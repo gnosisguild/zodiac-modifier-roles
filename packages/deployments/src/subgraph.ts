@@ -6,7 +6,7 @@ interface QueryRequest {
   operationName: string
 }
 
-const SQD_URL = "https://gnosisguild.squids.live/roles@v1/api/graphql"
+const SQD_URL = "https://gnosisguild.squids.live/roles:production/api/graphql"
 
 export const fetchFromSubgraph = async (
   request: QueryRequest,

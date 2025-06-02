@@ -52,20 +52,23 @@ The contracts have been developed with [Solidity 0.8.21](https://github.com/ethe
 - [Celo](https://celoscan.io/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
 - [Sonic](https://sonicscan.org/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
 - [Berachain](https://berascan.com/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
+- [HyperEVM]()
 - [Base Sepolia](https://sepolia.basescan.org/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
 - [Sepolia](https://sepolia.etherscan.io/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
 
 #### Contracts
 
-| Contract              | Description                  | Address                                      |
-| --------------------- | ---------------------------- | -------------------------------------------- |
-| Roles                 | Main roles modifier contract | `0x9646fDAD06d3e24444381f44362a3B0eB343D337` |
-| MultiSendUnwrapper    | Transaction unwrapper        | `0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0` |
-| AvatarIsOwnerOfERC721 | Custom condition             | `0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1` |
+| Contract              | Description                                                                     | Address                                      |
+| --------------------- | ------------------------------------------------------------------------------- | -------------------------------------------- |
+| Roles                 | Main roles modifier contract                                                    | `0x9646fDAD06d3e24444381f44362a3B0eB343D337` |
+| Integrity             | Library contract for condition integrity checks                                 | `0x6a6Af4b16458Bc39817e4019fB02BD3b26d41049` |
+| Packer                | Library contract for optimized condition storage                                | `0x61C5B1bE435391fDd7BC6703F3740C0d11728a8C` |
+| MultiSendUnwrapper    | Transaction unwrapper for Safe's MultiSend                                      | `0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0` |
+| AvatarIsOwnerOfERC721 | Custom condition useful for permissioned interaction with Uniswap NFT positions | `0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1` |
 
 #### Subgraphs
 
-- [https://gnosisguild.squids.live/roles@v1/api/graphql](https://gnosisguild.squids.live/roles@v1/api/graphql)
+- [https://gnosisguild.squids.live/roles:production/api/graphql](https://gnosisguild.squids.live/roles:production/api/graphql)
 
 ### Development environment setup
 
