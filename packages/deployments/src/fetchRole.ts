@@ -50,16 +50,8 @@ export const ROLE_FIELDS = `
 `.trim()
 
 const ROLE_QUERY = `
-query Role($id: String) {
-  role(id: $id) {
-    ${ROLE_FIELDS}
-  }
-}
-`.trim()
-
-const ROLE_AT_BLOCK_QUERY = `
-query Role($id: String, $block: Int) {
-  role(id: $id, block: { number: $block }) {
+query Role($id: ID!, $blockNumber: Int) {
+  role(id: $id, blockNumber: $blockNumber) {
     ${ROLE_FIELDS}
   }
 }
@@ -71,10 +63,10 @@ export const fetchRole = async (
 ): Promise<Role | null> => {
   const { role } = await fetchFromSubgraph(
     {
-      query: blockNumber ? ROLE_AT_BLOCK_QUERY : ROLE_QUERY,
+      query: ROLE_QUERY,
       variables: {
         id: getRoleId(chainId, address, roleKey),
-        block: blockNumber,
+        blockNumber,
       },
       operationName: "Role",
     },

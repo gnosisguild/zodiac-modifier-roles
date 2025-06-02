@@ -1,6 +1,7 @@
 import { fetchFromSubgraph, FetchOptions } from "./subgraph"
 import { ChainId, RolesModifier } from "./types"
 import { mapGraphQl as mapGraphQlRole, ROLE_FIELDS } from "./fetchRole"
+import { getRolesModId } from "./ids"
 
 type Props = {
   address: `0x${string}`
@@ -13,7 +14,9 @@ type Props = {
   blockNumber?: number
 }
 
-const MOD_FIELDS = `
+const MOD_QUERY = `
+query RolesMod($id: ID!, $blockNumber: Int) {
+  rolesModifier(id: $id, blockNumber: $blockNumber) {
     address
     owner
     avatar
@@ -29,40 +32,24 @@ const MOD_FIELDS = `
       balance
       timestamp
     }
-    unwrapAdapters(
-      where: {
-        selector: "0x8d80ff0a", 
-        adapterAddress: "0x93b7fcbc63ed8a3a24b59e1c3e6649d50b7427c0"
-      }
-    ) {
+    unwrapAdapters {
       targetAddress
     }
-`.trim()
-
-const MOD_QUERY = `
-query RolesMod($id: ID!) {
-  rolesModifier(id: $id) {
-    ${MOD_FIELDS}
-  }
-}
-`
-
-const MOD_AT_BLOCK_QUERY = `
-query RolesMod($id: ID!, $block: Int) {
-  rolesModifier(id: $id, block: { number: $block }) {
-    ${MOD_FIELDS}
   }
 }
 `
 
 export const fetchRolesMod = async (
-  { address, blockNumber, ...subgraphProps }: Props,
+  { chainId, address, blockNumber }: Props,
   options?: FetchOptions
 ): Promise<RolesModifier | null> => {
   const { rolesModifier } = await fetchFromSubgraph(
     {
-      query: blockNumber ? MOD_AT_BLOCK_QUERY : MOD_QUERY,
-      variables: { id: address.toLowerCase(), block: blockNumber },
+      query: MOD_QUERY,
+      variables: {
+        id: getRolesModId(chainId, address),
+        blockNumber,
+      },
       operationName: "RolesMod",
     },
     options
@@ -86,7 +73,11 @@ const mapGraphQl = (rolesModifier: any): RolesModifier => ({
     balance: BigInt(allowance.balance),
     timestamp: BigInt(allowance.timestamp),
   })),
-  multiSendAddresses: rolesModifier.unwrapAdapters.map(
-    (adapter: any) => adapter.targetAddress
-  ),
+  multiSendAddresses: rolesModifier.unwrapAdapters
+    .filter(
+      ({ selector, adapterAddress }: any) =>
+        selector === "0x8d80ff0a" &&
+        adapterAddress === "0x93b7fcbc63ed8a3a24b59e1c3e6649d50b7427c0"
+    )
+    .map((adapter: any) => adapter.targetAddress),
 })
