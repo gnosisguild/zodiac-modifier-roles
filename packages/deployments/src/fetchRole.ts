@@ -1,4 +1,5 @@
-import { chains } from "./chains"
+import { getRoleId } from "./ids"
+import { fetchFromSubgraph, FetchOptions } from "./subgraph"
 import {
   ChainId,
   Role,
@@ -9,128 +10,77 @@ import {
 } from "./types"
 
 type Props = {
+  chainId: ChainId
   address: `0x${string}`
   roleKey: `0x${string}`
-  /** Specify a block height to fetch a historic role state. Defaults to latest block. */
+
+  /**
+   * Specify a block height to fetch a historic state of the Roles mod. Defaults to latest block.
+   * @requires A Zodiac OS Enterprise subscription
+   **/
   blockNumber?: number
-} & (
-  | {
-      /** pass a chainId to use query against a dev subgraph */
-      chainId: ChainId
+}
+
+export const ROLE_FIELDS = `
+    key
+    members {
+      member {
+        address
+      }
     }
-  | {
-      /** pass your own subgraph endpoint for production use */
-      subgraph: string
+    targets {
+      address
+      clearance
+      executionOptions
+      functions {
+        selector
+        executionOptions
+        wildcarded
+        condition {
+          id
+          json
+        }
+      }
     }
-)
+    annotations {
+      uri
+      schema
+    }
+    lastUpdate
+`.trim()
 
 const ROLE_QUERY = `
-query Role($id: String) {
-  role(id: $id) {
-    key
-    members(first: 1000) {
-      member {
-        address
-      }
-    }
-    targets(first: 1000) {
-      address
-      clearance
-      executionOptions
-      functions(first: 1000) {
-        selector
-        executionOptions
-        wildcarded
-        condition {
-          id
-          json
-        }
-      }
-    }
-    annotations(first: 1000) {
-      uri
-      schema
-    }
-    lastUpdate
+query Role($id: ID!, $blockNumber: Int) {
+  role(id: $id, blockNumber: $blockNumber) {
+    ${ROLE_FIELDS}
   }
 }
 `.trim()
-
-const ROLE_AT_BLOCK_QUERY = `
-query Role($id: String, $block: Int) {
-  role(id: $id, block: { number: $block }) {
-    key
-    members(first: 1000) {
-      member {
-        address
-      }
-    }
-    targets(first: 1000) {
-      address
-      clearance
-      executionOptions
-      functions(first: 1000) {
-        selector
-        executionOptions
-        wildcarded
-        condition {
-          id
-          json
-        }
-      }
-    }
-    annotations(first: 1000) {
-      uri
-      schema
-    }
-    lastUpdate
-  }
-}
-`.trim()
-
-const getRoleId = (address: `0x${string}`, roleKey: `0x${string}`) =>
-  `${address.toLowerCase()}-ROLE-${roleKey}`
-
-type FetchOptions = Omit<RequestInit, "method" | "body">
 
 export const fetchRole = async (
-  { address, roleKey, blockNumber, ...rest }: Props,
+  { chainId, address, roleKey, blockNumber }: Props,
   options?: FetchOptions
 ): Promise<Role | null> => {
-  const endpoint =
-    "subgraph" in rest ? rest.subgraph : chains[rest.chainId].subgraph
-
-  const res = await fetch(endpoint, {
-    ...options,
-    method: "POST",
-    headers: {
-      ...options?.headers,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      query: blockNumber ? ROLE_AT_BLOCK_QUERY : ROLE_QUERY,
-      variables: { id: getRoleId(address, roleKey), block: blockNumber },
+  const { role } = await fetchFromSubgraph(
+    {
+      query: ROLE_QUERY,
+      variables: {
+        id: getRoleId(chainId, address, roleKey),
+        blockNumber,
+      },
       operationName: "Role",
-    }),
-  })
-  const { data, error, errors } = await res.json()
+    },
+    options
+  )
 
-  if (error || (errors && errors[0])) {
-    throw new Error(error || errors[0])
-  }
-
-  if (!data || !data.role) {
+  if (!role) {
     return null
   }
 
-  assertNoPagination(data.role.members)
-  assertNoPagination(data.role.targets)
-  assertNoPagination(data.role.annotations)
-
-  return mapGraphQl(data.role)
+  return mapGraphQl(role)
 }
 
-const mapGraphQl = (role: any): Role => ({
+export const mapGraphQl = (role: any): Role => ({
   ...role,
   members: role.members.map((assignment: any) => assignment.member.address),
   targets: role.targets.map(
@@ -155,9 +105,3 @@ const mapGraphQl = (role: any): Role => ({
     })
   ),
 })
-
-const assertNoPagination = (data: any[]) => {
-  if (data.length === 1000) {
-    throw new Error("Pagination not supported")
-  }
-}

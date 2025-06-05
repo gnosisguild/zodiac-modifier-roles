@@ -121,7 +121,7 @@ export interface Target {
   address: `0x${string}`
   clearance: Clearance
   executionOptions: ExecutionOptions
-  functions: readonly Function[]
+  functions: Function[]
 }
 
 export interface Function {
@@ -152,4 +152,14 @@ export interface Annotation {
   uri: string
   /** The OpenAPI schema that describes the API endpoint at uri. */
   schema: string
+}
+
+export interface RolesModifier {
+  address: `0x${string}`
+  owner: `0x${string}`
+  avatar: `0x${string}`
+  target: `0x${string}`
+  roles: Role[]
+  allowances: Allowance[]
+  multiSendAddresses: `0x${string}`[]
 }

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { checkIntegrity } from "zodiac-roles-sdk"
+import { targetIntegrity } from "zodiac-roles-sdk"
 import { zPermissionsPost } from "./types"
 import { withErrorHandling } from "../utils/withErrorHandling"
 import { createPermissionsPost } from "./createPermissionsPost"
@@ -11,7 +11,7 @@ export const POST = withErrorHandling(async (req: Request) => {
 
   if (validated.targets) {
     try {
-      checkIntegrity(validated.targets)
+      targetIntegrity(validated.targets)
     } catch (e) {
       return NextResponse.json({
         error: "Targets integrity check failed",

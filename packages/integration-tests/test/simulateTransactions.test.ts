@@ -1,9 +1,9 @@
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers"
 import hre from "hardhat"
 import {
-  applyTargets,
-  encodeRoleKey,
+  encodeKey,
   Permission,
+  planApplyRole,
   processPermissions,
 } from "zodiac-roles-sdk"
 
@@ -39,7 +39,7 @@ type Configs = typeof ADDRESSES
 type Config = Configs["BALANCER_1_ETH"]
 
 describe("Simulate Transactions Test", async () => {
-  const ROLE_KEY = encodeRoleKey("TEST_ROLE") as `0x${string}`
+  const ROLE_KEY = encodeKey("TEST_ROLE")
 
   const setup = async () => {
     const [owner] = await hre.ethers.getSigners()
@@ -99,35 +99,43 @@ describe("Simulate Transactions Test", async () => {
     // make sure the mod uses the right avatar address (important for EqualToAvatar conditions)
     await modifier.setAvatar(config.AVATAR)
 
-    const transactionsData = await applyTargets(
-      ROLE_KEY,
-      processPermissions(permissions).targets,
+    // const transactionsData = await applyTargets(
+    //   ROLE_KEY,
+    //   processPermissions(permissions).targets,
+    //   {
+    //     currentTargets: [],
+    //     mode: "replace",
+    //   }
+    // )
+
+    const transactionsData = await planApplyRole(
       {
-        currentTargets: [],
-        mode: "replace",
+        key: ROLE_KEY,
+        targets: processPermissions(permissions).targets,
+      },
+      {
+        chainId: 1,
+        address: (await modifier.getAddress()) as `0x${string}`,
+        current: {
+          key: ROLE_KEY,
+          members: [],
+          targets: [],
+          annotations: [],
+          lastUpdate: 0,
+        },
       }
     )
 
-    const to = await modifier.getAddress()
-    const permissionUpdateTransactions = transactionsData.map((data) => ({
-      to,
-      data: data,
-      value: "0",
-    }))
-
     let totalGas = BigInt(0)
     for (let i = 0; i < transactionsData.length; i++) {
-      totalGas =
-        totalGas + (await owner.estimateGas(permissionUpdateTransactions[i]))
+      totalGas = totalGas + (await owner.estimateGas(transactionsData[i]))
 
       await owner.sendTransaction({
-        ...permissionUpdateTransactions[i],
+        ...transactionsData[i],
       })
 
       console.log(
-        `Executed permissions update tx ${i + 1}/${
-          permissionUpdateTransactions.length
-        }`
+        `Executed permissions update tx ${i + 1}/${transactionsData.length}`
       )
     }
 

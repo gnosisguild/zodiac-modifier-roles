@@ -1,41 +1,48 @@
 {
   "name": "zodiac-roles-sdk",
-  "version": "2.22.2",
+  "version": "3.0.0",
   "license": "LGPL-3.0+",
-  "main": "build/cjs/sdk/src/index.js",
-  "module": "build/esm/sdk/src/index.js",
-  "types": "build/cjs/sdk/src/index.d.ts",
+  "main": "build/cjs/sdk/src/main/index.js",
+  "module": "build/esm/sdk/src/main/index.js",
+  "types": "build/cjs/sdk/src/main/index.d.ts",
   "exports": {
     ".": {
-      "require": "./build/cjs/sdk/src/index.js",
-      "import": "./build/esm/sdk/src/index.js"
+      "require": "./build/cjs/sdk/src/main/index.js",
+      "import": "./build/esm/sdk/src/main/index.js"
     },
     "./kit": {
-      "require": "./build/cjs/sdk/src/entrypoints/kit.js",
-      "import": "./build/esm/sdk/src/entrypoints/kit.js"
+      "require": "./build/cjs/sdk/src/kit/index.js",
+      "import": "./build/esm/sdk/src/kit/index.js"
     },
     "./annotations": {
-      "require": "./build/cjs/sdk/src/entrypoints/annotations.js",
-      "import": "./build/esm/sdk/src/entrypoints/annotations.js"
+      "require": "./build/cjs/sdk/src/annotations/index.js",
+      "import": "./build/esm/sdk/src/annotations/index.js"
+    },
+    "./swaps": {
+      "require": "./build/cjs/sdk/src/swaps/index.js",
+      "import": "./build/esm/sdk/src/swaps/index.js"
     },
     "./typechain": {
-      "require": "./build/cjs/sdk/src/entrypoints/typechain.js",
-      "import": "./build/esm/sdk/src/entrypoints/typechain.js"
+      "require": "./build/cjs/sdk/src/typechain.js",
+      "import": "./build/esm/sdk/src/typechain.js"
     }
   },
   "typesVersions": {
     "*": {
       ".": [
-        "./build/cjs/sdk/src/index.d.ts"
+        "./build/cjs/sdk/src/main/index.d.ts"
       ],
       "kit": [
-        "./build/cjs/sdk/src/entrypoints/kit.d.ts"
+        "./build/cjs/sdk/src/kit/index.d.ts"
       ],
       "annotations": [
-        "./build/cjs/sdk/src/entrypoints/annotations.d.ts"
+        "./build/cjs/sdk/src/annotations/index.d.ts"
+      ],
+      "swaps": [
+        "./build/cjs/sdk/src/swaps/index.d.ts"
       ],
       "typechain": [
-        "./build/cjs/sdk/src/entrypoints/typechain.d.ts"
+        "./build/cjs/sdk/src/typechain.d.ts"
       ]
     }
   },

@@ -1,15 +1,12 @@
 import { MdOutlineFileDownload } from "react-icons/md"
 import {
+  abi as rolesAbi,
   Annotation,
   ChainId,
   Role,
   Target,
-  applyAnnotations,
-  applyMembers,
-  applyTargets,
-  decodeRoleKey,
-  posterAbi,
-  rolesAbi,
+  planApplyRole,
+  decodeKey,
 } from "zodiac-roles-sdk"
 
 import Box from "@/ui/Box"
@@ -17,7 +14,6 @@ import Flex from "@/ui/Flex"
 
 import CallData from "../CallData"
 import styles from "./style.module.css"
-import { parseRoleParam } from "@/app/params"
 import ExecuteButton from "./ExecuteButton"
 import { Provider } from "./Provider"
 import {
@@ -53,49 +49,16 @@ const ApplyUpdates: React.FC<Props> = async ({
   const comments: string[] = []
   const logCall = (log: string) => comments.push(log)
 
-  let calls: { to: `0x${string}`; data: `0x${string}` }[] = []
-
-  if (members) {
-    calls = calls.concat(
-      (
-        await applyMembers(role.key, members, {
-          chainId,
-          address,
-          mode: "replace",
-          currentMembers: role.members,
-          log: logCall,
-        })
-      ).map((data) => ({ to: address, data }))
+  const calls: { to: `0x${string}`; data: `0x${string}` }[] =
+    await planApplyRole(
+      {
+        key: role.key,
+        members,
+        targets,
+        annotations,
+      },
+      { chainId, address, log: logCall }
     )
-  }
-
-  if (targets) {
-    calls = calls.concat(
-      (
-        await applyTargets(role.key, targets, {
-          chainId,
-          address,
-          mode: "replace",
-          currentTargets: role.targets,
-          log: logCall,
-        })
-      ).map((data) => ({ to: address, data }))
-    )
-  }
-
-  if (annotations) {
-    calls = calls.concat(
-      (
-        await applyAnnotations(role.key, annotations, {
-          chainId: chainId,
-          address: address,
-          mode: "replace",
-          currentAnnotations: role.annotations,
-          log: logCall,
-        })
-      ).map((data) => ({ to: POSTER_ADDRESS, data }))
-    )
-  }
 
   const txBuilderJson = exportToSafeTransactionBuilder(calls, chainId, role.key)
   return (
@@ -148,7 +111,7 @@ const exportToSafeTransactionBuilder = (
     chainId: chainId.toString(10),
     createdAt: Date.now(),
     meta: {
-      name: `Update permissions of ${decodeRoleKey(roleKey)} role`,
+      name: `Update permissions of ${decodeKey(roleKey)} role`,
       description: "",
       txBuilderVersion: "1.16.2",
     },
@@ -158,6 +121,9 @@ const exportToSafeTransactionBuilder = (
 
 // EIP-3722 Poster contract
 const POSTER_ADDRESS = "0x000000000000cd17345801aa8147b8D3950260FF" as const
+const posterAbi = JSON.parse(
+  Interface.from(["function post(string content,string tag)"]).formatJson()
+)
 
 const decode = (transaction: { to: `0x${string}`; data: `0x${string}` }) => {
   const abi: readonly JsonFragment[] =

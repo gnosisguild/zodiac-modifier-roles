@@ -1,6 +1,6 @@
 import { Condition, Operator, ParameterType } from "zodiac-roles-sdk"
 import { Fragment, ReactNode } from "react"
-import { AbiFunction, AbiParameter, decodeAbiParameters } from "viem"
+import { AbiFunction, AbiParameter, decodeAbiParameters, toHex } from "viem"
 
 import classes from "./style.module.css"
 import Flex from "@/ui/Flex"
@@ -12,7 +12,6 @@ import classNames from "classnames"
 import ComplexConditionView from "./ComplexConditionView"
 import { isLogicalOperator, isArrayOperator } from "./utils"
 import { arrayElementType } from "@/utils/abi"
-import { NormalizedCondition } from "../../../../sdk/build/esm/sdk/src/conditions/normalizeCondition"
 export { matchesAbi } from "./utils"
 
 export interface Props {
@@ -279,7 +278,9 @@ const ComparisonConditionView: React.FC<Props> = ({
   if (condition.compValue && abi && shallDecode(abi.type)) {
     const [decoded] = decodeAbiParameters(
       [abi as AbiParameter],
-      condition.compValue
+      condition.compValue === "0x"
+        ? toHex(0, { size: 32 })
+        : condition.compValue
     )
     value = String(decoded)
   }

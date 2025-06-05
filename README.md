@@ -10,7 +10,7 @@
 
 The Roles Modifier belongs to the [Zodiac](https://github.com/gnosisguild/zodiac) collection of tools, which can be accessed through the Zodiac App available on [Safe](https://safe.global/).
 
-If you have any questions about Zodiac, join the [Gnosis Guild Discord](https://discord.gg/wwmBWTgyEq). Follow [@GnosisGuild](https://twitter.com/gnosisguild) on Twitter for updates.
+If you have any questions about Zodiac, join the [Gnosis Guild Discord](http://discord.gnosisguild.org). Follow [@GnosisGuild](https://twitter.com/gnosisguild) on Twitter for updates.
 
 ### About the Roles Modifier
 
@@ -38,9 +38,7 @@ The contracts have been developed with [Solidity 0.8.21](https://github.com/ethe
 
 ### Deployments
 
-#### Roles
-
-Address: `0x9646fDAD06d3e24444381f44362a3B0eB343D337`
+#### Chains
 
 - [Mainnet](https://etherscan.io/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
 - [Optimism](https://optimistic.etherscan.io/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
@@ -54,60 +52,23 @@ Address: `0x9646fDAD06d3e24444381f44362a3B0eB343D337`
 - [Celo](https://celoscan.io/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
 - [Sonic](https://sonicscan.org/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
 - [Berachain](https://berascan.com/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
+- [HyperEVM](https://www.hyperscan.com/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
 - [Base Sepolia](https://sepolia.basescan.org/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
 - [Sepolia](https://sepolia.etherscan.io/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
 
-#### MultiSendUnwrapper (transaction unwrapper)
+#### Contracts
 
-Address: `0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0`
-
-- [Mainnet](https://etherscan.io/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
-- [Optimism](https://optimistic.etherscan.io/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
-- [Gnosis](https://gnosisscan.io/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
-- [Polygon](https://www.polygonscan.com/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
-- [Polygon zkEVM](https://zkevm.polygonscan.com/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
-- [Arbitrum One](https://arbiscan.io/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
-- [Avalanche C-Chain](https://snowtrace.io/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0/contract/43114/code)
-- [BSC](https://bscscan.com/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
-- [Base](https://basescan.org/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
-- [Celo](https://celoscan.io/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
-- [Sonic](https://sonicscan.org/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
-- [Berachain](https://berascan.com/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
-- [Base Sepolia](https://sepolia.basescan.org/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
-- [Sepolia](https://sepolia.etherscan.io/address/0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0#code)
-
-#### AvatarIsOwnerOfERC721 (custom condition)
-
-Address: `0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1`
-
-- [Mainnet](https://etherscan.io/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
-- [Optimism](https://optimistic.etherscan.io/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
-- [Gnosis](https://gnosisscan.io/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
-- [Polygon](https://www.polygonscan.com/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
-- [Polygon zkEVM](https://zkevm.polygonscan.com/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
-- [Arbitrum One](https://arbiscan.io/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
-- [Avalanche C-Chain](https://snowtrace.io/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1/contract/43114/code)
-- [BSC](https://bscscan.com/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
-- [Base](https://basescan.org/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
-- [Celo](https://celoscan.io/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
-- [Sonic](https://sonicscan.org/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
-- [Berachain](https://berascan.com/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
-- [Base Sepolia](https://sepolia.basescan.org/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
-- [Sepolia](https://sepolia.etherscan.io/address/0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1#code)
+| Contract              | Description                                                                     | Address                                      |
+| --------------------- | ------------------------------------------------------------------------------- | -------------------------------------------- |
+| Roles                 | Main roles modifier contract                                                    | `0x9646fDAD06d3e24444381f44362a3B0eB343D337` |
+| Integrity             | Library contract for condition integrity checks                                 | `0x6a6Af4b16458Bc39817e4019fB02BD3b26d41049` |
+| Packer                | Library contract for optimized condition storage                                | `0x61C5B1bE435391fDd7BC6703F3740C0d11728a8C` |
+| MultiSendUnwrapper    | Transaction unwrapper for Safe's MultiSend                                      | `0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0` |
+| AvatarIsOwnerOfERC721 | Custom condition useful for permissioned interaction with Uniswap NFT positions | `0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1` |
 
 #### Subgraphs
 
-- [Mainnet](https://api.studio.thegraph.com/query/23167/zodiac-roles-mainnet/v2.3.4)
-- [Optimism](https://api.studio.thegraph.com/query/23167/zodiac-roles-optimism/v2.3.4)
-- [Gnosis](https://api.studio.thegraph.com/query/23167/zodiac-roles-gnosis/v2.3.4)
-- [Polygon](https://api.studio.thegraph.com/query/23167/zodiac-roles-polygon/v2.3.4)
-- [Polygon zkEVM](https://api.studio.thegraph.com/query/23167/zodiac-roles-zkevm/v2.3.4)
-- [Arbitrum One](https://api.studio.thegraph.com/query/23167/zodiac-roles-arbitrum-one/v2.3.4)
-- [Avalanche C-Chain](https://api.studio.thegraph.com/query/23167/zodiac-roles-avalanche/v2.3.4)
-- [BSC](https://api.studio.thegraph.com/query/23167/zodiac-roles-bsc/v2.3.4)
-- [Base](https://api.studio.thegraph.com/query/23167/zodiac-roles-base/v2.3.4)
-- [Base Sepolia](https://api.studio.thegraph.com/query/23167/zodiac-roles-base-sepolia/v2.3.4)
-- [Sepolia](https://api.studio.thegraph.com/query/23167/zodiac-roles-sepolia/v2.3.4)
+- [https://gnosisguild.squids.live/roles:production/api/graphql](https://gnosisguild.squids.live/roles:production/api/graphql)
 
 ### Development environment setup
 
@@ -122,9 +83,11 @@ After that, you can start working on the different packages.
 This monorepo uses [yarn workspaces](https://yarnpkg.com/features/workspaces) and is comprised of:
 
 - **evm**: Roles mod smart contracts
-- **subgraph**: a subgraph indexing deployed Roles mod instances
-- **sdk**: a TypeScript SDK for managing roles
-- **app**: a webapp for editing roles
+- **subgraph**: a subgraph indexing deployed Roles mod instances:
+- **sdk**: a TypeScript SDK for managing roles: `zodiac-roles-sdk`
+- **deployments**: a TypeScript package that lists all supported chains and offers functions to fetch roles from the subgraph: `zodiac-roles-deployments`
+- **app**: a webapp for viewing roles: https://roles.gnosisguild.org
+- **docs**: the documentation page: https://docs.roles.gnosisguild.org
 
 ### Audits
 

@@ -5,8 +5,5 @@
     "target": "es2017",
     "outDir": "build/cjs",
     "module": "commonjs"
-  },
-  "include": ["src/**/*.ts"],
-  "exclude": ["src/**/*.test.ts"],
-  "files": []
+  }
 }

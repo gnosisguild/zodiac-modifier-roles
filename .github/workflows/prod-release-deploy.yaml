@@ -79,28 +79,3 @@ jobs:
         with:
           branch: gh-pages
           folder: ./packages/app/build
-
-      # - name: Prep graph cli for deployment
-      #   working-directory: packages/subgraph
-      #   run: yarn run graph auth --product hosted-service ${{ secrets.GRAPH_ACCESS_TOKEN }}
-
-      # - name: Deploy subgraphs
-      #   working-directory: packages/subgraph
-      #   env:
-      #     HOSTED_SERVICE_SUBGRAPH__GNOSIS_CHAIN: jfschwarz/zodiac-roles-mod-gnosis-chain
-      #     HOSTED_SERVICE_SUBGRAPH__ARBITRUM_ONE: jfschwarz/zodiac-roles-mod-arbitrum
-      #     HOSTED_SERVICE_SUBGRAPH__AVALANCHE: jfschwarz/zodiac-roles-mod-avalanche
-      #     HOSTED_SERVICE_SUBGRAPH__BSC: jfschwarz/zodiac-roles-mod-bsc
-      #     HOSTED_SERVICE_SUBGRAPH__MAINNET: jfschwarz/zodiac-roles-mod-mainnet
-      #     HOSTED_SERVICE_SUBGRAPH__OPTIMISM: jfschwarz/zodiac-roles-mod-optimism
-      #     HOSTED_SERVICE_SUBGRAPH__POLYGON: jfschwarz/zodiac-roles-mod-polygon
-      #     # HOSTED_SERVICE_SUBGRAPH__OPTIMISM_ON_GNOSIS_CHAIN: jfschwarz/zodiac-roles-mod_optimism-on-gnosis-chain
-      #   run: |
-      #     yarn deploy:arbitrum-one
-      #     yarn deploy:gnosis-chain
-      #     yarn deploy:avalanche
-      #     yarn deploy:bsc
-      #     yarn deploy:mainnet
-      #     yarn deploy:optimism
-      #     yarn deploy:polygon
-      #     # yarn deploy:optimism-on-gnosis-chain
