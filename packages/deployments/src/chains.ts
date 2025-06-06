@@ -55,4 +55,20 @@ export const chains = {
     name: "sepolia",
     prefix: "sep",
   },
+  [130]: {
+    name: "unichain",
+    prefix: "unichain",
+  },
+  [5000]: {
+    name: "mantle",
+    prefix: "mantle",
+  },
+  [60808]: {
+    name: "bob",
+    prefix: "bob",
+  },
+  [999]: {
+    name: "hyperevm",
+    prefix: "hyperevm",
+  },
 } as const
