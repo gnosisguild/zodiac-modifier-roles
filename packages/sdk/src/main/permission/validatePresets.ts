@@ -1,6 +1,6 @@
 import { coercePermission } from "./coercePermission"
 import { mergePermissions } from "./mergePermissions"
-import { permissionEquals } from "./permissionEquals"
+import { permissionIncludes } from "./permissionIncludes"
 
 import { Permission, PermissionCoerced } from "./types"
 
@@ -19,32 +19,37 @@ export function validatePresets<T extends { permissions: Permission[] }>({
   presets: T[]
   permissions: PermissionCoerced[]
 } {
-  const permissions: PermissionCoerced[] = input.map(coercePermission)
-  /*
-   * sanity check permissions and presets, will throw on unmergeable permissions
-   */
-  sanityCheck(permissions)
+  const targetPermissions: PermissionCoerced[] = input.map(coercePermission)
+
+  sanityCheck(targetPermissions)
   for (const preset of presets) {
     preset && sanityCheck(preset.permissions)
   }
 
-  const confirmedPresets = presets
+  const validated = presets
     .filter((p) => !!p)
-    .filter((preset) =>
-      preset.permissions.every((p1) =>
-        permissions.some((p2) => permissionEquals(p1, p2))
-      )
-    )
+    /*
+     * find matches from the preset permissions into the onchain permission
+     */
+    .map((preset) => ({
+      preset,
+      matches: preset.permissions.map((presetPermission) =>
+        targetPermissions.find((targetPermission) =>
+          permissionIncludes(targetPermission, presetPermission)
+        )
+      ),
+    }))
+    /*
+     * only presets for which every permission has a match are validated
+     */
+    .filter(({ matches }) => matches.every((m) => !!m))
 
-  const confirmedPermissions = confirmedPresets
-    .map((preset) => preset.permissions)
-    .flat()
+  const mentioned = new Set(validated.flatMap(({ matches }) => matches))
 
-  const remainingPermissions = permissions.filter((p1) =>
-    confirmedPermissions.every((p2) => !permissionEquals(p1, p2))
-  )
-
-  return { presets: confirmedPresets, permissions: remainingPermissions }
+  return {
+    presets: validated.map(({ preset }) => preset),
+    permissions: targetPermissions.filter((p) => !mentioned.has(p)),
+  }
 }
 
 function sanityCheck(permissions: readonly PermissionCoerced[]) {

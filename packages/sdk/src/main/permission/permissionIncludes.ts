@@ -1,8 +1,25 @@
+import { Operator, ParameterType } from "zodiac-roles-deployments"
 import { normalizeCondition } from "../target/condition"
 
 import { PermissionCoerced, FunctionPermissionCoerced } from "./types"
 
-export function permissionEquals(
+/**
+ * Checks if one permission includes (supersedes or equals) another permission.
+ *
+ * A permission p1 includes p2 if:
+ * 1. They target the same address with the same execution options (send/delegatecall)
+ * 2. AND one of the following:
+ *    - Both are wildcard permissions (no selector)
+ *    - Both target the same function AND p1's condition includes p2's condition
+ *
+ * For conditions, p1 includes p2 when -> OR(p1.condition, p2.condition) equals p1.condition (p2 is a subset)
+ *
+ * @param p1 - The potentially broader permission
+ * @param p2 - The permission to check if included in p1
+ * @returns true if p1 includes p2, false otherwise
+ *
+ */
+export function permissionIncludes(
   p1: PermissionCoerced,
   p2: PermissionCoerced
 ): boolean {
@@ -39,8 +56,16 @@ export function permissionEquals(
     return true
   }
 
+  /*
+   * We rely on the normalization mechanism do detect whether a permission
+   * is included (is subset of another)
+   */
   return (
     normalizeCondition(fp1.condition!).$$id ===
-    normalizeCondition(fp2.condition!).$$id
+    normalizeCondition({
+      paramType: ParameterType.None,
+      operator: Operator.Or,
+      children: [fp1.condition!, fp2.condition!],
+    }).$$id
   )
 }
