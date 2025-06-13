@@ -1,6 +1,5 @@
 import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
-import { normalizeCondition, stripIds } from "../target/condition"
 import {
   isPermissionAllowed,
   isPermissionConditional,
@@ -99,14 +98,15 @@ const mergeEntry = (p1: PermissionCoerced, p2: PermissionCoerced) => {
   return comparePermission(p1, p2) <= 0 ? p1 : p2
 }
 
-const mergeConditions = (a: Condition, b: Condition): Condition => {
-  return stripIds(
-    normalizeCondition({
-      paramType: ParameterType.None,
-      operator: Operator.Or,
-      children: [a, b],
-    })
-  )
+const mergeConditions = (a: Condition, b: Condition): Condition | undefined => {
+  const aBranches = a.operator === Operator.Or ? a.children : [a]
+  const bBranches = b.operator === Operator.Or ? b.children : [b]
+
+  return {
+    paramType: ParameterType.None,
+    operator: Operator.Or,
+    children: [...(aBranches || []), ...(bBranches || [])],
+  }
 }
 
 const comparePermission = (p1: PermissionCoerced, p2: PermissionCoerced) => {
