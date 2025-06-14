@@ -1,7 +1,10 @@
 import { expect, it, suite } from "vitest"
-import { Operator, ParameterType } from "zodiac-roles-deployments"
+import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
-import { normalizeCondition, stripIds } from "./normalizeCondition"
+import {
+  normalizeConditionDeprecated as normalizeCondition,
+  stripIds,
+} from "./normalizeCondition"
 
 import { FunctionPermissionCoerced, mergePermissions } from "../../permission"
 import { abiEncode } from "../../abiEncode"
@@ -16,7 +19,7 @@ const DUMMY_COMP = (id: number) => ({
   compValue: abiEncode(["uint256"], [id]),
 })
 
-suite("normalizeCondition()", () => {
+suite("normalizeConditionDeprecated()", () => {
   it("flattens nested AND conditions", () => {
     expect(
       stripIds(
@@ -646,5 +649,157 @@ suite("normalizeCondition() - MISC transfered from other tests", () => {
       operator: Operator.Or,
       children: [DUMMY_COMP(1), DUMMY_COMP(2), DUMMY_COMP(3)],
     })
+  })
+})
+
+suite("normalizeConditionDeprecated() - MISC new tests", () => {
+  it("Transforms an AND", () => {
+    const C1: Condition = {
+      paramType: ParameterType.Static,
+      operator: Operator.EqualTo,
+      compValue: "0x01",
+    }
+
+    const C2: Condition = {
+      paramType: ParameterType.Static,
+      operator: Operator.EqualTo,
+      compValue: "0x02",
+    }
+
+    const condition: Condition = {
+      paramType: ParameterType.None,
+      operator: Operator.And,
+      children: [
+        {
+          paramType: ParameterType.Calldata,
+          operator: Operator.Matches,
+          children: [C1],
+        },
+        {
+          paramType: ParameterType.Calldata,
+          operator: Operator.Matches,
+          children: [C2],
+        },
+      ],
+    }
+
+    const normalized = normalizeCondition(condition)
+
+    // The bug transforms it to:
+    expect(stripIds(normalized)).to.deep.equal({
+      paramType: ParameterType.Calldata,
+      operator: Operator.Matches,
+      children: [
+        {
+          paramType: ParameterType.None,
+          operator: Operator.And,
+          children: [C1, C2],
+        },
+      ],
+    })
+  })
+
+  it("Transforms an AND, deep", () => {
+    const C1: Condition = {
+      paramType: ParameterType.Static,
+      operator: Operator.EqualTo,
+      compValue: "0x01",
+    }
+
+    const C2: Condition = {
+      paramType: ParameterType.Static,
+      operator: Operator.EqualTo,
+      compValue: "0x02",
+    }
+    const C3: Condition = {
+      paramType: ParameterType.Static,
+      operator: Operator.EqualTo,
+      compValue: "0x03",
+    }
+
+    const condition: Condition = {
+      paramType: ParameterType.Calldata,
+      operator: Operator.Matches,
+      children: [
+        {
+          paramType: ParameterType.None,
+          operator: Operator.And,
+          children: [
+            {
+              paramType: ParameterType.Tuple,
+              operator: Operator.Matches,
+              children: [C1, C2],
+            },
+            {
+              paramType: ParameterType.Tuple,
+              operator: Operator.Matches,
+              children: [C1, C3],
+            },
+          ],
+        },
+      ],
+    }
+
+    const normalized = normalizeCondition(condition)
+
+    // The bug transforms it to:
+    expect(stripIds(normalized)).to.deep.equal({
+      paramType: ParameterType.Calldata,
+      operator: Operator.Matches,
+      children: [
+        {
+          paramType: ParameterType.Tuple,
+          operator: Operator.Matches,
+          children: [
+            C1,
+            {
+              paramType: ParameterType.None,
+              operator: Operator.And,
+              children: [C2, C3],
+            },
+          ],
+        },
+      ],
+    })
+  })
+
+  it("Array length mismatch should result in a push down", () => {
+    const A: Condition = {
+      paramType: ParameterType.Static,
+      operator: Operator.EqualTo,
+      compValue: "0x01",
+    }
+
+    const B: Condition = {
+      paramType: ParameterType.Static,
+      operator: Operator.EqualTo,
+      compValue: "0x02",
+    }
+
+    const C: Condition = {
+      paramType: ParameterType.Static,
+      operator: Operator.EqualTo,
+      compValue: "0x03",
+    }
+
+    // OR of two arrays with DIFFERENT lengths
+    const mismatchedArrays: Condition = {
+      paramType: ParameterType.None,
+      operator: Operator.Or,
+      children: [
+        {
+          paramType: ParameterType.Array,
+          operator: Operator.Matches,
+          children: [A, B, C], // 3 elements
+        },
+        {
+          paramType: ParameterType.Array,
+          operator: Operator.Matches,
+          children: [A, B], // 2 elements
+        },
+      ],
+    }
+
+    expect(() => normalizeCondition(mismatchedArrays)).to.toThrowError()
   })
 })

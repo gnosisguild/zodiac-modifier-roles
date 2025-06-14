@@ -13,13 +13,15 @@ export type NormalizedCondition = Omit<Condition, "children"> & {
   children?: NormalizedCondition[]
 }
 
+export const normalizeConditionDeprecated = normalizeCondition
+
 /**
  * Transforms the structure of a condition without changing it semantics. Aims to minimize the tree size and to arrive at a normal form, so that semantically equivalent conditions will have an equal representation.
  * Such a normal form is useful for efficiently comparing conditions for equality. It is also promotes efficient, globally deduplicated storage of conditions since the Roles contract stores conditions in bytecode at addresses derived by hashing the condition data.
  **/
-export const normalizeCondition = (
+function normalizeCondition(
   condition: Condition | NormalizedCondition
-): NormalizedCondition => {
+): NormalizedCondition {
   if (isNormalized(condition)) return condition
 
   // Processing starts at the leaves and works up, meaning that the individual normalization functions can rely on the current node's children being normalized.
@@ -319,7 +321,8 @@ const pushDownLogicalConditions = (
           ? child
           : {
               paramType: ParameterType.None,
-              operator: Operator.Or,
+              // Use the actual operator (AND/OR)
+              operator: condition.operator,
               children: condition.children?.map((c) => c.children?.[i]),
             }
       )
