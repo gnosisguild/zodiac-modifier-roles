@@ -1,3 +1,4 @@
+import { createHash } from "crypto"
 import {
   BytesLike,
   concat,
@@ -16,6 +17,24 @@ const ERC2470_SINGLETON_FACTORY_ADDRESS =
   "0xce0042b868300000d44a59004da54a005ffdcf9f"
 const ZERO_SALT =
   "0x0000000000000000000000000000000000000000000000000000000000000000"
+
+export function conditionHash(condition: Condition) {
+  return (
+    "0x" +
+    createHash("sha256")
+      .update(JSON.stringify(stripIds(condition)))
+      .digest("hex")
+  )
+}
+
+export const stripIds = (condition: Condition): Condition => {
+  const { $$id, children, ...rest } = condition as any
+  if (!children) return rest
+  return {
+    ...rest,
+    children: children.map(stripIds),
+  }
+}
 
 export const conditionId = (condition: Condition) => {
   const conditions = flattenCondition(condition)
@@ -55,13 +74,14 @@ const offsetParent = 8
 const offsetParamType = 5
 const offsetOperator = 0
 
-const packCondition = (condition: ConditionFlat) =>
-  toBeHex(
+const packCondition = (condition: ConditionFlat) => {
+  return toBeHex(
     (condition.parent << offsetParent) |
       (condition.paramType << offsetParamType) |
       (condition.operator << offsetOperator),
-    2
+    condition.parent >= 256 ? undefined : 2
   )
+}
 
 const packCompValue = (condition: ConditionFlat) => {
   if (!hasCompValue(condition.operator)) return "0x"

@@ -1,2 +1,3 @@
-export { normalizeCondition, stripIds } from "./normalizeCondition"
-export { conditionAddress, conditionId } from "./conditionId"
+export { conditionAddress, conditionId, stripIds } from "./conditionId"
+export { normalizeConditionDeprecated } from "./normalizeCondition"
+export { normalizeConditionNext } from "./normalizeConditionNext"
