@@ -2,7 +2,7 @@ import { Function } from "zodiac-roles-deployments"
 
 import {
   normalizeConditionNext as normalizeCondition,
-  conditionHash,
+  conditionId,
 } from "../condition"
 import {
   Diff,
@@ -164,8 +164,8 @@ function scopedAndEqual(a?: Function, b?: Function) {
   return (
     a?.condition &&
     b?.condition &&
-    conditionHash(normalizeCondition(a.condition)) ===
-      conditionHash(normalizeCondition(b.condition))
+    conditionId(normalizeCondition(a.condition)) ===
+      conditionId(normalizeCondition(b.condition))
   )
 }
 

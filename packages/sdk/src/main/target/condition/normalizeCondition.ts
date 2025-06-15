@@ -1,6 +1,6 @@
 import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
-import { conditionHash, conditionId } from "./conditionId"
+import { conditionId } from "./conditionId"
 
 export const normalizeConditionDeprecated = normalizeCondition
 
@@ -188,7 +188,7 @@ const dedupeBranches = (condition: Condition): Condition => {
   ) {
     const childIds = new Set()
     const uniqueChildren = condition.children?.filter((child) => {
-      const id = conditionHash(child)
+      const id = conditionId(child)
       const isDuplicate = childIds.has(id)
       childIds.add(id)
       return !isDuplicate
@@ -221,10 +221,6 @@ const normalizeChildrenOrder = (condition: Condition): Condition => {
   ) {
     if (!condition.children) return condition
 
-    /*
-     * we got to keep the 10x more expensive conditionId (vs conditionHash),
-     * since we want to keep backwards compatibility in sorting
-     */
     const sorted = condition.children
       .map((c) => ({
         condition: c,
@@ -399,7 +395,7 @@ const findMatchesHingeIndex = (conditions: readonly Condition[]) => {
 const findAndHingeIndices = (conditions: readonly Condition[]) => {
   const allChildrenIds = conditions.map((condition) => {
     if (!condition.children) throw new Error("empty children")
-    return condition.children.map((child) => conditionHash(child))
+    return condition.children.map((child) => conditionId(child))
   })
   const allChildrenIdsSets = allChildrenIds.map((ids) => new Set(ids))
 
@@ -454,4 +450,4 @@ const isDynamicParamType = (condition: Condition): boolean => {
 }
 
 const conditionsEqual = (a: Condition | undefined, b: Condition | undefined) =>
-  (!a || conditionHash(a)) === (!b || conditionHash(b))
+  (!a || conditionId(a)) === (!b || conditionId(b))

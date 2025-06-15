@@ -1,6 +1,6 @@
 import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
-import { conditionHash, conditionId } from "./conditionId"
+import { conditionId } from "./conditionId"
 
 export const normalizeConditionNext = normalizeCondition
 
@@ -127,7 +127,7 @@ const dedupeBranches = (condition: Condition): Condition => {
   ) {
     const childIds = new Set()
     const uniqueChildren = condition.children?.filter((child) => {
-      const id = conditionHash(child)
+      const id = conditionId(child)
       const isDuplicate = childIds.has(id)
       childIds.add(id)
       return !isDuplicate
@@ -160,10 +160,6 @@ const sortChildren = (condition: Condition): Condition => {
   ) {
     if (!condition.children) return condition
 
-    /*
-     * we got to keep the 10x more expensive conditionId (vs conditionHash),
-     * since we want to keep backwards compatibility in sorting
-     */
     const sorted = condition.children
       .map((c) => ({
         condition: c,
@@ -196,7 +192,10 @@ const sortChildren = (condition: Condition): Condition => {
 
 const deleteUndefinedFields = (condition: Condition): Condition => {
   if ("children" in condition && !condition.children) delete condition.children
-  if ("compValue" in condition && !condition.compValue)
+  if (
+    "compValue" in condition &&
+    (!condition.compValue || condition.compValue == "0x")
+  )
     delete condition.compValue
   return condition
 }
