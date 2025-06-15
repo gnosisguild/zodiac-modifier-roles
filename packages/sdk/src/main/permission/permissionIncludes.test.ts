@@ -1,8 +1,9 @@
-import { expect, it, suite, describe } from "vitest"
-import { Operator, ParameterType } from "zodiac-roles-deployments"
+import { expect, it, describe } from "vitest"
+import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
 import { abiEncode } from "../abiEncode"
 import { permissionIncludes } from "./permissionIncludes"
+import { PermissionCoerced } from "./types"
 
 const AddressOne = "0x0000000000000000000000000000000000000001"
 const AddressTwo = "0x0000000000000000000000000000000000000002"
@@ -13,27 +14,131 @@ const COMP = (id: number) => ({
   compValue: abiEncode(["uint256"], [id]),
 })
 
-const OR = (...children: any[]) => ({
-  paramType: ParameterType.None,
-  operator: Operator.Or,
-  children,
-})
+describe("permissionIncludes()", () => {
+  describe("Basic requirements", () => {
+    describe("Address matching", () => {
+      it("same address returns true", () => {
+        expect(
+          permissionIncludes(
+            { targetAddress: AddressOne },
+            { targetAddress: AddressOne }
+          )
+        ).toBe(true)
+      })
 
-const AND = (...children: any[]) => ({
-  paramType: ParameterType.None,
-  operator: Operator.And,
-  children,
-})
+      it("different addresses return false", () => {
+        expect(
+          permissionIncludes(
+            { targetAddress: AddressOne },
+            { targetAddress: AddressTwo }
+          )
+        ).toBe(false)
+      })
+    })
 
-const MATCHES = (paramType: ParameterType, ...children: any[]) => ({
-  paramType,
-  operator: Operator.Matches,
-  children,
-})
+    describe("Execution flags", () => {
+      it("p1 without send cannot include p2 with send", () => {
+        expect(
+          permissionIncludes(
+            { targetAddress: AddressOne, send: false },
+            { targetAddress: AddressOne, send: true }
+          )
+        ).toBe(false)
 
-suite("permissionIncludes()", () => {
-  describe("Address matching", () => {
-    it("same address returns true", () => {
+        expect(
+          permissionIncludes(
+            { targetAddress: AddressOne },
+            { targetAddress: AddressOne, selector: "0x11223344", send: true }
+          )
+        ).toBe(false)
+
+        expect(
+          permissionIncludes(
+            { targetAddress: AddressOne },
+            {
+              targetAddress: AddressOne,
+              selector: "0x11223344",
+              delegatecall: true,
+            }
+          )
+        ).toBe(false)
+
+        expect(
+          permissionIncludes(
+            { targetAddress: AddressOne },
+            { targetAddress: AddressOne, selector: "0x11223344" }
+          )
+        ).toBe(true)
+      })
+
+      it("p1 with send includes p2 without send", () => {
+        expect(
+          permissionIncludes(
+            { targetAddress: AddressOne, send: true },
+            { targetAddress: AddressOne }
+          )
+        ).toBe(true)
+
+        expect(
+          permissionIncludes(
+            { targetAddress: AddressOne, send: true },
+            { targetAddress: AddressOne, send: false }
+          )
+        ).toBe(true)
+      })
+
+      it("p1 without delegatecall cannot include p2 with delegatecall", () => {
+        expect(
+          permissionIncludes(
+            { targetAddress: AddressOne },
+            { targetAddress: AddressOne, delegatecall: true }
+          )
+        ).toBe(false)
+
+        expect(
+          permissionIncludes(
+            { targetAddress: AddressOne, delegatecall: false },
+            { targetAddress: AddressOne, delegatecall: true }
+          )
+        ).toBe(false)
+      })
+
+      it("p1 with delegatecall includes p2 without delegatecall", () => {
+        expect(
+          permissionIncludes(
+            { targetAddress: AddressOne, delegatecall: true },
+            { targetAddress: AddressOne }
+          )
+        ).toBe(true)
+
+        expect(
+          permissionIncludes(
+            { targetAddress: AddressOne, delegatecall: true },
+            { targetAddress: AddressOne, delegatecall: false }
+          )
+        ).toBe(true)
+      })
+
+      it("both flags work together", () => {
+        expect(
+          permissionIncludes(
+            { targetAddress: AddressOne, send: true, delegatecall: true },
+            { targetAddress: AddressOne, send: true }
+          )
+        ).toBe(true)
+
+        expect(
+          permissionIncludes(
+            { targetAddress: AddressOne, send: true },
+            { targetAddress: AddressOne, send: true, delegatecall: true }
+          )
+        ).toBe(false)
+      })
+    })
+  })
+
+  describe("Allowed permissions", () => {
+    it("allowed includes allowed", () => {
       expect(
         permissionIncludes(
           { targetAddress: AddressOne },
@@ -42,116 +147,45 @@ suite("permissionIncludes()", () => {
       ).toBe(true)
     })
 
-    it("different addresses return false", () => {
+    it("allowed includes wildcard", () => {
       expect(
         permissionIncludes(
           { targetAddress: AddressOne },
-          { targetAddress: AddressTwo }
+          { targetAddress: AddressOne, selector: "0x01" }
+        )
+      ).toBe(true)
+    })
+
+    it("allowed includes conditional", () => {
+      expect(
+        permissionIncludes(
+          { targetAddress: AddressOne },
+          { targetAddress: AddressOne, selector: "0x01", condition: COMP(1) }
+        )
+      ).toBe(true)
+    })
+
+    it("wildcard does NOT include allowed", () => {
+      expect(
+        permissionIncludes(
+          { targetAddress: AddressOne, selector: "0x01" },
+          { targetAddress: AddressOne }
+        )
+      ).toBe(false)
+    })
+
+    it("conditional does NOT include allowed", () => {
+      expect(
+        permissionIncludes(
+          { targetAddress: AddressOne, selector: "0x01", condition: COMP(1) },
+          { targetAddress: AddressOne }
         )
       ).toBe(false)
     })
   })
 
-  describe("Execution flags", () => {
-    it("send: false or undefined are equivalent", () => {
-      expect(
-        permissionIncludes(
-          { targetAddress: AddressOne },
-          { targetAddress: AddressOne, send: false }
-        )
-      ).toBe(true)
-
-      expect(
-        permissionIncludes(
-          { targetAddress: AddressOne, send: false },
-          { targetAddress: AddressOne }
-        )
-      ).toBe(true)
-    })
-
-    it("send: p1 without send cannot include p2 with send", () => {
-      expect(
-        permissionIncludes(
-          { targetAddress: AddressOne },
-          { targetAddress: AddressOne, send: true }
-        )
-      ).toBe(false)
-
-      expect(
-        permissionIncludes(
-          { targetAddress: AddressOne, send: false },
-          { targetAddress: AddressOne, send: true }
-        )
-      ).toBe(false)
-    })
-
-    it("send: p1 with send includes p2 without send", () => {
-      expect(
-        permissionIncludes(
-          { targetAddress: AddressOne, send: true },
-          { targetAddress: AddressOne }
-        )
-      ).toBe(true)
-
-      expect(
-        permissionIncludes(
-          { targetAddress: AddressOne, send: true },
-          { targetAddress: AddressOne, send: false }
-        )
-      ).toBe(true)
-    })
-
-    it("delegatecall: false or undefined are equivalent", () => {
-      expect(
-        permissionIncludes(
-          { targetAddress: AddressOne },
-          { targetAddress: AddressOne, delegatecall: false }
-        )
-      ).toBe(true)
-
-      expect(
-        permissionIncludes(
-          { targetAddress: AddressOne, delegatecall: false },
-          { targetAddress: AddressOne }
-        )
-      ).toBe(true)
-    })
-
-    it("delegatecall: p1 without delegatecall cannot include p2 with delegatecall", () => {
-      expect(
-        permissionIncludes(
-          { targetAddress: AddressOne },
-          { targetAddress: AddressOne, delegatecall: true }
-        )
-      ).toBe(false)
-
-      expect(
-        permissionIncludes(
-          { targetAddress: AddressOne, delegatecall: false },
-          { targetAddress: AddressOne, delegatecall: true }
-        )
-      ).toBe(false)
-    })
-
-    it("delegatecall: p1 with delegatecall includes p2 without delegatecall", () => {
-      expect(
-        permissionIncludes(
-          { targetAddress: AddressOne, delegatecall: true },
-          { targetAddress: AddressOne }
-        )
-      ).toBe(true)
-
-      expect(
-        permissionIncludes(
-          { targetAddress: AddressOne, delegatecall: true },
-          { targetAddress: AddressOne, delegatecall: false }
-        )
-      ).toBe(true)
-    })
-  })
-
-  describe("Selector matching", () => {
-    it("same selector returns true", () => {
+  describe("Wildcard permissions", () => {
+    it("wildcard includes wildcard with same selector", () => {
       expect(
         permissionIncludes(
           { targetAddress: AddressOne, selector: "0x01" },
@@ -160,7 +194,7 @@ suite("permissionIncludes()", () => {
       ).toBe(true)
     })
 
-    it("different selectors return false", () => {
+    it("wildcard does NOT include wildcard with different selector", () => {
       expect(
         permissionIncludes(
           { targetAddress: AddressOne, selector: "0x01" },
@@ -169,62 +203,25 @@ suite("permissionIncludes()", () => {
       ).toBe(false)
     })
 
-    it("wildcard p1 (no selector) should include specific p2 (with selector)", () => {
-      // This tests the core wildcard logic - currently FAILS
-      expect(
-        permissionIncludes(
-          { targetAddress: AddressOne }, // Wildcard permission
-          { targetAddress: AddressOne, selector: "0x01" } // Specific function
-        )
-      ).toBe(false)
-    })
-
-    it("specific p1 (with selector) should NOT include wildcard p2 (no selector)", () => {
-      expect(
-        permissionIncludes(
-          { targetAddress: AddressOne, selector: "0x01" }, // Specific function
-          { targetAddress: AddressOne } // Wildcard permission
-        )
-      ).toBe(false)
-    })
-
-    it("wildcard permissions should include each other", () => {
-      expect(
-        permissionIncludes(
-          { targetAddress: AddressOne }, // Wildcard
-          { targetAddress: AddressOne } // Wildcard
-        )
-      ).toBe(true)
-    })
-  })
-
-  describe("Condition matching", () => {
-    it("missing or undefined conditions are equivalent", () => {
-      expect(
-        permissionIncludes(
-          { targetAddress: AddressOne, selector: "0x01", condition: undefined },
-          { targetAddress: AddressOne, selector: "0x01" }
-        )
-      ).toBe(true)
-
-      expect(
-        permissionIncludes(
-          { targetAddress: AddressOne, selector: "0x01" },
-          { targetAddress: AddressOne, selector: "0x01", condition: undefined }
-        )
-      ).toBe(true)
-    })
-
-    it("condition: p1 without condition cannot include p2 with condition", () => {
+    it("wildcard includes conditional with same selector", () => {
       expect(
         permissionIncludes(
           { targetAddress: AddressOne, selector: "0x01" },
           { targetAddress: AddressOne, selector: "0x01", condition: COMP(1) }
         )
+      ).toBe(true)
+    })
+
+    it("wildcard does NOT include conditional with different selector", () => {
+      expect(
+        permissionIncludes(
+          { targetAddress: AddressOne, selector: "0x01" },
+          { targetAddress: AddressOne, selector: "0x02", condition: COMP(1) }
+        )
       ).toBe(false)
     })
 
-    it("condition: p1 with condition includes p2 without condition", () => {
+    it("conditional does NOT include wildcard", () => {
       expect(
         permissionIncludes(
           { targetAddress: AddressOne, selector: "0x01", condition: COMP(1) },
@@ -232,8 +229,10 @@ suite("permissionIncludes()", () => {
         )
       ).toBe(false)
     })
+  })
 
-    it("identical conditions are equal", () => {
+  describe("Conditional permissions", () => {
+    it("conditional includes identical conditional", () => {
       expect(
         permissionIncludes(
           {
@@ -250,7 +249,7 @@ suite("permissionIncludes()", () => {
       ).toBe(true)
     })
 
-    it("different conditions are not equal", () => {
+    it("conditional does NOT include different conditional", () => {
       expect(
         permissionIncludes(
           {
@@ -266,152 +265,46 @@ suite("permissionIncludes()", () => {
         )
       ).toBe(false)
     })
-  })
 
-  describe("Complex condition inclusion", () => {
-    it("OR condition includes individual branches", () => {
-      // OR(A, B) should include A
+    it("conditional does NOT include conditional with different selector", () => {
       expect(
         permissionIncludes(
-          {
-            targetAddress: AddressOne,
-            selector: "0x01",
-            condition: OR(COMP(1), COMP(2)),
-          },
           {
             targetAddress: AddressOne,
             selector: "0x01",
             condition: COMP(1),
-          }
-        )
-      ).toBe(true)
-
-      // OR(A, B) should include B
-      expect(
-        permissionIncludes(
-          {
-            targetAddress: AddressOne,
-            selector: "0x01",
-            condition: OR(COMP(1), COMP(2)),
           },
           {
             targetAddress: AddressOne,
-            selector: "0x01",
-            condition: COMP(2),
-          }
-        )
-      ).toBe(true)
-
-      // OR(A, B) should NOT include C
-      expect(
-        permissionIncludes(
-          {
-            targetAddress: AddressOne,
-            selector: "0x01",
-            condition: OR(COMP(1), COMP(2)),
-          },
-          {
-            targetAddress: AddressOne,
-            selector: "0x01",
-            condition: COMP(3),
-          }
-        )
-      ).toBe(false)
-    })
-
-    it("hoisted conditions from MATCHES", () => {
-      // MATCHES(Calldata, OR(A, B), C) gets hoisted to OR(MATCHES(Calldata, A, C), MATCHES(Calldata, B, C))
-      // This should include MATCHES(Calldata, A, C)
-      const complexCondition = MATCHES(
-        ParameterType.Calldata,
-        OR(COMP(1), COMP(2)),
-        COMP(3)
-      )
-
-      const simpleCondition = MATCHES(ParameterType.Calldata, COMP(1), COMP(3))
-
-      expect(
-        permissionIncludes(
-          {
-            targetAddress: AddressOne,
-            selector: "0x01",
-            condition: complexCondition,
-          },
-          {
-            targetAddress: AddressOne,
-            selector: "0x01",
-            condition: simpleCondition,
-          }
-        )
-      ).toBe(true)
-    })
-
-    it("real-world scenario", () => {
-      // Permission for transfer function with amount OR recipient restrictions
-      const broadCondition = OR(
-        MATCHES(ParameterType.Calldata, COMP(1), COMP(100)), // amount <= 100
-        MATCHES(ParameterType.Calldata, COMP(2), COMP(200)) // recipient == specific address
-      )
-
-      const specificCondition = MATCHES(
-        ParameterType.Calldata,
-        COMP(1),
-        COMP(100)
-      )
-
-      expect(
-        permissionIncludes(
-          {
-            targetAddress: AddressOne,
-            selector: "0xa9059cbb",
-            condition: broadCondition,
-          },
-          {
-            targetAddress: AddressOne,
-            selector: "0xa9059cbb",
-            condition: specificCondition,
-          }
-        )
-      ).toBe(true)
-    })
-  })
-
-  describe("Edge cases and error handling", () => {
-    it("handles null conditions gracefully", () => {
-      expect(
-        permissionIncludes(
-          {
-            targetAddress: AddressOne,
-            selector: "0x01",
-            condition: null as any,
-          },
-          { targetAddress: AddressOne, selector: "0x01" }
-        )
-      ).toBe(true)
-    })
-
-    it("handles empty OR conditions", () => {
-      const emptyOr = OR() // No children
-
-      expect(
-        permissionIncludes(
-          {
-            targetAddress: AddressOne,
-            selector: "0x01",
-            condition: emptyOr,
-          },
-          {
-            targetAddress: AddressOne,
-            selector: "0x01",
+            selector: "0x02",
             condition: COMP(1),
           }
         )
       ).toBe(false)
     })
 
-    it("handles circular-like structures", () => {
-      const condition1 = OR(COMP(1), COMP(2))
-      const condition2 = OR(COMP(2), COMP(1)) // Same but different order
+    it("conditions are normalized before comparison", () => {
+      // Test that equivalent but differently structured conditions are considered equal
+      const condition1: Condition = {
+        paramType: ParameterType.Calldata,
+        operator: Operator.Matches,
+        compValue: "0x",
+        children: [
+          COMP(2),
+          COMP(1),
+          {
+            compValue: "0x",
+            paramType: ParameterType.Static,
+            operator: Operator.Pass,
+          },
+        ],
+      }
+
+      const condition2: Condition = {
+        paramType: ParameterType.Calldata,
+        operator: Operator.Matches,
+        children: [COMP(2), COMP(1)],
+      }
 
       expect(
         permissionIncludes(
@@ -430,23 +323,84 @@ suite("permissionIncludes()", () => {
     })
   })
 
-  describe("Integration with wildcards and complex scenarios", () => {
-    it("wildcard with execution flags should include specific function with same flags", () => {
+  describe("Edge cases", () => {
+    it("handles missing/undefined conditions as wildcard", () => {
       expect(
         permissionIncludes(
-          { targetAddress: AddressOne, send: true, delegatecall: true }, // Wildcard with flags
-          { targetAddress: AddressOne, selector: "0x01", send: true } // Specific function
+          { targetAddress: AddressOne, selector: "0x01", condition: undefined },
+          { targetAddress: AddressOne, selector: "0x01" }
         )
-      ).toBe(false)
+      ).toBe(true)
+
+      expect(
+        permissionIncludes(
+          { targetAddress: AddressOne, selector: "0x01" },
+          { targetAddress: AddressOne, selector: "0x01", condition: undefined }
+        )
+      ).toBe(true)
     })
 
-    it("wildcard with fewer privileges cannot include specific function with more privileges", () => {
+    it("handles case sensitivity in addresses", () => {
       expect(
         permissionIncludes(
-          { targetAddress: AddressOne, send: true }, // Wildcard with only send
-          { targetAddress: AddressOne, selector: "0x01", delegatecall: true } // Specific function needs delegatecall
+          { targetAddress: AddressOne.toUpperCase() as any },
+          { targetAddress: AddressOne.toLowerCase() as any }
+        )
+      ).toBe(true)
+    })
+
+    it("validates execution flag combinations", () => {
+      // Complex execution flag scenarios
+      expect(
+        permissionIncludes(
+          { targetAddress: AddressOne, send: true, delegatecall: true },
+          { targetAddress: AddressOne, send: false, delegatecall: false }
+        )
+      ).toBe(true)
+
+      expect(
+        permissionIncludes(
+          { targetAddress: AddressOne, send: false, delegatecall: false },
+          { targetAddress: AddressOne, send: true, delegatecall: true }
         )
       ).toBe(false)
     })
+  })
+
+  describe("Permission type matrix", () => {
+    const matrix = [
+      // [p1_type, p2_type, expected]
+      ["allowed", "allowed", true],
+      ["allowed", "wildcard", true],
+      ["allowed", "conditional", true],
+      ["wildcard", "allowed", false],
+      ["wildcard", "wildcard", true], // same selector
+      ["wildcard", "conditional", true], // same selector
+      ["conditional", "allowed", false],
+      ["conditional", "wildcard", false],
+      ["conditional", "conditional", true], // same condition
+    ]
+
+    matrix.forEach(([p1Type, p2Type, expected]) => {
+      it(`${p1Type} includes ${p2Type}: ${expected}`, () => {
+        const p1 = createPermission(p1Type as any) as PermissionCoerced
+        const p2 = createPermission(p2Type as any) as PermissionCoerced
+
+        expect(permissionIncludes(p1, p2)).toBe(expected)
+      })
+    })
+
+    function createPermission(type: "allowed" | "wildcard" | "conditional") {
+      const base = { targetAddress: AddressOne }
+
+      switch (type) {
+        case "allowed":
+          return base
+        case "wildcard":
+          return { ...base, selector: "0x01" }
+        case "conditional":
+          return { ...base, selector: "0x01", condition: COMP(1) }
+      }
+    }
   })
 })

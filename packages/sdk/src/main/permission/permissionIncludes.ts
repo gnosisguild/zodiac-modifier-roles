@@ -1,10 +1,8 @@
-import assert from "assert"
-import { Condition, Operator } from "zodiac-roles-deployments"
+import { Condition } from "zodiac-roles-deployments"
 import {
   normalizeConditionNext as normalizeCondition,
   conditionId,
 } from "../target/condition"
-import { hoistCondition } from "../target/condition/hoistCondition"
 
 import { PermissionCoerced, FunctionPermissionCoerced } from "./types"
 import {
@@ -46,56 +44,44 @@ export function permissionIncludes(
     return false
   }
 
-  if (isPermissionAllowed(p1) !== isPermissionAllowed(p2)) {
-    return false
-  }
-
-  if (isPermissionScoped(p1) !== isPermissionScoped(p2)) {
-    return false
-  }
-
-  if (isPermissionWildcarded(p1) !== isPermissionWildcarded(p2)) {
-    return false
-  }
-
-  if (isPermissionConditional(p1) !== isPermissionConditional(p2)) {
-    console.log(p1)
-    console.log(p2)
-    return false
-  }
-
-  if (isPermissionScoped(p1) && p1.selector !== (p2 as any).selector) {
-    return false
-  }
-
-  const c1 = (p1 as FunctionPermissionCoerced).condition
-  const c2 = (p2 as FunctionPermissionCoerced).condition
-
-  if (!c1 || !c2) {
+  if (isPermissionAllowed(p1)) {
     return true
   }
 
+  if (isPermissionAllowed(p2)) {
+    return false
+  }
+
+  // assert
+  if (!isPermissionScoped(p1) || !isPermissionScoped(p2)) {
+    throw new Error("Expected Both Scoped")
+  }
+
+  // Check selectors match for scoped permissions
   if (
-    conditionId(normalizeCondition(c1)) === conditionId(normalizeCondition(c2))
+    (p1 as FunctionPermissionCoerced).selector !==
+    (p2 as FunctionPermissionCoerced).selector
   ) {
-    return true
-  }
-
-  if (inOrCondition(c1, c2)) {
-    return true
-  }
-
-  return inOrCondition(hoistCondition(c1), c2)
-}
-
-function inOrCondition(c1: Condition, c2: Condition): boolean {
-  if (c1.operator !== Operator.Or || !Array.isArray(c1.children)) {
     return false
   }
 
-  const id = conditionId(normalizeCondition(c2))
+  if (isPermissionWildcarded(p1)) {
+    return true
+  }
 
-  return c1.children.some(
-    (child) => conditionId(normalizeCondition(child)) === id
+  if (isPermissionWildcarded(p2)) {
+    return false
+  }
+
+  // assert
+  if (!isPermissionConditional(p1) || !isPermissionConditional(p2)) {
+    throw new Error("Expected Both Conditional")
+  }
+
+  const c1 = (p1 as FunctionPermissionCoerced).condition as Condition
+  const c2 = (p2 as FunctionPermissionCoerced).condition as Condition
+
+  return (
+    conditionId(normalizeCondition(c1)) === conditionId(normalizeCondition(c2))
   )
 }
