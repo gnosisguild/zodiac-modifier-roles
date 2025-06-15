@@ -8,7 +8,7 @@ import {
   Target,
 } from "zodiac-roles-deployments"
 
-import { normalizeCondition } from "../condition/normalizeCondition"
+import { normalizeConditionDeprecated as normalizeCondition } from "../condition/normalizeCondition"
 import { diffTarget, diffTargets } from "./target"
 
 const roleKey = ZeroHash
@@ -383,7 +383,6 @@ suite("diffTarget", () => {
 
     const { minus, plus } = diffTarget({
       roleKey,
-      targetAddress,
       prev,
       next,
     })
