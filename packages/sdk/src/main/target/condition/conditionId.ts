@@ -20,20 +20,8 @@ const ZERO_SALT =
 
 export function conditionHash(condition: Condition) {
   return (
-    "0x" +
-    createHash("sha256")
-      .update(JSON.stringify(stripIds(condition)))
-      .digest("hex")
+    "0x" + createHash("sha256").update(JSON.stringify(condition)).digest("hex")
   )
-}
-
-export const stripIds = (condition: Condition): Condition => {
-  const { $$id, children, ...rest } = condition as any
-  if (!children) return rest
-  return {
-    ...rest,
-    children: children.map(stripIds),
-  }
 }
 
 export const conditionId = (condition: Condition) => {

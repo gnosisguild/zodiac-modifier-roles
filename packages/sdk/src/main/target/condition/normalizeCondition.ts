@@ -1,17 +1,6 @@
 import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
-import { conditionId as calculateConditionId } from "./conditionId"
-
-export type NormalizedCondition = Omit<Condition, "children"> & {
-  /**
-   * A unique ID that is derived from the normalized condition content.
-   * As such it's useful for comparing conditions for equality.
-   *
-   * **Important: Whenever a condition is updated, its `$$id` field must be deleted.**
-   **/
-  $$id: string
-  children?: NormalizedCondition[]
-}
+import { conditionHash, conditionId } from "./conditionId"
 
 export const normalizeConditionDeprecated = normalizeCondition
 
@@ -19,14 +8,8 @@ export const normalizeConditionDeprecated = normalizeCondition
  * Transforms the structure of a condition without changing it semantics. Aims to minimize the tree size and to arrive at a normal form, so that semantically equivalent conditions will have an equal representation.
  * Such a normal form is useful for efficiently comparing conditions for equality. It is also promotes efficient, globally deduplicated storage of conditions since the Roles contract stores conditions in bytecode at addresses derived by hashing the condition data.
  **/
-function normalizeCondition(
-  condition: Condition | NormalizedCondition
-): NormalizedCondition {
-  if (isNormalized(condition)) return condition
-
-  // Processing starts at the leaves and works up, meaning that the individual normalization functions can rely on the current node's children being normalized.
-  let result: NormalizedCondition = {
-    $$id: "", // we'll set if after passing all normalization steps
+function normalizeCondition(condition: Condition): Condition {
+  let result: Condition = {
     ...condition,
     children: condition.children?.map(normalizeCondition),
   }
@@ -41,32 +24,11 @@ function normalizeCondition(
   result = pushDownLogicalConditions(result)
   result = normalizeChildrenOrder(result)
 
-  addId(result)
   return result
 }
 
-export const isNormalized = (
-  condition: Condition
-): condition is NormalizedCondition => "$$id" in condition && !!condition.$$id
-
-const addId = (condition: NormalizedCondition) => {
-  condition.$$id = calculateConditionId(condition)
-  return condition
-}
-
-export const stripIds = (condition: NormalizedCondition): Condition => {
-  const { $$id, children, ...rest } = condition
-  if (!children) return rest
-  return {
-    ...rest,
-    children: children.map(stripIds),
-  }
-}
-
 /** Removes trailing Pass nodes from Matches on Calldata, AbiEncoded, and dynamic tuples (as long as the tuple stays marked dynamic) */
-const pruneTrailingPass = (
-  condition: NormalizedCondition
-): NormalizedCondition => {
+const pruneTrailingPass = (condition: Condition): Condition => {
   if (!condition.children) return condition
   if (condition.operator !== Operator.Matches) return condition
 
@@ -81,7 +43,7 @@ const pruneTrailingPass = (
 
   if (!canPrune) return condition
 
-  const isGlobalAllowance = (child: NormalizedCondition) =>
+  const isGlobalAllowance = (child: Condition) =>
     child.operator === Operator.EtherWithinAllowance ||
     child.operator === Operator.CallWithinAllowance
 
@@ -99,7 +61,7 @@ const pruneTrailingPass = (
   if (isDynamicTuple) {
     keepChildrenUntil = prunableChildren.findIndex(isDynamicParamType)
   }
-  let prunedChildren: NormalizedCondition[] = prunableChildren.slice(
+  let prunedChildren: Condition[] = prunableChildren.slice(
     0,
     keepChildrenUntil + 1
   )
@@ -115,14 +77,12 @@ const pruneTrailingPass = (
   return condition
 }
 
-const ensureBranchTypeTreeCompatibility = (
-  condition: NormalizedCondition
-): NormalizedCondition => {
+const ensureBranchTypeTreeCompatibility = (condition: Condition): Condition => {
   const complexBranches = collectComplexBranches(condition)
 
   // find the longest branch
   let maxLength = 0
-  let longestBranch: NormalizedCondition | null = null
+  let longestBranch: Condition | null = null
   for (const branch of complexBranches) {
     if (branch.children?.length && branch.children.length > maxLength) {
       maxLength = branch.children.length
@@ -135,9 +95,10 @@ const ensureBranchTypeTreeCompatibility = (
   for (const branch of complexBranches) {
     if (!branch.children) continue
     for (let i = branch.children?.length; i < maxLength; i++) {
-      branch.children.push(
-        normalizeCondition(copyStructure(longestBranch.children![i]))
-      )
+      branch.children = [
+        ...branch.children,
+        normalizeCondition(copyStructure(longestBranch.children![i])),
+      ]
     }
   }
   return condition
@@ -146,9 +107,7 @@ const ensureBranchTypeTreeCompatibility = (
 /**
  * Traverses through logical and array nodes the condition tree and collects all complex branches: tuple, abiEncoded, calldata nodes
  */
-const collectComplexBranches = (
-  condition: NormalizedCondition
-): NormalizedCondition[] => {
+const collectComplexBranches = (condition: Condition): Condition[] => {
   if (
     condition.operator === Operator.And ||
     condition.operator === Operator.Or ||
@@ -173,9 +132,7 @@ const collectComplexBranches = (
 }
 
 /** flatten nested AND/OR conditions */
-const flattenNestedLogicalConditions = (
-  condition: NormalizedCondition
-): NormalizedCondition => {
+const flattenNestedLogicalConditions = (condition: Condition): Condition => {
   if (
     condition.operator === Operator.And ||
     condition.operator === Operator.Or
@@ -223,9 +180,7 @@ export const copyStructure = (condition: Condition): Condition => {
 }
 
 /** remove duplicate child branches in AND/OR/NOR */
-const dedupeBranches = (
-  condition: NormalizedCondition
-): NormalizedCondition => {
+const dedupeBranches = (condition: Condition): Condition => {
   if (
     condition.operator === Operator.And ||
     condition.operator === Operator.Or ||
@@ -233,8 +188,9 @@ const dedupeBranches = (
   ) {
     const childIds = new Set()
     const uniqueChildren = condition.children?.filter((child) => {
-      const isDuplicate = childIds.has(child.$$id)
-      childIds.add(child.$$id)
+      const id = conditionHash(child)
+      const isDuplicate = childIds.has(id)
+      childIds.add(id)
       return !isDuplicate
     })
 
@@ -245,9 +201,7 @@ const dedupeBranches = (
 }
 
 /** remove AND/OR wrapping if they have only a single child */
-const unwrapSingleBranches = (
-  condition: NormalizedCondition
-): NormalizedCondition => {
+const unwrapSingleBranches = (condition: Condition): Condition => {
   if (
     condition.operator === Operator.And ||
     condition.operator === Operator.Or
@@ -259,38 +213,50 @@ const unwrapSingleBranches = (
 }
 
 /** enforce a canonical order of AND/OR/NOR branches */
-const normalizeChildrenOrder = (
-  condition: NormalizedCondition
-): NormalizedCondition => {
+const normalizeChildrenOrder = (condition: Condition): Condition => {
   if (
     condition.operator === Operator.And ||
     condition.operator === Operator.Or ||
     condition.operator === Operator.Nor
   ) {
     if (!condition.children) return condition
-    condition.children.sort((a, b) =>
-      BigInt(a.$$id) < BigInt(b.$$id) ? -1 : 1
-    )
+
+    /*
+     * we got to keep the 10x more expensive conditionId (vs conditionHash),
+     * since we want to keep backwards compatibility in sorting
+     */
+    const sorted = condition.children
+      .map((c) => ({
+        condition: c,
+        id: conditionId(c),
+      }))
+      .sort((a, b) => (BigInt(a.id) < BigInt(b.id) ? -1 : 1))
+      .map(({ condition }) => condition)
 
     // in case of mixed-type children (dynamic & calldata/abiEncoded), those with children must come first
-    const moveToFront = condition.children.filter(
+    const front = sorted.filter(
       (child) =>
         child.paramType === ParameterType.Calldata ||
         child.paramType === ParameterType.AbiEncoded
     )
-    condition.children = [
-      ...moveToFront,
-      ...condition.children.filter((c) => !moveToFront.includes(c)),
-    ]
+    const back = sorted.filter(
+      (child) =>
+        !(
+          child.paramType === ParameterType.Calldata ||
+          child.paramType === ParameterType.AbiEncoded
+        )
+    )
+    return {
+      ...condition,
+      children: [...front, ...back],
+    }
   }
 
   return condition
 }
 
 /** push AND and OR conditions as far down the tree as possible without changing semantics */
-const pushDownLogicalConditions = (
-  condition: NormalizedCondition
-): NormalizedCondition => {
+const pushDownLogicalConditions = (condition: Condition): Condition => {
   if (
     condition.operator === Operator.And ||
     condition.operator === Operator.Or
@@ -306,7 +272,7 @@ const pushDownLogicalConditions = (
       return condition
     }
 
-    let updatedCondition: NormalizedCondition | null = null
+    let updatedCondition: Condition | null = null
     if (first.operator === Operator.Matches) {
       let hingeIndex: number | null = null
       try {
@@ -339,7 +305,7 @@ const pushDownLogicalConditions = (
 
       updatedCondition = {
         ...first,
-        children: children as NormalizedCondition[],
+        children: children as Condition[],
       }
     }
 
@@ -365,7 +331,6 @@ const pushDownLogicalConditions = (
             ? []
             : [
                 {
-                  $$id: "",
                   paramType: ParameterType.None,
                   operator: Operator.Or,
                   children: orBranches,
@@ -378,7 +343,6 @@ const pushDownLogicalConditions = (
     // If we push down, we'll need to re-normalize the children
     // This will recursively further push down logical conditions as far as possible
     if (updatedCondition) {
-      updatedCondition.$$id = "" // clear id to force re-normalization
       return normalizeCondition(updatedCondition)
     }
   }
@@ -391,7 +355,7 @@ const pushDownLogicalConditions = (
  * @returns the index of the hinge node. If there are differences in more than a single index, returns `null`.
  * @throws If the conditions would not pass integrity checks.
  **/
-const findMatchesHingeIndex = (conditions: readonly NormalizedCondition[]) => {
+const findMatchesHingeIndex = (conditions: readonly Condition[]) => {
   // use first branch as reference and check if the others are equivalent beyond a single nested hinge node
   let hingeNodeIndex: number | null = null
 
@@ -432,10 +396,10 @@ const findMatchesHingeIndex = (conditions: readonly NormalizedCondition[]) => {
  * Given a set of AND conditions, check that their children are equal beyond a single hinge node in each branch. A hinge branch index of `-1` indicate a missing branch that is present in the other AND conditions.
  * @returns the indices of the hinge branches for the respective AND conditions. If there are differences in more than a single branch, returns `null`.
  **/
-const findAndHingeIndices = (conditions: readonly NormalizedCondition[]) => {
+const findAndHingeIndices = (conditions: readonly Condition[]) => {
   const allChildrenIds = conditions.map((condition) => {
     if (!condition.children) throw new Error("empty children")
-    return condition.children.map((child) => child.$$id)
+    return condition.children.map((child) => conditionHash(child))
   })
   const allChildrenIdsSets = allChildrenIds.map((ids) => new Set(ids))
 
@@ -465,9 +429,7 @@ const intersection = <T>(...sets: Set<T>[]) => {
 const difference = <T>(a: Set<T>, b: Set<T>) =>
   Array.from(a).filter((element) => !b.has(element))
 
-const deleteUndefinedFields = (
-  condition: NormalizedCondition
-): NormalizedCondition => {
+const deleteUndefinedFields = (condition: Condition): Condition => {
   if ("children" in condition && !condition.children) delete condition.children
   if ("compValue" in condition && !condition.compValue)
     delete condition.compValue
@@ -491,7 +453,5 @@ const isDynamicParamType = (condition: Condition): boolean => {
   }
 }
 
-const conditionsEqual = (
-  a: NormalizedCondition | undefined,
-  b: NormalizedCondition | undefined
-) => (!a || a.$$id) === (!b || b.$$id)
+const conditionsEqual = (a: Condition | undefined, b: Condition | undefined) =>
+  (!a || conditionHash(a)) === (!b || conditionHash(b))

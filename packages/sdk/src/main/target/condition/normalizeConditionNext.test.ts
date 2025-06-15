@@ -1,12 +1,8 @@
 import { describe, it, expect } from "vitest"
 import { Operator, ParameterType, Condition } from "zodiac-roles-deployments"
-import {
-  normalizeConditionNext,
-  copyStructure,
-  NormalizedCondition,
-} from "./normalizeConditionNext"
+import { normalizeConditionNext, copyStructure } from "./normalizeConditionNext"
 import { abiEncode } from "../../abiEncode"
-import { conditionHash, conditionId, stripIds } from "./conditionId"
+import { conditionHash, conditionId } from "./conditionId"
 
 // Helper to create a static comparison condition
 const COMP = (id: number | `0x${string}`): Condition => ({
@@ -85,13 +81,6 @@ const WITHIN_ALLOWANCE = (): Condition => ({
   compValue: "0x",
 })
 
-// Helper to compare conditions using conditionId for semantic equality
-const expectSameCondition = (actual: Condition, expected: Condition) => {
-  expect(conditionId(stripIds(actual as NormalizedCondition))).toBe(
-    conditionId(expected)
-  )
-}
-
 describe("normalizeConditionNext", () => {
   describe("Core normalization steps", () => {
     describe("pruneTrailingPass", () => {
@@ -100,7 +89,7 @@ describe("normalizeConditionNext", () => {
 
         const result = normalizeConditionNext(input)
 
-        expect(stripIds(result)).toEqual({
+        expect(result).toEqual({
           paramType: ParameterType.Calldata,
           operator: Operator.Matches,
           children: [COMP(1)],
@@ -112,7 +101,7 @@ describe("normalizeConditionNext", () => {
 
         const result = normalizeConditionNext(input)
 
-        expect(stripIds(result)).toEqual({
+        expect(result).toEqual({
           paramType: ParameterType.AbiEncoded,
           operator: Operator.Matches,
           children: [COMP(1)],
@@ -129,7 +118,7 @@ describe("normalizeConditionNext", () => {
 
         const result = normalizeConditionNext(input)
 
-        expect(stripIds(result)).toEqual({
+        expect(result).toEqual({
           paramType: ParameterType.Tuple,
           operator: Operator.Matches,
           children: [DYNAMIC(Operator.EqualToAvatar)],
@@ -141,7 +130,7 @@ describe("normalizeConditionNext", () => {
 
         const result = normalizeConditionNext(input)
 
-        expect(stripIds(result)).toEqual({
+        expect(result).toEqual({
           paramType: ParameterType.Tuple,
           operator: Operator.Matches,
           children: [COMP(1), PASS(), PASS()],
@@ -158,7 +147,7 @@ describe("normalizeConditionNext", () => {
 
         const result = normalizeConditionNext(input)
 
-        expect(stripIds(result)).toEqual({
+        expect(result).toEqual({
           paramType: ParameterType.Calldata,
           operator: Operator.Matches,
           children: [PASS(), ETHER_ALLOWANCE()],
@@ -170,7 +159,7 @@ describe("normalizeConditionNext", () => {
 
         const result = normalizeConditionNext(input)
 
-        expect(stripIds(result)).toEqual({
+        expect(result).toEqual({
           paramType: ParameterType.Calldata,
           operator: Operator.Matches,
           children: [PASS()],
@@ -184,10 +173,10 @@ describe("normalizeConditionNext", () => {
 
         const result = normalizeConditionNext(input)
 
-        expect(stripIds(result)).toEqual({
+        expect(result).toEqual({
           paramType: ParameterType.None,
           operator: Operator.And,
-          children: [COMP(1), COMP(4), COMP(3), COMP(2)],
+          children: [COMP(1), COMP(2), COMP(3), COMP(4)],
         })
       })
 
@@ -196,10 +185,10 @@ describe("normalizeConditionNext", () => {
 
         const result = normalizeConditionNext(input)
 
-        expect(stripIds(result)).toEqual({
+        expect(result).toEqual({
           paramType: ParameterType.None,
           operator: Operator.Or,
-          children: [COMP(1), COMP(4), COMP(3), COMP(2)],
+          children: [COMP(1), COMP(2), COMP(3), COMP(4)],
         })
       })
 
@@ -208,7 +197,7 @@ describe("normalizeConditionNext", () => {
 
         const result = normalizeConditionNext(input)
 
-        expect(stripIds(result)).toEqual({
+        expect(result).toEqual({
           paramType: ParameterType.None,
           operator: Operator.And,
           children: [
@@ -217,7 +206,7 @@ describe("normalizeConditionNext", () => {
             {
               paramType: ParameterType.None,
               operator: Operator.Or,
-              children: [COMP(3), COMP(2)],
+              children: [COMP(2), COMP(3)],
             },
           ],
         })
@@ -228,7 +217,7 @@ describe("normalizeConditionNext", () => {
 
         const result = normalizeConditionNext(input)
 
-        expect(stripIds(result)).toEqual({
+        expect(result).toEqual({
           paramType: ParameterType.None,
           operator: Operator.Nor,
           children: [
@@ -237,7 +226,7 @@ describe("normalizeConditionNext", () => {
             {
               paramType: ParameterType.None,
               operator: Operator.Nor,
-              children: [COMP(3), COMP(2)],
+              children: [COMP(2), COMP(3)],
             },
           ],
         })
@@ -250,10 +239,10 @@ describe("normalizeConditionNext", () => {
 
         const result = normalizeConditionNext(input)
 
-        expect(stripIds(result)).toEqual({
+        expect(result).toEqual({
           paramType: ParameterType.None,
           operator: Operator.And,
-          children: [COMP(1), COMP(3), COMP(2)],
+          children: [COMP(1), COMP(2), COMP(3)],
         })
       })
 
@@ -262,10 +251,10 @@ describe("normalizeConditionNext", () => {
 
         const result = normalizeConditionNext(input)
 
-        expect(stripIds(result)).toEqual({
+        expect(result).toEqual({
           paramType: ParameterType.None,
           operator: Operator.Or,
-          children: [COMP(1), COMP(3), COMP(2)],
+          children: [COMP(1), COMP(2), COMP(3)],
         })
       })
 
@@ -274,10 +263,10 @@ describe("normalizeConditionNext", () => {
 
         const result = normalizeConditionNext(input)
 
-        expect(stripIds(result)).toEqual({
+        expect(result).toEqual({
           paramType: ParameterType.None,
           operator: Operator.Nor,
-          children: [COMP(1), COMP(3), COMP(2)],
+          children: [COMP(1), COMP(2), COMP(3)],
         })
       })
 
@@ -288,10 +277,10 @@ describe("normalizeConditionNext", () => {
 
         const result = normalizeConditionNext(input)
 
-        const normalized = stripIds(result)
+        const normalized = result
         expect(normalized.children).toHaveLength(2)
 
-        expect(stripIds(result)).toEqual(OR(COMP(3), branch1))
+        expect(result).toEqual(OR(COMP(3), branch1))
       })
     })
 
@@ -301,7 +290,7 @@ describe("normalizeConditionNext", () => {
 
         const result = normalizeConditionNext(input)
 
-        expect(stripIds(result)).toEqual(COMP(1))
+        expect(result).toEqual(COMP(1))
       })
 
       it("unwraps OR with single child", () => {
@@ -309,7 +298,7 @@ describe("normalizeConditionNext", () => {
 
         const result = normalizeConditionNext(input)
 
-        expect(stripIds(result)).toEqual(COMP(1))
+        expect(result).toEqual(COMP(1))
       })
 
       it("does NOT unwrap NOR with single child", () => {
@@ -317,7 +306,7 @@ describe("normalizeConditionNext", () => {
 
         const result = normalizeConditionNext(input)
 
-        expect(stripIds(result)).toEqual({
+        expect(result).toEqual({
           paramType: ParameterType.None,
           operator: Operator.Nor,
           children: [COMP(1)],
@@ -329,7 +318,7 @@ describe("normalizeConditionNext", () => {
 
         const result = normalizeConditionNext(input)
 
-        expect(stripIds(result)).toEqual(COMP(1))
+        expect(result).toEqual(COMP(1))
       })
     })
 
@@ -339,7 +328,7 @@ describe("normalizeConditionNext", () => {
 
         const result = normalizeConditionNext(input)
 
-        expect(stripIds(result)).toEqual(AND(COMP(1), COMP(3), COMP(2)))
+        expect(result).toEqual(AND(COMP(1), COMP(2), COMP(3)))
       })
 
       it("moves Calldata/AbiEncoded children to front regardless of ID order", () => {
@@ -350,9 +339,7 @@ describe("normalizeConditionNext", () => {
         const input = OR(staticChild, calldataChild, abiEncodedChild)
 
         const result = normalizeConditionNext(input)
-        expect(stripIds(result)).toEqual(
-          OR(abiEncodedChild, calldataChild, staticChild)
-        )
+        expect(result).toEqual(OR(calldataChild, abiEncodedChild, staticChild))
       })
     })
 
@@ -366,7 +353,7 @@ describe("normalizeConditionNext", () => {
 
         const result = normalizeConditionNext(condition)
 
-        expect(stripIds(result)).not.toHaveProperty("children")
+        expect(result).not.toHaveProperty("children")
       })
 
       it("removes undefined compValue field", () => {
@@ -378,7 +365,7 @@ describe("normalizeConditionNext", () => {
 
         const result = normalizeConditionNext(condition)
 
-        expect(stripIds(result)).not.toHaveProperty("compValue")
+        expect(result).not.toHaveProperty("compValue")
       })
 
       it("preserves defined fields", () => {
@@ -391,7 +378,7 @@ describe("normalizeConditionNext", () => {
 
         const result = normalizeConditionNext(condition)
 
-        const normalized = stripIds(result)
+        const normalized = result
         expect(normalized).toHaveProperty("compValue", "0x01")
         expect(normalized).toHaveProperty("children")
       })
@@ -409,11 +396,11 @@ describe("normalizeConditionNext", () => {
 
       const result = normalizeConditionNext(input)
 
-      expect(stripIds(result)).toEqual(
+      expect(result).toEqual(
         OR(
           MATCHES(ParameterType.Calldata, COMP(4)),
           COMP(1),
-          AND(COMP(3), COMP(2))
+          AND(COMP(2), COMP(3))
         )
       )
     })
@@ -426,7 +413,7 @@ describe("normalizeConditionNext", () => {
 
       const result = normalizeConditionNext(input)
 
-      expect(stripIds(result)).toEqual(
+      expect(result).toEqual(
         AND(MATCHES(ParameterType.AbiEncoded, COMP(3)), OR(COMP(1), COMP(2)))
       )
     })
@@ -441,7 +428,7 @@ describe("normalizeConditionNext", () => {
       const result = normalizeConditionNext(input)
 
       // Should pad the first branch to match the second
-      expect(stripIds(result)).toEqual(
+      expect(result).toEqual(
         OR(
           MATCHES(ParameterType.Tuple, COMP(1), PASS(0), PASS(0)),
           MATCHES(ParameterType.Tuple, COMP(2), COMP(3), COMP(4))
@@ -466,7 +453,7 @@ describe("normalizeConditionNext", () => {
 
       const result = normalizeConditionNext(input)
 
-      expect(stripIds(result)).toEqual(COMP(1))
+      expect(result).toEqual(COMP(1))
     })
 
     it("handles conditions with allowance operators", () => {
@@ -479,7 +466,7 @@ describe("normalizeConditionNext", () => {
 
       const result = normalizeConditionNext(input)
 
-      expect(stripIds(result)).toEqual({
+      expect(result).toEqual({
         paramType: ParameterType.Calldata,
         operator: Operator.Matches,
         children: [PASS(), ETHER_ALLOWANCE(), CALL_ALLOWANCE()],
@@ -488,41 +475,6 @@ describe("normalizeConditionNext", () => {
   })
 
   describe("ID management", () => {
-    it("assigns $$id to normalized conditions", () => {
-      const input = COMP(1)
-
-      const result = normalizeConditionNext(input)
-
-      expect(result.$$id).toBeDefined()
-      expect(typeof result.$$id).toBe("string")
-      expect(result.$$id.length).toBeGreaterThan(0)
-    })
-
-    it("assigns $$id to all child conditions recursively", () => {
-      const input = AND(COMP(1), OR(COMP(2), COMP(3)))
-
-      const result = normalizeConditionNext(input)
-
-      expect(result.$$id).toBeDefined()
-      expect(result.children![0].$$id).toBeDefined()
-      expect(result.children![1].$$id).toBeDefined()
-      expect(
-        (result.children![1] as NormalizedCondition).children![0].$$id
-      ).toBeDefined()
-    })
-
-    it("stripIds removes all $$id fields", () => {
-      const input = AND(COMP(1), OR(COMP(2), COMP(3)))
-
-      const result = normalizeConditionNext(input)
-      const stripped = stripIds(result)
-
-      expect(stripped).not.toHaveProperty("$$id")
-      expect(stripped.children![0]).not.toHaveProperty("$$id")
-      expect(stripped.children![1]).not.toHaveProperty("$$id")
-      expect(stripped.children![1].children![0]).not.toHaveProperty("$$id")
-    })
-
     it("produces stable IDs for semantically identical conditions", () => {
       const condition1 = AND(COMP(1), COMP(2))
       const condition2 = AND(COMP(2), COMP(1)) // Different order
@@ -530,7 +482,7 @@ describe("normalizeConditionNext", () => {
       const result1 = normalizeConditionNext(condition1)
       const result2 = normalizeConditionNext(condition2)
 
-      expect(result1.$$id).toBe(result2.$$id)
+      expect(conditionId(result1)).toBe(conditionId(result2))
       expect(conditionHash(result1)).toBe(conditionHash(result2))
     })
   })
@@ -546,8 +498,7 @@ describe("normalizeConditionNext", () => {
       const result1 = normalizeConditionNext(input)
       const result2 = normalizeConditionNext(result1)
 
-      expect(result1.$$id).toBe(result2.$$id)
-      expect(stripIds(result1)).toEqual(stripIds(result2))
+      expect(conditionHash(result1)).toEqual(conditionHash(result2))
     })
 
     it("produces consistent results across multiple calls", () => {
@@ -560,9 +511,9 @@ describe("normalizeConditionNext", () => {
         normalizeConditionNext(input)
       )
 
-      const firstId = results[0].$$id
+      const firstId = conditionId(results[0])
       results.forEach((result) => {
-        expect(result.$$id).toBe(firstId)
+        expect(conditionId(result)).toBe(firstId)
       })
     })
 
@@ -572,10 +523,9 @@ describe("normalizeConditionNext", () => {
       const largeCondition = OR(...largeBranches)
 
       const start = performance.now()
-      const result = normalizeConditionNext(largeCondition)
+      normalizeConditionNext(largeCondition)
       const end = performance.now()
 
-      expect(result.$$id).toBeDefined()
       expect(end - start).toBeLessThan(50) // Should complete in under 50 ms
     })
   })

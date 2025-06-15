@@ -1,19 +1,11 @@
 import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
-import { conditionHash } from "./conditionId"
-
-export type NormalizedCondition = Omit<Condition, "children"> & {
-  $$id: string
-  children?: NormalizedCondition[]
-}
+import { conditionHash, conditionId } from "./conditionId"
 
 export const normalizeConditionNext = normalizeCondition
 
-function normalizeCondition(
-  condition: Condition | NormalizedCondition
-): NormalizedCondition {
-  let result: NormalizedCondition = {
-    $$id: "",
+function normalizeCondition(condition: Condition): Condition {
+  let result: Condition = {
     ...condition,
     children: condition.children?.map(normalizeCondition),
   }
@@ -21,20 +13,15 @@ function normalizeCondition(
   result = pruneTrailingPass(result)
   result = flattenNestedLogical(result)
   result = dedupeBranches(result)
-  result = unwrapSingleBranch(result)
+  result = unwrapBranches(result)
   result = deleteUndefinedFields(result)
   result = sortChildren(result)
 
-  return {
-    ...result,
-    $$id: conditionHash(result),
-  }
+  return result
 }
 
 /** Removes trailing Pass nodes from Matches on Calldata, AbiEncoded, and dynamic tuples (as long as the tuple stays marked dynamic) */
-const pruneTrailingPass = (
-  condition: NormalizedCondition
-): NormalizedCondition => {
+const pruneTrailingPass = (condition: Condition): Condition => {
   if (!condition.children) return condition
   if (condition.operator !== Operator.Matches) return condition
 
@@ -49,7 +36,7 @@ const pruneTrailingPass = (
 
   if (!canPrune) return condition
 
-  const isGlobalAllowance = (child: NormalizedCondition) =>
+  const isGlobalAllowance = (child: Condition) =>
     child.operator === Operator.EtherWithinAllowance ||
     child.operator === Operator.CallWithinAllowance
 
@@ -67,7 +54,7 @@ const pruneTrailingPass = (
   if (isDynamicTuple) {
     keepChildrenUntil = prunableChildren.findIndex(isDynamicParamType)
   }
-  let prunedChildren: NormalizedCondition[] = prunableChildren.slice(
+  let prunedChildren: Condition[] = prunableChildren.slice(
     0,
     keepChildrenUntil + 1
   )
@@ -84,9 +71,7 @@ const pruneTrailingPass = (
 }
 
 /** flatten nested AND/OR conditions */
-const flattenNestedLogical = (
-  condition: NormalizedCondition
-): NormalizedCondition => {
+const flattenNestedLogical = (condition: Condition): Condition => {
   if (
     condition.operator === Operator.And ||
     condition.operator === Operator.Or
@@ -134,9 +119,7 @@ export const copyStructure = (condition: Condition): Condition => {
 }
 
 /** remove duplicate child branches in AND/OR/NOR */
-const dedupeBranches = (
-  condition: NormalizedCondition
-): NormalizedCondition => {
+const dedupeBranches = (condition: Condition): Condition => {
   if (
     condition.operator === Operator.And ||
     condition.operator === Operator.Or ||
@@ -144,8 +127,9 @@ const dedupeBranches = (
   ) {
     const childIds = new Set()
     const uniqueChildren = condition.children?.filter((child) => {
-      const isDuplicate = childIds.has(child.$$id)
-      childIds.add(child.$$id)
+      const id = conditionHash(child)
+      const isDuplicate = childIds.has(id)
+      childIds.add(id)
       return !isDuplicate
     })
 
@@ -156,9 +140,7 @@ const dedupeBranches = (
 }
 
 /** remove AND/OR wrapping if they have only a single child */
-const unwrapSingleBranch = (
-  condition: NormalizedCondition
-): NormalizedCondition => {
+const unwrapBranches = (condition: Condition): Condition => {
   if (
     condition.operator === Operator.And ||
     condition.operator === Operator.Or
@@ -170,35 +152,49 @@ const unwrapSingleBranch = (
 }
 
 /** enforce a canonical order of AND/OR/NOR branches */
-const sortChildren = (condition: NormalizedCondition): NormalizedCondition => {
+const sortChildren = (condition: Condition): Condition => {
   if (
     condition.operator === Operator.And ||
     condition.operator === Operator.Or ||
     condition.operator === Operator.Nor
   ) {
     if (!condition.children) return condition
-    condition.children.sort((a, b) =>
-      BigInt(a.$$id) < BigInt(b.$$id) ? -1 : 1
-    )
+
+    /*
+     * we got to keep the 10x more expensive conditionId (vs conditionHash),
+     * since we want to keep backwards compatibility in sorting
+     */
+    const sorted = condition.children
+      .map((c) => ({
+        condition: c,
+        id: conditionId(c),
+      }))
+      .sort((a, b) => (BigInt(a.id) < BigInt(b.id) ? -1 : 1))
+      .map(({ condition }) => condition)
 
     // in case of mixed-type children (dynamic & calldata/abiEncoded), those with children must come first
-    const moveToFront = condition.children.filter(
+    const front = sorted.filter(
       (child) =>
         child.paramType === ParameterType.Calldata ||
         child.paramType === ParameterType.AbiEncoded
     )
-    condition.children = [
-      ...moveToFront,
-      ...condition.children.filter((c) => !moveToFront.includes(c)),
-    ]
+    const back = sorted.filter(
+      (child) =>
+        !(
+          child.paramType === ParameterType.Calldata ||
+          child.paramType === ParameterType.AbiEncoded
+        )
+    )
+    return {
+      ...condition,
+      children: [...front, ...back],
+    }
   }
 
   return condition
 }
 
-const deleteUndefinedFields = (
-  condition: NormalizedCondition
-): NormalizedCondition => {
+const deleteUndefinedFields = (condition: Condition): Condition => {
   if ("children" in condition && !condition.children) delete condition.children
   if ("compValue" in condition && !condition.compValue)
     delete condition.compValue

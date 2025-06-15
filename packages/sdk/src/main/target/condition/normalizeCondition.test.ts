@@ -1,10 +1,7 @@
 import { expect, it, suite } from "vitest"
 import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
-import {
-  normalizeConditionDeprecated as normalizeCondition,
-  stripIds,
-} from "./normalizeCondition"
+import { normalizeConditionDeprecated as normalizeCondition } from "./normalizeCondition"
 
 import { FunctionPermissionCoerced, mergePermissions } from "../../permission"
 import { abiEncode } from "../../abiEncode"
@@ -22,28 +19,26 @@ const DUMMY_COMP = (id: number) => ({
 suite("normalizeConditionDeprecated()", () => {
   it("flattens nested AND conditions", () => {
     expect(
-      stripIds(
-        normalizeCondition({
-          paramType: ParameterType.None,
-          operator: Operator.And,
+      normalizeCondition({
+        paramType: ParameterType.None,
+        operator: Operator.And,
 
-          children: [
-            {
-              paramType: ParameterType.None,
-              operator: Operator.And,
-              children: [
-                DUMMY_COMP(0),
-                {
-                  paramType: ParameterType.None,
-                  operator: Operator.And,
-                  children: [DUMMY_COMP(1), DUMMY_COMP(2)],
-                },
-              ],
-            },
-            DUMMY_COMP(3),
-          ],
-        })
-      )
+        children: [
+          {
+            paramType: ParameterType.None,
+            operator: Operator.And,
+            children: [
+              DUMMY_COMP(0),
+              {
+                paramType: ParameterType.None,
+                operator: Operator.And,
+                children: [DUMMY_COMP(1), DUMMY_COMP(2)],
+              },
+            ],
+          },
+          DUMMY_COMP(3),
+        ],
+      })
     ).to.deep.equal({
       paramType: ParameterType.None,
       operator: Operator.And,
@@ -53,20 +48,18 @@ suite("normalizeConditionDeprecated()", () => {
 
   it("does not flatten ORs in ANDs", () => {
     expect(
-      stripIds(
-        normalizeCondition({
-          paramType: ParameterType.None,
-          operator: Operator.And,
-          children: [
-            {
-              paramType: ParameterType.None,
-              operator: Operator.Or,
-              children: [DUMMY_COMP(0), DUMMY_COMP(1)],
-            },
-            DUMMY_COMP(3),
-          ],
-        })
-      )
+      normalizeCondition({
+        paramType: ParameterType.None,
+        operator: Operator.And,
+        children: [
+          {
+            paramType: ParameterType.None,
+            operator: Operator.Or,
+            children: [DUMMY_COMP(0), DUMMY_COMP(1)],
+          },
+          DUMMY_COMP(3),
+        ],
+      })
     ).to.deep.equal({
       paramType: ParameterType.None,
       operator: Operator.And,
@@ -83,13 +76,11 @@ suite("normalizeConditionDeprecated()", () => {
 
   it("prunes equal branches in ANDs", () => {
     expect(
-      stripIds(
-        normalizeCondition({
-          paramType: ParameterType.None,
-          operator: Operator.And,
-          children: [DUMMY_COMP(0), DUMMY_COMP(0), DUMMY_COMP(1)],
-        })
-      )
+      normalizeCondition({
+        paramType: ParameterType.None,
+        operator: Operator.And,
+        children: [DUMMY_COMP(0), DUMMY_COMP(0), DUMMY_COMP(1)],
+      })
     ).to.deep.equal({
       paramType: ParameterType.None,
       operator: Operator.And,
@@ -99,21 +90,19 @@ suite("normalizeConditionDeprecated()", () => {
 
   it("prunes nested equal branches in ANDs", () => {
     expect(
-      stripIds(
-        normalizeCondition({
-          paramType: ParameterType.None,
-          operator: Operator.And,
-          children: [
-            DUMMY_COMP(0),
-            {
-              paramType: ParameterType.None,
-              operator: Operator.And,
-              children: [DUMMY_COMP(0), DUMMY_COMP(1)],
-            },
-            DUMMY_COMP(1),
-          ],
-        })
-      )
+      normalizeCondition({
+        paramType: ParameterType.None,
+        operator: Operator.And,
+        children: [
+          DUMMY_COMP(0),
+          {
+            paramType: ParameterType.None,
+            operator: Operator.And,
+            children: [DUMMY_COMP(0), DUMMY_COMP(1)],
+          },
+          DUMMY_COMP(1),
+        ],
+      })
     ).to.deep.equal({
       paramType: ParameterType.None,
       operator: Operator.And,
@@ -123,25 +112,21 @@ suite("normalizeConditionDeprecated()", () => {
 
   it("prunes single-child ANDs", () => {
     expect(
-      stripIds(
-        normalizeCondition({
-          paramType: ParameterType.None,
-          operator: Operator.And,
-          children: [DUMMY_COMP(0)],
-        })
-      )
+      normalizeCondition({
+        paramType: ParameterType.None,
+        operator: Operator.And,
+        children: [DUMMY_COMP(0)],
+      })
     ).to.deep.equal(DUMMY_COMP(0))
   })
 
   it("does not prune single-child NORs", () => {
     expect(
-      stripIds(
-        normalizeCondition({
-          paramType: ParameterType.None,
-          operator: Operator.Nor,
-          children: [DUMMY_COMP(0)],
-        })
-      )
+      normalizeCondition({
+        paramType: ParameterType.None,
+        operator: Operator.Nor,
+        children: [DUMMY_COMP(0)],
+      })
     ).to.deep.equal({
       paramType: ParameterType.None,
       operator: Operator.Nor,
@@ -151,20 +136,18 @@ suite("normalizeConditionDeprecated()", () => {
 
   it("prunes ANDs that become single child due to equal branch pruning", () => {
     expect(
-      stripIds(
-        normalizeCondition({
-          paramType: ParameterType.None,
-          operator: Operator.And,
-          children: [
-            DUMMY_COMP(0),
-            {
-              paramType: ParameterType.None,
-              operator: Operator.And,
-              children: [DUMMY_COMP(0)],
-            },
-          ],
-        })
-      )
+      normalizeCondition({
+        paramType: ParameterType.None,
+        operator: Operator.And,
+        children: [
+          DUMMY_COMP(0),
+          {
+            paramType: ParameterType.None,
+            operator: Operator.And,
+            children: [DUMMY_COMP(0)],
+          },
+        ],
+      })
     ).to.deep.equal(DUMMY_COMP(0))
   })
 
@@ -186,17 +169,15 @@ suite("normalizeConditionDeprecated()", () => {
 
   it("prunes trailing Static Pass nodes on Calldata", () => {
     expect(
-      stripIds(
-        normalizeCondition({
-          paramType: ParameterType.Calldata,
-          operator: Operator.Matches,
-          children: [
-            DUMMY_COMP(0),
-            { paramType: ParameterType.Static, operator: Operator.Pass },
-            { paramType: ParameterType.Static, operator: Operator.Pass },
-          ],
-        })
-      )
+      normalizeCondition({
+        paramType: ParameterType.Calldata,
+        operator: Operator.Matches,
+        children: [
+          DUMMY_COMP(0),
+          { paramType: ParameterType.Static, operator: Operator.Pass },
+          { paramType: ParameterType.Static, operator: Operator.Pass },
+        ],
+      })
     ).to.deep.equal({
       paramType: ParameterType.Calldata,
       operator: Operator.Matches,
@@ -206,17 +187,15 @@ suite("normalizeConditionDeprecated()", () => {
 
   it("prunes trailing Static Pass nodes on AbiEncoded", () => {
     expect(
-      stripIds(
-        normalizeCondition({
-          paramType: ParameterType.AbiEncoded,
-          operator: Operator.Matches,
-          children: [
-            DUMMY_COMP(0),
-            { paramType: ParameterType.Static, operator: Operator.Pass },
-            { paramType: ParameterType.Static, operator: Operator.Pass },
-          ],
-        })
-      )
+      normalizeCondition({
+        paramType: ParameterType.AbiEncoded,
+        operator: Operator.Matches,
+        children: [
+          DUMMY_COMP(0),
+          { paramType: ParameterType.Static, operator: Operator.Pass },
+          { paramType: ParameterType.Static, operator: Operator.Pass },
+        ],
+      })
     ).to.deep.equal({
       paramType: ParameterType.AbiEncoded,
       operator: Operator.Matches,
@@ -226,20 +205,18 @@ suite("normalizeConditionDeprecated()", () => {
 
   it("prunes trailing Static Pass nodes on dynamic tuples", () => {
     expect(
-      stripIds(
-        normalizeCondition({
-          paramType: ParameterType.Tuple,
-          operator: Operator.Matches,
-          children: [
-            {
-              paramType: ParameterType.Dynamic,
-              operator: Operator.EqualToAvatar,
-            },
-            { paramType: ParameterType.Static, operator: Operator.Pass },
-            { paramType: ParameterType.Static, operator: Operator.Pass },
-          ],
-        })
-      )
+      normalizeCondition({
+        paramType: ParameterType.Tuple,
+        operator: Operator.Matches,
+        children: [
+          {
+            paramType: ParameterType.Dynamic,
+            operator: Operator.EqualToAvatar,
+          },
+          { paramType: ParameterType.Static, operator: Operator.Pass },
+          { paramType: ParameterType.Static, operator: Operator.Pass },
+        ],
+      })
     ).to.deep.equal({
       paramType: ParameterType.Tuple,
       operator: Operator.Matches,
@@ -254,25 +231,23 @@ suite("normalizeConditionDeprecated()", () => {
 
   it("prunes trailing static Tuple Pass nodes", () => {
     expect(
-      stripIds(
-        normalizeCondition({
-          paramType: ParameterType.Calldata,
-          operator: Operator.Matches,
-          children: [
-            DUMMY_COMP(0),
-            {
-              paramType: ParameterType.Tuple,
-              operator: Operator.Pass,
-              children: [
-                {
-                  paramType: ParameterType.Static,
-                  operator: Operator.Pass,
-                },
-              ],
-            },
-          ],
-        })
-      )
+      normalizeCondition({
+        paramType: ParameterType.Calldata,
+        operator: Operator.Matches,
+        children: [
+          DUMMY_COMP(0),
+          {
+            paramType: ParameterType.Tuple,
+            operator: Operator.Pass,
+            children: [
+              {
+                paramType: ParameterType.Static,
+                operator: Operator.Pass,
+              },
+            ],
+          },
+        ],
+      })
     ).to.deep.equal({
       paramType: ParameterType.Calldata,
       operator: Operator.Matches,
@@ -282,24 +257,22 @@ suite("normalizeConditionDeprecated()", () => {
 
   it("does not prune trailing Static Pass nodes on static tuples", () => {
     expect(
-      stripIds(
-        normalizeCondition({
-          paramType: ParameterType.Calldata,
-          operator: Operator.Matches,
-          children: [
-            {
-              paramType: ParameterType.Tuple,
-              operator: Operator.Matches,
-              children: [
-                DUMMY_COMP(0),
-                { paramType: ParameterType.Static, operator: Operator.Pass },
-                { paramType: ParameterType.Static, operator: Operator.Pass },
-              ],
-            },
-            DUMMY_COMP(1),
-          ],
-        })
-      )
+      normalizeCondition({
+        paramType: ParameterType.Calldata,
+        operator: Operator.Matches,
+        children: [
+          {
+            paramType: ParameterType.Tuple,
+            operator: Operator.Matches,
+            children: [
+              DUMMY_COMP(0),
+              { paramType: ParameterType.Static, operator: Operator.Pass },
+              { paramType: ParameterType.Static, operator: Operator.Pass },
+            ],
+          },
+          DUMMY_COMP(1),
+        ],
+      })
     ).to.deep.equal({
       paramType: ParameterType.Calldata,
       operator: Operator.Matches,
@@ -320,20 +293,18 @@ suite("normalizeConditionDeprecated()", () => {
 
   it("prunes even dynamic trailing Pass nodes on the toplevel Matches", () => {
     expect(
-      stripIds(
-        normalizeCondition({
-          paramType: ParameterType.Calldata,
-          operator: Operator.Matches,
-          children: [
-            {
-              paramType: ParameterType.Static,
-              operator: Operator.EqualToAvatar,
-            },
-            { paramType: ParameterType.Static, operator: Operator.Pass },
-            { paramType: ParameterType.Dynamic, operator: Operator.Pass },
-          ],
-        })
-      )
+      normalizeCondition({
+        paramType: ParameterType.Calldata,
+        operator: Operator.Matches,
+        children: [
+          {
+            paramType: ParameterType.Static,
+            operator: Operator.EqualToAvatar,
+          },
+          { paramType: ParameterType.Static, operator: Operator.Pass },
+          { paramType: ParameterType.Dynamic, operator: Operator.Pass },
+        ],
+      })
     ).to.deep.equal({
       paramType: ParameterType.Calldata,
       operator: Operator.Matches,
@@ -348,27 +319,25 @@ suite("normalizeConditionDeprecated()", () => {
 
   it("keeps EtherWithinAllowance (moving it to the end) while pruning trailing Pass nodes on Calldata.Matches", () => {
     expect(
-      stripIds(
-        normalizeCondition({
-          paramType: ParameterType.Calldata,
-          operator: Operator.Matches,
-          children: [
-            {
-              paramType: ParameterType.None,
-              operator: Operator.EtherWithinAllowance,
-              compValue: encodeKey("test-allowance"),
-            },
-            {
-              paramType: ParameterType.Static,
-              operator: Operator.Pass,
-            },
-            {
-              paramType: ParameterType.Static,
-              operator: Operator.Pass,
-            },
-          ],
-        })
-      )
+      normalizeCondition({
+        paramType: ParameterType.Calldata,
+        operator: Operator.Matches,
+        children: [
+          {
+            paramType: ParameterType.None,
+            operator: Operator.EtherWithinAllowance,
+            compValue: encodeKey("test-allowance"),
+          },
+          {
+            paramType: ParameterType.Static,
+            operator: Operator.Pass,
+          },
+          {
+            paramType: ParameterType.Static,
+            operator: Operator.Pass,
+          },
+        ],
+      })
     ).to.deep.equal({
       paramType: ParameterType.Calldata,
       operator: Operator.Matches,
@@ -400,29 +369,27 @@ suite("normalizeConditionDeprecated()", () => {
         DUMMY_COMP(2),
       ],
     }
-    expect(stripIds(normalizeCondition(condition))).to.deep.equal(condition)
+    expect(normalizeCondition(condition)).to.deep.equal(condition)
   })
 
   it("adds trailing Pass nodes to make logical branches' type trees compatible", () => {
     expect(
-      stripIds(
-        normalizeCondition({
-          paramType: ParameterType.None,
-          operator: Operator.Or,
-          children: [
-            {
-              paramType: ParameterType.Calldata,
-              operator: Operator.Matches,
-              children: [DUMMY_COMP(3)],
-            },
-            {
-              paramType: ParameterType.Calldata,
-              operator: Operator.Matches,
-              children: [DUMMY_COMP(0), DUMMY_COMP(1)],
-            },
-          ],
-        })
-      )
+      normalizeCondition({
+        paramType: ParameterType.None,
+        operator: Operator.Or,
+        children: [
+          {
+            paramType: ParameterType.Calldata,
+            operator: Operator.Matches,
+            children: [DUMMY_COMP(3)],
+          },
+          {
+            paramType: ParameterType.Calldata,
+            operator: Operator.Matches,
+            children: [DUMMY_COMP(0), DUMMY_COMP(1)],
+          },
+        ],
+      })
     ).to.deep.equal({
       paramType: ParameterType.None,
       operator: Operator.Or,
@@ -457,7 +424,7 @@ suite("normalizeConditionDeprecated()", () => {
     ])
     const { condition } = functionVariants as FunctionPermissionCoerced
 
-    expect(stripIds(normalizeCondition(condition!))).to.deep.equal({
+    expect(normalizeCondition(condition!)).to.deep.equal({
       paramType: ParameterType.Calldata,
       operator: Operator.Matches,
       children: [
@@ -498,7 +465,7 @@ suite("normalizeConditionDeprecated()", () => {
     ])
     const { condition } = functionVariants as FunctionPermissionCoerced
 
-    expect(stripIds(normalizeCondition(condition!))).to.deep.equal({
+    expect(normalizeCondition(condition!)).to.deep.equal({
       paramType: ParameterType.None,
       operator: Operator.Or,
       children: [
@@ -593,7 +560,7 @@ suite("normalizeConditionDeprecated()", () => {
       ],
     }
 
-    expect(stripIds(normalizeCondition(condition))).to.deep.equal(condition)
+    expect(normalizeCondition(condition)).to.deep.equal(condition)
   })
 })
 
@@ -604,7 +571,7 @@ suite("normalizeCondition() - MISC transfered from other tests", () => {
       operator: Operator.Or,
       children: [DUMMY_COMP(1), DUMMY_COMP(2)],
     }
-    expect(stripIds(normalizeCondition(condition))).to.deep.equal(condition)
+    expect(normalizeCondition(condition)).to.deep.equal(condition)
   })
 
   it("both with condition - joined via OR, left gets hoisted", () => {
@@ -622,7 +589,7 @@ suite("normalizeCondition() - MISC transfered from other tests", () => {
       children: [left, right],
     }
 
-    expect(stripIds(normalizeCondition(condition))).to.deep.equal({
+    expect(normalizeCondition(condition)).to.deep.equal({
       paramType: ParameterType.None,
       operator: Operator.Or,
       children: [DUMMY_COMP(1), DUMMY_COMP(2), DUMMY_COMP(3)],
@@ -644,7 +611,7 @@ suite("normalizeCondition() - MISC transfered from other tests", () => {
       children: [left, right],
     }
 
-    expect(stripIds(normalizeCondition(condition))).to.deep.equal({
+    expect(normalizeCondition(condition)).to.deep.equal({
       paramType: ParameterType.None,
       operator: Operator.Or,
       children: [DUMMY_COMP(1), DUMMY_COMP(2), DUMMY_COMP(3)],
@@ -686,7 +653,7 @@ suite("normalizeConditionDeprecated() - MISC new tests", () => {
     const normalized = normalizeCondition(condition)
 
     // The bug transforms it to:
-    expect(stripIds(normalized)).to.deep.equal({
+    expect(normalized).to.deep.equal({
       paramType: ParameterType.Calldata,
       operator: Operator.Matches,
       children: [
@@ -743,7 +710,7 @@ suite("normalizeConditionDeprecated() - MISC new tests", () => {
     const normalized = normalizeCondition(condition)
 
     // The bug transforms it to:
-    expect(stripIds(normalized)).to.deep.equal({
+    expect(normalized).to.deep.equal({
       paramType: ParameterType.Calldata,
       operator: Operator.Matches,
       children: [
