@@ -76,7 +76,7 @@ describe("maybeHoist()", () => {
       }
 
       const result = maybeHoist(permission, [])
-      expect(result).toBe(condition)
+      expect(result).toStrictEqual(condition)
     })
   })
 

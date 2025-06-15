@@ -9,13 +9,20 @@ import { permissionIncludes } from "./permissionIncludes"
 
 import { FunctionPermissionCoerced, PermissionCoerced } from "./types"
 
-/*
+/**
+ * Hoists a permission condition by testing different hoisting strategies to maximize probe hits.
  *
- * 1. Takes a permission with a condition and optional probes
- * 2. Computes naive, hoisted, and hoistedTopOrs variantes
- * 3. Counts how many probes each variant produces
- * 4. Returns the maybe hoisted condition that produces most matches against probes (on tie, original wins)
- * 5. When no probes are provides, the condition is normalized and nothing else
+ * Hoisting pulls logical operators (AND/OR) up from within MATCHES nodes to try to revert some of
+ * the pushDownNode performed by normalizeConditionDeprecated. We need this to determine which annotations
+ * are applied
+ *
+ * Tests three strategies:
+ * - **Naive**: No hoisting, only normalizeConditionNext
+ * - **Full hoisting**: Complete generic hoisting using `hoistCondition`
+ * - **Top-level OR hoisting**: Selective hoisting using `hoistTopOrs`
+ *
+ * Each strategy is scored by counting probe hits. The highest scoring strategy wins.
+ * In case of ties, the original condition is returned (without hoisting)
  *
  */
 export function maybeHoist(
@@ -26,44 +33,40 @@ export function maybeHoist(
     return permission.condition
   }
 
-  const naive = {
-    ...permission,
-    condition: normalizeConditionNext(permission.condition),
+  const normalized = normalizeConditionNext(permission.condition)
+
+  if (!probes || probes.length == 0) {
+    return normalized
   }
 
-  if (!probes) {
-    return naive.condition
-  }
-
-  const countNaive = _count(naive, probes)
-
-  const entries = [
-    hoistCondition(naive.condition),
-    ...hoistTopOrs(naive.condition),
+  const { result } = [
+    normalized,
+    hoistCondition(normalized),
+    ...hoistTopOrs(normalized),
   ]
-    .map((condition) => ({ ...permission, condition }))
     .map(
-      (permissionHoisted) =>
-        [_count(permissionHoisted, probes), permissionHoisted.condition] as [
+      (condition) =>
+        [countHits({ ...permission, condition }, probes), condition] as [
           number,
           Condition,
         ]
     )
+    .reduce(
+      ({ max, result }, [count, condition]) => {
+        return count > max
+          ? { max: count, result: condition }
+          : { max: count, result }
+      },
+      { max: -1, result: {} as Condition }
+    )
 
-  let countHoisted = -1
-  let hoisted = null
-  for (const [count, _condition] of entries) {
-    if (count > countHoisted) {
-      countHoisted = count
-      hoisted = _condition
-    }
-  }
-
-  // in case of a tie, keep the original
-  return countHoisted > countNaive ? hoisted! : permission.condition!
+  return result
 }
 
-function _count(dest: FunctionPermissionCoerced, src: PermissionCoerced[]) {
+function countHits(
+  dest: FunctionPermissionCoerced,
+  src: PermissionCoerced[]
+): number {
   const split =
     dest.condition?.operator == Operator.Or
       ? dest.condition.children!.map((child) => ({ ...dest, condition: child }))
