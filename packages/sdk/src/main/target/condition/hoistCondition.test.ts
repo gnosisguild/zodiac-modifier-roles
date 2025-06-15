@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest"
 import { Operator, ParameterType, Condition } from "zodiac-roles-deployments"
-import { hoistCondition } from "./hoistCondition"
+import { hoistCondition, hoistTopOrs } from "./hoistCondition"
 import { normalizeConditionNext } from "./normalizeConditionNext"
 import { conditionHash, conditionId } from "./conditionId"
 
@@ -1242,6 +1242,61 @@ describe("hoistCondition", () => {
 
       // Should not throw stack overflow
       expect(() => hoistCondition(current)).not.toThrow()
+    })
+  })
+})
+
+describe("hoistTopOrs", () => {
+  describe("Multiple hoisting with different types", () => {
+    it("hoists multiple ORs from different positions in Calldata", () => {
+      const input = MATCHES(
+        ParameterType.Calldata,
+        OR(COMP(1), COMP(2)),
+        COMP(3),
+        OR(COMP(4), COMP(5)),
+        COMP(6)
+      )
+
+      const result = hoistTopOrs(input)
+
+      const expected1 = OR(
+        MATCHES(
+          ParameterType.Calldata,
+          COMP(1),
+          COMP(3),
+          OR(COMP(4), COMP(5)),
+          COMP(6)
+        ),
+        MATCHES(
+          ParameterType.Calldata,
+          COMP(2),
+          COMP(3),
+          OR(COMP(4), COMP(5)),
+          COMP(6)
+        )
+      )
+
+      const expected2 = OR(
+        MATCHES(
+          ParameterType.Calldata,
+          OR(COMP(1), COMP(2)),
+          COMP(3),
+          COMP(4),
+          COMP(6)
+        ),
+        MATCHES(
+          ParameterType.Calldata,
+          OR(COMP(1), COMP(2)),
+          COMP(3),
+          COMP(5),
+          COMP(6)
+        )
+      )
+
+      expect(result).toHaveLength(2)
+      expect(conditionId(result[0])).toEqual(conditionId(expected1))
+      expect(conditionId(result[1])).toEqual(conditionId(expected2))
+      expect(result).toEqual([expected1, expected2])
     })
   })
 })

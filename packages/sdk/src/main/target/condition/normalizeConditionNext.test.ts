@@ -75,12 +75,6 @@ const CALL_ALLOWANCE = (): Condition => ({
   operator: Operator.CallWithinAllowance,
 })
 
-const WITHIN_ALLOWANCE = (): Condition => ({
-  paramType: ParameterType.Static,
-  operator: Operator.WithinAllowance,
-  compValue: "0x",
-})
-
 describe("normalizeConditionNext", () => {
   describe("Core normalization steps", () => {
     describe("pruneTrailingPass", () => {
@@ -471,6 +465,40 @@ describe("normalizeConditionNext", () => {
         operator: Operator.Matches,
         children: [PASS(), ETHER_ALLOWANCE(), CALL_ALLOWANCE()],
       })
+    })
+
+    it("handles differences in children and compValue", () => {
+      const input1: Condition = {
+        paramType: ParameterType.Calldata,
+        operator: Operator.Matches,
+        compValue: "0x",
+        children: [
+          {
+            paramType: ParameterType.Static,
+            operator: Operator.EqualTo,
+            compValue: abiEncode(["uint256"], [1]),
+            children: [],
+          },
+        ],
+      }
+
+      const input2: Condition = {
+        paramType: ParameterType.Calldata,
+        operator: Operator.Matches,
+        compValue: "0x",
+        children: [
+          {
+            compValue: abiEncode(["uint256"], [1]),
+            operator: Operator.EqualTo,
+            paramType: ParameterType.Static,
+            children: null as any,
+          },
+        ],
+      }
+
+      expect(conditionId(normalizeConditionNext(input1))).toEqual(
+        conditionId(normalizeConditionNext(input2))
+      )
     })
   })
 

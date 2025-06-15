@@ -38,6 +38,23 @@ export const hoistCondition = (condition: Condition): Condition => {
   }
 }
 
+export const hoistTopOrs = (condition: Condition): Condition[] => {
+  if (
+    condition.operator !== Operator.Matches ||
+    condition.paramType !== ParameterType.Calldata
+  ) {
+    return [condition]
+  }
+
+  const result = (condition.children || [])
+    .map((child, index) =>
+      child.operator == Operator.Or ? tryHoistNode(condition, [index]) : null
+    )
+    .filter((c) => !!c)
+
+  return result.length > 0 ? result : [condition]
+}
+
 /**
  * Try to pull up a specific node in the condition tree.
  * Returns the transformed tree if pull-up is possible, null otherwise.
@@ -132,18 +149,22 @@ function replaceNode(
  */
 function allNodes(root: Condition): ConditionNode[] {
   const nodes: ConditionNode[] = []
+  const queue: ConditionNode[] = [{ condition: root, path: [] }]
 
-  function traverse(condition: Condition, path: number[]) {
-    nodes.push({ condition, path })
+  while (queue.length > 0) {
+    const current = queue.shift()!
+    nodes.push(current)
 
-    if (condition.children) {
-      condition.children.forEach((child, index) => {
-        traverse(child, [...path, index])
+    if (current.condition.children) {
+      current.condition.children.forEach((child, index) => {
+        queue.push({
+          condition: child,
+          path: [...current.path, index],
+        })
       })
     }
   }
 
-  traverse(root, [])
   return nodes.reverse()
 }
 

@@ -1,9 +1,12 @@
 import {
   Clearance,
+  Condition,
   ExecutionOptions,
   Operator,
   Target,
 } from "zodiac-roles-deployments"
+
+import { maybeHoist } from "./maybeHoist"
 
 import {
   FunctionPermissionCoerced,
@@ -11,17 +14,13 @@ import {
   TargetPermission,
 } from "./types"
 
-/**
- * The inverse of `processPermissions`: Given a list of allowed targets, reconstruct the list of permissions that would produce it.
- * @param targets Targets that are allowed
- * @returns A set of permissions that produces these targets when processed
- */
 export const reconstructPermissions = (
-  targets: readonly Target[]
+  targets: readonly Target[],
+  probes?: PermissionCoerced[]
 ): PermissionCoerced[] => {
   return targets.flatMap((target) => {
     if (target.clearance === Clearance.None) {
-      return []
+      return [] as PermissionCoerced[]
     }
 
     if (target.clearance === Clearance.Target) {
@@ -41,29 +40,35 @@ export const reconstructPermissions = (
           delegatecall: allowsDelegateCall(func.executionOptions),
           condition: !func.wildcarded ? func.condition : undefined,
         }))
-        .map(splitFunctionPermission)
+        .map((permission) => ({
+          ...permission,
+          condition: maybeHoist(permission, probes),
+        }))
+        .flatMap(splitFunctionPermission)
     }
 
     throw new Error(`Unknown clearance ${target.clearance}`)
   })
 }
 
-/** The inverse of mergePermissions */
-const splitFunctionPermission = (permission: FunctionPermissionCoerced) => {
+const splitFunctionPermission = (
+  permission: FunctionPermissionCoerced
+): FunctionPermissionCoerced[] => {
   // only split permissions with top-level OR conditions
+
   if (
     permission.condition &&
     permission.condition.operator === Operator.Or &&
     permission.condition.children &&
     permission.condition.children.length > 0
   ) {
-    permission.condition.children.map((child) => ({
+    return permission.condition.children.map((child) => ({
       ...permission,
       condition: child,
     }))
   }
 
-  return permission
+  return [permission]
 }
 
 const allowsSend = (execOptions: ExecutionOptions) =>
