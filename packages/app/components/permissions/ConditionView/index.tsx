@@ -311,17 +311,8 @@ const UnsupportedConditionView: React.FC<Props> = ({ condition }) => {
           Cannot parse this condition (it most likely came from a different
           interface)
         </p>
-        <pre>{JSON.stringify(stripIds(condition), undefined, 2)}</pre>
+        <pre>{JSON.stringify(condition, undefined, 2)}</pre>
       </LabeledData>
     </Flex>
   )
-}
-
-const stripIds = (condition: Condition & { $$id?: string }): Condition => {
-  const { $$id, children, ...rest } = condition
-  if (!children) return rest
-  return {
-    ...rest,
-    children: children.map(stripIds),
-  }
 }

@@ -1,9 +1,4 @@
-import {
-  Annotation,
-  PermissionCoerced,
-  Target,
-  reconstructPermissions,
-} from "zodiac-roles-sdk"
+import { Annotation, PermissionCoerced, Target } from "zodiac-roles-sdk"
 import { Preset } from "zodiac-roles-sdk/annotations"
 import { ChainId } from "@/app/chains"
 import Flex from "@/ui/Flex"
@@ -20,10 +15,8 @@ interface Props {
 }
 
 const PermissionsList = async ({ targets, annotations, chainId }: Props) => {
-  const allPermissions = reconstructPermissions(targets)
-
   const { presets, permissions } = await processAnnotations(
-    allPermissions,
+    targets,
     annotations
   )
 

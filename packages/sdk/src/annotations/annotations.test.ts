@@ -1,11 +1,11 @@
 import { expect, it, suite } from "vitest"
 
 import { processAnnotations } from "./annotations"
-import { PermissionCoerced } from "../main"
+import { PermissionCoerced, processPermissions } from "../main"
 
 suite("processAnnotations()", () => {
   it("returns the original set of permissions if no annotations are given", async () => {
-    const permissions = [
+    const permissions: PermissionCoerced[] = [
       {
         targetAddress: "0xc0ffee254729296a45a3885639ac7e10f9d54979",
         selector: "0x1234abcd",
@@ -13,15 +13,20 @@ suite("processAnnotations()", () => {
         send: false,
         delegatecall: false,
       },
-    ] as const
-    const result = await processAnnotations(permissions, [])
+    ]
+    const result = await processAnnotations(
+      processPermissions(permissions).targets,
+      []
+    )
     expect(result.permissions).to.deep.equal(permissions)
   })
 
   it("returns presets (resolved annotated permissions)", async () => {
-    const result = await processAnnotations(permissionsForPreset1, [
-      annotation1,
-    ])
+    const result = await processAnnotations(
+      processPermissions(permissionsForPreset1).targets,
+      [annotation1]
+    )
+
     expect(result.presets).to.have.lengthOf(1)
     expect(result.presets[0].permissions).to.deep.equal(permissionsForPreset1)
     expect(result.presets[0].query).to.deep.equal({
@@ -44,20 +49,24 @@ suite("processAnnotations()", () => {
       },
       ...permissionsForPreset1,
     ] as const
-    const result = await processAnnotations(permissions, [annotation1])
+    const result = await processAnnotations(
+      processPermissions(permissions).targets,
+      [annotation1]
+    )
     expect(result.permissions).to.deep.equal([
       {
         targetAddress: "0xc0ffee254729296a45a3885639ac7e10f9d54979",
         selector: "0x1234abcd",
         send: false,
         delegatecall: false,
+        condition: undefined,
       },
     ])
   })
 
   it("handles endpoints with indiscriminate parameter schemas", async () => {
     const result = await processAnnotations(
-      permissionsForPreset1,
+      processPermissions(permissionsForPreset1).targets,
       [
         {
           uri: "https://kit.karpatkey.com/api/v1/permissions/eth/cowswap/swap?sell=ETH&buy=0x6B175474E89094C44Da98b954EedeAC495271d0F",

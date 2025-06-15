@@ -1,30 +1,32 @@
-import { coercePermission } from "./coercePermission"
+import { Target } from "zodiac-roles-deployments"
 import { mergePermissions } from "./mergePermissions"
 import { permissionIncludes } from "./permissionIncludes"
+import { reconstructPermissions } from "./reconstructPermissions"
 
-import { Permission, PermissionCoerced } from "./types"
+import { PermissionCoerced } from "./types"
 
 /**
  * Filters and validates permission presets, returning two sets:
  * 1. Confirmed presets that are subsets of the provided permissions.
  * 2. Remaining permissions that are not referenced by any confirmed preset.
  */
-export function validatePresets<T extends { permissions: Permission[] }>({
+export function validatePresets<
+  T extends { permissions: PermissionCoerced[] },
+>({
   presets,
-  permissions: input,
+  targets,
 }: {
   presets: readonly (T | null)[]
-  permissions: readonly Permission[]
+  targets: readonly Target[]
 }): {
   presets: T[]
   permissions: PermissionCoerced[]
 } {
-  const targetPermissions: PermissionCoerced[] = input.map(coercePermission)
-
-  sanityCheck(targetPermissions)
   for (const preset of presets) {
     preset && sanityCheck(preset.permissions)
   }
+
+  const permissions = reconstructPermissions(targets)
 
   const validated = presets
     .filter((p) => !!p)
@@ -33,10 +35,8 @@ export function validatePresets<T extends { permissions: Permission[] }>({
      */
     .map((preset) => ({
       preset,
-      matches: preset.permissions.map((presetPermission) =>
-        targetPermissions.find((targetPermission) =>
-          permissionIncludes(targetPermission, presetPermission)
-        )
+      matches: preset.permissions.map((b) =>
+        permissions.find((a) => permissionIncludes(a, b))
       ),
     }))
     /*
@@ -48,7 +48,7 @@ export function validatePresets<T extends { permissions: Permission[] }>({
 
   return {
     presets: validated.map(({ preset }) => preset),
-    permissions: targetPermissions.filter((p) => !mentioned.has(p)),
+    permissions: permissions.filter((p) => !mentioned.has(p)),
   }
 }
 

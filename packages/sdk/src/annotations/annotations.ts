@@ -1,6 +1,6 @@
 import OpenAPIBackend from "openapi-backend"
 import { OpenAPIV3 } from "openapi-types"
-import { Annotation } from "zodiac-roles-deployments"
+import { Annotation, Target } from "zodiac-roles-deployments"
 // We import via alias to avoid double bundling of sdk functions
 import {
   Permission,
@@ -51,7 +51,7 @@ export interface Preset {
  *   - `permissions`: Input permissions not covered by any preset
  */
 export const processAnnotations = async (
-  permissions: readonly Permission[],
+  targets: readonly Target[],
   annotations: readonly Annotation[],
   options: {
     fetchPermissions?: (url: string) => Promise<Permission[]>
@@ -100,7 +100,7 @@ export const processAnnotations = async (
     })
   )
 
-  return validatePresets({ presets, permissions })
+  return validatePresets({ presets, targets })
 }
 
 export const resolveAnnotation = async (
