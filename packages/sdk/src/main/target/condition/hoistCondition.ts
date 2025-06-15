@@ -12,7 +12,7 @@ export interface ConditionNode {
 
 /**
  * Pull logical operators (AND/OR) up the tree from MATCHES nodes.
- * Continuously attempts to pull up nodes until no more pull-ups are possible.
+ * Tries to do the reverse of what is done by pushDownNode in normalizeConditionDeprecated
  *
  * @param condition The condition tree to transform
  */
@@ -24,7 +24,6 @@ export const hoistCondition = (condition: Condition): Condition => {
     const nodes = allNodes(condition)
 
     // Try to pull up each node
-
     let nextVariant
     for (const node of nodes) {
       nextVariant = tryHoistNode(condition, node.path)
@@ -38,6 +37,13 @@ export const hoistCondition = (condition: Condition): Condition => {
   }
 }
 
+/**
+ * Pulls top level ORs up the tree from MATCHES nodes.
+ * It pulls only one at a time, and returns an array of possibilities
+ * It also tries to reverse whats done by normalizeConditionDeprecated
+ *
+ * @param condition The condition tree to transform
+ */
 export const hoistTopOrs = (condition: Condition): Condition[] => {
   if (
     condition.operator !== Operator.Matches ||

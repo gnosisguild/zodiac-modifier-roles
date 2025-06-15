@@ -8,7 +8,7 @@ import {
 } from "zodiac-roles-deployments"
 
 import { abiEncode } from "../abiEncode"
-import { normalizeCondition } from "../target/condition"
+import { normalizeConditionNext as normalizeCondition } from "../target/condition"
 import { PermissionSet } from "./types"
 
 const DUMMY_COMP = (id: number) => ({

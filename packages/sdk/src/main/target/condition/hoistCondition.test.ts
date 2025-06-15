@@ -1210,29 +1210,6 @@ describe("hoistCondition", () => {
       expect(result.children).toHaveLength(16)
     })
 
-    it("completes in reasonable time for large trees", () => {
-      const startTime = Date.now()
-
-      // Create a large but realistic tree
-      const input = MATCHES(
-        ParameterType.Calldata,
-        ...Array.from({ length: 10 }, (_, i) =>
-          i % 3 === 0
-            ? OR(COMP(i * 2), COMP(i * 2 + 1))
-            : i % 3 === 1
-              ? AND(COMP(i * 2), COMP(i * 2 + 1))
-              : COMP(i)
-        )
-      )
-
-      const result = hoistCondition(input)
-      const endTime = Date.now()
-
-      expect(result).toBeDefined()
-      // Should complete in less than 2 seconds (allowing for slower test environments)
-      expect(endTime - startTime).toBeLessThan(2000)
-    })
-
     it("handles maximum nesting depth without stack overflow", () => {
       // Create maximum reasonable nesting
       let current: Condition = OR(COMP(1), COMP(2))

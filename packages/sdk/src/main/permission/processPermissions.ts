@@ -6,7 +6,7 @@ import {
 } from "zodiac-roles-deployments"
 
 import { groupBy } from "../groupBy"
-import { normalizeCondition } from "../target/condition"
+import { normalizeConditionNext as normalizeCondition } from "../target/condition"
 import { coercePermission } from "./coercePermission"
 import { executionFlagsToOptions } from "./executionFlagsToOptions"
 import { mergePermissions } from "./mergePermissions"

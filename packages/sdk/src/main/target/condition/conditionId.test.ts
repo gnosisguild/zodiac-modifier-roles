@@ -2,7 +2,7 @@ import { expect, it, suite } from "vitest"
 import { Operator, ParameterType } from "zodiac-roles-deployments"
 
 import { conditionAddress } from "./conditionId"
-import { normalizeCondition } from "./normalizeCondition"
+import { normalizeConditionDeprecated as normalizeCondition } from "./normalizeCondition"
 
 suite("conditionAddress", () => {
   it("calculates the create2 storage address of the condition", () => {
