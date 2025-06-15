@@ -26,7 +26,10 @@ export function validatePresets<
     preset && sanityCheck(preset.permissions)
   }
 
-  const permissions = reconstructPermissions(targets)
+  const permissions = reconstructPermissions(
+    targets,
+    presets.filter((p) => !!p).flatMap((p) => p?.permissions)
+  )
 
   const validated = presets
     .filter((p) => !!p)
