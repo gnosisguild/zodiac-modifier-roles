@@ -1,6 +1,7 @@
 import { Function } from "zodiac-roles-deployments"
 
 import {
+  normalizeConditionDeprecated,
   normalizeConditionNext as normalizeCondition,
   conditionId,
 } from "../condition"
@@ -160,12 +161,23 @@ function isMinus(prev: Function | undefined, next: Function | undefined) {
   return false
 }
 
-function scopedAndEqual(a?: Function, b?: Function) {
+function scopedAndEqual(prev?: Function, next?: Function) {
+  if (!(prev?.condition && next?.condition)) {
+    return false
+  }
+
+  const isEquivalentToStoredNormalizedDeprecated =
+    conditionId(prev.condition) ===
+      conditionId(normalizeConditionDeprecated(prev.condition)) &&
+    conditionId(prev.condition) ==
+      conditionId(normalizeConditionDeprecated(next.condition))
+  if (isEquivalentToStoredNormalizedDeprecated) {
+    return true
+  }
+
   return (
-    a?.condition &&
-    b?.condition &&
-    conditionId(normalizeCondition(a.condition)) ===
-      conditionId(normalizeCondition(b.condition))
+    conditionId(normalizeCondition(prev.condition)) ===
+    conditionId(normalizeCondition(next.condition))
   )
 }
 
