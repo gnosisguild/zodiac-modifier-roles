@@ -168,9 +168,7 @@ function scopedAndEqual(prev?: Function, next?: Function) {
 
   const isEquivalentToStoredNormalizedDeprecated =
     conditionId(prev.condition) ===
-      conditionId(normalizeConditionDeprecated(prev.condition)) &&
-    conditionId(prev.condition) ==
-      conditionId(normalizeConditionDeprecated(next.condition))
+    conditionId(normalizeConditionDeprecated(next.condition))
   if (isEquivalentToStoredNormalizedDeprecated) {
     return true
   }
