@@ -1,4 +1,7 @@
-import { conditionAddress, normalizeCondition } from "../target/condition"
+import {
+  conditionAddress,
+  normalizeConditionNext as normalizeCondition,
+} from "../target/condition"
 import { executionFlagsToOptions } from "./executionFlagsToOptions"
 
 import {
