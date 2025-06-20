@@ -2,13 +2,11 @@ import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
 import { conditionId } from "./conditionId"
 
-export const normalizeConditionDeprecated = normalizeCondition
-
 /**
  * Transforms the structure of a condition without changing it semantics. Aims to minimize the tree size and to arrive at a normal form, so that semantically equivalent conditions will have an equal representation.
  * Such a normal form is useful for efficiently comparing conditions for equality. It is also promotes efficient, globally deduplicated storage of conditions since the Roles contract stores conditions in bytecode at addresses derived by hashing the condition data.
  **/
-function normalizeCondition(condition: Condition): Condition {
+export function normalizeCondition(condition: Condition): Condition {
   let result: Condition = {
     ...condition,
     children: condition.children?.map(normalizeCondition),

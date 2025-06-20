@@ -7,9 +7,10 @@ import {
   ParameterType,
 } from "zodiac-roles-deployments"
 
-import { normalizeConditionDeprecated as normalizeCondition } from "../condition/normalizeCondition"
+import { normalizeCondition } from "../condition/normalizeCondition"
 import { diffFunction, diffFunctions } from "./function"
 import { abiEncode } from "../../abiEncode"
+import { conditionId } from "../condition"
 
 const roleKey = ZeroHash
 const targetAddress = ZeroAddress
@@ -244,8 +245,8 @@ suite("diffFunction", () => {
       operator: Operator.And,
       children: [staticComp(0), staticComp(1)],
     }
-    expect(normalizeCondition(condition1).$$id).toEqual(
-      normalizeCondition(condition2).$$id
+    expect(conditionId(normalizeCondition(condition1))).toEqual(
+      conditionId(normalizeCondition(condition2))
     )
 
     const scoped1 = {

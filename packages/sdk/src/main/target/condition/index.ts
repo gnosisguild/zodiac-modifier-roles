@@ -1,4 +1,3 @@
 export { conditionAddress, conditionId, conditionHash } from "./conditionId"
-export { normalizeConditionDeprecated } from "./normalizeCondition"
-export { normalizeConditionNext } from "./normalizeConditionNext"
+export { normalizeCondition } from "./normalizeCondition"
 export { hoistCondition, hoistTopOrs } from "./hoistCondition"

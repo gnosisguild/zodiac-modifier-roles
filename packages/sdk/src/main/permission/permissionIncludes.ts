@@ -1,8 +1,5 @@
 import { Condition } from "zodiac-roles-deployments"
-import {
-  normalizeConditionNext as normalizeCondition,
-  conditionId,
-} from "../target/condition"
+import { normalizeCondition, conditionId } from "../target/condition"
 
 import { PermissionCoerced, FunctionPermissionCoerced } from "./types"
 import {

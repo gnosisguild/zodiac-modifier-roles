@@ -8,7 +8,7 @@ import {
   Target,
 } from "zodiac-roles-deployments"
 
-import { normalizeConditionDeprecated as normalizeCondition } from "../condition/normalizeCondition"
+import { normalizeCondition } from "../condition/normalizeCondition"
 import { diffTarget, diffTargets } from "./target"
 
 const roleKey = ZeroHash

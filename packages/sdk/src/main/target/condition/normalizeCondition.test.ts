@@ -1,7 +1,7 @@
 import { expect, it, suite } from "vitest"
 import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
-import { normalizeConditionDeprecated as normalizeCondition } from "./normalizeCondition"
+import { normalizeCondition } from "./normalizeCondition"
 
 import { FunctionPermissionCoerced, mergePermissions } from "../../permission"
 import { abiEncode } from "../../abiEncode"

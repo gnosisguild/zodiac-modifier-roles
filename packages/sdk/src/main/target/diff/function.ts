@@ -1,10 +1,6 @@
 import { Function } from "zodiac-roles-deployments"
 
-import {
-  normalizeConditionDeprecated,
-  normalizeConditionNext as normalizeCondition,
-  conditionId,
-} from "../condition"
+import { normalizeCondition, conditionId } from "../condition"
 import {
   Diff,
   isExecutionOptionsMinus,
@@ -164,13 +160,6 @@ function isMinus(prev: Function | undefined, next: Function | undefined) {
 function scopedAndEqual(prev?: Function, next?: Function) {
   if (!(prev?.condition && next?.condition)) {
     return false
-  }
-
-  const isEquivalentToStoredNormalizedDeprecated =
-    conditionId(prev.condition) ===
-    conditionId(normalizeConditionDeprecated(next.condition))
-  if (isEquivalentToStoredNormalizedDeprecated) {
-    return true
   }
 
   return (

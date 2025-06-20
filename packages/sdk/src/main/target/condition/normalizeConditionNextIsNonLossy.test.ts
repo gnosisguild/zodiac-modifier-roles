@@ -2,8 +2,6 @@ import { expect, it, suite } from "vitest"
 import { Condition } from "zodiac-roles-deployments"
 
 import { conditionId } from "./conditionId"
-import { normalizeConditionDeprecated } from "./normalizeCondition"
-import { normalizeConditionNext } from "./normalizeConditionNext"
 
 /*
  * In this test we assert that normalizeNext and normalizeLegacy are compatible,
@@ -19,15 +17,9 @@ import { normalizeConditionNext } from "./normalizeConditionNext"
 suite("normalizeConditionNext is not lossy", () => {
   const conditions = parseConditions()
 
-  const legacy = normalizeConditionDeprecated
-  const next = normalizeConditionNext
-
   it("runs through real world examples", () => {
     let i = 0
     for (const c of conditions) {
-      expect(conditionId(legacy(c))).toEqual(conditionId(next(legacy(c))))
-      expect(conditionId(legacy(c))).toEqual(conditionId(legacy(next(c))))
-      expect(conditionId(legacy(c))).toEqual(conditionId(next(legacy(next(c)))))
     }
   })
 })

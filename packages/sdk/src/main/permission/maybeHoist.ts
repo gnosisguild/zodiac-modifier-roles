@@ -3,7 +3,7 @@ import { Condition, Operator } from "zodiac-roles-deployments"
 import {
   hoistTopOrs,
   hoistCondition,
-  normalizeConditionNext,
+  normalizeCondition,
 } from "../target/condition"
 import { permissionIncludes } from "./permissionIncludes"
 
@@ -33,7 +33,7 @@ export function maybeHoist(
     return permission.condition
   }
 
-  const normalized = normalizeConditionNext(permission.condition)
+  const normalized = normalizeCondition(permission.condition)
 
   if (!probes || probes.length == 0) {
     return normalized

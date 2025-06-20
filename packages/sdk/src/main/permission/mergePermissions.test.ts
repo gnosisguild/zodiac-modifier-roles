@@ -194,10 +194,6 @@ suite("mergePermissions()", () => {
         { targetAddress: AddressOne, selector: "0x1", delegatecall: true },
       ])
 
-      console.log(permissions)
-      console.log(violations)
-      console.log(warnings)
-
       expect(permissions).toHaveLength(0)
       expect(warnings).toHaveLength(0)
       expect(violations).toHaveLength(1)

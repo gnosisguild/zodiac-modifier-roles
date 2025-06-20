@@ -1,6 +1,6 @@
 import { Operator, ParameterType, Condition } from "zodiac-roles-deployments"
 
-import { normalizeConditionNext as normalizeCondition } from "./normalizeConditionNext"
+import { normalizeCondition } from "./normalizeCondition"
 
 /**
  * Represents a node in the condition tree with its path from the root
