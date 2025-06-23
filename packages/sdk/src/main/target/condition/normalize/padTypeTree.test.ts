@@ -4,6 +4,7 @@ import { abiEncode } from "../../../abiEncode"
 
 // Import the function we're testing through normalizeCondition
 import { normalizeCondition } from "."
+import { padTypeTree } from "./padTypeTree"
 
 // Helper to create test conditions
 const COMP = (id: number): Condition => ({
@@ -47,7 +48,7 @@ const MATCHES = (
   children,
 })
 
-describe("ensureBranchTypeTreeCompatibility", () => {
+describe("padTypeTree", () => {
   describe("Basic padding scenarios", () => {
     it("pads shorter Calldata branch to match longer one", () => {
       const input = OR(
@@ -99,6 +100,28 @@ describe("ensureBranchTypeTreeCompatibility", () => {
         )
       )
     })
+
+    it("preserves Dynamic nodes when copying structure", () => {
+      const dynamic = {
+        paramType: ParameterType.Dynamic,
+        operator: Operator.EqualTo,
+        compValue: abiEncode(["string"], ["Hello World"]),
+      }
+
+      const input = OR(
+        MATCHES(ParameterType.Calldata, COMP(1)),
+        MATCHES(ParameterType.Calldata, COMP(2), dynamic)
+      )
+
+      const result = normalizeCondition(input)
+
+      expect(result).toEqual(
+        OR(
+          MATCHES(ParameterType.Calldata, COMP(1), PASS(ParameterType.Dynamic)),
+          MATCHES(ParameterType.Calldata, COMP(2), dynamic)
+        )
+      )
+    })
   })
 
   describe("Different parameter types", () => {
@@ -134,8 +157,8 @@ describe("ensureBranchTypeTreeCompatibility", () => {
       )
     })
 
-    it("handles mixed types (only pads matching types)", () => {
-      const equals: Condition = {
+    it("handles mixed types  pads matching types)", () => {
+      const dynamic: Condition = {
         operator: Operator.EqualTo,
         paramType: ParameterType.Dynamic,
         compValue: "0xaabbccdd",
@@ -143,7 +166,7 @@ describe("ensureBranchTypeTreeCompatibility", () => {
 
       const input = OR(
         MATCHES(ParameterType.Calldata, COMP(1)),
-        equals,
+        dynamic,
         MATCHES(ParameterType.Calldata, COMP(4), COMP(5))
       )
 
@@ -153,7 +176,7 @@ describe("ensureBranchTypeTreeCompatibility", () => {
         OR(
           MATCHES(ParameterType.Calldata, COMP(1), PASS()),
           MATCHES(ParameterType.Calldata, COMP(4), COMP(5)),
-          equals
+          dynamic
         )
       )
     })
@@ -162,21 +185,45 @@ describe("ensureBranchTypeTreeCompatibility", () => {
   describe("Nested structures", () => {
     it("finds complex branches inside nested logical operators", () => {
       const input = AND(
+        OR(MATCHES(ParameterType.Calldata, COMP(1))),
+        OR(MATCHES(ParameterType.Calldata, COMP(5), COMP(6)))
+      )
+
+      const result = padTypeTree(input)
+
+      expect(result).toEqual(
+        AND(
+          OR(MATCHES(ParameterType.Calldata, COMP(1), PASS())),
+          OR(MATCHES(ParameterType.Calldata, COMP(5), COMP(6)))
+        )
+      )
+
+      // Should find and pad the Calldata branches inside the OR
+    })
+
+    it("finds complex branches inside nested logical operators 2", () => {
+      const input = AND(
         OR(
           MATCHES(ParameterType.Calldata, COMP(1)),
-          MATCHES(ParameterType.Calldata, COMP(2), COMP(3))
+          MATCHES(ParameterType.Calldata, COMP(3), COMP(4))
         ),
-        COMP(4)
+        OR(
+          MATCHES(ParameterType.Calldata, COMP(8)),
+          MATCHES(ParameterType.Calldata, COMP(5), COMP(6), COMP(7))
+        )
       )
 
       const result = normalizeCondition(input)
 
       expect(result).toEqual(
         AND(
-          COMP(4),
           OR(
-            MATCHES(ParameterType.Calldata, COMP(1), PASS()),
-            MATCHES(ParameterType.Calldata, COMP(2), COMP(3))
+            MATCHES(ParameterType.Calldata, COMP(1), PASS(), PASS()),
+            MATCHES(ParameterType.Calldata, COMP(3), COMP(4), PASS())
+          ),
+          OR(
+            MATCHES(ParameterType.Calldata, COMP(8), PASS(), PASS()),
+            MATCHES(ParameterType.Calldata, COMP(5), COMP(6), COMP(7))
           )
         )
       )
@@ -245,7 +292,7 @@ describe("ensureBranchTypeTreeCompatibility", () => {
               ParameterType.Tuple,
               PASS(),
               PASS(),
-              MATCHES(ParameterType.Array, PASS())
+              PASS_(ParameterType.Array, PASS())
             )
           ),
           // Complex call with nested tuple
@@ -264,9 +311,7 @@ describe("ensureBranchTypeTreeCompatibility", () => {
 
       // Should find and pad the Calldata branches inside the OR
     })
-  })
 
-  describe("Structure copying", () => {
     it("copies complex structure when padding", () => {
       const input = OR(
         // Simple call
@@ -316,25 +361,172 @@ describe("ensureBranchTypeTreeCompatibility", () => {
         )
       )
     })
+  })
 
-    it("preserves Dynamic nodes when copying structure", () => {
-      const dynamic = {
-        paramType: ParameterType.Dynamic,
-        operator: Operator.EqualTo,
-        compValue: abiEncode(["string"], ["Hello World"]),
-      }
+  describe("Arrays", () => {
+    it("finds complex branches inside nested logical operators", () => {
+      const input = AND(
+        OR(MATCHES(ParameterType.Calldata, COMP(1))),
+        OR(MATCHES(ParameterType.Calldata, COMP(5), COMP(6)))
+      )
 
+      const result = padTypeTree(input)
+
+      expect(result).toEqual(
+        AND(
+          OR(MATCHES(ParameterType.Calldata, COMP(1), PASS())),
+          OR(MATCHES(ParameterType.Calldata, COMP(5), COMP(6)))
+        )
+      )
+
+      // Should find and pad the Calldata branches inside the OR
+    })
+
+    it("finds complex branches inside nested logical operators 2", () => {
+      const input = AND(
+        OR(
+          MATCHES(ParameterType.Calldata, COMP(1)),
+          MATCHES(ParameterType.Calldata, COMP(3), COMP(4))
+        ),
+        OR(
+          MATCHES(ParameterType.Calldata, COMP(8)),
+          MATCHES(ParameterType.Calldata, COMP(5), COMP(6), COMP(7))
+        )
+      )
+
+      const result = normalizeCondition(input)
+
+      expect(result).toEqual(
+        AND(
+          OR(
+            MATCHES(ParameterType.Calldata, COMP(1), PASS(), PASS()),
+            MATCHES(ParameterType.Calldata, COMP(3), COMP(4), PASS())
+          ),
+          OR(
+            MATCHES(ParameterType.Calldata, COMP(8), PASS(), PASS()),
+            MATCHES(ParameterType.Calldata, COMP(5), COMP(6), COMP(7))
+          )
+        )
+      )
+
+      // Should find and pad the Calldata branches inside the OR
+    })
+
+    it("handles complex branches inside Arrays", () => {
+      const input = MATCHES(
+        ParameterType.Array,
+        MATCHES(ParameterType.Tuple, COMP(1), PASS(), COMP(3)),
+        MATCHES(ParameterType.Tuple, COMP(4))
+      )
+
+      const result = normalizeCondition(input)
+      expect(result).toEqual(
+        MATCHES(
+          ParameterType.Array,
+          MATCHES(ParameterType.Tuple, COMP(1), PASS(), COMP(3)),
+          MATCHES(ParameterType.Tuple, COMP(4), PASS(), PASS())
+        )
+      )
+    })
+
+    it("finds two branches which should mutually patch eachother", () => {
       const input = OR(
-        MATCHES(ParameterType.Calldata, COMP(1)),
-        MATCHES(ParameterType.Calldata, COMP(2), dynamic)
+        // Simple call
+        MATCHES(
+          ParameterType.Calldata,
+          MATCHES(ParameterType.Tuple, PASS(), COMP(1))
+        ),
+        // Complex call with nested tuple
+        MATCHES(
+          ParameterType.Calldata,
+          MATCHES(ParameterType.Tuple, COMP(2)),
+          MATCHES(
+            ParameterType.Tuple,
+            COMP(2),
+            COMP(3),
+            MATCHES(ParameterType.Array, COMP(3))
+          )
+        )
       )
 
       const result = normalizeCondition(input)
 
       expect(result).toEqual(
         OR(
-          MATCHES(ParameterType.Calldata, COMP(1), PASS(ParameterType.Dynamic)),
-          MATCHES(ParameterType.Calldata, COMP(2), dynamic)
+          // Simple call
+          MATCHES(
+            ParameterType.Calldata,
+            MATCHES(ParameterType.Tuple, PASS(), COMP(1)),
+            PASS_(
+              ParameterType.Tuple,
+              PASS(),
+              PASS(),
+              PASS_(ParameterType.Array, PASS())
+            )
+          ),
+          // Complex call with nested tuple
+          MATCHES(
+            ParameterType.Calldata,
+            MATCHES(ParameterType.Tuple, COMP(2), PASS()),
+            MATCHES(
+              ParameterType.Tuple,
+              COMP(2),
+              COMP(3),
+              MATCHES(ParameterType.Array, COMP(3))
+            )
+          )
+        )
+      )
+
+      // Should find and pad the Calldata branches inside the OR
+    })
+
+    it("copies complex structure when padding", () => {
+      const input = OR(
+        // Simple call
+        MATCHES(ParameterType.Calldata, COMP(2)),
+        // Complex call with nested tuple
+        MATCHES(
+          ParameterType.Calldata,
+          COMP(1),
+          MATCHES(
+            ParameterType.Tuple,
+            COMP(2),
+            COMP(3),
+            MATCHES(ParameterType.Array, COMP(4))
+          )
+        )
+      )
+
+      const result = normalizeCondition(input)
+
+      const pass = {
+        operator: Operator.Pass,
+        paramType: ParameterType.Tuple,
+        children: [
+          PASS(),
+          PASS(),
+          {
+            operator: Operator.Pass,
+            paramType: ParameterType.Array,
+            children: [PASS()],
+          },
+        ],
+      }
+
+      expect(result).toEqual(
+        OR(
+          MATCHES(ParameterType.Calldata, COMP(2), pass),
+          MATCHES(
+            ParameterType.Calldata,
+            COMP(1),
+            MATCHES(
+              ParameterType.Tuple,
+              COMP(2),
+              COMP(3),
+              MATCHES(ParameterType.Array, COMP(4))
+            )
+          )
         )
       )
     })

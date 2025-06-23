@@ -1,7 +1,7 @@
 import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
 import { conditionId } from "../conditionId"
-import { padTypeTree } from "./padTypeTrees"
+import { padTypeTree } from "./padTypeTree"
 
 /**
  * Transforms the structure of a condition without changing it semantics. Aims to minimize the tree size and to arrive at a normal form, so that semantically equivalent conditions will have an equal representation.
