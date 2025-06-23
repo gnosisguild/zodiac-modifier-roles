@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest"
 import { Operator, ParameterType, Condition } from "zodiac-roles-deployments"
-import { normalizeCondition } from "./normalizeCondition"
-import { abiEncode } from "../../abiEncode"
-import { conditionHash, conditionId } from "./conditionId"
+import { normalizeCondition } from "."
+import { abiEncode } from "../../../abiEncode"
+import { conditionHash, conditionId } from "../conditionId"
 
 // Helper to create a static comparison condition
 const COMP = (id: number | `0x${string}`): Condition => ({
@@ -412,7 +412,7 @@ describe("normalizeCondition", () => {
       )
     })
 
-    it.skip("preserves semantics through complex transformations", () => {
+    it("preserves semantics through complex transformations", () => {
       // Test case that should exercise branch type compatibility
       const input = OR(
         MATCHES(ParameterType.Tuple, COMP(1)),
@@ -424,7 +424,7 @@ describe("normalizeCondition", () => {
       // Should pad the first branch to match the second
       expect(result).toEqual(
         OR(
-          MATCHES(ParameterType.Tuple, COMP(1), PASS(0), PASS(0)),
+          MATCHES(ParameterType.Tuple, COMP(1), PASS(), PASS()),
           MATCHES(ParameterType.Tuple, COMP(2), COMP(3), COMP(4))
         )
       )

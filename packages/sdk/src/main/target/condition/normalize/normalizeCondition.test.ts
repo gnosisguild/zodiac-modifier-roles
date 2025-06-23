@@ -1,14 +1,17 @@
 import { expect, it, suite } from "vitest"
 import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
-import { normalizeCondition } from "./normalizeCondition"
+import { normalizeCondition } from "."
 
-import { FunctionPermissionCoerced, mergePermissions } from "../../permission"
-import { abiEncode } from "../../abiEncode"
+import {
+  FunctionPermissionCoerced,
+  mergePermissions,
+} from "../../../permission"
+import { abiEncode } from "../../../abiEncode"
 
-import { c } from "../../target/authoring"
-import { allow } from "../../../kit"
-import { encodeKey } from "../../keys"
+import { c } from "../../authoring"
+import { allow } from "../../../../kit"
+import { encodeKey } from "../../../keys"
 
 const DUMMY_COMP = (id: number) => ({
   paramType: ParameterType.Static,
@@ -372,7 +375,7 @@ suite("normalizeConditionDeprecated()", () => {
     expect(normalizeCondition(condition)).to.deep.equal(condition)
   })
 
-  it.skip("adds trailing Pass nodes to make logical branches' type trees compatible", () => {
+  it("adds trailing Pass nodes to make logical branches' type trees compatible", () => {
     expect(
       normalizeCondition({
         paramType: ParameterType.None,
