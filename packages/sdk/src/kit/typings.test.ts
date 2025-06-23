@@ -1,9 +1,7 @@
 import { test } from "vitest"
 import { BigNumberish } from "ethers"
-
+import { Scoping } from "../main/target/authoring/types"
 import { c } from "zodiac-roles-sdk"
-
-import { Scoping } from "../main/authoring/conditions/types"
 
 test("typings", async () => {
   // These are tests of the typing system, not the runtime behavior.
