@@ -1,3 +1,4 @@
+import { id } from "ethers"
 import { c, Condition, ExecutionOptions, forAll } from "zodiac-roles-sdk"
 
 const gpV2VaultRelayer = "0xC92E8bdf79f0507f65a392b0ab4667716BFE0110"
@@ -10,14 +11,29 @@ export const allowCowOrderSigning = ({
   sell,
   buy,
   receiver,
+  approveAllowance,
+  buyAllowance,
+  sellAllowance,
+  allowBalancerBalanceAccess,
 }: {
   sell: `0x${string}`[]
   buy: `0x${string}`[]
+
   /** Defaults to the avatar of the Roles Modifier. */
   receiver?: `0x${string}`
+
+  /** Allowance key to restrict approve amounts across sell tokens. If not provided, infinite approvals are allowed. */
+  approveAllowance?: string
+  /** Allowance key to restrict buy amount within allowance. If not provided, no buy amount restriction is applied. */
+  buyAllowance?: string
+  /** Allowance key to restrict sell amount within allowance. If not provided, no sell amount restriction is applied. */
+  sellAllowance?: string
+
+  /** If set to true, swaps can withdraw and deposit Balancer internal token balances of the avatar. */
+  allowBalancerBalanceAccess?: string
 }) => {
   return [
-    ...allowErc20Approve(sell, gpV2VaultRelayer),
+    ...allowErc20Approve(sell, gpV2VaultRelayer, approveAllowance),
     {
       target: cowOrderSigner,
       function:
@@ -25,9 +41,21 @@ export const allowCowOrderSigning = ({
       condition: c.calldataMatches(
         [
           c.matches({
-            sell: sell,
-            buy: buy,
+            sell: oneOf(sell),
+            buy: oneOf(buy),
             receiver: receiver ? receiver : c.avatar,
+            buyAmount: buyAllowance
+              ? c.withinAllowance(buyAllowance)
+              : undefined,
+            sellAmount: sellAllowance
+              ? c.withinAllowance(sellAllowance)
+              : undefined,
+            sellTokenBalance: allowBalancerBalanceAccess
+              ? undefined
+              : c.eq(id("erc20")),
+            buyTokenBalance: allowBalancerBalanceAccess
+              ? undefined
+              : c.eq(id("erc20")),
           }),
         ],
         [
@@ -61,9 +89,20 @@ export const allowCowOrderSigning = ({
 
 const allowErc20Approve = (
   tokens: readonly `0x${string}`[],
-  spender: `0x${string}`
+  spender: `0x${string}`,
+  allowanceKey?: string
 ) =>
   forAll(tokens, {
     signature: "approve(address,uint256)",
-    condition: c.calldataMatches([spender], ["address", "uint256"]),
+    condition: c.calldataMatches(
+      [spender, allowanceKey ? c.withinAllowance(allowanceKey) : undefined],
+      ["address", "uint256"]
+    ),
   })
+
+const oneOf = (values: string[]) =>
+  values.length === 0
+    ? undefined
+    : values.length === 1
+      ? values[0]
+      : c.or(...(values as [string, string, ...string[]]))
