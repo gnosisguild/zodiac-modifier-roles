@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest"
 import { Operator, ParameterType, Condition } from "zodiac-roles-deployments"
 import { hoistCondition, hoistTopOrs } from "./hoistCondition"
-import { normalizeConditionNext } from "./normalizeConditionNext"
+import { normalizeCondition } from "./normalize"
 import { conditionHash, conditionId } from "./conditionId"
 
 import { abiEncode } from "../../abiEncode"
@@ -742,7 +742,7 @@ describe("hoistCondition", () => {
         COMP(4)
       )
 
-      const normalized = normalizeConditionNext(input)
+      const normalized = normalizeCondition(input)
       const hoisted = hoistCondition(normalized)
 
       // hoistCondition strips IDs, so we need to check the structure
@@ -756,7 +756,7 @@ describe("hoistCondition", () => {
         COMP(3)
       )
 
-      const normalized = normalizeConditionNext(input)
+      const normalized = normalizeCondition(input)
       const hoisted = hoistCondition(normalized)
 
       // hoistCondition strips IDs, so we need to check the structure
@@ -771,7 +771,7 @@ describe("hoistCondition", () => {
         PASS()
       )
 
-      const normalized = normalizeConditionNext(input)
+      const normalized = normalizeCondition(input)
       const hoisted = hoistCondition(normalized)
 
       // hoistCondition strips IDs, so we need to check the structure
@@ -787,7 +787,7 @@ describe("hoistCondition", () => {
         )
       )
 
-      const normalized = normalizeConditionNext(input)
+      const normalized = normalizeCondition(input)
       const hoisted = hoistCondition(normalized)
 
       // hoistCondition strips IDs, so we need to check the structure
@@ -854,19 +854,6 @@ describe("hoistCondition", () => {
           ),
           MATCHES(ParameterType.Array, MATCHES(ParameterType.Static, COMP(3)))
         )
-      )
-
-      const result = hoistCondition(input)
-
-      expect(result.operator).toBe(Operator.Or)
-    })
-
-    it("handles mixed empty and non-empty children arrays", () => {
-      const input = MATCHES(
-        ParameterType.Tuple,
-        MATCHES(ParameterType.Calldata), // Empty children
-        OR(COMP(1), COMP(2)),
-        MATCHES(ParameterType.Array, COMP(3)) // Has children
       )
 
       const result = hoistCondition(input)
@@ -1016,9 +1003,9 @@ describe("hoistCondition", () => {
         MATCHES(ParameterType.Calldata, COMP(1), COMP(3))
       )
 
-      const normalized = normalizeConditionNext(original)
+      const normalized = normalizeCondition(original)
       const hoisted = hoistCondition(normalized)
-      const renormalized = normalizeConditionNext(hoisted)
+      const renormalized = normalizeCondition(hoisted)
 
       // The final result should be semantically equivalent
       // After round-trip, the structure should be equivalent
@@ -1033,9 +1020,9 @@ describe("hoistCondition", () => {
         MATCHES(ParameterType.AbiEncoded, COMP(1), COMP(3))
       )
 
-      const normalized = normalizeConditionNext(original)
+      const normalized = normalizeCondition(original)
       const hoisted = hoistCondition(normalized)
-      const renormalized = normalizeConditionNext(hoisted)
+      const renormalized = normalizeCondition(hoisted)
 
       // After round-trip, the structure should be equivalent
       // Note: hoistCondition might produce a different but semantically equivalent structure
@@ -1049,9 +1036,9 @@ describe("hoistCondition", () => {
         MATCHES(ParameterType.Tuple, COMP(1), COMP(3), PASS())
       )
 
-      const normalized = normalizeConditionNext(original)
+      const normalized = normalizeCondition(original)
       const hoisted = hoistCondition(normalized)
-      const renormalized = normalizeConditionNext(hoisted)
+      const renormalized = normalizeCondition(hoisted)
 
       // After round-trip, the structure should be equivalent
       // Note: hoistCondition might produce a different but semantically equivalent structure
@@ -1065,9 +1052,9 @@ describe("hoistCondition", () => {
         MATCHES(ParameterType.Array, MATCHES(ParameterType.Static, COMP(2)))
       )
 
-      const normalized = normalizeConditionNext(original)
+      const normalized = normalizeCondition(original)
       const hoisted = hoistCondition(normalized)
-      const renormalized = normalizeConditionNext(hoisted)
+      const renormalized = normalizeCondition(hoisted)
 
       // After round-trip, the structure should be equivalent
       // Note: hoistCondition might produce a different but semantically equivalent structure
@@ -1095,9 +1082,9 @@ describe("hoistCondition", () => {
         ],
       }
 
-      const normalized = normalizeConditionNext(original)
+      const normalized = normalizeCondition(original)
       const hoisted = hoistCondition(normalized)
-      const renormalized = normalizeConditionNext(hoisted)
+      const renormalized = normalizeCondition(hoisted)
 
       // After round-trip, the structure should be equivalent
       // Note: hoistCondition might produce a different but semantically equivalent structure

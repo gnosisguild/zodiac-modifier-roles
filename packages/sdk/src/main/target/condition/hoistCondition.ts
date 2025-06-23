@@ -1,6 +1,6 @@
 import { Operator, ParameterType, Condition } from "zodiac-roles-deployments"
 
-import { normalizeCondition } from "./normalizeCondition"
+import { normalizeCondition } from "./normalize"
 
 /**
  * Represents a node in the condition tree with its path from the root
@@ -19,7 +19,7 @@ export interface ConditionNode {
 
 export const hoistCondition = (condition: Condition): Condition => {
   while (true) {
-    condition = normalizeCondition(condition)
+    condition = normalizeCondition(condition, { shouldPushDown: false })
     // Get all nodes in the current tree
     const nodes = allNodes(condition)
 

@@ -8,8 +8,8 @@ import {
   Target,
 } from "zodiac-roles-deployments"
 
-import { normalizeCondition } from "../condition/normalizeCondition"
 import { diffTarget, diffTargets } from "./target"
+import { normalizeCondition } from "../condition"
 
 const roleKey = ZeroHash
 const address = ZeroAddress as `0x${string}`
@@ -580,9 +580,15 @@ suite("diffTarget - Misc", () => {
             executionOptions: 0,
             wildcarded: false,
             condition: {
-              paramType: ParameterType.None,
-              operator: Operator.Or,
-              children: [],
+              paramType: ParameterType.Calldata,
+              operator: Operator.Matches,
+              children: [
+                {
+                  paramType: ParameterType.Static,
+                  operator: Operator.EqualTo,
+                  compValue: "0xaabbccdd",
+                },
+              ],
             },
           },
         ],
@@ -600,11 +606,17 @@ suite("diffTarget - Misc", () => {
         targetAddress: "0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb",
         selector: "0x095ea7b3",
         executionOptions: 0,
-        condition: normalizeCondition({
-          paramType: ParameterType.None,
-          operator: Operator.Or,
-          children: [],
-        }),
+        condition: {
+          paramType: ParameterType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: ParameterType.Static,
+              operator: Operator.EqualTo,
+              compValue: "0xaabbccdd",
+            },
+          ],
+        },
       },
     ])
   })

@@ -19,7 +19,7 @@ const DUMMY_COMP = (id: number) => ({
   compValue: abiEncode(["uint256"], [id]),
 })
 
-suite("normalizeConditionDeprecated()", () => {
+suite("normalizeCondition()", () => {
   it("flattens nested AND conditions", () => {
     expect(
       normalizeCondition({
@@ -623,7 +623,7 @@ suite("normalizeCondition() - MISC transfered from other tests", () => {
 })
 
 suite("normalizeConditionDeprecated() - MISC new tests", () => {
-  it("Transforms an AND", () => {
+  it("DOES NOT transform an AND", () => {
     const C1: Condition = {
       paramType: ParameterType.Static,
       operator: Operator.EqualTo,
@@ -655,21 +655,10 @@ suite("normalizeConditionDeprecated() - MISC new tests", () => {
 
     const normalized = normalizeCondition(condition)
 
-    // The bug transforms it to:
-    expect(normalized).to.deep.equal({
-      paramType: ParameterType.Calldata,
-      operator: Operator.Matches,
-      children: [
-        {
-          paramType: ParameterType.None,
-          operator: Operator.And,
-          children: [C1, C2],
-        },
-      ],
-    })
+    expect(normalized).to.deep.equal(condition)
   })
 
-  it("Transforms an AND, deep", () => {
+  it("DOES NOT Transforms an AND, deep", () => {
     const C1: Condition = {
       paramType: ParameterType.Static,
       operator: Operator.EqualTo,
@@ -713,27 +702,10 @@ suite("normalizeConditionDeprecated() - MISC new tests", () => {
     const normalized = normalizeCondition(condition)
 
     // The bug transforms it to:
-    expect(normalized).to.deep.equal({
-      paramType: ParameterType.Calldata,
-      operator: Operator.Matches,
-      children: [
-        {
-          paramType: ParameterType.Tuple,
-          operator: Operator.Matches,
-          children: [
-            C1,
-            {
-              paramType: ParameterType.None,
-              operator: Operator.And,
-              children: [C2, C3],
-            },
-          ],
-        },
-      ],
-    })
+    expect(normalized).to.deep.equal(condition)
   })
 
-  it("Array length mismatch should result in a push down", () => {
+  it("does not push down on arrays: with Array length mismatch", () => {
     const A: Condition = {
       paramType: ParameterType.Static,
       operator: Operator.EqualTo,
@@ -760,16 +732,71 @@ suite("normalizeConditionDeprecated() - MISC new tests", () => {
         {
           paramType: ParameterType.Array,
           operator: Operator.Matches,
-          children: [A, B, C], // 3 elements
+          children: [A, B], // 2 elements
         },
         {
           paramType: ParameterType.Array,
           operator: Operator.Matches,
-          children: [A, B], // 2 elements
+          children: [A, B, C], // 3 elements
         },
       ],
     }
 
-    expect(() => normalizeCondition(mismatchedArrays)).to.toThrowError()
+    expect(normalizeCondition(mismatchedArrays)).to.deep.equal(mismatchedArrays)
+  })
+
+  it("never pushes down on Arrays", () => {
+    const A: Condition = {
+      paramType: ParameterType.Static,
+      operator: Operator.EqualTo,
+      compValue: "0x01",
+    }
+
+    const B: Condition = {
+      paramType: ParameterType.Static,
+      operator: Operator.EqualTo,
+      compValue: "0x02",
+    }
+
+    const C: Condition = {
+      paramType: ParameterType.Static,
+      operator: Operator.EqualTo,
+      compValue: "0x03",
+    }
+
+    // OR of two arrays with DIFFERENT lengths
+    const mismatchedArrays: Condition = {
+      paramType: ParameterType.None,
+      operator: Operator.Or,
+      children: [
+        {
+          paramType: ParameterType.Array,
+          operator: Operator.Matches,
+          children: [A, C],
+        },
+        {
+          paramType: ParameterType.Array,
+          operator: Operator.Matches,
+          children: [A, B],
+        },
+      ],
+    }
+
+    expect(normalizeCondition(mismatchedArrays)).to.deep.equal({
+      paramType: ParameterType.None,
+      operator: Operator.Or,
+      children: [
+        {
+          paramType: ParameterType.Array,
+          operator: Operator.Matches,
+          children: [A, B],
+        },
+        {
+          paramType: ParameterType.Array,
+          operator: Operator.Matches,
+          children: [A, C],
+        },
+      ],
+    })
   })
 })

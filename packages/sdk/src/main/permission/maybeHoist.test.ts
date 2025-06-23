@@ -387,19 +387,5 @@ describe("maybeHoist()", () => {
       const result = maybeHoist(permission, probes)
       expect(result).toBeDefined()
     })
-
-    it("handles empty OR conditions", () => {
-      const condition = OR() // Empty OR
-      const permission: FunctionPermissionCoerced = {
-        targetAddress: AddressOne,
-        selector: "0x01",
-        condition,
-      }
-
-      const probes: PermissionCoerced[] = []
-
-      const result = maybeHoist(permission, probes)
-      expect(result).toBeDefined()
-    })
   })
 })

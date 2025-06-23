@@ -7,10 +7,9 @@ import {
   ParameterType,
 } from "zodiac-roles-deployments"
 
-import { normalizeCondition } from "../condition/normalizeCondition"
 import { diffFunction, diffFunctions } from "./function"
 import { abiEncode } from "../../abiEncode"
-import { conditionId } from "../condition"
+import { conditionId, normalizeCondition } from "../condition"
 
 const roleKey = ZeroHash
 const targetAddress = ZeroAddress

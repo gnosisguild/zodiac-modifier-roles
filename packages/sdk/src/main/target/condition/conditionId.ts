@@ -19,8 +19,18 @@ const ZERO_SALT =
   "0x0000000000000000000000000000000000000000000000000000000000000000"
 
 export function conditionHash(condition: Condition) {
+  const normalize = (c: Condition): Condition => ({
+    paramType: c.paramType,
+    operator: c.operator,
+    compValue: c.compValue || "0x",
+    children: (c.children || []).map(normalize),
+  })
+
   return (
-    "0x" + createHash("sha256").update(JSON.stringify(condition)).digest("hex")
+    "0x" +
+    createHash("sha256")
+      .update(JSON.stringify(normalize(condition)))
+      .digest("hex")
   )
 }
 

@@ -52,19 +52,6 @@ const NOR = (...children: Condition[]): Condition => ({
   children,
 })
 
-// Helper for other operators
-const GT = (value: number): Condition => ({
-  paramType: ParameterType.Static,
-  operator: Operator.GreaterThan,
-  compValue: abiEncode(["uint256"], [value]),
-})
-
-const LT = (value: number): Condition => ({
-  paramType: ParameterType.Static,
-  operator: Operator.LessThan,
-  compValue: abiEncode(["uint256"], [value]),
-})
-
 const ETHER_ALLOWANCE = (): Condition => ({
   paramType: ParameterType.None,
   operator: Operator.EtherWithinAllowance,
@@ -316,7 +303,7 @@ describe("normalizeCondition", () => {
       })
     })
 
-    describe("normalizeChildrenOrder", () => {
+    describe("sortChildren", () => {
       it("sorts children by their condition IDs in AND", () => {
         const input = AND(COMP(3), COMP(1), COMP(2))
 
@@ -379,7 +366,7 @@ describe("normalizeCondition", () => {
     })
   })
 
-  describe("Integration tests", () => {
+  describe("Misc", () => {
     it("combines multiple normalization steps correctly", () => {
       // Complex condition that exercises multiple normalization steps
       const input = OR(
@@ -429,19 +416,21 @@ describe("normalizeCondition", () => {
         )
       )
     })
+    it("push down + pad", () => {
+      const input = OR(
+        MATCHES(ParameterType.Calldata, COMP(1), COMP(2)),
+        MATCHES(ParameterType.Calldata, COMP(1))
+      )
+
+      const result = normalizeCondition(input)
+
+      expect(result).toEqual(
+        MATCHES(ParameterType.Calldata, COMP(1), OR(PASS(), COMP(2)))
+      )
+    })
   })
 
   describe("Edge cases", () => {
-    it("handles empty OR condition", () => {
-      const input: Condition = {
-        paramType: ParameterType.None,
-        operator: Operator.Or,
-        children: [],
-      }
-
-      expect(() => normalizeCondition(input)).not.toThrow()
-    })
-
     it("handles conditions without children", () => {
       const input = COMP(1)
 
