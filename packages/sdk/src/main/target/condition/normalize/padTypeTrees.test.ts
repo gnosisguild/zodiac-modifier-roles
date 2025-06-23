@@ -17,6 +17,15 @@ const PASS = (paramType: ParameterType = ParameterType.Static): Condition => ({
   operator: Operator.Pass,
 })
 
+const PASS_ = (
+  paramType: ParameterType,
+  ...children: Condition[]
+): Condition => ({
+  paramType,
+  operator: Operator.Pass,
+  children,
+})
+
 const OR = (...children: Condition[]): Condition => ({
   paramType: ParameterType.None,
   operator: Operator.Or,
@@ -202,6 +211,58 @@ describe("ensureBranchTypeTreeCompatibility", () => {
           )
         )
       )
+    })
+
+    it("finds two branches which should mutually patch eachother", () => {
+      const input = OR(
+        // Simple call
+        MATCHES(
+          ParameterType.Calldata,
+          MATCHES(ParameterType.Tuple, PASS(), COMP(1))
+        ),
+        // Complex call with nested tuple
+        MATCHES(
+          ParameterType.Calldata,
+          MATCHES(ParameterType.Tuple, COMP(2)),
+          MATCHES(
+            ParameterType.Tuple,
+            COMP(2),
+            COMP(3),
+            MATCHES(ParameterType.Array, COMP(3))
+          )
+        )
+      )
+
+      const result = normalizeCondition(input)
+
+      expect(result).toEqual(
+        OR(
+          // Simple call
+          MATCHES(
+            ParameterType.Calldata,
+            MATCHES(ParameterType.Tuple, PASS(), COMP(1)),
+            PASS_(
+              ParameterType.Tuple,
+              PASS(),
+              PASS(),
+              MATCHES(ParameterType.Array, PASS())
+            )
+          ),
+          // Complex call with nested tuple
+          MATCHES(
+            ParameterType.Calldata,
+            MATCHES(ParameterType.Tuple, COMP(2), PASS()),
+            MATCHES(
+              ParameterType.Tuple,
+              COMP(2),
+              COMP(3),
+              MATCHES(ParameterType.Array, COMP(3))
+            )
+          )
+        )
+      )
+
+      // Should find and pad the Calldata branches inside the OR
     })
   })
 
