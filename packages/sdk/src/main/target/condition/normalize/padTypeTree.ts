@@ -10,9 +10,9 @@ import {
 
 export function padTypeTree(condition: Condition): Condition {
   /*
-   * This function is to be used only from within normalizeCondition
-   * there we come from the assumption that lower levels were recursively normalized
-   * thus we only really wanna kick off the normlization at Logical or Array nodes
+   * This function is to be used from within normalizeCondition
+   * we operate under the assumption that lower levels were recursively normalized
+   * thus we only really wanna kick off the normlization for Logical/Array nodes
    */
   if (!isLogical(condition) && !isArray(condition)) {
     return condition
@@ -20,20 +20,19 @@ export function padTypeTree(condition: Condition): Condition {
 
   const isPaddeable = (c: Condition) => isLogical(c) || isComplex(c)
 
-  const ids = new Set()
-  for (const child of condition.children || []) {
-    if (isPaddeable(child)) {
-      ids.add(typeTreeId(child))
-    }
-  }
+  const uniqueTypeTreeIds = new Set(
+    (condition.children || [])
+      .filter(isPaddeable)
+      .map((child) => typeTreeId(child))
+  )
 
-  // there's a unique type tree among children, nothing to do
-  if (ids.size <= 1) {
+  // All paddeable children already match
+  if (uniqueTypeTreeIds.size <= 1) {
     return condition
   }
 
   const nextChildren = [...condition.children!]
-  for (let i = 0; i < nextChildren.length; i++) {
+  for (let i = 0; i < condition.children!.length; i++) {
     if (!isPaddeable(nextChildren[i])) continue
 
     for (let j = 0; j < nextChildren.length; j++) {
@@ -49,6 +48,16 @@ export function padTypeTree(condition: Condition): Condition {
   }
 }
 
+/*
+ * Pads a `condition` tree so it structurally matches a given `typeTree`.
+ *
+ * Assumptions:
+ * - `condition` and `typeTree` are structurally compatible (not enforced here).
+ * - Either may be a subset of the other.
+ * - If `condition` is missing branches that exist in `typeTree`, they are added.
+ * - If `condition` is wider (has extra nodes), they are preserved — nothing is removed.
+ *
+ */
 function pad(
   condition: Condition | undefined | null,
   typeTree: TypeTree
@@ -63,6 +72,7 @@ function pad(
     }
   }
 
+  // Ensure condition has at least one child if it's expected to
   const atLeastOne = (): Condition[] => {
     if (!condition.children || condition.children.length == 0) {
       throw new Error("Expected populated children array")
@@ -82,6 +92,10 @@ function pad(
   if (isComplex(condition)) {
     const children = atLeastOne()
 
+    /*
+     * Use mergeArrays to preserve any extra nodes in `condition` (if it's wider),
+     * while padding or replacing only the overlapping portion with typeTree.
+     */
     return {
       ...condition,
       children: mergeArrays(
