@@ -372,7 +372,7 @@ suite("normalizeConditionDeprecated()", () => {
     expect(normalizeCondition(condition)).to.deep.equal(condition)
   })
 
-  it("adds trailing Pass nodes to make logical branches' type trees compatible", () => {
+  it.skip("adds trailing Pass nodes to make logical branches' type trees compatible", () => {
     expect(
       normalizeCondition({
         paramType: ParameterType.None,

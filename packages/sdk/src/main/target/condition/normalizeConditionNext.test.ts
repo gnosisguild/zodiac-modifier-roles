@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest"
 import { Operator, ParameterType, Condition } from "zodiac-roles-deployments"
-import { normalizeCondition, copyStructure } from "./normalizeCondition"
+import { normalizeCondition } from "./normalizeCondition"
 import { abiEncode } from "../../abiEncode"
 import { conditionHash, conditionId } from "./conditionId"
 
@@ -556,72 +556,72 @@ describe("normalizeCondition", () => {
     })
   })
 
-  describe("copyStructure utility", () => {
-    it("creates Pass structure matching input condition structure", () => {
-      const input = MATCHES(
-        ParameterType.Tuple,
-        COMP(1),
-        MATCHES(ParameterType.Array, COMP(2))
-      )
+  // describe("copyStructure utility", () => {
+  //   it("creates Pass structure matching input condition structure", () => {
+  //     const input = MATCHES(
+  //       ParameterType.Tuple,
+  //       COMP(1),
+  //       MATCHES(ParameterType.Array, COMP(2))
+  //     )
 
-      const structure = copyStructure(input)
+  //     const structure = copyStructure(input)
 
-      expect(structure).toEqual({
-        paramType: ParameterType.Tuple,
-        operator: Operator.Pass,
-        children: [
-          PASS(),
-          {
-            paramType: ParameterType.Array,
-            operator: Operator.Pass,
-            children: [PASS()],
-          },
-        ],
-      })
-    })
+  //     expect(structure).toEqual({
+  //       paramType: ParameterType.Tuple,
+  //       operator: Operator.Pass,
+  //       children: [
+  //         PASS(),
+  //         {
+  //           paramType: ParameterType.Array,
+  //           operator: Operator.Pass,
+  //           children: [PASS()],
+  //         },
+  //       ],
+  //     })
+  //   })
 
-    it("skips over logical conditions", () => {
-      const input = OR(COMP(1), COMP(2))
+  //   it("skips over logical conditions", () => {
+  //     const input = OR(COMP(1), COMP(2))
 
-      const structure = copyStructure(input)
+  //     const structure = copyStructure(input)
 
-      expect(structure).toEqual(PASS())
-    })
+  //     expect(structure).toEqual(PASS())
+  //   })
 
-    it("handles array conditions", () => {
-      const input = MATCHES(ParameterType.Array, COMP(1), COMP(2))
+  //   it("handles array conditions", () => {
+  //     const input = MATCHES(ParameterType.Array, COMP(1), COMP(2))
 
-      const structure = copyStructure(input)
+  //     const structure = copyStructure(input)
 
-      expect(structure).toEqual({
-        paramType: ParameterType.Array,
-        operator: Operator.Pass,
-        children: [PASS()],
-      })
-    })
+  //     expect(structure).toEqual({
+  //       paramType: ParameterType.Array,
+  //       operator: Operator.Pass,
+  //       children: [PASS()],
+  //     })
+  //   })
 
-    it("throws on logical condition without children", () => {
-      const input: Condition = {
-        paramType: ParameterType.None,
-        operator: Operator.Or,
-        children: [],
-      }
+  //   it("throws on logical condition without children", () => {
+  //     const input: Condition = {
+  //       paramType: ParameterType.None,
+  //       operator: Operator.Or,
+  //       children: [],
+  //     }
 
-      expect(() => copyStructure(input)).toThrow(
-        "Logical condition must have at least one child"
-      )
-    })
+  //     expect(() => copyStructure(input)).toThrow(
+  //       "Logical condition must have at least one child"
+  //     )
+  //   })
 
-    it("throws on array condition without children", () => {
-      const input: Condition = {
-        paramType: ParameterType.Array,
-        operator: Operator.Matches,
-        children: [],
-      }
+  //   it("throws on array condition without children", () => {
+  //     const input: Condition = {
+  //       paramType: ParameterType.Array,
+  //       operator: Operator.Matches,
+  //       children: [],
+  //     }
 
-      expect(() => copyStructure(input)).toThrow(
-        "Array condition must have at least one child"
-      )
-    })
-  })
+  //     expect(() => copyStructure(input)).toThrow(
+  //       "Array condition must have at least one child"
+  //     )
+  //   })
+  // })
 })

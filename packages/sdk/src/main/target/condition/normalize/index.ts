@@ -1,6 +1,7 @@
 import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
-import { conditionId } from "./conditionId"
+import { conditionId } from "../conditionId"
+import { padTypeTree } from "./padTypeTrees"
 
 /**
  * Transforms the structure of a condition without changing it semantics. Aims to minimize the tree size and to arrive at a normal form, so that semantically equivalent conditions will have an equal representation.
@@ -14,7 +15,7 @@ export function normalizeCondition(condition: Condition): Condition {
 
   // At this point result is already a deep clone of the input condition, so the individual normalization functions can safely mutate it in place.
   result = pruneTrailingPass(result)
-  result = ensureBranchTypeTreeCompatibility(result)
+  result = padTypeTree(result)
   result = flattenNestedLogicalConditions(result)
   result = dedupeBranches(result)
   result = unwrapSingleBranches(result)
@@ -75,60 +76,6 @@ const pruneTrailingPass = (condition: Condition): Condition => {
   return condition
 }
 
-const ensureBranchTypeTreeCompatibility = (condition: Condition): Condition => {
-  const complexBranches = collectComplexBranches(condition)
-
-  // find the longest branch
-  let maxLength = 0
-  let longestBranch: Condition | null = null
-  for (const branch of complexBranches) {
-    if (branch.children?.length && branch.children.length > maxLength) {
-      maxLength = branch.children.length
-      longestBranch = branch
-    }
-  }
-  if (!longestBranch) return condition
-
-  // fill up shorter branches with Pass nodes
-  for (const branch of complexBranches) {
-    if (!branch.children) continue
-    for (let i = branch.children?.length; i < maxLength; i++) {
-      branch.children = [
-        ...branch.children,
-        normalizeCondition(copyStructure(longestBranch.children![i])),
-      ]
-    }
-  }
-  return condition
-}
-
-/**
- * Traverses through logical and array nodes the condition tree and collects all complex branches: tuple, abiEncoded, calldata nodes
- */
-const collectComplexBranches = (condition: Condition): Condition[] => {
-  if (
-    condition.operator === Operator.And ||
-    condition.operator === Operator.Or ||
-    condition.operator === Operator.Nor
-  ) {
-    return condition.children?.flatMap(collectComplexBranches) ?? []
-  }
-
-  if (condition.paramType === ParameterType.Array) {
-    return condition.children?.flatMap(collectComplexBranches) ?? []
-  }
-
-  if (
-    condition.paramType === ParameterType.AbiEncoded ||
-    condition.paramType === ParameterType.Calldata ||
-    condition.paramType === ParameterType.Tuple
-  ) {
-    return [condition]
-  }
-
-  return []
-}
-
 /** flatten nested AND/OR conditions */
 const flattenNestedLogicalConditions = (condition: Condition): Condition => {
   if (
@@ -144,37 +91,6 @@ const flattenNestedLogicalConditions = (condition: Condition): Condition => {
   }
 
   return condition
-}
-
-/**
- * Given a condition, returns a tree of Pass nodes that matches the structure of the type
- */
-export const copyStructure = (condition: Condition): Condition => {
-  // skip over logical conditions
-  if (condition.paramType === ParameterType.None) {
-    if (!condition.children || condition.children.length === 0) {
-      throw new Error("Logical condition must have at least one child")
-    }
-    return copyStructure(condition.children[0])
-  }
-
-  // handle array conditions
-  if (condition.paramType === ParameterType.Array) {
-    if (!condition.children || condition.children.length === 0) {
-      throw new Error("Array condition must have at least one child")
-    }
-    return {
-      paramType: ParameterType.Array,
-      operator: Operator.Pass,
-      children: [copyStructure(condition.children[0])],
-    }
-  }
-
-  return {
-    paramType: condition.paramType,
-    operator: Operator.Pass,
-    children: condition.children?.map(copyStructure),
-  }
 }
 
 /** remove duplicate child branches in AND/OR/NOR */
