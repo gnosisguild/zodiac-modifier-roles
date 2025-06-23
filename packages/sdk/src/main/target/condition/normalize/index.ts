@@ -4,24 +4,32 @@ import { conditionId } from "../conditionId"
 import { padTypeTree } from "./padTypeTree"
 
 /**
- * Transforms the structure of a condition without changing it semantics. Aims to minimize the tree size and to arrive at a normal form, so that semantically equivalent conditions will have an equal representation.
- * Such a normal form is useful for efficiently comparing conditions for equality. It is also promotes efficient, globally deduplicated storage of conditions since the Roles contract stores conditions in bytecode at addresses derived by hashing the condition data.
- **/
+ * Normalizes a condition by transforming its structure without altering its semantics.
+ * The goal is to minimize tree size and produce a canonical (normal) form, so that
+ * semantically equivalent conditions are structurally identical.
+ *
+ * This normalization enables efficient condition equality checks and supports globally
+ * deduplicated storage. In particular, the Roles contract stores conditions as bytecode
+ * at addresses derived from hashing the condition data — so structurally consistent
+ * representations help avoid redundant storage.
+ */
 export function normalizeCondition(condition: Condition): Condition {
   let result: Condition = {
     ...condition,
     children: condition.children?.map(normalizeCondition),
   }
 
-  // At this point result is already a deep clone of the input condition, so the individual normalization functions can safely mutate it in place.
+  result = deleteUndefinedFields(result)
+
   result = pruneTrailingPass(result)
   result = padTypeTree(result)
-  result = flattenNestedLogicalConditions(result)
+
+  result = flattenAndOr(result)
   result = dedupeBranches(result)
   result = unwrapSingleBranches(result)
-  result = deleteUndefinedFields(result)
+
   result = pushDownLogicalConditions(result)
-  result = normalizeChildrenOrder(result)
+  result = sortChildren(result)
 
   return result
 }
@@ -77,7 +85,7 @@ const pruneTrailingPass = (condition: Condition): Condition => {
 }
 
 /** flatten nested AND/OR conditions */
-const flattenNestedLogicalConditions = (condition: Condition): Condition => {
+const flattenAndOr = (condition: Condition): Condition => {
   if (
     condition.operator === Operator.And ||
     condition.operator === Operator.Or
@@ -100,12 +108,13 @@ const dedupeBranches = (condition: Condition): Condition => {
     condition.operator === Operator.Or ||
     condition.operator === Operator.Nor
   ) {
-    const childIds = new Set()
+    const seen = new Set<string>()
     const uniqueChildren = condition.children?.filter((child) => {
       const id = conditionId(child)
-      const isDuplicate = childIds.has(id)
-      childIds.add(id)
-      return !isDuplicate
+      if (seen.has(id)) return false
+
+      seen.add(id)
+      return true
     })
 
     condition.children = uniqueChildren
@@ -127,7 +136,7 @@ const unwrapSingleBranches = (condition: Condition): Condition => {
 }
 
 /** enforce a canonical order of AND/OR/NOR branches */
-const normalizeChildrenOrder = (condition: Condition): Condition => {
+const sortChildren = (condition: Condition): Condition => {
   if (
     condition.operator === Operator.And ||
     condition.operator === Operator.Or ||
