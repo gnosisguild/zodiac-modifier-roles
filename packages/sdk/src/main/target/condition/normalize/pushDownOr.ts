@@ -5,7 +5,7 @@ import { conditionId } from "../conditionId"
 /** push AND and OR conditions as far down the tree as possible without changing semantics */
 export function pushDownOr(
   condition: Condition,
-  normalize: (c: Condition) => Condition
+  normalize: (c: Condition) => Condition = (c) => c
 ): Condition {
   if (condition.operator !== Operator.Or) {
     return condition

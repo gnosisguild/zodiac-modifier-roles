@@ -1,10 +1,9 @@
 import { describe, it, expect } from "vitest"
 import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
-import { pushDownOr } from "./pushDownOrs"
-import { normalizeCondition } from "."
-
+import { pushDownOr } from "./pushDownOr"
 import { abiEncode } from "../../../abiEncode"
+import { normalizeCondition } from "."
 
 // Helper functions
 const COMP = (id: number): Condition => ({
@@ -39,9 +38,6 @@ const MATCHES = (
   children,
 })
 
-// Simple normalizer for testing
-const testNormalizer = (c: Condition) => c
-
 describe("pushDownOrs", () => {
   describe("Basic push down scenarios", () => {
     it("pushes OR down to single differing position", () => {
@@ -50,7 +46,7 @@ describe("pushDownOrs", () => {
         MATCHES(ParameterType.Calldata, COMP(1), COMP(3))
       )
 
-      const result = pushDownOr(input, testNormalizer)
+      const result = pushDownOr(input)
 
       expect(result).toEqual(
         MATCHES(ParameterType.Calldata, COMP(1), OR(COMP(2), COMP(3)))
@@ -64,7 +60,7 @@ describe("pushDownOrs", () => {
         MATCHES(ParameterType.Calldata, COMP(1), COMP(4), COMP(5))
       )
 
-      const result = pushDownOr(input, testNormalizer)
+      const result = pushDownOr(input)
 
       expect(result).toEqual(
         MATCHES(
@@ -82,7 +78,7 @@ describe("pushDownOrs", () => {
         MATCHES(ParameterType.AbiEncoded, PASS(), COMP(2))
       )
 
-      const result = pushDownOr(input, testNormalizer)
+      const result = pushDownOr(input)
 
       expect(result).toEqual(
         MATCHES(ParameterType.AbiEncoded, PASS(), OR(COMP(1), COMP(2)))
@@ -95,7 +91,7 @@ describe("pushDownOrs", () => {
         MATCHES(ParameterType.Tuple, COMP(1), COMP(3), COMP(10))
       )
 
-      const result = pushDownOr(input, testNormalizer)
+      const result = pushDownOr(input)
 
       expect(result).toEqual(
         MATCHES(ParameterType.Tuple, COMP(1), OR(COMP(2), COMP(3)), COMP(10))
@@ -110,7 +106,7 @@ describe("pushDownOrs", () => {
         MATCHES(ParameterType.Calldata, COMP(2))
       )
 
-      const result = pushDownOr(input, testNormalizer)
+      const result = pushDownOr(input)
 
       expect(result).toEqual(input)
     })
@@ -121,7 +117,7 @@ describe("pushDownOrs", () => {
         COMP(2) // Not a MATCHES
       )
 
-      const result = pushDownOr(input, testNormalizer)
+      const result = pushDownOr(input)
 
       expect(result).toEqual(input)
     })
@@ -132,7 +128,7 @@ describe("pushDownOrs", () => {
         MATCHES(ParameterType.Calldata, COMP(3), COMP(4)) // Differs in both positions
       )
 
-      const result = pushDownOr(input, testNormalizer)
+      const result = pushDownOr(input)
 
       expect(result).toEqual(input)
     })
@@ -143,7 +139,7 @@ describe("pushDownOrs", () => {
         MATCHES(ParameterType.Array, COMP(2))
       )
 
-      const result = pushDownOr(input, testNormalizer)
+      const result = pushDownOr(input)
 
       expect(result).toEqual(input)
     })
@@ -154,7 +150,7 @@ describe("pushDownOrs", () => {
         MATCHES(ParameterType.Calldata, COMP(4), COMP(5), COMP(6))
       )
 
-      const result = pushDownOr(input, testNormalizer)
+      const result = pushDownOr(input)
 
       expect(result).toEqual(input)
     })
@@ -164,9 +160,7 @@ describe("pushDownOrs", () => {
     it("throws on single branch OR", () => {
       const input = OR(MATCHES(ParameterType.Calldata, COMP(1)))
 
-      expect(() => pushDownOr(input, testNormalizer)).toThrow(
-        "invariant violation"
-      )
+      expect(() => pushDownOr(input)).toThrow("invariant violation")
     })
 
     it("throws on empty children in MATCHES", () => {
@@ -175,7 +169,7 @@ describe("pushDownOrs", () => {
         MATCHES(ParameterType.Calldata, COMP(1))
       )
 
-      expect(() => pushDownOr(input, testNormalizer)).toThrow("empty children")
+      expect(() => pushDownOr(input)).toThrow("empty children")
     })
   })
 
@@ -189,7 +183,7 @@ describe("pushDownOrs", () => {
         MATCHES(ParameterType.Calldata, COMP(10), tuple2)
       )
 
-      const result = pushDownOr(input, testNormalizer)
+      const result = pushDownOr(input)
 
       expect(result).toEqual(
         MATCHES(ParameterType.Calldata, COMP(10), OR(tuple1, tuple2))
@@ -202,7 +196,7 @@ describe("pushDownOrs", () => {
         MATCHES(ParameterType.Calldata, COMP(1), AND(COMP(4), COMP(5)))
       )
 
-      const result = pushDownOr(input, testNormalizer)
+      const result = pushDownOr(input)
 
       expect(result).toEqual(
         MATCHES(
@@ -223,7 +217,6 @@ describe("pushDownOrs", () => {
 
       const result = pushDownOr(input, normalizeCondition)
 
-      // The nested ORs should be unwrapped by normalizeCondition
       expect(result).toEqual(
         MATCHES(ParameterType.Calldata, COMP(1), OR(COMP(2), COMP(3)))
       )
@@ -251,7 +244,7 @@ describe("pushDownOrs", () => {
         MATCHES(ParameterType.Calldata, COMP(2), COMP(10), COMP(20))
       )
 
-      const result = pushDownOr(input, testNormalizer)
+      const result = pushDownOr(input)
 
       expect(result).toEqual(
         MATCHES(
@@ -269,7 +262,7 @@ describe("pushDownOrs", () => {
         MATCHES(ParameterType.Calldata, COMP(10), COMP(20), COMP(2))
       )
 
-      const result = pushDownOr(input, testNormalizer)
+      const result = pushDownOr(input)
 
       expect(result).toEqual(
         MATCHES(
@@ -287,7 +280,7 @@ describe("pushDownOrs", () => {
         MATCHES(ParameterType.Calldata, PASS(), COMP(2))
       )
 
-      const result = pushDownOr(input, testNormalizer)
+      const result = pushDownOr(input)
 
       expect(result).toEqual(
         MATCHES(ParameterType.Calldata, PASS(), OR(COMP(1), COMP(2)))
