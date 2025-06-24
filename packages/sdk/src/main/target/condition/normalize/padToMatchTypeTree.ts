@@ -79,26 +79,20 @@ function extendWithPassNodes(
     condition = {
       operator: Operator.Pass,
       paramType: typeTree.paramType,
-      ...(isComplex(typeTree)
-        ? {
-            children: typeTree.children.map((child) =>
-              extendWithPassNodes(null, child)
-            ),
-          }
-        : {}),
     }
   }
 
   if (isLogical(condition)) {
-    const children = atLeastOne(condition)
     return {
       ...condition,
-      children: children.map((child) => extendWithPassNodes(child, typeTree)),
+      children: condition.children!.map((child) =>
+        extendWithPassNodes(child, typeTree)
+      ),
     }
   }
 
   if (isComplex(condition)) {
-    const children = atLeastOne(condition)
+    const children = (condition.children || []) as Condition[]
 
     /*
      * Merge the padded children with the original children array.
@@ -118,14 +112,6 @@ function extendWithPassNodes(
   }
 
   return condition
-}
-
-const atLeastOne = ({ children }: Condition): Condition[] => {
-  if (!children || children.length == 0) {
-    throw new Error("Expected populated children array")
-  }
-
-  return children! as Condition[]
 }
 
 function mergeArrays<T>(a: T[], b: T[]): T[] {
