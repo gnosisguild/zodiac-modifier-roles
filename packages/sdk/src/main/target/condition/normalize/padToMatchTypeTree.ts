@@ -36,9 +36,9 @@ export function padToMatchTypeTree(condition: Condition): Condition {
    * Apply all nodes onto eachother, cumulatively
    *
    * Since type trees can vary in structure at different depths, no single tree
-   * is "longest" everywhere. Tree A might have more nodes in one subtree while
-   * Tree B has more in another. Padding each child with the structure from
-   * all others, we ensure uniform structure across all branches, because
+   * is always "longest" everywhere. Tree A might have more nodes in one subtree
+   * while Tree B has more in another. Padding each child with the structure
+   * from all others, we ensure uniform structure across all branches, because
    * padding is cumulative
    */
   const nextChildren = [...condition.children!]
@@ -62,7 +62,7 @@ export function padToMatchTypeTree(condition: Condition): Condition {
 }
 
 /*
- * Pads a `condition` Pass nodes, such that it structurally matches a typeTree
+ * Pads a `condition` with Pass nodes, such that it structurally matches a typeTree
  *
  * Assumptions:
  * - `condition` and `typeTree` are structurally compatible (not checked here).
