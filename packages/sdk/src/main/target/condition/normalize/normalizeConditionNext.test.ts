@@ -502,6 +502,42 @@ describe("normalizeCondition", () => {
       expect(conditionId(result1)).toBe(conditionId(result2))
       expect(conditionHash(result1)).toBe(conditionHash(result2))
     })
+
+    it("produces stable IDs for deduping, even on different key ordering", () => {
+      const c1: Condition = {
+        paramType: ParameterType.Static,
+        operator: Operator.EqualTo,
+        compValue: "0x",
+      }
+
+      const c2: Condition = {
+        operator: Operator.EqualTo,
+        paramType: ParameterType.Static,
+        compValue: "0x",
+      }
+
+      const result = normalizeCondition(AND(c1, c2))
+
+      expect(result).toEqual(c1)
+    })
+
+    it("produces stable IDs for deduping, even on mismatched, but equivalent, fields", () => {
+      const c1: Condition = {
+        paramType: ParameterType.Static,
+        operator: Operator.EqualTo,
+        compValue: "0x",
+      }
+
+      const c2: Condition = {
+        operator: Operator.EqualTo,
+        paramType: ParameterType.Static,
+        children: [],
+      }
+
+      const result = normalizeCondition(AND(c1, c2))
+
+      expect(result).toEqual(c1)
+    })
   })
 
   describe("Regression and idempotency", () => {
@@ -544,73 +580,4 @@ describe("normalizeCondition", () => {
       expect(end - start).toBeLessThan(50) // Should complete in under 50 ms
     })
   })
-
-  // describe("copyStructure utility", () => {
-  //   it("creates Pass structure matching input condition structure", () => {
-  //     const input = MATCHES(
-  //       ParameterType.Tuple,
-  //       COMP(1),
-  //       MATCHES(ParameterType.Array, COMP(2))
-  //     )
-
-  //     const structure = copyStructure(input)
-
-  //     expect(structure).toEqual({
-  //       paramType: ParameterType.Tuple,
-  //       operator: Operator.Pass,
-  //       children: [
-  //         PASS(),
-  //         {
-  //           paramType: ParameterType.Array,
-  //           operator: Operator.Pass,
-  //           children: [PASS()],
-  //         },
-  //       ],
-  //     })
-  //   })
-
-  //   it("skips over logical conditions", () => {
-  //     const input = OR(COMP(1), COMP(2))
-
-  //     const structure = copyStructure(input)
-
-  //     expect(structure).toEqual(PASS())
-  //   })
-
-  //   it("handles array conditions", () => {
-  //     const input = MATCHES(ParameterType.Array, COMP(1), COMP(2))
-
-  //     const structure = copyStructure(input)
-
-  //     expect(structure).toEqual({
-  //       paramType: ParameterType.Array,
-  //       operator: Operator.Pass,
-  //       children: [PASS()],
-  //     })
-  //   })
-
-  //   it("throws on logical condition without children", () => {
-  //     const input: Condition = {
-  //       paramType: ParameterType.None,
-  //       operator: Operator.Or,
-  //       children: [],
-  //     }
-
-  //     expect(() => copyStructure(input)).toThrow(
-  //       "Logical condition must have at least one child"
-  //     )
-  //   })
-
-  //   it("throws on array condition without children", () => {
-  //     const input: Condition = {
-  //       paramType: ParameterType.Array,
-  //       operator: Operator.Matches,
-  //       children: [],
-  //     }
-
-  //     expect(() => copyStructure(input)).toThrow(
-  //       "Array condition must have at least one child"
-  //     )
-  //   })
-  // })
 })

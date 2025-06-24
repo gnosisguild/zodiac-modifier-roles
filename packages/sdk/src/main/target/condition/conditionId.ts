@@ -44,6 +44,17 @@ export const conditionId = (condition: Condition) => {
   )
 }
 
+export function rawConditionId(condition: Condition) {
+  const normalize = (c: Condition): Condition => ({
+    paramType: c.paramType,
+    operator: c.operator,
+    compValue: c.compValue || "0x",
+    children: (c.children || []).map(normalize),
+  })
+
+  return JSON.stringify(normalize(condition))
+}
+
 /**
  * Calculates the create2 storage address of the condition.
  */

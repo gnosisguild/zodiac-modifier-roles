@@ -1,6 +1,6 @@
 import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
-import { conditionId } from "../conditionId"
+import { conditionId, rawConditionId } from "../conditionId"
 import { padToMatchTypeTree } from "./padToMatchTypeTree"
 import { pushDownOr } from "./pushDownOr"
 
@@ -115,7 +115,7 @@ const dedupeChildren = (condition: Condition): Condition => {
   ) {
     const seen = new Set<string>()
     const uniqueChildren = condition.children?.filter((child) => {
-      const id = conditionId(child)
+      const id = rawConditionId(child)
       if (seen.has(id)) return false
 
       seen.add(id)
