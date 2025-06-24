@@ -31,7 +31,7 @@ export const hoistCondition = (condition: Condition): Condition => {
     }
 
     if (!nextVariant) {
-      return condition as any
+      return condition
     }
     condition = nextVariant
   }
@@ -138,15 +138,14 @@ function replaceNode(
   const [index, ...restPath] = path
 
   if (!root.children || index >= root.children.length) {
-    return root
+    throw new Error(`Invariant: Invalid path ${path.join(".")}`)
   }
-
-  const newChildren = [...root.children]
-  newChildren[index] = replaceNode(root.children[index], restPath, replacement)
 
   return {
     ...root,
-    children: newChildren,
+    children: root.children.map((child, i) =>
+      i === index ? replaceNode(child, restPath, replacement) : child
+    ),
   }
 }
 
