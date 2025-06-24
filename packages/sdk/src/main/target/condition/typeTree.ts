@@ -16,16 +16,17 @@ export function typeTreeId(condition: Condition): string {
 }
 
 export function createTypeTree(condition: Condition): TypeTree | null {
-  if (isLogical(condition)) {
-    return createTypeTree(condition.children![0])
-  }
-
   const atLeastOne = (): Condition[] => {
     if (!condition.children || condition.children.length == 0) {
       throw new Error("Expected populated children array")
     }
 
     return condition.children! as Condition[]
+  }
+
+  if (isLogical(condition)) {
+    const [child] = atLeastOne()
+    return createTypeTree(child)
   }
 
   if (isArray(condition)) {
