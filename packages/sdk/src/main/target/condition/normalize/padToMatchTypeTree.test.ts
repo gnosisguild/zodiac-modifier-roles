@@ -2,9 +2,8 @@ import { describe, it, expect } from "vitest"
 import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 import { abiEncode } from "../../../abiEncode"
 
-// Import the function we're testing through normalizeCondition
 import { normalizeCondition } from "."
-import { padTypeTree } from "./padTypeTree"
+import { padToMatchTypeTree } from "./padToMatchTypeTree"
 
 // Helper to create test conditions
 const COMP = (id: number): Condition => ({
@@ -48,7 +47,7 @@ const MATCHES = (
   children,
 })
 
-describe("padTypeTree", () => {
+describe("padToMatchTypeTree", () => {
   describe("Basic padding scenarios", () => {
     it("pads shorter Calldata branch to match longer one", () => {
       const input = OR(
@@ -189,7 +188,7 @@ describe("padTypeTree", () => {
         OR(MATCHES(ParameterType.Calldata, COMP(5), COMP(6)))
       )
 
-      const result = padTypeTree(input)
+      const result = padToMatchTypeTree(input)
 
       expect(result).toEqual(
         AND(
@@ -370,7 +369,7 @@ describe("padTypeTree", () => {
         OR(MATCHES(ParameterType.Calldata, COMP(5), COMP(6)))
       )
 
-      const result = padTypeTree(input)
+      const result = padToMatchTypeTree(input)
 
       expect(result).toEqual(
         AND(
