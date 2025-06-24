@@ -1,8 +1,8 @@
 import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
 import { conditionId } from "../conditionId"
-import { padTypeTree } from "./padTypeTree"
-import { pushDownOr } from "./pushDownOrs"
+import { padToMatchTypeTree } from "./padToMatchTypeTree"
+import { pushDownOr } from "./pushDownOr"
 
 /**
  * Normalizes a condition by transforming its structure without altering its semantics.
@@ -25,23 +25,22 @@ export function normalizeCondition(
     ),
   }
 
-  result = deleteUndefinedFields(result)
+  result = cleanEmptyFields(result) // Remove undefined fields
+  result = prunePassNodes(result) // Trim trailing Pass nodes
+  result = padToMatchTypeTree(result) // Ensure TypeTree compatibility
 
-  result = pruneTrailingPass(result)
-  result = padTypeTree(result)
-
-  result = flattenAndOr(result)
-  result = dedupeBranches(result)
-  result = unwrapSingleBranches(result)
+  result = flattenNestedBranches(result) // Collapse nested AND/OR
+  result = dedupeChildren(result) // Remove duplicate branches
+  result = unwrapSingleChild(result) // Remove single-child Logical nodes
 
   result = shouldPushDown ? pushDownOr(result, normalizeCondition) : result
-  result = sortChildren(result)
+  result = sortBranchesCanonical(result) // Establish canonical ordering
 
   return result
 }
 
 /** Removes trailing Pass nodes from Matches on Calldata, AbiEncoded, and dynamic tuples (as long as the tuple stays marked dynamic) */
-const pruneTrailingPass = (condition: Condition): Condition => {
+const prunePassNodes = (condition: Condition): Condition => {
   if (!condition.children) return condition
   if (condition.operator !== Operator.Matches) return condition
 
@@ -91,7 +90,7 @@ const pruneTrailingPass = (condition: Condition): Condition => {
 }
 
 /** flatten nested AND/OR conditions */
-const flattenAndOr = (condition: Condition): Condition => {
+const flattenNestedBranches = (condition: Condition): Condition => {
   if (
     condition.operator === Operator.And ||
     condition.operator === Operator.Or
@@ -108,7 +107,7 @@ const flattenAndOr = (condition: Condition): Condition => {
 }
 
 /** remove duplicate child branches in AND/OR/NOR */
-const dedupeBranches = (condition: Condition): Condition => {
+const dedupeChildren = (condition: Condition): Condition => {
   if (
     condition.operator === Operator.And ||
     condition.operator === Operator.Or ||
@@ -130,7 +129,7 @@ const dedupeBranches = (condition: Condition): Condition => {
 }
 
 /** remove AND/OR wrapping if they have only a single child */
-const unwrapSingleBranches = (condition: Condition): Condition => {
+const unwrapSingleChild = (condition: Condition): Condition => {
   if (
     condition.operator === Operator.And ||
     condition.operator === Operator.Or
@@ -142,7 +141,7 @@ const unwrapSingleBranches = (condition: Condition): Condition => {
 }
 
 /** enforce a canonical order of AND/OR/NOR branches */
-const sortChildren = (condition: Condition): Condition => {
+const sortBranchesCanonical = (condition: Condition): Condition => {
   if (
     condition.operator === Operator.And ||
     condition.operator === Operator.Or ||
@@ -180,19 +179,11 @@ const sortChildren = (condition: Condition): Condition => {
   return condition
 }
 
-const deleteUndefinedFields = (condition: Condition): Condition => {
+const cleanEmptyFields = (condition: Condition): Condition => {
   if ("children" in condition && !condition.children) delete condition.children
   if ("compValue" in condition && !condition.compValue)
     delete condition.compValue
   return condition
-}
-
-const renormalize = (
-  transform: (c: Condition) => Condition,
-  prev: Condition
-) => {
-  const next = transform(prev)
-  return next != prev ? normalizeCondition(next) : prev
 }
 
 const isDynamicParamType = (condition: Condition): boolean => {
