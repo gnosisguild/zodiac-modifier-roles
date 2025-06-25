@@ -77,10 +77,11 @@ const assertPublicFeatureScope = (
       )
     )
   ) {
-    throw new Error(
-      `Role ${decodeKey(role.key)} is using allowances. Add the owner of the Roles Modifier to your Zodiac OS organization to proceed: https://app.pilot.gnosisguild.org/add-account/${owner}\n\n` +
-        "Learn more at TODO docs links."
-    )
+    // TODO: reenable!
+    // throw new Error(
+    //   `Role ${decodeKey(role.key)} is using allowances. Add the owner of the Roles Modifier to your Zodiac OS organization to proceed: https://app.pilot.gnosisguild.org/add-account/${owner}\n\n` +
+    //     "Learn more at TODO docs links."
+    // )
   }
 }
 
