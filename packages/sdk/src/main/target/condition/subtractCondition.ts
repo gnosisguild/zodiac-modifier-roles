@@ -137,9 +137,8 @@ function OR_n_1(condition: Condition, fragment: Condition) {
     .children!.map((child) => subtractCondition(child, fragment))
     .filter((t) => !!t)
 
-  if (shallowEquals(condition.children!, nextChildren)) {
-    return condition // Fragment not in OR
-  }
+  // Fragment not in OR
+  if (shallowEquals(condition.children!, nextChildren)) return condition
 
   // remove
   if (nextChildren.length === 0) return undefined
@@ -153,40 +152,34 @@ function AND(condition: Condition, fragment: Condition) {
   const children = condition.children!
   const fragmentChildren = fragment.children!
 
-  // For AND, we need all children to match except possibly one
-  let differingPositions = 0
-  let differingIndex = -1
+  // Find the single differing position (if any)
+  let diffCount = 0
+  let diffIndex = -1
 
   for (let i = 0; i < children.length; i++) {
     if (conditionId(children[i]) !== conditionId(fragmentChildren[i])) {
-      differingPositions++
-      differingIndex = i
+      diffCount++
+      diffIndex = i
     }
   }
 
-  // Can only handle one differing position
-  if (differingPositions !== 1) {
-    return condition
-  }
+  // Only allow subtraction if exactly one child differs
+  if (diffCount !== 1) return condition
 
-  // Try to subtract at the differing position
+  // Attempt to subtract at the differing position
   const remainder = subtractCondition(
-    children[differingIndex],
-    fragmentChildren[differingIndex]
+    children[diffIndex],
+    fragmentChildren[diffIndex]
   )
 
-  if (remainder === children[differingIndex]) {
-    return condition // Couldn't subtract
-  }
+  // If subtraction failed or removed the entire child, bail
+  if (!remainder || remainder === children[diffIndex]) return condition
 
-  if (remainder === undefined) {
-    return condition // Would remove entire AND child - invalid
-  }
-
+  // Replace the differing child with the result of subtraction
   return {
     ...condition,
     children: children.map((child, index) =>
-      index === differingIndex ? remainder : child
+      index === diffIndex ? remainder : child
     ),
   }
 }

@@ -715,6 +715,7 @@ describe("subtractCondition", () => {
       const result = subtractCondition(condition, fragment)
 
       expect(result).toEqual(condition)
+      expect(result === condition).toBeTruthy()
     })
 
     it("complex OR at multiple positions - only single hinge allowed", () => {
