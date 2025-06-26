@@ -65,7 +65,8 @@ export const derivePermissionFromCall = ({
   wildcards: string[]
 }): FunctionPermissionCoerced => {
   const selector = call.data.slice(0, 10) as `0x${string}`
-  const { args } = decodeFunctionData({ abi: [abi], data: call.data })
+  // viem returns args as undefined for functions without args even though the types indicate something else 😤
+  const { args = [] } = decodeFunctionData({ abi: [abi], data: call.data })
 
   // This will generally be a calldataMatches condition (the type only doesn't say so because the recursive calls will yield other conditions)
   const condition = deriveConditionFromWildcards(args, abi.inputs, wildcards)
@@ -97,6 +98,9 @@ const deriveConditionFromWildcards = (
       wildcard.startsWith(pathPrefix + (input.name ?? `[${index}]`))
     )
   )
+
+  // no arguments -> no condition
+  if (values.length === 0) return undefined
 
   // some weird incompatibility between ParamType from different ethers instances forces use of any :/
   const paramTypes = abi.map((abiParam) => ParamType.from(abiParam)) as any[]
