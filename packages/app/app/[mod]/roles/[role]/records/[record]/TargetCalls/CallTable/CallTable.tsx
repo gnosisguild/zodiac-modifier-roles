@@ -327,7 +327,8 @@ const metadataColumns: ColDef<Row>[] = [
 
 const rowData = (calls: CallState[], abi: AbiFunction): Row[] => {
   const decodedCalls = calls.map((call) => {
-    const { args } = decodeFunctionData({ abi: [abi], data: call.data })
+    // viem returns args as undefined for functions without args even though the types indicate something else 😤
+    const { args = [] } = decodeFunctionData({ abi: [abi], data: call.data })
 
     const inputs = distributeArrayElements(
       mapAbiInputs(abi.inputs, args)

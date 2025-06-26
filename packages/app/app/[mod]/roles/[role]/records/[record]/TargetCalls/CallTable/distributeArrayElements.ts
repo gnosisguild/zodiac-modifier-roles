@@ -260,7 +260,8 @@ export const totalSpan = (value: RowValue): number => {
     return value.span
   }
   if (isStructRowValue(value)) {
-    return Math.max(...Object.values(value).map((v) => totalSpan(v)))
+    // including 1 is required if values is empty object (no function arguments)
+    return Math.max(1, ...Object.values(value).map((v) => totalSpan(v)))
   }
   return 1
 }

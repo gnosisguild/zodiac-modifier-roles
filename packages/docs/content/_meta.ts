@@ -15,6 +15,9 @@ const meta: MetaRecord = {
   sdk: {
     title: "SDK",
   },
+  tutorials: {
+    title: "Tutorials",
+  },
 };
 
 export default meta;
