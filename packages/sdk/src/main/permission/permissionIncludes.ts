@@ -1,13 +1,14 @@
 import { Condition } from "zodiac-roles-deployments"
-import { normalizeCondition, conditionId } from "../target/condition"
 
-import { PermissionCoerced, FunctionPermissionCoerced } from "./types"
+import { normalizeCondition, subtractCondition } from "../target/condition"
 import {
   isPermissionAllowed,
   isPermissionConditional,
   isPermissionScoped,
   isPermissionWildcarded,
 } from "./id"
+
+import { PermissionCoerced, FunctionPermissionCoerced } from "./types"
 
 /**
  * Checks if one permission includes (supersedes or equals) another permission.
@@ -78,7 +79,12 @@ export function permissionIncludes(
   const c1 = (p1 as FunctionPermissionCoerced).condition as Condition
   const c2 = (p2 as FunctionPermissionCoerced).condition as Condition
 
-  return (
-    conditionId(normalizeCondition(c1)) === conditionId(normalizeCondition(c2))
-  )
+  /*
+   * if we can struct from the main condition, it means current
+   * permission is at least a top level variant, and at most
+   * matches the condition completely
+   */
+  const condition = normalizeCondition(c1)
+  const fragment = normalizeCondition(c2)
+  return subtractCondition(condition, fragment) !== condition
 }
