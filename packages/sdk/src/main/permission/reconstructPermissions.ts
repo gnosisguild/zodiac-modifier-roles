@@ -32,43 +32,17 @@ export const reconstructPermissions = (
     }
 
     if (target.clearance === Clearance.Function) {
-      return target.functions
-        .map((func) => ({
-          targetAddress: target.address,
-          selector: func.selector,
-          send: allowsSend(func.executionOptions),
-          delegatecall: allowsDelegateCall(func.executionOptions),
-          condition: !func.wildcarded ? func.condition : undefined,
-        }))
-        .map((permission) => ({
-          ...permission,
-          condition: maybeHoist(permission, probes),
-        }))
-        .flatMap(splitFunctionPermission)
+      return target.functions.map((func) => ({
+        targetAddress: target.address,
+        selector: func.selector,
+        send: allowsSend(func.executionOptions),
+        delegatecall: allowsDelegateCall(func.executionOptions),
+        condition: !func.wildcarded ? func.condition : undefined,
+      }))
     }
 
     throw new Error(`Unknown clearance ${target.clearance}`)
   })
-}
-
-const splitFunctionPermission = (
-  permission: FunctionPermissionCoerced
-): FunctionPermissionCoerced[] => {
-  // only split permissions with top-level OR conditions
-
-  if (
-    permission.condition &&
-    permission.condition.operator === Operator.Or &&
-    permission.condition.children &&
-    permission.condition.children.length > 0
-  ) {
-    return permission.condition.children.map((child) => ({
-      ...permission,
-      condition: child,
-    }))
-  }
-
-  return [permission]
 }
 
 const allowsSend = (execOptions: ExecutionOptions) =>
