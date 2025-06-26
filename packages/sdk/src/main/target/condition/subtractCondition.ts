@@ -51,8 +51,16 @@ export function canSubtract(
 
 /**
  * Attempts to subtract a fragment from a condition tree.
- * Returns the remainder if subtraction is valid, otherwise returns the original condition.
- * Never throws - gracefully handles incompatible conditions.
+ *
+ * Handles various structural cases (OR, AND, MATCHES) with custom logic:
+ * - Exact match: returns undefined
+ * - OR: removes matching children or single child
+ * - AND: allows subtraction if exactly one child differs
+ * - MATCHES: recursive, positional subtraction with at most one difference
+ *
+ * Returns the remainder if subtraction is valid.
+ * If subtraction isn't possible, returns the original condition.
+ * Never throws — safe to call on arbitrary inputs.
  */
 export function subtractCondition(
   condition: Condition,
