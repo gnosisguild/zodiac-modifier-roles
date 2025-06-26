@@ -101,30 +101,35 @@ export function subtractCondition(
   }
 }
 
+/**
+ * Handles OR n:m subtraction.
+ * Removes all fragment children from an OR condition if they exist.
+ * - If all match: returns the remainder (or unwraps if 1 child remains).
+ * - If not all fragment children are found: returns the original condition.
+ */
 function OR_n_m(condition: Condition, fragment: Condition) {
-  const children = condition.children!
+  const conditionChildren = condition.children!
   const fragmentChildren = fragment.children!
 
-  // Check if all fragment children exist in condition
-  const conditionChildIds = new Set(children.map((c) => conditionId(c)))
-  const allFragmentChildrenExist = fragmentChildren.every((child) =>
-    conditionChildIds.has(conditionId(child))
+  // Ensure all fragment children exist in condition
+  const conditionIds = new Set(conditionChildren.map(conditionId))
+  const allExist = fragmentChildren.every((child) =>
+    conditionIds.has(conditionId(child))
   )
-  if (!allFragmentChildrenExist) {
-    return condition // Can't subtract - fragment not fully contained
-  }
-  // Remove fragment children from condition
-  const fragmentChildIds = new Set(fragmentChildren.map((c) => conditionId(c)))
-  const nextChildren = condition.children!.filter(
-    (child) => !fragmentChildIds.has(conditionId(child))
+  if (!allExist) return condition
+
+  // Filter out fragment children
+  const fragmentIds = new Set(fragmentChildren.map(conditionId))
+  const remaining = conditionChildren.filter(
+    (child) => !fragmentIds.has(conditionId(child))
   )
 
   // remove
-  if (nextChildren.length === 0) return undefined
+  if (remaining.length === 0) return undefined
   // unwrap
-  if (nextChildren.length === 1) return nextChildren[0]
+  if (remaining.length === 1) return remaining[0]
   // filter
-  return { ...condition, children: nextChildren }
+  return { ...condition, children: remaining }
 }
 
 function OR_n_1(condition: Condition, fragment: Condition) {
