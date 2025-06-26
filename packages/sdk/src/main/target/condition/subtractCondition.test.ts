@@ -5,7 +5,6 @@ import { normalizeCondition } from "./normalize"
 import { subtractCondition } from "./subtractCondition"
 import { abiEncode } from "../../abiEncode"
 
-// Helper functions
 const COMP = (id: number): Condition => ({
   paramType: ParameterType.Static,
   operator: Operator.EqualTo,
@@ -172,18 +171,6 @@ describe("subtractCondition", () => {
     })
 
     it("removes fragment from nested OR", () => {
-      const a = COMP(1)
-      const b = COMP(2)
-      const c = COMP(3)
-
-      const condition = OR(a, OR(b, c))
-
-      const result = subtractCondition(condition, b)
-
-      expect(result).toEqual(OR(a, c))
-    })
-
-    it("removes fragment from nested OR 2", () => {
       const a = COMP(1)
       const b = COMP(2)
       const c = COMP(3)
@@ -357,6 +344,476 @@ describe("subtractCondition", () => {
       const result = subtractCondition(condition, COMP(3))
 
       expect(result).toEqual(OR(COMP(1), OR(COMP(2), COMP(4))))
+    })
+  })
+
+  describe("OR n:1 subtraction", () => {
+    it("OR(A, B, C) - A = OR(B, C)", () => {
+      const a = COMP(1)
+      const b = COMP(2)
+      const c = COMP(3)
+      const condition = OR(a, b, c)
+
+      const result = subtractCondition(condition, a)
+
+      expect(result).toEqual(OR(b, c))
+    })
+
+    it("OR(A, B) - A = B (unwrap single child)", () => {
+      const a = COMP(1)
+      const b = COMP(2)
+      const condition = OR(a, b)
+
+      const result = subtractCondition(condition, a)
+
+      expect(result).toEqual(b)
+    })
+
+    it("OR(A) - A = undefined (complete removal)", () => {
+      const a = COMP(1)
+      const condition = OR(a)
+
+      const result = subtractCondition(condition, a)
+
+      expect(result).toBeUndefined()
+    })
+
+    it("OR(A, B, C) - D = OR(A, B, C) (no match, unchanged)", () => {
+      const a = COMP(1)
+      const b = COMP(2)
+      const c = COMP(3)
+      const d = COMP(4)
+      const condition = OR(a, b, c)
+
+      const result = subtractCondition(condition, d)
+
+      expect(result).toEqual(condition)
+      expect(result == condition).toBeTruthy()
+    })
+
+    it("removes from nested OR: OR(A, OR(B, C), D) - B = OR(A, C, D)", () => {
+      const a = COMP(1)
+      const b = COMP(2)
+      const c = COMP(3)
+      const d = COMP(4)
+      const condition = OR(a, OR(b, c), d)
+
+      const result = subtractCondition(condition, b)
+
+      expect(result).toEqual(OR(a, c, d))
+    })
+
+    it("removes from deeply nested OR", () => {
+      const a = COMP(1)
+      const b = COMP(2)
+      const c = COMP(3)
+      const condition = OR(a, OR(b, c))
+
+      const result = subtractCondition(condition, b)
+
+      expect(result).toEqual(OR(a, c))
+    })
+  })
+
+  describe("OR n:m subtraction (remove multiple items)", () => {
+    it("OR(A, B, C, D) - OR(A, C) = OR(B, D)", () => {
+      const a = COMP(1)
+      const b = COMP(2)
+      const c = COMP(3)
+      const d = COMP(4)
+      const condition = OR(a, b, c, d)
+      const fragment = OR(a, c)
+
+      const result = subtractCondition(condition, fragment)
+
+      expect(result).toEqual(OR(b, d))
+    })
+
+    it("OR(A, B, C) - OR(A, B, C) = undefined (complete removal)", () => {
+      const a = COMP(1)
+      const b = COMP(2)
+      const c = COMP(3)
+      const condition = OR(a, b, c)
+      const fragment = OR(a, b, c)
+
+      const result = subtractCondition(condition, fragment)
+
+      expect(result).toBeUndefined()
+    })
+
+    it("OR(A, B, C) - OR(A, B) = C (unwrap single remainder)", () => {
+      const a = COMP(1)
+      const b = COMP(2)
+      const c = COMP(3)
+      const condition = OR(a, b, c)
+      const fragment = OR(a, b)
+
+      const result = subtractCondition(condition, fragment)
+
+      expect(result).toEqual(c)
+    })
+
+    it("OR(A, B, C) - OR(A, D) = OR(A, B, C) (partial match, unchanged)", () => {
+      const a = COMP(1)
+      const b = COMP(2)
+      const c = COMP(3)
+      const d = COMP(4)
+      const condition = OR(a, b, c)
+      const fragment = OR(a, d) // D not in original
+
+      const result = subtractCondition(condition, fragment)
+
+      expect(result).toEqual(condition)
+    })
+
+    it("OR(A, B, C) - OR() = OR(A, B, C) (empty fragment, unchanged)", () => {
+      const a = COMP(1)
+      const b = COMP(2)
+      const c = COMP(3)
+      const condition = OR(a, b, c)
+      const fragment = OR()
+
+      const result = subtractCondition(condition, fragment)
+
+      expect(result).toEqual(condition)
+    })
+
+    it("handles different order: OR(A, B, C) - OR(C, A) = B", () => {
+      const a = COMP(1)
+      const b = COMP(2)
+      const c = COMP(3)
+      const condition = OR(a, b, c)
+      const fragment = OR(c, a) // Different order
+
+      const result = subtractCondition(condition, fragment)
+
+      expect(result).toEqual(b)
+    })
+  })
+
+  describe("AND subtraction", () => {
+    it("AND(A, B) - AND(A, B) = undefined (exact match)", () => {
+      const a = COMP(1)
+      const b = COMP(2)
+      const condition = AND(a, b)
+
+      const result = subtractCondition(condition, condition)
+
+      expect(result).toBeUndefined()
+    })
+
+    it("AND(A, B, C) - B = AND(A, B, C) (cannot subtract single part)", () => {
+      const a = COMP(1)
+      const b = COMP(2)
+      const c = COMP(3)
+      const condition = AND(a, b, c)
+
+      const result = subtractCondition(condition, b)
+
+      expect(result).toEqual(condition)
+    })
+
+    it("AND(A, OR(B, C)) - AND(A, B) = AND(A, C) (recursive subtraction)", () => {
+      const a = COMP(1)
+      const b = COMP(2)
+      const c = COMP(3)
+      const condition = AND(a, OR(b, c))
+      const fragment = AND(a, b)
+
+      const result = subtractCondition(condition, fragment)
+
+      expect(result).toEqual(AND(a, c))
+    })
+
+    it("AND(OR(A, B), OR(C, D)) - AND(A, C) = unchanged (multiple position differences)", () => {
+      const a = COMP(1)
+      const b = COMP(2)
+      const c = COMP(3)
+      const d = COMP(4)
+      const condition = AND(OR(a, b), OR(c, d))
+      const fragment = AND(a, c)
+
+      const result = subtractCondition(condition, fragment)
+
+      expect(result).toEqual(condition)
+    })
+
+    it("AND(OR(A, B), X, Y) - AND(A, X, Y) = AND(B, X, Y) (single position difference)", () => {
+      const a = COMP(1)
+      const b = COMP(2)
+      const x = COMP(10)
+      const y = COMP(11)
+      const condition = AND(OR(a, b), x, y)
+      const fragment = AND(a, x, y)
+
+      const result = subtractCondition(condition, fragment)
+
+      expect(result).toEqual(AND(b, x, y))
+    })
+
+    it("AND(A, OR(B, C), D) - AND(A, OR(B, C), E) = unchanged (different non-OR position)", () => {
+      const a = COMP(1)
+      const b = COMP(2)
+      const c = COMP(3)
+      const d = COMP(4)
+      const e = COMP(5)
+      const condition = AND(a, OR(b, c), d)
+      const fragment = AND(a, OR(b, c), e)
+
+      const result = subtractCondition(condition, fragment)
+
+      expect(result).toEqual(condition)
+    })
+
+    it("AND(A, B) - AND(C, D) = unchanged (completely different)", () => {
+      const a = COMP(1)
+      const b = COMP(2)
+      const c = COMP(3)
+      const d = COMP(4)
+      const condition = AND(a, b)
+      const fragment = AND(c, d)
+
+      const result = subtractCondition(condition, fragment)
+
+      expect(result).toEqual(condition)
+    })
+
+    it("AND(A, B, C) - AND(A, B) = unchanged (different lengths)", () => {
+      const a = COMP(1)
+      const b = COMP(2)
+      const c = COMP(3)
+      const condition = AND(a, b, c)
+      const fragment = AND(a, b)
+
+      const result = subtractCondition(condition, fragment)
+
+      expect(result).toEqual(condition)
+    })
+
+    it("nested AND with OR subtraction: AND(OR(A, B, C), D) - AND(OR(A, B), D) = AND(C, D)", () => {
+      const a = COMP(1)
+      const b = COMP(2)
+      const c = COMP(3)
+      const d = COMP(4)
+      const condition = AND(OR(a, b, c), d)
+      const fragment = AND(OR(a, b), d)
+
+      const result = subtractCondition(condition, fragment)
+
+      expect(result).toEqual(AND(c, d))
+    })
+
+    it("deeply nested AND: AND(AND(OR(A, B), C), D) - AND(AND(A, C), D) = AND(AND(B, C), D)", () => {
+      const a = COMP(1)
+      const b = COMP(2)
+      const c = COMP(3)
+      const d = COMP(4)
+      const condition = AND(AND(OR(a, b), c), d)
+      const fragment = AND(AND(a, c), d)
+
+      const result = subtractCondition(condition, fragment)
+
+      expect(result).toEqual(AND(AND(b, c), d))
+    })
+  })
+
+  describe("MATCHES subtraction", () => {
+    it("MATCHES(T, A, B) - MATCHES(T, A, B) = undefined (exact match)", () => {
+      const condition = MATCHES(ParameterType.Calldata, COMP(1), COMP(2))
+
+      const result = subtractCondition(condition, condition)
+
+      expect(result).toBeUndefined()
+    })
+
+    it("MATCHES(T, A, B) - A = unchanged (cannot subtract from non-MATCHES)", () => {
+      const condition = MATCHES(ParameterType.Calldata, COMP(1), COMP(2))
+      const fragment = COMP(1)
+
+      const result = subtractCondition(condition, fragment)
+
+      expect(result).toEqual(condition)
+    })
+
+    it("MATCHES(T1, A, B) - MATCHES(T2, A, B) = unchanged (different param types)", () => {
+      const condition = MATCHES(ParameterType.Calldata, COMP(1), COMP(2))
+      const fragment = MATCHES(ParameterType.AbiEncoded, COMP(1), COMP(2))
+
+      const result = subtractCondition(condition, fragment)
+
+      expect(result).toEqual(condition)
+      expect(result == condition).toBeTruthy()
+    })
+
+    it("MATCHES(T, A, B) - MATCHES(T, A) = unchanged (different lengths)", () => {
+      const condition = MATCHES(ParameterType.Calldata, COMP(1), COMP(2))
+      const fragment = MATCHES(ParameterType.Calldata, COMP(1))
+
+      const result = subtractCondition(condition, fragment)
+
+      expect(result).toEqual(condition)
+    })
+
+    it("MATCHES(T, OR(A, B), C) - MATCHES(T, A, C) = MATCHES(T, B, C) (single position OR)", () => {
+      const a = COMP(1)
+      const b = COMP(2)
+      const c = COMP(3)
+      const condition = MATCHES(ParameterType.Calldata, OR(a, b), c)
+      const fragment = MATCHES(ParameterType.Calldata, a, c)
+
+      const result = subtractCondition(condition, fragment)
+
+      expect(result).toEqual(MATCHES(ParameterType.Calldata, b, c))
+    })
+
+    it("MATCHES(T, A, OR(B, C)) - MATCHES(T, A, B) = MATCHES(T, A, C) (last position OR)", () => {
+      const a = COMP(1)
+      const b = COMP(2)
+      const c = COMP(3)
+      const condition = MATCHES(ParameterType.Calldata, a, OR(b, c))
+      const fragment = MATCHES(ParameterType.Calldata, a, b)
+
+      const result = subtractCondition(condition, fragment)
+
+      expect(result).toEqual(MATCHES(ParameterType.Calldata, a, c))
+    })
+
+    it("MATCHES(T, OR(A, B), OR(C, D)) - MATCHES(T, A, C) = unchanged (multiple position differences)", () => {
+      const a = COMP(1)
+      const b = COMP(2)
+      const c = COMP(3)
+      const d = COMP(4)
+      const condition = MATCHES(ParameterType.Calldata, OR(a, b), OR(c, d))
+      const fragment = MATCHES(ParameterType.Calldata, a, c)
+
+      const result = subtractCondition(condition, fragment)
+
+      expect(result).toEqual(condition)
+    })
+
+    it("MATCHES(T, OR(A, B, C), D) - MATCHES(T, OR(A, B), D) = MATCHES(T, C, D) (OR subtraction at position)", () => {
+      const a = COMP(1)
+      const b = COMP(2)
+      const c = COMP(3)
+      const d = COMP(4)
+      const condition = MATCHES(ParameterType.Calldata, OR(a, b, c), d)
+      const fragment = MATCHES(ParameterType.Calldata, OR(a, b), d)
+
+      const result = subtractCondition(condition, fragment)
+
+      expect(result).toEqual(MATCHES(ParameterType.Calldata, c, d))
+    })
+
+    it("MATCHES(T, A, B, C) - MATCHES(T, X, B, C) = unchanged (non-OR position difference)", () => {
+      const a = COMP(1)
+      const b = COMP(2)
+      const c = COMP(3)
+      const x = COMP(10)
+      const condition = MATCHES(ParameterType.Calldata, a, b, c)
+      const fragment = MATCHES(ParameterType.Calldata, x, b, c)
+
+      const result = subtractCondition(condition, fragment)
+
+      expect(result).toEqual(condition)
+    })
+
+    it("complex OR at multiple positions - only single hinge allowed", () => {
+      const condition = MATCHES(
+        ParameterType.Calldata,
+        OR(COMP(1), COMP(2)),
+        COMP(10),
+        OR(COMP(3), COMP(4))
+      )
+
+      // Single hinge at position 0 - should work
+      const fragment1 = MATCHES(
+        ParameterType.Calldata,
+        COMP(1),
+        COMP(10),
+        OR(COMP(3), COMP(4))
+      )
+      expect(subtractCondition(condition, fragment1)).toEqual(
+        MATCHES(ParameterType.Calldata, COMP(2), COMP(10), OR(COMP(3), COMP(4)))
+      )
+
+      // Single hinge at position 2 - should work
+      const fragment2 = MATCHES(
+        ParameterType.Calldata,
+        OR(COMP(1), COMP(2)),
+        COMP(10),
+        COMP(3)
+      )
+      expect(subtractCondition(condition, fragment2)).toEqual(
+        MATCHES(ParameterType.Calldata, OR(COMP(1), COMP(2)), COMP(10), COMP(4))
+      )
+
+      // Multiple position differences - should not work
+      const fragment3 = MATCHES(
+        ParameterType.Calldata,
+        COMP(1),
+        COMP(10),
+        COMP(3)
+      )
+      expect(subtractCondition(condition, fragment3)).toEqual(condition)
+    })
+
+    it("nested MATCHES within MATCHES positions", () => {
+      const nestedA = MATCHES(ParameterType.Tuple, COMP(10), COMP(11))
+      const nestedB = MATCHES(ParameterType.Tuple, COMP(10), COMP(12))
+      const condition = MATCHES(
+        ParameterType.Calldata,
+        OR(nestedA, nestedB),
+        COMP(20)
+      )
+      const fragment = MATCHES(ParameterType.Calldata, nestedA, COMP(20))
+
+      const result = subtractCondition(condition, fragment)
+
+      expect(result).toEqual(MATCHES(ParameterType.Calldata, nestedB, COMP(20)))
+    })
+
+    it("real-world ERC20 transfer scenario", () => {
+      // transfer(address to, uint256 amount) with OR at recipient position
+      const condition = MATCHES(
+        ParameterType.Calldata,
+        OR(
+          {
+            paramType: ParameterType.Static,
+            operator: Operator.EqualTo,
+            compValue: "0xALICE",
+          },
+          {
+            paramType: ParameterType.Static,
+            operator: Operator.EqualTo,
+            compValue: "0xBOB",
+          }
+        ),
+        { paramType: ParameterType.Static, operator: Operator.Pass }
+      )
+
+      const fragment = MATCHES(
+        ParameterType.Calldata,
+        {
+          paramType: ParameterType.Static,
+          operator: Operator.EqualTo,
+          compValue: "0xALICE",
+        },
+        { paramType: ParameterType.Static, operator: Operator.Pass }
+      )
+
+      const result = subtractCondition(condition, fragment)
+
+      expect(result).toEqual(
+        MATCHES(
+          ParameterType.Calldata,
+          {
+            paramType: ParameterType.Static,
+            operator: Operator.EqualTo,
+            compValue: "0xBOB",
+          },
+          { paramType: ParameterType.Static, operator: Operator.Pass }
+        )
+      )
     })
   })
 })
