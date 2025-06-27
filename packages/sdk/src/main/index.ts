@@ -37,7 +37,7 @@ export {
  * Misc
  *
  */
-export { default as abi } from "../abi.json"
+export { rolesAbi, posterAbi } from "./abi"
 export { encodeKey, decodeKey } from "./keys"
 export { postRole } from "./postRole"
 export { fetchLicense, License, LicenseError } from "./licensing"
