@@ -29,7 +29,7 @@ export {
   processPermissions,
   reconstructPermissions,
   targetId,
-  validatePresets,
+  confirmPreset,
 } from "./permission"
 
 /*

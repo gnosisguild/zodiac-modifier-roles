@@ -49,13 +49,14 @@ export function subtractTarget(
     .map(({ a, b }) => (b ? subtractFunction(a, b) : a))
     .filter((f) => !!f)
 
-  // if no difference, the whole target is void
-  return nextFunctions.length
-    ? {
+  if (nextFunctions.length === 0) return undefined
+
+  return shallowEquals(left.functions, nextFunctions)
+    ? left
+    : {
         ...left,
         functions: nextFunctions,
       }
-    : undefined
 }
 
 function subtractFunction(
@@ -106,6 +107,10 @@ function isTargetAllowed({ clearance }: { clearance: Clearance }): boolean {
 
 function isTargetScoped({ clearance }: { clearance: Clearance }): boolean {
   return clearance == Clearance.Function
+}
+
+function shallowEquals<T>(a: readonly T[], b: readonly T[]): boolean {
+  return a.length === b.length && a.every((item, index) => item === b[index])
 }
 
 function invariant(check: boolean) {

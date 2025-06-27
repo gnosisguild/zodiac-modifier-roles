@@ -5,7 +5,7 @@ import { Annotation, Target } from "zodiac-roles-deployments"
 import {
   Permission,
   PermissionCoerced,
-  validatePresets,
+  confirmPreset,
   // eslint does not know about our Typescript path alias
   // eslint-disable-next-line import/no-unresolved
 } from "zodiac-roles-sdk"
@@ -99,8 +99,6 @@ export const processAnnotations = async (
       }
     })
   )
-
-  return validatePresets({ presets, targets })
 }
 
 export const resolveAnnotation = async (
