@@ -1,23 +1,27 @@
 import { Target } from "zodiac-roles-deployments"
+
+import { subtractTarget } from "../target/subtractTarget"
+
+import { confirmPreset } from "./confirmPreset"
 import { mergePermissions } from "./mergePermissions"
-import { permissionIncludes } from "./permissionIncludes"
+import { processPermissions } from "./processPermissions"
 import { reconstructPermissions } from "./reconstructPermissions"
 
 import { PermissionCoerced } from "./types"
 
 /**
  * Filters and validates permission presets, returning two sets:
- * 1. Confirmed presets that are subsets of the provided permissions.
- * 2. Remaining permissions that are not referenced by any confirmed preset.
+ * 1. Confirmed presets that are fully included onchain
+ * 2. Remaining permissions that are not covered by any preset.
  */
 export function validatePresets<
   T extends { permissions: PermissionCoerced[] },
 >({
-  presets,
   targets,
+  presets,
 }: {
-  presets: readonly (T | null)[]
   targets: readonly Target[]
+  presets: readonly (T | null)[]
 }): {
   presets: T[]
   permissions: PermissionCoerced[]
@@ -26,32 +30,34 @@ export function validatePresets<
     preset && sanityCheck(preset.permissions)
   }
 
-  const permissions = reconstructPermissions(
-    targets,
-    presets.filter((p) => !!p).flatMap((p) => p?.permissions)
-  )
+  const confirmedPresets = presets.filter(
+    (preset) => !!preset && confirmPreset({ targets, preset })
+  ) as T[]
 
-  const validated = presets
-    .filter((p) => !!p)
-    /*
-     * find matches from the preset permissions into the onchain permission
-     */
-    .map((preset) => ({
-      preset,
-      matches: preset.permissions.map((b) =>
-        permissions.find((a) => permissionIncludes(a, b))
-      ),
-    }))
-    /*
-     * only presets for which every permission has a match are validated
-     */
-    .filter(({ matches }) => matches.every((m) => !!m))
+  const confirmedPermissions = confirmedPresets.flatMap((p) => p.permissions)
+  sanityCheck(confirmedPermissions)
 
-  const mentioned = new Set(validated.flatMap(({ matches }) => matches))
+  const { targets: targetsFromPresets } =
+    processPermissions(confirmedPermissions)
+
+  const subtractedTargets = targets
+    .map((target) => {
+      const targetFromPreset = targetsFromPresets.find(
+        ({ address }) => address == target.address
+      )
+
+      // if there's a target to subtract do it, otherwise
+      // return current
+      return targetFromPreset
+        ? subtractTarget(target, targetFromPreset)
+        : target
+    })
+    // undefined means the target was fully covered
+    .filter((t) => !!t)
 
   return {
-    presets: validated.map(({ preset }) => preset),
-    permissions: permissions.filter((p) => !mentioned.has(p)),
+    presets: confirmedPresets,
+    permissions: reconstructPermissions(subtractedTargets),
   }
 }
 
