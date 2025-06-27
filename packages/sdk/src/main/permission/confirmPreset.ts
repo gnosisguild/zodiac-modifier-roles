@@ -1,7 +1,7 @@
 import { Target } from "zodiac-roles-deployments"
 import { mergePermissions } from "./mergePermissions"
 
-import { subtractTarget } from "../target/subtractTarget"
+import { targetIncludes } from "../target/targetIncludes"
 import { processPermissions } from "./processPermissions"
 import { PermissionCoerced } from "./types"
 
@@ -33,7 +33,7 @@ export function confirmPreset({
     if (!target) return false
 
     // is it included?
-    return subtractTarget(target, targetFromPreset) !== target
+    return targetIncludes(target, targetFromPreset)
   })
 }
 

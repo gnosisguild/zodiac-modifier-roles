@@ -27,15 +27,11 @@ export function subtractTarget(
     return left
   }
 
-  // TODO check
   if (isTargetScoped(left) && isTargetAllowed(right)) {
     return undefined
   }
 
-  // we covered all cases they now both are scoped
   invariant(isTargetScoped(left) && isTargetScoped(right))
-
-  // TODO should we compare execution options here? In main we're not
 
   const nextFunctions = left.functions
     .map((f) => ({
