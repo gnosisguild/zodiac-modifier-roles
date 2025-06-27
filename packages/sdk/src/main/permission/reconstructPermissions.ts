@@ -1,22 +1,9 @@
-import {
-  Clearance,
-  Condition,
-  ExecutionOptions,
-  Operator,
-  Target,
-} from "zodiac-roles-deployments"
+import { Clearance, ExecutionOptions, Target } from "zodiac-roles-deployments"
 
-import { maybeHoist } from "./maybeHoist"
-
-import {
-  FunctionPermissionCoerced,
-  PermissionCoerced,
-  TargetPermission,
-} from "./types"
+import { PermissionCoerced, TargetPermission } from "./types"
 
 export const reconstructPermissions = (
-  targets: readonly Target[],
-  probes?: PermissionCoerced[]
+  targets: readonly Target[]
 ): PermissionCoerced[] => {
   return targets.flatMap((target) => {
     if (target.clearance === Clearance.None) {
