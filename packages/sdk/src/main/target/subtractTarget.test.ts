@@ -7,7 +7,7 @@ import {
   ParameterType,
   ExecutionOptions,
 } from "zodiac-roles-deployments"
-import { subtractTarget } from "./subtractTargets"
+import { subtractTarget } from "./subtractTarget"
 import { abiEncode } from "../abiEncode"
 
 const COMP = (id: number) => ({
