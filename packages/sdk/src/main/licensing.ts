@@ -7,6 +7,19 @@ import {
 } from "zodiac-roles-deployments"
 import { decodeKey } from "./keys"
 
+/**
+ * Error class for license-related errors
+ */
+export class LicenseError extends Error {
+  owner: PrefixedAddress
+
+  constructor(message: string, owner: PrefixedAddress) {
+    super(message)
+    this.name = "LicenseError"
+    this.owner = owner
+  }
+}
+
 type RoleFragment = {
   key: `0x${string}`
   targets?: Target[]
@@ -77,11 +90,10 @@ const assertPublicFeatureScope = (
       )
     )
   ) {
-    // TODO: reenable!
-    // throw new Error(
-    //   `Role ${decodeKey(role.key)} is using allowances. Add the owner of the Roles Modifier to your Zodiac OS organization to proceed: https://app.pilot.gnosisguild.org/add-account/${owner}\n\n` +
-    //     "Learn more at TODO docs links."
-    // )
+    throw new LicenseError(
+      `Role ${decodeKey(role.key)} is using allowances. Add the owner of the Roles Modifier to your Zodiac OS organization to proceed: https://app.pilot.gnosisguild.org/create/${owner}`,
+      owner
+    )
   }
 }
 
