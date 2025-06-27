@@ -3,11 +3,12 @@ import { Clearance, Target, Function } from "zodiac-roles-deployments"
 import { normalizeCondition, subtractCondition } from "./condition"
 
 /**
- * Subtracts right target from left target, returning only what's in left but not in right.
+ * Subtracts left target from right target, returning only what's in left but not in right.
  *
  * @param left - The target to subtract from
  * @param right - The target to subtract
  * @returns A new target with only the permissions that are in left but not in right
+ * @note returns undefined if left is fully subtracted
  */
 export function subtractTarget(
   left: Target,
@@ -80,7 +81,6 @@ function subtractFunction(
       !!right.condition
   )
 
-  // TODO check
   if (left.executionOptions !== right.executionOptions) {
     return left
   }
