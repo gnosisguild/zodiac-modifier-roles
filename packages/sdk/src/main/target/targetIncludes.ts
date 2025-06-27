@@ -5,13 +5,6 @@ import { normalizeCondition, subtractCondition } from "./condition"
 /**
  * Checks if one Target includes (supersedes or equals) another Target.
  *
- * A permission p1 includes p2 if:
- * 1. They target the same address with the same execution options (send/delegatecall)
- * 2. AND one of the following:
- *    - Both are wildcard permissions (no selector)
- *    - Both target the same function AND p1's condition includes p2's condition
- *
- *
  * @param p1 - The potentially broader permission
  * @param p2 - The permission to check if included in p1
  * @returns true if p1 includes p2, false otherwise
@@ -43,11 +36,6 @@ export function targetIncludes(left: Target, right: Target): boolean {
     const lf = left.functions.find((lf) => lf.selector == rf.selector)
     if (!lf) return false
 
-    // Check selectors match for scoped permissions
-    if (lf.selector !== rf.selector) {
-      return false
-    }
-
     if (lf.wildcarded) {
       return true
     }
@@ -65,7 +53,7 @@ export function targetIncludes(left: Target, right: Target): boolean {
     const c2 = rf.condition!
 
     /*
-     * if we can struct from the main condition, it means current
+     * if we can subtract from the main condition, it means current
      * permission is at least a top level variant, and at most
      * matches the condition completely
      */
