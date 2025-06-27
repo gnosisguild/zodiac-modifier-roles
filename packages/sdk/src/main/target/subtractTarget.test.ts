@@ -425,16 +425,16 @@ describe("subtractTarget", () => {
         condition: OR(COMP(1), COMP(2), COMP(3)),
         executionOptions: 0,
       }
-      const func3: Function = {
-        selector: "0x33333333",
-        wildcarded: true,
-        executionOptions: 0,
-      }
-
       const rightFunc2: Function = {
         selector: "0x22222222",
         wildcarded: false,
         condition: OR(COMP(1), COMP(2)),
+        executionOptions: 0,
+      }
+
+      const func3: Function = {
+        selector: "0x33333333",
+        wildcarded: true,
         executionOptions: 0,
       }
 
@@ -459,13 +459,13 @@ describe("subtractTarget", () => {
         clearance: Clearance.Function,
         executionOptions: 0,
         functions: [
-          func1,
           {
             selector: "0x22222222",
             wildcarded: false,
             condition: COMP(3),
             executionOptions: 0,
           },
+          func3,
         ],
       })
     })
