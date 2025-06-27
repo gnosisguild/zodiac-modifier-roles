@@ -1,54 +1,6 @@
 import { Condition, Operator } from "zodiac-roles-deployments"
 import { rawConditionId as conditionId } from "./conditionId"
 
-/*
-  1. Exact match check  
-  - If they're identical, nothing remains after subtraction
-
-  2. OR operator handling
-  This handles two cases:
-  Case A: n:m OR split (both are ORs)
-  // Example: OR(A,B,C) - OR(B,C) = A
-  - Checks that all split children exist in combined
-  - Removes split children from combined
-  - Returns remainder (unwrapping if single child)
-
-  Case B: n:1 OR split (combined is OR, split is single)
-  // Example: OR(A,B,C) - B = OR(A,C)
-  - Checks split exists as child of combined OR
-  - Removes that single child
-  - Returns remainder (unwrapping if single child)
-
-  3. Bail on mismatch
-  - Ensures both have same operator and param type
-  - can't split NOR
-
-  4. AND operator handling
-  For AND, you can't just remove parts. The logic:
-  - Both must have same number of children
-  - They can differ in at most ONE child position
-  - Finds the differing children and recursively splits them
-  - Returns AND with the equal children + the remainder from recursive split
-  // Example: AND(A,OR(B,C)) - AND(A,B) = AND(A,C)
-  //          The OR(B,C) - B = C part is done recursively
-
-  5. MATCHES/Array handling
-  Position-by-position processing:
-  - Goes through each child position
-  - If children match at position, keep as-is
-  - If they differ, recursively split at that position
-  - Only allows ONE position to differ (throws otherwise)
-  // Example: MATCHES(C, OR(A,B), X) - MATCHES(C, A, X) = MATCHES(C, B, X)
-*/
-
-export function canSubtract(
-  condition: Condition,
-  fragment: Condition
-): boolean {
-  const result = subtractCondition(condition, fragment)
-  return result !== condition
-}
-
 /**
  * Attempts to subtract a fragment from a condition tree.
  *
