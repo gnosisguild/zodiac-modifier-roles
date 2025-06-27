@@ -1,8 +1,8 @@
 import { Target } from "zodiac-roles-deployments"
 
 import { subtractTarget } from "../target/subtractTarget"
+import { targetIncludes } from "../target/targetIncludes"
 
-import { confirmPreset } from "./confirmPreset"
 import { mergePermissions } from "./mergePermissions"
 import { processPermissions } from "./processPermissions"
 import { reconstructPermissions } from "./reconstructPermissions"
@@ -33,10 +33,9 @@ export function validatePresets<
   const confirmedPresets = presets.filter(
     (preset) => !!preset && confirmPreset({ targets, preset })
   ) as T[]
-
   const confirmedPermissions = confirmedPresets.flatMap((p) => p.permissions)
-  sanityCheck(confirmedPermissions)
 
+  sanityCheck(confirmedPermissions)
   const { targets: targetsFromPresets } =
     processPermissions(confirmedPermissions)
 
@@ -59,6 +58,36 @@ export function validatePresets<
     presets: confirmedPresets,
     permissions: reconstructPermissions(subtractedTargets),
   }
+}
+
+/**
+ * Checks if all preset permissions are included in the given targets.
+ *
+ * @param targets - Current target permissions (from on-chain)
+ * @param preset - Preset permissions to verify
+ * @returns true if preset is fully covered by targets
+ * @throws if preset permissions can't be merged
+ */
+function confirmPreset({
+  targets,
+  preset,
+}: {
+  targets: readonly Target[]
+  preset: { permissions: PermissionCoerced[] }
+}): boolean {
+  const { targets: targetsFromPreset } = processPermissions(preset.permissions)
+
+  return targetsFromPreset.every((targetFromPreset) => {
+    const target = targets.find(
+      (target) => target.address === targetFromPreset.address
+    )
+
+    // was it found onchain?
+    if (!target) return false
+
+    // is it included?
+    return targetIncludes(target, targetFromPreset)
+  })
 }
 
 function sanityCheck(permissions: readonly PermissionCoerced[]) {
