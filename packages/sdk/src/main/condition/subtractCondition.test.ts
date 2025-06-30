@@ -3,7 +3,7 @@ import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
 import { normalizeCondition } from "./normalize"
 import { subtractCondition } from "./subtractCondition"
-import { abiEncode } from "../../abiEncode"
+import { abiEncode } from "../abiEncode"
 
 const COMP = (id: number): Condition => ({
   paramType: ParameterType.Static,

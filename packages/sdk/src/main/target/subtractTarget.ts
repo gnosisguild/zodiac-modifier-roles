@@ -1,6 +1,6 @@
 import { Clearance, Target, Function } from "zodiac-roles-deployments"
 
-import { normalizeCondition, subtractCondition } from "./condition"
+import { normalizeCondition, subtractCondition } from "../condition"
 
 /**
  * Subtracts right target from left target, returning only what's in left but not in right.

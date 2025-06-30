@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest"
 import { Operator, ParameterType, Condition } from "zodiac-roles-deployments"
 import { normalizeCondition } from "."
-import { abiEncode } from "../../../abiEncode"
+import { abiEncode } from "../../abiEncode"
 import { conditionHash, conditionId } from "../conditionId"
 
 // Helper to create a static comparison condition

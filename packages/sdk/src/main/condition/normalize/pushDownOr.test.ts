@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest"
 import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
 import { pushDownOr } from "./pushDownOr"
-import { abiEncode } from "../../../abiEncode"
+import { abiEncode } from "../../abiEncode"
 import { normalizeCondition } from "."
 
 // Helper functions

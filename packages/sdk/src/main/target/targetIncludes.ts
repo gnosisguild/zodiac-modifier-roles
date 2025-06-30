@@ -1,6 +1,6 @@
 import { Clearance, ExecutionOptions, Target } from "zodiac-roles-deployments"
 
-import { normalizeCondition, subtractCondition } from "./condition"
+import { normalizeCondition, subtractCondition } from "../condition"
 
 /**
  * Checks if one Target includes (supersedes or equals) another Target.

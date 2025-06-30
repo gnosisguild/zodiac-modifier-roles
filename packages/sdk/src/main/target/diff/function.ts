@@ -1,6 +1,6 @@
 import { Function } from "zodiac-roles-deployments"
 
-import { normalizeCondition, conditionId } from "../condition"
+import { normalizeCondition, conditionId } from "../../condition"
 import {
   Diff,
   isExecutionOptionsMinus,

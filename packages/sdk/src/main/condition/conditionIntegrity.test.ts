@@ -1,7 +1,7 @@
 import { expect, it, suite } from "vitest"
 import { Operator, ParameterType } from "zodiac-roles-deployments"
 
-import { abiEncode } from "../../abiEncode"
+import { abiEncode } from "../abiEncode"
 import {
   checkConditionIntegrity,
   checkRootConditionIntegrity,

@@ -9,7 +9,7 @@ import {
 } from "ethers"
 import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
-import { abiEncode } from "../../abiEncode"
+import { abiEncode } from "../abiEncode"
 
 import { flattenCondition, ConditionFlat } from "./flattenCondition"
 

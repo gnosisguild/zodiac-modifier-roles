@@ -1,5 +1,5 @@
 import { Interface } from "ethers"
-import { flattenCondition } from "../condition/flattenCondition"
+import { flattenCondition } from "../../condition/flattenCondition"
 
 import { Call } from "./Call"
 import { Roles__factory } from "../../../typechain"

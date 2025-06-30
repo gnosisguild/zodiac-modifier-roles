@@ -9,7 +9,7 @@ import {
 
 import { diffFunction, diffFunctions } from "./function"
 import { abiEncode } from "../../abiEncode"
-import { conditionId, normalizeCondition } from "../condition"
+import { conditionId, normalizeCondition } from "../../condition"
 
 const roleKey = ZeroHash
 const targetAddress = ZeroAddress

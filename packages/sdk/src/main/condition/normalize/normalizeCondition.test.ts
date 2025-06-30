@@ -3,15 +3,12 @@ import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
 import { normalizeCondition } from "."
 
-import {
-  FunctionPermissionCoerced,
-  mergePermissions,
-} from "../../../permission"
-import { abiEncode } from "../../../abiEncode"
+import { FunctionPermissionCoerced, mergePermissions } from "../../permission"
+import { abiEncode } from "../../abiEncode"
 
-import { c } from "../../authoring"
-import { allow } from "../../../../kit"
-import { encodeKey } from "../../../keys"
+import { c } from "../../target/authoring"
+import { allow } from "../../../kit"
+import { encodeKey } from "../../keys"
 
 const DUMMY_COMP = (id: number) => ({
   paramType: ParameterType.Static,
