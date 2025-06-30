@@ -14,15 +14,10 @@ import { pushDownOr } from "./pushDownOr"
  * at addresses derived from hashing the condition data — so structurally consistent
  * representations help avoid redundant storage.
  */
-export function normalizeCondition(
-  condition: Condition,
-  { shouldPushDown = true }: { shouldPushDown?: boolean } = {}
-): Condition {
+export function normalizeCondition(condition: Condition): Condition {
   let result: Condition = {
     ...condition,
-    children: condition.children?.map((child) =>
-      normalizeCondition(child, { shouldPushDown })
-    ),
+    children: condition.children?.map((child) => normalizeCondition(child)),
   }
 
   result = cleanEmptyFields(result) // Remove undefined fields
@@ -33,7 +28,7 @@ export function normalizeCondition(
   result = dedupeChildren(result) // Remove duplicate branches
   result = unwrapSingleChild(result) // Remove single-child Logical nodes
 
-  result = shouldPushDown ? pushDownOr(result, normalizeCondition) : result
+  result = pushDownOr(result, normalizeCondition)
   result = sortBranchesCanonical(result) // Establish canonical ordering
 
   return result
