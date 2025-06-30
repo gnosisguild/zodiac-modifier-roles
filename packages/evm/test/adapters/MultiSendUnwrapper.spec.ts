@@ -3,10 +3,10 @@ import { expect } from "chai";
 import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import { AddressOne } from "@gnosis.pm/safe-contracts";
 import { BigNumberish, getAddress, solidityPacked } from "ethers";
 import { encodeMultisendPayload } from "../utils";
 
+const AddressOne = "0x0000000000000000000000000000000000000001";
 enum Operation {
   Call = 0,
   DelegateCall,
@@ -20,9 +20,8 @@ describe("MultiSendUnwrapper", async () => {
     const TestEncoder = await hre.ethers.getContractFactory("TestEncoder");
     const testEncoder = await TestEncoder.deploy();
 
-    const MultiSendUnwrapper = await hre.ethers.getContractFactory(
-      "MultiSendUnwrapper"
-    );
+    const MultiSendUnwrapper =
+      await hre.ethers.getContractFactory("MultiSendUnwrapper");
     const unwrapper = await MultiSendUnwrapper.deploy();
 
     return {
@@ -46,7 +45,7 @@ describe("MultiSendUnwrapper", async () => {
           operation: Operation.Call,
           data: simpleCalldata as string,
         },
-      ])
+      ]),
     );
 
     assert(data);
@@ -59,8 +58,8 @@ describe("MultiSendUnwrapper", async () => {
         AddressOne,
         0,
         `${data.slice(0, 2)}${selectorWrong}${data.slice(10)}`,
-        Operation.DelegateCall
-      )
+        Operation.DelegateCall,
+      ),
     ).to.be.reverted;
 
     await expect(
@@ -68,8 +67,8 @@ describe("MultiSendUnwrapper", async () => {
         AddressOne,
         0,
         `${data.slice(0, 2)}${selectorOk}${data.slice(10)}`,
-        Operation.DelegateCall
-      )
+        Operation.DelegateCall,
+      ),
     ).to.not.be.reverted;
   });
 
@@ -87,7 +86,7 @@ describe("MultiSendUnwrapper", async () => {
           operation: Operation.DelegateCall,
           data: simpleCalldata as string,
         },
-      ])
+      ]),
     );
 
     assert(data);
@@ -102,8 +101,8 @@ describe("MultiSendUnwrapper", async () => {
         AddressOne,
         0,
         `${data.slice(0, 10)}${offsetWrong}${data.slice(74)}`,
-        Operation.DelegateCall
-      )
+        Operation.DelegateCall,
+      ),
     ).to.be.reverted;
 
     await expect(
@@ -111,8 +110,8 @@ describe("MultiSendUnwrapper", async () => {
         AddressOne,
         0,
         `${data.slice(0, 10)}${offsetOk}${data.slice(74)}`,
-        Operation.DelegateCall
-      )
+        Operation.DelegateCall,
+      ),
     ).to.not.be.reverted;
   });
 
@@ -130,7 +129,7 @@ describe("MultiSendUnwrapper", async () => {
           operation: Operation.DelegateCall,
           data: simpleCalldata as string,
         },
-      ])
+      ]),
     );
 
     assert(data);
@@ -143,8 +142,8 @@ describe("MultiSendUnwrapper", async () => {
         AddressOne,
         0,
         `${data.slice(0, 74)}${lengthWrong}${data.slice(140)}`,
-        Operation.DelegateCall
-      )
+        Operation.DelegateCall,
+      ),
     ).to.be.reverted;
 
     await expect(unwrapper.unwrap(AddressOne, 0, data, Operation.DelegateCall))
@@ -164,7 +163,7 @@ describe("MultiSendUnwrapper", async () => {
           operation: Operation.Call,
           data: txData,
         },
-      ])
+      ]),
     );
     assert(data);
 
@@ -186,7 +185,7 @@ describe("MultiSendUnwrapper", async () => {
           operation: Operation.Call,
           data: txData as string,
         },
-      ])
+      ]),
     );
     assert(data);
 
@@ -221,11 +220,11 @@ describe("MultiSendUnwrapper", async () => {
           operation: Operation.DelegateCall,
           data: simpleCalldata as string,
         },
-      ])
+      ]),
     );
 
     await expect(
-      unwrapper.unwrap(AddressOne, 0, data as string, Operation.DelegateCall)
+      unwrapper.unwrap(AddressOne, 0, data as string, Operation.DelegateCall),
     ).to.be.reverted;
   });
 
@@ -241,7 +240,7 @@ describe("MultiSendUnwrapper", async () => {
           operation: Operation.DelegateCall,
           data: txData as string,
         },
-      ])
+      ]),
     );
 
     assert(data);
@@ -251,12 +250,12 @@ describe("MultiSendUnwrapper", async () => {
       AddressOne,
       0,
       data,
-      Operation.DelegateCall
+      Operation.DelegateCall,
     );
 
     expect(result).to.have.lengthOf(1);
     expect(getAddress(result[0].to)).to.equal(
-      getAddress("0xaaff330000000000000000000aa0000ff0000000")
+      getAddress("0xaaff330000000000000000000aa0000ff0000000"),
     );
     expect(result[0].value).to.equal(BigInt(999444555));
 
@@ -271,7 +270,7 @@ describe("MultiSendUnwrapper", async () => {
     const { data: txData2 } = await testEncoder.staticDynamicDynamic32(
       "0x0000000000000000000000000000000000000001",
       "0xaabbcc",
-      [1, 2, 3]
+      [1, 2, 3],
     );
     assert(txData1);
     assert(txData2);
@@ -290,7 +289,7 @@ describe("MultiSendUnwrapper", async () => {
           operation: 0,
           data: txData2,
         },
-      ])
+      ]),
     );
     assert(data);
 
@@ -298,7 +297,7 @@ describe("MultiSendUnwrapper", async () => {
       AddressOne,
       0,
       data,
-      Operation.DelegateCall
+      Operation.DelegateCall,
     );
 
     expect(result).to.have.lengthOf(2);
@@ -329,10 +328,10 @@ describe("MultiSendUnwrapper", async () => {
           operation: 2,
           data: txData as string,
         },
-      ])
+      ]),
     );
     await expect(
-      unwrapper.unwrap(AddressOne, 0, data as string, Operation.DelegateCall)
+      unwrapper.unwrap(AddressOne, 0, data as string, Operation.DelegateCall),
     ).to.be.reverted;
     ({ data } = await multisend.multiSend.populateTransaction(
       encodeMultisendPayload([
@@ -342,10 +341,10 @@ describe("MultiSendUnwrapper", async () => {
           operation: Operation.DelegateCall,
           data: txData as string,
         },
-      ])
+      ]),
     ));
     await expect(
-      unwrapper.unwrap(AddressOne, 0, data as string, Operation.DelegateCall)
+      unwrapper.unwrap(AddressOne, 0, data as string, Operation.DelegateCall),
     ).to.not.be.reverted;
   });
 });
@@ -364,8 +363,8 @@ const encodeMultisendWrongLength = (txs: MetaTransaction[]): string => {
       .map((tx) =>
         solidityPacked(
           ["uint8", "address", "uint256", "uint256", "bytes"],
-          [tx.operation, tx.to, tx.value, 4000000, tx.data]
-        ).slice(2)
+          [tx.operation, tx.to, tx.value, 4000000, tx.data],
+        ).slice(2),
       )
       .join("")
   );

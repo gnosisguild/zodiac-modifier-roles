@@ -7,13 +7,13 @@ import { AbiCoder } from "ethers";
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
 import {
+  AbiType,
   Operator,
   ExecutionOptions,
-  ParameterType,
-  deployRolesMod,
   PermissionCheckerStatus,
   BYTES32_ZERO,
 } from "./utils";
+import { deployRolesMod } from "./setup";
 
 describe("Operator", async () => {
   const ROLE_KEY =
@@ -34,7 +34,7 @@ describe("Operator", async () => {
       hre,
       owner.address,
       avatarAddress,
-      avatarAddress
+      avatarAddress,
     );
     await modifier.enableModule(invoker.address);
 
@@ -68,7 +68,7 @@ describe("Operator", async () => {
           0,
           (await testContract.fnWithSingleParam.populateTransaction(a))
             .data as string,
-          0
+          0,
         );
 
     // set it to true
@@ -83,30 +83,30 @@ describe("Operator", async () => {
       [
         {
           parent: 0,
-          paramType: ParameterType.Calldata,
+          paramType: AbiType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: ParameterType.None,
+          paramType: AbiType.None,
           operator: Operator.Or,
           compValue: "0x",
         },
         {
           parent: 1,
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["uint256"], [11]),
         },
         {
           parent: 1,
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["uint256"], [22]),
         },
       ],
-      ExecutionOptions.None
+      ExecutionOptions.None,
     );
 
     await expect(invoke(11)).to.not.be.reverted;
@@ -130,7 +130,7 @@ describe("Operator", async () => {
           0,
           (await testContract.fnWithSingleParam.populateTransaction(a))
             .data as string,
-          0
+          0,
         );
 
     // set it to true
@@ -144,43 +144,43 @@ describe("Operator", async () => {
       [
         {
           parent: 0,
-          paramType: ParameterType.None,
+          paramType: AbiType.None,
           operator: Operator.And,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: ParameterType.Calldata,
+          paramType: AbiType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: ParameterType.Calldata,
+          paramType: AbiType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 1,
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.LessThan,
           compValue: defaultAbiCoder.encode(["uint256"], [50000]),
         },
         {
           parent: 2,
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.GreaterThan,
           compValue: defaultAbiCoder.encode(["uint256"], [40000]),
         },
       ],
-      ExecutionOptions.None
+      ExecutionOptions.None,
     );
 
     await expect(invoke(60000))
       .to.be.revertedWithCustomError(modifier, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.ParameterGreaterThanAllowed,
-        BYTES32_ZERO
+        BYTES32_ZERO,
       );
 
     await expect(invoke(30000))
@@ -204,7 +204,7 @@ describe("Operator", async () => {
           0,
           (await testContract.fnWithSingleParam.populateTransaction(a))
             .data as string,
-          0
+          0,
         );
 
     // set it to true
@@ -218,37 +218,37 @@ describe("Operator", async () => {
       [
         {
           parent: 0,
-          paramType: ParameterType.Calldata,
+          paramType: AbiType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: ParameterType.None,
+          paramType: AbiType.None,
           operator: Operator.And,
           compValue: "0x",
         },
         {
           parent: 1,
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.LessThan,
           compValue: defaultAbiCoder.encode(["uint256"], [50000]),
         },
         {
           parent: 1,
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.GreaterThan,
           compValue: defaultAbiCoder.encode(["uint256"], [40000]),
         },
       ],
-      ExecutionOptions.None
+      ExecutionOptions.None,
     );
 
     await expect(invoke(60000))
       .to.be.revertedWithCustomError(modifier, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.ParameterGreaterThanAllowed,
-        BYTES32_ZERO
+        BYTES32_ZERO,
       );
 
     await expect(invoke(30000))
@@ -262,7 +262,7 @@ describe("Operator", async () => {
     const { modifier, testContract, owner, invoker } = await loadFixture(setup);
 
     const SELECTOR = testContract.interface.getFunction(
-      "fnWithTwoMixedParams"
+      "fnWithTwoMixedParams",
     ).selector;
 
     const invoke = async (a: boolean, b: string) =>
@@ -273,7 +273,7 @@ describe("Operator", async () => {
           0,
           (await testContract.fnWithTwoMixedParams.populateTransaction(a, b))
             .data as string,
-          0
+          0,
         );
 
     // set it to true
@@ -287,42 +287,42 @@ describe("Operator", async () => {
       [
         {
           parent: 0,
-          paramType: ParameterType.Calldata,
+          paramType: AbiType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.Pass,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: ParameterType.None,
+          paramType: AbiType.None,
           operator: Operator.Or,
           compValue: "0x",
         },
         {
           parent: 2,
-          paramType: ParameterType.Dynamic,
+          paramType: AbiType.Dynamic,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["string"], ["First String"]),
         },
         {
           parent: 2,
-          paramType: ParameterType.Dynamic,
+          paramType: AbiType.Dynamic,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["string"], ["Good Morning!"]),
         },
         {
           parent: 2,
-          paramType: ParameterType.Dynamic,
+          paramType: AbiType.Dynamic,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["string"], ["Third String"]),
         },
       ],
-      ExecutionOptions.None
+      ExecutionOptions.None,
     );
 
     await expect(invoke(true, "First String")).to.not.be.reverted;
@@ -353,7 +353,7 @@ describe("Operator", async () => {
           0,
           (await testEncoder.staticTuple.populateTransaction(s, 100))
             .data as string,
-          0
+          0,
         );
 
     // set it to true
@@ -367,56 +367,56 @@ describe("Operator", async () => {
       [
         {
           parent: 0,
-          paramType: ParameterType.Calldata,
+          paramType: AbiType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: ParameterType.None,
+          paramType: AbiType.None,
           operator: Operator.Or,
           compValue: "0x",
         },
         {
           parent: 1,
-          paramType: ParameterType.Tuple,
+          paramType: AbiType.Tuple,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 1,
-          paramType: ParameterType.Tuple,
+          paramType: AbiType.Tuple,
           operator: Operator.Matches,
           compValue: "0x",
         },
         // first tuple variant
         {
           parent: 2,
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["uint256"], [1111]),
         },
         {
           parent: 2,
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["address"], [addressOne]),
         },
         // second tuple variant
         {
           parent: 3,
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["uint256"], [22222]),
         },
         {
           parent: 3,
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["address"], [addressTwo]),
         },
       ],
-      ExecutionOptions.None
+      ExecutionOptions.None,
     );
 
     await expect(invoke({ a: 1111, b: addressOne })).to.not.be.reverted;
@@ -428,7 +428,7 @@ describe("Operator", async () => {
       .withArgs(PermissionCheckerStatus.OrViolation, BYTES32_ZERO);
 
     await expect(
-      invoke({ a: 111, b: "0x0000000000000000000000000000000000000000" })
+      invoke({ a: 111, b: "0x0000000000000000000000000000000000000000" }),
     )
       .to.be.revertedWithCustomError(modifier, "ConditionViolation")
       .withArgs(PermissionCheckerStatus.OrViolation, BYTES32_ZERO);
@@ -441,7 +441,7 @@ describe("Operator", async () => {
 
     const { modifier, testEncoder, owner, invoker } = await loadFixture(setup);
     const SELECTOR = testEncoder.interface.getFunction(
-      "arrayStaticTupleItems"
+      "arrayStaticTupleItems",
     ).selector;
     const invoke = async (a: any[]) =>
       modifier
@@ -451,7 +451,7 @@ describe("Operator", async () => {
           0,
           (await testEncoder.arrayStaticTupleItems.populateTransaction(a))
             .data as string,
-          0
+          0,
         );
 
     // set it to true
@@ -465,113 +465,113 @@ describe("Operator", async () => {
       [
         {
           parent: 0,
-          paramType: ParameterType.Calldata,
+          paramType: AbiType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: ParameterType.None,
+          paramType: AbiType.None,
           operator: Operator.Or,
           compValue: "0x",
         },
         // first Array 1
         {
           parent: 1,
-          paramType: ParameterType.Array,
+          paramType: AbiType.Array,
           operator: Operator.Matches,
           compValue: "0x",
         },
         // second Array 2
         {
           parent: 1,
-          paramType: ParameterType.Array,
+          paramType: AbiType.Array,
           operator: Operator.Matches,
           compValue: "0x",
         },
         // first array first element 3
         {
           parent: 2,
-          paramType: ParameterType.Tuple,
+          paramType: AbiType.Tuple,
           operator: Operator.Matches,
           compValue: "0x",
         },
         // first array second element 4
         {
           parent: 2,
-          paramType: ParameterType.Tuple,
+          paramType: AbiType.Tuple,
           operator: Operator.Matches,
           compValue: "0x",
         },
         // second array first element 5
         {
           parent: 3,
-          paramType: ParameterType.Tuple,
+          paramType: AbiType.Tuple,
           operator: Operator.Matches,
           compValue: "0x",
         },
         // tuple first
         {
           parent: 4,
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: 0,
           compValue: "0x",
         },
         {
           parent: 4,
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["address"], [address1]),
         },
         // tuple second 8
         {
           parent: 5,
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["uint256"], [334455]),
         },
         {
           parent: 5,
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["address"], [address2]),
         },
         // tuple third 9
         {
           parent: 6,
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: 0,
           compValue: "0x",
         },
         {
           parent: 6,
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["address"], [address3]),
         },
       ],
-      ExecutionOptions.None
+      ExecutionOptions.None,
     );
 
     await expect(
       invoke([
         { a: 123, b: address1 },
         { a: 334455, b: address2 },
-      ])
+      ]),
     ).to.not.be.reverted;
 
     await expect(
       invoke([
         { a: 123456, b: address1 },
         { a: 334455, b: address2 },
-      ])
+      ]),
     ).to.not.be.reverted;
 
     await expect(
       invoke([
         { a: 123456, b: address1 },
         { a: 111111, b: address2 },
-      ])
+      ]),
     )
       .to.be.revertedWithCustomError(modifier, "ConditionViolation")
       .withArgs(PermissionCheckerStatus.OrViolation, BYTES32_ZERO);
@@ -599,7 +599,7 @@ describe("Operator", async () => {
           0,
           (await testEncoder.staticTuple.populateTransaction(s, 100))
             .data as string,
-          0
+          0,
         );
 
     // set it to true
@@ -613,56 +613,56 @@ describe("Operator", async () => {
       [
         {
           parent: 0,
-          paramType: ParameterType.Calldata,
+          paramType: AbiType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: ParameterType.None,
+          paramType: AbiType.None,
           operator: Operator.Or,
           compValue: "0x",
         },
         {
           parent: 1,
-          paramType: ParameterType.Tuple,
+          paramType: AbiType.Tuple,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 1,
-          paramType: ParameterType.Tuple,
+          paramType: AbiType.Tuple,
           operator: Operator.Matches,
           compValue: "0x",
         },
         // first tuple variant
         {
           parent: 2,
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["uint256"], [1111]),
         },
         {
           parent: 2,
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["address"], [addressOne]),
         },
         // second tuple variant
         {
           parent: 3,
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["uint256"], [22222]),
         },
         {
           parent: 3,
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["address"], [addressTwo]),
         },
       ],
-      ExecutionOptions.None
+      ExecutionOptions.None,
     );
 
     await expect(invoke({ a: 1111, b: addressOne })).to.not.be.reverted;
@@ -674,7 +674,7 @@ describe("Operator", async () => {
       .withArgs(PermissionCheckerStatus.OrViolation, BYTES32_ZERO);
 
     await expect(
-      invoke({ a: 111, b: "0x0000000000000000000000000000000000000000" })
+      invoke({ a: 111, b: "0x0000000000000000000000000000000000000000" }),
     )
       .to.be.revertedWithCustomError(modifier, "ConditionViolation")
       .withArgs(PermissionCheckerStatus.OrViolation, BYTES32_ZERO);
@@ -696,7 +696,7 @@ describe("Operator", async () => {
           0,
           (await testEncoder.staticTuple.populateTransaction(s, 100))
             .data as string,
-          0
+          0,
         );
 
     // set it to true
@@ -710,30 +710,30 @@ describe("Operator", async () => {
       [
         {
           parent: 0,
-          paramType: ParameterType.Calldata,
+          paramType: AbiType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: ParameterType.Tuple,
+          paramType: AbiType.Tuple,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 1,
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["uint256"], [345]),
         },
         {
           parent: 1,
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["address"], [addressOk]),
         },
       ],
-      ExecutionOptions.None
+      ExecutionOptions.None,
     );
 
     await expect(invoke({ a: 345, b: addressNok }))
@@ -756,7 +756,7 @@ describe("Operator", async () => {
           0,
           (await testEncoder.dynamicTuple.populateTransaction(s))
             .data as string,
-          0
+          0,
         );
 
     // set it to true
@@ -770,54 +770,54 @@ describe("Operator", async () => {
       [
         {
           parent: 0,
-          paramType: ParameterType.Calldata,
+          paramType: AbiType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: ParameterType.Tuple,
+          paramType: AbiType.Tuple,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 1,
-          paramType: ParameterType.Dynamic,
+          paramType: AbiType.Dynamic,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["bytes"], ["0xabcdef"]),
         },
         {
           parent: 1,
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["uint256"], [1998]),
         },
         {
           parent: 1,
-          paramType: ParameterType.Array,
+          paramType: AbiType.Array,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 4,
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["uint256"], [7]),
         },
         {
           parent: 4,
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["uint256"], [88]),
         },
         {
           parent: 4,
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["uint256"], [99]),
         },
       ],
-      ExecutionOptions.None
+      ExecutionOptions.None,
     );
 
     await expect(invoke({ dynamic: "0xabcdef", _static: 1998, dynamic32: [7] }))
@@ -825,7 +825,7 @@ describe("Operator", async () => {
       .withArgs(PermissionCheckerStatus.ParameterNotAMatch, BYTES32_ZERO);
 
     await expect(
-      invoke({ dynamic: "0xabcdef", _static: 1998, dynamic32: [7, 88, 99] })
+      invoke({ dynamic: "0xabcdef", _static: 1998, dynamic32: [7, 88, 99] }),
     ).to.not.be.reverted;
   });
 
@@ -836,7 +836,7 @@ describe("Operator", async () => {
 
     const { modifier, testEncoder, owner, invoker } = await loadFixture(setup);
     const SELECTOR = testEncoder.interface.getFunction(
-      "arrayStaticTupleItems"
+      "arrayStaticTupleItems",
     ).selector;
     const invoke = async (a: any[]) =>
       modifier
@@ -846,7 +846,7 @@ describe("Operator", async () => {
           0,
           (await testEncoder.arrayStaticTupleItems.populateTransaction(a))
             .data as string,
-          0
+          0,
         );
 
     // set it to true
@@ -860,75 +860,75 @@ describe("Operator", async () => {
       [
         {
           parent: 0,
-          paramType: ParameterType.Calldata,
+          paramType: AbiType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: ParameterType.Array,
+          paramType: AbiType.Array,
           operator: Operator.Matches,
           compValue: "0x",
         },
         // tuple first
         {
           parent: 1,
-          paramType: ParameterType.Tuple,
+          paramType: AbiType.Tuple,
           operator: Operator.Matches,
           compValue: "0x",
         },
         // tuple second
         {
           parent: 1,
-          paramType: ParameterType.Tuple,
+          paramType: AbiType.Tuple,
           operator: Operator.Matches,
           compValue: "0x",
         },
         // tuple third
         {
           parent: 1,
-          paramType: ParameterType.Tuple,
+          paramType: AbiType.Tuple,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 2,
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: 0,
           compValue: "0x",
         },
         {
           parent: 2,
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["address"], [address1]),
         },
         {
           parent: 3,
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: 0,
           compValue: "0x",
         },
         {
           parent: 3,
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["address"], [address2]),
         },
         {
           parent: 4,
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: 0,
           compValue: "0x",
         },
         {
           parent: 4,
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["address"], [address3]),
         },
       ],
-      ExecutionOptions.None
+      ExecutionOptions.None,
     );
 
     await expect(
@@ -936,7 +936,7 @@ describe("Operator", async () => {
         { a: 123, b: address1 },
         { a: 333, b: address2 },
         { a: 233, b: address3 },
-      ])
+      ]),
     ).to.not.be.reverted;
     await expect(invoke([]))
       .to.be.revertedWithCustomError(modifier, "ConditionViolation")
@@ -945,7 +945,7 @@ describe("Operator", async () => {
       invoke([
         { a: 123, b: address1 },
         { a: 333, b: address2 },
-      ])
+      ]),
     )
       .to.be.revertedWithCustomError(modifier, "ConditionViolation")
       .withArgs(PermissionCheckerStatus.ParameterNotAMatch, BYTES32_ZERO);
@@ -955,7 +955,7 @@ describe("Operator", async () => {
         { a: 123, b: address1 },
         { a: 333, b: address2 },
         { a: 233, b: address2 },
-      ])
+      ]),
     )
       .to.be.revertedWithCustomError(modifier, "ConditionViolation")
       .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
@@ -963,12 +963,11 @@ describe("Operator", async () => {
 
   describe("Variants", async () => {
     it("checks a simple 3 way variant", async () => {
-      const { modifier, testContract, owner, invoker } = await loadFixture(
-        setup
-      );
+      const { modifier, testContract, owner, invoker } =
+        await loadFixture(setup);
 
       const SELECTOR = testContract.interface.getFunction(
-        "fnWithTwoMixedParams"
+        "fnWithTwoMixedParams",
       ).selector;
 
       const invoke = async (a: boolean, b: string) =>
@@ -979,7 +978,7 @@ describe("Operator", async () => {
             0,
             (await testContract.fnWithTwoMixedParams.populateTransaction(a, b))
               .data as string,
-            0
+            0,
           );
 
       await modifier
@@ -997,54 +996,54 @@ describe("Operator", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.None,
+            paramType: AbiType.None,
             operator: Operator.Or,
             compValue: "0x",
           },
           // 1
           {
             parent: 0,
-            paramType: ParameterType.Calldata,
+            paramType: AbiType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
           // 2
           {
             parent: 0,
-            paramType: ParameterType.Calldata,
+            paramType: AbiType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
           // 3
           {
             parent: 0,
-            paramType: ParameterType.Calldata,
+            paramType: AbiType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
           // first variant
           {
             parent: 1,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: 0,
             compValue: "0x",
           },
           {
             parent: 1,
-            paramType: ParameterType.Dynamic,
+            paramType: AbiType.Dynamic,
             operator: Operator.EqualTo,
             compValue: defaultAbiCoder.encode(["string"], ["First String"]),
           },
           // second variant
           {
             parent: 2,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.EqualTo,
             compValue: defaultAbiCoder.encode(["bool"], [true]),
           },
           {
             parent: 2,
-            paramType: ParameterType.Dynamic,
+            paramType: AbiType.Dynamic,
             operator: Operator.EqualTo,
             compValue: defaultAbiCoder.encode(["string"], ["Good Morning!"]),
           },
@@ -1052,18 +1051,18 @@ describe("Operator", async () => {
           {
             parent: 3,
 
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.Pass,
             compValue: "0x",
           },
           {
             parent: 3,
-            paramType: ParameterType.Dynamic,
+            paramType: AbiType.Dynamic,
             operator: Operator.EqualTo,
             compValue: defaultAbiCoder.encode(["string"], ["Third String"]),
           },
         ],
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
 
       await expect(invoke(true, "First String")).to.not.be.reverted;

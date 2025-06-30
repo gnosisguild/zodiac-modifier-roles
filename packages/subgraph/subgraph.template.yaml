@@ -117,7 +117,7 @@ dataSources:
         - UnwrapAdapter
       abis:
         - name: Periphery
-          file: ./abis/Periphery.sol/Periphery.json
+          file: ./abis/_Periphery.sol/Periphery.json
       eventHandlers:
         - event: SetUnwrapAdapter(address,bytes4,address)
           handler: handleSetUnwrapAdapter

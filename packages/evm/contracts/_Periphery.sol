@@ -2,7 +2,7 @@
 pragma solidity >=0.8.17 <0.9.0;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "./adapters/Types.sol";
+import "./periphery/Types.sol";
 
 /**
  * @title Periphery - a coordinating component that facilitates plug-and-play

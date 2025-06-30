@@ -1,32 +1,31 @@
 import { expect } from "chai";
 import hre from "hardhat";
 import {
+  AbiType,
   BYTES32_ZERO,
-  deployRolesMod,
   ExecutionOptions,
   Operator,
-  ParameterType,
   PermissionCheckerStatus,
-  toConditionsFlat,
   encodeMultisendPayload,
+  flattenCondition,
 } from "./utils";
 import { AbiCoder, BigNumberish } from "ethers";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import {
+  deployRolesMod,
+  setupAvatarAndRoles,
   setupFnThatMaybeReturns,
   setupOneParamArrayOfDynamicTuple,
-  setupOneParamStatic,
   setupOneParamStaticTuple,
   setupTwoParamsStatic,
-} from "./operators/setup";
+} from "./setup";
 
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
 describe("Allowance", async () => {
   it("unexistent allowance produces error", async () => {
-    const { roles, scopeFunction, invoke } = await loadFixture(
-      setupTwoParamsStatic
-    );
+    const { roles, scopeFunction, invoke } =
+      await loadFixture(setupTwoParamsStatic);
 
     const allowanceKey =
       "0x123000000000000000000000000000000000000000000000000000000000000f";
@@ -34,19 +33,19 @@ describe("Allowance", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.Calldata,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.WithinAllowance,
         compValue: allowanceKey,
       },
       {
         parent: 0,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.Pass,
         compValue: "0x",
       },
@@ -58,25 +57,25 @@ describe("Allowance", async () => {
   });
   it("raises ConsumeAllowance event", async () => {
     const { roles, scopeFunction, invoke, owner } = await loadFixture(
-      setupFnThatMaybeReturns
+      setupFnThatMaybeReturns,
     );
 
     const allowanceKey =
       "0x000000000000000000000000000000000000000000000000000000000000000f";
     await roles.connect(owner).setAllowance(allowanceKey, 1000, 0, 0, 0, 0);
 
-    const conditionsFlat = toConditionsFlat({
-      paramType: ParameterType.Calldata,
+    const conditionsFlat = flattenCondition({
+      paramType: AbiType.Calldata,
       operator: Operator.Matches,
       compValue: "0x",
       children: [
         {
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.WithinAllowance,
           compValue: allowanceKey,
         },
         {
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.Pass,
           compValue: "0x",
         },
@@ -93,32 +92,31 @@ describe("Allowance", async () => {
   });
   it("does not raise ConsumeAllowance, when inner transaction reverts, shouldRevert=false", async () => {
     const { roles, scopeFunction, invoke, owner } = await loadFixture(
-      setupFnThatMaybeReturns
+      setupFnThatMaybeReturns,
     );
 
     const allowanceKey =
       "0x000000000000000000000000000000000000000000000000000000000000000f";
     await roles.connect(owner).setAllowance(allowanceKey, 1000, 0, 0, 0, 0);
 
-    const conditionsFlat = toConditionsFlat({
-      paramType: ParameterType.Calldata,
+    const conditionsFlat = flattenCondition({
+      paramType: AbiType.Calldata,
       operator: Operator.Matches,
       compValue: "0x",
       children: [
         {
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.WithinAllowance,
           compValue: allowanceKey,
         },
         {
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.Pass,
           compValue: "0x",
         },
       ],
     });
     await scopeFunction(conditionsFlat);
-    const maybe = true;
 
     expect((await roles.allowances(allowanceKey)).balance).to.equal(1000);
 
@@ -127,9 +125,8 @@ describe("Allowance", async () => {
     expect((await roles.allowances(allowanceKey)).balance).to.equal(1000);
   });
   it("consumption in truthy And branch bleeds to other branches", async () => {
-    const { roles, scopeFunction, invoke, owner } = await loadFixture(
-      setupTwoParamsStatic
-    );
+    const { roles, scopeFunction, invoke, owner } =
+      await loadFixture(setupTwoParamsStatic);
 
     const allowanceKey =
       "0x000000000000000000000000000000000000000000000000000000000000000f";
@@ -138,25 +135,25 @@ describe("Allowance", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.Calldata,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: ParameterType.None,
+        paramType: AbiType.None,
         operator: Operator.And,
         compValue: "0x",
       },
       {
         parent: 1,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.WithinAllowance,
         compValue: allowanceKey,
       },
       {
         parent: 1,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.WithinAllowance,
         compValue: allowanceKey,
       },
@@ -174,54 +171,53 @@ describe("Allowance", async () => {
     expect((await roles.allowances(allowanceKey)).balance).to.equal(100);
   });
   it("consumption in falsy Or branch gets discarded", async () => {
-    const { roles, scopeFunction, invoke, owner } = await loadFixture(
-      setupTwoParamsStatic
-    );
+    const { roles, scopeFunction, invoke, owner } =
+      await loadFixture(setupTwoParamsStatic);
 
     const allowanceKey =
       "0x000000000000000000000000000000000000000000000000000000000000000f";
     await roles.connect(owner).setAllowance(allowanceKey, 1000, 0, 0, 0, 0);
 
     await scopeFunction(
-      toConditionsFlat({
-        paramType: ParameterType.Calldata,
+      flattenCondition({
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
         children: [
           {
-            paramType: ParameterType.None,
+            paramType: AbiType.None,
             operator: Operator.Or,
             compValue: "0x",
             children: [
               {
-                paramType: ParameterType.None,
+                paramType: AbiType.None,
                 operator: Operator.And,
                 compValue: "0x",
                 children: [
                   {
-                    paramType: ParameterType.Static,
+                    paramType: AbiType.Static,
                     operator: Operator.WithinAllowance,
                     compValue: allowanceKey,
                   },
                   {
-                    paramType: ParameterType.Static,
+                    paramType: AbiType.Static,
                     operator: Operator.LessThan,
                     compValue: defaultAbiCoder.encode(["uint256"], [1]),
                   },
                 ],
               },
               {
-                paramType: ParameterType.None,
+                paramType: AbiType.None,
                 operator: Operator.And,
                 compValue: "0x",
                 children: [
                   {
-                    paramType: ParameterType.Static,
+                    paramType: AbiType.Static,
                     operator: Operator.WithinAllowance,
                     compValue: allowanceKey,
                   },
                   {
-                    paramType: ParameterType.Static,
+                    paramType: AbiType.Static,
                     operator: Operator.GreaterThan,
                     compValue: defaultAbiCoder.encode(["uint256"], [1]),
                   },
@@ -230,7 +226,7 @@ describe("Allowance", async () => {
             ],
           },
         ],
-      })
+      }),
     );
 
     expect((await roles.allowances(allowanceKey)).balance).to.equal(1000);
@@ -241,35 +237,35 @@ describe("Allowance", async () => {
   });
   it("consumption in ArraySome gets counted once", async () => {
     const { roles, scopeFunction, invoke, owner } = await loadFixture(
-      setupOneParamArrayOfDynamicTuple
+      setupOneParamArrayOfDynamicTuple,
     );
 
     const allowanceKey =
       "0x000000000000000000000000000000000000000000000000000000000000000f";
     await roles.connect(owner).setAllowance(allowanceKey, 1000, 0, 0, 0, 0);
 
-    const conditionsFlat = toConditionsFlat({
-      paramType: ParameterType.Calldata,
+    const conditionsFlat = flattenCondition({
+      paramType: AbiType.Calldata,
       operator: Operator.Matches,
       compValue: "0x",
       children: [
         {
-          paramType: ParameterType.Array,
+          paramType: AbiType.Array,
           operator: Operator.ArraySome,
           compValue: "0x",
           children: [
             {
-              paramType: ParameterType.Tuple,
+              paramType: AbiType.Tuple,
               operator: Operator.Matches,
               compValue: "0x",
               children: [
                 {
-                  paramType: ParameterType.Static,
+                  paramType: AbiType.Static,
                   operator: Operator.WithinAllowance,
                   compValue: allowanceKey,
                 },
                 {
-                  paramType: ParameterType.Dynamic,
+                  paramType: AbiType.Dynamic,
                   operator: Operator.EqualTo,
                   compValue: defaultAbiCoder.encode(["bytes"], ["0xbadfed"]),
                 },
@@ -297,42 +293,42 @@ describe("Allowance", async () => {
         { a: 100, b: "0xbadfed" },
         { a: 900, b: "0xbadfed" },
         { a: 1234, b: "0xbadfed" },
-      ])
+      ]),
     ).to.not.be.reverted;
 
     expect((await roles.allowances(allowanceKey)).balance).to.equal(800);
   });
   it("consumption in ArrayEvery gets counted for all elements", async () => {
     const { roles, scopeFunction, invoke, owner } = await loadFixture(
-      setupOneParamArrayOfDynamicTuple
+      setupOneParamArrayOfDynamicTuple,
     );
 
     const allowanceKey =
       "0x000000000000000000000000000000000000000000000000000000000000000f";
     await roles.connect(owner).setAllowance(allowanceKey, 1000, 0, 0, 0, 0);
 
-    const conditionsFlat = toConditionsFlat({
-      paramType: ParameterType.Calldata,
+    const conditionsFlat = flattenCondition({
+      paramType: AbiType.Calldata,
       operator: Operator.Matches,
       compValue: "0x",
       children: [
         {
-          paramType: ParameterType.Array,
+          paramType: AbiType.Array,
           operator: Operator.ArrayEvery,
           compValue: "0x",
           children: [
             {
-              paramType: ParameterType.Tuple,
+              paramType: AbiType.Tuple,
               operator: Operator.Matches,
               compValue: "0x",
               children: [
                 {
-                  paramType: ParameterType.Static,
+                  paramType: AbiType.Static,
                   operator: Operator.WithinAllowance,
                   compValue: allowanceKey,
                 },
                 {
-                  paramType: ParameterType.Dynamic,
+                  paramType: AbiType.Dynamic,
                   operator: Operator.EqualTo,
                   compValue: defaultAbiCoder.encode(["bytes"], ["0xbadfed"]),
                 },
@@ -350,7 +346,7 @@ describe("Allowance", async () => {
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.NotEveryArrayElementPasses,
-        BYTES32_ZERO
+        BYTES32_ZERO,
       );
 
     expect((await roles.allowances(allowanceKey)).balance).to.equal(1000);
@@ -359,16 +355,16 @@ describe("Allowance", async () => {
       invoke([
         { a: 123, b: "0xbadfed" },
         { a: 200, b: "0xbadfed" },
-      ])
+      ]),
     ).to.not.be.reverted;
 
     expect((await roles.allowances(allowanceKey)).balance).to.equal(
-      1000 - (123 + 200)
+      1000 - (123 + 200),
     );
   });
   it("consumption in ArraySubset gets counted in hits", async () => {
     const { roles, scopeFunction, invoke, owner } = await loadFixture(
-      setupOneParamArrayOfDynamicTuple
+      setupOneParamArrayOfDynamicTuple,
     );
 
     const allowanceKey1 =
@@ -383,62 +379,62 @@ describe("Allowance", async () => {
       "0x00000000000000000000000000000000000000000000000000000000000000f3";
     await roles.connect(owner).setAllowance(allowanceKey3, 100, 0, 0, 0, 0);
 
-    const conditionsFlat = toConditionsFlat({
-      paramType: ParameterType.Calldata,
+    const conditionsFlat = flattenCondition({
+      paramType: AbiType.Calldata,
       operator: Operator.Matches,
       compValue: "0x",
       children: [
         {
-          paramType: ParameterType.Array,
+          paramType: AbiType.Array,
           operator: Operator.ArraySubset,
           compValue: "0x",
           children: [
             {
-              paramType: ParameterType.Tuple,
+              paramType: AbiType.Tuple,
               operator: Operator.Matches,
               compValue: "0x",
               children: [
                 {
-                  paramType: ParameterType.Static,
+                  paramType: AbiType.Static,
                   operator: Operator.WithinAllowance,
                   compValue: allowanceKey1,
                 },
                 {
-                  paramType: ParameterType.Dynamic,
+                  paramType: AbiType.Dynamic,
                   operator: Operator.EqualTo,
                   compValue: defaultAbiCoder.encode(["bytes"], ["0xbadfed"]),
                 },
               ],
             },
             {
-              paramType: ParameterType.Tuple,
+              paramType: AbiType.Tuple,
               operator: Operator.Matches,
               compValue: "0x",
               children: [
                 {
-                  paramType: ParameterType.Static,
+                  paramType: AbiType.Static,
                   operator: Operator.WithinAllowance,
                   compValue: allowanceKey2,
                 },
                 {
-                  paramType: ParameterType.Dynamic,
+                  paramType: AbiType.Dynamic,
                   operator: Operator.EqualTo,
                   compValue: defaultAbiCoder.encode(["bytes"], ["0xdeadbeef"]),
                 },
               ],
             },
             {
-              paramType: ParameterType.Tuple,
+              paramType: AbiType.Tuple,
               operator: Operator.Matches,
               compValue: "0x",
               children: [
                 {
-                  paramType: ParameterType.Static,
+                  paramType: AbiType.Static,
                   operator: Operator.WithinAllowance,
                   compValue: allowanceKey3,
                 },
                 {
-                  paramType: ParameterType.Dynamic,
+                  paramType: AbiType.Dynamic,
                   operator: Operator.EqualTo,
                   compValue: defaultAbiCoder.encode(["bytes"], ["0xbad0beef"]),
                 },
@@ -458,7 +454,7 @@ describe("Allowance", async () => {
       invoke([
         { a: 20, b: "0xdeadbeef" },
         { a: 30, b: "0xbad0beef" },
-      ])
+      ]),
     ).to.not.be.reverted;
 
     expect((await roles.allowances(allowanceKey1)).balance).to.equal(100);
@@ -466,9 +462,13 @@ describe("Allowance", async () => {
     expect((await roles.allowances(allowanceKey3)).balance).to.equal(70);
   });
   it("failing And returns unchanged in memory consumptions", async () => {
-    const { roles, scopeFunction, invoke, owner } = await loadFixture(
-      setupOneParamStatic
-    );
+    const {
+      owner,
+      roles,
+      testContract,
+      scopeFunction,
+      execTransactionFromModule,
+    } = await loadFixture(setupAvatarAndRoles);
 
     const allowanceKey1 =
       "0x00000000000000000000000000000000000000000000000000000000000000f1";
@@ -478,35 +478,35 @@ describe("Allowance", async () => {
       "0x00000000000000000000000000000000000000000000000000000000000000f2";
     await roles.connect(owner).setAllowance(allowanceKey2, 100, 0, 0, 0, 0);
 
-    const conditionsFlat = toConditionsFlat({
-      paramType: ParameterType.Calldata,
+    const conditionsFlat = flattenCondition({
+      paramType: AbiType.Calldata,
       operator: Operator.Matches,
       compValue: "0x",
       children: [
         {
-          paramType: ParameterType.None,
+          paramType: AbiType.None,
           operator: Operator.Or,
           compValue: "0x",
           children: [
             {
-              paramType: ParameterType.None,
+              paramType: AbiType.None,
               operator: Operator.And,
               compValue: "0x",
               children: [
                 {
-                  paramType: ParameterType.Static,
+                  paramType: AbiType.Static,
                   operator: Operator.WithinAllowance,
                   compValue: allowanceKey1,
                 },
                 {
-                  paramType: ParameterType.Static,
+                  paramType: AbiType.Static,
                   operator: Operator.LessThan,
                   compValue: defaultAbiCoder.encode(["uint256"], [50]),
                 },
               ],
             },
             {
-              paramType: ParameterType.Static,
+              paramType: AbiType.Static,
               operator: Operator.WithinAllowance,
               compValue: allowanceKey2,
             },
@@ -515,7 +515,13 @@ describe("Allowance", async () => {
       ],
     });
 
-    await scopeFunction(conditionsFlat);
+    const { selector } = testContract.interface.getFunction("oneParamStatic");
+    await scopeFunction(selector, conditionsFlat);
+
+    const invoke = async (a: number) => {
+      const { data } = await testContract.oneParamStatic.populateTransaction(a);
+      return execTransactionFromModule({ data });
+    };
 
     expect((await roles.allowances(allowanceKey1)).balance).to.equal(100);
     expect((await roles.allowances(allowanceKey2)).balance).to.equal(100);
@@ -526,9 +532,13 @@ describe("Allowance", async () => {
     expect((await roles.allowances(allowanceKey2)).balance).to.equal(49);
   });
   it("failing OR returns unchanged in memory consumptions", async () => {
-    const { roles, invoke, scopeFunction, owner } = await loadFixture(
-      setupOneParamStatic
-    );
+    const {
+      owner,
+      roles,
+      testContract,
+      scopeFunction,
+      execTransactionFromModule,
+    } = await loadFixture(setupAvatarAndRoles);
 
     const allowanceKey1 =
       "0x00000000000000000000000000000000000000000000000000000000000000f1";
@@ -538,33 +548,33 @@ describe("Allowance", async () => {
       "0x00000000000000000000000000000000000000000000000000000000000000f2";
     await roles.connect(owner).setAllowance(allowanceKey2, 100, 0, 0, 0, 0);
 
-    const conditionsFlat = toConditionsFlat({
-      paramType: ParameterType.Calldata,
+    const conditionsFlat = flattenCondition({
+      paramType: AbiType.Calldata,
       operator: Operator.Matches,
       compValue: "0x",
       children: [
         {
-          paramType: ParameterType.None,
+          paramType: AbiType.None,
           operator: Operator.Or,
           compValue: "0x",
           children: [
             {
-              paramType: ParameterType.None,
+              paramType: AbiType.None,
               operator: Operator.Or,
               compValue: "0x",
               children: [
                 {
-                  paramType: ParameterType.None,
+                  paramType: AbiType.None,
                   operator: Operator.And,
                   compValue: "0x",
                   children: [
                     {
-                      paramType: ParameterType.Static,
+                      paramType: AbiType.Static,
                       operator: Operator.WithinAllowance,
                       compValue: allowanceKey1,
                     },
                     {
-                      paramType: ParameterType.Static,
+                      paramType: AbiType.Static,
                       operator: Operator.LessThan,
                       compValue: defaultAbiCoder.encode(["uint256"], [50]),
                     },
@@ -573,7 +583,7 @@ describe("Allowance", async () => {
               ],
             },
             {
-              paramType: ParameterType.Static,
+              paramType: AbiType.Static,
               operator: Operator.WithinAllowance,
               compValue: allowanceKey2,
             },
@@ -582,7 +592,13 @@ describe("Allowance", async () => {
       ],
     });
 
-    await scopeFunction(conditionsFlat);
+    const { selector } = testContract.interface.getFunction("oneParamStatic");
+    await scopeFunction(selector, conditionsFlat);
+
+    const invoke = async (a: number) => {
+      const { data } = await testContract.oneParamStatic.populateTransaction(a);
+      return execTransactionFromModule({ data });
+    };
 
     expect((await roles.allowances(allowanceKey1)).balance).to.equal(100);
     expect((await roles.allowances(allowanceKey2)).balance).to.equal(100);
@@ -594,7 +610,7 @@ describe("Allowance", async () => {
   });
   it("failing Matches returns unchanged in memory consumptions", async () => {
     const { roles, scopeFunction, invoke, owner } = await loadFixture(
-      setupOneParamStaticTuple
+      setupOneParamStaticTuple,
     );
 
     const allowanceKey1 =
@@ -605,45 +621,45 @@ describe("Allowance", async () => {
       "0x00000000000000000000000000000000000000000000000000000000000000f2";
     await roles.connect(owner).setAllowance(allowanceKey2, 100, 0, 0, 0, 0);
 
-    const conditionsFlat = toConditionsFlat({
-      paramType: ParameterType.Calldata,
+    const conditionsFlat = flattenCondition({
+      paramType: AbiType.Calldata,
       operator: Operator.Matches,
       compValue: "0x",
       children: [
         {
-          paramType: ParameterType.None,
+          paramType: AbiType.None,
           operator: Operator.Or,
           compValue: "0x",
           children: [
             {
-              paramType: ParameterType.Tuple,
+              paramType: AbiType.Tuple,
               operator: Operator.Matches,
               compValue: "0x",
               children: [
                 {
-                  paramType: ParameterType.Static,
+                  paramType: AbiType.Static,
                   operator: Operator.WithinAllowance,
                   compValue: allowanceKey1,
                 },
                 {
-                  paramType: ParameterType.Static,
+                  paramType: AbiType.Static,
                   operator: Operator.EqualTo,
                   compValue: defaultAbiCoder.encode(["bool"], [true]),
                 },
               ],
             },
             {
-              paramType: ParameterType.Tuple,
+              paramType: AbiType.Tuple,
               operator: Operator.Matches,
               compValue: "0x",
               children: [
                 {
-                  paramType: ParameterType.Static,
+                  paramType: AbiType.Static,
                   operator: Operator.WithinAllowance,
                   compValue: allowanceKey2,
                 },
                 {
-                  paramType: ParameterType.Static,
+                  paramType: AbiType.Static,
                   operator: Operator.Pass,
                   compValue: "0x",
                 },
@@ -666,7 +682,7 @@ describe("Allowance", async () => {
   });
   it("balance above maxRefill gets consumed", async () => {
     const { roles, scopeFunction, invoke, owner } = await loadFixture(
-      setupFnThatMaybeReturns
+      setupFnThatMaybeReturns,
     );
 
     const allowanceKey =
@@ -675,18 +691,18 @@ describe("Allowance", async () => {
       .connect(owner)
       .setAllowance(allowanceKey, 1300, 1000, 100, 0, 0);
 
-    const conditionsFlat = toConditionsFlat({
-      paramType: ParameterType.Calldata,
+    const conditionsFlat = flattenCondition({
+      paramType: AbiType.Calldata,
       operator: Operator.Matches,
       compValue: "0x",
       children: [
         {
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.WithinAllowance,
           compValue: allowanceKey,
         },
         {
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.Pass,
           compValue: "0x",
         },
@@ -724,7 +740,7 @@ describe("Allowance", async () => {
         hre,
         owner.address,
         avatarAddress,
-        avatarAddress
+        avatarAddress,
       );
       await roles.enableModule(invoker.address);
 
@@ -739,9 +755,8 @@ describe("Allowance", async () => {
       const multisend = await MultiSend.deploy();
       const multisendAddress = await multisend.getAddress();
 
-      const MultiSendUnwrapper = await hre.ethers.getContractFactory(
-        "MultiSendUnwrapper"
-      );
+      const MultiSendUnwrapper =
+        await hre.ethers.getContractFactory("MultiSendUnwrapper");
       const adapter = await MultiSendUnwrapper.deploy();
       const adapterAddress = await adapter.getAddress();
 
@@ -750,7 +765,7 @@ describe("Allowance", async () => {
         .setTransactionUnwrapper(
           multisendAddress,
           multisend.interface.getFunction("multiSend").selector,
-          adapterAddress
+          adapterAddress,
         );
 
       async function setAllowance(allowanceKey: string, balance: BigNumberish) {
@@ -803,18 +818,18 @@ describe("Allowance", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.Calldata,
+            paramType: AbiType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.WithinAllowance,
             compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey1]),
           },
         ],
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
 
       await roles.connect(owner).scopeFunction(
@@ -824,24 +839,24 @@ describe("Allowance", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.Calldata,
+            paramType: AbiType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.Pass,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.WithinAllowance,
             compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey2]),
           },
         ],
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
 
       const testContractAddress = await testContract.getAddress();
@@ -862,20 +877,20 @@ describe("Allowance", async () => {
               data: (
                 await testContract.twoParamsStatic.populateTransaction(
                   0,
-                  value2
+                  value2,
                 )
               ).data as string,
               operation: 0,
             },
-          ])
+          ]),
         )
       ).data as string;
 
       expect((await roles.allowances(allowanceKey1)).balance).to.equal(
-        balance1
+        balance1,
       );
       expect((await roles.allowances(allowanceKey2)).balance).to.equal(
-        balance2
+        balance2,
       );
 
       await expect(
@@ -885,15 +900,15 @@ describe("Allowance", async () => {
             await multisend.getAddress(),
             0,
             multisendCalldata,
-            1
-          )
+            1,
+          ),
       ).to.emit(roles, "ConsumeAllowance");
 
       expect((await roles.allowances(allowanceKey1)).balance).to.equal(
-        balance1 - value1
+        balance1 - value1,
       );
       expect((await roles.allowances(allowanceKey2)).balance).to.equal(
-        balance2 - value2
+        balance2 - value2,
       );
     });
     it("consumptions with overlap get flushed", async () => {
@@ -929,18 +944,18 @@ describe("Allowance", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.Calldata,
+            paramType: AbiType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.WithinAllowance,
             compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey1]),
           },
         ],
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
 
       await roles.connect(owner).scopeFunction(
@@ -950,24 +965,24 @@ describe("Allowance", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.Calldata,
+            paramType: AbiType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.WithinAllowance,
             compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey1]),
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.WithinAllowance,
             compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey2]),
           },
         ],
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
 
       const multisendCalldata = (
@@ -987,20 +1002,20 @@ describe("Allowance", async () => {
               data: (
                 await testContract.twoParamsStatic.populateTransaction(
                   value12,
-                  value2
+                  value2,
                 )
               ).data as string,
               operation: 0,
             },
-          ])
+          ]),
         )
       ).data as string;
 
       expect((await roles.allowances(allowanceKey1)).balance).to.equal(
-        balance1
+        balance1,
       );
       expect((await roles.allowances(allowanceKey2)).balance).to.equal(
-        balance2
+        balance2,
       );
 
       await expect(
@@ -1010,15 +1025,15 @@ describe("Allowance", async () => {
             await multisend.getAddress(),
             0,
             multisendCalldata,
-            1
-          )
+            1,
+          ),
       ).to.emit(roles, "ConsumeAllowance");
 
       expect((await roles.allowances(allowanceKey1)).balance).to.equal(
-        balance1 - (value11 + value12)
+        balance1 - (value11 + value12),
       );
       expect((await roles.allowances(allowanceKey2)).balance).to.equal(
-        balance2 - value2
+        balance2 - value2,
       );
     });
     it("consumptions with overlap overspend", async () => {
@@ -1042,18 +1057,18 @@ describe("Allowance", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.Calldata,
+            paramType: AbiType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.WithinAllowance,
             compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
           },
         ],
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
 
       await roles.connect(owner).scopeFunction(
@@ -1063,24 +1078,24 @@ describe("Allowance", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.Calldata,
+            paramType: AbiType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.WithinAllowance,
             compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.Pass,
             compValue: "0x",
           },
         ],
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
 
       const multisendCalldata = (
@@ -1100,12 +1115,12 @@ describe("Allowance", async () => {
               data: (
                 await testContract.twoParamsStatic.populateTransaction(
                   value2,
-                  999999
+                  999999,
                 )
               ).data as string,
               operation: 0,
             },
-          ])
+          ]),
         )
       ).data as string;
 
@@ -1118,8 +1133,8 @@ describe("Allowance", async () => {
             await multisend.getAddress(),
             0,
             multisendCalldata,
-            1
-          )
+            1,
+          ),
       )
         .to.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
@@ -1159,18 +1174,18 @@ describe("Allowance", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.Calldata,
+            paramType: AbiType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.WithinAllowance,
             compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey1]),
           },
         ],
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
 
       await roles
@@ -1179,7 +1194,7 @@ describe("Allowance", async () => {
           roleKey,
           testContractAddress,
           testContract.interface.getFunction("doNothing").selector,
-          ExecutionOptions.None
+          ExecutionOptions.None,
         );
 
       await roles.connect(owner).scopeFunction(
@@ -1189,24 +1204,24 @@ describe("Allowance", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.Calldata,
+            paramType: AbiType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.WithinAllowance,
             compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey1]),
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.WithinAllowance,
             compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey2]),
           },
         ],
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
 
       const multisendCalldata = (
@@ -1223,9 +1238,8 @@ describe("Allowance", async () => {
             {
               to: testContractAddress,
               value: 0,
-              data: (
-                await testContract.doNothing.populateTransaction()
-              ).data as string,
+              data: (await testContract.doNothing.populateTransaction())
+                .data as string,
               operation: 0,
             },
             {
@@ -1234,20 +1248,20 @@ describe("Allowance", async () => {
               data: (
                 await testContract.twoParamsStatic.populateTransaction(
                   value12,
-                  value2
+                  value2,
                 )
               ).data as string,
               operation: 0,
             },
-          ])
+          ]),
         )
       ).data as string;
 
       expect((await roles.allowances(allowanceKey1)).balance).to.equal(
-        balance1
+        balance1,
       );
       expect((await roles.allowances(allowanceKey2)).balance).to.equal(
-        balance2
+        balance2,
       );
 
       await expect(
@@ -1257,15 +1271,15 @@ describe("Allowance", async () => {
             await multisend.getAddress(),
             0,
             multisendCalldata,
-            1
-          )
+            1,
+          ),
       ).to.emit(roles, "ConsumeAllowance");
 
       expect((await roles.allowances(allowanceKey1)).balance).to.equal(
-        balance1 - (value11 + value12)
+        balance1 - (value11 + value12),
       );
       expect((await roles.allowances(allowanceKey2)).balance).to.equal(
-        balance2 - value2
+        balance2 - value2,
       );
     });
     it("middle entrypoint scoped with no consumptions carries and flushes", async () => {
@@ -1302,18 +1316,18 @@ describe("Allowance", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.Calldata,
+            paramType: AbiType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.WithinAllowance,
             compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey1]),
           },
         ],
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
       const testEncoderAddress = await testEncoder.getAddress();
       await roles.connect(owner).scopeFunction(
@@ -1323,18 +1337,18 @@ describe("Allowance", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.Calldata,
+            paramType: AbiType.Calldata,
             operator: Operator.Pass,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.EqualTo,
             compValue: defaultAbiCoder.encode(["uint256"], [1]),
           },
         ],
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
 
       await roles.connect(owner).scopeFunction(
@@ -1346,24 +1360,24 @@ describe("Allowance", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.Calldata,
+            paramType: AbiType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.WithinAllowance,
             compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey1]),
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.WithinAllowance,
             compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey2]),
           },
         ],
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
 
       const multisendCalldata = (
@@ -1380,9 +1394,8 @@ describe("Allowance", async () => {
             {
               to: testEncoderAddress,
               value: 0,
-              data: (
-                await testEncoder.simple.populateTransaction(1)
-              ).data as string,
+              data: (await testEncoder.simple.populateTransaction(1))
+                .data as string,
               operation: 0,
             },
             {
@@ -1391,20 +1404,20 @@ describe("Allowance", async () => {
               data: (
                 await testContract.twoParamsStatic.populateTransaction(
                   value12,
-                  value2
+                  value2,
                 )
               ).data as string,
               operation: 0,
             },
-          ])
+          ]),
         )
       ).data as string;
 
       expect((await roles.allowances(allowanceKey1)).balance).to.equal(
-        balance1
+        balance1,
       );
       expect((await roles.allowances(allowanceKey2)).balance).to.equal(
-        balance2
+        balance2,
       );
 
       await expect(
@@ -1414,15 +1427,15 @@ describe("Allowance", async () => {
             await multisend.getAddress(),
             0,
             multisendCalldata,
-            1
-          )
+            1,
+          ),
       ).to.emit(roles, "ConsumeAllowance");
 
       expect((await roles.allowances(allowanceKey1)).balance).to.equal(
-        balance1 - (value11 + value12)
+        balance1 - (value11 + value12),
       );
       expect((await roles.allowances(allowanceKey2)).balance).to.equal(
-        balance2 - value2
+        balance2 - value2,
       );
     });
   });
