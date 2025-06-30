@@ -121,6 +121,8 @@ export async function planApplyRole(
   fragment: RoleFragment,
   { chainId, address, current, log }: { current?: Role } & Options
 ): Promise<Result> {
+  fragment = pruneFragment(fragment)
+
   const rolesModConfig = await fetchRolesModConfig({ chainId, address })
   if (rolesModConfig) {
     const license = await fetchLicense({
@@ -189,6 +191,8 @@ export async function planExtendRole(
   fragment: RoleFragment,
   { chainId, address, current, log }: { current?: Role } & Options
 ): Promise<Result> {
+  fragment = pruneFragment(fragment)
+
   const roleModConfig = await fetchRolesModConfig({ chainId, address })
   if (roleModConfig) {
     const license = await fetchLicense({ chainId, owner: roleModConfig.owner })
@@ -231,4 +235,12 @@ function emptyRole(key: `0x${string}`): Role {
     annotations: [],
     lastUpdate: 0,
   }
+}
+
+function pruneFragment(fragment: RoleFragment): RoleFragment {
+  return Object.fromEntries(
+    Object.entries(fragment).filter(
+      ([_, value]) => value !== null && value !== undefined
+    )
+  ) as RoleFragment
 }
