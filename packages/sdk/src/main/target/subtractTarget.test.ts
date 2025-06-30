@@ -162,6 +162,36 @@ describe("subtractTarget", () => {
       expect(result).toBeUndefined() // func1 is fully subtracted, nothing remains
     })
 
+    it("returns undefined when all functions are subtracted", () => {
+      const func1: Function = {
+        selector: "0x11111111",
+        wildcarded: true,
+        executionOptions: 0,
+      }
+      const func2: Function = {
+        selector: "0x22222222",
+        wildcarded: true,
+        executionOptions: 0,
+      }
+
+      const left: Target = {
+        address: ADDRESS,
+        clearance: Clearance.Function,
+        executionOptions: 0,
+        functions: [func1, func2],
+      }
+      const right: Target = {
+        address: ADDRESS,
+        clearance: Clearance.Function,
+        executionOptions: 0,
+        functions: [func1, func2], // has all the same functions
+      }
+
+      const result = subtractTarget(left, right)
+
+      expect(result).toBeUndefined() // all functions subtracted, returns undefined
+    })
+
     it("returns the subtraction when both have the function", () => {
       const func1: Function = {
         selector: "0x11111111",
@@ -226,6 +256,83 @@ describe("subtractTarget", () => {
             executionOptions: 0,
           },
         ], // only allows 2 now
+      })
+    })
+  })
+
+  describe("Shallow equals", () => {
+    it("returns the same left object when functions array is unchanged", () => {
+      const func1: Function = {
+        selector: "0x11111111",
+        wildcarded: true,
+        executionOptions: 0,
+      }
+      const func2: Function = {
+        selector: "0x22222222",
+        wildcarded: true,
+        executionOptions: 0,
+      }
+      const func3: Function = {
+        selector: "0x33333333",
+        wildcarded: true,
+        executionOptions: 0,
+      }
+
+      const left: Target = {
+        address: ADDRESS,
+        clearance: Clearance.Function,
+        executionOptions: 0,
+        functions: [func1, func2],
+      }
+      const right: Target = {
+        address: ADDRESS,
+        clearance: Clearance.Function,
+        executionOptions: 0,
+        functions: [func3], // func3 not in left, so nothing to subtract
+      }
+
+      const result = subtractTarget(left, right)
+
+      // Should return the exact same object reference
+      expect(result).toBe(left)
+      expect(result === left).toBe(true)
+    })
+
+    it("returns a new object when functions array changes", () => {
+      const func1: Function = {
+        selector: "0x11111111",
+        wildcarded: true,
+        executionOptions: 0,
+      }
+      const func2: Function = {
+        selector: "0x22222222",
+        wildcarded: true,
+        executionOptions: 0,
+      }
+
+      const left: Target = {
+        address: ADDRESS,
+        clearance: Clearance.Function,
+        executionOptions: 0,
+        functions: [func1, func2],
+      }
+      const right: Target = {
+        address: ADDRESS,
+        clearance: Clearance.Function,
+        executionOptions: 0,
+        functions: [func1], // func1 is in left, so it will be removed
+      }
+
+      const result = subtractTarget(left, right)
+
+      // Should return a new object, not the same reference
+      expect(result).not.toBe(left)
+      expect(result === left).toBe(false)
+      expect(result).toEqual({
+        address: ADDRESS,
+        clearance: Clearance.Function,
+        executionOptions: 0,
+        functions: [func2],
       })
     })
   })

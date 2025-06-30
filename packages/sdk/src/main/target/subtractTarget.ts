@@ -38,14 +38,14 @@ export function subtractTarget(
 
   const nextFunctions = left.functions
     .map((f) => ({
-      a: f,
-      b: right.functions.find(({ selector }) => f.selector === selector),
+      left: f,
+      right: right.functions.find(({ selector }) => f.selector === selector),
     }))
     /*
      * if no match is found, return left
      * otherwise return left - right
      */
-    .map(({ a, b }) => (b ? subtractFunction(a, b) : a))
+    .map(({ left, right }) => (right ? subtractFunction(left, right) : left))
     .filter((f) => !!f)
 
   if (nextFunctions.length === 0) return undefined
