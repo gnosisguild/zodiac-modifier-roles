@@ -1,4 +1,3 @@
-import { createHash } from "crypto"
 import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
 export type TypeTree = {
@@ -7,12 +6,13 @@ export type TypeTree = {
 }
 
 export function typeTreeId(condition: Condition): string {
-  return (
-    "0x" +
-    createHash("sha256")
-      .update(JSON.stringify(createTypeTree(condition)))
-      .digest("hex")
-  )
+  return JSON.stringify(createTypeTree(condition))
+  // return (
+  //   "0x" +
+  //   createHash("sha256")
+  //     .update(JSON.stringify(createTypeTree(condition)))
+  //     .digest("hex")
+  // )
 }
 
 export function createTypeTree(condition: Condition): TypeTree | null {
