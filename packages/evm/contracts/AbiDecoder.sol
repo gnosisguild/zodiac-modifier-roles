@@ -70,11 +70,20 @@ library AbiDecoder {
         uint256 index,
         Payload memory result
     ) private pure {
+        if (location + 32 > data.length) {
+            result.overflown = true;
+            return;
+        }
+
         AbiType _type = typeTree[index]._type;
 
         if (_type == AbiType.Static) {
             result.size = 32;
         } else if (_type == AbiType.Dynamic) {
+            if (typeTree[index].fields.length > 0) {
+                _variant(data, location, typeTree, index, result);
+            }
+
             result.size = 32 + _ceil32(uint256(word(data, location)));
         } else if (_type == AbiType.Tuple) {
             __block__(
@@ -127,7 +136,6 @@ library AbiDecoder {
      *     1. Arrays: Length determined by a 32-byte word before the data.
      *     2. Tuples: Length determined by the number of fields in the type.
      */
-
     function __block__(
         bytes calldata data,
         uint256 location,
@@ -138,7 +146,7 @@ library AbiDecoder {
     ) private pure {
         AbiTypeTree memory node = typeTree[index];
 
-        result.children = new Payload[](blockLength);
+        Payload[] memory children = new Payload[](blockLength);
 
         bool isInline;
         uint256 offset;
@@ -154,17 +162,39 @@ library AbiDecoder {
                 _locationInBlock(data, location, offset, isInline),
                 typeTree,
                 node.fields[node._type == AbiType.Array ? 0 : i],
-                result.children[i]
+                children[i]
             );
+            if (children[i].overflown) {
+                result.overflown = true;
+                return;
+            }
 
             // Update the total size and offset
-            uint256 childSize = result.children[i].size;
+            uint256 childSize = children[i].size;
 
             // For non-inline elements, we need to account for the 32-byte pointer
             result.size += childSize + (isInline ? 0 : 32);
 
             // Update the offset in the block for the next element
             offset += isInline ? childSize : 32;
+        }
+        result.children = children;
+    }
+
+    function _variant(
+        bytes calldata data,
+        uint256 location,
+        AbiTypeTree[] memory typeTree,
+        uint256 index,
+        Payload memory result
+    ) private pure {
+        uint256[] memory fields = typeTree[index].fields;
+
+        result.variant = true;
+        result.children = new Payload[](fields.length);
+
+        for (uint256 i; i < fields.length; i++) {
+            _walk(data, location, typeTree, fields[i], result.children[i]);
         }
     }
 
@@ -187,9 +217,13 @@ library AbiDecoder {
     ) private pure returns (uint256) {
         if (isInline) {
             return location + offset;
-        } else {
-            return location + uint256(word(data, location + offset));
         }
+        if (location + offset + 32 > data.length) {
+            // signal overflow
+            return location + data.length;
+        }
+
+        return location + uint256(word(data, location + offset));
     }
 
     /**

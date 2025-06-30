@@ -39,6 +39,8 @@ struct AbiTypeTree {
  * @param children Array of child payloads for complex types (tuples, arrays)
  */
 struct Payload {
+    bool variant;
+    bool overflown;
     uint256 index;
     uint256 location;
     uint256 size;
