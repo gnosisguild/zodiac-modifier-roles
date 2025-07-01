@@ -50,7 +50,8 @@ export function subtractCondition(
   }
 
   const canProceed =
-    condition.operator !== Operator.Nor &&
+    (condition.operator == Operator.And ||
+      condition.operator == Operator.Matches) &&
     condition.operator === fragment.operator &&
     condition.paramType === fragment.paramType &&
     matchingChildrenCount(condition, fragment)
