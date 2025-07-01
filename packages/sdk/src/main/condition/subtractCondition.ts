@@ -2,17 +2,31 @@ import { Condition, Operator } from "zodiac-roles-deployments"
 import { rawConditionId as conditionId } from "./conditionId"
 
 /**
- * Attempts to subtract a fragment from a condition tree.
+ * Removes an independently satisfiable path from a condition.
  *
- * Handles various structural cases (OR, AND, MATCHES) with custom logic:
- * - Exact match: returns undefined
- * - OR: removes matching children or single child
- * - AND: allows subtraction if exactly one child differs
- * - MATCHES: recursive, positional subtraction with at most one difference
+ * This function removes any condition fragment that could independently make the
+ * original condition evaluate to true (satisfiable). It works with conditions that
+ * have been normalized (where ORs may have been pushed down) or in their original form.
  *
- * Returns the remainder if subtraction is valid.
- * If subtraction isn't possible, returns the original condition.
- * Never throws — safe to call on arbitrary inputs.
+ * Conceptually, if you think of a condition as a set of independent paths that
+ * can satisfy it, this function removes one such path:
+ * - For `A OR B`, removing A leaves B (removing an explicit path)
+ * - For `AND(X, OR(Y, Z))`, removing `AND(X, Y)` leaves `AND(X, Z)`
+ *   (removing a path that was pushed down during normalization)
+ *
+ * The "single hinge" principle for AND/MATCHES:
+ * These operators require exactly one position to differ between the condition
+ * and fragment. This ensures we're removing a complete satisfiable path, not
+ * a partial condition. Both AND and MATCHES enforce positional semantics.
+ *
+ * @param condition The condition to subtract from
+ * @param fragment The satisfiable path to remove
+ * @returns The remainder after removing the path, or undefined if nothing remains
+ * @returns The original condition if the fragment isn't a valid satisfiable path
+ *
+ * @example
+ * - `subtract(OR(A, B, C), B)` → `OR(A, C)`
+ * - `subtract(AND(X, OR(Y, Z)), AND(X, Y))` → `AND(X, Z)`)
  */
 export function subtractCondition(
   condition: Condition,
@@ -164,7 +178,7 @@ function shallowEquals<T>(a: readonly T[], b: readonly T[]): boolean {
   return a.length === b.length && a.every((item, index) => item === b[index])
 }
 
-function matchingChildrenCount<T>(a: Condition, b: Condition): boolean {
+function matchingChildrenCount(a: Condition, b: Condition): boolean {
   return (
     Array.isArray(a.children) &&
     Array.isArray(b.children) &&
