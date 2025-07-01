@@ -11,88 +11,148 @@ export function pushDownOr(
     return condition
   }
 
-  // we should at least have two branches since this function runs after `unwrapSingleBranches()`
-  if (!condition.children?.length || condition.children.length === 1) {
-    throw new Error("invariant violation")
-  }
+  invariant(!!condition.children?.length && condition.children.length > 1)
 
-  // bail on mixed expression types
-  if (
-    condition.children.some(({ operator }) => operator !== Operator.Matches)
-  ) {
+  const children = condition.children!
+
+  // bail on mixed param types
+  if (new Set(children.map((c) => c.paramType)).size !== 1) {
     return condition
   }
 
-  // bail on Arrays, only  Tuple/Calldata/AbiEncoded Matches
-  if (
-    condition.children.some((child) => child.paramType == ParameterType.Array)
-  ) {
+  // does not support Array
+  if (children.some(({ paramType }) => paramType == ParameterType.Array)) {
     return condition
   }
 
-  const hingeIndex = findMatchesHingeIndex(condition.children)
+  const isAnd = children.every(({ operator: o }) => o === Operator.And)
+  const isMatches = children.every(({ operator: o }) => o === Operator.Matches)
+
+  // only support every operator either And or Matches. Bail on mix or mismatch
+  if (!isAnd && !isMatches) {
+    return condition
+  }
+
+  const [first] = children
+
+  const nextChildren = isMatches
+    ? matches(children as Condition[])
+    : and(children as Condition[])
+
+  return children === nextChildren
+    ? condition
+    : normalize({
+        ...first,
+        children: nextChildren,
+      })
+}
+
+function matches(children: Condition[]): Condition[] {
+  invariant(children.length > 1)
+
+  const hingeIndex = findMatchesHingeIndex(children)
   if (hingeIndex === null) {
-    return condition
+    return children
   }
 
-  const [first] = condition.children
+  const [first] = children
 
-  const children = first.children!.map((child, i) =>
+  return first.children!.map((child, i) =>
     i !== hingeIndex
       ? child
       : {
           paramType: ParameterType.None,
           operator: Operator.Or,
-          children: condition.children!.map((c) => c.children?.[i]),
+          children: children.map((c) => c.children?.[i]),
         }
   ) as Condition[]
-
-  return normalize({
-    ...first,
-    children: children,
-  })
 }
 
-/**
- * Given a set of MATCHES conditions, check that their children are equal beyond a single hinge node.
- * @returns the index of the hinge node. If there are differences in more than a single index, returns `null`.
- * @throws If the conditions would not pass integrity checks.
- **/
-const findMatchesHingeIndex = (conditions: readonly Condition[]) => {
-  // use first branch as reference and check if the others are equivalent beyond a single nested hinge node
-  let hingeNodeIndex: number | null = null
+function and(children: Condition[]): Condition[] {
+  invariant(children.length > 1)
 
+  const hingeIndices = findAndHingeIndices(children)
+  if (!hingeIndices) {
+    return children
+  }
+
+  const [first] = children
+  const [pivot] = hingeIndices
+
+  return first.children!.map((child, i) =>
+    i !== pivot
+      ? child
+      : {
+          paramType: ParameterType.None,
+          operator: Operator.Or,
+          children: children.map(
+            (child, j) => child.children![hingeIndices[j]]
+          ),
+        }
+  ) as Condition[]
+}
+
+function findMatchesHingeIndex(conditions: readonly Condition[]) {
+  invariant(conditions.length > 1)
   const [first, ...others] = conditions
 
-  // empty matches does not make sense and would be rejected by the integrity check, bail
-  if (!first.children?.length) throw new Error("empty children")
-
+  let hingeIndex: number | null = null
   // all expressions must only differ in one child, the hinge node
   for (const other of others) {
-    // empty matches does not make sense and would be rejected by the integrity check, bail
-    if (!other.children?.length) throw new Error("empty children")
+    invariant(!!first.children && first.children!.length > 0)
+    invariant(!!other.children && other.children!.length > 0)
+    const left = first.children!
+    const right = other.children!
+    const length = Math.max(left.length, right.length)
 
-    for (
-      let i = 0;
-      i < Math.max(first.children.length, other.children.length);
-      i++
-    ) {
-      if (conditionsEqual(first.children[i], other.children[i])) {
+    for (let i = 0; i < length; i++) {
+      if (conditionsEqual(left[i], right[i])) {
         continue
       }
 
-      if (hingeNodeIndex === null) {
-        hingeNodeIndex = i
+      if (hingeIndex === null) {
+        hingeIndex = i
       }
 
-      if (hingeNodeIndex !== i) {
-        // difference in more than matches child
+      // difference in more than one matches child
+      if (hingeIndex !== i) {
         return null
       }
     }
   }
 
-  return hingeNodeIndex
+  return hingeIndex
+}
+
+function findAndHingeIndices(conditions: Condition[]) {
+  invariant(conditions.length > 1)
+
+  // Step 1: Extract children IDs from each condition
+  const allChildrenIds = conditions.map((c) => c.children!.map(conditionId))
+  const allChildrenIdSets = allChildrenIds.map((ids) => new Set(ids))
+
+  // Step 2: Find the intersection (common children IDs)
+  const [firstSet, ...restSets] = allChildrenIdSets
+  const commonChildrenIds = new Set(
+    Array.from(firstSet).filter((id) => restSets.every((set) => set.has(id)))
+  )
+
+  // Step 3: Compute unique IDs for each condition
+  const uniqueChildrenIds = allChildrenIds.map((ids) =>
+    ids.filter((id) => !commonChildrenIds.has(id))
+  )
+
+  // Step 4: Validate that each condition has at most one unique ID
+  if (uniqueChildrenIds.some((ids) => ids.length > 1)) return null
+
+  // Step 5: Map the unique IDs back to their original index, or -1 if none
+  return uniqueChildrenIds.map((unique, i) =>
+    unique.length === 0 ? -1 : allChildrenIds[i].indexOf(unique[0])
+  )
+}
+
+function invariant(c: boolean) {
+  if (!c) throw new Error("Invariant")
 }
 
 const conditionsEqual = (a: Condition | undefined, b: Condition | undefined) =>
