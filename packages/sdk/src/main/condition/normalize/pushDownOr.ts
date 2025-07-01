@@ -63,7 +63,7 @@ function matches(children: Condition[]): Condition[] {
       : {
           paramType: ParameterType.None,
           operator: Operator.Or,
-          children: children.map((c) => c.children![i]),
+          children: children.map((c) => c.children![hingeIndex]),
         }
   )
 }
@@ -77,10 +77,10 @@ function and(children: Condition[]): Condition[] {
   }
 
   const [first] = children
-  const [pivot] = hingeIndices
+  const [hingeIndex] = hingeIndices
 
   return first.children!.map((child, i) =>
-    i !== pivot
+    i !== hingeIndex
       ? child
       : {
           paramType: ParameterType.None,
