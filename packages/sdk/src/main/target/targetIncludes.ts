@@ -49,16 +49,13 @@ export function targetIncludes(left: Target, right: Target): boolean {
       throw new Error("Expected Both Conditional")
     }
 
-    const c1 = lf.condition!
-    const c2 = rf.condition!
-
     /*
      * if we can subtract from the main condition, it means current
      * permission is at least a top level variant, and at most
      * matches the condition completely
      */
-    const condition = normalizeCondition(c1)
-    const fragment = normalizeCondition(c2)
+    const condition = normalizeCondition(lf.condition)
+    const fragment = normalizeCondition(rf.condition)
     return subtractCondition(condition, fragment) !== condition
   })
 }
