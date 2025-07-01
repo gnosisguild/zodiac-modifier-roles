@@ -366,6 +366,41 @@ describe("subtractCondition", () => {
       expect(result).toEqual(condition)
     })
 
+    it("order doesn't matter - simple", () => {
+      // These should be equivalent but current implementation treats them differently
+      const condition1 = AND(OR(COMP(1), COMP(2)), COMP(10), COMP(20))
+      const fragment1 = AND(COMP(10), COMP(20), COMP(1))
+
+      const condition2 = AND(COMP(10), OR(COMP(1), COMP(2)), COMP(20))
+      const fragment2 = AND(COMP(1), COMP(20), COMP(10))
+
+      // Both should work logically, but current positional implementation may fail
+      const result1 = subtractCondition(condition1, fragment1)
+      const result2 = subtractCondition(condition2, fragment2)
+
+      expect(result1).toEqual(AND(COMP(2), COMP(10), COMP(20)))
+      expect(result2).toEqual(AND(COMP(10), COMP(2), COMP(20)))
+    })
+
+    it("order doesn't matter - nested", () => {
+      // Complex case with multiple reorderings
+      const condition = AND(
+        COMP(5),
+        OR(COMP(1), COMP(2), COMP(3)),
+        COMP(10),
+        COMP(15)
+      )
+
+      // Fragment with completely different order but same semantics
+      const fragment = AND(COMP(15), COMP(2), COMP(5), COMP(10))
+
+      const result = subtractCondition(condition, fragment)
+
+      expect(result).toEqual(
+        AND(COMP(5), OR(COMP(1), COMP(3)), COMP(10), COMP(15))
+      )
+    })
+
     it("nested OR subtraction", () => {
       const condition = AND(OR(COMP(1), COMP(2), COMP(3)), COMP(4))
       const fragment = AND(OR(COMP(1), COMP(2)), COMP(4))
@@ -401,6 +436,28 @@ describe("subtractCondition", () => {
       const result = subtractCondition(condition, fragment)
 
       expect(result).toEqual(condition)
+    })
+
+    it("order matters - different order fails", () => {
+      // Original: MATCHES(T, A, B, C)
+      const condition = MATCHES(
+        ParameterType.Calldata,
+        COMP(1),
+        COMP(2),
+        COMP(3)
+      )
+
+      // Fragment with different order: MATCHES(T, B, A, C) - should not match
+      const fragment = MATCHES(
+        ParameterType.Calldata,
+        COMP(2),
+        COMP(1),
+        COMP(3)
+      )
+
+      const result = subtractCondition(condition, fragment)
+
+      expect(result).toBe(condition) // unchanged - order matters
     })
 
     it("different param types returns unchanged", () => {
@@ -780,6 +837,29 @@ describe("subtractCondition", () => {
       const result = subtractCondition(condition, fragment)
 
       expect(result).toEqual(condition)
+    })
+
+    it("cannot subtract from different order matchs", () => {
+      // Complex case with multiple reorderings
+      const condition = MATCHES(
+        ParameterType.Calldata,
+        COMP(5),
+        OR(COMP(1), COMP(2), COMP(3)),
+        COMP(10),
+        COMP(15)
+      )
+
+      // Fragment with completely different order but same semantics
+      const fragment = MATCHES(
+        ParameterType.Calldata,
+        COMP(15),
+        COMP(2),
+        COMP(5),
+        COMP(10)
+      )
+
+      const result = subtractCondition(condition, fragment)
+      expect(result).toBe(condition)
     })
   })
 })

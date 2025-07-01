@@ -60,8 +60,11 @@ export function subtractCondition(
     return condition
   }
 
-  // AND and MATCHES operators - both use positional semantics
-  return and(condition, fragment)
+  if (condition.operator == Operator.And) {
+    return and(condition, fragment)
+  } else {
+    return matches(condition, fragment)
+  }
 }
 
 /**
@@ -111,48 +114,65 @@ function or_n_1(condition: Condition, fragment: Condition) {
   return { ...condition, children: nextChildren }
 }
 
-/**
- * Handles subtraction for operators with positional semantics (AND, MATCHES).
- * Both operators require exactly one position to differ (single hinge principle).
- */
 function and(condition: Condition, fragment: Condition) {
   const children = condition.children!
   const fragmentChildren = fragment.children!
+  invariant(children.length == fragmentChildren.length)
 
-  // Find positions that differ and attempt subtraction
-  let changeCount = 0
-  let changedIndex = -1
+  const cIds = children.map(conditionId)
+  const fIds = fragmentChildren.map(conditionId)
 
-  const newChildren = children.map((child, index) => {
-    if (changeCount > 1) return child
+  const conditionOnlyIds = cIds.filter((id) => !fIds.includes(id))
+  const fragmentOnlyIds = fIds.filter((id) => !cIds.includes(id))
 
-    const fragmentChild = fragmentChildren[index]
+  // Single hinge principle: exactly one difference in each direction
+  if (conditionOnlyIds.length !== 1 || fragmentOnlyIds.length !== 1) {
+    return condition
+  }
 
-    // Same child - no change needed
+  const child = children.find(
+    (child) => conditionId(child) === conditionOnlyIds[0]
+  )!
+  const fragmentChild = fragmentChildren.find(
+    (child) => conditionId(child) === fragmentOnlyIds[0]
+  )!
+
+  const remainder = subtractCondition(child, fragmentChild)
+  if (!remainder || remainder === child) {
+    // If subtraction failed or didn't change anything, bail
+    return condition
+  }
+
+  return {
+    ...condition,
+    children: children.map((c) => (c === child ? remainder : c)),
+  }
+}
+
+function matches(condition: Condition, fragment: Condition) {
+  invariant(condition.operator === Operator.Matches)
+
+  let changes = 0
+  const newChildren = condition.children!.map((child, index) => {
+    if (changes > 1) return child
+
+    const fragmentChild = fragment.children![index]
+
     if (conditionId(child) === conditionId(fragmentChild)) {
       return child
     }
 
-    // Attempt subtraction at this position
+    changes++
     const remainder = subtractCondition(child, fragmentChild)
-
-    // If subtraction succeeded and actually changed something
-    if (remainder !== child && remainder !== undefined) {
-      changeCount++
-      changedIndex = index
+    // If couldn't subtract or would remove entirely, keep original
+    if (remainder === child || remainder === undefined) {
+      return child
+    } else {
       return remainder
     }
-
-    return child
   })
 
-  // Only allow exactly one position to change (single hinge principle)
-  if (changeCount !== 1) return condition
-
-  return {
-    ...condition,
-    children: newChildren,
-  }
+  return changes == 1 ? { ...condition, children: newChildren } : condition
 }
 
 function shallowEquals<T>(a: readonly T[], b: readonly T[]): boolean {
@@ -166,4 +186,10 @@ function matchingChildrenCount(a: Condition, b: Condition): boolean {
     a.children.length > 0 &&
     a.children.length == b.children.length
   )
+}
+
+function invariant(c: boolean) {
+  if (!c) {
+    throw new Error("Invariant")
+  }
 }
