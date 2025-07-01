@@ -123,6 +123,8 @@ function and(condition: Condition, fragment: Condition) {
   let changedIndex = -1
 
   const newChildren = children.map((child, index) => {
+    if (changeCount > 1) return child
+
     const fragmentChild = fragmentChildren[index]
 
     // Same child - no change needed
