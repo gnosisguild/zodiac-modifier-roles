@@ -92,6 +92,28 @@ function and(children: Condition[]): Condition[] {
   ) as Condition[]
 }
 
+/**
+ * Finds the single position (hinge) where all MATCHES conditions differ.
+ *
+ * MATCHES operators use positional semantics - each child at position i must be
+ * compared with the child at the same position i in other conditions. This is
+ * because MATCHES represents structural pattern matching where order and position
+ * are significant.
+ *
+ * The function enforces the "single hinge principle": exactly one position must
+ * differ across all conditions for the OR to be pushed down. If differences
+ * exist at multiple positions, the transformation cannot proceed.
+ *
+ * @param conditions Array of MATCHES conditions to analyze
+ * @returns The index of the single differing position, or null if:
+ *          - Multiple positions differ
+ *          - No differences found
+ *          - Length mismatches exist
+ *
+ * @example
+ * MATCHES(1, 2, 3) and MATCHES(1, X, 3) -> returns 1 (middle position)
+ * MATCHES(1, 2) and MATCHES(X, Y) -> returns null (multiple differences)
+ */
 function findMatchesHingeIndex(conditions: readonly Condition[]) {
   invariant(conditions.length > 1)
   const [first, ...others] = conditions
@@ -124,6 +146,29 @@ function findMatchesHingeIndex(conditions: readonly Condition[]) {
   return hingeIndex
 }
 
+/**
+ * Finds the positions (hinges) where AND conditions differ using set-based comparison.
+ *
+ * AND operators use set-based semantics - elements can appear in any order within
+ * each condition since AND is commutative (A ∧ B ≡ B ∧ A). This function compares
+ * conditions by their content (condition IDs) rather than by position.
+ *
+ * The function enforces the "single hinge principle": exactly one element must
+ * differ across all conditions for the OR to be pushed down. Unlike MATCHES,
+ * the differing elements may appear at different positions in each condition.
+ *
+ * @param conditions Array of AND conditions to analyze
+ * @returns Array of indices where each index represents the position of the
+ *          unique element in that condition, or null if:
+ *          - Multiple elements differ in any condition
+ *          - No common elements exist across conditions
+ *
+ * @example
+ * AND(A, B, C) and AND(C, A, X) -> returns [1, 2] (B at pos 1, X at pos 2)
+ * AND(A, B, C) and AND(A, Y, Z) -> returns null (multiple differences)
+ * AND(A, B) and AND(X, Y) -> returns null (no common element)
+ *
+ */
 function findAndHingeIndices(conditions: Condition[]) {
   invariant(conditions.length > 1)
 
