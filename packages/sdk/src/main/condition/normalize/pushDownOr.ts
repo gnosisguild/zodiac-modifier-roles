@@ -63,9 +63,9 @@ function matches(children: Condition[]): Condition[] {
       : {
           paramType: ParameterType.None,
           operator: Operator.Or,
-          children: children.map((c) => c.children?.[i]),
+          children: children.map((c) => c.children![i]),
         }
-  ) as Condition[]
+  )
 }
 
 function and(children: Condition[]): Condition[] {
@@ -89,7 +89,7 @@ function and(children: Condition[]): Condition[] {
             (child, j) => child.children![hingeIndices[j]]
           ),
         }
-  ) as Condition[]
+  )
 }
 
 /**
@@ -117,26 +117,25 @@ function and(children: Condition[]): Condition[] {
 function findMatchesHingeIndex(conditions: readonly Condition[]) {
   invariant(conditions.length > 1)
   const [first, ...others] = conditions
+  invariant(!!first.children && first.children!.length > 0)
+  const left = first.children!
+  for (const other of others) {
+    invariant(!!other.children && other.children!.length > 0)
+  }
 
   let hingeIndex: number | null = null
-  // all expressions must only differ in one child, the hinge node
+
   for (const other of others) {
-    invariant(!!first.children && first.children!.length > 0)
-    invariant(!!other.children && other.children!.length > 0)
-    const left = first.children!
     const right = other.children!
     const length = Math.max(left.length, right.length)
 
     for (let i = 0; i < length; i++) {
-      if (conditionsEqual(left[i], right[i])) {
-        continue
-      }
+      if (conditionsEqual(left[i], right[i])) continue
 
       if (hingeIndex === null) {
         hingeIndex = i
       }
 
-      // difference in more than one matches child
       if (hingeIndex !== i) {
         return null
       }
@@ -188,7 +187,7 @@ function findAndHingeIndices(conditions: Condition[]) {
   )
 
   // Step 4: Validate that each condition has at most one unique ID
-  if (uniqueChildrenIds.some((ids) => ids.length > 1)) return null
+  if (!uniqueChildrenIds.every((ids) => ids.length === 1)) return null
 
   // Step 5: Map the unique IDs back to their original index, or -1 if none
   return uniqueChildrenIds.map((unique, i) =>
@@ -196,9 +195,9 @@ function findAndHingeIndices(conditions: Condition[]) {
   )
 }
 
+const conditionsEqual = (a: Condition | undefined, b: Condition | undefined) =>
+  (!a || conditionId(a)) === (!b || conditionId(b))
+
 function invariant(c: boolean) {
   if (!c) throw new Error("Invariant")
 }
-
-const conditionsEqual = (a: Condition | undefined, b: Condition | undefined) =>
-  (!a || conditionId(a)) === (!b || conditionId(b))

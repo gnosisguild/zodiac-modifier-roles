@@ -325,6 +325,74 @@ describe("pushDownOr", () => {
       })
     })
 
+    describe("boundary conditions - single hinge principle violations", () => {
+      it("fails when first condition is subset of second (0 vs 1 unique)", () => {
+        const input = OR(
+          AND(COMP(1), COMP(2), COMP(3)), // 0 unique elements (all in second)
+          AND(COMP(1), COMP(2), COMP(3), COMP(4)) // 1 unique element (COMP(4))
+        )
+
+        const result = pushDownOr(input)
+        expect(result).toBe(input) // unchanged - violates single hinge principle
+      })
+
+      it("fails when second condition is subset of first (1 vs 0 unique)", () => {
+        const input = OR(
+          AND(COMP(1), COMP(2), COMP(3), COMP(4)), // 1 unique element (COMP(4))
+          AND(COMP(1), COMP(2), COMP(3)) // 0 unique elements (all in first)
+        )
+
+        const result = pushDownOr(input)
+        expect(result).toBe(input) // unchanged - violates single hinge principle
+      })
+
+      it("fails when asymmetric unique counts (1 vs 2 unique)", () => {
+        const input = OR(
+          AND(COMP(1), COMP(2), COMP(10)), // 1 unique element (COMP(10))
+          AND(COMP(1), COMP(20), COMP(30)) // 2 unique elements (COMP(20), COMP(30))
+        )
+
+        const result = pushDownOr(input)
+        expect(result).toBe(input) // unchanged - violates single hinge principle
+      })
+
+      it("fails when both conditions have multiple unique elements (2 vs 2)", () => {
+        const input = OR(
+          AND(COMP(1), COMP(10), COMP(20)), // 2 unique elements (COMP(10), COMP(20))
+          AND(COMP(1), COMP(30), COMP(40)) // 2 unique elements (COMP(30), COMP(40))
+        )
+
+        const result = pushDownOr(input)
+        expect(result).toBe(input) // unchanged - violates single hinge principle
+      })
+
+      it("fails with three conditions where not all have single unique element", () => {
+        const input = OR(
+          AND(COMP(1), COMP(2)), // 1 unique element (COMP(2))
+          AND(COMP(1), COMP(3)), // 1 unique element (COMP(3))
+          AND(COMP(1), COMP(4), COMP(5)) // 2 unique elements (COMP(4), COMP(5))
+        )
+
+        const result = pushDownOr(input)
+        expect(result).toBe(input) // unchanged - third condition violates principle
+      })
+
+      it("succeeds only when all conditions have exactly one unique element", () => {
+        const input = OR(
+          AND(COMP(1), COMP(2), COMP(10)), // 1 unique element (COMP(2))
+          AND(COMP(1), COMP(3), COMP(10)), // 1 unique element (COMP(3))
+          AND(COMP(1), COMP(4), COMP(10)) // 1 unique element (COMP(4))
+        )
+
+        const result = pushDownOr(input)
+
+        // Should successfully transform - all conditions have exactly 1 unique element
+        expect(result).toEqual(
+          AND(COMP(1), OR(COMP(2), COMP(3), COMP(4)), COMP(10))
+        )
+      })
+    })
+
     describe("order does not matter", () => {
       it("handles reordered elements with single difference", () => {
         const input = OR(
@@ -643,6 +711,22 @@ describe("pushDownOr", () => {
           OR(AND(COMP(2), COMP(3)), AND(COMP(4), COMP(5)))
         )
       )
+    })
+    it("regression: fails when some conditions have no unique elements", () => {
+      // This test exposes the bug that was fixed in findAndHingeIndices
+      // The old logic: if (uniqueChildrenIds.some((ids) => ids.length > 1)) return null
+      // Would incorrectly pass this case because no condition has >1 unique elements
+      // But condition 1 has 0 unique elements, which should also fail
+      const input = OR(
+        AND(COMP(1), COMP(2), COMP(3)), // Has unique element: none (all are in condition 2)
+        AND(COMP(1), COMP(2), COMP(3), COMP(4)) // Has unique element: COMP(4)
+      )
+
+      const result = pushDownOr(input)
+
+      // Should remain unchanged because first condition has 0 unique elements
+      // while second condition has 1 unique element (violates single hinge principle)
+      expect(result).toBe(input) // unchanged
     })
   })
 })
