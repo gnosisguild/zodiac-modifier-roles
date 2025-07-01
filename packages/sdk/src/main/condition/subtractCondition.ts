@@ -14,10 +14,12 @@ import { rawConditionId as conditionId } from "./conditionId"
  * - For `AND(X, OR(Y, Z))`, removing `AND(X, Y)` leaves `AND(X, Z)`
  *   (removing a path that was pushed down during normalization)
  *
- * The "single hinge" principle for AND/MATCHES:
- * These operators require exactly one position to differ between the condition
- * and fragment. This ensures we're removing a complete satisfiable path, not
- * a partial condition. Both AND and MATCHES enforce positional semantics.
+ * The "single hinge" principle:
+ * - AND operators use set-based semantics: exactly one child must differ between
+ *   condition and fragment, regardless of order. This supports commutative logic
+ *   where AND(A, B) ≡ AND(B, A).
+ * - MATCHES operators use positional semantics: exactly one position must differ
+ *   between condition and fragment. Order matters for structural matching.
  *
  * @param condition The condition to subtract from
  * @param fragment The satisfiable path to remove
@@ -26,7 +28,8 @@ import { rawConditionId as conditionId } from "./conditionId"
  *
  * @example
  * - `subtract(OR(A, B, C), B)` → `OR(A, C)`
- * - `subtract(AND(X, OR(Y, Z)), AND(X, Y))` → `AND(X, Z)`)
+ * - `subtract(AND(X, OR(Y, Z)), AND(X, Y))` → `AND(X, Z)`
+ * - `subtract(AND(A, B, C), AND(C, A, D))` → `AND(A, B, C)` (order-independent)
  */
 export function subtractCondition(
   condition: Condition,
