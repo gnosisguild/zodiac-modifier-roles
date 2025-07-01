@@ -2,7 +2,7 @@ import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
 import { conditionId } from "../conditionId"
 
-/** push AND and OR conditions as far down the tree as possible without changing semantics */
+/** push OR conditions as far down the tree as possible without changing semantics */
 export function pushDownOr(
   condition: Condition,
   normalize: (c: Condition) => Condition = (c) => c
