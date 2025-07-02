@@ -26,6 +26,7 @@ export type {
 
 export {
   permissionId,
+  coercePermission,
   processPermissions,
   reconstructPermissions,
   targetId,
