@@ -6,11 +6,11 @@ import { BigNumberish } from "ethers";
 
 import {
   BYTES32_ZERO,
-  deployRolesMod,
   encodeMultisendPayload,
   ExecutionOptions,
   PermissionCheckerStatus,
 } from "./utils";
+import { deployRolesMod } from "./setup";
 
 enum Operation {
   Call = 0,
@@ -35,15 +35,14 @@ async function setup() {
     hre,
     owner.address,
     avatarAddress,
-    avatarAddress
+    avatarAddress,
   );
 
   const MultiSend = await hre.ethers.getContractFactory("MultiSend");
   const multisend = await MultiSend.deploy();
 
-  const MultiSendUnwrapper = await hre.ethers.getContractFactory(
-    "MultiSendUnwrapper"
-  );
+  const MultiSendUnwrapper =
+    await hre.ethers.getContractFactory("MultiSendUnwrapper");
   const adapter = await MultiSendUnwrapper.deploy();
 
   await roles
@@ -51,7 +50,7 @@ async function setup() {
     .setTransactionUnwrapper(
       await multisend.getAddress(),
       "0x8d80ff0a",
-      await adapter.getAddress()
+      await adapter.getAddress(),
     );
 
   await roles.enableModule(invoker.address);
@@ -66,17 +65,15 @@ async function setup() {
         {
           to: testContractAddress,
           value: 0,
-          data: (
-            await testContract.doNothing.populateTransaction()
-          ).data as string,
+          data: (await testContract.doNothing.populateTransaction())
+            .data as string,
           operation: Operation.Call,
         },
         {
           to: testContractAddress,
           value: 0,
-          data: (
-            await testContract.doEvenLess.populateTransaction()
-          ).data as string,
+          data: (await testContract.doEvenLess.populateTransaction())
+            .data as string,
           operation: Operation.Call,
         },
         {
@@ -84,12 +81,12 @@ async function setup() {
           value: 0,
           data: (
             await testContract.setAStorageNumber.populateTransaction(
-              NEXT_STORAGE_VALUE
+              NEXT_STORAGE_VALUE,
             )
           ).data as string,
           operation: Operation.Call,
         },
-      ])
+      ]),
     )
   ).data as string;
 
@@ -117,8 +114,8 @@ describe("Multi Entrypoint", async () => {
           await multisend.getAddress(),
           0,
           data as string,
-          Operation.DelegateCall
-        )
+          Operation.DelegateCall,
+        ),
     ).to.be.revertedWithCustomError(roles, "MalformedMultiEntrypoint");
   });
 
@@ -143,13 +140,13 @@ describe("Multi Entrypoint", async () => {
           await multisend.getAddress(),
           0,
           multisendCallData,
-          Operation.DelegateCall
-        )
+          Operation.DelegateCall,
+        ),
     )
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.FunctionNotAllowed,
-        selector.padEnd(66, "0")
+        selector.padEnd(66, "0"),
       );
     expect(await testContract.aStorageNumber()).to.equal(0);
   });
@@ -172,7 +169,7 @@ describe("Multi Entrypoint", async () => {
         ROLE_KEY,
         testContractAddress,
         testContract.interface.getFunction("doNothing").selector,
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
 
     await roles
@@ -181,7 +178,7 @@ describe("Multi Entrypoint", async () => {
         ROLE_KEY,
         testContractAddress,
         testContract.interface.getFunction("doEvenLess").selector,
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
 
     const selector =
@@ -195,13 +192,13 @@ describe("Multi Entrypoint", async () => {
           await multisend.getAddress(),
           0,
           multisendCallData,
-          Operation.DelegateCall
-        )
+          Operation.DelegateCall,
+        ),
     )
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.FunctionNotAllowed,
-        selector.padEnd(66, "0")
+        selector.padEnd(66, "0"),
       );
     expect(await testContract.aStorageNumber()).to.equal(0);
   });
@@ -217,7 +214,7 @@ describe("Multi Entrypoint", async () => {
       testContractAddress,
 
       testContract.interface.getFunction("setAStorageNumber").selector,
-      ExecutionOptions.None
+      ExecutionOptions.None,
     );
 
     const multisendCallData = (
@@ -228,12 +225,12 @@ describe("Multi Entrypoint", async () => {
             value: 0,
             data: (
               await testContract.setAStorageNumber.populateTransaction(
-                NEXT_STORAGE_VALUE
+                NEXT_STORAGE_VALUE,
               )
             ).data as string,
             operation: Operation.Call,
           },
-        ])
+        ]),
       )
     ).data as string;
 
@@ -245,8 +242,8 @@ describe("Multi Entrypoint", async () => {
           await multisend.getAddress(),
           0,
           multisendCallData,
-          Operation.DelegateCall
-        )
+          Operation.DelegateCall,
+        ),
     ).to.not.be.reverted;
     expect(await testContract.aStorageNumber()).to.equal(NEXT_STORAGE_VALUE);
 
@@ -256,7 +253,7 @@ describe("Multi Entrypoint", async () => {
       .setTransactionUnwrapper(
         await multisend.getAddress(),
         "0x8d80ff0a",
-        "0x0000000000000000000000000000000000000000"
+        "0x0000000000000000000000000000000000000000",
       );
     await expect(
       roles
@@ -265,8 +262,8 @@ describe("Multi Entrypoint", async () => {
           await multisend.getAddress(),
           0,
           multisendCallData,
-          Operation.DelegateCall
-        )
+          Operation.DelegateCall,
+        ),
     )
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(PermissionCheckerStatus.TargetAddressNotAllowed, BYTES32_ZERO);
@@ -290,7 +287,7 @@ describe("Multi Entrypoint", async () => {
         ROLE_KEY,
         testContractAddress,
         testContract.interface.getFunction("doNothing").selector,
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
 
     await roles
@@ -299,7 +296,7 @@ describe("Multi Entrypoint", async () => {
         ROLE_KEY,
         testContractAddress,
         testContract.interface.getFunction("doEvenLess").selector,
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
 
     await roles.connect(owner).allowFunction(
@@ -307,7 +304,7 @@ describe("Multi Entrypoint", async () => {
       testContractAddress,
 
       testContract.interface.getFunction("setAStorageNumber").selector,
-      ExecutionOptions.None
+      ExecutionOptions.None,
     );
 
     expect(await testContract.aStorageNumber()).to.equal(0);
@@ -318,8 +315,8 @@ describe("Multi Entrypoint", async () => {
           await multisend.getAddress(),
           0,
           multisendCallData,
-          Operation.DelegateCall
-        )
+          Operation.DelegateCall,
+        ),
     ).to.not.be.reverted;
     expect(await testContract.aStorageNumber()).to.equal(NEXT_STORAGE_VALUE);
   });

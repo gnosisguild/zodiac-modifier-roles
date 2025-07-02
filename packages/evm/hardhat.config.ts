@@ -35,6 +35,8 @@ const {
   CELOSCAN_API_KEY,
   SONICSCAN_API_KEY,
   BERASCAN_API_KEY,
+  MANTLESCAN_API_KEY,
+  UNISCAN_API_KEY,
 } = process.env;
 
 const sharedNetworkConfig: HttpNetworkUserConfig = {};
@@ -154,6 +156,11 @@ const config: HardhatUserConfig = {
       url: "https://bob-sepolia.rpc.gobob.xyz/",
       gasPrice: 1000000000,
     },
+    unichain: {
+      ...sharedNetworkConfig,
+      chainId: 130,
+      url: "https://mainnet.unichain.org",
+    },
     mantle: {
       ...sharedNetworkConfig,
       chainId: 5000,
@@ -169,26 +176,19 @@ const config: HardhatUserConfig = {
       chainId: 80094,
       url: "https://rpc.berachain.com",
     },
+    hyperevm: {
+      ...sharedNetworkConfig,
+      chainId: 999,
+      url: "https://rpc.hyperliquid.xyz/evm",
+    },
+    worldchain: {
+      ...sharedNetworkConfig,
+      chainId: 480,
+      url: "https://worldchain-mainnet.g.alchemy.com/public",
+    },
   },
   etherscan: {
-    apiKey: {
-      mainnet: ETHERSCAN_API_KEY,
-      sepolia: ETHERSCAN_API_KEY,
-      optimism: OPTIMISTIC_ETHERSCAN_API_KEY,
-      gnosis: GNOSISSCAN_API_KEY,
-      matic: POLYGONSCAN_API_KEY,
-      arbitrum: ARBISCAN_API_KEY,
-      avalanche: SNOWTRACE_API_KEY,
-      zkevm: ZKEVM_POLYGONSCAN_API_KEY,
-      base: BASESCAN_API_KEY,
-      baseSepolia: BASESCAN_API_KEY,
-      bsc: BSCSCAN_API_KEY,
-      celo: CELOSCAN_API_KEY,
-      sonic: SONICSCAN_API_KEY,
-      berachain: BERASCAN_API_KEY,
-      "lisk-sepolia": "not-required",
-      "bob-sepolia": ETHERSCAN_API_KEY,
-    } as Record<string, string>,
+    apiKey: ETHERSCAN_API_KEY,
     customChains: [
       {
         network: "optimism",
@@ -255,6 +255,22 @@ const config: HardhatUserConfig = {
         },
       },
       {
+        network: "mantle",
+        chainId: 5000,
+        urls: {
+          apiURL: "https://api.mantlescan.xyz/api",
+          browserURL: "https://mantlescan.xyz",
+        },
+      },
+      {
+        network: "unichain",
+        chainId: 130,
+        urls: {
+          apiURL: "https://api.uniscan.xyz/api",
+          browserURL: "https://uniscan.xyz",
+        },
+      },
+      {
         network: "sonic",
         chainId: 146,
         urls: {
@@ -271,6 +287,14 @@ const config: HardhatUserConfig = {
         },
       },
       {
+        network: "hyperevm",
+        chainId: 999,
+        urls: {
+          apiURL: "https://www.hyperscan.com/api",
+          browserURL: "https://www.hyperscan.com",
+        },
+      },
+      {
         network: "lisk-sepolia",
         chainId: 4202,
         urls: {
@@ -284,6 +308,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://bob-sepolia.explorer.gobob.xyz/api",
           browserURL: "https://bob-sepolia.explorer.gobob.xyz",
+        },
+      },
+      {
+        network: "worldchain",
+        chainId: 480,
+        urls: {
+          apiURL: "https://api.worldscan.org/api",
+          browserURL: "https://worldscan.org",
         },
       },
     ],

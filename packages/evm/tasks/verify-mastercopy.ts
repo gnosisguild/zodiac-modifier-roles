@@ -3,40 +3,48 @@ import { readMastercopies, verifyMastercopy } from "@gnosis-guild/zodiac-core";
 
 task(
   "verify:mastercopy",
-  "Verifies all mastercopies from the artifacts file in the block explorer corresponding to the current network"
+  "Verifies all mastercopies from the artifacts file in the block explorer corresponding to the current network",
 )
   .addOptionalParam(
     "contractVersion",
     "Specify a specific version",
     "latest", // Default value
-    types.string
+    types.string,
   )
   .setAction(async ({ contractVersion }, hre) => {
-    const apiKey = (hre.config.etherscan.apiKey as any)[hre.network.name] as
-      | string
-      | undefined;
+    const apiKey = hre.config.etherscan.apiKey as string;
     if (!apiKey) {
       throw new Error(
-        "Missing etherscan api key for network " + hre.network.name
+        "Missing etherscan api key for network " + hre.network.name,
       );
     }
+
+    const chainId = String((await hre.ethers.provider.getNetwork()).chainId);
 
     for (const artifact of readMastercopies({ contractVersion })) {
       const { noop } = await verifyMastercopy({
         artifact,
-        apiUrlOrChainId: (hre.config.networks[hre.network.name] as any).url,
-        apiKey: apiKey,
+        customChainConfig: hre.config.etherscan.customChains.find(
+          (chain: any) => chain.network === hre.network.name,
+        ),
+        apiUrlOrChainId: chainId,
+        apiKey,
+      }).catch((e) => {
+        console.error(
+          `Error verifying ${artifact.contractName}@${artifact.contractVersion}: ${e}`,
+        );
+        throw e;
       });
 
       const { contractName, contractVersion, address } = artifact;
 
       if (noop) {
         console.log(
-          `🔄 ${contractName}@${contractVersion}: Already verified at ${address}`
+          `🔄 ${contractName}@${contractVersion}: Already verified at ${address}`,
         );
       } else {
         console.log(
-          `🚀 ${contractName}@${contractVersion}: Successfully verified at ${address}`
+          `🚀 ${contractName}@${contractVersion}: Successfully verified at ${address}`,
         );
       }
     }

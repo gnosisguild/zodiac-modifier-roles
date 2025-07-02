@@ -3,12 +3,10 @@ import {
   toFunctionSelector,
   decodeFunctionData,
   AbiParameter,
-  encodeAbiParameters,
 } from "viem"
 import {
   c,
   Condition,
-  ConditionFunction,
   FunctionPermission,
   FunctionPermissionCoerced,
 } from "zodiac-roles-sdk"
@@ -17,6 +15,8 @@ import { invariant } from "@epic-web/invariant"
 import { fetchContractInfo } from "@/app/abi"
 import { ChainId } from "@/app/chains"
 import { Call, Operation, Record } from "@/app/api/records/types"
+
+type ConditionFunction = (abiType: ParamType, _?: any) => Condition
 
 export async function derivePermissionsFromRecord(
   record: Record,
@@ -90,7 +90,7 @@ const deriveConditionFromWildcards = (
   abi: readonly AbiParameter[],
   wildcards: string[],
   pathPrefix = ""
-): ConditionFunction<any> | undefined => {
+): ConditionFunction | undefined => {
   const isTopLevelCalldata = pathPrefix === ""
 
   const filteredWildcards = wildcards.filter((wildcard) =>

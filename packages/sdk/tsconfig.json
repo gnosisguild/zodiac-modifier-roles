@@ -11,8 +11,9 @@
     "target": "es2020",
     "typeRoots": ["node_modules/@types"],
     "paths": {
-      "zodiac-roles-sdk": ["./src/index.ts"]
+      "zodiac-roles-sdk": ["./src/main/index.ts"]
     }
   },
-  "include": ["./src"]
+  "include": ["./src/**/*.ts"],
+  "exclude": ["./src/**/*.test.ts"]
 }

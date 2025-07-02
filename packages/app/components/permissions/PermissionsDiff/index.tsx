@@ -1,4 +1,4 @@
-import { Annotation, Target, reconstructPermissions } from "zodiac-roles-sdk"
+import { Annotation, Target } from "zodiac-roles-sdk"
 import cn from "classnames"
 import { ChainId } from "@/app/chains"
 import Flex from "@/ui/Flex"
@@ -18,16 +18,10 @@ interface Props {
 
 const PermissionsDiff = async ({ left, right, chainId }: Props) => {
   const { presets: leftPresets, permissions: leftPermissions } =
-    await processAnnotations(
-      reconstructPermissions(left.targets),
-      left.annotations
-    )
+    await processAnnotations(left.targets, left.annotations)
 
   const { presets: rightPresets, permissions: rightPermissions } =
-    await processAnnotations(
-      reconstructPermissions(right.targets),
-      right.annotations
-    )
+    await processAnnotations(right.targets, right.annotations)
 
   const [permissionsDiffLeft, permissionsDiffRight] = diffPermissions(
     leftPermissions,

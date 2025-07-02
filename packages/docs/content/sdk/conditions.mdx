@@ -6,7 +6,7 @@ The Roles SDK provides a convenient API for defining conditions on targets. Func
 
 ## Exact values
 
-If a primitive, BigNumber, or array value is given, it will be used for an equality check.
+If a primitive or array value is given, it will be used for an equality check.
 This also applies to placeholders.
 A contract function call will need to use this exact value to pass the condition.
 
@@ -140,13 +140,21 @@ c.calldataMatches(
 
 See [`WithinAllowance`](/general/conditions#withinallowance) operator
 
-#### `c.etherWithinAllowance`
+#### Allowance on Ether value via `c.calldataMatches`
 
-See [`EtherWithinAllowance`](/general/conditions#etherwithinallowance) operator
+```typescript
+c.calldataMatches([], [], {
+  etherWithinAllowance: encodeKey("mt-eth-allowance"),
+});
+```
 
-#### `c.callWithinAllowance`
+#### Allowance on call rate via `c.calldataMatches`
 
-See [`CallWithinAllowance`](/general/conditions#callwithinallowance) operator
+```typescript
+c.calldataMatches([], [], {
+  callWithinAllowance: encodeKey("my-call-allowance"),
+});
+```
 
 ### Custom conditions
 

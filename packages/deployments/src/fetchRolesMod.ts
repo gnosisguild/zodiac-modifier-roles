@@ -1,137 +1,65 @@
-import { chains } from "./chains"
-import {
-  Allowance,
-  ChainId,
-  Clearance,
-  ExecutionOptions,
-  Function,
-} from "./types"
+import { fetchFromSubgraph, FetchOptions } from "./subgraph"
+import { ChainId, RolesModifier } from "./types"
+import { mapGraphQl as mapGraphQlRole, ROLE_FIELDS } from "./fetchRole"
+import { getRolesModId } from "./ids"
 
 type Props = {
   address: `0x${string}`
-} & (
-  | {
-      /** pass a chainId to use query against a dev subgraph */
-      chainId: ChainId
-    }
-  | {
-      /** pass your own subgraph endpoint for production use */
-      subgraph: string
-    }
-)
+  chainId: ChainId
 
-const QUERY = `
-  query RolesMod($id: String) {
-    rolesModifier(id: $id) {
-      address
-      owner
-      avatar
-      target 
-      roles(first: 1000) {
-        key
-        members(first: 1000) {
-          member {
-            address
-          }
-        }
-        targets(first: 1000) {
-          address
-          clearance
-          executionOptions
-          functions(first: 1000) {
-            selector
-            wildcarded
-            executionOptions
-          }
-        }
-        lastUpdate
-      }
-      allowances(first: 1000) {
-        key
-        refill
-        maxRefill
-        period
-        balance
-        timestamp
-      }
-      unwrapAdapters(
-        where: {
-          selector: "0x8d80ff0a", 
-          adapterAddress: "0x93b7fcbc63ed8a3a24b59e1c3e6649d50b7427c0"
-        }
-      ) {
-        targetAddress
-      }
+  /**
+   * Specify a block height to fetch a historic state of the Roles mod. Defaults to latest block.
+   * @requires A Zodiac OS Enterprise subscription
+   **/
+  blockNumber?: number
+}
+
+const MOD_QUERY = `
+query RolesMod($id: ID!, $blockNumber: Int) {
+  rolesModifier(id: $id, blockNumber: $blockNumber) {
+    address
+    owner
+    avatar
+    target 
+    roles {
+      ${ROLE_FIELDS}
+    }
+    allowances {
+      key
+      refill
+      maxRefill
+      period
+      balance
+      timestamp
+    }
+    unwrapAdapters {
+      targetAddress
     }
   }
+}
 `
 
-type FetchOptions = Omit<RequestInit, "method" | "body">
-
 export const fetchRolesMod = async (
-  { address, ...rest }: Props,
+  { chainId, address, blockNumber }: Props,
   options?: FetchOptions
 ): Promise<RolesModifier | null> => {
-  const endpoint =
-    "subgraph" in rest ? rest.subgraph : chains[rest.chainId].subgraph
-
-  const res = await fetch(endpoint, {
-    ...options,
-    method: "POST",
-    headers: {
-      ...options?.headers,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      query: QUERY,
-      variables: { id: address.toLowerCase() },
+  const { rolesModifier } = await fetchFromSubgraph(
+    {
+      query: MOD_QUERY,
+      variables: {
+        id: getRolesModId(chainId, address),
+        blockNumber,
+      },
       operationName: "RolesMod",
-    }),
-  })
-  const { data, error, errors } = await res.json()
+    },
+    options
+  )
 
-  if (error || (errors && errors[0])) {
-    throw new Error(error || errors[0])
-  }
-
-  if (!data || !data.rolesModifier) {
+  if (!rolesModifier) {
     return null
   }
 
-  assertNoPagination(data.rolesModifier.roles)
-  for (const role of data.rolesModifier.roles) {
-    assertNoPagination(role.members)
-    assertNoPagination(role.targets)
-  }
-
-  return mapGraphQl(data.rolesModifier)
-}
-
-interface TargetSummary {
-  address: `0x${string}`
-  clearance: Clearance
-  executionOptions: ExecutionOptions
-  functions: {
-    selector: `0x${string}`
-    wildcarded: boolean
-    executionOptions: ExecutionOptions
-  }[]
-}
-
-export interface RoleSummary {
-  key: `0x${string}`
-  members: `0x${string}`[]
-  targets: TargetSummary[]
-}
-
-export interface RolesModifier {
-  address: `0x${string}`
-  owner: `0x${string}`
-  avatar: `0x${string}`
-  target: `0x${string}`
-  roles: RoleSummary[]
-  allowances: Allowance[]
-  multiSendAddresses: `0x${string}`[]
+  return mapGraphQl(rolesModifier)
 }
 
 const mapGraphQl = (rolesModifier: any): RolesModifier => ({
@@ -145,44 +73,11 @@ const mapGraphQl = (rolesModifier: any): RolesModifier => ({
     balance: BigInt(allowance.balance),
     timestamp: BigInt(allowance.timestamp),
   })),
-  multiSendAddresses: rolesModifier.unwrapAdapters.map(
-    (adapter: any) => adapter.targetAddress
-  ),
-})
-
-const mapGraphQlRole = (role: any): RoleSummary => ({
-  key: role.key,
-  members: role.members.map((assignment: any) => assignment.member.address),
-  targets: role.targets
+  multiSendAddresses: rolesModifier.unwrapAdapters
     .filter(
-      (t: any) =>
-        t.clearance !== "None" &&
-        !(t.clearance === "Function" && t.functions.length === 0)
+      ({ selector, adapterAddress }: any) =>
+        selector === "0x8d80ff0a" &&
+        adapterAddress === "0x93b7fcbc63ed8a3a24b59e1c3e6649d50b7427c0"
     )
-    .map(
-      (target: any): TargetSummary => ({
-        address: target.address,
-        clearance: Clearance[target.clearance as keyof typeof Clearance],
-        executionOptions:
-          ExecutionOptions[
-            target.executionOptions as keyof typeof ExecutionOptions
-          ],
-        functions: target.functions.map(
-          (func: any): Function => ({
-            selector: func.selector,
-            executionOptions:
-              ExecutionOptions[
-                func.executionOptions as keyof typeof ExecutionOptions
-              ],
-            wildcarded: func.wildcarded,
-          })
-        ),
-      })
-    ),
+    .map((adapter: any) => adapter.targetAddress),
 })
-
-const assertNoPagination = (data: any[]) => {
-  if (data.length === 1000) {
-    throw new Error("Pagination not supported")
-  }
-}

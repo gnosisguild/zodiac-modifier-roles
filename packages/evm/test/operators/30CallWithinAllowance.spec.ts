@@ -7,13 +7,13 @@ import { AbiCoder, BigNumberish } from "ethers";
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
 import {
+  AbiType,
   Operator,
   ExecutionOptions,
-  ParameterType,
-  deployRolesMod,
   PermissionCheckerStatus,
   BYTES32_ZERO,
 } from "../utils";
+import { deployRolesMod } from "../setup";
 
 const ROLE_KEY =
   "0x0000000000000000000000000000000000000000000000000000000000000001";
@@ -32,7 +32,7 @@ describe("Operator - CallWithinAllowance", async () => {
       hre,
       owner.address,
       avatarAddress,
-      avatarAddress
+      avatarAddress,
     );
     await roles.enableModule(invoker.address);
 
@@ -70,18 +70,18 @@ describe("Operator - CallWithinAllowance", async () => {
       [
         {
           parent: 0,
-          paramType: ParameterType.Calldata,
+          paramType: AbiType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: ParameterType.None,
+          paramType: AbiType.None,
           operator: Operator.CallWithinAllowance,
           compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
         },
       ],
-      ExecutionOptions.None
+      ExecutionOptions.None,
     );
 
     async function invoke() {
@@ -91,7 +91,7 @@ describe("Operator - CallWithinAllowance", async () => {
           testContractAddress,
           0,
           (await testContract.doNothing.populateTransaction()).data as string,
-          0
+          0,
         );
     }
 
@@ -108,9 +108,8 @@ describe("Operator - CallWithinAllowance", async () => {
 
   describe("CallWithinAllowance - Check", () => {
     it("success - from existing balance", async () => {
-      const { roles, allowanceKey, setAllowance, invoke } = await loadFixture(
-        setup
-      );
+      const { roles, allowanceKey, setAllowance, invoke } =
+        await loadFixture(setup);
 
       await setAllowance({
         key: allowanceKey,
@@ -133,9 +132,8 @@ describe("Operator - CallWithinAllowance", async () => {
         .withArgs(PermissionCheckerStatus.CallAllowanceExceeded, allowanceKey);
     });
     it("success - multiple checks from existing balance", async () => {
-      const { roles, allowanceKey, setAllowance, invoke } = await loadFixture(
-        setup
-      );
+      const { roles, allowanceKey, setAllowance, invoke } =
+        await loadFixture(setup);
 
       await setAllowance({
         key: allowanceKey,
@@ -160,9 +158,8 @@ describe("Operator - CallWithinAllowance", async () => {
         .withArgs(PermissionCheckerStatus.CallAllowanceExceeded, allowanceKey);
     });
     it("success - from balance 0 but enough refill pending", async () => {
-      const { roles, allowanceKey, setAllowance, invoke } = await loadFixture(
-        setup
-      );
+      const { roles, allowanceKey, setAllowance, invoke } =
+        await loadFixture(setup);
 
       const timestamp = await time.latest();
       await setAllowance({
@@ -179,9 +176,8 @@ describe("Operator - CallWithinAllowance", async () => {
         .withArgs(PermissionCheckerStatus.CallAllowanceExceeded, allowanceKey);
     });
     it("fail - insufficient balance and not enough elapsed for next refill", async () => {
-      const { roles, allowanceKey, setAllowance, invoke } = await loadFixture(
-        setup
-      );
+      const { roles, allowanceKey, setAllowance, invoke } =
+        await loadFixture(setup);
 
       const timestamp = await time.latest();
       await setAllowance({
@@ -238,7 +234,7 @@ describe("Operator - CallWithinAllowance", async () => {
             0,
             (await testContract.oneParamStatic.populateTransaction(p))
               .data as string,
-            0
+            0,
           );
       }
 
@@ -249,48 +245,48 @@ describe("Operator - CallWithinAllowance", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.None,
+            paramType: AbiType.None,
             operator: Operator.Or,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: ParameterType.Calldata,
+            paramType: AbiType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: ParameterType.Calldata,
+            paramType: AbiType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 1,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.EqualTo,
             compValue: defaultAbiCoder.encode(["uint256"], [value1]),
           },
           {
             parent: 1,
-            paramType: ParameterType.None,
+            paramType: AbiType.None,
             operator: Operator.CallWithinAllowance,
             compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey1]),
           },
           {
             parent: 2,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.EqualTo,
             compValue: defaultAbiCoder.encode(["uint256"], [value2]),
           },
           {
             parent: 2,
-            paramType: ParameterType.None,
+            paramType: AbiType.None,
             operator: Operator.CallWithinAllowance,
             compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey2]),
           },
         ],
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
 
       await expect(invoke(valueOther))

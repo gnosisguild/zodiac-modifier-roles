@@ -7,8 +7,13 @@ task(
   "verify:mastercopies",
   "Verifies all mastercopies from the artifacts file, in the block explorer corresponding to the current network"
 ).setAction(async (_, hre) => {
-  if (!ETHERSCAN_API_KEY) {
-    throw new Error("Missing ENV ETHERSCAN_API_KEY");
+  const apiKey = (hre.config.etherscan.apiKey as any)[hre.network.name] as
+    | string
+    | undefined;
+  if (!apiKey) {
+    throw new Error(
+      "Missing etherscan api key for network " + hre.network.name
+    );
   }
 
   const chainId = String((await hre.ethers.provider.getNetwork()).chainId);
@@ -16,8 +21,11 @@ task(
   for (const artifact of readMastercopies()) {
     const { noop } = await verifyMastercopy({
       artifact,
+      customChainConfig: hre.config.etherscan.customChains.find(
+        (chain: any) => chain.network === hre.network.name
+      ),
       apiUrlOrChainId: chainId,
-      apiKey: ETHERSCAN_API_KEY,
+      apiKey,
     });
 
     const { contractName, contractVersion, address } = artifact;

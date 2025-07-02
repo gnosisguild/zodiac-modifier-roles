@@ -25,7 +25,7 @@ const PresetInfo: React.FC<{
           <div className={classes.contact}>
             by{" "}
             {apiInfo.contact.url ? (
-              <a href={apiInfo.contact.url} target="_blank">
+              <a href={apiInfo.contact.url} target="_blank" rel="noreferrer">
                 {apiInfo.contact.name}
               </a>
             ) : (

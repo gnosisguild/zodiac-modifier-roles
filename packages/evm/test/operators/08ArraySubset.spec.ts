@@ -5,11 +5,11 @@ import { AbiCoder } from "ethers";
 
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
-import { setupOneParamArrayOfStatic } from "./setup";
+import { setupOneParamArrayOfStatic } from "../setup";
 import {
+  AbiType,
   BYTES32_ZERO,
   Operator,
-  ParameterType,
   PermissionCheckerStatus,
 } from "../utils";
 
@@ -21,77 +21,77 @@ describe("Operator - ArraySubset", async () => {
       scopeFunction([
         {
           parent: 0,
-          paramType: ParameterType.Calldata,
+          paramType: AbiType.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: ParameterType.Array,
+          paramType: AbiType.Array,
           operator: Operator.ArraySubset,
           compValue: "0x",
         },
         {
           parent: 1,
-          paramType: ParameterType.Tuple,
+          paramType: AbiType.Tuple,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 1,
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.Pass,
           compValue: "0x",
         },
         {
           parent: 2,
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.Pass,
           compValue: "0x",
         },
         {
           parent: 2,
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["bool"], [true]),
         },
-      ])
+      ]),
     ).to.be.reverted;
   });
 
   it("evaluates operator ArraySubset", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
-      setupOneParamArrayOfStatic
+      setupOneParamArrayOfStatic,
     );
 
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.Calldata,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: ParameterType.Array,
+        paramType: AbiType.Array,
         operator: Operator.ArraySubset,
         compValue: "0x",
       },
       {
         parent: 1,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["uint256"], [123]),
       },
       {
         parent: 1,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["uint256"], [4567]),
       },
       {
         parent: 1,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["uint256"], [999999]),
       },
@@ -101,7 +101,7 @@ describe("Operator - ArraySubset", async () => {
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.ParameterNotSubsetOfAllowed,
-        BYTES32_ZERO
+        BYTES32_ZERO,
       );
 
     await expect(invoke([123, 4567])).to.not.be.reverted;
@@ -109,37 +109,37 @@ describe("Operator - ArraySubset", async () => {
 
   it("evaluates operator ArraySubset - order does not matter", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
-      setupOneParamArrayOfStatic
+      setupOneParamArrayOfStatic,
     );
 
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.Calldata,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: ParameterType.Array,
+        paramType: AbiType.Array,
         operator: Operator.ArraySubset,
         compValue: "0x",
       },
       {
         parent: 1,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["uint256"], [1]),
       },
       {
         parent: 1,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["uint256"], [2]),
       },
       {
         parent: 1,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["uint256"], [3]),
       },
@@ -155,37 +155,37 @@ describe("Operator - ArraySubset", async () => {
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.ParameterNotSubsetOfAllowed,
-        BYTES32_ZERO
+        BYTES32_ZERO,
       );
   });
 
   it("evaluates operator ArraySubset - empty array is not subset", async () => {
     const { roles, invoke, scopeFunction } = await loadFixture(
-      setupOneParamArrayOfStatic
+      setupOneParamArrayOfStatic,
     );
 
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.Calldata,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: ParameterType.Array,
+        paramType: AbiType.Array,
         operator: Operator.ArraySubset,
         compValue: "0x",
       },
       {
         parent: 1,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["uint256"], [1]),
       },
       {
         parent: 1,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["uint256"], [2]),
       },
@@ -195,43 +195,43 @@ describe("Operator - ArraySubset", async () => {
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.ParameterNotSubsetOfAllowed,
-        BYTES32_ZERO
+        BYTES32_ZERO,
       );
   });
 
   it("evaluates operator ArraySubset - does not allow repetition", async () => {
     const { roles, scopeFunction, invoke } = await loadFixture(
-      setupOneParamArrayOfStatic
+      setupOneParamArrayOfStatic,
     );
 
     await scopeFunction([
       {
         parent: 0,
-        paramType: ParameterType.Calldata,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: ParameterType.Array,
+        paramType: AbiType.Array,
         operator: Operator.ArraySubset,
         compValue: "0x",
       },
       {
         parent: 1,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["uint256"], [1]),
       },
       {
         parent: 1,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["uint256"], [2]),
       },
       {
         parent: 1,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["uint256"], [3]),
       },
@@ -247,14 +247,14 @@ describe("Operator - ArraySubset", async () => {
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.ParameterNotSubsetOfAllowed,
-        BYTES32_ZERO
+        BYTES32_ZERO,
       );
 
     await expect(invoke([3, 2, 1, 3]))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.ParameterNotSubsetOfAllowed,
-        BYTES32_ZERO
+        BYTES32_ZERO,
       );
   });
 });

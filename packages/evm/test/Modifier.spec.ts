@@ -2,7 +2,7 @@ import { expect } from "chai";
 import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import { deployRolesMod } from "./utils";
+import { deployRolesMod } from "./setup";
 
 const AddressZero = "0x0000000000000000000000000000000000000000";
 const AddressOne = "0x0000000000000000000000000000000000000001";
@@ -19,7 +19,7 @@ describe("Modifier", async () => {
       hre,
       owner.address,
       avatarAddress,
-      avatarAddress
+      avatarAddress,
     );
     return { owner, invoker, avatar, roles, testContract };
   }
@@ -28,7 +28,7 @@ describe("Modifier", async () => {
     it("reverts if not owner", async () => {
       const { roles, invoker } = await loadFixture(setup);
       await expect(
-        roles.connect(invoker).disableModule(AddressOne, invoker.address)
+        roles.connect(invoker).disableModule(AddressOne, invoker.address),
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
 
@@ -42,7 +42,7 @@ describe("Modifier", async () => {
     it("reverts if module is not enabled ", async () => {
       const { roles, owner, invoker } = await loadFixture(setup);
       await expect(
-        roles.connect(owner).disableModule(AddressZero, invoker.address)
+        roles.connect(owner).disableModule(AddressZero, invoker.address),
       )
         .to.be.revertedWithCustomError(roles, `AlreadyDisabledModule`)
         .withArgs(invoker.address);
@@ -51,13 +51,13 @@ describe("Modifier", async () => {
       const { roles, owner, invoker } = await loadFixture(setup);
 
       await expect(await roles.isModuleEnabled(invoker.address)).to.equal(
-        false
+        false,
       );
       await roles.connect(owner).enableModule(invoker.address);
       await expect(await roles.isModuleEnabled(invoker.address)).to.equal(true);
       await roles.connect(owner).disableModule(AddressOne, invoker.address);
       await expect(await roles.isModuleEnabled(invoker.address)).to.equal(
-        false
+        false,
       );
     });
   });
@@ -66,7 +66,7 @@ describe("Modifier", async () => {
     it("reverts if not owner", async () => {
       const { roles, invoker } = await loadFixture(setup);
       await expect(
-        roles.connect(invoker).enableModule(AddressOne)
+        roles.connect(invoker).enableModule(AddressOne),
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
     it("reverts if module is already enabled", async () => {
@@ -92,10 +92,10 @@ describe("Modifier", async () => {
 
       await roles.connect(owner).enableModule(invoker.address);
       await expect(await roles.isModuleEnabled(invoker.address)).to.be.equals(
-        true
+        true,
       );
       await expect(
-        await roles.getModulesPaginated(AddressOne, 10)
+        await roles.getModulesPaginated(AddressOne, 10),
       ).to.be.deep.equal([[invoker.address], AddressOne]);
     });
   });

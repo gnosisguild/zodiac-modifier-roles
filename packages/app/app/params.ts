@@ -1,6 +1,6 @@
 import { CHAINS } from "@/app/chains"
 import { isAddress } from "viem"
-import { ChainId, encodeRoleKey } from "zodiac-roles-sdk"
+import { ChainId, encodeKey } from "zodiac-roles-sdk"
 
 const chains = Object.values(CHAINS)
 
@@ -29,5 +29,5 @@ export function parseModParam(mod: string | string[] | undefined) {
 
 export function parseRoleParam(role: string | string[] | undefined) {
   if (!role || typeof role !== "string") return null
-  return encodeRoleKey(role) as `0x${string}`
+  return encodeKey(role) as `0x${string}`
 }

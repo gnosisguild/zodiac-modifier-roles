@@ -1,13 +1,13 @@
-import { Annotation, Permission } from "zodiac-roles-sdk"
+import { Annotation, Target } from "zodiac-roles-sdk"
 import { processAnnotations as processAnnotationsBase } from "zodiac-roles-sdk/annotations"
 import { z } from "zod"
 import { zPermission } from "./schema"
 
 export const processAnnotations = async (
-  permissions: readonly Permission[],
+  targets: readonly Target[],
   annotations: readonly Annotation[]
 ) => {
-  return await processAnnotationsBase(permissions, annotations, {
+  return await processAnnotationsBase(targets, annotations, {
     fetchPermissions,
     fetchSchema,
   })

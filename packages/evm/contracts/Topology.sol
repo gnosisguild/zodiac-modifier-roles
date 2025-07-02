@@ -9,11 +9,6 @@ import "./Types.sol";
  * @author Cristóvão Honorato - <cristovao.honorato@gnosis.io>
  */
 library Topology {
-    struct TypeTree {
-        ParameterType paramType;
-        TypeTree[] children;
-    }
-
     struct Bounds {
         uint256 start;
         uint256 end;
@@ -45,87 +40,63 @@ library Topology {
         }
     }
 
-    function isInline(TypeTree memory node) internal pure returns (bool) {
-        ParameterType paramType = node.paramType;
-        if (paramType == ParameterType.Static) {
-            return true;
-        } else if (
-            paramType == ParameterType.Dynamic ||
-            paramType == ParameterType.Array ||
-            paramType == ParameterType.Calldata ||
-            paramType == ParameterType.AbiEncoded
-        ) {
-            return false;
-        } else {
-            uint256 length = node.children.length;
-
-            for (uint256 i; i < length; ) {
-                if (!isInline(node.children[i])) {
-                    return false;
-                }
-                unchecked {
-                    ++i;
-                }
-            }
-            return true;
-        }
-    }
-
     function typeTree(
-        Condition memory condition
-    ) internal pure returns (TypeTree memory result) {
-        if (
-            condition.operator >= Operator.And &&
-            condition.operator <= Operator.Nor
-        ) {
-            assert(condition.children.length > 0);
-            return typeTree(condition.children[0]);
-        }
+        ConditionFlat[] memory conditions,
+        uint256 entrypoint,
+        Bounds[] memory bounds
+    ) internal pure returns (AbiTypeTree[] memory result) {
+        result = new AbiTypeTree[](conditions.length - entrypoint);
+        uint256 length = typeTree(conditions, bounds, entrypoint, 0, result);
 
-        result.paramType = condition.paramType;
-        if (condition.children.length > 0) {
-            uint256 length = condition.paramType == ParameterType.Array
-                ? 1
-                : condition.children.length;
-            result.children = new TypeTree[](length);
-
-            for (uint256 i; i < length; ) {
-                result.children[i] = typeTree(condition.children[i]);
-
-                unchecked {
-                    ++i;
-                }
+        if (length != conditions.length - entrypoint) {
+            assembly {
+                mstore(result, length)
             }
         }
     }
 
     function typeTree(
         ConditionFlat[] memory conditions,
-        uint256 index,
-        Bounds[] memory bounds
-    ) internal pure returns (TypeTree memory result) {
-        ConditionFlat memory condition = conditions[index];
-        if (
-            condition.operator >= Operator.And &&
-            condition.operator <= Operator.Nor
-        ) {
-            assert(bounds[index].length > 0);
-            return typeTree(conditions, bounds[index].start, bounds);
+        Bounds[] memory bounds,
+        uint256 from,
+        uint256 to,
+        AbiTypeTree[] memory result
+    ) internal pure returns (uint256) {
+        AbiType _type = conditions[from].paramType;
+        Operator operator = conditions[from].operator;
+        uint256 start = bounds[from].start;
+        uint256 end = bounds[from].end;
+        bool hasChildren = start < end;
+
+        if (operator >= Operator.And && operator <= Operator.Nor) {
+            return typeTree(conditions, bounds, start, to, result);
         }
 
-        result.paramType = condition.paramType;
-        if (bounds[index].length > 0) {
-            uint256 start = bounds[index].start;
-            uint256 end = condition.paramType == ParameterType.Array
-                ? bounds[index].start + 1
-                : bounds[index].end;
-            result.children = new TypeTree[](end - start);
-            for (uint256 i = start; i < end; ) {
-                result.children[i - start] = typeTree(conditions, i, bounds);
-                unchecked {
-                    ++i;
-                }
+        result[to]._type = _type;
+        if (!hasChildren) {
+            return (to + 1);
+        }
+
+        end = _type == AbiType.Array ? start + 1 : end;
+        uint256[] memory fields = new uint256[](end - start);
+
+        (uint256 nextTo, uint256 length) = (to + 1, 0);
+        for (from = start; from < end; from++) {
+            uint256 temp = typeTree(conditions, bounds, from, nextTo, result);
+            if (nextTo != temp) {
+                fields[length] = nextTo;
+                nextTo = temp;
+                length++;
             }
         }
+
+        result[to].fields = fields;
+        if (length != end - start) {
+            assembly {
+                mstore(fields, length)
+            }
+        }
+
+        return nextTo;
     }
 }

@@ -1,17 +1,18 @@
 import { expect } from "chai";
-import hre, { ethers } from "hardhat";
+import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { AbiCoder } from "ethers";
 
 import {
-  ParameterType,
+  AbiType,
   ExecutionOptions,
   Operator,
-  deployRolesMod,
   PermissionCheckerStatus,
   BYTES32_ZERO,
   encodeMultisendPayload,
 } from "./utils";
-import { AbiCoder } from "ethers";
+
+import { deployRolesMod } from "./setup";
 
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
@@ -31,7 +32,7 @@ describe("OldTests", async () => {
       hre,
       avatarAddress,
       avatarAddress,
-      avatarAddress
+      avatarAddress,
     );
 
     return { avatar, testContract, modifier };
@@ -48,7 +49,7 @@ describe("OldTests", async () => {
       hre,
       owner.address,
       avatarAddress,
-      avatarAddress
+      avatarAddress,
     );
 
     await modifier.enableModule(invoker.address);
@@ -68,9 +69,8 @@ describe("OldTests", async () => {
     const MultiSend = await hre.ethers.getContractFactory("MultiSend");
     const multisend = await MultiSend.deploy();
     const modifierAddress = await modifier.getAddress();
-    const MultiSendUnwrapper = await hre.ethers.getContractFactory(
-      "MultiSendUnwrapper"
-    );
+    const MultiSendUnwrapper =
+      await hre.ethers.getContractFactory("MultiSendUnwrapper");
     const adapter = await MultiSendUnwrapper.deploy();
     const testContractAddress = await testContract.getAddress();
     await avatar.exec(
@@ -80,10 +80,10 @@ describe("OldTests", async () => {
         await modifier.setTransactionUnwrapper.populateTransaction(
           await multisend.getAddress(),
           "0x8d80ff0a",
-          await adapter.getAddress()
+          await adapter.getAddress(),
         )
       ).data as string,
-      0
+      0,
     );
 
     const [user1] = await hre.ethers.getSigners();
@@ -91,7 +91,7 @@ describe("OldTests", async () => {
     const encodedParam_2 = defaultAbiCoder.encode(["uint256"], [99]);
     const encodedParam_3 = defaultAbiCoder.encode(
       ["string"],
-      ["This is a dynamic array"]
+      ["This is a dynamic array"],
     );
     const encodedParam_4 = defaultAbiCoder.encode(["uint256"], [4]);
     const encodedParam_5 = defaultAbiCoder.encode(["string"], ["Test"]);
@@ -102,7 +102,7 @@ describe("OldTests", async () => {
       ["string"],
       [
         "This is an input that is larger than 32 bytes and must be scanned for correctness",
-      ]
+      ],
     );
     const tx_1 = {
       to: testContractAddress,
@@ -123,7 +123,7 @@ describe("OldTests", async () => {
           true,
           3,
           "weeeeeeee",
-          "This is an input that is larger than 32 bytes and must be scanned for correctness"
+          "This is an input that is larger than 32 bytes and must be scanned for correctness",
         )
       ).data as string,
       operation: 0,
@@ -132,49 +132,49 @@ describe("OldTests", async () => {
     const conditionTree = [
       {
         parent: 0,
-        paramType: ParameterType.Calldata,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: ParameterType.Dynamic,
+        paramType: AbiType.Dynamic,
         operator: Operator.EqualTo,
         compValue: encodedParam_3,
       },
       {
         parent: 0,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.EqualTo,
         compValue: encodedParam_4,
       },
       {
         parent: 0,
-        paramType: ParameterType.Dynamic,
+        paramType: AbiType.Dynamic,
         operator: Operator.EqualTo,
         compValue: encodedParam_5,
       },
       {
         parent: 0,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.EqualTo,
         compValue: encodedParam_6,
       },
       {
         parent: 0,
-        paramType: ParameterType.Static,
+        paramType: AbiType.Static,
         operator: Operator.EqualTo,
         compValue: encodedParam_7,
       },
       {
         parent: 0,
-        paramType: ParameterType.Dynamic,
+        paramType: AbiType.Dynamic,
         operator: Operator.EqualTo,
         compValue: encodedParam_8,
       },
       {
         parent: 0,
-        paramType: ParameterType.Dynamic,
+        paramType: AbiType.Dynamic,
         operator: Operator.EqualTo,
         compValue: encodedParam_9,
       },
@@ -203,7 +203,7 @@ describe("OldTests", async () => {
   describe("execTransactionFromModule()", () => {
     it("reverts if data is set and is not at least 4 bytes", async () => {
       const { modifier, testContract, invoker } = await loadFixture(
-        setupRolesWithOwnerAndInvoker
+        setupRolesWithOwnerAndInvoker,
       );
 
       await modifier.assignRoles(invoker.address, [ROLE_KEY], [true]);
@@ -212,13 +212,13 @@ describe("OldTests", async () => {
       await expect(
         modifier
           .connect(invoker)
-          .execTransactionFromModule(testContractAddress, 0, "0xab", 0)
+          .execTransactionFromModule(testContractAddress, 0, "0xab", 0),
       ).to.be.revertedWithCustomError(modifier, "FunctionSignatureTooShort");
     });
 
     it("reverts if called from module not assigned any role", async () => {
       const { modifier, testContract, owner } = await loadFixture(
-        setupRolesWithOwnerAndInvoker
+        setupRolesWithOwnerAndInvoker,
       );
 
       const [user1] = await hre.ethers.getSigners();
@@ -229,7 +229,7 @@ describe("OldTests", async () => {
 
       const mint = await testContract.mint.populateTransaction(
         user1.address,
-        99
+        99,
       );
 
       await expect(
@@ -237,8 +237,8 @@ describe("OldTests", async () => {
           testContractAddress,
           0,
           mint.data as string,
-          0
-        )
+          0,
+        ),
       )
         .to.be.revertedWithCustomError(modifier, `NotAuthorized`)
         .withArgs(user1.address);
@@ -251,36 +251,36 @@ describe("OldTests", async () => {
       const assign = await modifier.assignRoles.populateTransaction(
         user1.address,
         [ROLE_KEY1],
-        [true]
+        [true],
       );
       await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
 
       const allowTargetAddress = await modifier.allowTarget.populateTransaction(
         ROLE_KEY1,
         testContractAddress,
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
       await avatar.exec(
         await modifier.getAddress(),
         0,
         allowTargetAddress.data || "",
-        0
+        0,
       );
 
       const defaultRole = await modifier.setDefaultRole.populateTransaction(
         user1.address,
-        ROLE_KEY1
+        ROLE_KEY1,
       );
       await avatar.exec(
         await modifier.getAddress(),
         0,
         defaultRole.data || "",
-        0
+        0,
       );
 
       const mint = await testContract.mint.populateTransaction(
         user1.address,
-        99
+        99,
       );
 
       const someOtherAddress = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
@@ -289,13 +289,13 @@ describe("OldTests", async () => {
           someOtherAddress,
           0,
           mint.data || "",
-          0
-        )
+          0,
+        ),
       )
         .to.be.revertedWithCustomError(modifier, "ConditionViolation")
         .withArgs(
           PermissionCheckerStatus.TargetAddressNotAllowed,
-          BYTES32_ZERO
+          BYTES32_ZERO,
         );
     });
 
@@ -305,37 +305,37 @@ describe("OldTests", async () => {
       const assign = await modifier.assignRoles.populateTransaction(
         user1.address,
         [ROLE_KEY1],
-        [true]
+        [true],
       );
       await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
 
       const allowTargetAddress = await modifier.allowTarget.populateTransaction(
         ROLE_KEY1,
         await testContract.getAddress(),
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
       await avatar.exec(
         await modifier.getAddress(),
         0,
         allowTargetAddress.data || "",
-        0
+        0,
       );
 
       const defaultRole = await modifier.setDefaultRole.populateTransaction(
         user1.address,
-        ROLE_KEY1
+        ROLE_KEY1,
       );
 
       await avatar.exec(
         await modifier.getAddress(),
         0,
         defaultRole.data || "",
-        0
+        0,
       );
 
       const mint = await testContract.mint.populateTransaction(
         user1.address,
-        99
+        99,
       );
 
       await expect(
@@ -343,8 +343,8 @@ describe("OldTests", async () => {
           await testContract.getAddress(),
           0,
           mint.data || "",
-          0
-        )
+          0,
+        ),
       ).to.emit(testContract, "Mint");
     });
 
@@ -355,30 +355,30 @@ describe("OldTests", async () => {
       const assign = await modifier.assignRoles.populateTransaction(
         user1.address,
         [ROLE_KEY1],
-        [true]
+        [true],
       );
       await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
 
       const defaultRole = await modifier.setDefaultRole.populateTransaction(
         user1.address,
-        ROLE_KEY1
+        ROLE_KEY1,
       );
       await avatar.exec(
         await modifier.getAddress(),
         0,
         defaultRole.data || "",
-        0
+        0,
       );
 
       const functionScoped = await modifier.scopeTarget.populateTransaction(
         ROLE_KEY1,
-        await testContract.getAddress()
+        await testContract.getAddress(),
       );
       await avatar.exec(
         await modifier.getAddress(),
         0,
         functionScoped.data || "",
-        0
+        0,
       );
 
       const paramScoped = await modifier.scopeFunction.populateTransaction(
@@ -388,35 +388,35 @@ describe("OldTests", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.Calldata,
+            paramType: AbiType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.EqualTo,
             compValue: encodedParam_1,
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.EqualTo,
             compValue: encodedParam_2,
           },
         ],
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
       await avatar.exec(
         await modifier.getAddress(),
         0,
         paramScoped.data || "",
-        0
+        0,
       );
 
       const mint = await testContract.mint.populateTransaction(
         user1.address,
-        98
+        98,
       );
 
       await expect(
@@ -424,8 +424,8 @@ describe("OldTests", async () => {
           await testContract.getAddress(),
           0,
           mint.data || "",
-          0
-        )
+          0,
+        ),
       )
         .to.be.revertedWithCustomError(modifier, "ConditionViolation")
         .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
@@ -439,30 +439,30 @@ describe("OldTests", async () => {
       const assign = await modifier.assignRoles.populateTransaction(
         user1.address,
         [ROLE_KEY1],
-        [true]
+        [true],
       );
       await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
 
       const defaultRole = await modifier.setDefaultRole.populateTransaction(
         user1.address,
-        ROLE_KEY1
+        ROLE_KEY1,
       );
       await avatar.exec(
         await modifier.getAddress(),
         0,
         defaultRole.data || "",
-        0
+        0,
       );
 
       const functionScoped = await modifier.scopeTarget.populateTransaction(
         ROLE_KEY1,
-        await testContract.getAddress()
+        await testContract.getAddress(),
       );
       await avatar.exec(
         await modifier.getAddress(),
         0,
         functionScoped.data || "",
-        0
+        0,
       );
 
       const paramScoped = await modifier.scopeFunction.populateTransaction(
@@ -472,35 +472,35 @@ describe("OldTests", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.Calldata,
+            paramType: AbiType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.EqualTo,
             compValue: encodedParam_1,
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.EqualTo,
             compValue: encodedParam_2,
           },
         ],
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
       await avatar.exec(
         await modifier.getAddress(),
         0,
         paramScoped.data || "",
-        0
+        0,
       );
 
       const mint = await testContract.mint.populateTransaction(
         user1.address,
-        99
+        99,
       );
 
       await expect(
@@ -508,8 +508,8 @@ describe("OldTests", async () => {
           await testContract.getAddress(),
           0,
           mint.data || "",
-          0
-        )
+          0,
+        ),
       ).to.emit(testContract, "Mint");
     });
 
@@ -520,31 +520,31 @@ describe("OldTests", async () => {
       const assign = await modifier.assignRoles.populateTransaction(
         user1.address,
         [ROLE_KEY1],
-        [true]
+        [true],
       );
 
       await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
 
       const defaultRole = await modifier.setDefaultRole.populateTransaction(
         user1.address,
-        ROLE_KEY1
+        ROLE_KEY1,
       );
       await avatar.exec(
         await modifier.getAddress(),
         0,
         defaultRole.data || "",
-        0
+        0,
       );
 
       const functionScoped = await modifier.scopeTarget.populateTransaction(
         ROLE_KEY1,
-        await testContract.getAddress()
+        await testContract.getAddress(),
       );
       await avatar.exec(
         await modifier.getAddress(),
         0,
         functionScoped.data || "",
-        0
+        0,
       );
 
       const paramScoped = await modifier.scopeFunction.populateTransaction(
@@ -552,13 +552,13 @@ describe("OldTests", async () => {
         await testContract.getAddress(),
         testContract.interface.getFunction("testDynamic").selector,
         conditionTree,
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
       await avatar.exec(
         await modifier.getAddress(),
         0,
         paramScoped.data || "",
-        0
+        0,
       );
 
       const dynamic = await testContract.testDynamic.populateTransaction(
@@ -568,7 +568,7 @@ describe("OldTests", async () => {
         true,
         3,
         "weeeeeeee",
-        "This is an input that is larger than 32 bytes and must be scanned for correctness"
+        "This is an input that is larger than 32 bytes and must be scanned for correctness",
       );
 
       await expect(
@@ -576,8 +576,8 @@ describe("OldTests", async () => {
           await testContract.getAddress(),
           0,
           dynamic.data || "",
-          0
-        )
+          0,
+        ),
       )
         .to.be.revertedWithCustomError(modifier, "ConditionViolation")
         .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
@@ -590,31 +590,31 @@ describe("OldTests", async () => {
       const assign = await modifier.assignRoles.populateTransaction(
         user1.address,
         [ROLE_KEY1],
-        [true]
+        [true],
       );
 
       await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
 
       const defaultRole = await modifier.setDefaultRole.populateTransaction(
         user1.address,
-        ROLE_KEY1
+        ROLE_KEY1,
       );
       await avatar.exec(
         await modifier.getAddress(),
         0,
         defaultRole.data || "",
-        0
+        0,
       );
 
       const functionScoped = await modifier.scopeTarget.populateTransaction(
         ROLE_KEY1,
-        await testContract.getAddress()
+        await testContract.getAddress(),
       );
       await avatar.exec(
         await modifier.getAddress(),
         0,
         functionScoped.data || "",
-        0
+        0,
       );
 
       const paramScoped = await modifier.scopeFunction.populateTransaction(
@@ -622,14 +622,14 @@ describe("OldTests", async () => {
         await testContract.getAddress(),
         "0x273454bf",
         conditionTree,
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
 
       await avatar.exec(
         await modifier.getAddress(),
         0,
         paramScoped.data || "",
-        0
+        0,
       );
 
       const dynamic = await testContract.testDynamic.populateTransaction(
@@ -639,7 +639,7 @@ describe("OldTests", async () => {
         true,
         3,
         "weeeeeeee",
-        "This is an input that is larger than 32 bytes and must be scanned for correctness"
+        "This is an input that is larger than 32 bytes and must be scanned for correctness",
       );
 
       await expect(
@@ -647,8 +647,8 @@ describe("OldTests", async () => {
           await testContract.getAddress(),
           0,
           dynamic.data || "",
-          0
-        )
+          0,
+        ),
       ).to.emit(testContract, "TestDynamic");
     });
 
@@ -669,30 +669,30 @@ describe("OldTests", async () => {
       const assign = await modifier.assignRoles.populateTransaction(
         user1.address,
         [ROLE_KEY1],
-        [true]
+        [true],
       );
       await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
 
       const defaultRole = await modifier.setDefaultRole.populateTransaction(
         user1.address,
-        ROLE_KEY1
+        ROLE_KEY1,
       );
       await avatar.exec(
         await modifier.getAddress(),
         0,
         defaultRole.data || "",
-        0
+        0,
       );
 
       const scopeTarget = await modifier.scopeTarget.populateTransaction(
         ROLE_KEY1,
-        await testContract.getAddress()
+        await testContract.getAddress(),
       );
       await avatar.exec(
         await modifier.getAddress(),
         0,
         scopeTarget.data || "",
-        0
+        0,
       );
 
       const paramScoped = await modifier.scopeFunction.populateTransaction(
@@ -702,30 +702,30 @@ describe("OldTests", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.Calldata,
+            paramType: AbiType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.EqualTo,
             compValue: encodedParam_1,
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.EqualTo,
             compValue: encodedParam_2,
           },
         ],
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
       await avatar.exec(
         await modifier.getAddress(),
         0,
         paramScoped.data || "",
-        0
+        0,
       );
 
       const paramScoped_2 = await modifier.scopeFunction.populateTransaction(
@@ -733,13 +733,13 @@ describe("OldTests", async () => {
         await testContract.getAddress(),
         "0x273454bf",
         conditionTree,
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
       await avatar.exec(
         await modifier.getAddress(),
         0,
         paramScoped_2.data || "",
-        0
+        0,
       );
 
       const tx_bad = {
@@ -756,11 +756,11 @@ describe("OldTests", async () => {
           0,
           (
             await multisend.multiSend.populateTransaction(
-              encodeMultisendPayload([tx_1, tx_1, tx_3, tx_bad, tx_1, tx_3])
+              encodeMultisendPayload([tx_1, tx_1, tx_3, tx_bad, tx_1, tx_3]),
             )
           ).data as string,
-          1
-        )
+          1,
+        ),
       )
         .to.be.revertedWithCustomError(modifier, "ConditionViolation")
         .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
@@ -781,30 +781,30 @@ describe("OldTests", async () => {
       const assign = await modifier.assignRoles.populateTransaction(
         user1.address,
         [ROLE_KEY1],
-        [true]
+        [true],
       );
       await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
 
       const defaultRole = await modifier.setDefaultRole.populateTransaction(
         user1.address,
-        ROLE_KEY1
+        ROLE_KEY1,
       );
       await avatar.exec(
         await modifier.getAddress(),
         0,
         defaultRole.data || "",
-        0
+        0,
       );
 
       const functionScoped = await modifier.scopeTarget.populateTransaction(
         ROLE_KEY1,
-        await testContract.getAddress()
+        await testContract.getAddress(),
       );
       await avatar.exec(
         await modifier.getAddress(),
         0,
         functionScoped.data || "",
-        0
+        0,
       );
 
       const paramScoped = await modifier.scopeFunction.populateTransaction(
@@ -814,36 +814,36 @@ describe("OldTests", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.Calldata,
+            paramType: AbiType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.EqualTo,
             compValue: encodedParam_1,
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.EqualTo,
             compValue: encodedParam_2,
           },
         ],
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
 
       await avatar.exec(
         await modifier.getAddress(),
         0,
         paramScoped.data || "",
-        0
+        0,
       );
 
       let multisendCalldata = (
         await multisend.multiSend.populateTransaction(
-          encodeMultisendPayload([tx_1])
+          encodeMultisendPayload([tx_1]),
         )
       ).data as string;
 
@@ -856,8 +856,8 @@ describe("OldTests", async () => {
           await multisend.getAddress(),
           0,
           multisendCalldata,
-          1
-        )
+          1,
+        ),
       ).to.be.revertedWithCustomError(modifier, "MalformedMultiEntrypoint");
     });
 
@@ -878,30 +878,30 @@ describe("OldTests", async () => {
       const assign = await modifier.assignRoles.populateTransaction(
         user1.address,
         [ROLE_KEY1],
-        [true]
+        [true],
       );
       await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
 
       const defaultRole = await modifier.setDefaultRole.populateTransaction(
         user1.address,
-        ROLE_KEY1
+        ROLE_KEY1,
       );
       await avatar.exec(
         await modifier.getAddress(),
         0,
         defaultRole.data || "",
-        0
+        0,
       );
 
       const scopeTarget = await modifier.scopeTarget.populateTransaction(
         ROLE_KEY1,
-        await testContract.getAddress()
+        await testContract.getAddress(),
       );
       await avatar.exec(
         await modifier.getAddress(),
         0,
         scopeTarget.data || "",
-        0
+        0,
       );
 
       const paramScoped = await modifier.scopeFunction.populateTransaction(
@@ -911,30 +911,30 @@ describe("OldTests", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.Calldata,
+            paramType: AbiType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.EqualTo,
             compValue: encodedParam_1,
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.EqualTo,
             compValue: encodedParam_2,
           },
         ],
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
       await avatar.exec(
         await modifier.getAddress(),
         0,
         paramScoped.data || "",
-        0
+        0,
       );
 
       const paramScoped_2 = await modifier.scopeFunction.populateTransaction(
@@ -942,18 +942,18 @@ describe("OldTests", async () => {
         await testContract.getAddress(),
         "0x273454bf",
         conditionTree,
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
       await avatar.exec(
         await modifier.getAddress(),
         0,
         paramScoped_2.data || "",
-        0
+        0,
       );
 
       const multisendCalldata = (
         await multisend.multiSend.populateTransaction(
-          encodeMultisendPayload([tx_1, tx_3, tx_1, tx_3])
+          encodeMultisendPayload([tx_1, tx_3, tx_1, tx_3]),
         )
       ).data as string;
 
@@ -962,8 +962,8 @@ describe("OldTests", async () => {
           await multisend.getAddress(),
           0,
           multisendCalldata,
-          1
-        )
+          1,
+        ),
       ).to.emit(testContract, "TestDynamic");
     });
   });
@@ -975,18 +975,18 @@ describe("OldTests", async () => {
       const allowTargetAddress = await modifier.allowTarget.populateTransaction(
         ROLE_KEY1,
         await testContract.getAddress(),
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
       await avatar.exec(
         await modifier.getAddress(),
         0,
         allowTargetAddress.data || "",
-        0
+        0,
       );
 
       const mint = await testContract.mint.populateTransaction(
         user1.address,
-        99
+        99,
       );
 
       await expect(
@@ -994,8 +994,8 @@ describe("OldTests", async () => {
           await testContract.getAddress(),
           0,
           mint.data || "",
-          0
-        )
+          0,
+        ),
       )
         .to.be.revertedWithCustomError(modifier, `NotAuthorized`)
         .withArgs(user1.address);
@@ -1007,36 +1007,36 @@ describe("OldTests", async () => {
       const assign = await modifier.assignRoles.populateTransaction(
         user1.address,
         [ROLE_KEY1],
-        [true]
+        [true],
       );
       await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
 
       const allowTargetAddress = await modifier.allowTarget.populateTransaction(
         ROLE_KEY1,
         await testContract.getAddress(),
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
       await avatar.exec(
         await modifier.getAddress(),
         0,
         allowTargetAddress.data || "",
-        0
+        0,
       );
 
       const defaultRole = await modifier.setDefaultRole.populateTransaction(
         user1.address,
-        ROLE_KEY1
+        ROLE_KEY1,
       );
       await avatar.exec(
         await modifier.getAddress(),
         0,
         defaultRole.data || "",
-        0
+        0,
       );
 
       const mint = await testContract.mint.populateTransaction(
         user1.address,
-        99
+        99,
       );
 
       const someOtherAddress = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
@@ -1045,13 +1045,13 @@ describe("OldTests", async () => {
           someOtherAddress,
           0,
           mint.data || "",
-          0
-        )
+          0,
+        ),
       )
         .to.be.revertedWithCustomError(modifier, "ConditionViolation")
         .withArgs(
           PermissionCheckerStatus.TargetAddressNotAllowed,
-          BYTES32_ZERO
+          BYTES32_ZERO,
         );
     });
 
@@ -1061,37 +1061,37 @@ describe("OldTests", async () => {
       const assign = await modifier.assignRoles.populateTransaction(
         user1.address,
         [ROLE_KEY1],
-        [true]
+        [true],
       );
       await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
 
       const allowTargetAddress = await modifier.allowTarget.populateTransaction(
         ROLE_KEY1,
         await testContract.getAddress(),
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
       await avatar.exec(
         await modifier.getAddress(),
         0,
         allowTargetAddress.data || "",
-        0
+        0,
       );
 
       const defaultRole = await modifier.setDefaultRole.populateTransaction(
         user1.address,
-        ROLE_KEY1
+        ROLE_KEY1,
       );
 
       await avatar.exec(
         await modifier.getAddress(),
         0,
         defaultRole.data || "",
-        0
+        0,
       );
 
       const mint = await testContract.mint.populateTransaction(
         user1.address,
-        99
+        99,
       );
 
       await expect(
@@ -1099,8 +1099,8 @@ describe("OldTests", async () => {
           await testContract.getAddress(),
           0,
           mint.data || "",
-          0
-        )
+          0,
+        ),
       ).to.emit(testContract, "Mint");
     });
   });
@@ -1108,7 +1108,7 @@ describe("OldTests", async () => {
   describe("execTransactionWithRole()", () => {
     it("reverts if inner tx reverted and shouldRevert true", async () => {
       const { modifier, testContract, owner, invoker } = await loadFixture(
-        setupRolesWithOwnerAndInvoker
+        setupRolesWithOwnerAndInvoker,
       );
 
       const SHOULD_REVERT = true;
@@ -1124,7 +1124,7 @@ describe("OldTests", async () => {
         .allowTarget(
           ROLE_KEY,
           await testContract.getAddress(),
-          ExecutionOptions.None
+          ExecutionOptions.None,
         );
 
       await expect(
@@ -1136,13 +1136,13 @@ describe("OldTests", async () => {
             fnThatReverts.data as string,
             0,
             ROLE_KEY,
-            SHOULD_REVERT
-          )
+            SHOULD_REVERT,
+          ),
       ).to.be.revertedWithCustomError(modifier, "ModuleTransactionFailed");
     });
     it("does not revert if inner tx reverted and shouldRevert false", async () => {
       const { modifier, testContract, owner, invoker } = await loadFixture(
-        setupRolesWithOwnerAndInvoker
+        setupRolesWithOwnerAndInvoker,
       );
 
       const SHOULD_REVERT = true;
@@ -1158,7 +1158,7 @@ describe("OldTests", async () => {
         .allowTarget(
           ROLE_KEY,
           await testContract.getAddress(),
-          ExecutionOptions.None
+          ExecutionOptions.None,
         );
 
       await expect(
@@ -1170,8 +1170,8 @@ describe("OldTests", async () => {
             fnThatReverts.data as string,
             0,
             ROLE_KEY,
-            !SHOULD_REVERT
-          )
+            !SHOULD_REVERT,
+          ),
       ).to.not.be.reverted;
     });
   });
@@ -1179,7 +1179,7 @@ describe("OldTests", async () => {
   describe("execTransactionWithRoleReturnData()", () => {
     it("reverts if called from module not assigned any role", async () => {
       const { modifier, testContract, invoker } = await loadFixture(
-        setupRolesWithOwnerAndInvoker
+        setupRolesWithOwnerAndInvoker,
       );
       const [user1] = await hre.ethers.getSigners();
 
@@ -1187,7 +1187,7 @@ describe("OldTests", async () => {
 
       const mint = await testContract.mint.populateTransaction(
         user1.address,
-        99
+        99,
       );
 
       await expect(
@@ -1199,14 +1199,14 @@ describe("OldTests", async () => {
             mint.data as string,
             0,
             ROLE_KEY,
-            !SHOULD_REVERT
-          )
+            !SHOULD_REVERT,
+          ),
       ).to.be.revertedWithCustomError(modifier, "NoMembership");
     });
 
     it("reverts if inner tx reverted and shouldRevert true", async () => {
       const { modifier, testContract, owner, invoker } = await loadFixture(
-        setupRolesWithOwnerAndInvoker
+        setupRolesWithOwnerAndInvoker,
       );
 
       const SHOULD_REVERT = true;
@@ -1222,7 +1222,7 @@ describe("OldTests", async () => {
         .allowTarget(
           ROLE_KEY,
           await testContract.getAddress(),
-          ExecutionOptions.None
+          ExecutionOptions.None,
         );
 
       await expect(
@@ -1234,14 +1234,14 @@ describe("OldTests", async () => {
             fnThatReverts.data as string,
             0,
             ROLE_KEY,
-            SHOULD_REVERT
-          )
+            SHOULD_REVERT,
+          ),
       ).to.be.revertedWithCustomError(modifier, "ModuleTransactionFailed");
     });
 
     it("does not revert if inner tx reverted and shouldRevert false", async () => {
       const { modifier, testContract, owner, invoker } = await loadFixture(
-        setupRolesWithOwnerAndInvoker
+        setupRolesWithOwnerAndInvoker,
       );
 
       const SHOULD_REVERT = true;
@@ -1257,7 +1257,7 @@ describe("OldTests", async () => {
         .allowTarget(
           ROLE_KEY,
           await testContract.getAddress(),
-          ExecutionOptions.None
+          ExecutionOptions.None,
         );
 
       await expect(
@@ -1269,8 +1269,8 @@ describe("OldTests", async () => {
             fnThatReverts.data as string,
             0,
             ROLE_KEY,
-            !SHOULD_REVERT
-          )
+            !SHOULD_REVERT,
+          ),
       ).to.be.not.be.reverted;
     });
 
@@ -1293,19 +1293,19 @@ describe("OldTests", async () => {
       const assign = await modifier.assignRoles.populateTransaction(
         user1.address,
         [ROLE_KEY],
-        [true]
+        [true],
       );
       await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
 
       const scopeTarget = await modifier.scopeTarget.populateTransaction(
         ROLE_KEY,
-        await testContract.getAddress()
+        await testContract.getAddress(),
       );
       await avatar.exec(
         await modifier.getAddress(),
         0,
         scopeTarget.data || "",
-        0
+        0,
       );
 
       const paramScoped = await modifier.scopeFunction.populateTransaction(
@@ -1315,30 +1315,30 @@ describe("OldTests", async () => {
         [
           {
             parent: 0,
-            paramType: ParameterType.Calldata,
+            paramType: AbiType.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.EqualTo,
             compValue: encodedParam_1,
           },
           {
             parent: 0,
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.EqualTo,
             compValue: encodedParam_2,
           },
         ],
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
       await avatar.exec(
         await modifier.getAddress(),
         0,
         paramScoped.data || "",
-        0
+        0,
       );
 
       const paramScoped_2 = await modifier.scopeFunction.populateTransaction(
@@ -1346,19 +1346,19 @@ describe("OldTests", async () => {
         await testContract.getAddress(),
         "0x273454bf",
         conditionTree,
-        ExecutionOptions.None
+        ExecutionOptions.None,
       );
 
       await avatar.exec(
         await modifier.getAddress(),
         0,
         paramScoped_2.data || "",
-        0
+        0,
       );
 
       const multisendCalldata = (
         await multisend.multiSend.populateTransaction(
-          encodeMultisendPayload([tx_1, tx_3, tx_1, tx_3])
+          encodeMultisendPayload([tx_1, tx_3, tx_1, tx_3]),
         )
       ).data as string;
 
@@ -1369,8 +1369,8 @@ describe("OldTests", async () => {
           multisendCalldata,
           1,
           ROLE_KEY,
-          !SHOULD_REVERT
-        )
+          !SHOULD_REVERT,
+        ),
       ).to.emit(testContract, "TestDynamic");
     });
   });

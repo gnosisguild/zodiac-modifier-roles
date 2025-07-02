@@ -104,7 +104,7 @@ contract Roles is
         address to,
         uint256 value,
         bytes calldata data,
-        Enum.Operation operation
+        Operation operation
     ) public override returns (bool success) {
         Consumption[] memory consumptions = _authorize(
             defaultRoles[msg.sender],
@@ -128,7 +128,7 @@ contract Roles is
         address to,
         uint256 value,
         bytes calldata data,
-        Enum.Operation operation
+        Operation operation
     ) public override returns (bool success, bytes memory returnData) {
         Consumption[] memory consumptions = _authorize(
             defaultRoles[msg.sender],
@@ -154,7 +154,7 @@ contract Roles is
         address to,
         uint256 value,
         bytes calldata data,
-        Enum.Operation operation,
+        Operation operation,
         bytes32 roleKey,
         bool shouldRevert
     ) public returns (bool success) {
@@ -185,7 +185,7 @@ contract Roles is
         address to,
         uint256 value,
         bytes calldata data,
-        Enum.Operation operation,
+        Operation operation,
         bytes32 roleKey,
         bool shouldRevert
     ) public returns (bool success, bytes memory returnData) {
