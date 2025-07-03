@@ -28,7 +28,7 @@ library Topology2 {
         }
 
         result._type = _type;
-        (uint256 start, uint256 length) = _children(conditions, index);
+        (uint256 start, uint256 length) = childBounds(conditions, index);
         if (length > 0) {
             result.children = new Result[](_type == AbiType.Array ? 1 : length);
             for (uint256 i = 0; i < result.children.length; i++) {
@@ -41,7 +41,7 @@ library Topology2 {
         ConditionFlat[] memory conditions,
         uint256 index
     ) internal pure returns (Result memory result) {
-        (uint256 childrenStart, uint256 childrenLength) = _children(
+        (uint256 childrenStart, uint256 childrenLength) = childBounds(
             conditions,
             index
         );
@@ -116,7 +116,7 @@ library Topology2 {
             result.children[i] = typeTree(conditions, childrenStart + i);
 
             if (!isVariant) {
-                bytes32 currentId = _typeTreeId(result.children[i]);
+                bytes32 currentId = typeTreeId(result.children[i]);
 
                 if (id == 0) {
                     id = currentId;
@@ -129,7 +129,7 @@ library Topology2 {
         return isVariant ? result : result.children[0];
     }
 
-    function _children(
+    function childBounds(
         ConditionFlat[] memory conditions,
         uint256 index
     ) internal pure returns (uint256 start, uint256 length) {
@@ -146,7 +146,7 @@ library Topology2 {
         }
     }
 
-    function _typeTreeId(Result memory tree) private pure returns (bytes32) {
+    function typeTreeId(Result memory tree) internal pure returns (bytes32) {
         uint256 childCount = tree.children.length;
         if (childCount == 0) {
             return bytes32(uint256(tree._type));
@@ -156,7 +156,7 @@ library Topology2 {
         if (childCount == 1) {
             return
                 keccak256(
-                    abi.encodePacked(tree._type, _typeTreeId(tree.children[0]))
+                    abi.encodePacked(tree._type, typeTreeId(tree.children[0]))
                 );
         }
 
@@ -166,15 +166,15 @@ library Topology2 {
                 keccak256(
                     abi.encodePacked(
                         tree._type,
-                        _typeTreeId(tree.children[0]),
-                        _typeTreeId(tree.children[1])
+                        typeTreeId(tree.children[0]),
+                        typeTreeId(tree.children[1])
                     )
                 );
         }
 
         bytes32[] memory ids = new bytes32[](childCount);
         for (uint256 i = 0; i < childCount; ++i) {
-            ids[i] = _typeTreeId(tree.children[i]);
+            ids[i] = typeTreeId(tree.children[i]);
         }
         return keccak256(abi.encodePacked(tree._type, ids));
     }
