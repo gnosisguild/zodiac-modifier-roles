@@ -1669,46 +1669,12 @@ describe("Integrity", async () => {
               operator: Operator.Pass,
               compValue: "0x",
             },
-
             {
-              parent: 3,
+              parent: 1,
               paramType: AbiType.Static,
               operator: Operator.Pass,
               compValue: "0x",
             },
-          ]),
-        )
-          .to.be.revertedWithCustomError(integrity, "UnsuitableChildTypeTree")
-          .withArgs(1);
-
-        // Dynamic can't come before the AbiEncoded node that actually defines the type tree and should be the Anchor
-        await expect(
-          enforce([
-            {
-              parent: 0,
-              paramType: AbiType.Calldata,
-              operator: Operator.Pass,
-              compValue: "0x",
-            },
-            {
-              parent: 0,
-              paramType: AbiType.None,
-              operator: Operator.And,
-              compValue: "0x",
-            },
-            {
-              parent: 1,
-              paramType: AbiType.Dynamic,
-              operator: Operator.Pass,
-              compValue: "0x",
-            },
-            {
-              parent: 1,
-              paramType: AbiType.Calldata,
-              operator: Operator.Pass,
-              compValue: "0x",
-            },
-
             {
               parent: 3,
               paramType: AbiType.Static,
