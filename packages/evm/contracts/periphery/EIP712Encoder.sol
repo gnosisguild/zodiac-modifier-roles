@@ -2,7 +2,6 @@
 pragma solidity >=0.8.21 <0.9.0;
 
 import "../AbiDecoder.sol";
-import "../Convert.sol";
 
 /**
  * @title EIP712Encoder - Encodes and hashes EIP-712 typed structured data
@@ -65,7 +64,7 @@ library EIP712Encoder {
         uint256 index
     ) private pure returns (bytes32) {
         Payload memory payload = AbiDecoder
-            .inspect(data, Convert.toTree(types.typeTree, index))
+            .inspect(data, _toTree(types.typeTree, index))
             .children[0];
 
         return _hashBlock(data, types, payload);
@@ -128,6 +127,21 @@ library EIP712Encoder {
             return _hashDynamic(data, field);
         } else {
             return _hashBlock(data, types, field);
+        }
+    }
+
+    function _toTree(
+        TypeTreeFlat[] calldata flatTypeTree,
+        uint256 index
+    ) private pure returns (TypeTree memory typeTree) {
+        typeTree._type = flatTypeTree[index]._type;
+        typeTree.bfsIndex = index;
+        if (flatTypeTree[index].fields.length > 0) {
+            uint256[] memory fields = flatTypeTree[index].fields;
+            typeTree.children = new TypeTree[](fields.length);
+            for (uint256 i = 0; i < fields.length; i++) {
+                typeTree.children[i] = _toTree(flatTypeTree, fields[i]);
+            }
         }
     }
 }
