@@ -5,7 +5,6 @@ import "./_Core.sol";
 import "./_Periphery.sol";
 import "./AbiDecoder.sol";
 import "./Consumptions.sol";
-import "./Topology.sol";
 
 import "./packers/BufferPacker.sol";
 
@@ -218,11 +217,11 @@ abstract contract PermissionChecker is Core, Periphery {
     ) private view returns (Status, Result memory) {
         (
             Condition memory condition,
-            AbiTypeTree[] memory typeTree,
+            TypeTree memory typeTree,
             Consumption[] memory consumptions
         ) = _load(role, key);
 
-        Payload memory payload = AbiDecoder.inspect(data, typeTree, 0);
+        Payload memory payload = AbiDecoder.inspect(data, typeTree);
 
         context.consumptions = context.consumptions.length > 0
             ? Consumptions.merge(context.consumptions, consumptions)

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0
 pragma solidity >=0.8.21 <0.9.0;
 
-import "./Types.sol";
+import "./AbiTypes.sol";
 
 /**
  * @title AbiDecoder - A library that decodes abi encoded calldata and returns
@@ -18,18 +18,16 @@ library AbiDecoder {
      *
      * @param data     The encoded transaction data to be inspected.
      * @param typeTree Array of ABI type definitions forming the typeTree.
-     * @param index    Entrypoint in typeTree.
      * @return result  The mapped location and size of parameters in the encoded
      *                 transaction data.
      */
     function inspect(
         bytes calldata data,
-        AbiTypeTree[] memory typeTree,
-        uint256 index
+        TypeTree memory typeTree
     ) internal pure returns (Payload memory result) {
         assert(
-            typeTree[index]._type == AbiType.Calldata ||
-                typeTree[index]._type == AbiType.AbiEncoded
+            typeTree._type == AbiType.Calldata ||
+                typeTree._type == AbiType.AbiEncoded
         );
         /*
          * The parameter encoding area consists of a head region, divided into
@@ -43,10 +41,9 @@ library AbiDecoder {
          */
         __block__(
             data,
-            typeTree[index]._type == AbiType.Calldata ? 4 : 0,
+            typeTree._type == AbiType.Calldata ? 4 : 0,
             typeTree,
-            index,
-            typeTree[index].fields.length,
+            typeTree.children.length,
             result
         );
         result.size = data.length;
@@ -58,16 +55,14 @@ library AbiDecoder {
      *
      * @param data     The encoded transaction data.
      * @param location The current absolute position within calldata.
-     * @param typeTree Array of ABI type definitions forming the typeTree.
-     * @param index    Index of current typeTree node.
+     * @param typeTree Todo
      * @param result   The output payload containing the parameter's location
      *                 and size in calldata.
      */
     function _walk(
         bytes calldata data,
         uint256 location,
-        AbiTypeTree[] memory typeTree,
-        uint256 index,
+        TypeTree memory typeTree,
         Payload memory result
     ) private pure {
         if (location + 32 > data.length) {
@@ -75,13 +70,13 @@ library AbiDecoder {
             return;
         }
 
-        AbiType _type = typeTree[index]._type;
+        AbiType _type = typeTree._type;
 
         if (_type == AbiType.Static) {
             result.size = 32;
         } else if (_type == AbiType.Dynamic) {
-            if (typeTree[index].fields.length > 0) {
-                _variant(data, location, typeTree, index, result);
+            if (typeTree.children.length > 0) {
+                _variant(data, location, typeTree, result);
             }
 
             result.size = 32 + _ceil32(uint256(word(data, location)));
@@ -90,8 +85,7 @@ library AbiDecoder {
                 data,
                 location,
                 typeTree,
-                index,
-                typeTree[index].fields.length,
+                typeTree.children.length,
                 result
             );
         } else if (_type == AbiType.Array) {
@@ -99,7 +93,6 @@ library AbiDecoder {
                 data,
                 location + 32,
                 typeTree,
-                index,
                 uint256(word(data, location)),
                 result
             );
@@ -109,13 +102,12 @@ library AbiDecoder {
                 data,
                 location + 32 + (_type == AbiType.Calldata ? 4 : 0),
                 typeTree,
-                index,
-                typeTree[index].fields.length,
+                typeTree.children.length,
                 result
             );
             result.size = 32 + _ceil32(uint256(word(data, location)));
         }
-        result.index = index;
+        result.index = typeTree.bfsIndex;
         result.location = location;
     }
 
@@ -127,8 +119,6 @@ library AbiDecoder {
      * @param data        The encoded transaction data (in calldata for gas
      *                    efficiency).
      * @param location    Starting byte position of the block in calldata.
-     * @param typeTree    Array of ABI type definitions forming the typeTree.
-     * @param index       Index of the current node in the `typeTree`.
      * @param blockLength Number of elements to process in this block.
      * @param result      The decoded `Payload`.
      *
@@ -139,13 +129,10 @@ library AbiDecoder {
     function __block__(
         bytes calldata data,
         uint256 location,
-        AbiTypeTree[] memory typeTree,
-        uint256 index,
+        TypeTree memory node,
         uint256 blockLength,
         Payload memory result
     ) private pure {
-        AbiTypeTree memory node = typeTree[index];
-
         Payload[] memory children = new Payload[](blockLength);
 
         bool isInline;
@@ -154,14 +141,13 @@ library AbiDecoder {
             if (i == 0 || node._type != AbiType.Array) {
                 // For structs or the first element of an array, calculate if element inline
                 // For array elements after the first, they all have the same inline status
-                isInline = _isInline(typeTree, node.fields[i]);
+                isInline = _isInline(node.children[i]);
             }
 
             _walk(
                 data,
                 _locationInBlock(data, location, offset, isInline),
-                typeTree,
-                node.fields[node._type == AbiType.Array ? 0 : i],
+                node.children[node._type == AbiType.Array ? 0 : i],
                 children[i]
             );
             if (children[i].overflown) {
@@ -184,17 +170,16 @@ library AbiDecoder {
     function _variant(
         bytes calldata data,
         uint256 location,
-        AbiTypeTree[] memory typeTree,
-        uint256 index,
+        TypeTree memory typeTree,
         Payload memory result
     ) private pure {
-        uint256[] memory fields = typeTree[index].fields;
+        uint256 length = typeTree.children.length;
 
         result.variant = true;
-        result.children = new Payload[](fields.length);
+        result.children = new Payload[](length);
 
-        for (uint256 i; i < fields.length; i++) {
-            _walk(data, location, typeTree, fields[i], result.children[i]);
+        for (uint256 i; i < length; i++) {
+            _walk(data, location, typeTree.children[i], result.children[i]);
         }
     }
 
@@ -235,15 +220,10 @@ library AbiDecoder {
      *      Additionally, nested `AbiEncoded*` nodes are always embedded within
      *      a dynamic placeholder node, making them non-inline as well.
      *
-     * @param typeTree Array of ABI type definitions forming the typeTree.
-     * @param index    Index of the current node in the typeTree.
      * @return         `true` if the parameter is inline, `false` otherwise.
      */
-    function _isInline(
-        AbiTypeTree[] memory typeTree,
-        uint256 index
-    ) private pure returns (bool) {
-        AbiType _type = typeTree[index]._type;
+    function _isInline(TypeTree memory node) private pure returns (bool) {
+        AbiType _type = node._type;
         if (_type == AbiType.Static) {
             return true;
         } else if (
@@ -254,10 +234,9 @@ library AbiDecoder {
         ) {
             return false;
         } else {
-            uint256 length = typeTree[index].fields.length;
-
+            uint256 length = node.children.length;
             for (uint256 i; i < length; ) {
-                if (!_isInline(typeTree, typeTree[index].fields[i])) {
+                if (!_isInline(node.children[i])) {
                     return false;
                 }
                 unchecked {

@@ -42,7 +42,7 @@ abstract contract PermissionLoader is Core {
         override
         returns (
             Condition memory condition,
-            AbiTypeTree[] memory typeTree,
+            TypeTree memory typeTree,
             Consumption[] memory consumptions
         )
     {
@@ -76,11 +76,8 @@ abstract contract PermissionLoader is Core {
         }
 
         {
-            Topology.Bounds[] memory bounds = Topology.childrenBounds(
-                conditionsFlat
-            );
-            typeTree = Topology.typeTree(conditionsFlat, 0, bounds);
-            _conditionTree(conditionsFlat, compValues, bounds, 0, condition);
+            typeTree = Topology.typeTree(conditionsFlat, 0);
+            _conditionTree(conditionsFlat, compValues, 0, condition);
         }
 
         return (
@@ -95,7 +92,6 @@ abstract contract PermissionLoader is Core {
     function _conditionTree(
         ConditionFlat[] memory conditionsFlat,
         bytes32[] memory compValues,
-        Topology.Bounds[] memory childrenBounds,
         uint256 index,
         Condition memory treeNode
     ) private pure {
@@ -107,19 +103,20 @@ abstract contract PermissionLoader is Core {
         treeNode.operator = conditionFlat.operator;
         treeNode.compValue = compValues[index];
 
-        if (childrenBounds[index].length == 0) {
+        (uint256 start, uint256 length) = Topology.childBounds(
+            conditionsFlat,
+            index
+        );
+
+        if (length == 0) {
             return;
         }
-
-        uint256 start = childrenBounds[index].start;
-        uint256 length = childrenBounds[index].length;
 
         treeNode.children = new Condition[](length);
         for (uint j; j < length; ) {
             _conditionTree(
                 conditionsFlat,
                 compValues,
-                childrenBounds,
                 start + j,
                 treeNode.children[j]
             );

@@ -3,36 +3,18 @@ pragma solidity >=0.8.17 <0.9.0;
 
 import "../Topology.sol";
 
-import "../Topology2.sol";
-
 contract MockTopology {
     function typeTree(
         ConditionFlat[] memory conditions
-    ) public pure returns (AbiTypeTree[] memory result) {
-        return
-            Topology.typeTree(
-                conditions,
-                0,
-                Topology.childrenBounds(conditions)
-            );
+    ) public pure returns (FlatNode[] memory result) {
+        return flattenTree(Topology.typeTree(conditions, 0));
     }
 
     function typeTreeAt(
         ConditionFlat[] memory conditions,
         uint256 entrypoint
-    ) public pure returns (AbiTypeTree[] memory result) {
-        return
-            Topology.typeTree(
-                conditions,
-                entrypoint,
-                Topology.childrenBounds(conditions)
-            );
-    }
-
-    function typeTree2(
-        ConditionFlat[] memory conditions
     ) public pure returns (FlatNode[] memory result) {
-        return flattenTree(Topology2.typeTree(conditions, 0));
+        return flattenTree(Topology.typeTree(conditions, entrypoint));
     }
 
     // Flat structure with parent reference
@@ -44,11 +26,11 @@ contract MockTopology {
     // Queue item for BFS
     struct QueueItem {
         uint256 parent;
-        Topology2.Result node;
+        TypeTree node;
     }
 
     function flattenTree(
-        Topology2.Result memory root
+        TypeTree memory root
     ) internal pure returns (FlatNode[] memory result) {
         // Count nodes first to allocate array
         uint256 totalNodes = countNodes(root);
@@ -93,9 +75,7 @@ contract MockTopology {
     }
 
     // Recursive helper to count nodes
-    function countNodes(
-        Topology2.Result memory tree
-    ) private pure returns (uint256) {
+    function countNodes(TypeTree memory tree) private pure returns (uint256) {
         uint256 count;
 
         for (uint256 i = 0; i < tree.children.length; i++) {

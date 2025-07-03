@@ -4,7 +4,7 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { AbiCoder, Interface } from "ethers";
 
 import { AbiType } from "./utils";
-import { AbiTypeTreeStruct } from "../typechain-types/contracts/test/MockDecoder";
+import { TypeTreeFlatStruct } from "../typechain-types/contracts/test/MockDecoder";
 
 const AddressOne = "0x0000000000000000000000000000000000000001";
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
@@ -949,8 +949,8 @@ interface TreeNode {
   children?: TreeNode[];
 }
 
-function treeToFlat(root: TreeNode): AbiTypeTreeStruct[] {
-  const result: AbiTypeTreeStruct[] = [];
+function treeToFlat(root: TreeNode): TypeTreeFlatStruct[] {
+  const result: TypeTreeFlatStruct[] = [];
   const queue: { node: TreeNode; parentIndex: number }[] = [
     { node: root, parentIndex: -1 },
   ];

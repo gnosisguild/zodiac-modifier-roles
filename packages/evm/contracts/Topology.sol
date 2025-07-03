@@ -6,97 +6,170 @@ import "./Types.sol";
 /**
  * @title Topology - a library that provides helper functions for dealing with
  * the flat representation of conditions.
- * @author Cristóvão Honorato - <cristovao.honorato@gnosis.io>
+ *
+ * @author gnosisguild
  */
 library Topology {
-    struct Bounds {
-        uint256 start;
-        uint256 end;
-        uint256 length;
-    }
-
-    function childrenBounds(
-        ConditionFlat[] memory conditions
-    ) internal pure returns (Bounds[] memory result) {
-        uint256 count = conditions.length;
-        assert(count > 0);
-
-        // parents are breadth-first
-        result = new Bounds[](count);
-        result[0].start = type(uint256).max;
-
-        // first item is the root
-        for (uint256 i = 1; i < count; ) {
-            result[i].start = type(uint256).max;
-            Bounds memory parentBounds = result[conditions[i].parent];
-            if (parentBounds.start == type(uint256).max) {
-                parentBounds.start = i;
-            }
-            parentBounds.end = i + 1;
-            parentBounds.length = parentBounds.end - parentBounds.start;
-            unchecked {
-                ++i;
-            }
-        }
-    }
-
     function typeTree(
         ConditionFlat[] memory conditions,
-        uint256 entrypoint,
-        Bounds[] memory bounds
-    ) internal pure returns (AbiTypeTree[] memory result) {
-        result = new AbiTypeTree[](conditions.length - entrypoint);
-        uint256 length = typeTree(conditions, bounds, entrypoint, 0, result);
+        uint256 index
+    ) internal pure returns (TypeTree memory node) {
+        AbiType _type = conditions[index].paramType;
 
-        if (length != conditions.length - entrypoint) {
-            assembly {
-                mstore(result, length)
-            }
-        }
-    }
-
-    function typeTree(
-        ConditionFlat[] memory conditions,
-        Bounds[] memory bounds,
-        uint256 from,
-        uint256 to,
-        AbiTypeTree[] memory result
-    ) internal pure returns (uint256) {
-        AbiType _type = conditions[from].paramType;
-        Operator operator = conditions[from].operator;
-        uint256 start = bounds[from].start;
-        uint256 end = bounds[from].end;
-        bool hasChildren = start < end;
-
+        Operator operator = conditions[index].operator;
         if (operator >= Operator.And && operator <= Operator.Nor) {
-            return typeTree(conditions, bounds, start, to, result);
+            return _variant(conditions, index);
         }
 
-        result[to]._type = _type;
-        if (!hasChildren) {
-            return (to + 1);
+        node._type = _type;
+        (uint256 start, uint256 length) = childBounds(conditions, index);
+        if (length > 0) {
+            node.children = new TypeTree[](_type == AbiType.Array ? 1 : length);
+            for (uint256 i = 0; i < node.children.length; i++) {
+                node.children[i] = typeTree(conditions, i + start);
+            }
+        }
+    }
+
+    function _variant(
+        ConditionFlat[] memory conditions,
+        uint256 index
+    ) private pure returns (TypeTree memory result) {
+        (uint256 childrenStart, uint256 childrenLength) = childBounds(
+            conditions,
+            index
+        );
+        assert(childrenStart > 0);
+
+        // Check if this is a valid variant type structure
+        (bool cantBeVariant, bool hasToBeVariant) = _variantShortcut(
+            conditions,
+            childrenStart,
+            childrenLength
+        );
+
+        if (cantBeVariant) {
+            // Non-variant type found, return first element's tree
+            return typeTree(conditions, childrenStart);
         }
 
-        end = _type == AbiType.Array ? start + 1 : end;
-        uint256[] memory fields = new uint256[](end - start);
+        return
+            _variantResolve(
+                conditions,
+                childrenStart,
+                childrenLength,
+                hasToBeVariant
+            );
+    }
 
-        (uint256 nextTo, uint256 length) = (to + 1, 0);
-        for (from = start; from < end; from++) {
-            uint256 temp = typeTree(conditions, bounds, from, nextTo, result);
-            if (nextTo != temp) {
-                fields[length] = nextTo;
-                nextTo = temp;
+    function _variantShortcut(
+        ConditionFlat[] memory conditions,
+        uint256 start,
+        uint256 length
+    ) private pure returns (bool cantBeVariant, bool hasToBeVariant) {
+        bool hasDynamic;
+        bool hasCalldata;
+        bool hasAbiEncoded;
+        /*
+         * We operate under the assumption that a condition tree reaching
+         * this point has been validated for integrity
+         */
+        for (uint256 i = 0; i < length; i++) {
+            AbiType paramType = conditions[start + i].paramType;
+
+            if (paramType == AbiType.Dynamic) {
+                hasDynamic = true;
+            } else if (paramType == AbiType.Calldata) {
+                hasCalldata = true;
+            } else if (paramType == AbiType.AbiEncoded) {
+                hasAbiEncoded = true;
+            } else if (paramType != AbiType.None) {
+                return (true, false);
+            }
+        }
+
+        // Check if we have mixed types (which creates variants)
+        uint256 typeCount = (hasDynamic ? 1 : 0) +
+            (hasCalldata ? 1 : 0) +
+            (hasAbiEncoded ? 1 : 0);
+
+        return (false, typeCount > 1);
+    }
+
+    function _variantResolve(
+        ConditionFlat[] memory conditions,
+        uint256 childrenStart,
+        uint256 childrenLength,
+        bool isVariant
+    ) private pure returns (TypeTree memory node) {
+        node._type = AbiType.Dynamic;
+        node.children = new TypeTree[](childrenLength);
+
+        bytes32 id;
+        for (uint256 i = 0; i < childrenLength; i++) {
+            node.children[i] = typeTree(conditions, childrenStart + i);
+
+            if (!isVariant) {
+                bytes32 currentId = typeTreeId(node.children[i]);
+
+                if (id == 0) {
+                    id = currentId;
+                } else if (id != currentId) {
+                    isVariant = true;
+                }
+            }
+        }
+
+        return isVariant ? node : node.children[0];
+    }
+
+    function childBounds(
+        ConditionFlat[] memory conditions,
+        uint256 index
+    ) internal pure returns (uint256 start, uint256 length) {
+        for (uint256 i = index + 1; i < conditions.length; i++) {
+            uint256 parent = conditions[i].parent;
+            if (parent == index) {
+                if (start == 0) {
+                    start = i;
+                }
                 length++;
+            } else if (parent > index) {
+                break;
             }
         }
+    }
 
-        result[to].fields = fields;
-        if (length != end - start) {
-            assembly {
-                mstore(fields, length)
-            }
+    function typeTreeId(TypeTree memory tree) internal pure returns (bytes32) {
+        uint256 childCount = tree.children.length;
+        if (childCount == 0) {
+            return bytes32(uint256(tree._type));
         }
 
-        return nextTo;
+        // For single child, avoid array allocation
+        if (childCount == 1) {
+            return
+                keccak256(
+                    abi.encodePacked(tree._type, typeTreeId(tree.children[0]))
+                );
+        }
+
+        // For small counts, unroll the loop
+        if (childCount == 2) {
+            return
+                keccak256(
+                    abi.encodePacked(
+                        tree._type,
+                        typeTreeId(tree.children[0]),
+                        typeTreeId(tree.children[1])
+                    )
+                );
+        }
+
+        bytes32[] memory ids = new bytes32[](childCount);
+        for (uint256 i = 0; i < childCount; ++i) {
+            ids[i] = typeTreeId(tree.children[i]);
+        }
+        return keccak256(abi.encodePacked(tree._type, ids));
     }
 }
