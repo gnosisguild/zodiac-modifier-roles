@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
-
-import "./Topology.sol";
+import "./Topology2.sol";
 
 /**
  * @title Integrity, A library that validates condition integrity, and
  * adherence to the expected input structure and rules.
- * @author Cristóvão Honorato - <cristovao.honorato@gnosis.io>
+ * @author gnosisguild
  */
 library Integrity {
     error UnsuitableRootNode();
@@ -165,19 +164,15 @@ library Integrity {
             }
         }
 
-        Topology.Bounds[] memory childrenBounds = Topology.childrenBounds(
-            conditions
-        );
-
         for (uint256 i = 0; i < conditions.length; i++) {
             ConditionFlat memory condition = conditions[i];
-            Topology.Bounds memory childBounds = childrenBounds[i];
+            (, uint256 childrenLength) = Topology2.childBounds(conditions, i);
 
             if (condition.paramType == AbiType.None) {
                 if (
                     (condition.operator == Operator.EtherWithinAllowance ||
                         condition.operator == Operator.CallWithinAllowance) &&
-                    childBounds.length != 0
+                    childrenLength != 0
                 ) {
                     revert UnsuitableChildCount(i);
                 }
@@ -185,7 +180,7 @@ library Integrity {
                     (condition.operator >= Operator.And &&
                         condition.operator <= Operator.Nor)
                 ) {
-                    if (childBounds.length == 0) {
+                    if (childrenLength == 0) {
                         revert UnsuitableChildCount(i);
                     }
                 }
@@ -193,7 +188,7 @@ library Integrity {
                 condition.paramType == AbiType.Static ||
                 condition.paramType == AbiType.Dynamic
             ) {
-                if (childBounds.length != 0) {
+                if (childrenLength != 0) {
                     revert UnsuitableChildCount(i);
                 }
             } else if (
@@ -201,25 +196,25 @@ library Integrity {
                 condition.paramType == AbiType.Calldata ||
                 condition.paramType == AbiType.AbiEncoded
             ) {
-                if (childBounds.length == 0) {
+                if (childrenLength == 0) {
                     revert UnsuitableChildCount(i);
                 }
             } else {
                 assert(condition.paramType == AbiType.Array);
 
-                if (childBounds.length == 0) {
+                if (childrenLength == 0) {
                     revert UnsuitableChildCount(i);
                 }
 
                 if (
                     (condition.operator == Operator.ArraySome ||
                         condition.operator == Operator.ArrayEvery) &&
-                    childBounds.length != 1
+                    childrenLength != 1
                 ) {
                     revert UnsuitableChildCount(i);
                 } else if (
                     condition.operator == Operator.ArraySubset &&
-                    childBounds.length > 256
+                    childrenLength > 256
                 ) {
                     revert UnsuitableChildCount(i);
                 }
@@ -231,82 +226,67 @@ library Integrity {
             if (
                 ((condition.operator >= Operator.And &&
                     condition.operator <= Operator.Nor) ||
-                    condition.paramType == AbiType.Array) &&
-                childrenBounds[i].length > 1
+                    condition.paramType == AbiType.Array)
             ) {
-                _compatibleSiblingTypes(conditions, i, childrenBounds);
+                if (
+                    !(_isTypeMatch(conditions, i) ||
+                        _isTypeEquivalence(conditions, i))
+                ) {
+                    revert UnsuitableChildTypeTree(i);
+                }
             }
         }
 
-        AbiTypeTree[] memory typeTree = Topology.typeTree(
-            conditions,
-            0,
-            childrenBounds
-        );
-
-        if (typeTree[0]._type != AbiType.Calldata) {
+        if (Topology2.typeTree(conditions, 0)._type != AbiType.Calldata) {
             revert UnsuitableRootNode();
-        }
-    }
-
-    function _compatibleSiblingTypes(
-        ConditionFlat[] memory conditions,
-        uint256 index,
-        Topology.Bounds[] memory childrenBounds
-    ) private pure {
-        uint256 start = childrenBounds[index].start;
-        uint256 end = childrenBounds[index].end;
-
-        for (uint256 j = start + 1; j < end; ++j) {
-            if (
-                !_isTypeMatch(conditions, start, j, childrenBounds) &&
-                !_isTypeEquivalent(conditions, start, j, childrenBounds)
-            ) {
-                revert UnsuitableChildTypeTree(index);
-            }
         }
     }
 
     function _isTypeMatch(
         ConditionFlat[] memory conditions,
-        uint256 i,
-        uint256 j,
-        Topology.Bounds[] memory childrenBounds
-    ) private pure returns (bool) {
-        return
-            typeTreeId(Topology.typeTree(conditions, i, childrenBounds), 0) ==
-            typeTreeId(Topology.typeTree(conditions, j, childrenBounds), 0);
-    }
-
-    function _isTypeEquivalent(
-        ConditionFlat[] memory conditions,
-        uint256 i,
-        uint256 j,
-        Topology.Bounds[] memory childrenBounds
-    ) private pure returns (bool) {
-        AbiType leftType = Topology
-        .typeTree(conditions, i, childrenBounds)[0]._type;
-        return
-            (leftType == AbiType.Calldata || leftType == AbiType.AbiEncoded) &&
-            Topology.typeTree(conditions, j, childrenBounds)[0]._type ==
-            AbiType.Dynamic;
-    }
-
-    function typeTreeId(
-        AbiTypeTree[] memory typeTree,
         uint256 index
-    ) private pure returns (bytes32) {
-        AbiTypeTree memory node = typeTree[index];
-        uint256 childCount = node.fields.length;
-        if (childCount > 0) {
-            bytes32[] memory ids = new bytes32[](childCount);
-            for (uint256 i = 0; i < childCount; ++i) {
-                ids[i] = typeTreeId(typeTree, node.fields[i]);
-            }
+    ) private pure returns (bool) {
+        (uint256 childrenStart, uint256 childrenLength) = Topology2.childBounds(
+            conditions,
+            index
+        );
 
-            return keccak256(abi.encodePacked(node._type, "-", ids));
-        } else {
-            return bytes32(uint256(node._type));
+        bytes32[] memory ids = new bytes32[](childrenLength);
+        for (uint256 i = 0; i < childrenLength; ++i) {
+            ids[i] = Topology2.typeTreeId(
+                Topology2.typeTree(conditions, childrenStart + i)
+            );
         }
+
+        // is type match
+        for (uint256 i = 1; i < childrenLength; ++i) {
+            if (ids[i - 1] != ids[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+    function _isTypeEquivalence(
+        ConditionFlat[] memory conditions,
+        uint256 index
+    ) private pure returns (bool) {
+        (uint256 childrenStart, uint256 childrenLength) = Topology2.childBounds(
+            conditions,
+            index
+        );
+
+        for (uint256 i = 0; i < childrenLength; ++i) {
+            AbiType _type = Topology2
+                .typeTree(conditions, childrenStart + i)
+                ._type;
+            if (
+                _type != AbiType.Dynamic &&
+                _type != AbiType.Calldata &&
+                _type != AbiType.AbiEncoded
+            ) {
+                return false;
+            }
+        }
+        return true;
     }
 }
