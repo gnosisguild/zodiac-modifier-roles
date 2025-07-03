@@ -4,8 +4,8 @@ pragma solidity >=0.8.17 <0.9.0;
 import "@gnosis-guild/zodiac-core/contracts/core/Modifier.sol";
 
 import "./_Core.sol";
+import "./ConditionTopology.sol";
 import "./Consumptions.sol";
-import "./Topology.sol";
 import "./WriteOnce.sol";
 
 import "./packers/Packer.sol";
@@ -76,7 +76,7 @@ abstract contract PermissionLoader is Core {
         }
 
         {
-            typeTree = Topology.typeTree(conditionsFlat, 0);
+            typeTree = ConditionTopology.typeTree(conditionsFlat, 0);
             _conditionTree(conditionsFlat, compValues, 0, condition);
         }
 
@@ -103,7 +103,7 @@ abstract contract PermissionLoader is Core {
         treeNode.operator = conditionFlat.operator;
         treeNode.compValue = compValues[index];
 
-        (uint256 start, uint256 length) = Topology.childBounds(
+        (uint256 start, uint256 length) = ConditionTopology.childBounds(
             conditionsFlat,
             index
         );
