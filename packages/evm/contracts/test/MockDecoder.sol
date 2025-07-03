@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
+import "../Convert.sol";
 import "../Topology.sol";
 import "../AbiDecoder.sol";
 
@@ -10,24 +11,14 @@ contract MockDecoder {
         ConditionFlat[] memory conditions
     ) public pure returns (PP1 memory r) {
         return
-            copyOut(
-                AbiDecoder.inspect(
-                    data,
-                    Topology.typeTree(
-                        conditions,
-                        0,
-                        Topology.childrenBounds(conditions)
-                    ),
-                    0
-                )
-            );
+            copyOut(AbiDecoder.inspect(data, Topology.typeTree(conditions, 0)));
     }
 
     function inspectRaw(
         bytes calldata data,
-        AbiTypeTree[] memory typeTree
+        TypeTreeFlat[] calldata typeTree
     ) public pure returns (PP1 memory r) {
-        return copyOut(AbiDecoder.inspect(data, typeTree, 0));
+        return copyOut(AbiDecoder.inspect(data, Convert.toTree(typeTree, 0)));
     }
 
     function pluck(
