@@ -52,7 +52,7 @@ describe("Topology library", async () => {
         ],
       });
 
-      const output = bfsToTree(await topology.typeTree2(input));
+      const output = bfsToTree(await topology.typeTree(input));
 
       expect(output).to.deep.equal({
         _type: AbiType.Calldata,
@@ -108,7 +108,7 @@ describe("Topology library", async () => {
         ],
       });
 
-      const output = bfsToTree(await topology.typeTree2(input));
+      const output = bfsToTree(await topology.typeTree(input));
 
       expect(output).to.deep.equal({
         _type: AbiType.Calldata,
@@ -178,7 +178,7 @@ describe("Topology library", async () => {
         ],
       });
 
-      const output = bfsToTree(await topology.typeTree2(input));
+      const output = bfsToTree(await topology.typeTree(input));
 
       expect(output).to.deep.equal({
         _type: AbiType.Calldata,
@@ -220,7 +220,7 @@ describe("Topology library", async () => {
         ],
       });
 
-      const output = bfsToTree(await topology.typeTree2(input));
+      const output = bfsToTree(await topology.typeTree(input));
 
       expect(output).to.deep.equal({
         _type: AbiType.Calldata,
@@ -286,7 +286,7 @@ describe("Topology library", async () => {
         ],
       });
 
-      const output = bfsToTree(await topology.typeTree2(input));
+      const output = bfsToTree(await topology.typeTree(input));
 
       expect(output).to.deep.equal({
         _type: AbiType.Calldata,
@@ -364,7 +364,7 @@ describe("Topology library", async () => {
         ],
       });
 
-      const output = bfsToTree(await topology.typeTree2(input));
+      const output = bfsToTree(await topology.typeTree(input));
 
       expect(output).to.deep.equal({
         _type: AbiType.Calldata,
@@ -414,7 +414,7 @@ describe("Topology library", async () => {
         ],
       });
 
-      const output = bfsToTree(await topology.typeTree2(input));
+      const output = bfsToTree(await topology.typeTree(input));
 
       expect(output).to.deep.equal({
         _type: AbiType.Calldata,
@@ -450,7 +450,7 @@ describe("Topology library", async () => {
         ],
       });
 
-      const output = bfsToTree(await topology.typeTree2(input));
+      const output = bfsToTree(await topology.typeTree(input));
 
       expect(output).to.deep.equal({
         _type: AbiType.Calldata,
@@ -497,7 +497,7 @@ describe("Topology library", async () => {
         ],
       });
 
-      const output = bfsToTree(await topology.typeTree2(input));
+      const output = bfsToTree(await topology.typeTree(input));
 
       // Array should only process its first child, ignoring the rest
       expect(output).to.deep.equal({
@@ -551,7 +551,7 @@ describe("Topology library", async () => {
         ],
       });
 
-      const output = bfsToTree(await topology.typeTree2(input));
+      const output = bfsToTree(await topology.typeTree(input));
 
       expect(output).to.deep.equal({
         _type: AbiType.Calldata,
@@ -616,7 +616,7 @@ describe("Topology library", async () => {
         ],
       });
 
-      const output = bfsToTree(await topology.typeTree2(input));
+      const output = bfsToTree(await topology.typeTree(input));
 
       expect(output).to.deep.equal({
         _type: AbiType.Calldata,
@@ -692,7 +692,7 @@ describe("Topology library", async () => {
         ],
       });
 
-      const output = bfsToTree(await topology.typeTree2(input));
+      const output = bfsToTree(await topology.typeTree(input));
 
       expect(output).to.deep.equal({
         _type: AbiType.Calldata,
@@ -761,7 +761,7 @@ describe("Topology library", async () => {
         ],
       });
 
-      const output = bfsToTree(await topology.typeTree2(input));
+      const output = bfsToTree(await topology.typeTree(input));
 
       expect(output).to.deep.equal({
         _type: AbiType.Calldata,
@@ -822,7 +822,7 @@ describe("Topology library", async () => {
         ],
       });
 
-      const output = bfsToTree(await topology.typeTree2(input));
+      const output = bfsToTree(await topology.typeTree(input));
 
       // All OR children produce same type tree (Dynamic with no children)
       // This should NOT create a variant, just return the first child's tree
@@ -863,7 +863,7 @@ describe("Topology library", async () => {
         ],
       });
 
-      const output = bfsToTree(await topology.typeTree2(input));
+      const output = bfsToTree(await topology.typeTree(input));
 
       // All AND children produce same type tree (Dynamic with no children)
       // So this should NOT create a variant, just return the first child's tree
@@ -921,7 +921,7 @@ describe("Topology library", async () => {
         ],
       });
 
-      const output = bfsToTree(await topology.typeTree2(input));
+      const output = bfsToTree(await topology.typeTree(input));
 
       // OR children have different type trees, so this creates a variant
       expect(output).to.deep.equal({
@@ -990,7 +990,7 @@ describe("Topology library", async () => {
         ],
       });
 
-      const output = bfsToTree(await topology.typeTree2(input));
+      const output = bfsToTree(await topology.typeTree(input));
 
       // AND children have different type trees, so this creates a variant
       expect(output).to.deep.equal({
@@ -1078,7 +1078,7 @@ describe("Topology library", async () => {
         ],
       });
 
-      const output = bfsToTree(await topology.typeTree2(input));
+      const output = bfsToTree(await topology.typeTree(input));
 
       // Mixed OR/AND structure where:
       // - First AND yields Dynamic (same type tree)
@@ -1193,7 +1193,7 @@ describe("Topology library", async () => {
         ],
       });
 
-      const output = bfsToTree(await topology.typeTree2(input));
+      const output = bfsToTree(await topology.typeTree(input));
 
       // Deeply nested structure:
       // - Inner OR yields Dynamic (same type tree)
@@ -1272,7 +1272,7 @@ describe("Topology library", async () => {
         ],
       });
 
-      const output = bfsToTree(await topology.typeTree2(input));
+      const output = bfsToTree(await topology.typeTree(input));
 
       expect(output).to.deep.equal({
         _type: AbiType.Calldata,
@@ -1344,7 +1344,7 @@ describe("Topology library", async () => {
         ],
       });
 
-      const output = bfsToTree(await topology.typeTree2(input));
+      const output = bfsToTree(await topology.typeTree(input));
 
       // OR with mixed child types creates a variant payload node
       expect(output).to.deep.equal({
@@ -1465,7 +1465,7 @@ describe("Topology library", async () => {
         ],
       });
 
-      const output = bfsToTree(await topology.typeTree2(input));
+      const output = bfsToTree(await topology.typeTree(input));
 
       // Variant within Tuple: second element is OR with different structures
       expect(output).to.deep.equal({
@@ -1597,7 +1597,7 @@ describe("Topology library", async () => {
         ],
       });
 
-      const output = bfsToTree(await topology.typeTree2(input));
+      const output = bfsToTree(await topology.typeTree(input));
 
       // Array contains OR variant as first child (others ignored)
       expect(output).to.deep.equal({
@@ -1702,7 +1702,7 @@ describe("Topology library", async () => {
         ],
       });
 
-      const output = bfsToTree(await topology.typeTree2(input));
+      const output = bfsToTree(await topology.typeTree(input));
 
       // Nested variants: outer OR contains inner OR with different structures
       expect(output).to.deep.equal({
