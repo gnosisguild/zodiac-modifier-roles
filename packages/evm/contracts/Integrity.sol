@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
-import "./Topology.sol";
+import "./ConditionTopology.sol";
 
 /**
  * @title Integrity, A library that validates condition integrity, and
@@ -166,7 +166,10 @@ library Integrity {
 
         for (uint256 i = 0; i < conditions.length; i++) {
             ConditionFlat memory condition = conditions[i];
-            (, uint256 childrenLength) = Topology.childBounds(conditions, i);
+            (, uint256 childrenLength) = ConditionTopology.childBounds(
+                conditions,
+                i
+            );
 
             if (condition.paramType == AbiType.None) {
                 if (
@@ -237,7 +240,9 @@ library Integrity {
             }
         }
 
-        if (Topology.typeTree(conditions, 0)._type != AbiType.Calldata) {
+        if (
+            ConditionTopology.typeTree(conditions, 0)._type != AbiType.Calldata
+        ) {
             revert UnsuitableRootNode();
         }
     }
@@ -246,15 +251,14 @@ library Integrity {
         ConditionFlat[] memory conditions,
         uint256 index
     ) private pure returns (bool) {
-        (uint256 childrenStart, uint256 childrenLength) = Topology.childBounds(
-            conditions,
-            index
-        );
+        (uint256 childrenStart, uint256 childrenLength) = ConditionTopology
+            .childBounds(conditions, index);
 
         bytes32[] memory ids = new bytes32[](childrenLength);
         for (uint256 i = 0; i < childrenLength; ++i) {
-            ids[i] = Topology.typeTreeId(
-                Topology.typeTree(conditions, childrenStart + i)
+            ids[i] = ConditionTopology.typeTreeId(
+                conditions,
+                childrenStart + i
             );
         }
 
@@ -270,13 +274,11 @@ library Integrity {
         ConditionFlat[] memory conditions,
         uint256 index
     ) private pure returns (bool) {
-        (uint256 childrenStart, uint256 childrenLength) = Topology.childBounds(
-            conditions,
-            index
-        );
+        (uint256 childrenStart, uint256 childrenLength) = ConditionTopology
+            .childBounds(conditions, index);
 
         for (uint256 i = 0; i < childrenLength; ++i) {
-            AbiType _type = Topology
+            AbiType _type = ConditionTopology
                 .typeTree(conditions, childrenStart + i)
                 ._type;
             if (

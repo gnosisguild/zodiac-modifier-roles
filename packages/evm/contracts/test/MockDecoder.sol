@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "../Convert.sol";
-import "../Topology.sol";
 import "../AbiDecoder.sol";
+import "../ConditionTopology.sol";
 
 contract MockDecoder {
     function inspect(
@@ -11,14 +10,19 @@ contract MockDecoder {
         ConditionFlat[] memory conditions
     ) public pure returns (PP1 memory r) {
         return
-            copyOut(AbiDecoder.inspect(data, Topology.typeTree(conditions, 0)));
+            copyOut(
+                AbiDecoder.inspect(
+                    data,
+                    ConditionTopology.typeTree(conditions, 0)
+                )
+            );
     }
 
     function inspectRaw(
         bytes calldata data,
         TypeTreeFlat[] calldata typeTree
     ) public pure returns (PP1 memory r) {
-        return copyOut(AbiDecoder.inspect(data, Convert.toTree(typeTree, 0)));
+        return copyOut(AbiDecoder.inspect(data, _toTree(typeTree, 0)));
     }
 
     function pluck(
@@ -27,6 +31,21 @@ contract MockDecoder {
         uint256 size
     ) public pure returns (bytes memory result) {
         return AbiDecoder.pluck(data, offset, size);
+    }
+
+    function _toTree(
+        TypeTreeFlat[] calldata flatTree,
+        uint256 index
+    ) private pure returns (TypeTree memory result) {
+        result._type = flatTree[index]._type;
+        result.bfsIndex = index;
+        if (flatTree[index].fields.length > 0) {
+            uint256[] memory fields = flatTree[index].fields;
+            result.children = new TypeTree[](fields.length);
+            for (uint256 i = 0; i < fields.length; i++) {
+                result.children[i] = _toTree(flatTree, fields[i]);
+            }
+        }
     }
 
     function copyOut(

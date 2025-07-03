@@ -4,12 +4,12 @@ pragma solidity >=0.8.17 <0.9.0;
 import "./Types.sol";
 
 /**
- * @title Topology - a library that provides helper functions for dealing with
+ * @title  ConditionTopology - a library that provides helper functions for dealing with
  * the flat representation of conditions.
  *
  * @author gnosisguild
  */
-library Topology {
+library ConditionTopology {
     function typeTree(
         ConditionFlat[] memory conditions,
         uint256 index
@@ -27,6 +27,30 @@ library Topology {
             node.children = new TypeTree[](_type == AbiType.Array ? 1 : length);
             for (uint256 i = 0; i < node.children.length; i++) {
                 node.children[i] = typeTree(conditions, i + start);
+            }
+        }
+    }
+
+    function typeTreeId(
+        ConditionFlat[] memory conditions,
+        uint256 index
+    ) internal pure returns (bytes32) {
+        return _typeTreeId(typeTree(conditions, index));
+    }
+
+    function childBounds(
+        ConditionFlat[] memory conditions,
+        uint256 index
+    ) internal pure returns (uint256 start, uint256 length) {
+        for (uint256 i = index + 1; i < conditions.length; i++) {
+            uint256 parent = conditions[i].parent;
+            if (parent == index) {
+                if (start == 0) {
+                    start = i;
+                }
+                length++;
+            } else if (parent > index) {
+                break;
             }
         }
     }
@@ -110,7 +134,7 @@ library Topology {
             node.children[i] = typeTree(conditions, childrenStart + i);
 
             if (!isVariant) {
-                bytes32 currentId = typeTreeId(node.children[i]);
+                bytes32 currentId = _typeTreeId(node.children[i]);
 
                 if (id == 0) {
                     id = currentId;
@@ -123,24 +147,7 @@ library Topology {
         return isVariant ? node : node.children[0];
     }
 
-    function childBounds(
-        ConditionFlat[] memory conditions,
-        uint256 index
-    ) internal pure returns (uint256 start, uint256 length) {
-        for (uint256 i = index + 1; i < conditions.length; i++) {
-            uint256 parent = conditions[i].parent;
-            if (parent == index) {
-                if (start == 0) {
-                    start = i;
-                }
-                length++;
-            } else if (parent > index) {
-                break;
-            }
-        }
-    }
-
-    function typeTreeId(TypeTree memory tree) internal pure returns (bytes32) {
+    function _typeTreeId(TypeTree memory tree) private pure returns (bytes32) {
         uint256 childCount = tree.children.length;
         if (childCount == 0) {
             return bytes32(uint256(tree._type));
@@ -150,7 +157,7 @@ library Topology {
         if (childCount == 1) {
             return
                 keccak256(
-                    abi.encodePacked(tree._type, typeTreeId(tree.children[0]))
+                    abi.encodePacked(tree._type, _typeTreeId(tree.children[0]))
                 );
         }
 
@@ -160,15 +167,15 @@ library Topology {
                 keccak256(
                     abi.encodePacked(
                         tree._type,
-                        typeTreeId(tree.children[0]),
-                        typeTreeId(tree.children[1])
+                        _typeTreeId(tree.children[0]),
+                        _typeTreeId(tree.children[1])
                     )
                 );
         }
 
         bytes32[] memory ids = new bytes32[](childCount);
         for (uint256 i = 0; i < childCount; ++i) {
-            ids[i] = typeTreeId(tree.children[i]);
+            ids[i] = _typeTreeId(tree.children[i]);
         }
         return keccak256(abi.encodePacked(tree._type, ids));
     }
