@@ -172,9 +172,9 @@ export const BYTES32_ZERO =
 
 interface Condition {
   paramType: AbiType;
-  operator: Operator;
+  operator?: Operator;
   compValue?: `0x${string}`;
-  children?: readonly Condition[];
+  children?: Condition[];
 }
 
 interface ConditionFlat {
@@ -198,6 +198,7 @@ export function flattenCondition(root: Condition): ConditionFlat[] {
       ...result,
       {
         parent,
+        operator: Operator.Pass,
         compValue: "0x",
         ...node,
       },
