@@ -67,8 +67,8 @@ library AbiDecoder {
     ) private pure {
         assert(location + 32 <= data.length);
 
-        payload.index = typeNode.bfsIndex;
         payload.location = location;
+        payload.typeIndex = typeNode.index;
 
         AbiType _type = typeNode._type;
         if (_type == AbiType.Static) {
