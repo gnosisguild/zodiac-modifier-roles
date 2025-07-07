@@ -65,13 +65,10 @@ library AbiDecoder {
         TypeTree memory typeTree,
         Payload memory result
     ) private pure {
+        assert(location + 32 <= data.length);
+
         result.index = typeTree.bfsIndex;
         result.location = location;
-
-        if (location + 32 > data.length) {
-            result.overflown = true;
-            return;
-        }
 
         AbiType _type = typeTree._type;
         if (_type == AbiType.Static) {
@@ -118,7 +115,7 @@ library AbiDecoder {
 
     /**
      * @dev Decodes a structured block of parameters from calldata. Maps
-     *      locations of values within Array or Tuple sections, which both use the
+     *      locations of values within Array or Tuple sections, which both use
      *      HEAD+TAIL+OFFSET encoding scheme.
      *
      * @param data        The encoded transaction data (in calldata for gas
