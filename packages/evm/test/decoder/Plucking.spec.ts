@@ -8,7 +8,7 @@ import { AbiType, flattenCondition, Operator } from "../utils";
 const AddressOne = "0x0000000000000000000000000000000000000001";
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
-describe.only("AbiDecoder - Plucking", () => {
+describe("AbiDecoder - Plucking", () => {
   async function setup() {
     const MockDecoder = await hre.ethers.getContractFactory("MockDecoder");
     const decoder = await MockDecoder.deploy();

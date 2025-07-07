@@ -5,7 +5,7 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { AbiType, flattenCondition, Operator } from "../utils";
 import { Interface } from "ethers";
 
-describe.only("AbiDecoder - Overflow", () => {
+describe("AbiDecoder - Overflow", () => {
   async function setup() {
     const MockDecoder = await hre.ethers.getContractFactory("MockDecoder");
     const decoder = await MockDecoder.deploy();
