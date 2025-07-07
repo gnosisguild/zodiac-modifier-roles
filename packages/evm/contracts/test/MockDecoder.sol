@@ -31,7 +31,7 @@ contract MockDecoder {
         uint256 index
     ) private pure returns (TypeTree memory result) {
         result._type = flatTree[index]._type;
-        result.bfsIndex = index;
+        result.index = index;
         if (flatTree[index].fields.length > 0) {
             uint256[] memory fields = flatTree[index].fields;
             result.children = new TypeTree[](fields.length);
