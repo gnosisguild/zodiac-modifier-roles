@@ -89,8 +89,11 @@ library EIP712Encoder {
 
         return
             keccak256(
-                types.typeHashes[_block.index] != bytes32(0)
-                    ? abi.encodePacked(types.typeHashes[_block.index], result)
+                types.typeHashes[_block.typeIndex] != bytes32(0)
+                    ? abi.encodePacked(
+                        types.typeHashes[_block.typeIndex],
+                        result
+                    )
                     : abi.encodePacked(result)
             );
     }
@@ -120,7 +123,7 @@ library EIP712Encoder {
         Types calldata types,
         Payload memory field
     ) private pure returns (bytes32) {
-        AbiType _type = types.typeTree[field.index]._type;
+        AbiType _type = types.typeTree[field.typeIndex]._type;
         if (_type == AbiType.Static) {
             return bytes32(data[field.location:]);
         } else if (_type == AbiType.Dynamic) {
@@ -135,7 +138,7 @@ library EIP712Encoder {
         uint256 index
     ) private pure returns (TypeTree memory typeTree) {
         typeTree._type = flatTypeTree[index]._type;
-        typeTree.bfsIndex = index;
+        typeTree.index = index;
         if (flatTypeTree[index].fields.length > 0) {
             uint256[] memory fields = flatTypeTree[index].fields;
             typeTree.children = new TypeTree[](fields.length);
