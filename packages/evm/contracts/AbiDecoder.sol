@@ -65,20 +65,21 @@ library AbiDecoder {
         TypeTree memory typeTree,
         Payload memory result
     ) private pure {
+        result.index = typeTree.bfsIndex;
+        result.location = location;
+
         if (location + 32 > data.length) {
             result.overflown = true;
             return;
         }
 
         AbiType _type = typeTree._type;
-
         if (_type == AbiType.Static) {
             result.size = 32;
         } else if (_type == AbiType.Dynamic) {
             if (typeTree.children.length > 0) {
                 _variant(data, location, typeTree, result);
             }
-
             result.size = 32 + _ceil32(uint256(word(data, location)));
         } else if (_type == AbiType.Tuple) {
             __block__(
@@ -105,10 +106,14 @@ library AbiDecoder {
                 typeTree.children.length,
                 result
             );
-            result.size = 32 + _ceil32(uint256(word(data, location)));
+
+            result.location = location + 32;
+            result.size = _ceil32(uint256(word(data, location)));
         }
-        result.index = typeTree.bfsIndex;
-        result.location = location;
+
+        if (result.location + result.size > data.length) {
+            result.overflown = true;
+        }
     }
 
     /**
@@ -144,25 +149,35 @@ library AbiDecoder {
                 isInline = _isInline(node.children[i]);
             }
 
+            uint256 childLocation = _locationInBlock(
+                data,
+                location,
+                offset,
+                isInline
+            );
+
+            if (childLocation == type(uint256).max) {
+                result.overflown = true;
+                return;
+            }
+
             _walk(
                 data,
-                _locationInBlock(data, location, offset, isInline),
+                childLocation,
                 node.children[node._type == AbiType.Array ? 0 : i],
                 children[i]
             );
+
             if (children[i].overflown) {
                 result.overflown = true;
                 return;
             }
 
-            // Update the total size and offset
-            uint256 childSize = children[i].size;
-
             // For non-inline elements, we need to account for the 32-byte pointer
-            result.size += childSize + (isInline ? 0 : 32);
+            result.size += children[i].size + (isInline ? 0 : 32);
 
             // Update the offset in the block for the next element
-            offset += isInline ? childSize : 32;
+            offset += isInline ? children[i].size : 32;
         }
         result.children = children;
     }
@@ -176,10 +191,12 @@ library AbiDecoder {
         uint256 length = typeTree.children.length;
 
         result.variant = true;
+        result.overflown = true;
         result.children = new Payload[](length);
 
         for (uint256 i; i < length; i++) {
             _walk(data, location, typeTree.children[i], result.children[i]);
+            result.overflown = result.overflown && result.children[i].overflown;
         }
     }
 
@@ -188,27 +205,40 @@ library AbiDecoder {
      *      For inline parameters, returns the position in the HEAD region.
      *      For non-inline parameters, follows the offset pointer to TAIL.
      *
-     * @param data     The encoded calldata.
-     * @param location Base position where the HEAD region begins.
-     * @param offset   Relative position within the HEAD region.
-     * @param isInline Whether the parameter is inline or referenced via offset.
-     * @return         The absolute position of the chunk in calldata.
+     * @param data       The encoded calldata.
+     * @param location   Base position where the HEAD region begins.
+     * @param headOffset Relative position within the HEAD region.
+     * @param isInline   Whether the parameter is inline or referenced via offset.
+     * @return           The absolute position of the chunk in calldata.
      */
     function _locationInBlock(
         bytes calldata data,
         uint256 location,
-        uint256 offset,
+        uint256 headOffset,
         bool isInline
     ) private pure returns (uint256) {
-        if (isInline) {
-            return location + offset;
-        }
-        if (location + offset + 32 > data.length) {
-            // signal overflow
-            return location + data.length;
+        // is head within calldata
+        if (location + headOffset + 32 > data.length) {
+            return type(uint256).max;
         }
 
-        return location + uint256(word(data, location + offset));
+        if (isInline) {
+            return location + headOffset;
+        }
+
+        uint256 tailOffset = uint256(word(data, location + headOffset));
+
+        // tail points within head?
+        if (tailOffset <= headOffset) {
+            return type(uint256).max;
+        }
+
+        // tail points beyond calldata?
+        if (location + tailOffset + 32 > data.length) {
+            return type(uint256).max;
+        }
+
+        return location + tailOffset;
     }
 
     /**
