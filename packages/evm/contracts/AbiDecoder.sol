@@ -16,18 +16,18 @@ library AbiDecoder {
      * @dev Maps the location and size of a parameter in calldata according to
      *      an ABI `typeTree`.
      *
-     * @param data     The encoded transaction data to be inspected.
-     * @param typeTree Array of ABI type definitions forming the typeTree.
-     * @return result  The mapped location and size of parameters in the encoded
-     *                 transaction data.
+     * @param data      The encoded transaction data to be inspected.
+     * @param typeNode  Array of ABI type definitions forming the typeTree.
+     * @return payload  The mapped location and size of parameters in the encoded
+     *                  transaction data.
      */
     function inspect(
         bytes calldata data,
-        TypeTree memory typeTree
-    ) internal pure returns (Payload memory result) {
+        TypeTree memory typeNode
+    ) internal pure returns (Payload memory payload) {
         assert(
-            typeTree._type == AbiType.Calldata ||
-                typeTree._type == AbiType.AbiEncoded
+            typeNode._type == AbiType.Calldata ||
+                typeNode._type == AbiType.AbiEncoded
         );
         /*
          * The parameter encoding area consists of a head region, divided into
@@ -41,12 +41,12 @@ library AbiDecoder {
          */
         __block__(
             data,
-            typeTree._type == AbiType.Calldata ? 4 : 0,
-            typeTree,
-            typeTree.children.length,
-            result
+            typeNode._type == AbiType.Calldata ? 4 : 0,
+            typeNode.children.length,
+            typeNode,
+            payload
         );
-        result.size = data.length;
+        payload.size = data.length;
     }
 
     /**
@@ -55,61 +55,61 @@ library AbiDecoder {
      *
      * @param data     The encoded transaction data.
      * @param location The current absolute position within calldata.
-     * @param typeTree Todo
-     * @param result   The output payload containing the parameter's location
+     * @param typeNode Todo
+     * @param payload  The output payload containing the parameter's location
      *                 and size in calldata.
      */
     function _walk(
         bytes calldata data,
         uint256 location,
-        TypeTree memory typeTree,
-        Payload memory result
+        TypeTree memory typeNode,
+        Payload memory payload
     ) private pure {
         assert(location + 32 <= data.length);
 
-        result.index = typeTree.bfsIndex;
-        result.location = location;
+        payload.index = typeNode.bfsIndex;
+        payload.location = location;
 
-        AbiType _type = typeTree._type;
+        AbiType _type = typeNode._type;
         if (_type == AbiType.Static) {
-            result.size = 32;
+            payload.size = 32;
         } else if (_type == AbiType.Dynamic) {
-            if (typeTree.children.length > 0) {
-                _variant(data, location, typeTree, result);
+            if (typeNode.children.length > 0) {
+                _variant(data, location, typeNode, payload);
             }
-            result.size = 32 + _ceil32(uint256(word(data, location)));
+            payload.size = 32 + _ceil32(uint256(word(data, location)));
         } else if (_type == AbiType.Tuple) {
             __block__(
                 data,
                 location,
-                typeTree,
-                typeTree.children.length,
-                result
+                typeNode.children.length,
+                typeNode,
+                payload
             );
         } else if (_type == AbiType.Array) {
             __block__(
                 data,
                 location + 32,
-                typeTree,
                 uint256(word(data, location)),
-                result
+                typeNode,
+                payload
             );
-            result.size += 32;
+            payload.size += 32;
         } else if (_type == AbiType.Calldata || _type == AbiType.AbiEncoded) {
             __block__(
                 data,
                 location + 32 + (_type == AbiType.Calldata ? 4 : 0),
-                typeTree,
-                typeTree.children.length,
-                result
+                typeNode.children.length,
+                typeNode,
+                payload
             );
 
-            result.location = location + 32;
-            result.size = _ceil32(uint256(word(data, location)));
+            payload.location = location + 32;
+            payload.size = _ceil32(uint256(word(data, location)));
         }
 
-        if (result.location + result.size > data.length) {
-            result.overflown = true;
+        if (payload.location + payload.size > data.length) {
+            payload.overflown = true;
         }
     }
 
@@ -118,11 +118,11 @@ library AbiDecoder {
      *      locations of values within Array or Tuple sections, which both use
      *      HEAD+TAIL+OFFSET encoding scheme.
      *
-     * @param data        The encoded transaction data (in calldata for gas
-     *                    efficiency).
-     * @param location    Starting byte position of the block in calldata.
-     * @param blockLength Number of elements to process in this block.
-     * @param result      The decoded `Payload`.
+     * @param data      The encoded transaction data (in calldata for gas
+     *                  efficiency).
+     * @param location  Starting byte position of the block in calldata.
+     * @param length.   Number of elements to process in this block.
+     * @param payload   The decoded `Payload`.
      *
      * @notice Handles two block types:
      *     1. Arrays: Length determined by a 32-byte word before the data.
@@ -131,19 +131,19 @@ library AbiDecoder {
     function __block__(
         bytes calldata data,
         uint256 location,
-        TypeTree memory node,
-        uint256 blockLength,
-        Payload memory result
+        uint256 length,
+        TypeTree memory typeNode,
+        Payload memory payload
     ) private pure {
-        Payload[] memory children = new Payload[](blockLength);
+        Payload[] memory children = new Payload[](length);
 
         bool isInline;
         uint256 offset;
-        for (uint256 i; i < blockLength; i++) {
-            if (i == 0 || node._type != AbiType.Array) {
+        for (uint256 i; i < length; i++) {
+            if (i == 0 || typeNode._type != AbiType.Array) {
                 // For structs or the first element of an array, calculate if element inline
                 // For array elements after the first, they all have the same inline status
-                isInline = _isInline(node.children[i]);
+                isInline = _isInline(typeNode.children[i]);
             }
 
             uint256 childLocation = _locationInBlock(
@@ -154,46 +154,48 @@ library AbiDecoder {
             );
 
             if (childLocation == type(uint256).max) {
-                result.overflown = true;
+                payload.overflown = true;
                 return;
             }
 
             _walk(
                 data,
                 childLocation,
-                node.children[node._type == AbiType.Array ? 0 : i],
+                typeNode.children[typeNode._type == AbiType.Array ? 0 : i],
                 children[i]
             );
 
             if (children[i].overflown) {
-                result.overflown = true;
+                payload.overflown = true;
                 return;
             }
 
             // For non-inline elements, we need to account for the 32-byte pointer
-            result.size += children[i].size + (isInline ? 0 : 32);
+            payload.size += children[i].size + (isInline ? 0 : 32);
 
             // Update the offset in the block for the next element
             offset += isInline ? children[i].size : 32;
         }
-        result.children = children;
+        payload.children = children;
     }
 
     function _variant(
         bytes calldata data,
         uint256 location,
-        TypeTree memory typeTree,
-        Payload memory result
+        TypeTree memory typeNode,
+        Payload memory payload
     ) private pure {
-        uint256 length = typeTree.children.length;
+        uint256 length = typeNode.children.length;
 
-        result.variant = true;
-        result.overflown = true;
-        result.children = new Payload[](length);
+        payload.variant = true;
+        payload.overflown = true;
+        payload.children = new Payload[](length);
 
         for (uint256 i; i < length; i++) {
-            _walk(data, location, typeTree.children[i], result.children[i]);
-            result.overflown = result.overflown && result.children[i].overflown;
+            _walk(data, location, typeNode.children[i], payload.children[i]);
+            payload.overflown =
+                payload.overflown &&
+                payload.children[i].overflown;
         }
     }
 
