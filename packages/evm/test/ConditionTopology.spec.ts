@@ -518,6 +518,212 @@ describe("ConditionTopology library", async () => {
       });
     });
 
+    describe("Ether/CallWithinAllowance", () => {
+      it("EtherWithinAllowance as lone node", async () => {
+        const { topology } = await loadFixture(setup);
+
+        const input = flattenCondition({
+          paramType: AbiType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: AbiType.None,
+              operator: Operator.EtherWithinAllowance,
+              children: [],
+            },
+          ],
+        });
+
+        const output = bfsToTree(await topology.typeTree(input));
+
+        expect(output).to.deep.equal({
+          _type: AbiType.Calldata,
+          children: [
+            {
+              _type: AbiType.None,
+              children: [],
+            },
+          ],
+        });
+      });
+
+      it("CallWithinAllowance as lone node", async () => {
+        const { topology } = await loadFixture(setup);
+
+        const input = flattenCondition({
+          paramType: AbiType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: AbiType.None,
+              operator: Operator.CallWithinAllowance,
+              children: [],
+            },
+          ],
+        });
+
+        const output = bfsToTree(await topology.typeTree(input));
+
+        expect(output).to.deep.equal({
+          _type: AbiType.Calldata,
+          children: [
+            {
+              _type: AbiType.None,
+              children: [],
+            },
+          ],
+        });
+      });
+
+      it("EtherWithinAllowance as first node", async () => {
+        const { topology } = await loadFixture(setup);
+
+        const input = flattenCondition({
+          paramType: AbiType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: AbiType.None,
+              operator: Operator.EtherWithinAllowance,
+              children: [],
+            },
+            {
+              paramType: AbiType.Static,
+              operator: Operator.EqualTo,
+              children: [],
+            },
+            {
+              paramType: AbiType.Dynamic,
+              operator: Operator.Pass,
+              children: [],
+            },
+          ],
+        });
+
+        const output = bfsToTree(await topology.typeTree(input));
+
+        expect(output).to.deep.equal({
+          _type: AbiType.Calldata,
+          children: [
+            {
+              _type: AbiType.None,
+              children: [],
+            },
+            {
+              _type: AbiType.Static,
+              children: [],
+            },
+            {
+              _type: AbiType.Dynamic,
+              children: [],
+            },
+          ],
+        });
+      });
+
+      it("CallWithinAllowance as last node", async () => {
+        const { topology } = await loadFixture(setup);
+
+        const input = flattenCondition({
+          paramType: AbiType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: AbiType.Static,
+              operator: Operator.EqualTo,
+              children: [],
+            },
+            {
+              paramType: AbiType.Dynamic,
+              operator: Operator.Pass,
+              children: [],
+            },
+            {
+              paramType: AbiType.None,
+              operator: Operator.CallWithinAllowance,
+              children: [],
+            },
+          ],
+        });
+
+        const output = bfsToTree(await topology.typeTree(input));
+
+        expect(output).to.deep.equal({
+          _type: AbiType.Calldata,
+          children: [
+            {
+              _type: AbiType.Static,
+              children: [],
+            },
+            {
+              _type: AbiType.Dynamic,
+              children: [],
+            },
+            {
+              _type: AbiType.None,
+              children: [],
+            },
+          ],
+        });
+      });
+
+      it("EtherWithinAllowance as child of OR variant", async () => {
+        const { topology } = await loadFixture(setup);
+
+        const condition = {
+          paramType: AbiType.None,
+          operator: Operator.Or,
+          children: [
+            {
+              paramType: AbiType.Calldata,
+              operator: Operator.Matches,
+              children: [
+                {
+                  paramType: AbiType.Static,
+                  operator: Operator.EqualTo,
+                  children: [],
+                },
+                {
+                  paramType: AbiType.None,
+                  operator: Operator.EtherWithinAllowance,
+                  children: [],
+                },
+              ],
+            },
+            {
+              paramType: AbiType.Calldata,
+              operator: Operator.Matches,
+              children: [
+                {
+                  paramType: AbiType.Static,
+                  operator: Operator.EqualTo,
+                  children: [],
+                },
+                {
+                  paramType: AbiType.None,
+                  operator: Operator.EtherWithinAllowance,
+                  children: [],
+                },
+              ],
+            },
+          ],
+        };
+
+        const input = flattenCondition(condition);
+
+        const output = bfsToTree(await topology.typeTree(input));
+
+        // OR with different type trees creates a variant
+        expect(output).to.deep.equal({
+          _type: AbiType.Calldata,
+          children: [
+            { _type: AbiType.Static, children: [] },
+            { _type: AbiType.None, children: [] },
+          ],
+        });
+      });
+    });
+
     describe("Non-top level Calldata/AbiEncoded handling", () => {
       it("should represent non-top level Calldata directly", async () => {
         const { topology } = await loadFixture(setup);
@@ -577,7 +783,6 @@ describe("ConditionTopology library", async () => {
           ],
         });
       });
-
       it("should represent non-top level AbiEncoded directly", async () => {
         const { topology } = await loadFixture(setup);
 
@@ -647,7 +852,6 @@ describe("ConditionTopology library", async () => {
           ],
         });
       });
-
       it("should handle nested non-top level Calldata directly in complex structures", async () => {
         const { topology } = await loadFixture(setup);
 
@@ -728,7 +932,6 @@ describe("ConditionTopology library", async () => {
           ],
         });
       });
-
       it("should represent AbiEncoded within OR structure as variant with Dynamic wrapper", async () => {
         const { topology } = await loadFixture(setup);
 
@@ -793,7 +996,6 @@ describe("ConditionTopology library", async () => {
     describe("OR/AND children with type tree equivalence rules", () => {
       it("should handle OR with children translating to same type tree - non-variant payload", async () => {
         const { topology } = await loadFixture(setup);
-
         const input = flattenCondition({
           paramType: AbiType.Calldata,
           operator: Operator.Matches,
@@ -836,7 +1038,6 @@ describe("ConditionTopology library", async () => {
           ],
         });
       });
-
       it("should handle AND with children translating to same type tree - non-variant payload", async () => {
         const { topology } = await loadFixture(setup);
 
@@ -877,7 +1078,6 @@ describe("ConditionTopology library", async () => {
           ],
         });
       });
-
       it("should handle OR with children translating to different type trees - variant payload", async () => {
         const { topology } = await loadFixture(setup);
 
@@ -957,7 +1157,6 @@ describe("ConditionTopology library", async () => {
           ],
         });
       });
-
       it("should handle AND with children translating to different type trees - variant payload", async () => {
         const { topology } = await loadFixture(setup);
 
@@ -1017,7 +1216,6 @@ describe("ConditionTopology library", async () => {
           ],
         });
       });
-
       it("should handle mixed OR/AND structures with relaxed equivalence", async () => {
         const { topology } = await loadFixture(setup);
 
@@ -1121,7 +1319,6 @@ describe("ConditionTopology library", async () => {
           ],
         });
       });
-
       it("should handle deeply nested OR/AND with relaxed type tree matching", async () => {
         const { topology } = await loadFixture(setup);
 
@@ -1284,7 +1481,6 @@ describe("ConditionTopology library", async () => {
           ],
         });
       });
-
       it("should create variant payload node with mixed child types", async () => {
         const { topology } = await loadFixture(setup);
 
@@ -1393,7 +1589,6 @@ describe("ConditionTopology library", async () => {
           ],
         });
       });
-
       it("should handle variant payload nodes within Tuple structures", async () => {
         const { topology } = await loadFixture(setup);
 
@@ -1524,7 +1719,6 @@ describe("ConditionTopology library", async () => {
           ],
         });
       });
-
       it("should handle variant payload nodes within Array structures", async () => {
         const { topology } = await loadFixture(setup);
 
@@ -1652,7 +1846,6 @@ describe("ConditionTopology library", async () => {
           ],
         });
       });
-
       it("should handle nested variant payload nodes", async () => {
         const { topology } = await loadFixture(setup);
 
