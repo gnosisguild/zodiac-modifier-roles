@@ -357,6 +357,37 @@ export async function setupOneParamStaticNestedTuple() {
     invoke,
   };
 }
+
+export async function setupOneParamArrayOfBytes() {
+  const {
+    owner,
+    member,
+    roles,
+    testContract,
+    scopeFunction,
+    execTransactionFromModule,
+  } = await setupAvatarAndRoles();
+
+  const { selector } = testContract.interface.getFunction(
+    "oneParamArrayOfBytes",
+  );
+  return {
+    owner,
+    member,
+    roles,
+    scopeFunction: (
+      conditions: ConditionFlatStruct[],
+      options?: ExecutionOptions,
+    ) => scopeFunction(selector, conditions, options),
+    invoke: async (params: string[]) =>
+      execTransactionFromModule({
+        data: (
+          await testContract.oneParamArrayOfBytes.populateTransaction(params)
+        ).data,
+      }),
+  };
+}
+
 export async function setupTwoParamsStaticTupleStatic() {
   const {
     owner,
