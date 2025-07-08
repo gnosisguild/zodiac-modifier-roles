@@ -137,6 +137,8 @@ contract TestContract {
 
     function oneParamBytes(bytes calldata) public {}
 
+    function oneParamArrayOfBytes(bytes[] calldata) public {}
+
     function oneParamString(string calldata) public {}
 
     function oneParamAddress(address) public {}
@@ -178,6 +180,8 @@ contract TestContract {
     function twoParamsStatic(uint256 a, uint256 b) public {}
 
     function twoParamsStaticTupleStatic(StaticTuple calldata, uint256) public {}
+
+    function twoParamsStaticDynamic(uint256, bytes calldata) public {}
 
     function spendAndMaybeRevert(uint256, bool revert_) public pure {
         if (revert_) {
