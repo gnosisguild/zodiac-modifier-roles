@@ -1,9 +1,9 @@
 import { expect } from "chai";
 import hre from "hardhat";
+import { AbiCoder, ZeroHash } from "ethers";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { AbiCoder } from "ethers";
 
-import { AbiType, BYTES32_ZERO, Operator } from "./utils";
+import { AbiType, flattenCondition, Operator } from "./utils";
 import { ConditionFlatStruct } from "../typechain-types/contracts/Integrity";
 
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
@@ -748,38 +748,231 @@ describe("Integrity", async () => {
         ]),
       ).to.be.revertedWithCustomError(integrity, "NotBFS");
     });
-    it("enforces (Ether/Call)WithinAllowance to be child of Calldata", async () => {
-      const { integrity, enforce } = await loadFixture(setup);
-      const conditions = [
-        {
-          parent: 0,
-          paramType: AbiType.Calldata,
-          operator: Operator.Pass,
-          compValue: "0x",
-        },
-        {
-          parent: 0,
-          paramType: AbiType.Tuple,
-          operator: Operator.Pass,
-          compValue: "0x",
-        },
-        {
-          parent: 1,
-          paramType: AbiType.None,
-          operator: Operator.EtherWithinAllowance,
-          compValue:
-            "0x0000000000000000000000000000000000000000000000000000000000000000",
-        },
-      ];
-      await expect(enforce(conditions))
-        .to.be.revertedWithCustomError(integrity, "UnsuitableParent")
-        .withArgs(2);
 
-      conditions[2].operator = Operator.CallWithinAllowance;
-      await expect(enforce(conditions))
-        .to.be.revertedWithCustomError(integrity, "UnsuitableParent")
-        .withArgs(2);
+    it("enforces (Ether/Call)WithinAllowance to be child of root Calldata - ok", async () => {
+      const { enforce } = await loadFixture(setup);
+
+      // EtherWithinAllowance
+      const conditions = flattenCondition({
+        paramType: AbiType.Calldata,
+        children: [
+          {
+            paramType: AbiType.None,
+            operator: Operator.EtherWithinAllowance,
+            compValue: ZeroHash,
+          },
+        ],
+      });
+      await expect(enforce(conditions)).to.not.be.reverted;
     });
+
+    it("enforces (Ether/Call)WithinAllowance to be child of root Calldata - ok when root under LOGICAL", async () => {
+      const { integrity, enforce } = await loadFixture(setup);
+      {
+        // EtherWithinAllowance
+        await expect(
+          enforce(
+            flattenCondition({
+              paramType: AbiType.None,
+              operator: Operator.Or,
+              children: [
+                {
+                  paramType: AbiType.Calldata,
+                  children: [
+                    {
+                      paramType: AbiType.None,
+                      operator: Operator.EtherWithinAllowance,
+                      compValue: ZeroHash,
+                    },
+                  ],
+                },
+                {
+                  paramType: AbiType.Calldata,
+                  children: [
+                    {
+                      paramType: AbiType.None,
+                      operator: Operator.EtherWithinAllowance,
+                      compValue: ZeroHash,
+                    },
+                  ],
+                },
+              ],
+            }),
+          ),
+        ).to.not.be.reverted;
+      }
+
+      {
+        // EtherWithinAllowance
+        await expect(
+          enforce(
+            flattenCondition({
+              paramType: AbiType.None,
+              operator: Operator.Or,
+              children: [
+                {
+                  paramType: AbiType.Calldata,
+                  children: [
+                    {
+                      paramType: AbiType.None,
+                      operator: Operator.EtherWithinAllowance,
+                      compValue: ZeroHash,
+                    },
+                  ],
+                },
+                {
+                  paramType: AbiType.Calldata,
+                  children: [
+                    {
+                      paramType: AbiType.None,
+                      operator: Operator.EtherWithinAllowance,
+                      compValue: ZeroHash,
+                    },
+                  ],
+                },
+              ],
+            }),
+          ),
+        ).to.not.be.reverted;
+      }
+    });
+
+    it("enforces (Ether/Call)WithinAllowance to be child of root Calldata - throws on Calldata that's non root", async () => {
+      const { integrity, enforce } = await loadFixture(setup);
+      {
+        // EtherWithinAllowance
+        const conditions = flattenCondition({
+          paramType: AbiType.Calldata,
+          children: [
+            {
+              paramType: AbiType.Calldata,
+              children: [
+                {
+                  paramType: AbiType.None,
+                  operator: Operator.EtherWithinAllowance,
+                  compValue: ZeroHash,
+                },
+              ],
+            },
+          ],
+        });
+        await expect(enforce(conditions))
+          .to.be.revertedWithCustomError(integrity, "UnsuitableParent")
+          .withArgs(2);
+      }
+      {
+        // CallWithinAllowance
+        const conditions = flattenCondition({
+          paramType: AbiType.Calldata,
+          children: [
+            {
+              paramType: AbiType.Calldata,
+              children: [
+                {
+                  paramType: AbiType.None,
+                  operator: Operator.CallWithinAllowance,
+                  compValue: ZeroHash,
+                },
+              ],
+            },
+          ],
+        });
+        await expect(enforce(conditions))
+          .to.be.revertedWithCustomError(integrity, "UnsuitableParent")
+          .withArgs(2);
+      }
+    });
+
+    it("enforces (Ether/Call)WithinAllowance to be child of root Calldata - throws on nodes other than Calldata", async () => {
+      const { integrity, enforce } = await loadFixture(setup);
+      {
+        // EtherWithinAllowance
+        const conditions = flattenCondition({
+          paramType: AbiType.Calldata,
+          children: [
+            {
+              paramType: AbiType.Tuple,
+              children: [
+                {
+                  paramType: AbiType.None,
+                  operator: Operator.EtherWithinAllowance,
+                  compValue: ZeroHash,
+                },
+              ],
+            },
+          ],
+        });
+        await expect(enforce(conditions))
+          .to.be.revertedWithCustomError(integrity, "UnsuitableParent")
+          .withArgs(2);
+      }
+
+      {
+        // EtherWithinAllowance
+        const conditions = flattenCondition({
+          paramType: AbiType.Calldata,
+          children: [
+            {
+              paramType: AbiType.AbiEncoded,
+              children: [
+                {
+                  paramType: AbiType.None,
+                  operator: Operator.EtherWithinAllowance,
+                  compValue: ZeroHash,
+                },
+              ],
+            },
+          ],
+        });
+        await expect(enforce(conditions))
+          .to.be.revertedWithCustomError(integrity, "UnsuitableParent")
+          .withArgs(2);
+      }
+      {
+        // CallWithinAllowance
+        const conditions = flattenCondition({
+          paramType: AbiType.Calldata,
+          children: [
+            {
+              paramType: AbiType.Tuple,
+              children: [
+                {
+                  paramType: AbiType.None,
+                  operator: Operator.CallWithinAllowance,
+                  compValue: ZeroHash,
+                },
+              ],
+            },
+          ],
+        });
+        await expect(enforce(conditions))
+          .to.be.revertedWithCustomError(integrity, "UnsuitableParent")
+          .withArgs(2);
+      }
+
+      {
+        // CallWithinAllowance
+        const conditions = flattenCondition({
+          paramType: AbiType.Calldata,
+          children: [
+            {
+              paramType: AbiType.AbiEncoded,
+              children: [
+                {
+                  paramType: AbiType.None,
+                  operator: Operator.CallWithinAllowance,
+                  compValue: ZeroHash,
+                },
+              ],
+            },
+          ],
+        });
+        await expect(enforce(conditions))
+          .to.be.revertedWithCustomError(integrity, "UnsuitableParent")
+          .withArgs(2);
+      }
+    });
+
     it("enforces and/or/nor to have at least 1 child", async () => {
       const { integrity, enforce } = await loadFixture(setup);
 
@@ -1031,7 +1224,7 @@ describe("Integrity", async () => {
             parent: 0,
             paramType: AbiType.None,
             operator: Operator.CallWithinAllowance,
-            compValue: BYTES32_ZERO,
+            compValue: ZeroHash,
           },
           {
             parent: 1,
@@ -1056,7 +1249,7 @@ describe("Integrity", async () => {
             parent: 0,
             paramType: AbiType.None,
             operator: Operator.EtherWithinAllowance,
-            compValue: BYTES32_ZERO,
+            compValue: ZeroHash,
           },
           {
             parent: 1,
@@ -1325,60 +1518,55 @@ describe("Integrity", async () => {
       it("array mismatch", async () => {
         const { integrity, enforce } = await loadFixture(setup);
 
-        const conditions = [
-          {
-            parent: 0,
-            paramType: AbiType.Calldata,
-            operator: Operator.Pass,
-            compValue: "0x",
-          },
-          {
-            parent: 0,
-            paramType: AbiType.Array,
-            operator: Operator.Pass,
-            compValue: "0x",
-          },
-          // first element 2
-          {
-            parent: 1,
-            paramType: AbiType.Tuple,
-            operator: Operator.Pass,
-            compValue: "0x",
-          },
-          // second element 3
-          {
-            parent: 1,
-            paramType: AbiType.Tuple,
-            operator: Operator.Pass,
-            compValue: "0x",
-          },
-          // tuple first
-          {
-            parent: 2,
-            paramType: AbiType.Dynamic,
-            operator: Operator.Pass,
-            compValue: "0x",
-          },
-          {
-            parent: 2,
-            paramType: AbiType.Static,
-            operator: Operator.Pass,
-            compValue: "0x",
-          },
-          // tuple second 8
-          {
-            parent: 3,
-            paramType: AbiType.Static,
-            operator: Operator.Pass,
-            compValue: "0x",
-          },
-          {
-            parent: 3,
-            paramType: AbiType.Static,
-            operator: Operator.Pass,
-            compValue: "0x",
-          },
-        ];
+        const conditions = flattenCondition({
+          paramType: AbiType.Calldata,
+          operator: Operator.Pass,
+          compValue: "0x",
+          children: [
+            {
+              paramType: AbiType.Array,
+              operator: Operator.Pass,
+              compValue: "0x",
+              children: [
+                {
+                  paramType: AbiType.Tuple,
+                  operator: Operator.Pass,
+                  compValue: "0x",
+                  children: [
+                    {
+                      paramType: AbiType.Dynamic,
+                      operator: Operator.Pass,
+                      compValue: "0x",
+                    },
+                    {
+                      paramType: AbiType.Static,
+                      operator: Operator.Pass,
+                      compValue: "0x",
+                    },
+                  ],
+                },
+                {
+                  paramType: AbiType.Tuple,
+                  operator: Operator.Pass,
+                  compValue: "0x",
+                  children: [
+                    {
+                      paramType: AbiType.Static,
+                      operator: Operator.Pass,
+                      compValue: "0x",
+                    },
+                    {
+                      paramType: AbiType.Static,
+                      operator: Operator.Pass,
+                      compValue: "0x",
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+
         await expect(enforce(conditions)).to.be.revertedWithCustomError(
           integrity,
           "UnsuitableChildTypeTree",
