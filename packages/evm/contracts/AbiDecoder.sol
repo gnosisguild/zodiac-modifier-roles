@@ -114,19 +114,20 @@ library AbiDecoder {
     }
 
     /**
-     * @dev Decodes a structured block of parameters from calldata. Maps
-     *      locations of values within Array or Tuple sections, which both use
-     *      HEAD+TAIL+OFFSET encoding scheme.
+     * @dev Decodes a block of parameters from calldata, handling both Arrays
+     *      and Tuples which use the HEAD+TAIL encoding scheme.
      *
-     * @param data      The encoded transaction data (in calldata for gas
-     *                  efficiency).
-     * @param location  Starting byte position of the block in calldata.
-     * @param length.   Number of elements to process in this block.
-     * @param payload   The decoded `Payload`.
+     * @param data      The encoded transaction data
+     * @param location  Starting byte position of the block in calldata
+     * @param length    Number of elements to decode in this block
+     * @param typeNode  Type definition tree for this block
+     * @param payload   Output payload to populate with decoded data
      *
-     * @notice Handles two block types:
-     *     1. Arrays: Length determined by a 32-byte word before the data.
-     *     2. Tuples: Length determined by the number of fields in the type.
+     * @notice Key differences:
+     *        - Arrays: All elements share the same type (typeNode.children[0])
+     *        - Tuples: Each element has its own type (typeNode.children[i])
+     *        - Inline elements are stored directly in HEAD region
+     *        - Non-inline elements store a pointer in HEAD, data in TAIL
      */
     function __block__(
         bytes calldata data,
