@@ -4,10 +4,18 @@ pragma solidity >=0.8.21 <0.9.0;
 import "./AbiTypes.sol";
 
 /**
- * @title AbiDecoder - A library that decodes abi encoded calldata and returns
- *        parameter payloads
+ * @title AbiDecoder - Inspects locations and sizes of abi-encoded parameters
  *
  * @author gnosisguild
+ *
+ * @notice This library analyzes ABI-encoded calldata according to a TypeTree
+ *         structure, returning Payload mappings that describe where each
+ *         parameter is located and how large it is.
+ *
+ *         The decoder validates bounds but does NOT extract actual values.
+ *         It only maps WHERE parameters are, not WHAT they contain.
+ *         Subsequently used by the PermissionChecker, which takes advantage
+ *         of cheap calldata slicing.
  */
 library AbiDecoder {
     error CalldataOutOfBounds();
@@ -191,6 +199,19 @@ library AbiDecoder {
         payload.children = children;
     }
 
+    /**
+     * @dev Handles variant nodes where multiple type interpretations are possible
+     *      for the same data location. Used by Dynamic nodes with variant children.
+     *
+     * @param data      The encoded transaction data
+     * @param location  Starting byte position in calldata
+     * @param typeNode  Type node containing variant interpretations as children
+     * @param payload   Output payload marked as variant with child payloads
+     *
+     * @notice The payload is marked as overflown=true by default. It's only set
+     *         to false if at least one variant interpretation succeeds (doesn't
+     *         overflow).
+     */
     function _variant(
         bytes calldata data,
         uint256 location,
@@ -212,16 +233,22 @@ library AbiDecoder {
     }
 
     /**
-     * @dev Calculates the absolute position of a chunk in calldata.
-     *      For inline parameters, returns the position in the HEAD region.
-     *      For non-inline parameters, follows the offset pointer to TAIL.
+     * @dev Resolves the absolute position of a block element in calldata based
+     *      on HEAD+TAIL encoding. Part of __block__ processing for Arrays/Tuples.
      *
-     * @param data       The encoded calldata.
-     * @param location   Base position where the HEAD region begins.
-     * @param headOffset Relative position within the HEAD region.
-     * @param isInline   Whether the parameter is inline or referenced via offset.
-     * @return           The absolute position of the chunk in calldata.
+     * @param data       The encoded calldata
+     * @param location   Start of this block's HEAD region
+     * @param headOffset Offset of current element within block's HEAD
+     * @param isInline   True if element stored inline in HEAD, false if in TAIL
+     * @return           Absolute position in calldata, or type(uint256).max if
+     *                   bounds are violated (overflow detected)
+     *
+     * @notice Block encoding rules:
+     *         - Inline elements: stored directly at location + headOffset
+     *         - Dynamic elements: HEAD contains pointer, data in TAIL region
+     *         - TAIL offsets are relative to block start, not calldata start
      */
+
     function _locationInBlock(
         bytes calldata data,
         uint256 location,
@@ -253,15 +280,20 @@ library AbiDecoder {
     }
 
     /**
-     * @dev Recursively traverses the ABI typeTree to determine if the
-     *      parameter is inline. A parameter is considered inline if it is
-     *      either a static type or a tuple containing only static types.
-     *      Arrays and dynamic types break the inline chain.
+     * @dev Determines if a parameter is stored inline (in HEAD region) versus
+     *      offset pointing to TAIL region.
      *
-     *      Additionally, nested `AbiEncoded*` nodes are always embedded within
-     *      a dynamic placeholder node, making them non-inline as well.
+     * @param node The type tree node to check
+     * @return     `true` if inline, `false` if requires pointer
      *
-     * @return         `true` if the parameter is inline, `false` otherwise.
+     * @notice Inline types:
+     *         - Static: always inline (32 bytes)
+     *         - Tuple: inline if ALL fields are inline
+     *
+     *         Non-inline types (require pointer):
+     *         - Dynamic: variable length data
+     *         - Array: length prefix + elements
+     *         - Calldata/AbiEncoded: embedded structures
      */
     function _isInline(TypeTree memory node) private pure returns (bool) {
         AbiType _type = node._type;
