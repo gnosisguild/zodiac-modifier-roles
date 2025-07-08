@@ -4,7 +4,7 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 import { AbiType, flattenCondition, Operator } from "./utils";
 
-describe("ConditionTopology library", async () => {
+describe("Topology library", async () => {
   async function setup() {
     const MockTopology = await hre.ethers.getContractFactory("MockTopology");
     const topology = await MockTopology.deploy();

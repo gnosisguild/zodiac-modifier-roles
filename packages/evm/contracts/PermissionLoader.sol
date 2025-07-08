@@ -4,8 +4,8 @@ pragma solidity >=0.8.17 <0.9.0;
 import "@gnosis-guild/zodiac-core/contracts/core/Modifier.sol";
 
 import "./_Core.sol";
-import "./ConditionTopology.sol";
 import "./Consumptions.sol";
+import "./Topology.sol";
 import "./WriteOnce.sol";
 
 import "./packers/Packer.sol";
@@ -13,8 +13,9 @@ import "./packers/Packer.sol";
 /**
  * @title PermissionLoader - a component of the Zodiac Roles Mod that handles
  * the writing and reading of permission data to and from storage.
- * @author Cristóvão Honorato - <cristovao.honorato@gnosis.io>
- * @author Jan-Felix Schwarz  - <jan-felix.schwarz@gnosis.io>
+ *
+ * @author gnosisguild
+ *
  */
 abstract contract PermissionLoader is Core {
     function _store(
@@ -76,7 +77,7 @@ abstract contract PermissionLoader is Core {
         }
 
         {
-            typeTree = ConditionTopology.typeTree(conditionsFlat, 0);
+            typeTree = Topology.typeTree(conditionsFlat, 0);
             _conditionTree(conditionsFlat, compValues, 0, condition);
         }
 
@@ -103,7 +104,7 @@ abstract contract PermissionLoader is Core {
         treeNode.operator = conditionFlat.operator;
         treeNode.compValue = compValues[index];
 
-        (uint256 start, uint256 length) = ConditionTopology.childBounds(
+        (uint256 start, uint256 length) = Topology.childBounds(
             conditionsFlat,
             index
         );

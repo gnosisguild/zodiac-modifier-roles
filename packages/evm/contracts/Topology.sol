@@ -4,12 +4,13 @@ pragma solidity >=0.8.17 <0.9.0;
 import "./Types.sol";
 
 /**
- * @title  ConditionTopology - a library that provides helper functions for dealing with
+ * @title  Topology - a library that provides helper functions for dealing with
  * the flat representation of conditions.
  *
  * @author gnosisguild
+ *
  */
-library ConditionTopology {
+library Topology {
     function typeTree(
         ConditionFlat[] memory conditions,
         uint256 index
