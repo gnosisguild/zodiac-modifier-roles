@@ -80,6 +80,24 @@ describe("AbiDecoder - Overflow", () => {
         expect(result.children.length).to.equal(0);
       }
     });
+    it("does not overflow on lone allowances", async () => {
+      const { decoder } = await loadFixture(setup);
+      const conditions = flattenCondition({
+        paramType: AbiType.Calldata,
+        children: [{ paramType: AbiType.None }],
+      });
+
+      const dataOk = Interface.from([
+        "function doNothing()",
+      ]).encodeFunctionData("doNothing", []);
+
+      {
+        // OKAY
+        const result = await decoder.inspect(dataOk, conditions);
+        expect(result.overflown).to.equal(false);
+        expect(result.children.length).to.equal(1);
+      }
+    });
     it("overflows on static type missing", async () => {
       const { decoder } = await loadFixture(setup);
 
