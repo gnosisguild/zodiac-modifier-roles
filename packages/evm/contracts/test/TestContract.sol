@@ -179,6 +179,8 @@ contract TestContract {
 
     function twoParamsStaticTupleStatic(StaticTuple calldata, uint256) public {}
 
+    function twoParamsStaticDynamic(uint256, bytes calldata) public {}
+
     function spendAndMaybeRevert(uint256, bool revert_) public pure {
         if (revert_) {
             revert();
