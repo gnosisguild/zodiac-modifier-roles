@@ -137,6 +137,8 @@ contract TestContract {
 
     function oneParamBytes(bytes calldata) public {}
 
+    function oneParamArrayOfBytes(bytes[] calldata) public {}
+
     function oneParamString(string calldata) public {}
 
     function oneParamAddress(address) public {}
