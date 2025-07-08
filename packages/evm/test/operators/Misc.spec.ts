@@ -95,7 +95,7 @@ describe("Operator - Misc", async () => {
       .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
   });
 
-  it("Cannot setup sibling TypeEquivalence when the first element is Dynamic", async () => {
+  it("It is possible to setup sibling TypeEquivalence when the first element is Dynamic, and others are Dynamic or AbiEncoded or Calldata", async () => {
     const { scopeFunction } = await loadFixture(setupOneParamBytes);
 
     const maskCompValue = (selector: string) => {
@@ -159,6 +159,6 @@ describe("Operator - Misc", async () => {
           compValue: defaultAbiCoder.encode(["uint256"], [123456]),
         },
       ]),
-    ).to.be.reverted;
+    ).to.not.be.reverted;
   });
 });

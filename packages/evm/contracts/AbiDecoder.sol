@@ -137,12 +137,23 @@ library AbiDecoder {
     ) private pure {
         Payload[] memory children = new Payload[](length);
 
-        bool isInline;
+        bool isArray = typeNode._type == AbiType.Array;
+        bool isInline = isArray && _isInline(typeNode.children[0]);
+
         uint256 offset;
         for (uint256 i; i < length; i++) {
-            if (i == 0 || typeNode._type != AbiType.Array) {
-                // For structs or the first element of an array, calculate if element inline
-                // For array elements after the first, they all have the same inline status
+            if (!isArray) {
+                /*
+                 * Skip AbiType.None children (Ether|Call)WithinAllowance.
+                 * These only appear as top level children of Calldata nodes,
+                 * ever within arrays.
+                 */
+                if (typeNode.children[i]._type == AbiType.None) continue;
+                /*
+                 * For tuples, each child may have different inline status.
+                 * Arrays reuse the same inline status for all elements,
+                 * calculated once above
+                 */
                 isInline = _isInline(typeNode.children[i]);
             }
 
@@ -161,7 +172,7 @@ library AbiDecoder {
             _walk(
                 data,
                 childLocation,
-                typeNode.children[typeNode._type == AbiType.Array ? 0 : i],
+                typeNode.children[isArray ? 0 : i],
                 children[i]
             );
 
@@ -170,11 +181,11 @@ library AbiDecoder {
                 return;
             }
 
-            // For non-inline elements, we need to account for the 32-byte pointer
-            payload.size += children[i].size + (isInline ? 0 : 32);
-
             // Update the offset in the block for the next element
             offset += isInline ? children[i].size : 32;
+
+            // For non-inline elements, we need to account for the 32-byte pointer
+            payload.size += children[i].size + (isInline ? 0 : 32);
         }
         payload.children = children;
     }
