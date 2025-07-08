@@ -198,20 +198,14 @@ describe("Operator - Misc", async () => {
                   operator: Operator.Matches,
                   children: [
                     {
-                      paramType: AbiType.Tuple,
-                      operator: Operator.Matches,
-                      children: [
-                        {
-                          paramType: AbiType.Static,
-                          operator: Operator.LessThan,
-                          compValue: defaultAbiCoder.encode(["uint256"], [50]),
-                        },
-                        {
-                          paramType: AbiType.Dynamic,
-                          operator: Operator.EqualTo,
-                          compValue: encode(["bytes"], ["0xaabbcc"]),
-                        },
-                      ],
+                      paramType: AbiType.Static,
+                      operator: Operator.EqualTo,
+                      compValue: defaultAbiCoder.encode(["uint256"], [987654]),
+                    },
+                    {
+                      paramType: AbiType.Dynamic,
+                      operator: Operator.EqualTo,
+                      compValue: encode(["bytes"], ["0xaabbcc"]),
                     },
                   ],
                 },
@@ -227,7 +221,7 @@ describe("Operator - Misc", async () => {
     // Test data - each entry must match one of the variants
     const validArray = [
       encode(["uint256"], [150]), // Variant 1: 150 > 100 ✓
-      encode(["uint256", "bytes"], [25, "0xaabbcc"]), // Variant 2: 25 < 50 ✓
+      encode(["tuple(uint256,bytes)"], [[25, "0xaabbcc"]]), // Variant 2: 25 < 50 ✓
       encode(["uint256"], [200]), // Variant 1: 200 > 100 ✓
     ];
 
@@ -240,7 +234,7 @@ describe("Operator - Misc", async () => {
     await expect(invoke(validArray)).to.not.be.reverted;
     await expect(invoke(invalidArray))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.OrViolation, ZeroHash);
+      .withArgs(PermissionCheckerStatus.NotEveryArrayElementPasses, ZeroHash);
   });
 });
 
