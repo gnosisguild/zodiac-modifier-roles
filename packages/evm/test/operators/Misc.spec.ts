@@ -198,14 +198,20 @@ describe("Operator - Misc", async () => {
                   operator: Operator.Matches,
                   children: [
                     {
-                      paramType: AbiType.Static,
-                      operator: Operator.EqualTo,
-                      compValue: defaultAbiCoder.encode(["uint256"], [987654]),
-                    },
-                    {
-                      paramType: AbiType.Dynamic,
-                      operator: Operator.EqualTo,
-                      compValue: encode(["bytes"], ["0xaabbcc"]),
+                      paramType: AbiType.Tuple,
+                      operator: Operator.Matches,
+                      children: [
+                        {
+                          paramType: AbiType.Static,
+                          operator: Operator.EqualTo,
+                          compValue: defaultAbiCoder.encode(["uint256"], [25]),
+                        },
+                        {
+                          paramType: AbiType.Dynamic,
+                          operator: Operator.EqualTo,
+                          compValue: encode(["bytes"], ["0xaabbcc"]),
+                        },
+                      ],
                     },
                   ],
                 },
