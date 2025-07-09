@@ -748,7 +748,6 @@ describe("Integrity", async () => {
         ]),
       ).to.be.revertedWithCustomError(integrity, "NotBFS");
     });
-
     it("enforces (Ether/Call)WithinAllowance to be child of root Calldata - ok", async () => {
       const { enforce } = await loadFixture(setup);
 
@@ -765,7 +764,6 @@ describe("Integrity", async () => {
       });
       await expect(enforce(conditions)).to.not.be.reverted;
     });
-
     it("enforces (Ether/Call)WithinAllowance to be child of root Calldata - ok when root under LOGICAL", async () => {
       const { integrity, enforce } = await loadFixture(setup);
       {
@@ -801,7 +799,6 @@ describe("Integrity", async () => {
           ),
         ).to.not.be.reverted;
       }
-
       {
         // EtherWithinAllowance
         await expect(
@@ -836,7 +833,6 @@ describe("Integrity", async () => {
         ).to.not.be.reverted;
       }
     });
-
     it("enforces (Ether/Call)WithinAllowance to be child of root Calldata - throws on Calldata that's non root", async () => {
       const { integrity, enforce } = await loadFixture(setup);
       {
@@ -856,6 +852,7 @@ describe("Integrity", async () => {
             },
           ],
         });
+
         await expect(enforce(conditions))
           .to.be.revertedWithCustomError(integrity, "UnsuitableParent")
           .withArgs(2);
@@ -866,12 +863,24 @@ describe("Integrity", async () => {
           paramType: AbiType.Calldata,
           children: [
             {
-              paramType: AbiType.Calldata,
+              operator: Operator.Or,
+              paramType: AbiType.None,
               children: [
                 {
-                  paramType: AbiType.None,
-                  operator: Operator.CallWithinAllowance,
-                  compValue: ZeroHash,
+                  paramType: AbiType.Calldata,
+                  children: [
+                    {
+                      operator: Operator.Or,
+                      paramType: AbiType.None,
+                      children: [
+                        {
+                          paramType: AbiType.None,
+                          operator: Operator.CallWithinAllowance,
+                          compValue: ZeroHash,
+                        },
+                      ],
+                    },
+                  ],
                 },
               ],
             },
@@ -879,10 +888,9 @@ describe("Integrity", async () => {
         });
         await expect(enforce(conditions))
           .to.be.revertedWithCustomError(integrity, "UnsuitableParent")
-          .withArgs(2);
+          .withArgs(4);
       }
     });
-
     it("enforces (Ether/Call)WithinAllowance to be child of root Calldata - throws on nodes other than Calldata", async () => {
       const { integrity, enforce } = await loadFixture(setup);
       {
@@ -972,7 +980,6 @@ describe("Integrity", async () => {
           .withArgs(2);
       }
     });
-
     it("enforces and/or/nor to have at least 1 child", async () => {
       const { integrity, enforce } = await loadFixture(setup);
 
@@ -1180,6 +1187,108 @@ describe("Integrity", async () => {
         .withArgs(1);
 
       await expect(enforce(conditions.slice(0, -1))).to.not.be.reverted;
+    });
+    it("allows arraySome/arrayEvery to have logical operators as children", async () => {
+      const { enforce } = await loadFixture(setup);
+
+      // Test ArraySome with OR logical operator
+      await expect(
+        enforce(
+          flattenCondition({
+            paramType: AbiType.Calldata,
+            children: [
+              {
+                paramType: AbiType.Array,
+                operator: Operator.ArraySome,
+                children: [
+                  {
+                    paramType: AbiType.None,
+                    operator: Operator.Or,
+                    children: [
+                      {
+                        paramType: AbiType.Static,
+                        operator: Operator.EqualTo,
+                        compValue: defaultAbiCoder.encode(["uint256"], [100]),
+                      },
+                      {
+                        paramType: AbiType.Static,
+                        operator: Operator.EqualTo,
+                        compValue: defaultAbiCoder.encode(["uint256"], [200]),
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          }),
+        ),
+      ).to.not.be.reverted;
+
+      // Test ArrayEvery with AND logical operator
+      await expect(
+        enforce(
+          flattenCondition({
+            paramType: AbiType.Calldata,
+            children: [
+              {
+                paramType: AbiType.Array,
+                operator: Operator.ArrayEvery,
+                children: [
+                  {
+                    paramType: AbiType.None,
+                    operator: Operator.And,
+                    children: [
+                      {
+                        paramType: AbiType.Static,
+                        operator: Operator.GreaterThan,
+                        compValue: defaultAbiCoder.encode(["uint256"], [50]),
+                      },
+                      {
+                        paramType: AbiType.Static,
+                        operator: Operator.LessThan,
+                        compValue: defaultAbiCoder.encode(["uint256"], [150]),
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          }),
+        ),
+      ).to.not.be.reverted;
+
+      // Test ArraySome with NOR logical operator
+      await expect(
+        enforce(
+          flattenCondition({
+            paramType: AbiType.Calldata,
+            children: [
+              {
+                paramType: AbiType.Array,
+                operator: Operator.ArraySome,
+                children: [
+                  {
+                    paramType: AbiType.None,
+                    operator: Operator.Nor,
+                    children: [
+                      {
+                        paramType: AbiType.Static,
+                        operator: Operator.EqualTo,
+                        compValue: defaultAbiCoder.encode(["uint256"], [0]),
+                      },
+                      {
+                        paramType: AbiType.Static,
+                        operator: Operator.EqualTo,
+                        compValue: defaultAbiCoder.encode(["uint256"], [1]),
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          }),
+        ),
+      ).to.not.be.reverted;
     });
     it("enforces arraySubset to have at most 256 children", async () => {
       const { integrity, enforce } = await loadFixture(setup);
@@ -1755,124 +1864,273 @@ describe("Integrity", async () => {
         conditions[conditions.length - 1].paramType = AbiType.Static;
         await expect(enforce(conditions)).to.not.be.reverted;
       });
-      it("sibling type equivalence - ok", async () => {
-        const { integrity, enforce } = await loadFixture(setup);
 
-        // A function with a dynamic argument, which is also an embedded Calldata encoded field
-        await expect(
-          enforce([
-            {
-              parent: 0,
-              paramType: AbiType.Calldata,
-              operator: Operator.Pass,
-              compValue: "0x",
-            },
-            {
-              parent: 0,
-              paramType: AbiType.None,
-              operator: Operator.And,
-              compValue: "0x",
-            },
-            {
-              parent: 1,
-              paramType: AbiType.Calldata,
-              operator: Operator.Pass,
-              compValue: "0x",
-            },
-            {
-              parent: 1,
-              paramType: AbiType.Dynamic,
-              operator: Operator.Pass,
-              compValue: "0x",
-            },
-            {
-              parent: 2,
-              paramType: AbiType.Static,
-              operator: Operator.Pass,
-              compValue: "0x",
-            },
-          ]),
-        ).to.not.be.reverted;
+      it("type variants:", async () => {
+        it("allows Dynamic and Calldata siblings", async () => {
+          const { enforce } = await loadFixture(setup);
 
-        // A function with a dynamic argument, which is also an embedded AbiEncoded encoded field
-        await expect(
-          enforce([
-            {
-              parent: 0,
-              paramType: AbiType.Calldata,
-              operator: Operator.Pass,
-              compValue: "0x",
-            },
-            {
-              parent: 0,
-              paramType: AbiType.None,
-              operator: Operator.And,
-              compValue: "0x",
-            },
-            {
-              parent: 1,
-              paramType: AbiType.AbiEncoded,
-              operator: Operator.Pass,
-              compValue: "0x",
-            },
-            {
-              parent: 1,
-              paramType: AbiType.Dynamic,
-              operator: Operator.Pass,
-              compValue: "0x",
-            },
-            {
-              parent: 2,
-              paramType: AbiType.Static,
-              operator: Operator.Pass,
-              compValue: "0x",
-            },
-          ]),
-        ).to.not.be.reverted;
+          await expect(
+            enforce(
+              flattenCondition({
+                paramType: AbiType.Calldata,
+                children: [
+                  {
+                    paramType: AbiType.None,
+                    operator: Operator.And,
+                    children: [
+                      {
+                        paramType: AbiType.Dynamic,
+                        operator: Operator.Pass,
+                      },
+                      {
+                        paramType: AbiType.Calldata,
+                        children: [
+                          {
+                            paramType: AbiType.Static,
+                            operator: Operator.Pass,
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              }),
+            ),
+          ).to.not.be.reverted;
+        });
 
-        // Dynamic can't come before the Calldata node that actually defines the type tree and should be the Anchor
-        await expect(
-          enforce([
-            {
-              parent: 0,
-              paramType: AbiType.Calldata,
-              operator: Operator.Pass,
-              compValue: "0x",
-            },
-            {
-              parent: 0,
-              paramType: AbiType.None,
-              operator: Operator.And,
-              compValue: "0x",
-            },
-            {
-              parent: 1,
-              paramType: AbiType.Dynamic,
-              operator: Operator.Pass,
-              compValue: "0x",
-            },
-            {
-              parent: 1,
-              paramType: AbiType.Calldata,
-              operator: Operator.Pass,
-              compValue: "0x",
-            },
-            {
-              parent: 1,
-              paramType: AbiType.Static,
-              operator: Operator.Pass,
-              compValue: "0x",
-            },
-            {
-              parent: 3,
-              paramType: AbiType.Static,
-              operator: Operator.Pass,
-              compValue: "0x",
-            },
-          ]),
-        )
-          .to.be.revertedWithCustomError(integrity, "UnsuitableChildTypeTree")
-          .withArgs(1);
+        // Test 2: Dynamic + AbiEncoded are equivalent
+        it("allows Dynamic and AbiEncoded siblings", async () => {
+          const { enforce } = await loadFixture(setup);
+          await expect(
+            enforce(
+              flattenCondition({
+                paramType: AbiType.Calldata,
+                children: [
+                  {
+                    paramType: AbiType.None,
+                    operator: Operator.Or,
+                    children: [
+                      {
+                        paramType: AbiType.Dynamic,
+                        operator: Operator.Pass,
+                      },
+                      {
+                        paramType: AbiType.AbiEncoded,
+                        children: [
+                          {
+                            paramType: AbiType.Static,
+                            operator: Operator.Pass,
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              }),
+            ),
+          ).to.not.be.reverted;
+        });
+
+        // Test 3: Calldata + AbiEncoded are equivalent
+        it("allows Calldata and AbiEncoded siblings", async () => {
+          const { enforce } = await loadFixture(setup);
+          await expect(
+            enforce(
+              flattenCondition({
+                paramType: AbiType.Calldata,
+                children: [
+                  {
+                    paramType: AbiType.None,
+                    operator: Operator.Nor,
+                    children: [
+                      {
+                        paramType: AbiType.Calldata,
+                        children: [
+                          {
+                            paramType: AbiType.Static,
+                            operator: Operator.Pass,
+                          },
+                        ],
+                      },
+                      {
+                        paramType: AbiType.AbiEncoded,
+                        children: [
+                          {
+                            paramType: AbiType.Dynamic,
+                            operator: Operator.Pass,
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              }),
+            ),
+          ).to.not.be.reverted;
+        });
+
+        // Test 4: All three types together (Dynamic + Calldata + AbiEncoded)
+        it("allows all three equivalent types as siblings", async () => {
+          const { enforce } = await loadFixture(setup);
+          await expect(
+            enforce(
+              flattenCondition({
+                paramType: AbiType.Calldata,
+                children: [
+                  {
+                    paramType: AbiType.None,
+                    operator: Operator.And,
+                    children: [
+                      {
+                        paramType: AbiType.Dynamic,
+                        operator: Operator.Pass,
+                      },
+                      {
+                        paramType: AbiType.Calldata,
+                        children: [
+                          {
+                            paramType: AbiType.Static,
+                            operator: Operator.Pass,
+                          },
+                        ],
+                      },
+                      {
+                        paramType: AbiType.AbiEncoded,
+                        children: [
+                          {
+                            paramType: AbiType.Tuple,
+                            children: [
+                              {
+                                paramType: AbiType.Static,
+                                operator: Operator.Pass,
+                              },
+                            ],
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              }),
+            ),
+          ).to.not.be.reverted;
+        });
+
+        // Test 5: Type equivalence in nested arrays
+        it("allows type equivalence within array contexts", async () => {
+          const { enforce } = await loadFixture(setup);
+          await expect(
+            enforce(
+              flattenCondition({
+                paramType: AbiType.Calldata,
+                children: [
+                  {
+                    paramType: AbiType.Array,
+                    operator: Operator.ArraySome,
+                    children: [
+                      {
+                        paramType: AbiType.None,
+                        operator: Operator.Or,
+                        children: [
+                          {
+                            paramType: AbiType.Dynamic,
+                            operator: Operator.Pass,
+                          },
+                          {
+                            paramType: AbiType.Calldata,
+                            children: [
+                              {
+                                paramType: AbiType.Static,
+                                operator: Operator.EqualTo,
+                                compValue: defaultAbiCoder.encode(
+                                  ["uint256"],
+                                  [42],
+                                ),
+                              },
+                            ],
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              }),
+            ),
+          ).to.not.be.reverted;
+        });
+
+        it("rejects Static as sibling in type variant point", async () => {
+          const { integrity, enforce } = await loadFixture(setup);
+          await expect(
+            enforce(
+              flattenCondition({
+                paramType: AbiType.Calldata,
+                children: [
+                  {
+                    paramType: AbiType.None,
+                    operator: Operator.And,
+                    children: [
+                      {
+                        paramType: AbiType.Dynamic,
+                        operator: Operator.Pass,
+                      },
+                      {
+                        paramType: AbiType.Calldata,
+                        children: [
+                          {
+                            paramType: AbiType.Static,
+                            operator: Operator.Pass,
+                          },
+                        ],
+                      },
+                      {
+                        paramType: AbiType.Static,
+                        operator: Operator.Pass,
+                      },
+                    ],
+                  },
+                ],
+              }),
+            ),
+          )
+            .to.be.revertedWithCustomError(integrity, "UnsuitableChildTypeTree")
+            .withArgs(1);
+        });
+
+        it("rejects Tuple as sibling in type variant point", async () => {
+          const { integrity, enforce } = await loadFixture(setup);
+          await expect(
+            enforce(
+              flattenCondition({
+                paramType: AbiType.Calldata,
+                children: [
+                  {
+                    paramType: AbiType.None,
+                    operator: Operator.And,
+                    children: [
+                      {
+                        paramType: AbiType.Dynamic,
+                        operator: Operator.Pass,
+                      },
+                      {
+                        paramType: AbiType.Tuple,
+                        children: [
+                          {
+                            paramType: AbiType.Static,
+                            operator: Operator.Pass,
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              }),
+            ),
+          )
+            .to.be.revertedWithCustomError(integrity, "UnsuitableChildTypeTree")
+            .withArgs(1);
+        });
       });
     });
   });

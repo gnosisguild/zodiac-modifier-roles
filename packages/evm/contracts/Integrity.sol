@@ -157,10 +157,32 @@ library Integrity {
         for (uint256 i = 0; i < length; ++i) {
             if (
                 (conditions[i].operator == Operator.EtherWithinAllowance ||
-                    conditions[i].operator == Operator.CallWithinAllowance) &&
-                conditions[conditions[i].parent].paramType != AbiType.Calldata
+                    conditions[i].operator == Operator.CallWithinAllowance)
             ) {
-                revert UnsuitableParent(i);
+                uint256 countCalldataNodes = 0;
+                for (uint256 j = conditions[i].parent; ; ) {
+                    bool isCalldata = conditions[j].paramType ==
+                        AbiType.Calldata;
+                    bool isLogical = (conditions[j].operator >= Operator.And &&
+                        conditions[j].operator <= Operator.Nor);
+
+                    if (isCalldata) {
+                        countCalldataNodes++;
+                    }
+
+                    if (!isCalldata && !isLogical) {
+                        revert UnsuitableParent(i);
+                    }
+
+                    if (j == 0) {
+                        break;
+                    }
+
+                    j = conditions[j].parent;
+                }
+                if (countCalldataNodes != 1) {
+                    revert UnsuitableParent(i);
+                }
             }
         }
 
@@ -229,8 +251,8 @@ library Integrity {
                     condition.paramType == AbiType.Array)
             ) {
                 if (
-                    !(_isTypeMatch(conditions, i) ||
-                        _isTypeEquivalence(conditions, i))
+                    !_isTypeMatch(conditions, i) &&
+                    !_isTypeEquivalence(conditions, i)
                 ) {
                     revert UnsuitableChildTypeTree(i);
                 }
