@@ -5,6 +5,7 @@ import { Annotation, Target } from "zodiac-roles-deployments"
 import {
   Permission,
   PermissionCoerced,
+  permissionId,
   validatePresets,
   // eslint does not know about our Typescript path alias
   // eslint-disable-next-line import/no-unresolved
@@ -155,7 +156,7 @@ export const resolveAnnotation = async (
     operation.parameters as DeferencedOpenAPIParameter[]
 
   return {
-    permissions,
+    permissions: dedupePermissions(permissions),
     uri: normalizedUri,
     serverUrl,
     apiInfo: schema.definition.info || { title: "", version: "" },
@@ -274,4 +275,14 @@ async function validateJsonResponse(res: Response) {
   }
 
   throw new Error(`Request failed: ${res.statusText}`)
+}
+
+function dedupePermissions(
+  permissions: PermissionCoerced[]
+): PermissionCoerced[] {
+  const seen = new Set<string>()
+  return permissions.filter((p) => {
+    const id = permissionId(p)
+    return seen.has(id) ? false : seen.add(id) && true
+  })
 }
