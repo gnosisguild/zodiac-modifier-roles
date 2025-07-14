@@ -67,6 +67,10 @@ export const chains = {
     name: "bob",
     prefix: "bob",
   },
+  [57073]: {
+    name: "ink",
+    prefix: "ink",
+  },
   // [999]: {
   //   name: "hyperevm",
   //   prefix: "hyperevm",

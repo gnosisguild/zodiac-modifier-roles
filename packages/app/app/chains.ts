@@ -16,6 +16,7 @@ import {
   bob,
   unichain,
   mantle,
+  ink,
 } from "wagmi/chains"
 
 export const CHAINS = {
@@ -86,6 +87,10 @@ export const CHAINS = {
   [bob.id]: {
     ...bob,
     prefix: "bob",
+  },
+  [ink.id]: {
+    ...ink,
+    prefix: "ink",
   },
 }
 
