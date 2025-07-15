@@ -84,6 +84,8 @@ const NETWORK_MAP: Record<SupportedChainId, string> = {
   [SupportedChainId.GNOSIS_CHAIN]: "xdai",
   [SupportedChainId.ARBITRUM_ONE]: "arbitrum_one",
   [SupportedChainId.BASE]: "base",
+  [SupportedChainId.AVALANCHE]: "avalanche",
+  [SupportedChainId.POLYGON]: "polygon",
   [SupportedChainId.SEPOLIA]: "sepolia",
 }
 
