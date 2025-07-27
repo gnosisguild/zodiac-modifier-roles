@@ -9,6 +9,10 @@ export { c, forAll } from "./target/authoring"
 export { planApply, planApplyRole, planExtendRole } from "./target/plan"
 export { targetIntegrity } from "./target/integrity"
 
+// helpers
+export { callsPlannedForApply, callsPlannedForApplyRole } from "./target/plan"
+export { encodeCalls, type Call } from "./target/calls"
+
 /*
  *
  * Layer 2 - Permission

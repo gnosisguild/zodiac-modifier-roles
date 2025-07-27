@@ -93,6 +93,14 @@ export async function planApply(
   return encodeCalls(calls, address)
 }
 
+export function callsPlannedForApply(
+  prev: { roles: Role[]; allowances: Allowance[] },
+  next: { roles: Role[]; allowances: Allowance[] }
+): Call[] {
+  const { minus, plus } = diff({ prev, next })
+  return [...minus, ...plus]
+}
+
 /**
  * Plans and encodes transactions to update a single role to a desired state.
  *
@@ -153,6 +161,11 @@ export async function planApplyRole(
   logCalls(calls, log)
 
   return encodeCalls(calls, address)
+}
+
+export function callsPlannedForApplyRole(prev: Role, next: Role): Call[] {
+  const { minus, plus } = diffRole({ prev, next })
+  return [...minus, ...plus]
 }
 
 /**
