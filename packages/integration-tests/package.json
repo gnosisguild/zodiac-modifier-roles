@@ -10,7 +10,7 @@
     "pre-commit": "yarn fix"
   },
   "devDependencies": {
-    "@gnosis-guild/zodiac-core": "^2.0.5",
+    "@gnosis-guild/zodiac-core": "^3.0.1",
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.8",
     "@nomicfoundation/hardhat-ethers": "^3.0.8",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.12",
