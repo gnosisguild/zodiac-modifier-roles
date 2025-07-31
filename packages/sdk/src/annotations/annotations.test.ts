@@ -88,6 +88,8 @@ const annotation1 = {
 const permissionsForPreset1: PermissionCoerced[] = [
   {
     targetAddress: "0x6b175474e89094c44da98b954eedeac495271d0f",
+    delegatecall: false,
+    send: false,
     selector: "0x095ea7b3",
     condition: {
       paramType: 5,
@@ -106,6 +108,8 @@ const permissionsForPreset1: PermissionCoerced[] = [
   {
     targetAddress: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
     selector: "0x095ea7b3",
+    delegatecall: false,
+    send: false,
     condition: {
       paramType: 5,
       operator: 5,
@@ -184,10 +188,12 @@ const permissionsForPreset1: PermissionCoerced[] = [
       ],
     },
     delegatecall: true,
+    send: false,
   },
   {
     targetAddress: "0x23da9ade38e4477b23770ded512fd37b12381fab",
     selector: "0x5a66c223",
     delegatecall: true,
+    send: false,
   },
 ]
