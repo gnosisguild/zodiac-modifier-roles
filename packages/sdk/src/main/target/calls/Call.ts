@@ -13,56 +13,56 @@ export type Call =
 
 interface AllowTargetCall {
   call: "allowTarget"
-  roleKey: string
-  targetAddress: string
+  roleKey: `0x${string}`
+  targetAddress: `0x${string}`
   executionOptions: ExecutionOptions
 }
 
 interface ScopeTargetCall {
   call: "scopeTarget"
-  roleKey: string
-  targetAddress: string
+  roleKey: `0x${string}`
+  targetAddress: `0x${string}`
 }
 interface RevokeTargetCall {
   call: "revokeTarget"
-  roleKey: string
-  targetAddress: string
+  roleKey: `0x${string}`
+  targetAddress: `0x${string}`
 }
 
 interface AllowFunctionCall {
   call: "allowFunction"
-  roleKey: string
-  targetAddress: string
-  selector: string
+  roleKey: `0x${string}`
+  targetAddress: `0x${string}`
+  selector: `0x${string}`
   executionOptions: ExecutionOptions
 }
 
 interface ScopeFunctionCall {
   call: "scopeFunction"
-  roleKey: string
-  targetAddress: string
-  selector: string
+  roleKey: `0x${string}`
+  targetAddress: `0x${string}`
+  selector: `0x${string}`
   condition: Condition
   executionOptions: ExecutionOptions
 }
 
 interface RevokeFunctionCall {
   call: "revokeFunction"
-  roleKey: string
-  targetAddress: string
-  selector: string
+  roleKey: `0x${string}`
+  targetAddress: `0x${string}`
+  selector: `0x${string}`
 }
 
 interface AssignRolesCall {
   call: "assignRoles"
-  roleKey: string
-  member: string
+  roleKey: `0x${string}`
+  member: `0x${string}`
   join: boolean
 }
 
 interface SetAllowanceCall {
   call: "setAllowance"
-  key: string
+  key: `0x${string}`
   balance: bigint
   maxRefill: bigint
   refill: bigint
@@ -72,7 +72,7 @@ interface SetAllowanceCall {
 
 interface PostAnnotationsCall {
   call: "postAnnotations"
-  roleKey: string
+  roleKey: `0x${string}`
   body: {
     addAnnotations?: {
       uris: string[]

@@ -17,7 +17,7 @@ export function diffTargets({
   prev,
   next,
 }: {
-  roleKey: string
+  roleKey: `0x${string}`
   prev?: Target[]
   next?: Target[]
 }) {
@@ -44,7 +44,7 @@ export function diffTarget({
   prev,
   next,
 }: {
-  roleKey: string
+  roleKey: `0x${string}`
   prev?: Target
   next?: Target
 }): Diff {
@@ -77,8 +77,8 @@ function draftCall({
   targetAddress,
   target,
 }: {
-  roleKey: string
-  targetAddress: string
+  roleKey: `0x${string}`
+  targetAddress: `0x${string}`
   target?: Target
 }): Call {
   const clearance = target?.clearance || Clearance.None

@@ -23,14 +23,14 @@ export const allowCowOrderSigning = ({
   receiver?: `0x${string}`
 
   /** Allowance key to restrict approve amounts across sell tokens. If not provided, infinite approvals are allowed. */
-  approveAllowance?: string
+  approveAllowance?: `0x${string}`
   /** Allowance key to restrict buy amount within allowance. If not provided, no buy amount restriction is applied. */
-  buyAllowance?: string
+  buyAllowance?: `0x${string}`
   /** Allowance key to restrict sell amount within allowance. If not provided, no sell amount restriction is applied. */
-  sellAllowance?: string
+  sellAllowance?: `0x${string}`
 
   /** If set to true, swaps can withdraw and deposit Balancer internal token balances of the avatar. */
-  allowBalancerBalanceAccess?: string
+  allowBalancerBalanceAccess?: boolean
 }): Permission[] => {
   return [
     ...allowErc20Approve(sell, gpV2VaultRelayer, approveAllowance),
@@ -90,7 +90,7 @@ export const allowCowOrderSigning = ({
 const allowErc20Approve = (
   tokens: readonly `0x${string}`[],
   spender: `0x${string}`,
-  allowanceKey?: string
+  allowanceKey?: `0x${string}`
 ) =>
   forAll(tokens, {
     signature: "approve(address,uint256)",

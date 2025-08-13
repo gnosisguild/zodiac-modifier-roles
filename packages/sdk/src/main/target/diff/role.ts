@@ -8,7 +8,7 @@ import { diffTargets } from "./target"
 import { Diff, merge } from "./helpers"
 
 type RoleFragment = {
-  key: string
+  key: `0x${string}`
   members?: `0x${string}`[]
   targets?: Target[]
   annotations?: Annotation[]
@@ -76,5 +76,5 @@ function ensureRoleKey(
     throw new Error(`Not the same Role: ${prev?.key} and ${next?.key}`)
   }
 
-  return prev?.key || next?.key || ZeroHash
+  return (prev?.key || next?.key || ZeroHash) as `0x${string}`
 }

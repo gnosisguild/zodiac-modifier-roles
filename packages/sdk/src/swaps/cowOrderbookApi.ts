@@ -5,8 +5,8 @@ import type { OrderKind, SellTokenBalance, BuyTokenBalance } from "./types"
  * COW Protocol API quote request
  */
 interface CowQuoteRequest {
-  sellToken: string
-  buyToken: string
+  sellToken: `0x${string}`
+  buyToken: `0x${string}`
   kind: OrderKind
   sellAmountBeforeFee?: string
   sellAmountAfterFee?: string
@@ -28,14 +28,14 @@ interface CowQuoteRequest {
  */
 interface CowQuoteResponse {
   quote: {
-    sellToken: string
-    buyToken: string
-    receiver: string
+    sellToken: `0x${string}`
+    buyToken: `0x${string}`
+    receiver: `0x${string}`
     sellAmount: string
     buyAmount: string
     validTo: number
     appData: string
-    appDataHash: string
+    appDataHash: `0x${string}`
     feeAmount: string
     kind: OrderKind
     partiallyFillable: boolean
@@ -51,8 +51,8 @@ interface CowQuoteResponse {
  * COW Protocol API order request for posting signed orders
  */
 interface CowOrderRequest {
-  sellToken: string
-  buyToken: string
+  sellToken: `0x${string}`
+  buyToken: `0x${string}`
   sellAmount: string
   buyAmount: string
   validTo: number
@@ -62,8 +62,8 @@ interface CowOrderRequest {
   partiallyFillable: boolean
   sellTokenBalance?: SellTokenBalance
   buyTokenBalance?: BuyTokenBalance
-  from: string
-  signature: string
+  from: `0x${string}`
+  signature: `0x${string}`
   signingScheme: "eip712" | "ethsign" | "eip1271" | "presign"
   quoteId?: number
 }
