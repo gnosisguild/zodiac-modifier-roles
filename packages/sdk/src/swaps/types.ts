@@ -50,13 +50,13 @@ export type QuoteRequest = (SellOrderRequest | BuyOrderRequest) & {
 
   chainId: SupportedChainId
   rolesModifier: `0x${string}`
-  roleKey: string
+  roleKey: `0x${string}`
 }
 
 export type Quote = {
-  sellToken: string
-  buyToken: string
-  receiver: string
+  sellToken: `0x${string}`
+  buyToken: `0x${string}`
+  receiver: `0x${string}`
   sellAmount: string
   buyAmount: string
   validTo: number
@@ -71,7 +71,7 @@ export type Quote = {
   from: `0x${string}`
   chainId: SupportedChainId
   rolesModifier: `0x${string}`
-  roleKey: string
+  roleKey: `0x${string}`
 }
 
 /**

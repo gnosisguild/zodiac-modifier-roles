@@ -16,8 +16,8 @@ export function diffFunctions({
   prev,
   next,
 }: {
-  roleKey: string
-  targetAddress: string
+  roleKey: `0x${string}`
+  targetAddress: `0x${string}`
   prev?: Function[]
   next?: Function[]
 }): Diff {
@@ -46,15 +46,20 @@ export function diffFunction({
   prev,
   next,
 }: {
-  roleKey: string
-  targetAddress: string
+  roleKey: `0x${string}`
+  targetAddress: `0x${string}`
   prev?: Function
   next?: Function
 }): Diff {
+  const selector = prev?.selector || next?.selector
+  if (!selector) {
+    throw new Error("selector is required")
+  }
+
   const call = draftCall({
     roleKey,
     targetAddress,
-    selector: (prev?.selector || next?.selector) as string,
+    selector,
     fn: next,
   })
 
@@ -69,9 +74,9 @@ function draftCall({
   selector,
   fn,
 }: {
-  roleKey: string
-  targetAddress: string
-  selector: string
+  roleKey: `0x${string}`
+  targetAddress: `0x${string}`
+  selector: `0x${string}`
   fn?: Function
 }): Call {
   if (!fn) {

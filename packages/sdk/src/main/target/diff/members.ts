@@ -6,7 +6,7 @@ export function diffMembers({
   prev,
   next,
 }: {
-  roleKey: string
+  roleKey: `0x${string}`
   prev?: `0x${string}`[]
   next?: `0x${string}`[]
 }): Diff {

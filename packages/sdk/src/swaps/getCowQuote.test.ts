@@ -15,6 +15,7 @@ vi.mock("../main/licensing", () => ({
 // Import the License enum from the actual module for type safety
 import { License } from "../main/licensing"
 import { fetchLicense } from "../main/licensing"
+import { encodeKey } from "../main/keys"
 const mockFetchLicense = vi.mocked(fetchLicense)
 
 // Token addresses on mainnet
@@ -55,7 +56,7 @@ describe("getCowQuote", () => {
         validTo,
         chainId: SupportedChainId.MAINNET,
         rolesModifier: ROLES_MOD_ADDRESS,
-        roleKey: "test-role",
+        roleKey: encodeKey("test-role"),
       })
 
       // Verify the quote was successful
@@ -88,7 +89,7 @@ describe("getCowQuote", () => {
         validTo,
         chainId: SupportedChainId.MAINNET,
         rolesModifier: ROLES_MOD_ADDRESS,
-        roleKey: "test-role",
+        roleKey: encodeKey("test-role"),
       })
 
       // Verify the quote was successful

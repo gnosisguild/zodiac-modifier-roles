@@ -16,6 +16,7 @@ vi.mock("../main/licensing", () => ({
 import { License } from "../main/licensing"
 import { fetchLicense } from "../main/licensing"
 import { postCowOrder as postCowOrderApi } from "./cowOrderbookApi"
+import { encodeKey } from "../main/keys"
 
 const mockFetchLicense = vi.mocked(fetchLicense)
 
@@ -50,7 +51,7 @@ const quoteWithoutFee: Quote = {
   from: ROLES_MOD_ADDRESS,
   chainId: SupportedChainId.MAINNET,
   rolesModifier: ROLES_MOD_ADDRESS,
-  roleKey: "test-role",
+  roleKey: encodeKey("test-role"),
 }
 
 describe("postCowOrder", () => {

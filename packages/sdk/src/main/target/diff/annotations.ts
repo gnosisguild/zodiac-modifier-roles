@@ -9,7 +9,7 @@ export function diffAnnotations({
   prev = [],
   next = [],
 }: {
-  roleKey: string
+  roleKey: `0x${string}`
   prev?: Annotation[]
   next?: Annotation[]
 }): Diff {
