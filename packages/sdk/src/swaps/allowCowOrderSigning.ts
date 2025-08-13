@@ -1,8 +1,8 @@
 import { id } from "ethers"
-import { c, Condition, ExecutionOptions, forAll } from "zodiac-roles-sdk"
+import { c, forAll, Permission } from "zodiac-roles-sdk"
 
-const gpV2VaultRelayer = "0xC92E8bdf79f0507f65a392b0ab4667716BFE0110"
-const cowOrderSigner = "0x23dA9AdE38E4477b23770DeD512fD37b12381FAB"
+const gpV2VaultRelayer = "0xC92E8bdf79f0507f65a392b0ab4667716BFE0110" as const
+const cowOrderSigner = "0x23dA9AdE38E4477b23770DeD512fD37b12381FAB" as const
 
 /**
  * Returns permissions allowing the avatar to sign the specified CowSwap orders.
@@ -31,18 +31,18 @@ export const allowCowOrderSigning = ({
 
   /** If set to true, swaps can withdraw and deposit Balancer internal token balances of the avatar. */
   allowBalancerBalanceAccess?: string
-}) => {
+}): Permission[] => {
   return [
     ...allowErc20Approve(sell, gpV2VaultRelayer, approveAllowance),
     {
-      target: cowOrderSigner,
-      function:
+      targetAddress: cowOrderSigner,
+      signature:
         "signOrder((address,address,address,uint256,uint256,uint32,bytes32,uint256,bytes32,bool,bytes32,bytes32),uint32,uint256)",
       condition: c.calldataMatches(
         [
           c.matches({
-            sell: oneOf(sell),
-            buy: oneOf(buy),
+            sellToken: oneOf(sell),
+            buyToken: oneOf(buy),
             receiver: receiver ? receiver : c.avatar,
             buyAmount: buyAllowance
               ? c.withinAllowance(buyAllowance)
@@ -64,17 +64,17 @@ export const allowCowOrderSigning = ({
           "uint256",
         ]
       ),
-      executionOptions: ExecutionOptions.DelegateCall,
+      delegatecall: true,
     },
     {
-      target: cowOrderSigner,
-      function:
+      targetAddress: cowOrderSigner,
+      signature:
         "unsignOrder((address,address,address,uint256,uint256,uint32,bytes32,uint256,bytes32,bool,bytes32,bytes32))",
       condition: c.calldataMatches(
         [
           c.matches({
-            sell: sell,
-            buy: buy,
+            sellToken: oneOf(sell),
+            buyToken: oneOf(buy),
             receiver: receiver ? receiver : c.avatar,
           }),
         ],
@@ -82,7 +82,7 @@ export const allowCowOrderSigning = ({
           "(address sellToken, address buyToken, address receiver, uint256 sellAmount, uint256 buyAmount, uint32 validTo, bytes32 appData, uint256 feeAmount, bytes32 kind, bool partiallyFillable, bytes32 sellTokenBalance, bytes32 buyTokenBalance)",
         ]
       ),
-      executionOptions: ExecutionOptions.DelegateCall,
+      delegatecall: true,
     },
   ]
 }
@@ -104,5 +104,5 @@ const oneOf = (values: string[]) =>
   values.length === 0
     ? undefined
     : values.length === 1
-      ? values[0]
+      ? c.eq(values[0])
       : c.or(...(values as [string, string, ...string[]]))
