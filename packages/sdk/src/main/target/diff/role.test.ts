@@ -1,5 +1,5 @@
 import { it, suite, expect } from "vitest"
-import { Clearance, ExecutionOptions } from "zodiac-roles-deployments"
+import { Clearance, ExecutionOptions, Role } from "zodiac-roles-deployments"
 import { diffRoles } from "./role"
 
 const AddressOne = "0x0000000000000000000000000000000000000001" as `0x${string}`
@@ -35,8 +35,10 @@ suite("diffRoles", () => {
             functions: [],
           },
         ],
+        annotations: [],
+        lastUpdate: 0,
       },
-    ]
+    ] satisfies Role[]
 
     const next = [
       {
@@ -50,6 +52,8 @@ suite("diffRoles", () => {
             functions: [],
           },
         ],
+        annotations: [],
+        lastUpdate: 0,
       },
       {
         key: roleKey2,
@@ -62,8 +66,10 @@ suite("diffRoles", () => {
             functions: [],
           },
         ],
+        annotations: [],
+        lastUpdate: 0,
       },
-    ]
+    ] satisfies Role[]
 
     const { minus, plus } = diffRoles({ prev, next })
 

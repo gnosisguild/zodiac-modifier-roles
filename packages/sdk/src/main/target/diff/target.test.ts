@@ -11,7 +11,7 @@ import {
 import { diffTarget, diffTargets } from "./target"
 import { normalizeCondition } from "../../condition"
 
-const roleKey = ZeroHash
+const roleKey = ZeroHash as `0x${string}`
 const address = ZeroAddress as `0x${string}`
 const targetAddress = address
 
