@@ -1,12 +1,5 @@
 export * from "zodiac-roles-deployments"
 
-export {
-  TargetPartial,
-  RolePartial,
-  AllowancePartial,
-  RolesModifierPartial,
-} from "./target/types"
-
 /*
  *
  * Layer 1 - Target
@@ -19,7 +12,7 @@ export { targetIntegrity } from "./target/integrity"
 // helpers
 export { callsPlannedForApply, callsPlannedForApplyRole } from "./target/plan"
 export { encodeCalls, type Call } from "./target/calls"
-export { spreadPartial, spreadRolePartial } from "./target/partials"
+export { spreadPartial } from "./target/diff"
 
 /*
  *

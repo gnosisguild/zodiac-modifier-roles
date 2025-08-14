@@ -1,18 +1,15 @@
 import {
+  Allowance,
   ChainId,
   fetchRole,
   fetchRolesMod,
   fetchRolesModConfig,
   Role,
-  RolesModifier,
 } from "zodiac-roles-deployments"
 
 import { type Call, encodeCalls, logCall } from "./calls"
-import { diff, diffRole } from "./diff"
+import { diff, diffRole, spreadPartial } from "./diff"
 import { enforceLicenseTerms, fetchLicense } from "../licensing"
-import { spreadRolePartial, spreadRolesModifierPartial } from "./partials"
-
-import { RolePartial, RolesModifierPartial } from "./types"
 
 type Options = {
   chainId: ChainId
@@ -50,18 +47,21 @@ type Result = {
  *
  */
 export async function planApply(
-  desired: RolesModifierPartial,
+  desired: {
+    roles?: Role[] | Record<string, Role>
+    allowances?: Allowance[] | Record<string, Allowance>
+  },
   {
     chainId,
     address,
     current,
     log,
   }: {
-    current?: RolesModifier
+    current?: { roles: Role[]; allowances: Allowance[] }
   } & Options
 ): Promise<Result> {
   const prev = current || (await fetchRolesMod({ chainId, address }))
-  const next = spreadRolesModifierPartial(prev, desired)
+  const next = spreadPartial(prev, desired)
 
   const roleModConfig = await fetchRolesModConfig({ chainId, address })
   if (roleModConfig) {
@@ -88,8 +88,8 @@ export async function planApply(
 }
 
 export function callsPlannedForApply(
-  prev: RolesModifier,
-  next: RolesModifier
+  prev: { roles: Role[]; allowances: Allowance[] },
+  next: { roles: Role[]; allowances: Allowance[] }
 ): Call[] {
   const { minus, plus } = diff({ prev, next })
   return [...minus, ...plus]
@@ -120,12 +120,15 @@ export function callsPlannedForApply(
  */
 
 export async function planApplyRole(
-  desired: RolePartial,
+  desired: Partial<Role> & { key: `0x${string}` },
   { chainId, address, current, log }: { current?: Role } & Options
 ): Promise<Result> {
   const prev =
     current || (await fetchRole({ chainId, address, roleKey: desired.key }))
-  const next = spreadRolePartial(prev, desired)
+  const next = {
+    ...(prev || { members: [], targets: [], annotations: [], lastUpdate: 0 }),
+    ...clean(desired),
+  }
 
   const rolesModConfig = await fetchRolesModConfig({ chainId, address })
   if (rolesModConfig) {
@@ -183,12 +186,15 @@ export function callsPlannedForApplyRole(prev: Role, next: Role): Call[] {
  * @returns Promise resolving to encoded transaction calls for implementation
  */
 export async function planExtendRole(
-  desired: RolePartial,
+  desired: Partial<Role> & { key: `0x${string}` },
   { chainId, address, current, log }: { current?: Role } & Options
 ): Promise<Result> {
   const prev =
     current || (await fetchRole({ chainId, address, roleKey: desired.key }))
-  const next = spreadRolePartial(prev, desired)
+  const next = {
+    ...(prev || { members: [], targets: [], annotations: [], lastUpdate: 0 }),
+    ...clean(desired),
+  }
 
   const roleModConfig = await fetchRolesModConfig({ chainId, address })
   if (roleModConfig) {
@@ -218,4 +224,10 @@ function logCalls(calls: Call[], log?: boolean | ((message: string) => void)) {
   for (const call of calls) {
     logCall(call, log === true ? console.log : log || undefined)
   }
+}
+
+function clean<T extends object>(obj: T): T {
+  return Object.fromEntries(
+    Object.entries(obj).filter(([_, v]) => v != null)
+  ) as T
 }
