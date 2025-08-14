@@ -1,5 +1,12 @@
 export * from "zodiac-roles-deployments"
 
+export {
+  TargetPartial,
+  RolePartial,
+  AllowancePartial,
+  RolesModifierPartial,
+} from "./target/types"
+
 /*
  *
  * Layer 1 - Target
