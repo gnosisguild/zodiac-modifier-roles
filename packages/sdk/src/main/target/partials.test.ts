@@ -15,17 +15,13 @@ import {
   RolesModifierPartial,
 } from "./types"
 import {
-  applyTargetPartial,
-  applyRolePartial,
-  applyAllowancePartial,
-  applyRolesModifierPartial,
-  getDefaultTarget,
-  getDefaultRole,
-  getDefaultAllowance,
-  getDefaultRolesModifier,
+  spreadTargetPartial,
+  spreadRolePartial,
+  spreadAllowancePartial,
+  spreadRolesModifierPartial,
 } from "./partials"
 
-describe("applyTargetPartial", () => {
+describe("spreadTargetPartial", () => {
   describe("functions field", () => {
     it("array replaces all functions", () => {
       const existingTarget: Target = {
@@ -57,7 +53,7 @@ describe("applyTargetPartial", () => {
         ],
       }
 
-      const result = applyTargetPartial(existingTarget, partial)
+      const result = spreadTargetPartial(existingTarget, partial)
 
       expect(result.functions).toHaveLength(1)
       expect(result.functions[0].selector).toBe("0xabcdef00")
@@ -96,7 +92,7 @@ describe("applyTargetPartial", () => {
         },
       }
 
-      const result = applyTargetPartial(existingTarget, partial)
+      const result = spreadTargetPartial(existingTarget, partial)
 
       expect(result.functions).toEqual([
         {
@@ -137,7 +133,7 @@ describe("applyTargetPartial", () => {
         },
       }
 
-      const result = applyTargetPartial(existingTarget, partial)
+      const result = spreadTargetPartial(existingTarget, partial)
 
       expect(result).toEqual({
         address: "0x1234567890123456789012345678901234567890",
@@ -193,7 +189,7 @@ describe("applyTargetPartial", () => {
         },
       }
 
-      const result = applyTargetPartial(existingTarget, partial)
+      const result = spreadTargetPartial(existingTarget, partial)
 
       expect(result).toEqual({
         address: "0x1234567890123456789012345678901234567890",
@@ -240,7 +236,7 @@ describe("applyTargetPartial", () => {
         clearance: Clearance.Function,
       }
 
-      const result = applyTargetPartial(existingTarget, partial)
+      const result = spreadTargetPartial(existingTarget, partial)
 
       expect(result).toEqual({
         address: "0x1234567890123456789012345678901234567890",
@@ -269,7 +265,7 @@ describe("applyTargetPartial", () => {
         executionOptions: ExecutionOptions.Both,
       }
 
-      const result = applyTargetPartial(existingTarget, partial)
+      const result = spreadTargetPartial(existingTarget, partial)
 
       expect(result).toEqual({
         address: "0x1234567890123456789012345678901234567890",
@@ -292,7 +288,7 @@ describe("applyTargetPartial", () => {
         executionOptions: ExecutionOptions.Both,
       }
 
-      const result = applyTargetPartial(existingTarget, partial)
+      const result = spreadTargetPartial(existingTarget, partial)
 
       expect(result).toEqual({
         address: "0x1234567890123456789012345678901234567890",
@@ -314,14 +310,14 @@ describe("applyTargetPartial", () => {
         address: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
       }
 
-      expect(() => applyTargetPartial(existingTarget, partial)).toThrow(
+      expect(() => spreadTargetPartial(existingTarget, partial)).toThrow(
         "Invariant"
       )
     })
   })
 })
 
-describe("applyRolePartial", () => {
+describe("spreadRolePartial", () => {
   describe("targets field", () => {
     it("array replaces all targets", () => {
       const existingRole: Role = {
@@ -357,7 +353,7 @@ describe("applyRolePartial", () => {
         ],
       }
 
-      const result = applyRolePartial(existingRole, partial)
+      const result = spreadRolePartial(existingRole, partial)
 
       expect(result).toEqual({
         key: "0x0000000000000000000000000000000000000000000000000000000000000001",
@@ -408,7 +404,7 @@ describe("applyRolePartial", () => {
         },
       }
 
-      const result = applyRolePartial(existingRole, partial)
+      const result = spreadRolePartial(existingRole, partial)
 
       expect(result).toEqual({
         key: "0x0000000000000000000000000000000000000000000000000000000000000001",
@@ -460,7 +456,7 @@ describe("applyRolePartial", () => {
         },
       }
 
-      const result = applyRolePartial(existingRole, partial)
+      const result = spreadRolePartial(existingRole, partial)
 
       expect(result).toEqual({
         key: "0x0000000000000000000000000000000000000000000000000000000000000001",
@@ -516,7 +512,7 @@ describe("applyRolePartial", () => {
         },
       }
 
-      const result = applyRolePartial(existingRole, partial)
+      const result = spreadRolePartial(existingRole, partial)
 
       expect(result).toEqual({
         key: "0x0000000000000000000000000000000000000000000000000000000000000001",
@@ -578,7 +574,7 @@ describe("applyRolePartial", () => {
         },
       }
 
-      const result = applyRolePartial(existingRole, partial)
+      const result = spreadRolePartial(existingRole, partial)
 
       expect(result).toEqual({
         key: "0x0000000000000000000000000000000000000000000000000000000000000001",
@@ -656,7 +652,7 @@ describe("applyRolePartial", () => {
         },
       }
 
-      const result = applyRolePartial(existingRole, partial)
+      const result = spreadRolePartial(existingRole, partial)
 
       expect(result).toEqual({
         key: "0x0000000000000000000000000000000000000000000000000000000000000001",
@@ -709,7 +705,7 @@ describe("applyRolePartial", () => {
         ],
       }
 
-      const result = applyRolePartial(existingRole, partial)
+      const result = spreadRolePartial(existingRole, partial)
 
       expect(result).toEqual({
         key: "0x0000000000000000000000000000000000000000000000000000000000000001",
@@ -751,7 +747,7 @@ describe("applyRolePartial", () => {
         ],
       }
 
-      const result = applyRolePartial(existingRole, partial)
+      const result = spreadRolePartial(existingRole, partial)
 
       expect(result).toEqual({
         key: "0x0000000000000000000000000000000000000000000000000000000000000001",
@@ -785,7 +781,7 @@ describe("applyRolePartial", () => {
         lastUpdate: 999999,
       }
 
-      const result = applyRolePartial(existingRole, partial)
+      const result = spreadRolePartial(existingRole, partial)
 
       expect(result).toEqual({
         key: "0x0000000000000000000000000000000000000000000000000000000000000001",
@@ -824,7 +820,7 @@ describe("applyRolePartial", () => {
         key: "0x0000000000000000000000000000000000000000000000000000000000000001",
       }
 
-      const result = applyRolePartial(existingRole, partial)
+      const result = spreadRolePartial(existingRole, partial)
 
       expect(result).toEqual({
         key: "0x0000000000000000000000000000000000000000000000000000000000000001",
@@ -863,12 +859,14 @@ describe("applyRolePartial", () => {
         key: "0x0000000000000000000000000000000000000000000000000000000000000002",
       }
 
-      expect(() => applyRolePartial(existingRole, partial)).toThrow("Invariant")
+      expect(() => spreadRolePartial(existingRole, partial)).toThrow(
+        "Invariant"
+      )
     })
   })
 })
 
-describe("applyAllowancePartial", () => {
+describe("spreadAllowancePartial", () => {
   it("updates refill field", () => {
     const existingAllowance: Allowance = {
       key: "0x0000000000000000000000000000000000000000000000000000000000000001",
@@ -884,7 +882,7 @@ describe("applyAllowancePartial", () => {
       refill: 200n,
     }
 
-    const result = applyAllowancePartial(existingAllowance, partial)
+    const result = spreadAllowancePartial(existingAllowance, partial)
 
     expect(result).toEqual({
       key: "0x0000000000000000000000000000000000000000000000000000000000000001",
@@ -911,7 +909,7 @@ describe("applyAllowancePartial", () => {
       maxRefill: 2000n,
     }
 
-    const result = applyAllowancePartial(existingAllowance, partial)
+    const result = spreadAllowancePartial(existingAllowance, partial)
 
     expect(result).toEqual({
       key: "0x0000000000000000000000000000000000000000000000000000000000000001",
@@ -938,7 +936,7 @@ describe("applyAllowancePartial", () => {
       period: 7200n,
     }
 
-    const result = applyAllowancePartial(existingAllowance, partial)
+    const result = spreadAllowancePartial(existingAllowance, partial)
 
     expect(result).toEqual({
       key: "0x0000000000000000000000000000000000000000000000000000000000000001",
@@ -965,7 +963,7 @@ describe("applyAllowancePartial", () => {
       balance: 750n,
     }
 
-    const result = applyAllowancePartial(existingAllowance, partial)
+    const result = spreadAllowancePartial(existingAllowance, partial)
 
     expect(result).toEqual({
       key: "0x0000000000000000000000000000000000000000000000000000000000000001",
@@ -992,7 +990,7 @@ describe("applyAllowancePartial", () => {
       timestamp: 9876543210n,
     }
 
-    const result = applyAllowancePartial(existingAllowance, partial)
+    const result = spreadAllowancePartial(existingAllowance, partial)
 
     expect(result).toEqual({
       key: "0x0000000000000000000000000000000000000000000000000000000000000001",
@@ -1018,13 +1016,13 @@ describe("applyAllowancePartial", () => {
       key: "0x0000000000000000000000000000000000000000000000000000000000000002",
     }
 
-    expect(() => applyAllowancePartial(existingAllowance, partial)).toThrow(
+    expect(() => spreadAllowancePartial(existingAllowance, partial)).toThrow(
       "Invariant"
     )
   })
 })
 
-describe("applyRolesModifierPartial", () => {
+describe("spreadRolesModifierPartial", () => {
   describe("roles field", () => {
     it("array replaces all roles", () => {
       const existingModifier: RolesModifier = {
@@ -1066,7 +1064,7 @@ describe("applyRolesModifierPartial", () => {
         allowances: [],
       }
 
-      const result = applyRolesModifierPartial(existingModifier, partial)
+      const result = spreadRolesModifierPartial(existingModifier, partial)
 
       expect(result).toEqual({
         address: "0x1234567890123456789012345678901234567890",
@@ -1126,7 +1124,7 @@ describe("applyRolesModifierPartial", () => {
         allowances: [],
       }
 
-      const result = applyRolesModifierPartial(existingModifier, partial)
+      const result = spreadRolesModifierPartial(existingModifier, partial)
 
       expect(result).toEqual({
         address: "0x1234567890123456789012345678901234567890",
@@ -1188,7 +1186,7 @@ describe("applyRolesModifierPartial", () => {
         allowances: [],
       }
 
-      const result = applyRolesModifierPartial(existingModifier, partial)
+      const result = spreadRolesModifierPartial(existingModifier, partial)
 
       expect(result).toEqual({
         address: "0x1234567890123456789012345678901234567890",
@@ -1254,7 +1252,7 @@ describe("applyRolesModifierPartial", () => {
         allowances: [],
       }
 
-      const result = applyRolesModifierPartial(existingModifier, partial)
+      const result = spreadRolesModifierPartial(existingModifier, partial)
 
       expect(result).toEqual({
         address: "0x1234567890123456789012345678901234567890",
@@ -1327,7 +1325,7 @@ describe("applyRolesModifierPartial", () => {
         allowances: [],
       }
 
-      const result = applyRolesModifierPartial(existingModifier, partial)
+      const result = spreadRolesModifierPartial(existingModifier, partial)
 
       expect(result).toEqual({
         address: "0x1234567890123456789012345678901234567890",
@@ -1417,7 +1415,7 @@ describe("applyRolesModifierPartial", () => {
         allowances: [],
       }
 
-      const result = applyRolesModifierPartial(existingModifier, partial)
+      const result = spreadRolesModifierPartial(existingModifier, partial)
 
       expect(result).toEqual({
         address: "0x1234567890123456789012345678901234567890",
@@ -1503,7 +1501,7 @@ describe("applyRolesModifierPartial", () => {
         ],
       }
 
-      const result = applyRolesModifierPartial(existingModifier, partial)
+      const result = spreadRolesModifierPartial(existingModifier, partial)
 
       expect(result).toEqual({
         address: "0x1234567890123456789012345678901234567890",
@@ -1565,7 +1563,7 @@ describe("applyRolesModifierPartial", () => {
         },
       }
 
-      const result = applyRolesModifierPartial(existingModifier, partial)
+      const result = spreadRolesModifierPartial(existingModifier, partial)
 
       expect(result).toEqual({
         address: "0x1234567890123456789012345678901234567890",
@@ -1631,7 +1629,7 @@ describe("applyRolesModifierPartial", () => {
         },
       }
 
-      const result = applyRolesModifierPartial(existingModifier, partial)
+      const result = spreadRolesModifierPartial(existingModifier, partial)
 
       expect(result).toEqual({
         address: "0x1234567890123456789012345678901234567890",
@@ -1694,7 +1692,7 @@ describe("applyRolesModifierPartial", () => {
         },
       }
 
-      const result = applyRolesModifierPartial(existingModifier, partial)
+      const result = spreadRolesModifierPartial(existingModifier, partial)
 
       expect(result).toEqual({
         address: "0x1234567890123456789012345678901234567890",
@@ -1764,7 +1762,7 @@ describe("applyRolesModifierPartial", () => {
         },
       }
 
-      const result = applyRolesModifierPartial(existingModifier, partial)
+      const result = spreadRolesModifierPartial(existingModifier, partial)
 
       expect(result).toEqual({
         address: "0x1234567890123456789012345678901234567890",
@@ -1822,7 +1820,7 @@ describe("applyRolesModifierPartial", () => {
         allowances: [],
       }
 
-      const result = applyRolesModifierPartial(existingModifier, partial)
+      const result = spreadRolesModifierPartial(existingModifier, partial)
 
       expect(result).toEqual({
         address: "0x1234567890123456789012345678901234567890",
@@ -1853,7 +1851,7 @@ describe("applyRolesModifierPartial", () => {
         allowances: [],
       }
 
-      const result = applyRolesModifierPartial(existingModifier, partial)
+      const result = spreadRolesModifierPartial(existingModifier, partial)
 
       expect(result).toEqual({
         address: "0x1234567890123456789012345678901234567890",
@@ -1884,7 +1882,7 @@ describe("applyRolesModifierPartial", () => {
         allowances: [],
       }
 
-      const result = applyRolesModifierPartial(existingModifier, partial)
+      const result = spreadRolesModifierPartial(existingModifier, partial)
 
       expect(result).toEqual({
         address: "0x1234567890123456789012345678901234567890",
@@ -1918,7 +1916,7 @@ describe("applyRolesModifierPartial", () => {
         allowances: [],
       }
 
-      const result = applyRolesModifierPartial(existingModifier, partial)
+      const result = spreadRolesModifierPartial(existingModifier, partial)
 
       expect(result).toEqual({
         address: "0x1234567890123456789012345678901234567890",
@@ -1934,7 +1932,7 @@ describe("applyRolesModifierPartial", () => {
       })
     })
 
-    it("updates address field", () => {
+    it("throws on address field mismatch", () => {
       const existingModifier: RolesModifier = {
         address: "0x1234567890123456789012345678901234567890",
         owner: "0x1111111111111111111111111111111111111111",
@@ -1951,17 +1949,9 @@ describe("applyRolesModifierPartial", () => {
         allowances: [],
       }
 
-      const result = applyRolesModifierPartial(existingModifier, partial)
-
-      expect(result).toEqual({
-        address: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
-        owner: "0x1111111111111111111111111111111111111111",
-        avatar: "0x2222222222222222222222222222222222222222",
-        target: "0x3333333333333333333333333333333333333333",
-        roles: [],
-        allowances: [],
-        multiSendAddresses: [],
-      })
+      expect(() =>
+        spreadRolesModifierPartial(existingModifier, partial)
+      ).toThrow()
     })
 
     it("preserves fields not specified in partial", () => {
@@ -1999,7 +1989,7 @@ describe("applyRolesModifierPartial", () => {
         allowances: [],
       }
 
-      const result = applyRolesModifierPartial(existingModifier, partial)
+      const result = spreadRolesModifierPartial(existingModifier, partial)
 
       expect(result).toEqual({
         address: "0x1234567890123456789012345678901234567890",
