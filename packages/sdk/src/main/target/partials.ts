@@ -14,11 +14,16 @@ import {
   RolesModifierPartial,
 } from "./types"
 
-export function applyTargetPartial(
-  target: Target,
+const AddressZero = "0x0000000000000000000000000000000000000000"
+const HashZero =
+  "0x0000000000000000000000000000000000000000000000000000000000000000"
+
+export function spreadTargetPartial(
+  target: Target | undefined | null,
   partial: TargetPartial
 ): Target {
-  invariant(target.address === partial.address)
+  if (target) invariant(target.address === partial.address)
+  else target = defaultTarget
 
   let functions: Function[]
 
@@ -48,8 +53,13 @@ export function applyTargetPartial(
   }
 }
 
-export function applyRolePartial(role: Role, partial: RolePartial): Role {
-  invariant(role.key == partial.key)
+export function spreadRolePartial(
+  role: Role | undefined | null,
+  partial: RolePartial
+): Role {
+  if (role) invariant(role.key == partial.key)
+  else role = defaultRole
+
   let targets: Target[]
 
   if (Array.isArray(partial.targets)) {
@@ -58,12 +68,7 @@ export function applyRolePartial(role: Role, partial: RolePartial): Role {
       const existingTarget = role.targets.find(
         (t) => t.address === targetPartial.address
       )
-      return existingTarget
-        ? applyTargetPartial(existingTarget, targetPartial)
-        : applyTargetPartial(
-            getDefaultTarget(targetPartial.address),
-            targetPartial
-          )
+      return spreadTargetPartial(existingTarget, targetPartial)
     })
   } else if (partial.targets) {
     // Map: merge with existing, updating only specified addresses
@@ -71,12 +76,8 @@ export function applyRolePartial(role: Role, partial: RolePartial): Role {
 
     for (const [address, targetPartial] of Object.entries(partial.targets)) {
       const existingTarget = targetsMap.get(address as `0x${string}`)
-      const updatedTarget = existingTarget
-        ? applyTargetPartial(existingTarget, targetPartial)
-        : applyTargetPartial(
-            getDefaultTarget(address as `0x${string}`),
-            targetPartial
-          )
+      const updatedTarget = spreadTargetPartial(existingTarget, targetPartial)
+
       targetsMap.set(address as `0x${string}`, updatedTarget)
     }
 
@@ -94,11 +95,13 @@ export function applyRolePartial(role: Role, partial: RolePartial): Role {
   }
 }
 
-export function applyAllowancePartial(
-  allowance: Allowance,
+export function spreadAllowancePartial(
+  allowance: Allowance | undefined | null,
   partial: AllowancePartial
 ): Allowance {
-  invariant(allowance.key === partial.key)
+  if (allowance) invariant(allowance.key === partial.key)
+  else allowance = defaultAllowance
+
   return {
     key: partial.key,
     refill: partial.refill ?? allowance.refill,
@@ -109,10 +112,13 @@ export function applyAllowancePartial(
   }
 }
 
-export function applyRolesModifierPartial(
-  rolesModifier: RolesModifier,
+export function spreadRolesModifierPartial(
+  rolesModifier: RolesModifier | undefined | null,
   partial: RolesModifierPartial
 ): RolesModifier {
+  if (rolesModifier) invariant(rolesModifier.address === partial.address)
+  else rolesModifier = defaultRolesModifier
+
   let roles: Role[]
   let allowances: Allowance[]
 
@@ -122,9 +128,7 @@ export function applyRolesModifierPartial(
       const existingRole = rolesModifier.roles.find(
         (r) => r.key === rolePartial.key
       )
-      return existingRole
-        ? applyRolePartial(existingRole, rolePartial)
-        : applyRolePartial(getDefaultRole(rolePartial.key), rolePartial)
+      return spreadRolePartial(existingRole, rolePartial)
     })
   } else if (partial.roles) {
     // Map: merge with existing, updating only specified keys
@@ -132,9 +136,8 @@ export function applyRolesModifierPartial(
 
     for (const [key, rolePartial] of Object.entries(partial.roles)) {
       const existingRole = rolesMap.get(key as `0x${string}`)
-      const updatedRole = existingRole
-        ? applyRolePartial(existingRole, rolePartial)
-        : applyRolePartial(getDefaultRole(key as `0x${string}`), rolePartial)
+      const updatedRole = spreadRolePartial(existingRole, rolePartial)
+
       rolesMap.set(key as `0x${string}`, updatedRole)
     }
 
@@ -149,12 +152,7 @@ export function applyRolesModifierPartial(
       const existingAllowance = rolesModifier.allowances.find(
         (a) => a.key === allowancePartial.key
       )
-      return existingAllowance
-        ? applyAllowancePartial(existingAllowance, allowancePartial)
-        : applyAllowancePartial(
-            getDefaultAllowance(allowancePartial.key),
-            allowancePartial
-          )
+      return spreadAllowancePartial(existingAllowance, allowancePartial)
     })
   } else if (partial.allowances) {
     // Map: merge with existing, updating only specified keys
@@ -163,13 +161,10 @@ export function applyRolesModifierPartial(
     )
 
     for (const [key, allowancePartial] of Object.entries(partial.allowances)) {
-      const existingAllowance = allowancesMap.get(key as `0x${string}`)
-      const updatedAllowance = existingAllowance
-        ? applyAllowancePartial(existingAllowance, allowancePartial)
-        : applyAllowancePartial(
-            getDefaultAllowance(key as `0x${string}`),
-            allowancePartial
-          )
+      const updatedAllowance = spreadAllowancePartial(
+        allowancesMap.get(key as `0x${string}`),
+        allowancePartial
+      )
       allowancesMap.set(key as `0x${string}`, updatedAllowance)
     }
 
@@ -190,46 +185,38 @@ export function applyRolesModifierPartial(
   }
 }
 
-export function getDefaultTarget(address: `0x${string}`): Target {
-  return {
-    address,
-    clearance: Clearance.None,
-    executionOptions: ExecutionOptions.None,
-    functions: [],
-  }
+const defaultTarget: Target = {
+  address: AddressZero,
+  clearance: Clearance.None,
+  executionOptions: ExecutionOptions.None,
+  functions: [],
 }
 
-export function getDefaultRole(key: `0x${string}`): Role {
-  return {
-    key,
-    members: [],
-    targets: [],
-    annotations: [],
-    lastUpdate: 0,
-  }
+const defaultRole: Role = {
+  key: HashZero,
+  members: [],
+  targets: [],
+  annotations: [],
+  lastUpdate: 0,
 }
 
-export function getDefaultAllowance(key: `0x${string}`): Allowance {
-  return {
-    key,
-    refill: 0n,
-    maxRefill: 0n,
-    period: 0n,
-    balance: 0n,
-    timestamp: 0n,
-  }
+const defaultAllowance: Allowance = {
+  key: HashZero,
+  refill: 0n,
+  maxRefill: 0n,
+  period: 0n,
+  balance: 0n,
+  timestamp: 0n,
 }
 
-export function getDefaultRolesModifier(address: `0x${string}`): RolesModifier {
-  return {
-    address,
-    owner: "0x0000000000000000000000000000000000000000",
-    avatar: "0x0000000000000000000000000000000000000000",
-    target: "0x0000000000000000000000000000000000000000",
-    roles: [],
-    allowances: [],
-    multiSendAddresses: [],
-  }
+const defaultRolesModifier: RolesModifier = {
+  address: AddressZero,
+  owner: "0x0000000000000000000000000000000000000000",
+  avatar: "0x0000000000000000000000000000000000000000",
+  target: "0x0000000000000000000000000000000000000000",
+  roles: [],
+  allowances: [],
+  multiSendAddresses: [],
 }
 
 function invariant(condition: boolean): asserts condition {
