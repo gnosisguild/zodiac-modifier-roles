@@ -219,6 +219,8 @@ const defaultRolesModifier: RolesModifier = {
   multiSendAddresses: [],
 }
 
+export const spreadPartial = spreadRolesModifierPartial
+
 function invariant(condition: boolean): asserts condition {
   if (!condition) {
     throw new Error("Invariant")
