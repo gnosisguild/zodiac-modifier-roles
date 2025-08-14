@@ -3,8 +3,9 @@ import {
   chains,
   Condition,
   Operator,
-  Target,
+  Role,
 } from "zodiac-roles-deployments"
+
 import { decodeKey } from "./keys"
 
 /**
@@ -18,11 +19,6 @@ export class LicenseError extends Error {
     this.name = "LicenseError"
     this.owner = owner
   }
-}
-
-type RoleFragment = {
-  key: `0x${string}`
-  targets?: Target[]
 }
 
 type ChainPrefix = (typeof chains)[ChainId]["prefix"]
@@ -66,7 +62,7 @@ export const enforceLicenseTerms = ({
 }: {
   chainId: ChainId
   owner: `0x${string}`
-  role: RoleFragment
+  role: Role
   license: License
 }) => {
   if (license === License.None) {
@@ -77,10 +73,7 @@ export const enforceLicenseTerms = ({
 /**
  * Asserts that the role is only using features that are available without a zodiac os account.
  */
-const assertPublicFeatureScope = (
-  role: RoleFragment,
-  owner: PrefixedAddress
-) => {
+const assertPublicFeatureScope = (role: Role, owner: PrefixedAddress) => {
   if (!role.targets) return
 
   if (

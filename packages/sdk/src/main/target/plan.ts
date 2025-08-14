@@ -1,29 +1,23 @@
 import {
-  Allowance,
-  Annotation,
   ChainId,
   fetchRole,
   fetchRolesMod,
   fetchRolesModConfig,
   Role,
-  Target,
+  RolesModifier,
 } from "zodiac-roles-deployments"
 
 import { type Call, encodeCalls, logCall } from "./calls"
 import { diff, diffRole } from "./diff"
 import { enforceLicenseTerms, fetchLicense } from "../licensing"
+import { spreadRolePartial, spreadRolesModifierPartial } from "./partials"
+
+import { RolePartial, RolesModifierPartial } from "./types"
 
 type Options = {
   chainId: ChainId
   address: `0x${string}`
   log?: boolean | ((message: string) => void)
-}
-
-type RoleFragment = {
-  key: `0x${string}`
-  members?: `0x${string}`[]
-  targets?: Target[]
-  annotations?: Annotation[]
 }
 
 type Result = {
@@ -41,7 +35,7 @@ type Result = {
  * Note: Unlike `plan*Role` functions, this function does not support partial
  * state input. The full intended state must be provided.
  *
- * @param next - The complete desired state to apply
+ * @param desired - The state to apply. It may be a partial representation, which gets merged with the current full representation.
  * @param next.roles - Array of roles to be set
  * @param next.allowances - Array of allowances to be set
  * @param options - Configuration options for the operation
@@ -56,19 +50,19 @@ type Result = {
  *
  */
 export async function planApply(
-  next: { roles: Role[]; allowances: Allowance[] },
+  desired: RolesModifierPartial,
   {
     chainId,
     address,
     current,
     log,
   }: {
-    current?: {
-      roles: Role[]
-      allowances: Allowance[]
-    }
+    current?: RolesModifier
   } & Options
 ): Promise<Result> {
+  const prev = current || (await fetchRolesMod({ chainId, address }))
+  const next = spreadRolesModifierPartial(prev, desired)
+
   const roleModConfig = await fetchRolesModConfig({ chainId, address })
   if (roleModConfig) {
     const license = await fetchLicense({ chainId, owner: roleModConfig.owner })
@@ -94,8 +88,8 @@ export async function planApply(
 }
 
 export function callsPlannedForApply(
-  prev: { roles: Role[]; allowances: Allowance[] },
-  next: { roles: Role[]; allowances: Allowance[] }
+  prev: RolesModifier,
+  next: RolesModifier
 ): Call[] {
   const { minus, plus } = diff({ prev, next })
   return [...minus, ...plus]
@@ -114,7 +108,7 @@ export function callsPlannedForApply(
  * current state to create a complete role configuration. Fields not included
  * in the fragment remain unchanged.
  *
- * @param next - The complete desired role configuration to apply
+ * @param desired - The state to apply. It may be a partial representation, which gets merged with the current full representation.
  * @param options - Configuration options for the operation
  * @param options.chainId - Chain ID where the rolesMod is deployed
  * @param options.address - Contract address of the rolesMod
@@ -126,10 +120,12 @@ export function callsPlannedForApply(
  */
 
 export async function planApplyRole(
-  fragment: RoleFragment,
+  desired: RolePartial,
   { chainId, address, current, log }: { current?: Role } & Options
 ): Promise<Result> {
-  fragment = pruneFragment(fragment)
+  const prev =
+    current || (await fetchRole({ chainId, address, roleKey: desired.key }))
+  const next = spreadRolePartial(prev, desired)
 
   const rolesModConfig = await fetchRolesModConfig({ chainId, address })
   if (rolesModConfig) {
@@ -138,21 +134,11 @@ export async function planApplyRole(
       owner: rolesModConfig.owner,
     })
     enforceLicenseTerms({
-      role: fragment,
+      role: next,
       license,
       chainId,
       owner: rolesModConfig.owner,
     })
-  }
-
-  const prev: Role =
-    current ||
-    (await fetchRole({ chainId, address, roleKey: fragment.key })) ||
-    emptyRole(fragment.key)
-
-  const next: Role = {
-    ...prev,
-    ...fragment,
   }
 
   const { minus, plus } = await diffRole({ prev, next })
@@ -185,11 +171,7 @@ export function callsPlannedForApplyRole(prev: Role, next: Role): Call[] {
  *   it with `ExecutionOptions.none` will result in a NOOP (empty output).
  * - Etc.
  *
- * @param fragment - The partial role configuration to add to the existing role
- * @param fragment.key - The unique role identifier (hex string)
- * @param fragment.members - Optional array of member addresses to add to the role
- * @param fragment.targets - Optional array of target contracts and functions to
- *                           grant permissions for
+ * @param desired - The state to apply. It may be a partial representation, which gets merged with the current full representation.
  * @param fragment.annotations - Optional array of annotations to attach to the role
  * @param options - Configuration options for the operation
  * @param options.chainId - Chain ID where the rolesMod is deployed
@@ -201,27 +183,25 @@ export function callsPlannedForApplyRole(prev: Role, next: Role): Call[] {
  * @returns Promise resolving to encoded transaction calls for implementation
  */
 export async function planExtendRole(
-  fragment: RoleFragment,
+  desired: RolePartial,
   { chainId, address, current, log }: { current?: Role } & Options
 ): Promise<Result> {
-  fragment = pruneFragment(fragment)
+  const prev =
+    current || (await fetchRole({ chainId, address, roleKey: desired.key }))
+  const next = spreadRolePartial(prev, desired)
 
   const roleModConfig = await fetchRolesModConfig({ chainId, address })
   if (roleModConfig) {
     const license = await fetchLicense({ chainId, owner: roleModConfig.owner })
     enforceLicenseTerms({
-      role: fragment,
+      role: next,
       license,
       chainId,
       owner: roleModConfig.owner,
     })
   }
 
-  const { plus } = await diffRole({
-    prev:
-      current || (await fetchRole({ chainId, address, roleKey: fragment.key })),
-    next: fragment,
-  })
+  const { plus } = await diffRole({ prev, next })
 
   // extend -> just the plus
   const calls = plus
@@ -238,22 +218,4 @@ function logCalls(calls: Call[], log?: boolean | ((message: string) => void)) {
   for (const call of calls) {
     logCall(call, log === true ? console.log : log || undefined)
   }
-}
-
-function emptyRole(key: `0x${string}`): Role {
-  return {
-    key: key,
-    members: [],
-    targets: [],
-    annotations: [],
-    lastUpdate: 0,
-  }
-}
-
-function pruneFragment(fragment: RoleFragment): RoleFragment {
-  return Object.fromEntries(
-    Object.entries(fragment).filter(
-      ([_, value]) => value !== null && value !== undefined
-    )
-  ) as RoleFragment
 }
