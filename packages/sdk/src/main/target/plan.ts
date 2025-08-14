@@ -228,6 +228,6 @@ function logCalls(calls: Call[], log?: boolean | ((message: string) => void)) {
 
 function clean<T extends object>(obj: T): T {
   return Object.fromEntries(
-    Object.entries(obj).filter(([_, v]) => v != null)
+    Object.entries(obj).filter(([_, v]) => v !== null && v !== undefined)
   ) as T
 }
