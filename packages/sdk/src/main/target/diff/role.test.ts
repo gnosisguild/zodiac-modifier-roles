@@ -88,4 +88,83 @@ suite("diffRoles", () => {
       "allowTarget",
     ])
   })
+
+  it("it deletes a role containing several targets and members", () => {
+    const prev = [
+      {
+        key: roleKey1,
+        members: [AddressOne, AddressTwo] as `0x${string}`[],
+        targets: [
+          {
+            address: ContractOne,
+            clearance: Clearance.Target,
+            executionOptions: ExecutionOptions.Send,
+            functions: [],
+          },
+          {
+            address: ContractTwo,
+            clearance: Clearance.Function,
+            executionOptions: ExecutionOptions.DelegateCall,
+            functions: [
+              {
+                selector: "0x12345678",
+                executionOptions: ExecutionOptions.None,
+                wildcarded: true,
+              },
+            ],
+          },
+        ],
+        annotations: [],
+        lastUpdate: 0,
+      },
+      {
+        key: roleKey2,
+        members: [AddressTwo] as `0x${string}`[],
+        targets: [
+          {
+            address: ContractOne,
+            clearance: Clearance.Target,
+            executionOptions: ExecutionOptions.None,
+            functions: [],
+          },
+        ],
+        annotations: [],
+        lastUpdate: 0,
+      },
+    ] satisfies Role[]
+
+    const next = [
+      {
+        key: roleKey2,
+        members: [AddressTwo] as `0x${string}`[],
+        targets: [
+          {
+            address: ContractOne,
+            clearance: Clearance.Target,
+            executionOptions: ExecutionOptions.None,
+            functions: [],
+          },
+        ],
+        annotations: [],
+        lastUpdate: 0,
+      },
+    ] satisfies Role[]
+
+    const { minus, plus } = diffRoles({ prev, next })
+
+    // Should revoke all members from the deleted role
+    expect(minus).toHaveLength(5)
+
+    // No additions needed since roleKey2 already exists unchanged
+    expect(plus).toHaveLength(0)
+
+    // // Verify the removal operations
+    const minusCalls = minus.map(({ call }) => call)
+
+    expect(minus.filter(({ call }) => call === "assignRoles")).toHaveLength(2)
+    expect(minus.filter(({ call }) => call === "revokeTarget")).toHaveLength(2)
+    expect(minus.filter(({ call }) => call === "revokeFunction")).toHaveLength(
+      1
+    )
+  })
 })
