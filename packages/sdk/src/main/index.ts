@@ -12,6 +12,7 @@ export { targetIntegrity } from "./target/integrity"
 // helpers
 export { callsPlannedForApply, callsPlannedForApplyRole } from "./target/plan"
 export { encodeCalls, type Call } from "./target/calls"
+export { spreadPartial } from "./target/diff"
 
 /*
  *

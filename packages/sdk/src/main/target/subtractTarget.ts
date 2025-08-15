@@ -70,6 +70,8 @@ function shallowEquals<T>(a: readonly T[], b: readonly T[]): boolean {
   return a.length === b.length && a.every((item, index) => item === b[index])
 }
 
-function invariant(check: boolean) {
-  if (!check) throw new Error("Invariant")
+function invariant(condition: boolean): asserts condition {
+  if (!condition) {
+    throw new Error("Invariant")
+  }
 }

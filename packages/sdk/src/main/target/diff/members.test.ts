@@ -3,7 +3,7 @@ import { ZeroHash } from "ethers"
 
 import { diffMembers } from "./members"
 
-const roleKey = ZeroHash
+const roleKey = ZeroHash as `0x${string}`
 const AddressOne = `0x0000000000000000000000000000000000000001`
 const AddressTwo = `0x0000000000000000000000000000000000000002`
 const AddressThree = `0x0000000000000000000000000000000000000003`

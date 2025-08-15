@@ -1,5 +1,5 @@
 import { ZeroHash } from "ethers"
-import { Annotation, Target } from "zodiac-roles-deployments"
+import { Role } from "zodiac-roles-deployments"
 
 import { diffAnnotations } from "./annotations"
 import { diffMembers } from "./members"
@@ -7,19 +7,12 @@ import { diffTargets } from "./target"
 
 import { Diff, merge } from "./helpers"
 
-type RoleFragment = {
-  key: `0x${string}`
-  members?: `0x${string}`[]
-  targets?: Target[]
-  annotations?: Annotation[]
-}
-
 export function diffRoles({
   prev,
   next,
 }: {
-  prev: RoleFragment[] | undefined | null
-  next: RoleFragment[] | undefined | null
+  prev: Role[] | undefined | null
+  next: Role[] | undefined | null
 }): Diff {
   const roleKeys = Array.from(
     new Set([
@@ -42,8 +35,8 @@ export function diffRole({
   prev,
   next,
 }: {
-  prev: RoleFragment | undefined | null
-  next: RoleFragment | undefined | null
+  prev: Role | undefined | null
+  next: Role | undefined | null
 }): Diff {
   const roleKey = ensureRoleKey(prev, next)
 
@@ -67,8 +60,8 @@ export function diffRole({
 }
 
 function ensureRoleKey(
-  prev: RoleFragment | undefined | null,
-  next: RoleFragment | undefined | null
+  prev: Role | undefined | null,
+  next: Role | undefined | null
 ) {
   const set = new Set([prev?.key, next?.key].filter(Boolean))
 

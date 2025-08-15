@@ -12,7 +12,6 @@ import { abiEncode } from "../abiEncode"
 import { targetIncludes } from "./targetIncludes"
 
 const AddressOne = "0x0000000000000000000000000000000000000001"
-const AddressTwo = "0x0000000000000000000000000000000000000002"
 
 const COMP = (id: number) => ({
   paramType: ParameterType.Static,

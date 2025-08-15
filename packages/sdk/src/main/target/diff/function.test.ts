@@ -11,8 +11,8 @@ import { diffFunction, diffFunctions } from "./function"
 import { abiEncode } from "../../abiEncode"
 import { conditionId, normalizeCondition } from "../../condition"
 
-const roleKey = ZeroHash
-const targetAddress = ZeroAddress
+const roleKey = ZeroHash as `0x${string}`
+const targetAddress = ZeroAddress as `0x${string}`
 const selector: `0x${string}` = "0xaabbccdd"
 
 const staticComp = (id: number) => ({
