@@ -48,8 +48,8 @@ type Result = {
  */
 export async function planApply(
   desired: {
-    roles?: Role[] | Record<string, Role>
-    allowances?: Allowance[] | Record<string, Allowance>
+    roles?: Role[] | Record<string, Role | null>
+    allowances?: Allowance[] | Record<string, Allowance | null>
   },
   {
     chainId,
