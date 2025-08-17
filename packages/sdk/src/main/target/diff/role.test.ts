@@ -158,9 +158,6 @@ suite("diffRoles", () => {
     // No additions needed since roleKey2 already exists unchanged
     expect(plus).toHaveLength(0)
 
-    // // Verify the removal operations
-    const minusCalls = minus.map(({ call }) => call)
-
     expect(minus.filter(({ call }) => call === "assignRoles")).toHaveLength(2)
     expect(minus.filter(({ call }) => call === "revokeTarget")).toHaveLength(2)
     expect(minus.filter(({ call }) => call === "revokeFunction")).toHaveLength(
