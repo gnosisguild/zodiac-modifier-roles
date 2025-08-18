@@ -6,5 +6,6 @@ export default defineConfig([
     format: ["cjs", "esm"],
     outDir: "build",
     exports: true,
+    sourcemap: true,
   },
 ])
