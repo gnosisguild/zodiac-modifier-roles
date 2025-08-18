@@ -10,6 +10,18 @@
       "import": "./build/index.mjs",
       "require": "./build/index.js"
     },
+    "./annotations": {
+      "import": "./build/annotations.mjs",
+      "require": "./build/annotations.js"
+    },
+    "./kit": {
+      "import": "./build/kit.mjs",
+      "require": "./build/kit.js"
+    },
+    "./swaps": {
+      "import": "./build/swaps.mjs",
+      "require": "./build/swaps.js"
+    },
     "./package.json": "./package.json"
   },
   "typesVersions": {
