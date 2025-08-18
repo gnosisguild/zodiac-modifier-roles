@@ -5,6 +5,13 @@
   "directories": {
     "test": "test"
   },
+  "types": "./typechain-types/index.ts",
+  "exports": {
+    ".": {
+      "types": "./typechain-types/index.ts",
+      "import": "./typechain-types/index.ts"
+    }
+  },
   "scripts": {
     "build": "hardhat compile",
     "clean": "hardhat clean",

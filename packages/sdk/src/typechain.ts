@@ -1,1 +1,1 @@
-export * from "../../evm/typechain-types"
+export * from "@gnosis-guild/zodiac-core-modifier-roles"

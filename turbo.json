@@ -5,7 +5,7 @@
     "test": { "cache": false },
     "build": {
       "dependsOn": ["clean", "^generate", "^build"],
-      "outputs": ["build/cjs", "build/esm"]
+      "outputs": ["build", "typechain-types"]
     },
     "clean": { "cache": false },
     "dev": {
