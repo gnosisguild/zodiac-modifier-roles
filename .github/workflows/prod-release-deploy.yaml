@@ -21,7 +21,7 @@ jobs:
             .yarn/install-state.gz
           key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock', '.yarnrc.yml') }}
       - run: yarn
-      - run: yarn build
+      - run: yarn dist
 
       - name: Pin to IPFS
         id: upload

@@ -12,6 +12,7 @@
       "dependsOn": ["^build"],
       "persistent": true,
       "cache": false
-    }
+    },
+    "dist": { "dependsOn": ["^build"] }
   }
 }

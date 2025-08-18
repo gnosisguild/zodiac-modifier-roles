@@ -6,7 +6,7 @@
     "dev": "next dev --turbopack",
     "dev:inspect": "NODE_OPTIONS='--inspect' next dev",
     "clear-cache": "rm -rf .next",
-    "build": "next build",
+    "dist": "next build",
     "start": "next start",
     "test": "vitest",
     "lint": "next lint"
