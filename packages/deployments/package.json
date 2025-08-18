@@ -10,7 +10,8 @@
     "README.md"
   ],
   "scripts": {
-    "build": "rimraf build && yarn build:cjs && yarn build:esm",
+    "clean": "rimraf build",
+    "build": "yarn build:cjs && yarn build:esm",
     "build:cjs": "tsc -p tsconfig.cjs.json",
     "build:esm": "tsc -p tsconfig.esm.json",
     "check": "yarn check:types && yarn check:prettier",

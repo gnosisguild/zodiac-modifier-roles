@@ -6,18 +6,16 @@
     "packages/*"
   ],
   "scripts": {
-    "prepare": "yarn build:evm && yarn workspaces foreach run prepare && yarn build:deployments && yarn build:sdk",
     "pre-commit": "yarn workspaces foreach run pre-commit",
-    "test": "yarn workspaces foreach run test",
-    "build": "yarn workspaces foreach run build",
-    "build:evm": "yarn workspace @gnosis-guild/zodiac-core-modifier-roles run build",
-    "build:subgraph": "yarn workspace zodiac-roles-subgraph run build",
-    "build:deployments": "yarn workspace zodiac-roles-deployments run build",
-    "build:sdk": "yarn workspace zodiac-roles-sdk run build",
-    "build:app": "yarn workspace zodiac-roles-app run build",
-    "build:docs": "yarn workspace zodiac-roles-docs run build",
+    "test": "turbo test",
+    "build": "turbo build",
+    "build:evm": "turbo build --filter=@gnosis-guild/zodiac-core-modifier-roles",
+    "build:deployments": "turbo build --filter=zodiac-roles-deployments",
+    "build:sdk": "turbo build --filter=zodiac-roles-sdk",
+    "build:app": "turbo build --filter=zodiac-roles-app",
+    "build:docs": "turbo build --filter=zodiac-roles-docs",
     "coverage": "yarn workspace @gnosis-guild/zodiac-core-modifier-roles run coverage",
-    "dev": "yarn build:deployments && yarn build:sdk && yarn workspace zodiac-roles-app run dev"
+    "dev": "turbo run dev"
   },
   "repository": {
     "type": "git",
@@ -25,5 +23,8 @@
   },
   "author": "",
   "license": "LGPL-3.0+",
-  "packageManager": "yarn@3.7.0"
+  "packageManager": "yarn@3.7.0",
+  "dependencies": {
+    "turbo": "^2.5.6"
+  }
 }
