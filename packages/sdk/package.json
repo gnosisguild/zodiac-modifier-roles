@@ -50,8 +50,6 @@
   "scripts": {
     "clean": "rimraf build",
     "build": "tsdown",
-    "build:cjs": "tsc -p tsconfig.cjs.json",
-    "build:esm": "tsc -p tsconfig.esm.json",
     "test": "vitest run",
     "test:watch": "vitest",
     "check": "yarn check:types && yarn check:prettier && yarn check:lint",
