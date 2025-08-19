@@ -1,0 +1,60 @@
+name: Release packages to npm
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          target-branch: main
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+      - uses: actions/checkout@v3
+        # ensure that a publication only occurs when a new release is created:
+        if: ${{ steps.release.outputs.releases_created }}
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 24
+        # ensure that a publication only occurs when a new release is created:
+        if: ${{ steps.release.outputs.releases_created }}
+      - uses: actions/cache@v3
+        with:
+          path: |
+            **/node_modules
+            .yarn/cache
+            .yarn/install-state.gz
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock', '.yarnrc.yml') }}
+        # ensure that a publication only occurs when a new release is created:
+        if: ${{ steps.release.outputs.releases_created }}
+      - run: yarn
+        # ensure that a publication only occurs when a new release is created:
+        if: ${{ steps.release.outputs.releases_created }}
+      - name: Build packages
+        run: |
+          bun run build:evm
+          bun run build:deployments
+          bun run build:sdk
+        if: ${{ steps.release.outputs.releases_created }}
+      - name: Publish deployments package to npm
+        working-directory: ./packages/deployments
+        run: yarn npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.PUBLISH_NPM_TOKEN}}
+        if: ${{ steps.release.outputs['packages/deployments--release_created'] }}
+      - name: Publish sdk package to npm
+        working-directory: ./packages/sdk
+        run: yarn npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.PUBLISH_NPM_TOKEN}}
+        if: ${{ steps.release.outputs['packages/sdk--release_created'] }}
