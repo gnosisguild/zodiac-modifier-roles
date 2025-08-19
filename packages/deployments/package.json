@@ -1,18 +1,17 @@
 {
   "name": "zodiac-roles-deployments",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "license": "LGPL-3.0+",
-  "main": "build/cjs/index.js",
-  "module": "build/esm/index.js",
-  "types": "build/cjs/index.d.ts",
+  "main": "./build/index.js",
+  "module": "./build/index.mjs",
+  "types": "./build/index.d.ts",
   "files": [
     "build",
     "README.md"
   ],
   "scripts": {
-    "build": "rimraf build && yarn build:cjs && yarn build:esm",
-    "build:cjs": "tsc -p tsconfig.cjs.json",
-    "build:esm": "tsc -p tsconfig.esm.json",
+    "clean": "rimraf build",
+    "build": "tsdown",
     "check": "yarn check:types && yarn check:prettier",
     "check:types": "tsc --noEmit",
     "check:prettier": "prettier \"src/**/*.ts\" --list-different",
@@ -23,9 +22,17 @@
   "devDependencies": {
     "prettier": "^3.4.2",
     "rimraf": "^6.0.1",
+    "tsdown": "^0.14.1",
     "typescript": "^5.7.3"
   },
   "installConfig": {
     "hoistingLimits": "workspaces"
+  },
+  "exports": {
+    ".": {
+      "import": "./build/index.mjs",
+      "require": "./build/index.js"
+    },
+    "./package.json": "./package.json"
   }
 }

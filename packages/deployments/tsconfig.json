@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
+    "module": "esnext",
+    "target": "esnext",
     "declaration": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
@@ -11,5 +13,6 @@
     "skipLibCheck": true,
     "strict": true,
     "typeRoots": ["node_modules/@types"]
-  }
+  },
+  "include": ["src/**/*.ts"]
 }

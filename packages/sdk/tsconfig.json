@@ -2,18 +2,17 @@
   "compilerOptions": {
     "declaration": true,
     "esModuleInterop": true,
-    "module": "commonjs",
+    "module": "esnext",
     "moduleResolution": "node",
     "noEmit": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": true,
-    "target": "es2020",
+    "target": "esnext",
     "typeRoots": ["node_modules/@types"],
     "paths": {
       "zodiac-roles-sdk": ["./src/main/index.ts"]
     }
   },
-  "include": ["./src/**/*.ts"],
-  "exclude": ["./src/**/*.test.ts"]
+  "include": ["./src/**/*.ts"]
 }

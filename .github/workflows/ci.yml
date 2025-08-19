@@ -17,7 +17,7 @@ jobs:
             .yarn/install-state.gz
           key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock', '.yarnrc.yml') }}
       - run: yarn
-      - run: yarn prepare
+
       - run: yarn test
       - run: yarn coverage
       - name: Coveralls

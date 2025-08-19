@@ -1,31 +1,28 @@
 {
   "name": "zodiac-roles-sdk",
-  "version": "3.2.2",
+  "version": "3.2.3",
   "license": "LGPL-3.0+",
-  "main": "build/cjs/sdk/src/main/index.js",
-  "module": "build/esm/sdk/src/main/index.js",
-  "types": "build/cjs/sdk/src/main/index.d.ts",
+  "main": "./build/index.js",
+  "module": "./build/index.mjs",
+  "types": "./build/index.d.ts",
   "exports": {
     ".": {
-      "require": "./build/cjs/sdk/src/main/index.js",
-      "import": "./build/esm/sdk/src/main/index.js"
-    },
-    "./kit": {
-      "require": "./build/cjs/sdk/src/kit/index.js",
-      "import": "./build/esm/sdk/src/kit/index.js"
+      "import": "./build/index.mjs",
+      "require": "./build/index.js"
     },
     "./annotations": {
-      "require": "./build/cjs/sdk/src/annotations/index.js",
-      "import": "./build/esm/sdk/src/annotations/index.js"
+      "import": "./build/annotations.mjs",
+      "require": "./build/annotations.js"
+    },
+    "./kit": {
+      "import": "./build/kit.mjs",
+      "require": "./build/kit.js"
     },
     "./swaps": {
-      "require": "./build/cjs/sdk/src/swaps/index.js",
-      "import": "./build/esm/sdk/src/swaps/index.js"
+      "import": "./build/swaps.mjs",
+      "require": "./build/swaps.js"
     },
-    "./typechain": {
-      "require": "./build/cjs/sdk/src/typechain.js",
-      "import": "./build/esm/sdk/src/typechain.js"
-    }
+    "./package.json": "./package.json"
   },
   "typesVersions": {
     "*": {
@@ -51,9 +48,8 @@
     "README.md"
   ],
   "scripts": {
-    "build": "rimraf build && yarn build:cjs && yarn build:esm",
-    "build:cjs": "tsc -p tsconfig.cjs.json",
-    "build:esm": "tsc -p tsconfig.esm.json",
+    "clean": "rimraf build",
+    "build": "tsdown",
     "test": "vitest run",
     "test:watch": "vitest",
     "check": "yarn check:types && yarn check:prettier && yarn check:lint",
@@ -64,11 +60,11 @@
     "fix:prettier": "prettier \"src/**/*.ts\" --write",
     "fix:lint": "eslint src --ext .ts --fix",
     "pre-commit": "yarn fix",
-    "prepare": "yarn eth-sdk"
+    "generate": "yarn eth-sdk"
   },
   "dependencies": {
     "ethers": "^6.13.5",
-    "zodiac-roles-deployments": "workspace:^"
+    "zodiac-roles-deployments": "workspace:*"
   },
   "peerDependencies": {
     "@gnosis-guild/eth-sdk-client": "^0.1.6",
@@ -90,6 +86,7 @@
     "@gnosis-guild/eth-sdk": "^0.3.7",
     "@gnosis-guild/eth-sdk-client": "^0.1.6",
     "@gnosis-guild/typechain-ethers-v6": "^0.5.5",
+    "@gnosis-guild/zodiac-core-modifier-roles": "workspace:*",
     "@types/node": "^20.9.0",
     "@typescript-eslint/eslint-plugin": "^5.62.0",
     "@typescript-eslint/parser": "^5.62.0",
@@ -103,6 +100,7 @@
     "prettier": "^3.4.2",
     "rimraf": "^6.0.1",
     "ts-node": "^10.9.2",
+    "tsdown": "^0.14.1",
     "typechain": "^8.3.2",
     "typescript": "^5.7.3",
     "vitest": "3.0.4"
