@@ -3,7 +3,7 @@ name: Release packages to npm
 on:
   push:
     branches:
-      - chore/release-please
+      - main
 
 permissions:
   contents: write
@@ -16,7 +16,7 @@ jobs:
       - uses: googleapis/release-please-action@v4
         id: release
         with:
-          target-branch: chore/release-please
+          target-branch: main
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
@@ -51,12 +51,12 @@ jobs:
           cd packages/deployments
           yarn npm publish
         env:
-          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+          NODE_AUTH_TOKEN: ${{secrets.PUBLISH_NPM_TOKEN}}
         if: ${{ steps.release.outputs['packages/deployments--release_created'] }}
       - name: Publish sdk package to npm
         run: |
           cd packages/sdk
           yarn npm publish
         env:
-          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+          NODE_AUTH_TOKEN: ${{secrets.PUBLISH_NPM_TOKEN}}
         if: ${{ steps.release.outputs['packages/sdk--release_created'] }}
