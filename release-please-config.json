@@ -4,7 +4,11 @@
   "release-type": "node",
   "plugins": ["node-workspace"],
   "packages": {
-    "packages/deployments": {},
-    "packages/sdk": {}
+    "packages/deployments": {
+      "package-name": "deployments"
+    },
+    "packages/sdk": {
+      "package-name": "sdk"
+    }
   }
 }
