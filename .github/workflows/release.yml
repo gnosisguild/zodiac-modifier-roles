@@ -47,16 +47,14 @@ jobs:
           bun run build:sdk
         if: ${{ steps.release.outputs.releases_created }}
       - name: Publish deployments package to npm
-        run: |
-          cd packages/deployments
-          yarn npm publish
+        working-directory: ./packages/deployments
+        run: yarn npm publish
         env:
           NODE_AUTH_TOKEN: ${{secrets.PUBLISH_NPM_TOKEN}}
         if: ${{ steps.release.outputs['packages/deployments--release_created'] }}
       - name: Publish sdk package to npm
-        run: |
-          cd packages/sdk
-          yarn npm publish
+        working-directory: ./packages/sdk
+        run: yarn npm publish
         env:
           NODE_AUTH_TOKEN: ${{secrets.PUBLISH_NPM_TOKEN}}
         if: ${{ steps.release.outputs['packages/sdk--release_created'] }}
