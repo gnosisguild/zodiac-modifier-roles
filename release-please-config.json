@@ -5,12 +5,10 @@
   "target-branch": "chore/release-please",
   "packages": {
     "packages/deployments": {
-      "release-type": "node",
-      "package-name": "deployments"
+      "release-type": "node"
     },
     "packages/sdk": {
-      "release-type": "node",
-      "package-name": "sdk"
+      "release-type": "node"
     }
   },
   "commit-search-depth": 25,
