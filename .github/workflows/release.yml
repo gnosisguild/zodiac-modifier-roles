@@ -17,15 +17,17 @@ jobs:
         id: release
         with:
           release-type: node
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
 
       - uses: actions/checkout@v3
         # ensure that a publication only occurs when a new release is created:
-        if: ${{ steps.release.outputs.release_created }}
+        if: ${{ steps.release.outputs.releases_created }}
       - uses: actions/setup-node@v3
         with:
           node-version: 24
         # ensure that a publication only occurs when a new release is created:
-        if: ${{ steps.release.outputs.release_created }}
+        if: ${{ steps.release.outputs.releases_created }}
       - uses: actions/cache@v3
         with:
           path: |
@@ -34,16 +36,16 @@ jobs:
             .yarn/install-state.gz
           key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock', '.yarnrc.yml') }}
         # ensure that a publication only occurs when a new release is created:
-        if: ${{ steps.release.outputs.release_created }}
+        if: ${{ steps.release.outputs.releases_created }}
       - run: yarn
         # ensure that a publication only occurs when a new release is created:
-        if: ${{ steps.release.outputs.release_created }}
+        if: ${{ steps.release.outputs.releases_created }}
       - name: Build packages
         run: |
           bun run build:evm
           bun run build:deployments
           bun run build:sdk
-        if: ${{ steps.release.outputs.release_created }}
+        if: ${{ steps.release.outputs.releases_created }}
       - name: Publish deployments package to npm
         run: |
           cd packages/deployments
