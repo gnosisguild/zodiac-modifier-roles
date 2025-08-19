@@ -3,6 +3,7 @@
   "bootstrap-sha": "845035c50f3c63715801c4bd87e680e953fb773c",
   "release-type": "node",
   "plugins": ["node-workspace"],
+  "target-branch": "chore/release-please",
   "packages": {
     "packages/deployments": {
       "package-name": "deployments"
