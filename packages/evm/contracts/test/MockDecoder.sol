@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "../Topology.sol";
 import "../AbiDecoder.sol";
+import "../Topology.sol";
 
 contract MockDecoder {
     function inspect(
@@ -10,24 +10,7 @@ contract MockDecoder {
         ConditionFlat[] memory conditions
     ) public pure returns (PP1 memory r) {
         return
-            copyOut(
-                AbiDecoder.inspect(
-                    data,
-                    Topology.typeTree(
-                        conditions,
-                        0,
-                        Topology.childrenBounds(conditions)
-                    ),
-                    0
-                )
-            );
-    }
-
-    function inspectRaw(
-        bytes calldata data,
-        AbiTypeTree[] memory typeTree
-    ) public pure returns (PP1 memory r) {
-        return copyOut(AbiDecoder.inspect(data, typeTree, 0));
+            copyOut(AbiDecoder.inspect(data, Topology.typeTree(conditions, 0)));
     }
 
     function pluck(
@@ -38,9 +21,26 @@ contract MockDecoder {
         return AbiDecoder.pluck(data, offset, size);
     }
 
+    function _toTree(
+        TypeTreeFlat[] calldata flatTree,
+        uint256 index
+    ) private pure returns (TypeTree memory result) {
+        result._type = flatTree[index]._type;
+        result.index = index;
+        if (flatTree[index].fields.length > 0) {
+            uint256[] memory fields = flatTree[index].fields;
+            result.children = new TypeTree[](fields.length);
+            for (uint256 i = 0; i < fields.length; i++) {
+                result.children[i] = _toTree(flatTree, fields[i]);
+            }
+        }
+    }
+
     function copyOut(
         Payload memory output
     ) private pure returns (PP1 memory result) {
+        result.variant = output.variant;
+        result.overflown = output.overflown;
         result.location = output.location;
         result.size = output.size;
         result.children = new PP2[](output.children.length);
@@ -52,6 +52,8 @@ contract MockDecoder {
     function copyOutTo2(
         Payload memory output
     ) private pure returns (PP2 memory result) {
+        result.variant = output.variant;
+        result.overflown = output.overflown;
         result.location = output.location;
         result.size = output.size;
         result.children = new PP3[](output.children.length);
@@ -63,6 +65,8 @@ contract MockDecoder {
     function copyOutTo3(
         Payload memory output
     ) private pure returns (PP3 memory result) {
+        result.variant = output.variant;
+        result.overflown = output.overflown;
         result.location = output.location;
         result.size = output.size;
         result.children = new PP4[](output.children.length);
@@ -74,6 +78,8 @@ contract MockDecoder {
     function copyOutTo4(
         Payload memory output
     ) private pure returns (PP4 memory result) {
+        result.variant = output.variant;
+        result.overflown = output.overflown;
         result.location = output.location;
         result.size = output.size;
         result.children = new PP5[](output.children.length);
@@ -85,6 +91,8 @@ contract MockDecoder {
     function copyOutTo5(
         Payload memory output
     ) private pure returns (PP5 memory result) {
+        result.variant = output.variant;
+        result.overflown = output.overflown;
         result.location = output.location;
         result.size = output.size;
         result.children = new PP6[](output.children.length);
@@ -96,6 +104,8 @@ contract MockDecoder {
     function copyOutTo6(
         Payload memory output
     ) private pure returns (PP6 memory result) {
+        result.variant = output.variant;
+        result.overflown = output.overflown;
         result.location = output.location;
         result.size = output.size;
         if (output.children.length > 0) {
@@ -104,36 +114,48 @@ contract MockDecoder {
     }
 
     struct PP1 {
+        bool variant;
+        bool overflown;
         uint256 location;
         uint256 size;
         PP2[] children;
     }
 
     struct PP2 {
+        bool variant;
+        bool overflown;
         uint256 location;
         uint256 size;
         PP3[] children;
     }
 
     struct PP3 {
+        bool variant;
+        bool overflown;
         uint256 location;
         uint256 size;
         PP4[] children;
     }
 
     struct PP4 {
+        bool variant;
+        bool overflown;
         uint256 location;
         uint256 size;
         PP5[] children;
     }
 
     struct PP5 {
+        bool variant;
+        bool overflown;
         uint256 location;
         uint256 size;
         PP6[] children;
     }
 
     struct PP6 {
+        bool variant;
+        bool overflown;
         uint256 location;
         uint256 size;
     }
