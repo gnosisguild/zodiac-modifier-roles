@@ -72,7 +72,14 @@ export const processAnnotations = async (
   const cachedFetchSchema = (url: string) => {
     const fetchSchemaAndInitApi = async () => {
       const schema = await fetchSchema(url)
-      const api = new OpenAPIBackend({
+
+      // Resilient access to CJS-only openapi-backend to not force a special CJS<>ESM interop config on users
+      const ResilientOpenAPIBackend =
+        "default" in OpenAPIBackend
+          ? (OpenAPIBackend.default as typeof OpenAPIBackend)
+          : OpenAPIBackend
+
+      const api = new ResilientOpenAPIBackend({
         definition: schema,
         quick: true, // makes $ref resolution synchronous
       })
