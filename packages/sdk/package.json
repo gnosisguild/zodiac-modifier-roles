@@ -22,24 +22,28 @@
       "import": "./build/swaps.mjs",
       "require": "./build/swaps.js"
     },
+    "./typechain": {
+      "import": "./build/typechain.mjs",
+      "require": "./build/typechain.js"
+    },
     "./package.json": "./package.json"
   },
   "typesVersions": {
     "*": {
       ".": [
-        "./build/cjs/sdk/src/main/index.d.ts"
+        "./build/index.d.ts"
       ],
       "kit": [
-        "./build/cjs/sdk/src/kit/index.d.ts"
+        "./build/kit.d.ts"
       ],
       "annotations": [
-        "./build/cjs/sdk/src/annotations/index.d.ts"
+        "./build/annotations.d.ts"
       ],
       "swaps": [
-        "./build/cjs/sdk/src/swaps/index.d.ts"
+        "./build/swaps.d.ts"
       ],
       "typechain": [
-        "./build/cjs/sdk/src/typechain.d.ts"
+        "./build/typechain.d.ts"
       ]
     }
   },
