@@ -43,9 +43,9 @@ jobs:
         if: ${{ steps.release.outputs.releases_created }}
       - name: Build packages
         run: |
-          bun run build:evm
-          bun run build:deployments
-          bun run build:sdk
+          yarn run build:evm
+          yarn run build:deployments
+          yarn run build:sdk
         if: ${{ steps.release.outputs.releases_created }}
       - name: Publish deployments package to npm
         working-directory: ./packages/deployments
