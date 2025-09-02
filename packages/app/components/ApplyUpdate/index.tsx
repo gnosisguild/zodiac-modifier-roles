@@ -16,8 +16,6 @@ import Flex from "@/ui/Flex"
 
 import CallData from "../CallData"
 import styles from "./style.module.css"
-import ExecuteButton from "./ExecuteButton"
-import { Provider } from "./Provider"
 import {
   hexlify,
   Interface,
@@ -29,6 +27,13 @@ import {
 } from "ethers"
 import Alert from "@/ui/Alert"
 import { LinkButton } from "@/ui/Button"
+import ApplyViaSafe from "./ApplyViaSafe"
+import ApplyViaGovernor, { isGovernor } from "./ApplyViaGovernor"
+import ApplyViaRethinkFactory, {
+  isFundInitializing as isRethinkFundInitializing,
+} from "./ApplyViaRethinkFactory"
+import { POSTER_ADDRESS } from "./const"
+import { WalletProvider } from "../Wallet"
 
 interface Props {
   chainId: ChainId
@@ -87,6 +92,20 @@ const ApplyUpdates: React.FC<Props> = async ({
     throw error
   }
 
+  let Apply = ApplyViaSafe
+  if (await isGovernor(chainId, owner)) {
+    Apply = ApplyViaGovernor
+  } else if (
+    await isRethinkFundInitializing({
+      chainId,
+      owner,
+      rolesModifier: address,
+      connectedWalletAddress: owner,
+    })
+  ) {
+    Apply = ApplyViaRethinkFactory
+  }
+
   const txBuilderJson = exportToSafeTransactionBuilder(calls, chainId, role.key)
   return (
     <Box p={3} className={styles.calls}>
@@ -118,9 +137,14 @@ const ApplyUpdates: React.FC<Props> = async ({
             </Flex>
           ))}
         </Flex>
-        <Provider>
-          <ExecuteButton calls={calls} owner={owner} />
-        </Provider>
+        <WalletProvider>
+          <Apply
+            calls={calls}
+            owner={owner}
+            roleKey={role.key}
+            chainId={chainId}
+          />
+        </WalletProvider>
       </Flex>
     </Box>
   )
@@ -145,9 +169,6 @@ const exportToSafeTransactionBuilder = (
     transactions: calls.map(decode),
   } as const
 }
-
-// EIP-3722 Poster contract
-const POSTER_ADDRESS = "0x000000000000cd17345801aa8147b8D3950260FF" as const
 
 const decode = (transaction: { to: `0x${string}`; data: `0x${string}` }) => {
   const abi: readonly JsonFragment[] =

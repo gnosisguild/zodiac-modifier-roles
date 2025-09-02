@@ -1,5 +1,3 @@
-"use client"
-
 import { useState } from "react"
 import { useSafeAppsSDK } from "@safe-global/safe-apps-react-sdk"
 import { RiCheckboxCircleLine } from "react-icons/ri"
