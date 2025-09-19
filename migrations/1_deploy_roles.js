@@ -75,5 +75,19 @@ module.exports = async function (deployer, network, accounts) {
   console.log('USER_ROLE:', getUserRole());
   console.log('MANAGER_ROLE:', getManagerRole());
   
+  // Generate contract verification instructions
+  console.log('\n🔍 Generating contract verification instructions...');
+  try {
+    const { generateVerificationInstructions } = require('../scripts/verify-contract');
+    generateVerificationInstructions(tronAddress, 'TRONRoles', deploymentInfo);
+    
+    console.log('\n📝 To verify your contract:');
+    console.log(`   node scripts/verify-contract.js ${tronAddress} TRONRoles`);
+  } catch (error) {
+    console.log('⚠️  Verification instruction generation error:', error.message);
+    console.log('   You can verify manually later using:');
+    console.log(`   node scripts/verify-contract.js ${tronAddress} TRONRoles`);
+  }
+  
   return rolesInstance;
 };

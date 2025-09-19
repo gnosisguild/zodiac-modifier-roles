@@ -44,16 +44,11 @@ const managerRole = getManagerRole();
 - `feeLimit`: 1000 TRX maximum
 - `originEnergyLimit`: 10,000,000 energy
 
-## Updating Addresses
+## Deployment Information
 
-After deployment, update the roles module address:
-
-```bash
-# Update roles module address
-npm run update-address nile 0x1234...
-# or
-yarn update-address nile 0x1234...
-```
+After deployment, contract addresses are automatically saved to:
+- `deployments/{network}_roles_deployment.json` - Full deployment details
+- Contains contract address, role keys, timestamps, and explorer URLs
 
 ## Helper Functions
 

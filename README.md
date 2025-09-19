@@ -31,11 +31,24 @@ echo "PRIVATE_KEY=your_actual_private_key_here" > .env
 # TRON Private Key for deployment and testing
 PRIVATE_KEY=your_actual_private_key_here
 
+# Optional: TronScan API Key for contract verification
+# Note: Not required for Nile/Shasta testnets, only needed for mainnet
+# Get your API key from: https://tronscan.org/#/apikey
+# TRONSCAN_API_KEY=your_tronscan_api_key_here
+
 # Optional: Network-specific private keys
 # PRIVATE_KEY_NILE=your_nile_private_key_here
 # PRIVATE_KEY_SHASTA=your_shasta_private_key_here
 # PRIVATE_KEY_MAINNET=your_mainnet_private_key_here
+
+# Optional: TRON Full Node URL (defaults to Nile testnet)
+# TRON_FULL_NODE=https://nile.trongrid.io
 ```
+
+**🔑 TronScan API Key (Optional for Testnets):**
+- **Nile/Shasta Testnets**: No API key required (as per [TRON Developer docs](https://developers.tron.network/reference/select-network))
+- **Mainnet**: API key recommended for higher rate limits
+- Get API key from: [TronScan API Keys](https://tronscan.org/#/apikey)
 
 ### 3. Compile Contracts
 ```bash
@@ -63,6 +76,27 @@ yarn deploy:shasta
 ```bash
 yarn deploy:mainnet
 ```
+
+### 6. Contract Verification
+
+Contracts are automatically verified on TronScan during deployment if you have a TronScan API key configured.
+
+#### Manual Verification
+If automatic verification fails or you want to verify manually:
+
+```bash
+# Verify the deployed contract
+yarn verify:nile
+
+# Or verify with custom parameters
+yarn verify <contract-address> <contract-name>
+```
+
+#### Verification Status
+Check verification status on TronScan:
+- **Nile Testnet**: https://nile.tronscan.org/#/contract/TG6AxQr665rkjC7RNkwzZRHZT6jCmkDwmh
+- **Shasta Testnet**: https://shasta.tronscan.org/#/contract/YOUR_CONTRACT_ADDRESS
+- **Mainnet**: https://tronscan.org/#/contract/YOUR_CONTRACT_ADDRESS
 
 ## TRON-Specific Features
 
