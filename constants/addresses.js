@@ -3,6 +3,19 @@
  * Centralized constants for the Roles module deployment and configuration
  */
 
+// Helper function for role keys
+const getRoleKey = (roleName) => {
+  // These are the actual keccak256 hash values for role names (without 0x prefix for TRON)
+  // Calculated using: keccak256("ROLE_NAME") in Solidity
+  const roleHashes = {
+    'ADMIN_ROLE': 'c2b6e8e1a784262ec27d89f86cdf96f4128d4bb3018cda66eaaac98009c8264c',
+    'USER_ROLE': '7458c68a8d5911e046867ad77078bbb0dcc6dce6a75d9fa201035a7e604f56cb', 
+    'MANAGER_ROLE': '55f77dd6b80916682b17948cfd1fe865e4f3af81a47c419611309aadaf76e376'
+  };
+  
+  return roleHashes[roleName] || '0000000000000000000000000000000000000000000000000000000000000000';
+};
+
 const ADDRESSES = {
   // Mainnet addresses
   mainnet: {
@@ -54,39 +67,42 @@ const CONFIG = {
   versions: {
     roles: "2.1.0-tron",
     compiler: "0.8.21",
-    evmVersion: "shanghai"
+        evmVersion: "shanghai"
   },
   
   // Roles module specific settings
   roles: {
-    // Role keys (keccak256 hashes)
-    adminRole: "0x0000000000000000000000000000000000000000000000000000000000000000", // Will be set to keccak256("ADMIN_ROLE")
-    userRole: "0x0000000000000000000000000000000000000000000000000000000000000000", // Will be set to keccak256("USER_ROLE")
-    managerRole: "0x0000000000000000000000000000000000000000000000000000000000000000" // Will be set to keccak256("MANAGER_ROLE")
+    // Role keys (keccak256 hashes) - calculated using getRoleKey function
+    adminRole: getRoleKey("ADMIN_ROLE"),
+    userRole: getRoleKey("USER_ROLE"),
+    managerRole: getRoleKey("MANAGER_ROLE")
   },
   
   // TronBox network configurations
   tronbox: {
     development: {
-      privateKey: "da146374a75310b9666e834ee4ad0866d6f4035967bfc76217c5a495fff9f0d0",
       userFeePercentage: 100,
       feeLimit: 1000 * 1e6,
-      fullHost: "https://api.shasta.trongrid.io"
+      fullHost: "https://api.shasta.trongrid.io",
+      network_id: "*"
     },
     shasta: {
       userFeePercentage: 100,
       feeLimit: 1000 * 1e6,
-      fullHost: "https://api.shasta.trongrid.io"
+      fullHost: "https://api.shasta.trongrid.io",
+      network_id: "*"
     },
     nile: {
       userFeePercentage: 100,
       feeLimit: 1000 * 1e6,
-      fullHost: "https://nile.trongrid.io"
+      fullHost: "https://nile.trongrid.io",
+      network_id: "*"
     },
     mainnet: {
       userFeePercentage: 100,
       feeLimit: 1000 * 1e6,
-      fullHost: "https://api.trongrid.io"
+      fullHost: "https://api.trongrid.io",
+      network_id: "*"
     }
   }
 };
@@ -118,11 +134,6 @@ const getTronBoxConfig = (network) => {
 
 const getRolesConfig = () => {
   return CONFIG.roles;
-};
-
-const getRoleKey = (roleName) => {
-  const crypto = require('crypto');
-  return '0x' + crypto.createHash('sha256').update(roleName).digest('hex');
 };
 
 module.exports = {

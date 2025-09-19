@@ -1,4 +1,5 @@
 const { getTronBoxConfig, getVersions } = require('./constants/addresses');
+require('dotenv').config();
 
 // Get shared configuration
 const versions = getVersions();
@@ -9,7 +10,14 @@ const supportedNetworks = ['development', 'shasta', 'nile', 'mainnet'];
 
 supportedNetworks.forEach(network => {
   try {
-    networks[network] = getTronBoxConfig(network);
+    const config = getTronBoxConfig(network);
+    
+    // Add private key from environment variables
+    if (process.env.PRIVATE_KEY) {
+      config.privateKey = process.env.PRIVATE_KEY;
+    }
+    
+    networks[network] = config;
   } catch (error) {
     console.warn(`Warning: Could not load configuration for network ${network}:`, error.message);
   }

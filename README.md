@@ -20,7 +20,21 @@ yarn install
 ### 2. Set Up Environment
 Create a `.env` file with your TRON private key:
 ```bash
-PRIVATE_KEY=your_private_key_here
+# Create .env file
+echo "PRIVATE_KEY=your_actual_private_key_here" > .env
+```
+
+**⚠️ Security Note:** Never commit your private key to version control. The `.env` file is already in `.gitignore`.
+
+**Example .env file:**
+```bash
+# TRON Private Key for deployment and testing
+PRIVATE_KEY=your_actual_private_key_here
+
+# Optional: Network-specific private keys
+# PRIVATE_KEY_NILE=your_nile_private_key_here
+# PRIVATE_KEY_SHASTA=your_shasta_private_key_here
+# PRIVATE_KEY_MAINNET=your_mainnet_private_key_here
 ```
 
 ### 3. Compile Contracts
