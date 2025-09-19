@@ -1,0 +1,16 @@
+{
+  "network": "nile",
+  "rolesAddress": "TG6AxQr665rkjC7RNkwzZRHZT6jCmkDwmh",
+  "rolesAddressHex": "414321f5755d245627c3fcd460615a6265df3af396",
+  "owner": "TNdt4WJjgRQkSBbCxQVtLz3gbrNQDSYjxF",
+  "avatar": "TNdt4WJjgRQkSBbCxQVtLz3gbrNQDSYjxF",
+  "target": "TNdt4WJjgRQkSBbCxQVtLz3gbrNQDSYjxF",
+  "deployer": "TNdt4WJjgRQkSBbCxQVtLz3gbrNQDSYjxF",
+  "explorer": "https://nile.tronscan.org",
+  "timestamp": "2025-09-19T18:41:51.825Z",
+  "roleKeys": {
+    "adminRole": "c2b6e8e1a784262ec27d89f86cdf96f4128d4bb3018cda66eaaac98009c8264c",
+    "userRole": "7458c68a8d5911e046867ad77078bbb0dcc6dce6a75d9fa201035a7e604f56cb",
+    "managerRole": "55f77dd6b80916682b17948cfd1fe865e4f3af81a47c419611309aadaf76e376"
+  }
+}

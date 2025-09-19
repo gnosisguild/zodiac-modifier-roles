@@ -2,6 +2,7 @@ const TRONRoles = artifacts.require('TRONRoles');
 const { getAddresses, getAdminRole, getUserRole, getManagerRole } = require('../constants/addresses');
 const fs = require('fs');
 const path = require('path');
+const TronWeb = require('tronweb');
 
 module.exports = async function (deployer, network, accounts) {
   console.log('Deploying TRON Roles module to network:', network);
@@ -30,10 +31,15 @@ module.exports = async function (deployer, network, accounts) {
   const rolesInstance = await TRONRoles.deployed();
   console.log('TRON Roles module deployed at:', rolesInstance.address);
   
+  // Convert hex address to TRON address format
+  const tronAddress = TronWeb.utils.address.fromHex(rolesInstance.address);
+  console.log('TRON address format:', tronAddress);
+  
   // Store deployment info
   const deploymentInfo = {
     network: network,
-    rolesAddress: rolesInstance.address,
+    rolesAddress: tronAddress, // Use TRON address format
+    rolesAddressHex: rolesInstance.address, // Keep hex for reference
     owner: owner,
     avatar: avatar,
     target: target,
@@ -57,9 +63,10 @@ module.exports = async function (deployer, network, accounts) {
   fs.writeFileSync(deploymentFile, JSON.stringify(deploymentInfo, null, 2));
   
   console.log('Deployment completed successfully!');
-  console.log('TRON Roles module address:', rolesInstance.address);
+  console.log('TRON Roles module address (hex):', rolesInstance.address);
+  console.log('TRON Roles module address (TRON):', tronAddress);
   console.log('Explorer URL:', networkConfig.explorer);
-  console.log('Contract URL:', `${networkConfig.explorer}/#/contract/${rolesInstance.address}`);
+  console.log('Contract URL:', `${networkConfig.explorer}/#/contract/${tronAddress}`);
   console.log('Deployment info saved to:', deploymentFile);
   
   // Log available role keys for reference
