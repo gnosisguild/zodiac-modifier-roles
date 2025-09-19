@@ -1,18 +1,65 @@
-**📯 Legacy Zodiac Roles v1 sources at: [gnosis/zodiac-modifier-roles-v1](https://github.com/gnosisguild/zodiac-modifier-roles-v1)**
+# Zodiac Roles Modifier for TRON
 
----
+This is a TRON port of the Zodiac Roles Modifier, providing granular, role-based access control for TRON Safe accounts.
 
-# Zodiac Roles Modifier
+## Overview
 
-[![Build Status](https://github.com/gnosisguild/zodiac-modifier-roles/actions/workflows/ci.yml/badge.svg)](https://github.com/gnosisguild/zodiac-modifier-roles/actions/workflows/ci.yml)
-[![Coverage Status](https://coveralls.io/repos/github/gnosis/zodiac-modifier-roles/badge.svg?branch=main&cache_bust=1)](https://coveralls.io/github/gnosis/zodiac-modifier-roles?branch=main)
-[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](https://github.com/gnosisguild/CODE_OF_CONDUCT)
+The TRON Roles Modifier allows you to:
+- Define roles with specific permissions
+- Assign modules to roles  
+- Control which target addresses each role can interact with
+- Execute transactions through role-based authorization
 
-The Roles Modifier belongs to the [Zodiac](https://github.com/gnosisguild/zodiac) collection of tools, which can be accessed through the Zodiac App available on [Safe](https://safe.global/).
+## Quick Start
 
-If you have any questions about Zodiac, join the [Gnosis Guild Discord](http://discord.gnosisguild.org). Follow [@GnosisGuild](https://twitter.com/gnosisguild) on Twitter for updates.
+### 1. Install Dependencies
+```bash
+yarn install
+```
 
-### About the Roles Modifier
+### 2. Set Up Environment
+Create a `.env` file with your TRON private key:
+```bash
+PRIVATE_KEY=your_private_key_here
+```
+
+### 3. Compile Contracts
+```bash
+yarn build
+```
+
+### 4. Run Tests
+```bash
+yarn test
+```
+
+### 5. Deploy to TRON Networks
+
+#### Deploy to Nile Testnet
+```bash
+yarn deploy:nile
+```
+
+#### Deploy to Shasta Testnet
+```bash
+yarn deploy:shasta
+```
+
+#### Deploy to Mainnet
+```bash
+yarn deploy:mainnet
+```
+
+## TRON-Specific Features
+
+This simplified version of the Roles modifier has been adapted for TRON with:
+
+- **Simplified Permission Model**: Basic role-based access control
+- **TRON Compatibility**: Works with TRON Safe and TRX transfers
+- **Energy Optimization**: Efficient for TRON's energy model
+- **TronBox Integration**: Native TRON deployment and testing
+
+## About the Roles Modifier
 
 This modifier allows avatars to enforce granular, role-based, permissions for attached modules.
 
@@ -20,9 +67,9 @@ Modules that have been granted a role are able to unilaterally make calls to any
 
 The interface mirrors the relevant parts of the Safe's interface, so this contract can be placed between Safe modules and the Safe itself to enforce role-based permissions.
 
-The contracts have been developed with [Solidity 0.8.21](https://github.com/ethereum/solidity/releases/tag/v0.8.21) targeting evm version shanghai.
+The contracts have been developed with [Solidity 0.8.24](https://github.com/ethereum/solidity/releases/tag/v0.8.24) targeting evm version cancun for TRON compatibility.
 
-### Features
+## Features
 
 - Create multiple roles
 - Assign roles to addresses
@@ -30,77 +77,134 @@ The contracts have been developed with [Solidity 0.8.21](https://github.com/ethe
 - Scope which functions a role can call on given address
 - Define conditions on function parameters
 
-### Flow
+## Flow
 
 - Define a role by setting targets, functions, and parameters that it can call
 - Assign the role to an address with `assignRoles()`
 - Address can now trigger the safe to call those targets, functions, and parameters via `execTransactionWithRole()`
 
-### Deployments
+## Usage
 
-#### Chains
+### 1. Deploy the Module
+```javascript
+const roles = await TRONRoles.new(owner, avatar, target);
+```
 
-- [Mainnet](https://etherscan.io/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
-- [Optimism](https://optimistic.etherscan.io/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
-- [Gnosis](https://gnosisscan.io/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
-- [Polygon](https://www.polygonscan.com/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
-- [Polygon zkEVM](https://zkevm.polygonscan.com/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
-- [Arbitrum One](https://arbiscan.io/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
-- [Avalanche C-Chain](https://snowtrace.io/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337/contract/43114/code)
-- [BSC](https://bscscan.com/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
-- [Base](https://basescan.org/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
-- [Celo](https://celoscan.io/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
-- [Sonic](https://sonicscan.org/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
-- [Berachain](https://berascan.com/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
-- [HyperEVM](https://www.hyperscan.com/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
-- [Base Sepolia](https://sepolia.basescan.org/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
-- [Sepolia](https://sepolia.etherscan.io/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
+### 2. Define Roles
+```javascript
+const ADMIN_ROLE = web3.utils.keccak256('ADMIN_ROLE');
+const USER_ROLE = web3.utils.keccak256('USER_ROLE');
+```
 
-#### Contracts
+### 3. Assign Roles to Modules
+```javascript
+await roles.assignRoles(
+  moduleAddress,
+  [ADMIN_ROLE, USER_ROLE],
+  [true, false], // module has ADMIN_ROLE, not USER_ROLE
+  { from: owner }
+);
+```
 
-| Contract              | Description                                                                     | Address                                      |
-| --------------------- | ------------------------------------------------------------------------------- | -------------------------------------------- |
-| Roles                 | Main roles modifier contract                                                    | `0x9646fDAD06d3e24444381f44362a3B0eB343D337` |
-| Integrity             | Library contract for condition integrity checks                                 | `0x6a6Af4b16458Bc39817e4019fB02BD3b26d41049` |
-| Packer                | Library contract for optimized condition storage                                | `0x61C5B1bE435391fDd7BC6703F3740C0d11728a8C` |
-| MultiSendUnwrapper    | Transaction unwrapper for Safe's MultiSend                                      | `0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0` |
-| AvatarIsOwnerOfERC721 | Custom condition useful for permissioned interaction with Uniswap NFT positions | `0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1` |
+### 4. Set Target Permissions
+```javascript
+await roles.setTarget(
+  targetAddress,
+  ADMIN_ROLE,
+  true, // Allow ADMIN_ROLE to interact with targetAddress
+  { from: owner }
+);
+```
 
-#### Subgraphs
+### 5. Set Default Role for Module
+```javascript
+await roles.setDefaultRole(moduleAddress, ADMIN_ROLE, { from: owner });
+```
 
-- [https://gnosisguild.squids.live/roles:production/api/graphql](https://gnosisguild.squids.live/roles:production/api/graphql)
+### 6. Execute Transactions
+Modules can now execute transactions through the roles modifier:
 
-### Development environment setup
+```javascript
+// Using default role
+await roles.execTransactionFromModule(
+  targetAddress,
+  value,
+  data,
+  operation,
+  { from: moduleAddress }
+);
 
-1. For each package were a `.env.sample` file is present, copy the content of the file into a `.env` file at the same location and populate it with your keys, etc.
-2. From the repo root run `yarn`
-3. From the repo root run `yarn prepare`
+// Using specific role
+await roles.execTransactionWithRole(
+  targetAddress,
+  value,
+  data,
+  operation,
+  roleKey,
+  { from: moduleAddress }
+);
+```
 
-After that, you can start working on the different packages.
+## Integration with TRON Safe
 
-### Packages
+1. Deploy the TRON Safe contract
+2. Deploy this Roles module
+3. Enable the Roles module on the Safe
+4. Configure roles and permissions
+5. Other modules can now execute transactions through role-based authorization
 
-This monorepo uses [yarn workspaces](https://yarnpkg.com/features/workspaces) and is comprised of:
+## Security Model
 
-- **evm**: Roles mod smart contracts
-- **subgraph**: a subgraph indexing deployed Roles mod instances:
-- **sdk**: a TypeScript SDK for managing roles: `zodiac-roles-sdk`
-- **deployments**: a TypeScript package that lists all supported chains and offers functions to fetch roles from the subgraph: `zodiac-roles-deployments`
-- **app**: a webapp for viewing roles: https://roles.gnosisguild.org
-- **docs**: the documentation page: https://docs.roles.gnosisguild.org
+- **Role-based Access**: Modules must have specific roles to execute transactions
+- **Target Restrictions**: Each role can only interact with pre-approved target addresses
+- **Owner Control**: Only the owner can modify roles and permissions
+- **Module Authorization**: Only enabled modules can execute transactions
 
-### Audits
+## API Reference
 
-Audits have been performed by the [G0 group](https://github.com/g0-group) and [Omniscia](https://omniscia.io).
+### Core Functions
 
-All identified issues have been resolved as of commit [a19c0ebda97f7d645335f2c386818546641f832b](https://github.com/gnosisguild/zodiac-modifier-roles/tree/a19c0ebda97f7d645335f2c386818546641f832b/packages/evm/contracts)
+- `assignRoles(module, roleKeys, memberOf)`: Assign/revoke roles for a module
+- `setDefaultRole(module, roleKey)`: Set default role for a module
+- `setTarget(target, roleKey, allowed)`: Allow/deny target for a role
+- `execTransactionFromModule(to, value, data, operation)`: Execute with default role
+- `execTransactionWithRole(to, value, data, operation, roleKey)`: Execute with specific role
 
-All audit reports are available at [packages/evm/docs](packages/evm/docs).
+### View Functions
 
-### Security and Liability
+- `hasRole(module, roleKey)`: Check if module has role
+- `isTargetAllowed(target, roleKey)`: Check if target is allowed for role
+- `defaultRoles(module)`: Get default role for module
+
+## Network Configuration
+
+- **Mainnet**: https://api.trongrid.io
+- **Nile Testnet**: https://nile.trongrid.io  
+- **Shasta Testnet**: https://api.shasta.trongrid.io
+
+## Development
+
+### Console Access
+```bash
+yarn console
+```
+
+### Contract Verification
+After deployment, verify contracts on TronScan using the deployment address.
+
+## Differences from Ethereum Version
+
+This TRON version is simplified compared to the full Zodiac Roles implementation:
+
+- **No Complex Conditions**: Simplified to basic role and target permissions
+- **No Allowance Tracking**: Removed complex allowance and consumption tracking
+- **No ABI Decoding**: Simplified permission checking
+- **TRON Optimized**: Designed specifically for TRON's energy model
+
+## Security and Liability
 
 All contracts are WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-### License
+## License
 
 Created under the [LGPL-3.0+ license](LICENSE).
