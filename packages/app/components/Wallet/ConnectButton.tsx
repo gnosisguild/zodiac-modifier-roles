@@ -1,3 +1,5 @@
+"use client"
+
 import { ChainId, CHAINS } from "@/app/chains"
 import Address from "@/ui/Address"
 import { Button } from "@/ui/Button"

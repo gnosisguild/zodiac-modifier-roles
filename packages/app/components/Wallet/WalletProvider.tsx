@@ -1,3 +1,4 @@
+"use client"
 import { CHAINS } from "@/app/chains"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { getDefaultConfig } from "connectkit"

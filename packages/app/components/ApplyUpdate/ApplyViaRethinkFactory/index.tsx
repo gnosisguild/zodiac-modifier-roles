@@ -42,6 +42,7 @@ export const isFundInitializing = async ({
   }
 
   try {
+    console.log("calling getFundInitializationCache", owner)
     // Try to call the getFundInitializationCache function
     // We use a dummy address (0x0000000000000000000000000000000000000000) as the deployer parameter
     const result = await client.readContract({
@@ -70,10 +71,11 @@ export const isFundInitializing = async ({
       functionName: "getFundInitializationCache",
       args: [connectedWalletAddress],
     })
-
+    console.log("result", result)
     // Check if the fund is initializing and connected to our Roles Modifier
     return result.rolesModifier.toLowerCase() === rolesModifier.toLowerCase()
   } catch (error) {
+    console.error("isFundInit", error)
     // If call reverts, it's not a Rethink factory
     return false
   }
