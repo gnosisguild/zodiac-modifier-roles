@@ -22,8 +22,8 @@ export const mapAbiInputs = (
     inputs.map((input, index) => {
       let value = values[index] as AbiInput
 
-      // We only need to map the nested fields if the current input is a tuple or an (multi-dimensional) array of tuples
-      // In either case, the tuple's components will already be defined on input.components
+      // We only need to map the nested fields if the current input is a tuple or an (multi-dimensional) array of tuples.
+      // In either case, the tuple's components will already be defined on input.components.
       if ("components" in input) {
         const isArrayParam = arrayElementType(input) != null
         if (isArrayParam) {
@@ -51,10 +51,9 @@ const mapAbiInputsInArray = (
   invariant("components" in elementType, "expected array of tuples")
 
   const isNestedArray = arrayElementType(elementType) != null
-
   return values.map((value) =>
     isNestedArray
       ? mapAbiInputsInArray(elementType, value)
-      : mapAbiInputs(elementType.components, value)
+      : mapAbiInputs(elementType.components, Object.values(value))
   )
 }
