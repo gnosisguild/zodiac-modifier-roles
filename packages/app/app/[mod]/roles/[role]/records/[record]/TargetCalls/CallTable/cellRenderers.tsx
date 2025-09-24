@@ -17,17 +17,20 @@ export class NestedValuesRenderer implements ICellRendererComp<Row> {
   className = classes.nestedValues
 
   init(params: ICellRendererParams<Row, NestedArrayValues>) {
-    invariant(params.value != null, "unexpected empty cell value")
-
     this.eGui = document.createElement("div")
-    this.eGui.dataset.span = params.value.span.toString()
+    this.eGui.dataset.span =
+      params.value == null ? "0" : params.value.span.toString()
     this.eGui.classList.add(this.className)
 
     const valueFormatter =
       params.formatValue ??
       ((val: any) => (val != null ? val.toString() : undefined))
 
-    const html = this.render(params.value, valueFormatter)
+    const html =
+      params.value != null &&
+      !("children" in params.value && params.value.children.length === 0)
+        ? this.render(params.value, valueFormatter)
+        : this.renderEmpty()
     this.eGui.innerHTML = html
   }
 
@@ -48,6 +51,10 @@ export class NestedValuesRenderer implements ICellRendererComp<Row> {
     })
 
     return '<ol start="0">' + lis.join("") + "</ol>"
+  }
+
+  renderEmpty() {
+    return ""
   }
 
   // Format the value of an element according to the column definition.
@@ -72,6 +79,10 @@ export class NestedValuesRenderer implements ICellRendererComp<Row> {
 
 export class NestedIndicesRenderer extends NestedValuesRenderer {
   override className = classes.nestedIndices
+
+  override renderEmpty() {
+    return "&mdash;"
+  }
 }
 
 export class RecordedCellRenderer implements ICellRendererComp<Row> {
