@@ -19,7 +19,7 @@ const Disclosure: React.FC<DisclosureProps> = ({
   return (
     <HeadlessDisclosure defaultOpen={defaultOpen}>
       {({ open }) => (
-        <>
+        <div>
           <HeadlessDisclosure.Button
             className={classNames(classes.button, open && classes.open)}
             as="div"
@@ -29,7 +29,7 @@ const Disclosure: React.FC<DisclosureProps> = ({
             <SlArrowDown size={24} className={classes.buttonIcon} />
           </HeadlessDisclosure.Button>
           <HeadlessDisclosure.Panel>{children}</HeadlessDisclosure.Panel>
-        </>
+        </div>
       )}
     </HeadlessDisclosure>
   )

@@ -59,9 +59,22 @@ export const encodeCalls = (
       }
 
       case "scopeFunction": {
-        return {
-          to: rolesMod,
-          data: rolesInterface.encodeFunctionData("scopeFunction", [
+        try {
+          return {
+            to: rolesMod,
+            data: rolesInterface.encodeFunctionData("scopeFunction", [
+              call.roleKey,
+              call.targetAddress,
+              call.selector,
+              flattenCondition(call.condition).map((c) => ({
+                ...c,
+                compValue: c.compValue || "0x",
+              })),
+              call.executionOptions,
+            ]) as `0x${string}`,
+          }
+        } catch (e) {
+          console.warn([
             call.roleKey,
             call.targetAddress,
             call.selector,
@@ -70,7 +83,8 @@ export const encodeCalls = (
               compValue: c.compValue || "0x",
             })),
             call.executionOptions,
-          ]) as `0x${string}`,
+          ])
+          throw e
         }
       }
 

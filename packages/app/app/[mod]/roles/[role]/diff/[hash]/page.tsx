@@ -5,12 +5,10 @@ import { kv } from "@vercel/kv"
 import Layout from "@/components/Layout"
 import { parseModParam, parseRoleParam } from "@/app/params"
 import PageBreadcrumbs from "./breadcrumbs"
-import styles from "./page.module.css"
 import Flex from "@/ui/Flex"
 import ApplyUpdates from "@/components/ApplyUpdate"
-import AnnotationsToggle from "@/components/AnnotationsToggle"
 import { fetchOrInitRole } from "../../fetching"
-import { PermissionsPost, zPermissionsPost } from "@/app/api/permissions/types"
+import { zPermissionsPost } from "@/app/api/permissions/types"
 import DiffView from "@/components/DiffView"
 
 export default async function DiffPage(props: {
