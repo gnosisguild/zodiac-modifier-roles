@@ -32,6 +32,9 @@ export const wagmiConfig = createConfig(
     walletConnectProjectId: WALLETCONNECT_PROJECT_ID,
     chains: Object.values(CHAINS) as any,
     connectors: [injected(), metaMask(), getWalletConnectConnector()],
+    batch: {
+      multicall: false,
+    },
   })
 )
 

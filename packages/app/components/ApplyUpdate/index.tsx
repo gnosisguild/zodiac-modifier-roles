@@ -29,11 +29,10 @@ import Alert from "@/ui/Alert"
 import { LinkButton } from "@/ui/Button"
 import ApplyViaSafe from "./ApplyViaSafe"
 import ApplyViaGovernor, { isGovernor } from "./ApplyViaGovernor"
-import ApplyViaRethinkFactory, {
-  isFundInitializing as isRethinkFundInitializing,
-} from "./ApplyViaRethinkFactory"
+import ApplyViaRethinkFactory from "./ApplyViaRethinkFactory"
 import { POSTER_ADDRESS } from "./const"
 import { WalletProvider } from "../Wallet"
+import { isRethinkFactory } from "./ApplyViaRethinkFactory/isRethinkFactory"
 
 interface Props {
   chainId: ChainId
@@ -95,14 +94,7 @@ const ApplyUpdates: React.FC<Props> = async ({
   let Apply = ApplyViaSafe
   if (await isGovernor(chainId, owner)) {
     Apply = ApplyViaGovernor
-  } else if (
-    await isRethinkFundInitializing({
-      chainId,
-      owner,
-      rolesModifier: address,
-      connectedWalletAddress: owner,
-    })
-  ) {
+  } else if (await isRethinkFactory(chainId, owner)) {
     Apply = ApplyViaRethinkFactory
   }
 
@@ -141,6 +133,7 @@ const ApplyUpdates: React.FC<Props> = async ({
           <Apply
             calls={calls}
             owner={owner}
+            rolesModifier={address}
             roleKey={role.key}
             chainId={chainId}
           />
