@@ -9,13 +9,13 @@ const AddressOne = "0x0000000000000000000000000000000000000001";
 
 task(
   "extract:mastercopy",
-  "Extracts and persists current mastercopy build artifacts"
+  "Extracts and persists current mastercopy build artifacts",
 ).setAction(async (_, hre) => {
   writeMastercopyFromBuild({
     contractVersion: packageJson.version,
     contractName: "AvatarIsOwnerOfERC721",
     compilerInput: await hre.run("verify:etherscan-get-minimal-input", {
-      sourceName: "contracts/adapters/AvatarIsOwnerOfERC721.sol",
+      sourceName: "contracts/periphery/AvatarIsOwnerOfERC721.sol",
     }),
     constructorArgs: {
       types: [],
@@ -27,7 +27,19 @@ task(
     contractVersion: packageJson.version,
     contractName: "MultiSendUnwrapper",
     compilerInput: await hre.run("verify:etherscan-get-minimal-input", {
-      sourceName: "contracts/adapters/MultiSendUnwrapper.sol",
+      sourceName: "contracts/periphery/MultiSendUnwrapper.sol",
+    }),
+    constructorArgs: {
+      types: [],
+      values: [],
+    },
+    salt: ZeroHash,
+  });
+  writeMastercopyFromBuild({
+    contractVersion: packageJson.version,
+    contractName: "MorphoBundler3Unwrapper",
+    compilerInput: await hre.run("verify:etherscan-get-minimal-input", {
+      sourceName: "contracts/periphery/MorphoBundler3Unwrapper.sol",
     }),
     constructorArgs: {
       types: [],
