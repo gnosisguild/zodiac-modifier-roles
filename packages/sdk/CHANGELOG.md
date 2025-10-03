@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.3.0](https://github.com/gnosisguild/zodiac-modifier-roles/compare/zodiac-roles-sdk-v3.2.5...zodiac-roles-sdk-v3.3.0) (2025-10-03)
+
+
+### Features
+
+* apply via governor and rethink factory ([#381](https://github.com/gnosisguild/zodiac-modifier-roles/issues/381)) ([11a9a54](https://github.com/gnosisguild/zodiac-modifier-roles/commit/11a9a54f5e4ba87be175900b1ac6dfafb0b37c9d))
+
 ## [3.2.5](https://github.com/gnosisguild/zodiac-modifier-roles/compare/zodiac-roles-sdk-v3.2.4...zodiac-roles-sdk-v3.2.5) (2025-08-28)
 
 
