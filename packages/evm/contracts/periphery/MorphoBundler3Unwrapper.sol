@@ -52,12 +52,12 @@ contract MorphoBundler3Unwrapper is ITransactionUnwrapper {
         }
 
         uint256 count = uint256(bytes32(data[36:]));
-        uint256 length = 68;
+        uint256 size = 68;
         for (uint256 i; i < count; i++) {
-            length += 32 + _entrySize(data, _tail(data, 68, i));
+            size += 32 + _entrySize(data, _tail(data, 68, i));
         }
 
-        if (length != data.length) {
+        if (size != data.length) {
             revert MalformedBody();
         }
     }
