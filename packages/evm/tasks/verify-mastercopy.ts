@@ -19,16 +19,13 @@ task(
       );
     }
 
-    const chainId = String((await hre.ethers.provider.getNetwork()).chainId);
+    const chainId = Number((await hre.ethers.provider.getNetwork()).chainId);
 
     for (const artifact of readMastercopies({ contractVersion })) {
       const { noop } = await verifyMastercopy({
-        artifact,
-        customChainConfig: hre.config.etherscan.customChains.find(
-          (chain: any) => chain.network === hre.network.name,
-        ),
-        apiUrlOrChainId: chainId,
+        chainId: chainId,
         apiKey,
+        artifact,
       }).catch((e) => {
         console.error(
           `Error verifying ${artifact.contractName}@${artifact.contractVersion}: ${e}`,
