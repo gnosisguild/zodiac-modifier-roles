@@ -1269,7 +1269,7 @@ __metadata:
   resolution: "@gnosis-guild/zodiac-core-modifier-roles@workspace:packages/evm"
   dependencies:
     "@gnosis-guild/typechain-ethers-v6": ^0.5.5
-    "@gnosis-guild/zodiac-core": ^2.1.3
+    "@gnosis-guild/zodiac-core": ^3.0.1
     "@nomicfoundation/hardhat-chai-matchers": ^2.0.8
     "@nomicfoundation/hardhat-ethers": ^3.0.8
     "@nomicfoundation/hardhat-ignition": ^0.15.10
@@ -1299,37 +1299,15 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@gnosis-guild/zodiac-core@npm:^2.0.5":
-  version: 2.1.2
-  resolution: "@gnosis-guild/zodiac-core@npm:2.1.2"
-  dependencies:
-    "@gnosis.pm/safe-contracts": 1.3.0
-    "@openzeppelin/contracts": 5.0.2
-    "@openzeppelin/contracts-upgradeable": 5.0.2
-    ethers: ^6.13.2
-    semver: ^7.6.3
-  checksum: 95cbd6c0a6ccb13fcb5aaef8d9404f420696ba9fb3e395f0b39820b55e7d7c73186f0f6bcdfba1494fc16fa198f7bdcca62300938a15824310f332a5c89e759a
-  languageName: node
-  linkType: hard
-
-"@gnosis-guild/zodiac-core@npm:^2.1.3":
-  version: 2.1.3
-  resolution: "@gnosis-guild/zodiac-core@npm:2.1.3"
+"@gnosis-guild/zodiac-core@npm:^3.0.1":
+  version: 3.0.1
+  resolution: "@gnosis-guild/zodiac-core@npm:3.0.1"
   dependencies:
     "@openzeppelin/contracts": 5.0.2
     "@openzeppelin/contracts-upgradeable": 5.0.2
     ethers: ^6.13.2
     semver: ^7.6.3
-  checksum: 160348567e10a74684b1bba4350a24cf0635858fd7c4a107e09f23ef2b5afb18d712478e634798e7c9f5ce37966fbb62457c5d3c54b6f3a8d2d0342d7ba93d41
-  languageName: node
-  linkType: hard
-
-"@gnosis.pm/safe-contracts@npm:1.3.0":
-  version: 1.3.0
-  resolution: "@gnosis.pm/safe-contracts@npm:1.3.0"
-  peerDependencies:
-    ethers: ^5.1.4
-  checksum: fea331745e3af0ed7322115e5bd4cc37de914253d9f6e1d85a4713e7e1fdc758bdba95cd2c38c6ba2cfd1bb289378d983d40723c3c525331dce0ed30418ab990
+  checksum: ddc8454a7b15aeca86542f8ef4534d8a5cb42a16af5878a2672c46cfd27806f82a76b5bcc68096884d02ebb4694f10dee1d7a60b4f0be5d56956a6c6dd52b151
   languageName: node
   linkType: hard
 
@@ -19800,7 +19778,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "zodiac-roles-integration-tests@workspace:packages/integration-tests"
   dependencies:
-    "@gnosis-guild/zodiac-core": ^2.0.5
+    "@gnosis-guild/zodiac-core": ^3.0.1
     "@nomicfoundation/hardhat-chai-matchers": ^2.0.8
     "@nomicfoundation/hardhat-ethers": ^3.0.8
     "@nomicfoundation/hardhat-network-helpers": ^1.0.12
