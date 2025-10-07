@@ -4,18 +4,20 @@ pragma solidity >=0.8.21 <0.9.0;
 import "./AbiTypes.sol";
 
 /**
- * @title AbiDecoder - Inspects locations and sizes of abi-encoded parameters
+ * @title AbiDecoder - Inspects calldata and determines parameter locations
  *
  * @author gnosisguild
  *
- * @notice This library analyzes ABI-encoded calldata according to a TypeTree
- *         structure, returning Payload mappings that describe where each
- *         parameter is located and how large it is.
+ * @notice This library inspects ABI-encoded calldata according to a TypeTree
+ *         definition, producing Payload mappings that describe where each
+ *         parameter resides in calldata and how large it is.
  *
- *         The decoder validates bounds but does NOT extract actual values.
- *         It only maps WHERE parameters are, not WHAT they contain.
- *         Subsequently used by the PermissionChecker, which takes advantage
- *         of cheap calldata slicing.
+ *         The decoder performs strict bounds validation but does NOT extract
+ *         or interpret actual parameter values. It only identifies WHERE each
+ *         parameter is located, not WHAT it contains.
+ *
+ *         This mapping is subsequently consumed by the PermissionChecker,
+ *         which leverages it for cheap calldata slicing.
  */
 library AbiDecoder {
     error CalldataOutOfBounds();
