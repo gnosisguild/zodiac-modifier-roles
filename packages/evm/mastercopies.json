@@ -5380,5 +5380,134 @@
         }
       }
     }
+  },
+  "MorphoBundler3Unwrapper": {
+    "2.1.0": {
+      "contractName": "MorphoBundler3Unwrapper",
+      "sourceName": "contracts/periphery/MorphoBundler3Unwrapper.sol",
+      "contractVersion": "2.1.0",
+      "compilerVersion": "v0.8.21+commit.d9974bed",
+      "factory": "0xce0042b868300000d44a59004da54a005ffdcf9f",
+      "address": "0x9cAfcC440a748000283aF4014818BaB12A072c95",
+      "bytecode": "0x608060405234801561000f575f80fd5b5061072c8061001d5f395ff3fe608060405234801561000f575f80fd5b5060043610610029575f3560e01c8063c7a7b6351461002d575b5f80fd5b61004061003b366004610454565b610056565b60405161004d919061050b565b60405180910390f35b606061006485858585610078565b61006e84846101c5565b9695505050505050565b83156100975760405163ad6e405560e01b815260040160405180910390fd5b5f8160018111156100aa576100aa6104f7565b146100c85760405163ad6e405560e01b815260040160405180910390fd5b63374f435d60e01b6100da838561059f565b6001600160e01b0319161461010257604051631a751fb760e11b815260040160405180910390fd5b602061011183600481876105cf565b61011a916105f6565b1461013857604051631a751fb760e11b815260040160405180910390fd5b60445f61014884602481886105cf565b610151916105f6565b90505f5b8181101561019d57610174868661016f89896044876102b9565b610331565b61017f906020610627565b6101899084610627565b9250806101958161063a565b915050610155565b508184146101bd57604051629ec3f960e31b815260040160405180910390fd5b505050505050565b60605f6101d583602481876105cf565b6101de916105f6565b90508067ffffffffffffffff8111156101f9576101f9610652565b60405190808252806020026020018201604052801561026157816020015b61024e6040805160a08101909152805f81526020015f6001600160a01b031681526020015f81526020015f81526020015f81525090565b8152602001906001900390816102175790505b50915060445f5b828110156102b0576102a08686610281898987876102b9565b87858151811061029357610293610666565b6020026020010151610377565b6102a98161063a565b9050610268565b50505092915050565b5f836102c683602061067a565b6102d09085610627565b6102db906020610627565b11156102f957604051629ec3f960e31b815260040160405180910390fd5b5f858561030785602061067a565b6103119087610627565b61031c9282906105cf565b610325916105f6565b905061006e8185610627565b5f60a081610360868661034782828960016102b9565b6103529282906105cf565b61035b916105f6565b61040d565b61036b906020610627565b905061006e8183610627565b5f8152838361038784600c610627565b6103929282906105cf565b61039b91610691565b60601c60208201525f6103b185858560016102b9565b90506103be816020610627565b60608301526103cf848281886105cf565b6103d8916105f6565b608083015284846103ea856040610627565b6103f59282906105cf565b6103fe916105f6565b60409092019190915250505050565b5f6020600161041c8483610627565b61042691906106c4565b61043091906106d7565b61043b90602061067a565b92915050565b80356002811061044f575f80fd5b919050565b5f805f805f60808688031215610468575f80fd5b85356001600160a01b038116811461047e575f80fd5b945060208601359350604086013567ffffffffffffffff808211156104a1575f80fd5b818801915088601f8301126104b4575f80fd5b8135818111156104c2575f80fd5b8960208285010111156104d3575f80fd5b6020830195508094505050506104eb60608701610441565b90509295509295909350565b634e487b7160e01b5f52602160045260245ffd5b602080825282518282018190525f91906040908185019086840185805b8381101561059157825180516002811061055057634e487b7160e01b84526021600452602484fd5b8652808801516001600160a01b0316888701528681015187870152606080820151908701526080908101519086015260a09094019391860191600101610528565b509298975050505050505050565b6001600160e01b031981358181169160048510156105c75780818660040360031b1b83161692505b505092915050565b5f80858511156105dd575f80fd5b838611156105e9575f80fd5b5050820193919092039150565b8035602083101561043b575f19602084900360031b1b1692915050565b634e487b7160e01b5f52601160045260245ffd5b8082018082111561043b5761043b610613565b5f6001820161064b5761064b610613565b5060010190565b634e487b7160e01b5f52604160045260245ffd5b634e487b7160e01b5f52603260045260245ffd5b808202811582820484141761043b5761043b610613565b6bffffffffffffffffffffffff1981358181169160148510156105c75760149490940360031b84901b1690921692915050565b8181038181111561043b5761043b610613565b5f826106f157634e487b7160e01b5f52601260045260245ffd5b50049056fea26469706673582212209fa2c215bd885e98bcd92032bea3e01df25d5d8e193d4b0726809d4a0e0ea3fb64736f6c63430008150033",
+      "constructorArgs": {
+        "types": [],
+        "values": []
+      },
+      "salt": "0x0000000000000000000000000000000000000000000000000000000000000000",
+      "abi": [
+        {
+          "inputs": [],
+          "name": "MalformedBody",
+          "type": "error"
+        },
+        {
+          "inputs": [],
+          "name": "MalformedHeader",
+          "type": "error"
+        },
+        {
+          "inputs": [],
+          "name": "UnsupportedMode",
+          "type": "error"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "value",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bytes",
+              "name": "data",
+              "type": "bytes"
+            },
+            {
+              "internalType": "enum Operation",
+              "name": "operation",
+              "type": "uint8"
+            }
+          ],
+          "name": "unwrap",
+          "outputs": [
+            {
+              "components": [
+                {
+                  "internalType": "enum Operation",
+                  "name": "operation",
+                  "type": "uint8"
+                },
+                {
+                  "internalType": "address",
+                  "name": "to",
+                  "type": "address"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "value",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "dataLocation",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "dataSize",
+                  "type": "uint256"
+                }
+              ],
+              "internalType": "struct UnwrappedTransaction[]",
+              "name": "",
+              "type": "tuple[]"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function"
+        }
+      ],
+      "compilerInput": {
+        "language": "Solidity",
+        "sources": {
+          "@gnosis-guild/zodiac-core/contracts/core/Operation.sol": {
+            "content": "// SPDX-License-Identifier: LGPL-3.0-only\npragma solidity >=0.7.0 <0.9.0;\n\nenum Operation {\n  Call,\n  DelegateCall\n}\n"
+          },
+          "contracts/periphery/MorphoBundler3Unwrapper.sol": {
+            "content": "// SPDX-License-Identifier: LGPL-3.0-only\npragma solidity >=0.8.17 <0.9.0;\n\nimport \"./Types.sol\";\n\n/**\n * @title MorphoBundler3Unwrapper - An adapter that unwraps Morpho Bundler3 multicalls\n *\n * @author gnosisguild\n *\n */\n\ninterface IBundler3 {\n    struct Call {\n        address to;\n        bytes data;\n        uint256 value;\n        bool skipRevert;\n        bytes32 callbackHash;\n    }\n\n    function multicall(Call[] calldata) external payable;\n}\n\ncontract MorphoBundler3Unwrapper is ITransactionUnwrapper {\n    error UnsupportedMode();\n    error MalformedHeader();\n    error MalformedBody();\n\n    /**\n     * @notice Unwraps a bundler3 multicall transaction into individual operations\n     * @param\n     * @param value ETH value sent with the call\n     * @param data Bundler3 encoded multicall calldata\n     * @param operation Operation type (must be Operation.Call)\n     * @return result Array of unwrapped transactions\n     */\n    function unwrap(\n        address,\n        uint256 value,\n        bytes calldata data,\n        Operation operation\n    ) external pure override returns (UnwrappedTransaction[] memory) {\n        _validate(value, data, operation);\n        return _unwrapEntries(data);\n    }\n\n    /**\n     * @notice Validates the overall structure of the multicall calldata\n     * @dev Ensures selector, offsets, and sizes match expected layout\n     */\n    function _validate(\n        uint256 value,\n        bytes calldata data,\n        Operation operation\n    ) internal pure {\n        // Only zero-value calls are supported\n        if (value != 0) {\n            revert UnsupportedMode();\n        }\n\n        // Only Operation.Call is supported\n        if (operation != Operation.Call) {\n            revert UnsupportedMode();\n        }\n\n        // First 4 bytes must be the multicall selector\n        if (bytes4(data) != IBundler3.multicall.selector) {\n            revert MalformedHeader();\n        }\n\n        // Next 32 bytes should be the offset to payload (always 0x20)\n        if (bytes32(data[4:]) != bytes32(uint256(0x20))) {\n            revert MalformedHeader();\n        }\n\n        // 4 (selector) + 32 (offset) + 32 (array length)\n        uint256 size = 68;\n        uint256 length = uint256(bytes32(data[36:]));\n\n        // Calculate expected total size based on each entry\n        for (uint256 i; i < length; i++) {\n            size += 32 + _entrySize(data, _tail(data, 68, i));\n        }\n\n        // Total length must match calldata\n        if (size != data.length) {\n            revert MalformedBody();\n        }\n    }\n\n    function _unwrapEntries(\n        bytes calldata data\n    ) private pure returns (UnwrappedTransaction[] memory result) {\n        uint256 count = uint256(bytes32(data[36:])); // number of calls\n        result = new UnwrappedTransaction[](count);\n\n        // Offset to start of head section: selector (4) + buffer offset (32) + array length (32)\n        uint256 headLocation = 4 + 32 + 32;\n\n        // Loop through each entry\n        for (uint256 i = 0; i < count; ++i) {\n            _unwrapEntry(data, _tail(data, headLocation, i), result[i]);\n        }\n    }\n\n    function _unwrapEntry(\n        bytes calldata data,\n        uint256 location,\n        UnwrappedTransaction memory result\n    ) private pure {\n        result.operation = Operation.Call;\n\n        // Head Slot 0 Inline: To -> address are rightmost 20 bytes of the slot\n        result.to = address(bytes20(data[location + 12:]));\n\n        // Head Slot 1 Offset: Data\n        uint256 slot1Location = _tail(data, location, 1);\n        result.dataLocation = slot1Location + 32;\n        result.dataSize = uint256(bytes32(data[slot1Location:]));\n\n        // Head Slot 2 Inline: Value\n        result.value = uint256(bytes32(data[location + 64:]));\n    }\n\n    function _entrySize(\n        bytes calldata data,\n        uint256 location\n    ) private pure returns (uint256) {\n        uint256 headSize = 5 * 32; // 5 slots in the head\n        uint256 tailSize = 32 + // 32 bytes for data length\n            _ceil32(uint256(bytes32(data[_tail(data, location, 1):]))); // padded data\n        return headSize + tailSize;\n    }\n\n    /**\n     * @notice Returns the absolute calldata location of a non-inline slot\n     *\n     * @dev A non-inline slot, is one that's not encoded inline at head. Rather\n     *      contains an offset pointing to its corresponding tail region where\n     *      data is encoded.\n     * @param data Full calldata buffer\n     * @param headLocation Starting position of the head block\n     * @param slot Index of the slot within the head block\n     * @return location Absolute location of the data\n     */\n    function _tail(\n        bytes calldata data,\n        uint256 headLocation,\n        uint256 slot\n    ) private pure returns (uint256 location) {\n        if ((headLocation + 32 * slot) + 32 > data.length) {\n            revert MalformedBody();\n        }\n        uint256 offset = uint256(bytes32(data[headLocation + 32 * slot:]));\n        location = headLocation + offset;\n    }\n\n    /**\n     * @notice Rounds a length up to the nearest multiple of 32 bytes\n     */\n    function _ceil32(uint256 length) private pure returns (uint256) {\n        return ((length + 32 - 1) / 32) * 32;\n    }\n}\n"
+          },
+          "contracts/periphery/Types.sol": {
+            "content": "// SPDX-License-Identifier: LGPL-3.0-only\npragma solidity >=0.8.17 <0.9.0;\n\nimport \"@gnosis-guild/zodiac-core/contracts/core/Operation.sol\";\n\ninterface IMultiSend {\n    function multiSend(bytes memory transactions) external payable;\n}\n\nstruct UnwrappedTransaction {\n    Operation operation;\n    address to;\n    uint256 value;\n    // We wanna deal in calldata slices. We return location, let invoker slice\n    uint256 dataLocation;\n    uint256 dataSize;\n}\n\ninterface ITransactionUnwrapper {\n    function unwrap(\n        address to,\n        uint256 value,\n        bytes calldata data,\n        Operation operation\n    ) external view returns (UnwrappedTransaction[] memory result);\n}\n\ninterface ICustomCondition {\n    function check(\n        address to,\n        uint256 value,\n        bytes calldata data,\n        Operation operation,\n        uint256 location,\n        uint256 size,\n        bytes12 extra\n    ) external view returns (bool success, bytes32 reason);\n}\n"
+          }
+        },
+        "settings": {
+          "evmVersion": "shanghai",
+          "optimizer": {
+            "enabled": true,
+            "runs": 100
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      }
+    }
   }
 }
