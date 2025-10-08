@@ -34,19 +34,28 @@ library Topology {
         ConditionFlat[] memory conditions,
         uint256 index
     ) internal pure returns (TypeTree memory node) {
-        AbiType _type = conditions[index].paramType;
+        node._type = conditions[index].paramType;
+
+        (uint256 childrenStart, uint256 childrenLength) = childBounds(
+            conditions,
+            index
+        );
+
+        if (childrenLength == 0) {
+            return node;
+        }
 
         Operator operator = conditions[index].operator;
         if (operator >= Operator.And && operator <= Operator.Nor) {
-            return _variant(conditions, index);
+            return _variantTypeTree(conditions, childrenStart, childrenLength);
         }
 
-        node._type = _type;
-        (uint256 start, uint256 length) = childBounds(conditions, index);
-        if (length > 0) {
-            node.children = new TypeTree[](_type == AbiType.Array ? 1 : length);
-            for (uint256 i = 0; i < node.children.length; i++) {
-                node.children[i] = typeTree(conditions, i + start);
+        unchecked {
+            node.children = new TypeTree[](
+                node._type == AbiType.Array ? 1 : childrenLength
+            );
+            for (uint256 i = 0; i < node.children.length; ++i) {
+                node.children[i] = typeTree(conditions, i + childrenStart);
             }
         }
     }
@@ -93,23 +102,38 @@ library Topology {
         return keccak256(abi.encodePacked(bytes32(uint256(tree._type)), ids));
     }
 
-    function _variant(
+    function _variantTypeTree(
         ConditionFlat[] memory conditions,
-        uint256 index
-    ) private pure returns (TypeTree memory result) {
-        (uint256 childrenStart, uint256 childrenLength) = childBounds(
-            conditions,
-            index
-        );
-        assert(childrenStart > 0);
-
+        uint256 childrenStart,
+        uint256 childrenLength
+    ) private pure returns (TypeTree memory node) {
         if (_cantBeVariant(conditions, childrenStart, childrenLength)) {
             // Non-variant type found, return first element's tree
             return typeTree(conditions, childrenStart);
         }
 
-        return
-            _variantResolve(conditions, childrenStart, childrenLength, false);
+        node._type = AbiType.Dynamic;
+        node.children = new TypeTree[](childrenLength);
+
+        bool isVariant;
+        bytes32 id;
+        unchecked {
+            for (uint256 i = 0; i < childrenLength; ++i) {
+                node.children[i] = typeTree(conditions, childrenStart + i);
+
+                if (!isVariant) {
+                    bytes32 currentId = _typeTreeId(node.children[i]);
+
+                    if (id == 0) {
+                        id = currentId;
+                    } else if (id != currentId) {
+                        isVariant = true;
+                    }
+                }
+            }
+        }
+
+        return isVariant ? node : node.children[0];
     }
 
     function _cantBeVariant(
@@ -135,34 +159,5 @@ library Topology {
         }
 
         return false;
-    }
-
-    function _variantResolve(
-        ConditionFlat[] memory conditions,
-        uint256 childrenStart,
-        uint256 childrenLength,
-        bool isVariant
-    ) private pure returns (TypeTree memory node) {
-        node._type = AbiType.Dynamic;
-        node.children = new TypeTree[](childrenLength);
-
-        bytes32 id;
-        unchecked {
-            for (uint256 i = 0; i < childrenLength; i++) {
-                node.children[i] = typeTree(conditions, childrenStart + i);
-
-                if (!isVariant) {
-                    bytes32 currentId = _typeTreeId(node.children[i]);
-
-                    if (id == 0) {
-                        id = currentId;
-                    } else if (id != currentId) {
-                        isVariant = true;
-                    }
-                }
-            }
-        }
-
-        return isVariant ? node : node.children[0];
     }
 }
