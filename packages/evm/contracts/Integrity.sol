@@ -5,6 +5,7 @@ import "./Topology.sol";
 /**
  * @title Integrity, A library that validates condition integrity, and
  * adherence to the expected input structure and rules.
+ *
  * @author gnosisguild
  */
 library Integrity {
@@ -26,10 +27,17 @@ library Integrity {
 
     function enforce(ConditionFlat[] memory conditions) external pure {
         _root(conditions);
+        _bfs(conditions);
         for (uint256 i = 0; i < conditions.length; ++i) {
             _node(conditions[i], i);
         }
-        _tree(conditions);
+        _parents(conditions);
+        _children(conditions);
+        _typeTree(conditions);
+
+        if (Topology.typeTree(conditions, 0)._type != AbiType.Calldata) {
+            revert UnsuitableRootNode();
+        }
     }
 
     function _root(ConditionFlat[] memory conditions) private pure {
@@ -40,6 +48,16 @@ library Integrity {
         }
         if (count != 1 || conditions[0].parent != 0) {
             revert UnsuitableRootNode();
+        }
+    }
+
+    function _bfs(ConditionFlat[] memory conditions) private pure {
+        uint256 length = conditions.length;
+        // check BFS
+        for (uint256 i = 1; i < length; ++i) {
+            if (conditions[i - 1].parent > conditions[i].parent) {
+                revert NotBFS();
+            }
         }
     }
 
@@ -145,47 +163,28 @@ library Integrity {
         }
     }
 
-    function _tree(ConditionFlat[] memory conditions) private pure {
+    function _parents(ConditionFlat[] memory conditions) private pure {
         uint256 length = conditions.length;
-        // check BFS
-        for (uint256 i = 1; i < length; ++i) {
-            if (conditions[i - 1].parent > conditions[i].parent) {
-                revert NotBFS();
-            }
-        }
 
         for (uint256 i = 0; i < length; ++i) {
             if (
                 (conditions[i].operator == Operator.EtherWithinAllowance ||
                     conditions[i].operator == Operator.CallWithinAllowance)
             ) {
-                uint256 countCalldataNodes = 0;
-                for (uint256 j = conditions[i].parent; ; ) {
-                    bool isCalldata = conditions[j].paramType ==
-                        AbiType.Calldata;
-                    bool isLogical = (conditions[j].operator >= Operator.And &&
-                        conditions[j].operator <= Operator.Nor);
+                (
+                    uint256 countCalldataNodes,
+                    ,
+                    uint256 countOtherNodes
+                ) = _countParentNodes(conditions, i);
 
-                    if (isCalldata) {
-                        countCalldataNodes++;
-                    }
-
-                    if (!isCalldata && !isLogical) {
-                        revert UnsuitableParent(i);
-                    }
-
-                    if (j == 0) {
-                        break;
-                    }
-
-                    j = conditions[j].parent;
-                }
-                if (countCalldataNodes != 1) {
+                if (countCalldataNodes != 1 || countOtherNodes > 0) {
                     revert UnsuitableParent(i);
                 }
             }
         }
+    }
 
+    function _children(ConditionFlat[] memory conditions) private pure {
         for (uint256 i = 0; i < conditions.length; i++) {
             ConditionFlat memory condition = conditions[i];
             (, uint256 childrenLength) = Topology.childBounds(conditions, i);
@@ -242,7 +241,9 @@ library Integrity {
                 }
             }
         }
+    }
 
+    function _typeTree(ConditionFlat[] memory conditions) private pure {
         for (uint256 i = 0; i < conditions.length; i++) {
             ConditionFlat memory condition = conditions[i];
             if (
@@ -252,15 +253,11 @@ library Integrity {
             ) {
                 if (
                     !_isTypeMatch(conditions, i) &&
-                    !_isTypeEquivalence(conditions, i)
+                    !_isTypeVariant(conditions, i)
                 ) {
                     revert UnsuitableChildTypeTree(i);
                 }
             }
-        }
-
-        if (Topology.typeTree(conditions, 0)._type != AbiType.Calldata) {
-            revert UnsuitableRootNode();
         }
     }
 
@@ -286,7 +283,7 @@ library Integrity {
         }
         return true;
     }
-    function _isTypeEquivalence(
+    function _isTypeVariant(
         ConditionFlat[] memory conditions,
         uint256 index
     ) private pure returns (bool) {
@@ -308,5 +305,42 @@ library Integrity {
             }
         }
         return true;
+    }
+
+    function _countParentNodes(
+        ConditionFlat[] memory conditions,
+        uint256 i
+    )
+        private
+        pure
+        returns (
+            uint256 countCalldata,
+            uint256 countLogical,
+            uint256 countOther
+        )
+    {
+        for (uint256 j = conditions[i].parent; ; ) {
+            bool isCalldata = conditions[j].paramType == AbiType.Calldata;
+            bool isLogical = (conditions[j].operator >= Operator.And &&
+                conditions[j].operator <= Operator.Nor);
+
+            if (isCalldata) {
+                ++countCalldata;
+            }
+
+            if (isLogical) {
+                ++countLogical;
+            }
+
+            if (!isCalldata && !isLogical) {
+                ++countOther;
+            }
+
+            if (j == 0) {
+                break;
+            }
+
+            j = conditions[j].parent;
+        }
     }
 }
