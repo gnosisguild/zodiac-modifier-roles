@@ -139,7 +139,8 @@ library AbiDecoder {
      *        - Inline elements are stored directly in HEAD region
      *        - Non-inline elements store a pointer in HEAD, data in TAIL
      */
-    function __block__(
+    // 79,791
+    function __block__2(
         bytes calldata data,
         uint256 location,
         uint256 length,
@@ -201,6 +202,58 @@ library AbiDecoder {
         payload.children = children;
     }
 
+    // 79,378
+    function __block__(
+        bytes calldata data,
+        uint256 location,
+        uint256 length,
+        TypeTree memory typeNode,
+        Payload memory payload
+    ) private pure {
+        Payload[] memory children = new Payload[](length);
+
+        uint256 offset;
+        unchecked {
+            for (uint256 i; i < length; ++i) {
+                TypeTree memory typeChild = typeNode.children[
+                    i >= typeNode.children.length ? 0 : i
+                ];
+
+                if (typeChild._type == AbiType.None) continue;
+
+                bool isInline = _isInline(typeChild);
+
+                uint256 childLocation = _locationInBlock(
+                    data,
+                    location,
+                    offset,
+                    isInline
+                );
+
+                if (childLocation == type(uint256).max) {
+                    payload.overflown = true;
+                    return;
+                }
+
+                Payload memory child = children[i];
+
+                _walk(data, childLocation, typeChild, child);
+
+                if (child.overflown) {
+                    payload.overflown = true;
+                    return;
+                }
+
+                // Update the offset in the block for the next element
+                offset += isInline ? child.size : 32;
+
+                // For non-inline elements, we need to account for the 32-byte pointer
+                payload.size += child.size + (isInline ? 0 : 32);
+            }
+        }
+        payload.children = children;
+    }
+
     /**
      * @dev Handles variant nodes where multiple type interpretations are possible
      *      for the same data location. Used by Dynamic nodes with variant children.
@@ -226,11 +279,18 @@ library AbiDecoder {
         payload.overflown = true;
         payload.children = new Payload[](length);
 
-        for (uint256 i; i < length; i++) {
-            _walk(data, location, typeNode.children[i], payload.children[i]);
-            payload.overflown =
-                payload.overflown &&
-                payload.children[i].overflown;
+        unchecked {
+            for (uint256 i; i < length; ++i) {
+                _walk(
+                    data,
+                    location,
+                    typeNode.children[i],
+                    payload.children[i]
+                );
+                payload.overflown =
+                    payload.overflown &&
+                    payload.children[i].overflown;
+            }
         }
     }
 
