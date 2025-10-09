@@ -58,6 +58,10 @@ library Integrity {
             if (conditions[i - 1].parent > conditions[i].parent) {
                 revert NotBFS();
             }
+
+            if (conditions[i].parent > i) {
+                revert NotBFS();
+            }
         }
     }
 
