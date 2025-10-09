@@ -257,7 +257,7 @@ library Integrity {
             ) {
                 if (
                     !_isTypeMatch(conditions, i) &&
-                    !_isTypeVariant(conditions, i)
+                    !_isTypeEquivalence(conditions, i)
                 ) {
                     revert UnsuitableChildTypeTree(i);
                 }
@@ -274,20 +274,19 @@ library Integrity {
             index
         );
 
-        bytes32[] memory ids = new bytes32[](childrenLength);
-        for (uint256 i = 0; i < childrenLength; ++i) {
-            ids[i] = Topology.typeTreeId(conditions, childrenStart + i);
+        if (childrenLength == 1) {
+            return true;
         }
 
-        // is type match
+        bytes32 id = Topology.typeTreeId(conditions, childrenStart);
         for (uint256 i = 1; i < childrenLength; ++i) {
-            if (ids[i - 1] != ids[i]) {
+            if (id != Topology.typeTreeId(conditions, childrenStart + i))
                 return false;
-            }
         }
+
         return true;
     }
-    function _isTypeVariant(
+    function _isTypeEquivalence(
         ConditionFlat[] memory conditions,
         uint256 index
     ) private pure returns (bool) {

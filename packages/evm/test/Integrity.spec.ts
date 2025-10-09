@@ -633,6 +633,34 @@ describe("Integrity", () => {
       }
     });
 
+    it("should revert if nested children of a logical operator have different, non-variant type trees  (e.g., Or(Or(T1, T2)))", async () => {
+      const { integrity, enforce } = await loadFixture(setup);
+      // Or with a single child that is itself an Or containing variants
+      const conditions = flattenCondition({
+        paramType: AbiType.Calldata,
+        children: [
+          {
+            paramType: AbiType.None,
+            operator: Operator.Or,
+            children: [
+              {
+                paramType: AbiType.None,
+                operator: Operator.Or,
+                children: [
+                  { paramType: AbiType.Dynamic },
+                  { paramType: AbiType.Static },
+                ],
+              },
+            ],
+          },
+        ],
+      });
+      await expect(enforce(conditions)).to.be.revertedWithCustomError(
+        integrity,
+        "UnsuitableChildTypeTree",
+      );
+    });
+
     it("should pass if children of a logical operator have identical type trees", async () => {
       const { enforce } = await loadFixture(setup);
       const conditions = flattenCondition({
@@ -738,6 +766,133 @@ describe("Integrity", () => {
         });
         await expect(enforce(conditions)).to.not.be.reverted;
       }
+    });
+
+    describe("Array.Matches with Multiple Entries", () => {
+      it("should pass when Array.Matches children are simple homogeneous types (e.g., all Static)", async () => {
+        const { enforce } = await loadFixture(setup);
+        const conditions = flattenCondition({
+          paramType: AbiType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: AbiType.Array,
+              operator: Operator.Matches,
+              children: [
+                { paramType: AbiType.Static },
+                {
+                  paramType: AbiType.Static,
+                  operator: Operator.EqualTo,
+                  compValue: defaultAbiCoder.encode(["uint256"], [42]),
+                },
+                {
+                  paramType: AbiType.Static,
+                  operator: Operator.GreaterThan,
+                  compValue: defaultAbiCoder.encode(["uint256"], [10]),
+                },
+              ],
+            },
+          ],
+        });
+        await expect(enforce(conditions)).to.not.be.reverted;
+      });
+
+      it("should pass when Array.Matches children are complex homogeneous types (e.g., all Tuple with same structure)", async () => {
+        const { enforce } = await loadFixture(setup);
+        const conditions = flattenCondition({
+          paramType: AbiType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: AbiType.Array,
+              operator: Operator.Matches,
+              children: [
+                {
+                  paramType: AbiType.Tuple,
+                  operator: Operator.Pass,
+                  children: [
+                    { paramType: AbiType.Static },
+                    { paramType: AbiType.Dynamic },
+                  ],
+                },
+                {
+                  paramType: AbiType.Tuple,
+                  operator: Operator.EqualTo,
+                  compValue: defaultAbiCoder.encode(
+                    ["tuple(uint256,string)"],
+                    [[42, "test"]],
+                  ),
+                  children: [
+                    { paramType: AbiType.Static },
+                    { paramType: AbiType.Dynamic },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+        await expect(enforce(conditions)).to.not.be.reverted;
+      });
+
+      it("should pass when Array.Matches children are type equivalent variants (Dynamic/Calldata/AbiEncoded)", async () => {
+        const { enforce } = await loadFixture(setup);
+        const conditions = flattenCondition({
+          paramType: AbiType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: AbiType.Array,
+              operator: Operator.Matches,
+              children: [
+                { paramType: AbiType.Dynamic },
+                {
+                  paramType: AbiType.Calldata,
+                  operator: Operator.Matches,
+                  children: [{ paramType: AbiType.Static }],
+                },
+                {
+                  paramType: AbiType.AbiEncoded,
+                  operator: Operator.Matches,
+                  children: [
+                    {
+                      paramType: AbiType.Tuple,
+                      operator: Operator.Pass,
+                      children: [
+                        { paramType: AbiType.Static },
+                        { paramType: AbiType.Dynamic },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+        await expect(enforce(conditions)).to.not.be.reverted;
+      });
+
+      it("should revert when Array.Matches children have incompatible type trees", async () => {
+        const { integrity, enforce } = await loadFixture(setup);
+        {
+          const conditions = flattenCondition({
+            paramType: AbiType.Calldata,
+            operator: Operator.Matches,
+            children: [
+              {
+                paramType: AbiType.Array,
+                operator: Operator.Matches,
+                children: [
+                  { paramType: AbiType.Static },
+                  { paramType: AbiType.Dynamic },
+                ],
+              },
+            ],
+          });
+          await expect(enforce(conditions))
+            .to.be.revertedWithCustomError(integrity, "UnsuitableChildTypeTree")
+            .withArgs(1);
+        }
+      });
     });
   });
 
