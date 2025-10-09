@@ -104,10 +104,10 @@ const config: HardhatUserConfig = {
       chainId: 84532,
       url: "https://sepolia.base.org",
     },
-    matic: {
+    polygon: {
       ...sharedNetworkConfig,
       chainId: 137,
-      url: "https://rpc-mainnet.maticvigil.com",
+      url: "https://polygon-rpc.com",
     },
     arbitrum: {
       ...sharedNetworkConfig,
@@ -117,7 +117,7 @@ const config: HardhatUserConfig = {
     avalanche: {
       ...sharedNetworkConfig,
       chainId: 43114,
-      url: "https://rpc.ankr.com/avalanche",
+      url: "https://0xrpc.io/avax",
     },
     zkevm: {
       ...sharedNetworkConfig,
@@ -127,7 +127,7 @@ const config: HardhatUserConfig = {
     bsc: {
       ...sharedNetworkConfig,
       chainId: 56,
-      url: "https://bscrpc.com",
+      url: "https://1rpc.io/bnb",
     },
     celo: {
       ...sharedNetworkConfig,
@@ -189,136 +189,137 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: ETHERSCAN_API_KEY,
-    customChains: [
-      {
-        network: "optimism",
-        chainId: 10,
-        urls: {
-          apiURL: "https://api-optimistic.etherscan.io/api",
-          browserURL: "https://optimistic.etherscan.io",
-        },
-      },
-      {
-        network: "gnosis",
-        chainId: 100,
-        urls: {
-          apiURL: "https://api.gnosisscan.io/api",
-          browserURL: "https://www.gnosisscan.io",
-        },
-      },
-      {
-        network: "matic",
-        chainId: 137,
-        urls: {
-          apiURL: "https://api.polygonscan.com/api",
-          browserURL: "https://www.polygonscan.com",
-        },
-      },
-      {
-        network: "arbitrum",
-        chainId: 42161,
-        urls: {
-          apiURL: "https://api.arbiscan.io/api",
-          browserURL: "https://www.arbiscan.io",
-        },
-      },
-      {
-        network: "avalanche",
-        chainId: 43114,
-        urls: {
-          apiURL: "https://api.snowtrace.io/api",
-          browserURL: "https://www.snowtrace.io",
-        },
-      },
-      {
-        network: "zkevm",
-        chainId: 1101,
-        urls: {
-          apiURL: "https://api-zkevm.polygonscan.com/api",
-          browserURL: "https://zkevm.polygonscan.com",
-        },
-      },
-      {
-        network: "bsc",
-        chainId: 56,
-        urls: {
-          apiURL: "https://api.bscscan.com/api",
-          browserURL: "https://bscscan.com",
-        },
-      },
-      {
-        network: "celo",
-        chainId: 42220,
-        urls: {
-          apiURL: "https://api.celoscan.io/api",
-          browserURL: "https://celoscan.io",
-        },
-      },
-      {
-        network: "mantle",
-        chainId: 5000,
-        urls: {
-          apiURL: "https://api.mantlescan.xyz/api",
-          browserURL: "https://mantlescan.xyz",
-        },
-      },
-      {
-        network: "unichain",
-        chainId: 130,
-        urls: {
-          apiURL: "https://api.uniscan.xyz/api",
-          browserURL: "https://uniscan.xyz",
-        },
-      },
-      {
-        network: "sonic",
-        chainId: 146,
-        urls: {
-          apiURL: "https://api.sonicscan.org/api",
-          browserURL: "https://sonicscan.org",
-        },
-      },
-      {
-        network: "berachain",
-        chainId: 80094,
-        urls: {
-          apiURL: "https://api.berascan.com/api",
-          browserURL: "https://berascan.com",
-        },
-      },
-      {
-        network: "hyperevm",
-        chainId: 999,
-        urls: {
-          apiURL: "https://www.hyperscan.com/api",
-          browserURL: "https://www.hyperscan.com",
-        },
-      },
-      {
-        network: "lisk-sepolia",
-        chainId: 4202,
-        urls: {
-          apiURL: "https://sepolia-blockscout.lisk.com/api",
-          browserURL: "https://sepolia-blockscout.lisk.com",
-        },
-      },
-      {
-        network: "bob-sepolia",
-        chainId: 808813,
-        urls: {
-          apiURL: "https://bob-sepolia.explorer.gobob.xyz/api",
-          browserURL: "https://bob-sepolia.explorer.gobob.xyz",
-        },
-      },
-      {
-        network: "worldchain",
-        chainId: 480,
-        urls: {
-          apiURL: "https://api.worldscan.org/api",
-          browserURL: "https://worldscan.org",
-        },
-      },
-    ],
+
+    // customChains: [
+    //   {
+    //     network: "optimism",
+    //     chainId: 10,
+    //     urls: {
+    //       apiURL: "https://api-optimistic.etherscan.io/api",
+    //       browserURL: "https://optimistic.etherscan.io",
+    //     },
+    //   },
+    //   {
+    //     network: "gnosis",
+    //     chainId: 100,
+    //     urls: {
+    //       apiURL: "https://api.gnosisscan.io/api",
+    //       browserURL: "https://www.gnosisscan.io",
+    //     },
+    //   },
+    //   {
+    //     network: "polygon",
+    //     chainId: 137,
+    //     urls: {
+    //       apiURL: "https://api.polygonscan.com/api",
+    //       browserURL: "https://www.polygonscan.com",
+    //     },
+    //   },
+    //   {
+    //     network: "arbitrum",
+    //     chainId: 42161,
+    //     urls: {
+    //       apiURL: "https://api.arbiscan.io/api",
+    //       browserURL: "https://www.arbiscan.io",
+    //     },
+    //   },
+    //   {
+    //     network: "avalanche",
+    //     chainId: 43114,
+    //     urls: {
+    //       apiURL: "https://api.snowtrace.io/api",
+    //       browserURL: "https://www.snowtrace.io",
+    //     },
+    //   },
+    //   {
+    //     network: "zkevm",
+    //     chainId: 1101,
+    //     urls: {
+    //       apiURL: "https://api-zkevm.polygonscan.com/api",
+    //       browserURL: "https://zkevm.polygonscan.com",
+    //     },
+    //   },
+    //   {
+    //     network: "bsc",
+    //     chainId: 56,
+    //     urls: {
+    //       apiURL: "https://api.bscscan.com/api",
+    //       browserURL: "https://bscscan.com",
+    //     },
+    //   },
+    //   {
+    //     network: "celo",
+    //     chainId: 42220,
+    //     urls: {
+    //       apiURL: "https://api.celoscan.io/api",
+    //       browserURL: "https://celoscan.io",
+    //     },
+    //   },
+    //   {
+    //     network: "mantle",
+    //     chainId: 5000,
+    //     urls: {
+    //       apiURL: "https://api.mantlescan.xyz/api",
+    //       browserURL: "https://mantlescan.xyz",
+    //     },
+    //   },
+    //   {
+    //     network: "unichain",
+    //     chainId: 130,
+    //     urls: {
+    //       apiURL: "https://api.uniscan.xyz/api",
+    //       browserURL: "https://uniscan.xyz",
+    //     },
+    //   },
+    //   {
+    //     network: "sonic",
+    //     chainId: 146,
+    //     urls: {
+    //       apiURL: "https://api.sonicscan.org/api",
+    //       browserURL: "https://sonicscan.org",
+    //     },
+    //   },
+    //   {
+    //     network: "berachain",
+    //     chainId: 80094,
+    //     urls: {
+    //       apiURL: "https://api.berascan.com/api",
+    //       browserURL: "https://berascan.com",
+    //     },
+    //   },
+    //   {
+    //     network: "hyperevm",
+    //     chainId: 999,
+    //     urls: {
+    //       apiURL: "https://www.hyperscan.com/api",
+    //       browserURL: "https://www.hyperscan.com",
+    //     },
+    //   },
+    //   {
+    //     network: "lisk-sepolia",
+    //     chainId: 4202,
+    //     urls: {
+    //       apiURL: "https://sepolia-blockscout.lisk.com/api",
+    //       browserURL: "https://sepolia-blockscout.lisk.com",
+    //     },
+    //   },
+    //   {
+    //     network: "bob-sepolia",
+    //     chainId: 808813,
+    //     urls: {
+    //       apiURL: "https://bob-sepolia.explorer.gobob.xyz/api",
+    //       browserURL: "https://bob-sepolia.explorer.gobob.xyz",
+    //     },
+    //   },
+    //   {
+    //     network: "worldchain",
+    //     chainId: 480,
+    //     urls: {
+    //       apiURL: "https://api.worldscan.org/api",
+    //       browserURL: "https://worldscan.org",
+    //     },
+    //   },
+    // ],
   },
   sourcify: {
     enabled: false,
