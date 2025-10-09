@@ -2106,1932 +2106,2088 @@ describe("Topology Library", () => {
         });
       });
     });
-  });
 
-  describe("toTypeTree - OLD TESTS", () => {
-      describe("basic cases", () => {
-        it("a tuple type tree", async () => {
-          const { topology } = await loadFixture(setup);
-  
-          const input = flattenCondition({
-            paramType: AbiType.Calldata,
-            operator: Operator.Matches,
-            children: [
-              {
-                paramType: AbiType.Tuple,
-                operator: Operator.Pass,
-                children: [
-                  {
-                    paramType: AbiType.Dynamic,
-                    operator: Operator.Pass,
-                    children: [],
-                  },
-                  {
-                    paramType: AbiType.Static,
-                    operator: Operator.Pass,
-                    children: [],
-                  },
-                  {
-                    paramType: AbiType.Array,
-                    operator: Operator.Pass,
-                    children: [
-                      {
-                        paramType: AbiType.Static,
-                        operator: Operator.Pass,
-                        children: [],
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          });
-  
-          const output = bfsToTree(await topology.typeTree(input));
-  
-          expect(output).to.deep.equal({
-            _type: AbiType.Calldata,
-            children: [
-              {
-                _type: AbiType.Tuple,
-                children: [
-                  {
-                    _type: AbiType.Dynamic,
-                    children: [],
-                  },
-                  {
-                    _type: AbiType.Static,
-                    children: [],
-                  },
-                  {
-                    _type: AbiType.Array,
-                    children: [
-                      {
-                        _type: AbiType.Static,
-                        children: [],
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          });
+    describe("Array Variant Handling", () => {
+      it("should include only first Array element when children have same type tree", async () => {
+        const { topology } = await loadFixture(setup);
+
+        const input = flattenCondition({
+          paramType: AbiType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: AbiType.Array,
+              operator: Operator.Pass,
+              children: [
+                {
+                  paramType: AbiType.None,
+                  operator: Operator.Or,
+                  children: [
+                    {
+                      paramType: AbiType.Dynamic,
+                      operator: Operator.Pass,
+                      children: [],
+                    },
+                    {
+                      paramType: AbiType.Dynamic,
+                      operator: Operator.EqualTo,
+                      children: [],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
         });
-        it("a logical type tree", async () => {
-          const { topology } = await loadFixture(setup);
-  
-          const input = flattenCondition({
-            paramType: AbiType.Calldata,
-            operator: Operator.Matches,
-            children: [
-              {
-                paramType: AbiType.None,
-                operator: Operator.And,
-                children: [
-                  {
-                    paramType: AbiType.Static,
-                    operator: Operator.EqualTo,
-                    children: [],
-                  },
-                  {
-                    paramType: AbiType.Static,
-                    operator: Operator.EqualTo,
-                    children: [],
-                  },
-                ],
-              },
-            ],
-          });
-  
-          const output = bfsToTree(await topology.typeTree(input));
-  
-          expect(output).to.deep.equal({
-            _type: AbiType.Calldata,
-            children: [
-              {
-                _type: AbiType.Static,
-                children: [],
-              },
-            ],
-          });
-        });
-        it("top level variants get unfolded to its entrypoint form", async () => {
-          const { topology } = await loadFixture(setup);
-  
-          const input = flattenCondition({
-            paramType: AbiType.None,
-            operator: Operator.Or,
-            children: [
-              {
-                paramType: AbiType.Calldata,
-                operator: Operator.Matches,
-                children: [
-                  {
-                    paramType: AbiType.Static,
-                    operator: Operator.Pass,
-                    children: [],
-                  },
-                  {
-                    paramType: AbiType.Dynamic,
-                    operator: Operator.EqualTo,
-                    children: [],
-                  },
-                ],
-              },
-              {
-                paramType: AbiType.Calldata,
-                operator: Operator.Matches,
-                children: [
-                  {
-                    paramType: AbiType.Static,
-                    operator: Operator.EqualTo,
-                    children: [],
-                  },
-                  {
-                    paramType: AbiType.Dynamic,
-                    operator: Operator.EqualTo,
-                    children: [],
-                  },
-                ],
-              },
-              {
-                paramType: AbiType.Calldata,
-                operator: Operator.Matches,
-                children: [
-                  {
-                    paramType: AbiType.Static,
-                    operator: Operator.EqualTo,
-                    children: [],
-                  },
-                  {
-                    paramType: AbiType.Dynamic,
-                    operator: Operator.EqualTo,
-                    children: [],
-                  },
-                ],
-              },
-            ],
-          });
-  
-          const output = bfsToTree(await topology.typeTree(input));
-  
-          expect(output).to.deep.equal({
-            _type: AbiType.Calldata,
-            children: [
-              {
-                _type: AbiType.Static,
-                children: [],
-              },
-              {
-                _type: AbiType.Dynamic,
-                children: [],
-              },
-            ],
-          });
-        });
-        it("AND gets unfolded to Static", async () => {
-          const { topology } = await loadFixture(setup);
-  
-          const input = flattenCondition({
-            paramType: AbiType.Calldata,
-            operator: Operator.Matches,
-            children: [
-              {
-                paramType: AbiType.None,
-                operator: Operator.And,
-                children: [
-                  {
-                    paramType: AbiType.Static,
-                    operator: Operator.EqualTo,
-                    children: [],
-                  },
-                  {
-                    paramType: AbiType.Static,
-                    operator: Operator.EqualTo,
-                    children: [],
-                  },
-                ],
-              },
-            ],
-          });
-  
-          const output = bfsToTree(await topology.typeTree(input));
-  
-          expect(output).to.deep.equal({
-            _type: AbiType.Calldata,
-            children: [
-              {
-                _type: AbiType.Static,
-                children: [],
-              },
-            ],
-          });
-        });
-        it("OR gets unfolded to Array - From Tuple", async () => {
-          const { topology } = await loadFixture(setup);
-  
-          const input = flattenCondition({
-            paramType: AbiType.Calldata,
-            operator: Operator.Matches,
-            children: [
-              {
-                paramType: AbiType.Tuple,
-                operator: Operator.Matches,
-                children: [
-                  {
-                    paramType: AbiType.Dynamic,
-                    operator: Operator.Pass,
-                    children: [],
-                  },
-                  {
-                    paramType: AbiType.Static,
-                    operator: Operator.Pass,
-                    children: [],
-                  },
-                  {
-                    paramType: AbiType.None,
-                    operator: Operator.Or,
-                    children: [
-                      {
-                        paramType: AbiType.Array,
-                        operator: Operator.EqualTo,
-                        children: [
-                          {
-                            paramType: AbiType.Static,
-                            operator: Operator.EqualTo,
-                            children: [],
-                          },
-                        ],
-                      },
-                      {
-                        paramType: AbiType.Array,
-                        operator: Operator.EqualTo,
-                        children: [
-                          {
-                            paramType: AbiType.Static,
-                            operator: Operator.EqualTo,
-                            children: [],
-                          },
-                        ],
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          });
-  
-          const output = bfsToTree(await topology.typeTree(input));
-  
-          expect(output).to.deep.equal({
-            _type: AbiType.Calldata,
-            children: [
-              {
-                _type: AbiType.Tuple,
-                children: [
-                  {
-                    _type: AbiType.Dynamic,
-                    children: [],
-                  },
-                  {
-                    _type: AbiType.Static,
-                    children: [],
-                  },
-                  {
-                    _type: AbiType.Array,
-                    children: [
-                      {
-                        _type: AbiType.Static,
-                        children: [],
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          });
-        });
-        it("OR gets unfolded to Static - From Array", async () => {
-          const { topology } = await loadFixture(setup);
-  
-          const input = flattenCondition({
-            paramType: AbiType.Calldata,
-            operator: Operator.Matches,
-            children: [
-              {
-                paramType: AbiType.Tuple,
-                operator: Operator.Matches,
-                children: [
-                  {
-                    paramType: AbiType.Dynamic,
-                    operator: Operator.Pass,
-                    children: [],
-                  },
-                  {
-                    paramType: AbiType.Static,
-                    operator: Operator.Pass,
-                    children: [],
-                  },
-                  {
-                    paramType: AbiType.Array,
-                    operator: Operator.EqualTo,
-                    children: [
-                      {
-                        paramType: AbiType.None,
-                        operator: Operator.Or,
-                        children: [
-                          {
-                            paramType: AbiType.Static,
-                            operator: Operator.EqualTo,
-                            children: [],
-                          },
-                          {
-                            paramType: AbiType.Static,
-                            operator: Operator.EqualTo,
-                            children: [],
-                          },
-                        ],
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          });
-  
-          const output = bfsToTree(await topology.typeTree(input));
-  
-          expect(output).to.deep.equal({
-            _type: AbiType.Calldata,
-            children: [
-              {
-                _type: AbiType.Tuple,
-                children: [
-                  {
-                    _type: AbiType.Dynamic,
-                    children: [],
-                  },
-                  {
-                    _type: AbiType.Static,
-                    children: [],
-                  },
-                  {
-                    _type: AbiType.Array,
-                    children: [
-                      {
-                        _type: AbiType.Static,
-                        children: [],
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          });
-        });
-        it("EtherWithinAllowance in Calldata gets inspected as None", async () => {
-          const { topology } = await loadFixture(setup);
-  
-          const input = flattenCondition({
-            paramType: AbiType.Calldata,
-            operator: Operator.Matches,
-            children: [
-              {
-                paramType: AbiType.None,
-                operator: Operator.EtherWithinAllowance,
-                children: [],
-              },
-              {
-                paramType: AbiType.Static,
-                operator: Operator.EqualTo,
-                children: [],
-              },
-            ],
-          });
-  
-          const output = bfsToTree(await topology.typeTree(input));
-  
-          expect(output).to.deep.equal({
-            _type: AbiType.Calldata,
-            children: [
-              {
-                _type: AbiType.None,
-                children: [],
-              },
-              {
-                _type: AbiType.Static,
-                children: [],
-              },
-            ],
-          });
-        });
-        it("CallWithinAllowance Value trailing in Calldata gets inspected as None", async () => {
-          const { topology } = await loadFixture(setup);
-  
-          const input = flattenCondition({
-            paramType: AbiType.Calldata,
-            operator: Operator.Matches,
-            children: [
-              {
-                paramType: AbiType.Static,
-                operator: Operator.EqualTo,
-                children: [],
-              },
-              {
-                paramType: AbiType.None,
-                operator: Operator.CallWithinAllowance,
-                children: [],
-              },
-            ],
-          });
-  
-          const output = bfsToTree(await topology.typeTree(input));
-  
-          expect(output).to.deep.equal({
-            _type: AbiType.Calldata,
-            children: [
-              {
-                _type: AbiType.Static,
-                children: [],
-              },
-              {
-                _type: AbiType.None,
-                children: [],
-              },
-            ],
-          });
-        });
-        it("Array resolves to first element only in type tree", async () => {
-          const { topology } = await loadFixture(setup);
-  
-          const input = flattenCondition({
-            paramType: AbiType.Calldata,
-            operator: Operator.Matches,
-            children: [
-              {
-                paramType: AbiType.Array,
-                operator: Operator.Pass,
-                children: [
-                  {
-                    paramType: AbiType.Static,
-                    operator: Operator.Pass,
-                    children: [],
-                  },
-                  {
-                    paramType: AbiType.Static,
-                    operator: Operator.Pass,
-                    children: [],
-                  },
-                  {
-                    paramType: AbiType.Static,
-                    operator: Operator.Pass,
-                    children: [],
-                  },
-                ],
-              },
-            ],
-          });
-  
-          const output = bfsToTree(await topology.typeTree(input));
-  
-          // Array should only process its first child, ignoring the rest
-          expect(output).to.deep.equal({
-            _type: AbiType.Calldata,
-            children: [
-              {
-                _type: AbiType.Array,
-                children: [
-                  {
-                    _type: AbiType.Static,
-                    children: [],
-                  },
-                ],
-              },
-            ],
-          });
+
+        const output = bfsToTree(await topology.typeTree(input));
+
+        // OR with homogeneous children (all Dynamic) is not a variant
+        // Array should only have first child
+        expect(output).to.deep.equal({
+          _type: AbiType.Calldata,
+          children: [
+            {
+              _type: AbiType.Array,
+              children: [
+                {
+                  _type: AbiType.Dynamic,
+                  children: [],
+                },
+              ],
+            },
+          ],
         });
       });
-  
-      describe("Ether/CallWithinAllowance", () => {
-        it("EtherWithinAllowance as lone node", async () => {
-          const { topology } = await loadFixture(setup);
-  
-          const input = flattenCondition({
-            paramType: AbiType.Calldata,
-            operator: Operator.Matches,
-            children: [
-              {
-                paramType: AbiType.None,
-                operator: Operator.EtherWithinAllowance,
-                children: [],
-              },
-            ],
-          });
-  
-          const output = bfsToTree(await topology.typeTree(input));
-  
-          expect(output).to.deep.equal({
-            _type: AbiType.Calldata,
-            children: [
-              {
-                _type: AbiType.None,
-                children: [],
-              },
-            ],
-          });
+
+      it("should include only first Array element for simple non-variant types", async () => {
+        const { topology } = await loadFixture(setup);
+
+        const input = flattenCondition({
+          paramType: AbiType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: AbiType.Array,
+              operator: Operator.Pass,
+              children: [
+                { paramType: AbiType.Static },
+                { paramType: AbiType.Static },
+                { paramType: AbiType.Static },
+              ],
+            },
+          ],
         });
-  
-        it("CallWithinAllowance as lone node", async () => {
-          const { topology } = await loadFixture(setup);
-  
-          const input = flattenCondition({
-            paramType: AbiType.Calldata,
-            operator: Operator.Matches,
-            children: [
-              {
-                paramType: AbiType.None,
-                operator: Operator.CallWithinAllowance,
-                children: [],
-              },
-            ],
-          });
-  
-          const output = bfsToTree(await topology.typeTree(input));
-  
-          expect(output).to.deep.equal({
-            _type: AbiType.Calldata,
-            children: [
-              {
-                _type: AbiType.None,
-                children: [],
-              },
-            ],
-          });
-        });
-  
-        it("EtherWithinAllowance as first node", async () => {
-          const { topology } = await loadFixture(setup);
-  
-          const input = flattenCondition({
-            paramType: AbiType.Calldata,
-            operator: Operator.Matches,
-            children: [
-              {
-                paramType: AbiType.None,
-                operator: Operator.EtherWithinAllowance,
-                children: [],
-              },
-              {
-                paramType: AbiType.Static,
-                operator: Operator.EqualTo,
-                children: [],
-              },
-              {
-                paramType: AbiType.Dynamic,
-                operator: Operator.Pass,
-                children: [],
-              },
-            ],
-          });
-  
-          const output = bfsToTree(await topology.typeTree(input));
-  
-          expect(output).to.deep.equal({
-            _type: AbiType.Calldata,
-            children: [
-              {
-                _type: AbiType.None,
-                children: [],
-              },
-              {
-                _type: AbiType.Static,
-                children: [],
-              },
-              {
-                _type: AbiType.Dynamic,
-                children: [],
-              },
-            ],
-          });
-        });
-  
-        it("CallWithinAllowance as last node", async () => {
-          const { topology } = await loadFixture(setup);
-  
-          const input = flattenCondition({
-            paramType: AbiType.Calldata,
-            operator: Operator.Matches,
-            children: [
-              {
-                paramType: AbiType.Static,
-                operator: Operator.EqualTo,
-                children: [],
-              },
-              {
-                paramType: AbiType.Dynamic,
-                operator: Operator.Pass,
-                children: [],
-              },
-              {
-                paramType: AbiType.None,
-                operator: Operator.CallWithinAllowance,
-                children: [],
-              },
-            ],
-          });
-  
-          const output = bfsToTree(await topology.typeTree(input));
-  
-          expect(output).to.deep.equal({
-            _type: AbiType.Calldata,
-            children: [
-              {
-                _type: AbiType.Static,
-                children: [],
-              },
-              {
-                _type: AbiType.Dynamic,
-                children: [],
-              },
-              {
-                _type: AbiType.None,
-                children: [],
-              },
-            ],
-          });
-        });
-  
-        it("EtherWithinAllowance as child of OR variant", async () => {
-          const { topology } = await loadFixture(setup);
-  
-          const condition = {
-            paramType: AbiType.None,
-            operator: Operator.Or,
-            children: [
-              {
-                paramType: AbiType.Calldata,
-                operator: Operator.Matches,
-                children: [
-                  {
-                    paramType: AbiType.Static,
-                    operator: Operator.EqualTo,
-                    children: [],
-                  },
-                  {
-                    paramType: AbiType.None,
-                    operator: Operator.EtherWithinAllowance,
-                    children: [],
-                  },
-                ],
-              },
-              {
-                paramType: AbiType.Calldata,
-                operator: Operator.Matches,
-                children: [
-                  {
-                    paramType: AbiType.Static,
-                    operator: Operator.EqualTo,
-                    children: [],
-                  },
-                  {
-                    paramType: AbiType.None,
-                    operator: Operator.EtherWithinAllowance,
-                    children: [],
-                  },
-                ],
-              },
-            ],
-          };
-  
-          const input = flattenCondition(condition);
-  
-          const output = bfsToTree(await topology.typeTree(input));
-  
-          // OR with different type trees creates a variant
-          expect(output).to.deep.equal({
-            _type: AbiType.Calldata,
-            children: [
-              { _type: AbiType.Static, children: [] },
-              { _type: AbiType.None, children: [] },
-            ],
-          });
+
+        const output = bfsToTree(await topology.typeTree(input));
+
+        // Multiple Static children - all same type, not a variant
+        // Array should only have first child
+        expect(output).to.deep.equal({
+          _type: AbiType.Calldata,
+          children: [
+            {
+              _type: AbiType.Array,
+              children: [
+                {
+                  _type: AbiType.Static,
+                  children: [],
+                },
+              ],
+            },
+          ],
         });
       });
-  
-      describe("Non-top level Calldata/AbiEncoded handling", () => {
-        it("should represent non-top level Calldata directly", async () => {
-          const { topology } = await loadFixture(setup);
-  
-          const input = flattenCondition({
-            paramType: AbiType.Calldata,
-            operator: Operator.Matches,
-            children: [
-              {
-                paramType: AbiType.Tuple,
-                operator: Operator.Pass,
-                children: [
-                  {
-                    paramType: AbiType.Static,
-                    operator: Operator.Pass,
-                    children: [],
-                  },
-                  {
-                    paramType: AbiType.Calldata,
-                    operator: Operator.Matches,
-                    children: [
-                      {
-                        paramType: AbiType.Static,
-                        operator: Operator.Pass,
-                        children: [],
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          });
-  
-          const output = bfsToTree(await topology.typeTree(input));
-  
-          expect(output).to.deep.equal({
-            _type: AbiType.Calldata,
-            children: [
-              {
-                _type: AbiType.Tuple,
-                children: [
-                  {
-                    _type: AbiType.Static,
-                    children: [],
-                  },
-                  {
-                    _type: AbiType.Calldata,
-                    children: [
-                      {
-                        _type: AbiType.Static,
-                        children: [],
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          });
+
+      it("should include all Array elements when children form a variant", async () => {
+        const { topology } = await loadFixture(setup);
+
+        const input = flattenCondition({
+          paramType: AbiType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: AbiType.Array,
+              operator: Operator.Pass,
+              children: [
+                {
+                  paramType: AbiType.None,
+                  operator: Operator.Or,
+                  children: [
+                    { paramType: AbiType.Dynamic },
+                    {
+                      paramType: AbiType.Calldata,
+                      operator: Operator.Matches,
+                      children: [{ paramType: AbiType.Static }],
+                    },
+                    {
+                      paramType: AbiType.AbiEncoded,
+                      operator: Operator.Matches,
+                      children: [{ paramType: AbiType.Dynamic }],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
         });
-        it("should represent non-top level AbiEncoded directly", async () => {
-          const { topology } = await loadFixture(setup);
-  
-          const input = flattenCondition({
-            paramType: AbiType.Calldata,
-            operator: Operator.Matches,
-            children: [
-              {
-                paramType: AbiType.Array,
-                operator: Operator.Pass,
-                children: [
-                  {
-                    paramType: AbiType.AbiEncoded,
-                    operator: Operator.Matches,
-                    children: [
-                      {
-                        paramType: AbiType.Tuple,
-                        operator: Operator.Pass,
-                        children: [
-                          {
-                            paramType: AbiType.Static,
-                            operator: Operator.Pass,
-                            children: [],
-                          },
-                          {
-                            paramType: AbiType.Dynamic,
-                            operator: Operator.Pass,
-                            children: [],
-                          },
-                        ],
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          });
-  
-          const output = bfsToTree(await topology.typeTree(input));
-  
-          expect(output).to.deep.equal({
-            _type: AbiType.Calldata,
-            children: [
-              {
-                _type: AbiType.Array,
-                children: [
-                  {
-                    _type: AbiType.AbiEncoded,
-                    children: [
-                      {
-                        _type: AbiType.Tuple,
-                        children: [
-                          {
-                            _type: AbiType.Static,
-                            children: [],
-                          },
-                          {
-                            _type: AbiType.Dynamic,
-                            children: [],
-                          },
-                        ],
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          });
-        });
-        it("should handle nested non-top level Calldata directly in complex structures", async () => {
-          const { topology } = await loadFixture(setup);
-  
-          const input = flattenCondition({
-            paramType: AbiType.Calldata,
-            operator: Operator.Matches,
-            children: [
-              {
-                paramType: AbiType.Tuple,
-                operator: Operator.Pass,
-                children: [
-                  {
-                    paramType: AbiType.Array,
-                    operator: Operator.Pass,
-                    children: [
-                      {
-                        paramType: AbiType.Calldata,
-                        operator: Operator.Matches,
-                        children: [
-                          {
-                            paramType: AbiType.Tuple,
-                            operator: Operator.Pass,
-                            children: [
-                              {
-                                paramType: AbiType.Static,
-                                operator: Operator.Pass,
-                                children: [],
-                              },
-                            ],
-                          },
-                        ],
-                      },
-                    ],
-                  },
-                  {
-                    paramType: AbiType.Static,
-                    operator: Operator.Pass,
-                    children: [],
-                  },
-                ],
-              },
-            ],
-          });
-  
-          const output = bfsToTree(await topology.typeTree(input));
-  
-          expect(output).to.deep.equal({
-            _type: AbiType.Calldata,
-            children: [
-              {
-                _type: AbiType.Tuple,
-                children: [
-                  {
-                    _type: AbiType.Array,
-                    children: [
-                      {
-                        _type: AbiType.Calldata,
-                        children: [
-                          {
-                            _type: AbiType.Tuple,
-                            children: [
-                              {
-                                _type: AbiType.Static,
-                                children: [],
-                              },
-                            ],
-                          },
-                        ],
-                      },
-                    ],
-                  },
-                  {
-                    _type: AbiType.Static,
-                    children: [],
-                  },
-                ],
-              },
-            ],
-          });
-        });
-        it("should represent AbiEncoded within OR structure as variant with Dynamic wrapper", async () => {
-          const { topology } = await loadFixture(setup);
-  
-          const input = flattenCondition({
-            paramType: AbiType.Calldata,
-            operator: Operator.Matches,
-            children: [
-              {
-                paramType: AbiType.None,
-                operator: Operator.Or,
-                children: [
-                  {
-                    paramType: AbiType.AbiEncoded,
-                    operator: Operator.Matches,
-                    children: [
-                      {
-                        paramType: AbiType.Static,
-                        operator: Operator.Pass,
-                        children: [],
-                      },
-                    ],
-                  },
-                  {
-                    paramType: AbiType.Dynamic,
-                    operator: Operator.EqualTo,
-                    children: [],
-                  },
-                ],
-              },
-            ],
-          });
-  
-          const output = bfsToTree(await topology.typeTree(input));
-  
-          expect(output).to.deep.equal({
-            _type: AbiType.Calldata,
-            children: [
-              {
-                _type: AbiType.Dynamic,
-                children: [
-                  {
-                    _type: AbiType.AbiEncoded,
-                    children: [
-                      {
-                        _type: AbiType.Static,
-                        children: [],
-                      },
-                    ],
-                  },
-                  {
-                    _type: AbiType.Dynamic,
-                    children: [],
-                  },
-                ],
-              },
-            ],
-          });
-        });
-      });
-  
-      // OR/AND children with relaxed type tree equivalence
-      describe("OR/AND children with type tree equivalence rules", () => {
-        it("should handle OR with children translating to same type tree - non-variant payload", async () => {
-          const { topology } = await loadFixture(setup);
-          const input = flattenCondition({
-            paramType: AbiType.Calldata,
-            operator: Operator.Matches,
-            children: [
-              {
-                paramType: AbiType.None,
-                operator: Operator.Or,
-                children: [
-                  {
-                    paramType: AbiType.Dynamic,
-                    operator: Operator.Pass,
-                    children: [],
-                  },
-                  {
-                    paramType: AbiType.Dynamic,
-                    operator: Operator.Pass,
-                    children: [],
-                  },
-                  {
-                    paramType: AbiType.Dynamic,
-                    operator: Operator.Pass,
-                    children: [],
-                  },
-                ],
-              },
-            ],
-          });
-  
-          const output = bfsToTree(await topology.typeTree(input));
-  
-          // All OR children produce same type tree (Dynamic with no children)
-          // This should NOT create a variant, just return the first child's tree
-          expect(output).to.deep.equal({
-            _type: AbiType.Calldata,
-            children: [
-              {
-                _type: AbiType.Dynamic,
-                children: [],
-              },
-            ],
-          });
-        });
-        it("should handle AND with children translating to same type tree - non-variant payload", async () => {
-          const { topology } = await loadFixture(setup);
-  
-          const input = flattenCondition({
-            paramType: AbiType.Calldata,
-            operator: Operator.Matches,
-            children: [
-              {
-                paramType: AbiType.None,
-                operator: Operator.And,
-                children: [
-                  {
-                    paramType: AbiType.Dynamic,
-                    operator: Operator.EqualTo,
-                    children: [],
-                  },
-                  {
-                    paramType: AbiType.Dynamic,
-                    operator: Operator.GreaterThan,
-                    children: [],
-                  },
-                ],
-              },
-            ],
-          });
-  
-          const output = bfsToTree(await topology.typeTree(input));
-  
-          // All AND children produce same type tree (Dynamic with no children)
-          // So this should NOT create a variant, just return the first child's tree
-          expect(output).to.deep.equal({
-            _type: AbiType.Calldata,
-            children: [
-              {
-                _type: AbiType.Dynamic,
-                children: [],
-              },
-            ],
-          });
-        });
-        it("should handle OR with children translating to different type trees - variant payload", async () => {
-          const { topology } = await loadFixture(setup);
-  
-          const input = flattenCondition({
-            paramType: AbiType.Calldata,
-            operator: Operator.Matches,
-            children: [
-              {
-                paramType: AbiType.None,
-                operator: Operator.Or,
-                children: [
-                  {
-                    paramType: AbiType.Dynamic,
-                    operator: Operator.Pass,
-                    children: [],
-                  },
-                  {
-                    paramType: AbiType.Calldata,
-                    operator: Operator.Matches,
-                    children: [
-                      {
-                        paramType: AbiType.Static,
-                        operator: Operator.Pass,
-                        children: [],
-                      },
-                    ],
-                  },
-                  {
-                    paramType: AbiType.AbiEncoded,
-                    operator: Operator.Matches,
-                    children: [
-                      {
-                        paramType: AbiType.Dynamic,
-                        operator: Operator.Pass,
-                        children: [],
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          });
-  
-          const output = bfsToTree(await topology.typeTree(input));
-  
-          // OR children have different type trees, so this creates a variant
-          expect(output).to.deep.equal({
-            _type: AbiType.Calldata,
-            children: [
-              {
-                _type: AbiType.Dynamic,
-                children: [
-                  {
-                    _type: AbiType.Dynamic,
-                    children: [],
-                  },
-                  {
-                    _type: AbiType.Calldata,
-                    children: [
-                      {
-                        _type: AbiType.Static,
-                        children: [],
-                      },
-                    ],
-                  },
-                  {
-                    _type: AbiType.AbiEncoded,
-                    children: [
-                      {
-                        _type: AbiType.Dynamic,
-                        children: [],
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          });
-        });
-        it("should handle AND with children translating to different type trees - variant payload", async () => {
-          const { topology } = await loadFixture(setup);
-  
-          const input = flattenCondition({
-            paramType: AbiType.Calldata,
-            operator: Operator.Matches,
-            children: [
-              {
-                paramType: AbiType.None,
-                operator: Operator.And,
-                children: [
-                  {
-                    paramType: AbiType.Dynamic,
-                    operator: Operator.Pass,
-                    children: [],
-                  },
-                  {
-                    paramType: AbiType.Calldata,
-                    operator: Operator.Matches,
-                    children: [
-                      {
-                        paramType: AbiType.Static,
-                        operator: Operator.Pass,
-                        children: [],
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          });
-  
-          const output = bfsToTree(await topology.typeTree(input));
-  
-          // AND children have different type trees, so this creates a variant
-          expect(output).to.deep.equal({
-            _type: AbiType.Calldata,
-            children: [
-              {
-                _type: AbiType.Dynamic,
-                children: [
-                  {
-                    _type: AbiType.Dynamic,
-                    children: [],
-                  },
-                  {
-                    _type: AbiType.Calldata,
-                    children: [
-                      {
-                        _type: AbiType.Static,
-                        children: [],
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          });
-        });
-        it("should handle mixed OR/AND structures with relaxed equivalence", async () => {
-          const { topology } = await loadFixture(setup);
-  
-          const input = flattenCondition({
-            paramType: AbiType.Calldata,
-            operator: Operator.Matches,
-            children: [
-              {
-                paramType: AbiType.None,
-                operator: Operator.Or,
-                children: [
-                  {
-                    paramType: AbiType.None,
-                    operator: Operator.And,
-                    children: [
-                      {
-                        paramType: AbiType.Dynamic,
-                        operator: Operator.Pass,
-                        children: [],
-                      },
-                      {
-                        paramType: AbiType.Dynamic,
-                        operator: Operator.EqualTo,
-                        children: [],
-                      },
-                    ],
-                  },
-                  {
-                    paramType: AbiType.None,
-                    operator: Operator.And,
-                    children: [
-                      {
-                        paramType: AbiType.Calldata,
-                        operator: Operator.Matches,
-                        children: [
-                          {
-                            paramType: AbiType.Static,
-                            operator: Operator.Pass,
-                            children: [],
-                          },
-                        ],
-                      },
-                      {
-                        paramType: AbiType.AbiEncoded,
-                        operator: Operator.Matches,
-                        children: [
-                          {
-                            paramType: AbiType.Static,
-                            operator: Operator.Pass,
-                            children: [],
-                          },
-                        ],
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          });
-  
-          const output = bfsToTree(await topology.typeTree(input));
-  
-          // Mixed OR/AND structure where:
-          // - First AND yields Dynamic (same type tree)
-          // - Second AND yields different structures, creating a variant
-          expect(output).to.deep.equal({
-            _type: AbiType.Calldata,
-            children: [
-              {
-                _type: AbiType.Dynamic,
-                children: [
-                  {
-                    _type: AbiType.Dynamic,
-                    children: [],
-                  },
-                  {
-                    _type: AbiType.Dynamic,
-                    children: [
-                      {
-                        _type: AbiType.Calldata,
-                        children: [
-                          {
-                            _type: AbiType.Static,
-                            children: [],
-                          },
-                        ],
-                      },
-                      {
-                        _type: AbiType.AbiEncoded,
-                        children: [
-                          {
-                            _type: AbiType.Static,
-                            children: [],
-                          },
-                        ],
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          });
-        });
-        it("should handle deeply nested OR/AND with relaxed type tree matching", async () => {
-          const { topology } = await loadFixture(setup);
-  
-          const input = flattenCondition({
-            paramType: AbiType.Calldata,
-            operator: Operator.Matches,
-            children: [
-              {
-                paramType: AbiType.Tuple,
-                operator: Operator.Pass,
-                children: [
-                  {
-                    paramType: AbiType.None,
-                    operator: Operator.Or,
-                    children: [
-                      {
-                        paramType: AbiType.None,
-                        operator: Operator.And,
-                        children: [
-                          {
-                            paramType: AbiType.None,
-                            operator: Operator.Or,
-                            children: [
-                              {
-                                paramType: AbiType.Dynamic,
-                                operator: Operator.Pass,
-                                children: [],
-                              },
-                              {
-                                paramType: AbiType.Dynamic,
-                                operator: Operator.EqualTo,
-                                children: [],
-                              },
-                            ],
-                          },
-                          {
-                            paramType: AbiType.Dynamic,
-                            operator: Operator.Pass,
-                            children: [],
-                          },
-                        ],
-                      },
-                      {
-                        paramType: AbiType.Calldata,
-                        operator: Operator.Matches,
-                        children: [
-                          {
-                            paramType: AbiType.Array,
-                            operator: Operator.Pass,
-                            children: [
-                              {
-                                paramType: AbiType.Static,
-                                operator: Operator.Pass,
-                                children: [],
-                              },
-                            ],
-                          },
-                        ],
-                      },
-                    ],
-                  },
-                  {
-                    paramType: AbiType.Static,
-                    operator: Operator.Pass,
-                    children: [],
-                  },
-                ],
-              },
-            ],
-          });
-  
-          const output = bfsToTree(await topology.typeTree(input));
-  
-          // Deeply nested structure:
-          // - Inner OR yields Dynamic (same type tree)
-          // - AND combines to Dynamic
-          // - Outer OR creates variant between Dynamic and Calldata
-          expect(output).to.deep.equal({
-            _type: AbiType.Calldata,
-            children: [
-              {
-                _type: AbiType.Tuple,
-                children: [
-                  {
-                    _type: AbiType.Dynamic,
-                    children: [
-                      {
-                        _type: AbiType.Dynamic,
-                        children: [],
-                      },
-                      {
-                        _type: AbiType.Calldata,
-                        children: [
-                          {
-                            _type: AbiType.Array,
-                            children: [
-                              {
-                                _type: AbiType.Static,
-                                children: [],
-                              },
-                            ],
-                          },
-                        ],
-                      },
-                    ],
-                  },
-                  {
-                    _type: AbiType.Static,
-                    children: [],
-                  },
-                ],
-              },
-            ],
-          });
-        });
-      });
-  
-      // Variant payload nodes with multiple children
-      describe("Variant payload nodes with multiple children", () => {
-        it("should create variant payload node with multiple Static children", async () => {
-          const { topology } = await loadFixture(setup);
-  
-          const input = flattenCondition({
-            paramType: AbiType.Calldata,
-            operator: Operator.Matches,
-            children: [
-              {
-                paramType: AbiType.None,
-                operator: Operator.Or,
-                children: [
-                  {
-                    paramType: AbiType.Dynamic,
-                    operator: Operator.Pass,
-                    children: [],
-                  },
-                  {
-                    paramType: AbiType.Dynamic,
-                    operator: Operator.EqualTo,
-                    children: [],
-                  },
-                  {
-                    paramType: AbiType.Dynamic,
-                    operator: Operator.GreaterThan,
-                    children: [],
-                  },
-                ],
-              },
-            ],
-          });
-  
-          const output = bfsToTree(await topology.typeTree(input));
-  
-          expect(output).to.deep.equal({
-            _type: AbiType.Calldata,
-            children: [
-              {
-                _type: AbiType.Dynamic,
-                children: [],
-              },
-            ],
-          });
-        });
-        it("should create variant payload node with mixed child types", async () => {
-          const { topology } = await loadFixture(setup);
-  
-          const input = flattenCondition({
-            paramType: AbiType.Calldata,
-            operator: Operator.Matches,
-            children: [
-              {
-                paramType: AbiType.None,
-                operator: Operator.Or,
-                children: [
-                  {
-                    paramType: AbiType.Dynamic,
-                    operator: Operator.Pass,
-                    children: [],
-                  },
-                  {
-                    paramType: AbiType.Calldata,
-                    operator: Operator.Matches,
-                    children: [
-                      {
-                        paramType: AbiType.Static,
-                        operator: Operator.Pass,
-                        children: [],
-                      },
-                    ],
-                  },
-                  {
-                    paramType: AbiType.AbiEncoded,
-                    operator: Operator.Matches,
-                    children: [
-                      {
-                        paramType: AbiType.Tuple,
-                        operator: Operator.Pass,
-                        children: [
-                          {
-                            paramType: AbiType.Static,
-                            operator: Operator.Pass,
-                            children: [],
-                          },
-                          {
-                            paramType: AbiType.Dynamic,
-                            operator: Operator.Pass,
-                            children: [],
-                          },
-                        ],
-                      },
-                    ],
-                  },
-                  {
-                    paramType: AbiType.Dynamic,
-                    operator: Operator.EqualTo,
-                    children: [],
-                  },
-                ],
-              },
-            ],
-          });
-  
-          const output = bfsToTree(await topology.typeTree(input));
-  
-          // OR with mixed child types creates a variant payload node
-          expect(output).to.deep.equal({
-            _type: AbiType.Calldata,
-            children: [
-              {
-                _type: AbiType.Dynamic,
-                children: [
-                  {
-                    _type: AbiType.Dynamic,
-                    children: [],
-                  },
-                  {
-                    _type: AbiType.Calldata,
-                    children: [
-                      {
-                        _type: AbiType.Static,
-                        children: [],
-                      },
-                    ],
-                  },
-                  {
-                    _type: AbiType.AbiEncoded,
-                    children: [
-                      {
-                        _type: AbiType.Tuple,
-                        children: [
-                          {
-                            _type: AbiType.Static,
-                            children: [],
-                          },
-                          {
-                            _type: AbiType.Dynamic,
-                            children: [],
-                          },
-                        ],
-                      },
-                    ],
-                  },
-                  {
-                    _type: AbiType.Dynamic,
-                    children: [],
-                  },
-                ],
-              },
-            ],
-          });
-        });
-        it("should handle variant payload nodes within Tuple structures", async () => {
-          const { topology } = await loadFixture(setup);
-  
-          const input = flattenCondition({
-            paramType: AbiType.Calldata,
-            operator: Operator.Matches,
-            children: [
-              {
-                paramType: AbiType.Tuple,
-                operator: Operator.Pass,
-                children: [
-                  {
-                    paramType: AbiType.Static,
-                    operator: Operator.Pass,
-                    children: [],
-                  },
-                  {
-                    paramType: AbiType.None,
-                    operator: Operator.Or,
-                    children: [
-                      {
-                        paramType: AbiType.Dynamic,
-                        operator: Operator.Pass,
-                        children: [],
-                      },
-                      {
-                        paramType: AbiType.Calldata,
-                        operator: Operator.Matches,
-                        children: [
-                          {
-                            paramType: AbiType.Array,
-                            operator: Operator.Pass,
-                            children: [
-                              {
-                                paramType: AbiType.Static,
-                                operator: Operator.Pass,
-                                children: [],
-                              },
-                            ],
-                          },
-                        ],
-                      },
-                      {
-                        paramType: AbiType.AbiEncoded,
-                        operator: Operator.Matches,
-                        children: [
-                          {
-                            paramType: AbiType.Dynamic,
-                            operator: Operator.Pass,
-                            children: [],
-                          },
-                        ],
-                      },
-                    ],
-                  },
-                  {
-                    paramType: AbiType.Array,
-                    operator: Operator.Pass,
-                    children: [
-                      {
-                        paramType: AbiType.Dynamic,
-                        operator: Operator.Pass,
-                        children: [],
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          });
-  
-          const output = bfsToTree(await topology.typeTree(input));
-  
-          // Variant within Tuple: second element is OR with different structures
-          expect(output).to.deep.equal({
-            _type: AbiType.Calldata,
-            children: [
-              {
-                _type: AbiType.Tuple,
-                children: [
-                  {
-                    _type: AbiType.Static,
-                    children: [],
-                  },
-                  {
-                    _type: AbiType.Dynamic,
-                    children: [
-                      {
-                        _type: AbiType.Dynamic,
-                        children: [],
-                      },
-                      {
-                        _type: AbiType.Calldata,
-                        children: [
-                          {
-                            _type: AbiType.Array,
-                            children: [
-                              {
-                                _type: AbiType.Static,
-                                children: [],
-                              },
-                            ],
-                          },
-                        ],
-                      },
-                      {
-                        _type: AbiType.AbiEncoded,
-                        children: [
-                          {
-                            _type: AbiType.Dynamic,
-                            children: [],
-                          },
-                        ],
-                      },
-                    ],
-                  },
-                  {
-                    _type: AbiType.Array,
-                    children: [
-                      {
-                        _type: AbiType.Dynamic,
-                        children: [],
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          });
-        });
-        it("should handle variant payload nodes within Array structures", async () => {
-          const { topology } = await loadFixture(setup);
-  
-          const input = flattenCondition({
-            paramType: AbiType.Calldata,
-            operator: Operator.Matches,
-            children: [
-              {
-                paramType: AbiType.Array,
-                operator: Operator.Pass,
-                children: [
-                  {
-                    paramType: AbiType.None,
-                    operator: Operator.Or,
-                    children: [
-                      {
-                        paramType: AbiType.Calldata,
-                        operator: Operator.Matches,
-                        children: [
-                          {
-                            paramType: AbiType.Tuple,
-                            operator: Operator.Pass,
-                            children: [
-                              {
-                                paramType: AbiType.Static,
-                                operator: Operator.Pass,
-                                children: [],
-                              },
-                              {
-                                paramType: AbiType.Dynamic,
-                                operator: Operator.Pass,
-                                children: [],
-                              },
-                            ],
-                          },
-                        ],
-                      },
-                      {
-                        paramType: AbiType.AbiEncoded,
-                        operator: Operator.Matches,
-                        children: [
-                          {
-                            paramType: AbiType.Array,
-                            operator: Operator.Pass,
-                            children: [
-                              {
-                                paramType: AbiType.Static,
-                                operator: Operator.Pass,
-                                children: [],
-                              },
-                            ],
-                          },
-                        ],
-                      },
-                      {
-                        paramType: AbiType.Dynamic,
-                        operator: Operator.Pass,
-                        children: [],
-                      },
-                    ],
-                  },
-                  // These will be ignored - Array only processes first child
-                  {
-                    paramType: AbiType.Static,
-                    operator: Operator.Pass,
-                    children: [],
-                  },
-                ],
-              },
-            ],
-          });
-  
-          const output = bfsToTree(await topology.typeTree(input));
-  
-          // Array contains OR variant as first child (others ignored)
-          expect(output).to.deep.equal({
-            _type: AbiType.Calldata,
-            children: [
-              {
-                _type: AbiType.Array,
-                children: [
-                  {
-                    _type: AbiType.Dynamic,
-                    children: [
-                      {
-                        _type: AbiType.Calldata,
-                        children: [
-                          {
-                            _type: AbiType.Tuple,
-                            children: [
-                              {
-                                _type: AbiType.Static,
-                                children: [],
-                              },
-                              {
-                                _type: AbiType.Dynamic,
-                                children: [],
-                              },
-                            ],
-                          },
-                        ],
-                      },
-                      {
-                        _type: AbiType.AbiEncoded,
-                        children: [
-                          {
-                            _type: AbiType.Array,
-                            children: [
-                              {
-                                _type: AbiType.Static,
-                                children: [],
-                              },
-                            ],
-                          },
-                        ],
-                      },
-                      {
-                        _type: AbiType.Dynamic,
-                        children: [],
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          });
-        });
-        it("should handle nested variant payload nodes", async () => {
-          const { topology } = await loadFixture(setup);
-  
-          const input = flattenCondition({
-            paramType: AbiType.Calldata,
-            operator: Operator.Matches,
-            children: [
-              {
-                paramType: AbiType.None,
-                operator: Operator.Or,
-                children: [
-                  {
-                    paramType: AbiType.Calldata,
-                    operator: Operator.Matches,
-                    children: [
-                      {
-                        paramType: AbiType.None,
-                        operator: Operator.Or,
-                        children: [
-                          {
-                            paramType: AbiType.Dynamic,
-                            operator: Operator.Pass,
-                            children: [],
-                          },
-                          {
-                            paramType: AbiType.AbiEncoded,
-                            operator: Operator.Matches,
-                            children: [
-                              {
-                                paramType: AbiType.Static,
-                                operator: Operator.Pass,
-                                children: [],
-                              },
-                            ],
-                          },
-                        ],
-                      },
-                    ],
-                  },
-                  {
-                    paramType: AbiType.Dynamic,
-                    operator: Operator.Pass,
-                    children: [],
-                  },
-                ],
-              },
-            ],
-          });
-  
-          const output = bfsToTree(await topology.typeTree(input));
-  
-          // Nested variants: outer OR contains inner OR with different structures
-          expect(output).to.deep.equal({
-            _type: AbiType.Calldata,
-            children: [
-              {
-                _type: AbiType.Dynamic,
-                children: [
-                  {
-                    _type: AbiType.Calldata,
-                    children: [
-                      {
-                        _type: AbiType.Dynamic,
-                        children: [
-                          {
-                            _type: AbiType.Dynamic,
-                            children: [],
-                          },
-                          {
-                            _type: AbiType.AbiEncoded,
-                            children: [
-                              {
-                                _type: AbiType.Static,
-                                children: [],
-                              },
-                            ],
-                          },
-                        ],
-                      },
-                    ],
-                  },
-                  {
-                    _type: AbiType.Dynamic,
-                    children: [],
-                  },
-                ],
-              },
-            ],
-          });
+
+        const output = bfsToTree(await topology.typeTree(input));
+
+        // OR with heterogeneous children (Dynamic, Calldata, AbiEncoded) creates a variant
+        // Array should contain all variant children
+        expect(output).to.deep.equal({
+          _type: AbiType.Calldata,
+          children: [
+            {
+              _type: AbiType.Array,
+              children: [
+                {
+                  _type: AbiType.Dynamic,
+                  children: [
+                    { _type: AbiType.Dynamic, children: [] },
+                    {
+                      _type: AbiType.Calldata,
+                      children: [{ _type: AbiType.Static, children: [] }],
+                    },
+                    {
+                      _type: AbiType.AbiEncoded,
+                      children: [{ _type: AbiType.Dynamic, children: [] }],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
         });
       });
     });
+  });
+
+  describe("toTypeTree - OLD TESTS", () => {
+    describe("basic cases", () => {
+      it("a tuple type tree", async () => {
+        const { topology } = await loadFixture(setup);
+
+        const input = flattenCondition({
+          paramType: AbiType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: AbiType.Tuple,
+              operator: Operator.Pass,
+              children: [
+                {
+                  paramType: AbiType.Dynamic,
+                  operator: Operator.Pass,
+                  children: [],
+                },
+                {
+                  paramType: AbiType.Static,
+                  operator: Operator.Pass,
+                  children: [],
+                },
+                {
+                  paramType: AbiType.Array,
+                  operator: Operator.Pass,
+                  children: [
+                    {
+                      paramType: AbiType.Static,
+                      operator: Operator.Pass,
+                      children: [],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+
+        const output = bfsToTree(await topology.typeTree(input));
+
+        expect(output).to.deep.equal({
+          _type: AbiType.Calldata,
+          children: [
+            {
+              _type: AbiType.Tuple,
+              children: [
+                {
+                  _type: AbiType.Dynamic,
+                  children: [],
+                },
+                {
+                  _type: AbiType.Static,
+                  children: [],
+                },
+                {
+                  _type: AbiType.Array,
+                  children: [
+                    {
+                      _type: AbiType.Static,
+                      children: [],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+      });
+      it("a logical type tree", async () => {
+        const { topology } = await loadFixture(setup);
+
+        const input = flattenCondition({
+          paramType: AbiType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: AbiType.None,
+              operator: Operator.And,
+              children: [
+                {
+                  paramType: AbiType.Static,
+                  operator: Operator.EqualTo,
+                  children: [],
+                },
+                {
+                  paramType: AbiType.Static,
+                  operator: Operator.EqualTo,
+                  children: [],
+                },
+              ],
+            },
+          ],
+        });
+
+        const output = bfsToTree(await topology.typeTree(input));
+
+        expect(output).to.deep.equal({
+          _type: AbiType.Calldata,
+          children: [
+            {
+              _type: AbiType.Static,
+              children: [],
+            },
+          ],
+        });
+      });
+      it("top level variants get unfolded to its entrypoint form", async () => {
+        const { topology } = await loadFixture(setup);
+
+        const input = flattenCondition({
+          paramType: AbiType.None,
+          operator: Operator.Or,
+          children: [
+            {
+              paramType: AbiType.Calldata,
+              operator: Operator.Matches,
+              children: [
+                {
+                  paramType: AbiType.Static,
+                  operator: Operator.Pass,
+                  children: [],
+                },
+                {
+                  paramType: AbiType.Dynamic,
+                  operator: Operator.EqualTo,
+                  children: [],
+                },
+              ],
+            },
+            {
+              paramType: AbiType.Calldata,
+              operator: Operator.Matches,
+              children: [
+                {
+                  paramType: AbiType.Static,
+                  operator: Operator.EqualTo,
+                  children: [],
+                },
+                {
+                  paramType: AbiType.Dynamic,
+                  operator: Operator.EqualTo,
+                  children: [],
+                },
+              ],
+            },
+            {
+              paramType: AbiType.Calldata,
+              operator: Operator.Matches,
+              children: [
+                {
+                  paramType: AbiType.Static,
+                  operator: Operator.EqualTo,
+                  children: [],
+                },
+                {
+                  paramType: AbiType.Dynamic,
+                  operator: Operator.EqualTo,
+                  children: [],
+                },
+              ],
+            },
+          ],
+        });
+
+        const output = bfsToTree(await topology.typeTree(input));
+
+        expect(output).to.deep.equal({
+          _type: AbiType.Calldata,
+          children: [
+            {
+              _type: AbiType.Static,
+              children: [],
+            },
+            {
+              _type: AbiType.Dynamic,
+              children: [],
+            },
+          ],
+        });
+      });
+      it("AND gets unfolded to Static", async () => {
+        const { topology } = await loadFixture(setup);
+
+        const input = flattenCondition({
+          paramType: AbiType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: AbiType.None,
+              operator: Operator.And,
+              children: [
+                {
+                  paramType: AbiType.Static,
+                  operator: Operator.EqualTo,
+                  children: [],
+                },
+                {
+                  paramType: AbiType.Static,
+                  operator: Operator.EqualTo,
+                  children: [],
+                },
+              ],
+            },
+          ],
+        });
+
+        const output = bfsToTree(await topology.typeTree(input));
+
+        expect(output).to.deep.equal({
+          _type: AbiType.Calldata,
+          children: [
+            {
+              _type: AbiType.Static,
+              children: [],
+            },
+          ],
+        });
+      });
+      it("OR gets unfolded to Array - From Tuple", async () => {
+        const { topology } = await loadFixture(setup);
+
+        const input = flattenCondition({
+          paramType: AbiType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: AbiType.Tuple,
+              operator: Operator.Matches,
+              children: [
+                {
+                  paramType: AbiType.Dynamic,
+                  operator: Operator.Pass,
+                  children: [],
+                },
+                {
+                  paramType: AbiType.Static,
+                  operator: Operator.Pass,
+                  children: [],
+                },
+                {
+                  paramType: AbiType.None,
+                  operator: Operator.Or,
+                  children: [
+                    {
+                      paramType: AbiType.Array,
+                      operator: Operator.EqualTo,
+                      children: [
+                        {
+                          paramType: AbiType.Static,
+                          operator: Operator.EqualTo,
+                          children: [],
+                        },
+                      ],
+                    },
+                    {
+                      paramType: AbiType.Array,
+                      operator: Operator.EqualTo,
+                      children: [
+                        {
+                          paramType: AbiType.Static,
+                          operator: Operator.EqualTo,
+                          children: [],
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+
+        const output = bfsToTree(await topology.typeTree(input));
+
+        expect(output).to.deep.equal({
+          _type: AbiType.Calldata,
+          children: [
+            {
+              _type: AbiType.Tuple,
+              children: [
+                {
+                  _type: AbiType.Dynamic,
+                  children: [],
+                },
+                {
+                  _type: AbiType.Static,
+                  children: [],
+                },
+                {
+                  _type: AbiType.Array,
+                  children: [
+                    {
+                      _type: AbiType.Static,
+                      children: [],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+      });
+      it("OR gets unfolded to Static - From Array", async () => {
+        const { topology } = await loadFixture(setup);
+
+        const input = flattenCondition({
+          paramType: AbiType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: AbiType.Tuple,
+              operator: Operator.Matches,
+              children: [
+                {
+                  paramType: AbiType.Dynamic,
+                  operator: Operator.Pass,
+                  children: [],
+                },
+                {
+                  paramType: AbiType.Static,
+                  operator: Operator.Pass,
+                  children: [],
+                },
+                {
+                  paramType: AbiType.Array,
+                  operator: Operator.EqualTo,
+                  children: [
+                    {
+                      paramType: AbiType.None,
+                      operator: Operator.Or,
+                      children: [
+                        {
+                          paramType: AbiType.Static,
+                          operator: Operator.EqualTo,
+                          children: [],
+                        },
+                        {
+                          paramType: AbiType.Static,
+                          operator: Operator.EqualTo,
+                          children: [],
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+
+        const output = bfsToTree(await topology.typeTree(input));
+
+        expect(output).to.deep.equal({
+          _type: AbiType.Calldata,
+          children: [
+            {
+              _type: AbiType.Tuple,
+              children: [
+                {
+                  _type: AbiType.Dynamic,
+                  children: [],
+                },
+                {
+                  _type: AbiType.Static,
+                  children: [],
+                },
+                {
+                  _type: AbiType.Array,
+                  children: [
+                    {
+                      _type: AbiType.Static,
+                      children: [],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+      });
+      it("EtherWithinAllowance in Calldata gets inspected as None", async () => {
+        const { topology } = await loadFixture(setup);
+
+        const input = flattenCondition({
+          paramType: AbiType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: AbiType.None,
+              operator: Operator.EtherWithinAllowance,
+              children: [],
+            },
+            {
+              paramType: AbiType.Static,
+              operator: Operator.EqualTo,
+              children: [],
+            },
+          ],
+        });
+
+        const output = bfsToTree(await topology.typeTree(input));
+
+        expect(output).to.deep.equal({
+          _type: AbiType.Calldata,
+          children: [
+            {
+              _type: AbiType.None,
+              children: [],
+            },
+            {
+              _type: AbiType.Static,
+              children: [],
+            },
+          ],
+        });
+      });
+      it("CallWithinAllowance Value trailing in Calldata gets inspected as None", async () => {
+        const { topology } = await loadFixture(setup);
+
+        const input = flattenCondition({
+          paramType: AbiType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: AbiType.Static,
+              operator: Operator.EqualTo,
+              children: [],
+            },
+            {
+              paramType: AbiType.None,
+              operator: Operator.CallWithinAllowance,
+              children: [],
+            },
+          ],
+        });
+
+        const output = bfsToTree(await topology.typeTree(input));
+
+        expect(output).to.deep.equal({
+          _type: AbiType.Calldata,
+          children: [
+            {
+              _type: AbiType.Static,
+              children: [],
+            },
+            {
+              _type: AbiType.None,
+              children: [],
+            },
+          ],
+        });
+      });
+      it("Array resolves to first element only in type tree", async () => {
+        const { topology } = await loadFixture(setup);
+
+        const input = flattenCondition({
+          paramType: AbiType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: AbiType.Array,
+              operator: Operator.Pass,
+              children: [
+                {
+                  paramType: AbiType.Static,
+                  operator: Operator.Pass,
+                  children: [],
+                },
+                {
+                  paramType: AbiType.Static,
+                  operator: Operator.Pass,
+                  children: [],
+                },
+                {
+                  paramType: AbiType.Static,
+                  operator: Operator.Pass,
+                  children: [],
+                },
+              ],
+            },
+          ],
+        });
+
+        const output = bfsToTree(await topology.typeTree(input));
+
+        // Array should only process its first child, ignoring the rest
+        expect(output).to.deep.equal({
+          _type: AbiType.Calldata,
+          children: [
+            {
+              _type: AbiType.Array,
+              children: [
+                {
+                  _type: AbiType.Static,
+                  children: [],
+                },
+              ],
+            },
+          ],
+        });
+      });
+    });
+
+    describe("Ether/CallWithinAllowance", () => {
+      it("EtherWithinAllowance as lone node", async () => {
+        const { topology } = await loadFixture(setup);
+
+        const input = flattenCondition({
+          paramType: AbiType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: AbiType.None,
+              operator: Operator.EtherWithinAllowance,
+              children: [],
+            },
+          ],
+        });
+
+        const output = bfsToTree(await topology.typeTree(input));
+
+        expect(output).to.deep.equal({
+          _type: AbiType.Calldata,
+          children: [
+            {
+              _type: AbiType.None,
+              children: [],
+            },
+          ],
+        });
+      });
+
+      it("CallWithinAllowance as lone node", async () => {
+        const { topology } = await loadFixture(setup);
+
+        const input = flattenCondition({
+          paramType: AbiType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: AbiType.None,
+              operator: Operator.CallWithinAllowance,
+              children: [],
+            },
+          ],
+        });
+
+        const output = bfsToTree(await topology.typeTree(input));
+
+        expect(output).to.deep.equal({
+          _type: AbiType.Calldata,
+          children: [
+            {
+              _type: AbiType.None,
+              children: [],
+            },
+          ],
+        });
+      });
+
+      it("EtherWithinAllowance as first node", async () => {
+        const { topology } = await loadFixture(setup);
+
+        const input = flattenCondition({
+          paramType: AbiType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: AbiType.None,
+              operator: Operator.EtherWithinAllowance,
+              children: [],
+            },
+            {
+              paramType: AbiType.Static,
+              operator: Operator.EqualTo,
+              children: [],
+            },
+            {
+              paramType: AbiType.Dynamic,
+              operator: Operator.Pass,
+              children: [],
+            },
+          ],
+        });
+
+        const output = bfsToTree(await topology.typeTree(input));
+
+        expect(output).to.deep.equal({
+          _type: AbiType.Calldata,
+          children: [
+            {
+              _type: AbiType.None,
+              children: [],
+            },
+            {
+              _type: AbiType.Static,
+              children: [],
+            },
+            {
+              _type: AbiType.Dynamic,
+              children: [],
+            },
+          ],
+        });
+      });
+
+      it("CallWithinAllowance as last node", async () => {
+        const { topology } = await loadFixture(setup);
+
+        const input = flattenCondition({
+          paramType: AbiType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: AbiType.Static,
+              operator: Operator.EqualTo,
+              children: [],
+            },
+            {
+              paramType: AbiType.Dynamic,
+              operator: Operator.Pass,
+              children: [],
+            },
+            {
+              paramType: AbiType.None,
+              operator: Operator.CallWithinAllowance,
+              children: [],
+            },
+          ],
+        });
+
+        const output = bfsToTree(await topology.typeTree(input));
+
+        expect(output).to.deep.equal({
+          _type: AbiType.Calldata,
+          children: [
+            {
+              _type: AbiType.Static,
+              children: [],
+            },
+            {
+              _type: AbiType.Dynamic,
+              children: [],
+            },
+            {
+              _type: AbiType.None,
+              children: [],
+            },
+          ],
+        });
+      });
+
+      it("EtherWithinAllowance as child of OR variant", async () => {
+        const { topology } = await loadFixture(setup);
+
+        const condition = {
+          paramType: AbiType.None,
+          operator: Operator.Or,
+          children: [
+            {
+              paramType: AbiType.Calldata,
+              operator: Operator.Matches,
+              children: [
+                {
+                  paramType: AbiType.Static,
+                  operator: Operator.EqualTo,
+                  children: [],
+                },
+                {
+                  paramType: AbiType.None,
+                  operator: Operator.EtherWithinAllowance,
+                  children: [],
+                },
+              ],
+            },
+            {
+              paramType: AbiType.Calldata,
+              operator: Operator.Matches,
+              children: [
+                {
+                  paramType: AbiType.Static,
+                  operator: Operator.EqualTo,
+                  children: [],
+                },
+                {
+                  paramType: AbiType.None,
+                  operator: Operator.EtherWithinAllowance,
+                  children: [],
+                },
+              ],
+            },
+          ],
+        };
+
+        const input = flattenCondition(condition);
+
+        const output = bfsToTree(await topology.typeTree(input));
+
+        // OR with different type trees creates a variant
+        expect(output).to.deep.equal({
+          _type: AbiType.Calldata,
+          children: [
+            { _type: AbiType.Static, children: [] },
+            { _type: AbiType.None, children: [] },
+          ],
+        });
+      });
+    });
+
+    describe("Non-top level Calldata/AbiEncoded handling", () => {
+      it("should represent non-top level Calldata directly", async () => {
+        const { topology } = await loadFixture(setup);
+
+        const input = flattenCondition({
+          paramType: AbiType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: AbiType.Tuple,
+              operator: Operator.Pass,
+              children: [
+                {
+                  paramType: AbiType.Static,
+                  operator: Operator.Pass,
+                  children: [],
+                },
+                {
+                  paramType: AbiType.Calldata,
+                  operator: Operator.Matches,
+                  children: [
+                    {
+                      paramType: AbiType.Static,
+                      operator: Operator.Pass,
+                      children: [],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+
+        const output = bfsToTree(await topology.typeTree(input));
+
+        expect(output).to.deep.equal({
+          _type: AbiType.Calldata,
+          children: [
+            {
+              _type: AbiType.Tuple,
+              children: [
+                {
+                  _type: AbiType.Static,
+                  children: [],
+                },
+                {
+                  _type: AbiType.Calldata,
+                  children: [
+                    {
+                      _type: AbiType.Static,
+                      children: [],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+      });
+      it("should represent non-top level AbiEncoded directly", async () => {
+        const { topology } = await loadFixture(setup);
+
+        const input = flattenCondition({
+          paramType: AbiType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: AbiType.Array,
+              operator: Operator.Pass,
+              children: [
+                {
+                  paramType: AbiType.AbiEncoded,
+                  operator: Operator.Matches,
+                  children: [
+                    {
+                      paramType: AbiType.Tuple,
+                      operator: Operator.Pass,
+                      children: [
+                        {
+                          paramType: AbiType.Static,
+                          operator: Operator.Pass,
+                          children: [],
+                        },
+                        {
+                          paramType: AbiType.Dynamic,
+                          operator: Operator.Pass,
+                          children: [],
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+
+        const output = bfsToTree(await topology.typeTree(input));
+
+        expect(output).to.deep.equal({
+          _type: AbiType.Calldata,
+          children: [
+            {
+              _type: AbiType.Array,
+              children: [
+                {
+                  _type: AbiType.AbiEncoded,
+                  children: [
+                    {
+                      _type: AbiType.Tuple,
+                      children: [
+                        {
+                          _type: AbiType.Static,
+                          children: [],
+                        },
+                        {
+                          _type: AbiType.Dynamic,
+                          children: [],
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+      });
+      it("should handle nested non-top level Calldata directly in complex structures", async () => {
+        const { topology } = await loadFixture(setup);
+
+        const input = flattenCondition({
+          paramType: AbiType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: AbiType.Tuple,
+              operator: Operator.Pass,
+              children: [
+                {
+                  paramType: AbiType.Array,
+                  operator: Operator.Pass,
+                  children: [
+                    {
+                      paramType: AbiType.Calldata,
+                      operator: Operator.Matches,
+                      children: [
+                        {
+                          paramType: AbiType.Tuple,
+                          operator: Operator.Pass,
+                          children: [
+                            {
+                              paramType: AbiType.Static,
+                              operator: Operator.Pass,
+                              children: [],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  paramType: AbiType.Static,
+                  operator: Operator.Pass,
+                  children: [],
+                },
+              ],
+            },
+          ],
+        });
+
+        const output = bfsToTree(await topology.typeTree(input));
+
+        expect(output).to.deep.equal({
+          _type: AbiType.Calldata,
+          children: [
+            {
+              _type: AbiType.Tuple,
+              children: [
+                {
+                  _type: AbiType.Array,
+                  children: [
+                    {
+                      _type: AbiType.Calldata,
+                      children: [
+                        {
+                          _type: AbiType.Tuple,
+                          children: [
+                            {
+                              _type: AbiType.Static,
+                              children: [],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  _type: AbiType.Static,
+                  children: [],
+                },
+              ],
+            },
+          ],
+        });
+      });
+      it("should represent AbiEncoded within OR structure as variant with Dynamic wrapper", async () => {
+        const { topology } = await loadFixture(setup);
+
+        const input = flattenCondition({
+          paramType: AbiType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: AbiType.None,
+              operator: Operator.Or,
+              children: [
+                {
+                  paramType: AbiType.AbiEncoded,
+                  operator: Operator.Matches,
+                  children: [
+                    {
+                      paramType: AbiType.Static,
+                      operator: Operator.Pass,
+                      children: [],
+                    },
+                  ],
+                },
+                {
+                  paramType: AbiType.Dynamic,
+                  operator: Operator.EqualTo,
+                  children: [],
+                },
+              ],
+            },
+          ],
+        });
+
+        const output = bfsToTree(await topology.typeTree(input));
+
+        expect(output).to.deep.equal({
+          _type: AbiType.Calldata,
+          children: [
+            {
+              _type: AbiType.Dynamic,
+              children: [
+                {
+                  _type: AbiType.AbiEncoded,
+                  children: [
+                    {
+                      _type: AbiType.Static,
+                      children: [],
+                    },
+                  ],
+                },
+                {
+                  _type: AbiType.Dynamic,
+                  children: [],
+                },
+              ],
+            },
+          ],
+        });
+      });
+    });
+
+    // OR/AND children with relaxed type tree equivalence
+    describe("OR/AND children with type tree equivalence rules", () => {
+      it("should handle OR with children translating to same type tree - non-variant payload", async () => {
+        const { topology } = await loadFixture(setup);
+        const input = flattenCondition({
+          paramType: AbiType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: AbiType.None,
+              operator: Operator.Or,
+              children: [
+                {
+                  paramType: AbiType.Dynamic,
+                  operator: Operator.Pass,
+                  children: [],
+                },
+                {
+                  paramType: AbiType.Dynamic,
+                  operator: Operator.Pass,
+                  children: [],
+                },
+                {
+                  paramType: AbiType.Dynamic,
+                  operator: Operator.Pass,
+                  children: [],
+                },
+              ],
+            },
+          ],
+        });
+
+        const output = bfsToTree(await topology.typeTree(input));
+
+        // All OR children produce same type tree (Dynamic with no children)
+        // This should NOT create a variant, just return the first child's tree
+        expect(output).to.deep.equal({
+          _type: AbiType.Calldata,
+          children: [
+            {
+              _type: AbiType.Dynamic,
+              children: [],
+            },
+          ],
+        });
+      });
+      it("should handle AND with children translating to same type tree - non-variant payload", async () => {
+        const { topology } = await loadFixture(setup);
+
+        const input = flattenCondition({
+          paramType: AbiType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: AbiType.None,
+              operator: Operator.And,
+              children: [
+                {
+                  paramType: AbiType.Dynamic,
+                  operator: Operator.EqualTo,
+                  children: [],
+                },
+                {
+                  paramType: AbiType.Dynamic,
+                  operator: Operator.GreaterThan,
+                  children: [],
+                },
+              ],
+            },
+          ],
+        });
+
+        const output = bfsToTree(await topology.typeTree(input));
+
+        // All AND children produce same type tree (Dynamic with no children)
+        // So this should NOT create a variant, just return the first child's tree
+        expect(output).to.deep.equal({
+          _type: AbiType.Calldata,
+          children: [
+            {
+              _type: AbiType.Dynamic,
+              children: [],
+            },
+          ],
+        });
+      });
+      it("should handle OR with children translating to different type trees - variant payload", async () => {
+        const { topology } = await loadFixture(setup);
+
+        const input = flattenCondition({
+          paramType: AbiType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: AbiType.None,
+              operator: Operator.Or,
+              children: [
+                {
+                  paramType: AbiType.Dynamic,
+                  operator: Operator.Pass,
+                  children: [],
+                },
+                {
+                  paramType: AbiType.Calldata,
+                  operator: Operator.Matches,
+                  children: [
+                    {
+                      paramType: AbiType.Static,
+                      operator: Operator.Pass,
+                      children: [],
+                    },
+                  ],
+                },
+                {
+                  paramType: AbiType.AbiEncoded,
+                  operator: Operator.Matches,
+                  children: [
+                    {
+                      paramType: AbiType.Dynamic,
+                      operator: Operator.Pass,
+                      children: [],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+
+        const output = bfsToTree(await topology.typeTree(input));
+
+        // OR children have different type trees, so this creates a variant
+        expect(output).to.deep.equal({
+          _type: AbiType.Calldata,
+          children: [
+            {
+              _type: AbiType.Dynamic,
+              children: [
+                {
+                  _type: AbiType.Dynamic,
+                  children: [],
+                },
+                {
+                  _type: AbiType.Calldata,
+                  children: [
+                    {
+                      _type: AbiType.Static,
+                      children: [],
+                    },
+                  ],
+                },
+                {
+                  _type: AbiType.AbiEncoded,
+                  children: [
+                    {
+                      _type: AbiType.Dynamic,
+                      children: [],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+      });
+      it("should handle AND with children translating to different type trees - variant payload", async () => {
+        const { topology } = await loadFixture(setup);
+
+        const input = flattenCondition({
+          paramType: AbiType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: AbiType.None,
+              operator: Operator.And,
+              children: [
+                {
+                  paramType: AbiType.Dynamic,
+                  operator: Operator.Pass,
+                  children: [],
+                },
+                {
+                  paramType: AbiType.Calldata,
+                  operator: Operator.Matches,
+                  children: [
+                    {
+                      paramType: AbiType.Static,
+                      operator: Operator.Pass,
+                      children: [],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+
+        const output = bfsToTree(await topology.typeTree(input));
+
+        // AND children have different type trees, so this creates a variant
+        expect(output).to.deep.equal({
+          _type: AbiType.Calldata,
+          children: [
+            {
+              _type: AbiType.Dynamic,
+              children: [
+                {
+                  _type: AbiType.Dynamic,
+                  children: [],
+                },
+                {
+                  _type: AbiType.Calldata,
+                  children: [
+                    {
+                      _type: AbiType.Static,
+                      children: [],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+      });
+      it("should handle mixed OR/AND structures with relaxed equivalence", async () => {
+        const { topology } = await loadFixture(setup);
+
+        const input = flattenCondition({
+          paramType: AbiType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: AbiType.None,
+              operator: Operator.Or,
+              children: [
+                {
+                  paramType: AbiType.None,
+                  operator: Operator.And,
+                  children: [
+                    {
+                      paramType: AbiType.Dynamic,
+                      operator: Operator.Pass,
+                      children: [],
+                    },
+                    {
+                      paramType: AbiType.Dynamic,
+                      operator: Operator.EqualTo,
+                      children: [],
+                    },
+                  ],
+                },
+                {
+                  paramType: AbiType.None,
+                  operator: Operator.And,
+                  children: [
+                    {
+                      paramType: AbiType.Calldata,
+                      operator: Operator.Matches,
+                      children: [
+                        {
+                          paramType: AbiType.Static,
+                          operator: Operator.Pass,
+                          children: [],
+                        },
+                      ],
+                    },
+                    {
+                      paramType: AbiType.AbiEncoded,
+                      operator: Operator.Matches,
+                      children: [
+                        {
+                          paramType: AbiType.Static,
+                          operator: Operator.Pass,
+                          children: [],
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+
+        const output = bfsToTree(await topology.typeTree(input));
+
+        // Mixed OR/AND structure where:
+        // - First AND yields Dynamic (same type tree)
+        // - Second AND yields different structures, creating a variant
+        expect(output).to.deep.equal({
+          _type: AbiType.Calldata,
+          children: [
+            {
+              _type: AbiType.Dynamic,
+              children: [
+                {
+                  _type: AbiType.Dynamic,
+                  children: [],
+                },
+                {
+                  _type: AbiType.Dynamic,
+                  children: [
+                    {
+                      _type: AbiType.Calldata,
+                      children: [
+                        {
+                          _type: AbiType.Static,
+                          children: [],
+                        },
+                      ],
+                    },
+                    {
+                      _type: AbiType.AbiEncoded,
+                      children: [
+                        {
+                          _type: AbiType.Static,
+                          children: [],
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+      });
+      it("should handle deeply nested OR/AND with relaxed type tree matching", async () => {
+        const { topology } = await loadFixture(setup);
+
+        const input = flattenCondition({
+          paramType: AbiType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: AbiType.Tuple,
+              operator: Operator.Pass,
+              children: [
+                {
+                  paramType: AbiType.None,
+                  operator: Operator.Or,
+                  children: [
+                    {
+                      paramType: AbiType.None,
+                      operator: Operator.And,
+                      children: [
+                        {
+                          paramType: AbiType.None,
+                          operator: Operator.Or,
+                          children: [
+                            {
+                              paramType: AbiType.Dynamic,
+                              operator: Operator.Pass,
+                              children: [],
+                            },
+                            {
+                              paramType: AbiType.Dynamic,
+                              operator: Operator.EqualTo,
+                              children: [],
+                            },
+                          ],
+                        },
+                        {
+                          paramType: AbiType.Dynamic,
+                          operator: Operator.Pass,
+                          children: [],
+                        },
+                      ],
+                    },
+                    {
+                      paramType: AbiType.Calldata,
+                      operator: Operator.Matches,
+                      children: [
+                        {
+                          paramType: AbiType.Array,
+                          operator: Operator.Pass,
+                          children: [
+                            {
+                              paramType: AbiType.Static,
+                              operator: Operator.Pass,
+                              children: [],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  paramType: AbiType.Static,
+                  operator: Operator.Pass,
+                  children: [],
+                },
+              ],
+            },
+          ],
+        });
+
+        const output = bfsToTree(await topology.typeTree(input));
+
+        // Deeply nested structure:
+        // - Inner OR yields Dynamic (same type tree)
+        // - AND combines to Dynamic
+        // - Outer OR creates variant between Dynamic and Calldata
+        expect(output).to.deep.equal({
+          _type: AbiType.Calldata,
+          children: [
+            {
+              _type: AbiType.Tuple,
+              children: [
+                {
+                  _type: AbiType.Dynamic,
+                  children: [
+                    {
+                      _type: AbiType.Dynamic,
+                      children: [],
+                    },
+                    {
+                      _type: AbiType.Calldata,
+                      children: [
+                        {
+                          _type: AbiType.Array,
+                          children: [
+                            {
+                              _type: AbiType.Static,
+                              children: [],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  _type: AbiType.Static,
+                  children: [],
+                },
+              ],
+            },
+          ],
+        });
+      });
+    });
+
+    // Variant payload nodes with multiple children
+    describe("Variant payload nodes with multiple children", () => {
+      it("should create variant payload node with multiple Static children", async () => {
+        const { topology } = await loadFixture(setup);
+
+        const input = flattenCondition({
+          paramType: AbiType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: AbiType.None,
+              operator: Operator.Or,
+              children: [
+                {
+                  paramType: AbiType.Dynamic,
+                  operator: Operator.Pass,
+                  children: [],
+                },
+                {
+                  paramType: AbiType.Dynamic,
+                  operator: Operator.EqualTo,
+                  children: [],
+                },
+                {
+                  paramType: AbiType.Dynamic,
+                  operator: Operator.GreaterThan,
+                  children: [],
+                },
+              ],
+            },
+          ],
+        });
+
+        const output = bfsToTree(await topology.typeTree(input));
+
+        expect(output).to.deep.equal({
+          _type: AbiType.Calldata,
+          children: [
+            {
+              _type: AbiType.Dynamic,
+              children: [],
+            },
+          ],
+        });
+      });
+      it("should create variant payload node with mixed child types", async () => {
+        const { topology } = await loadFixture(setup);
+
+        const input = flattenCondition({
+          paramType: AbiType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: AbiType.None,
+              operator: Operator.Or,
+              children: [
+                {
+                  paramType: AbiType.Dynamic,
+                  operator: Operator.Pass,
+                  children: [],
+                },
+                {
+                  paramType: AbiType.Calldata,
+                  operator: Operator.Matches,
+                  children: [
+                    {
+                      paramType: AbiType.Static,
+                      operator: Operator.Pass,
+                      children: [],
+                    },
+                  ],
+                },
+                {
+                  paramType: AbiType.AbiEncoded,
+                  operator: Operator.Matches,
+                  children: [
+                    {
+                      paramType: AbiType.Tuple,
+                      operator: Operator.Pass,
+                      children: [
+                        {
+                          paramType: AbiType.Static,
+                          operator: Operator.Pass,
+                          children: [],
+                        },
+                        {
+                          paramType: AbiType.Dynamic,
+                          operator: Operator.Pass,
+                          children: [],
+                        },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  paramType: AbiType.Dynamic,
+                  operator: Operator.EqualTo,
+                  children: [],
+                },
+              ],
+            },
+          ],
+        });
+
+        const output = bfsToTree(await topology.typeTree(input));
+
+        // OR with mixed child types creates a variant payload node
+        expect(output).to.deep.equal({
+          _type: AbiType.Calldata,
+          children: [
+            {
+              _type: AbiType.Dynamic,
+              children: [
+                {
+                  _type: AbiType.Dynamic,
+                  children: [],
+                },
+                {
+                  _type: AbiType.Calldata,
+                  children: [
+                    {
+                      _type: AbiType.Static,
+                      children: [],
+                    },
+                  ],
+                },
+                {
+                  _type: AbiType.AbiEncoded,
+                  children: [
+                    {
+                      _type: AbiType.Tuple,
+                      children: [
+                        {
+                          _type: AbiType.Static,
+                          children: [],
+                        },
+                        {
+                          _type: AbiType.Dynamic,
+                          children: [],
+                        },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  _type: AbiType.Dynamic,
+                  children: [],
+                },
+              ],
+            },
+          ],
+        });
+      });
+      it("should handle variant payload nodes within Tuple structures", async () => {
+        const { topology } = await loadFixture(setup);
+
+        const input = flattenCondition({
+          paramType: AbiType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: AbiType.Tuple,
+              operator: Operator.Pass,
+              children: [
+                {
+                  paramType: AbiType.Static,
+                  operator: Operator.Pass,
+                  children: [],
+                },
+                {
+                  paramType: AbiType.None,
+                  operator: Operator.Or,
+                  children: [
+                    {
+                      paramType: AbiType.Dynamic,
+                      operator: Operator.Pass,
+                      children: [],
+                    },
+                    {
+                      paramType: AbiType.Calldata,
+                      operator: Operator.Matches,
+                      children: [
+                        {
+                          paramType: AbiType.Array,
+                          operator: Operator.Pass,
+                          children: [
+                            {
+                              paramType: AbiType.Static,
+                              operator: Operator.Pass,
+                              children: [],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                    {
+                      paramType: AbiType.AbiEncoded,
+                      operator: Operator.Matches,
+                      children: [
+                        {
+                          paramType: AbiType.Dynamic,
+                          operator: Operator.Pass,
+                          children: [],
+                        },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  paramType: AbiType.Array,
+                  operator: Operator.Pass,
+                  children: [
+                    {
+                      paramType: AbiType.Dynamic,
+                      operator: Operator.Pass,
+                      children: [],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+
+        const output = bfsToTree(await topology.typeTree(input));
+
+        // Variant within Tuple: second element is OR with different structures
+        expect(output).to.deep.equal({
+          _type: AbiType.Calldata,
+          children: [
+            {
+              _type: AbiType.Tuple,
+              children: [
+                {
+                  _type: AbiType.Static,
+                  children: [],
+                },
+                {
+                  _type: AbiType.Dynamic,
+                  children: [
+                    {
+                      _type: AbiType.Dynamic,
+                      children: [],
+                    },
+                    {
+                      _type: AbiType.Calldata,
+                      children: [
+                        {
+                          _type: AbiType.Array,
+                          children: [
+                            {
+                              _type: AbiType.Static,
+                              children: [],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                    {
+                      _type: AbiType.AbiEncoded,
+                      children: [
+                        {
+                          _type: AbiType.Dynamic,
+                          children: [],
+                        },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  _type: AbiType.Array,
+                  children: [
+                    {
+                      _type: AbiType.Dynamic,
+                      children: [],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+      });
+      it("should handle variant payload nodes within Array structures", async () => {
+        const { topology } = await loadFixture(setup);
+
+        const input = flattenCondition({
+          paramType: AbiType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: AbiType.Array,
+              operator: Operator.Pass,
+              children: [
+                {
+                  paramType: AbiType.None,
+                  operator: Operator.Or,
+                  children: [
+                    {
+                      paramType: AbiType.Calldata,
+                      operator: Operator.Matches,
+                      children: [
+                        {
+                          paramType: AbiType.Tuple,
+                          operator: Operator.Pass,
+                          children: [
+                            {
+                              paramType: AbiType.Static,
+                              operator: Operator.Pass,
+                              children: [],
+                            },
+                            {
+                              paramType: AbiType.Dynamic,
+                              operator: Operator.Pass,
+                              children: [],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                    {
+                      paramType: AbiType.AbiEncoded,
+                      operator: Operator.Matches,
+                      children: [
+                        {
+                          paramType: AbiType.Array,
+                          operator: Operator.Pass,
+                          children: [
+                            {
+                              paramType: AbiType.Static,
+                              operator: Operator.Pass,
+                              children: [],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                    {
+                      paramType: AbiType.Dynamic,
+                      operator: Operator.Pass,
+                      children: [],
+                    },
+                  ],
+                },
+                // These will be ignored - Array only processes first child
+                {
+                  paramType: AbiType.Static,
+                  operator: Operator.Pass,
+                  children: [],
+                },
+              ],
+            },
+          ],
+        });
+
+        const output = bfsToTree(await topology.typeTree(input));
+
+        // Array contains OR variant as first child (others ignored)
+        expect(output).to.deep.equal({
+          _type: AbiType.Calldata,
+          children: [
+            {
+              _type: AbiType.Array,
+              children: [
+                {
+                  _type: AbiType.Dynamic,
+                  children: [
+                    {
+                      _type: AbiType.Calldata,
+                      children: [
+                        {
+                          _type: AbiType.Tuple,
+                          children: [
+                            {
+                              _type: AbiType.Static,
+                              children: [],
+                            },
+                            {
+                              _type: AbiType.Dynamic,
+                              children: [],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                    {
+                      _type: AbiType.AbiEncoded,
+                      children: [
+                        {
+                          _type: AbiType.Array,
+                          children: [
+                            {
+                              _type: AbiType.Static,
+                              children: [],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                    {
+                      _type: AbiType.Dynamic,
+                      children: [],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+      });
+      it("should handle nested variant payload nodes", async () => {
+        const { topology } = await loadFixture(setup);
+
+        const input = flattenCondition({
+          paramType: AbiType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: AbiType.None,
+              operator: Operator.Or,
+              children: [
+                {
+                  paramType: AbiType.Calldata,
+                  operator: Operator.Matches,
+                  children: [
+                    {
+                      paramType: AbiType.None,
+                      operator: Operator.Or,
+                      children: [
+                        {
+                          paramType: AbiType.Dynamic,
+                          operator: Operator.Pass,
+                          children: [],
+                        },
+                        {
+                          paramType: AbiType.AbiEncoded,
+                          operator: Operator.Matches,
+                          children: [
+                            {
+                              paramType: AbiType.Static,
+                              operator: Operator.Pass,
+                              children: [],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  paramType: AbiType.Dynamic,
+                  operator: Operator.Pass,
+                  children: [],
+                },
+              ],
+            },
+          ],
+        });
+
+        const output = bfsToTree(await topology.typeTree(input));
+
+        // Nested variants: outer OR contains inner OR with different structures
+        expect(output).to.deep.equal({
+          _type: AbiType.Calldata,
+          children: [
+            {
+              _type: AbiType.Dynamic,
+              children: [
+                {
+                  _type: AbiType.Calldata,
+                  children: [
+                    {
+                      _type: AbiType.Dynamic,
+                      children: [
+                        {
+                          _type: AbiType.Dynamic,
+                          children: [],
+                        },
+                        {
+                          _type: AbiType.AbiEncoded,
+                          children: [
+                            {
+                              _type: AbiType.Static,
+                              children: [],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  _type: AbiType.Dynamic,
+                  children: [],
+                },
+              ],
+            },
+          ],
+        });
+      });
+    });
+  });
 });
 
 // Helper function
