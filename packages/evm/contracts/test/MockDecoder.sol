@@ -13,6 +13,16 @@ contract MockDecoder {
             copyOut(AbiDecoder.inspect(data, Topology.typeTree(conditions, 0)));
     }
 
+    function inspectFlat(
+        bytes calldata data,
+        ConditionFlat[] memory conditions
+    ) public pure returns (FlatPayload[] memory) {
+        return
+            flattenTree(
+                AbiDecoder.inspect(data, Topology.typeTree(conditions, 0))
+            );
+    }
+
     function pluck(
         bytes calldata data,
         uint256 offset,
@@ -21,19 +31,52 @@ contract MockDecoder {
         return AbiDecoder.pluck(data, offset, size);
     }
 
-    function _toTree(
-        TypeTreeFlat[] calldata flatTree,
-        uint256 index
-    ) private pure returns (TypeTree memory result) {
-        result._type = flatTree[index]._type;
-        result.index = index;
-        if (flatTree[index].fields.length > 0) {
-            uint256[] memory fields = flatTree[index].fields;
-            result.children = new TypeTree[](fields.length);
-            for (uint256 i = 0; i < fields.length; i++) {
-                result.children[i] = _toTree(flatTree, fields[i]);
-            }
+    struct FlatPayload {
+        uint256 parent;
+        uint256 location;
+        uint256 size;
+        /* meta fields */
+        bool variant;
+        bool overflown;
+    }
+
+    function flattenTree(
+        Payload memory root
+    ) internal pure returns (FlatPayload[] memory) {
+        FlatPayload[] memory result = new FlatPayload[](countNodes(root));
+        _flatten(root, 0, 0, result);
+        return result;
+    }
+
+    function _flatten(
+        Payload memory node,
+        uint256 index,
+        uint256 parent,
+        FlatPayload[] memory result
+    ) private pure returns (uint256 next) {
+        result[index] = FlatPayload({
+            parent: parent,
+            location: node.location,
+            size: node.size,
+            variant: node.variant,
+            overflown: node.overflown
+        });
+
+        next = index + 1;
+        for (uint256 i = 0; i < node.children.length; i++) {
+            next = _flatten(node.children[i], next, index, result);
         }
+        return next;
+    }
+
+    function countNodes(Payload memory tree) private pure returns (uint256) {
+        uint256 count;
+
+        for (uint256 i = 0; i < tree.children.length; i++) {
+            count += countNodes(tree.children[i]);
+        }
+
+        return count + 1;
     }
 
     function copyOut(

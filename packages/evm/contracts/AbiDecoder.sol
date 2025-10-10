@@ -77,7 +77,6 @@ library AbiDecoder {
     ) private pure {
         assert(location + 32 <= data.length);
 
-        payload.location = location;
         payload.typeIndex = typeNode.index;
 
         AbiType _type = typeNode._type;
@@ -113,14 +112,13 @@ library AbiDecoder {
                 typeNode,
                 payload
             );
-
-            payload.location = location + 32;
-            payload.size = _ceil32(uint256(word(data, location)));
+            payload.size = 32 + _ceil32(uint256(word(data, location)));
         }
 
-        if (payload.location + payload.size > data.length) {
+        if (location + payload.size > data.length) {
             payload.overflown = true;
         }
+        payload.location = location;
     }
 
     /**
@@ -139,8 +137,7 @@ library AbiDecoder {
      *        - Inline elements are stored directly in HEAD region
      *        - Non-inline elements store a pointer in HEAD, data in TAIL
      */
-    // 79,791
-    function __block__2(
+    function __block__(
         bytes calldata data,
         uint256 location,
         uint256 length,
@@ -150,24 +147,16 @@ library AbiDecoder {
         Payload[] memory children = new Payload[](length);
 
         bool isArray = typeNode._type == AbiType.Array;
-        bool isInline = isArray && _isInline(typeNode.children[0]);
-
         uint256 offset;
-        for (uint256 i; i < length; i++) {
-            if (!isArray) {
-                /*
-                 * Skip AbiType.None children (Ether|Call)WithinAllowance.
-                 * These only appear as top level children of Calldata nodes,
-                 * ever within arrays.
-                 */
-                if (typeNode.children[i]._type == AbiType.None) continue;
-                /*
-                 * For tuples, each child may have different inline status.
-                 * Arrays reuse the same inline status for all elements,
-                 * calculated once above
-                 */
-                isInline = _isInline(typeNode.children[i]);
-            }
+        for (uint256 i; i < length; ++i) {
+            Payload memory child = children[i];
+            TypeTree memory typeChild = typeNode.children[
+                isArray && i >= typeNode.children.length ? 0 : i
+            ];
+
+            if (typeChild._type == AbiType.None) continue;
+
+            bool isInline = _isInline(typeChild);
 
             uint256 childLocation = _locationInBlock(
                 data,
@@ -181,75 +170,18 @@ library AbiDecoder {
                 return;
             }
 
-            _walk(
-                data,
-                childLocation,
-                typeNode.children[isArray ? 0 : i],
-                children[i]
-            );
+            _walk(data, childLocation, typeChild, child);
 
-            if (children[i].overflown) {
+            if (child.overflown) {
                 payload.overflown = true;
                 return;
             }
 
             // Update the offset in the block for the next element
-            offset += isInline ? children[i].size : 32;
+            offset += isInline ? child.size : 32;
 
             // For non-inline elements, we need to account for the 32-byte pointer
-            payload.size += children[i].size + (isInline ? 0 : 32);
-        }
-        payload.children = children;
-    }
-
-    // 79,378
-    function __block__(
-        bytes calldata data,
-        uint256 location,
-        uint256 length,
-        TypeTree memory typeNode,
-        Payload memory payload
-    ) private pure {
-        Payload[] memory children = new Payload[](length);
-
-        uint256 offset;
-        unchecked {
-            for (uint256 i; i < length; ++i) {
-                TypeTree memory typeChild = typeNode.children[
-                    i >= typeNode.children.length ? 0 : i
-                ];
-
-                if (typeChild._type == AbiType.None) continue;
-
-                bool isInline = _isInline(typeChild);
-
-                uint256 childLocation = _locationInBlock(
-                    data,
-                    location,
-                    offset,
-                    isInline
-                );
-
-                if (childLocation == type(uint256).max) {
-                    payload.overflown = true;
-                    return;
-                }
-
-                Payload memory child = children[i];
-
-                _walk(data, childLocation, typeChild, child);
-
-                if (child.overflown) {
-                    payload.overflown = true;
-                    return;
-                }
-
-                // Update the offset in the block for the next element
-                offset += isInline ? child.size : 32;
-
-                // For non-inline elements, we need to account for the 32-byte pointer
-                payload.size += child.size + (isInline ? 0 : 32);
-            }
+            payload.size += child.size + (isInline ? 0 : 32);
         }
         payload.children = children;
     }

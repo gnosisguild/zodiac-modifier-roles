@@ -518,6 +518,279 @@ describe("AbiDecoder - Plucking", () => {
         ),
       );
     });
+
+    it("decodes arrays with embedded calldata items", async () => {
+      const { decoder } = await loadFixture(setup);
+
+      const embedded1 = Interface.from([
+        "function embedded(uint256)",
+      ]).encodeFunctionData("embedded", [12345]);
+
+      const embedded2 = Interface.from([
+        "function embedded(uint256)",
+      ]).encodeFunctionData("embedded", [67890]);
+
+      const data = Interface.from([
+        "function test(bytes[])",
+      ]).encodeFunctionData("test", [[embedded1, embedded2]]);
+
+      const conditions = [
+        {
+          parent: 0,
+          paramType: AbiType.Calldata,
+          operator: Operator.Pass,
+          compValue: "0x",
+        }, // 0 (root, self-parent)
+        {
+          parent: 0,
+          paramType: AbiType.Array,
+          operator: Operator.Pass,
+          compValue: "0x",
+        }, // 1
+        {
+          parent: 1,
+          paramType: AbiType.Calldata,
+          operator: Operator.Pass,
+          compValue: "0x",
+        }, // 2
+        {
+          parent: 2,
+          paramType: AbiType.Static,
+          operator: Operator.Pass,
+          compValue: "0x",
+        }, // 3
+      ];
+
+      const result = await decoder.inspect(data, conditions);
+      const arrayField = result.children[0];
+      const [entry1, entry2] = arrayField.children;
+
+      // Pluck the entire array
+      expect(
+        await decoder.pluck(data, arrayField.location, arrayField.size),
+      ).to.equal(encode(["bytes[]"], [[embedded1, embedded2]], true));
+
+      // Pluck first embedded calldata entry and its parameter
+      const firstEntry = arrayField.children[0];
+      const firstParam = firstEntry.children[0];
+      expect(
+        await decoder.pluck(data, firstParam.location, firstParam.size),
+      ).to.equal(encode(["uint256"], [12345]));
+
+      // Pluck second embedded calldata entry and its parameter
+      const secondEntry = arrayField.children[1];
+      const secondParam = secondEntry.children[0];
+      expect(
+        await decoder.pluck(data, secondParam.location, secondParam.size),
+      ).to.equal(encode(["uint256"], [67890]));
+    });
+  });
+
+  describe("Array.Matches", () => {
+    it("plucks Array.Matches with single non type variant entry", async () => {
+      const { decoder } = await loadFixture(setup);
+      const data = Interface.from([
+        "function test(uint256[])",
+      ]).encodeFunctionData("test", [[10, 20, 30]]);
+
+      const conditions = flattenCondition({
+        paramType: AbiType.Calldata,
+        children: [
+          {
+            paramType: AbiType.Array,
+            operator: Operator.Matches,
+            children: [{ paramType: AbiType.Static }],
+          },
+        ],
+      });
+
+      const result = await decoder.inspect(data, conditions);
+      const arrayField = result.children[0];
+
+      expect(
+        await decoder.pluck(data, arrayField.location, arrayField.size),
+      ).to.equal(encode(["uint256[]"], [[10, 20, 30]], true));
+    });
+
+    it("plucks Array.Matches with multiple non type variant entries", async () => {
+      const { decoder } = await loadFixture(setup);
+      const data = Interface.from([
+        "function test(uint256[])",
+      ]).encodeFunctionData("test", [[42, 100, 256]]);
+
+      const conditions = flattenCondition({
+        paramType: AbiType.Calldata,
+        children: [
+          {
+            paramType: AbiType.Array,
+            operator: Operator.Matches,
+            children: [
+              { paramType: AbiType.Static },
+              {
+                paramType: AbiType.Static,
+                operator: Operator.EqualTo,
+                compValue: defaultAbiCoder.encode(["uint256"], [42]),
+              },
+              {
+                paramType: AbiType.Static,
+                operator: Operator.GreaterThan,
+                compValue: defaultAbiCoder.encode(["uint256"], [50]),
+              },
+            ],
+          },
+        ],
+      });
+
+      const result = await decoder.inspect(data, conditions);
+      const arrayField = result.children[0];
+
+      expect(
+        await decoder.pluck(data, arrayField.location, arrayField.size),
+      ).to.equal(encode(["uint256[]"], [[42, 100, 256]], true));
+    });
+
+    it("plucks Array.Matches with type equivalent variants (Dynamic/Calldata/AbiEncoded)", async () => {
+      const { decoder } = await loadFixture(setup);
+
+      const embedded1 = Interface.from([
+        "function embedded(uint256)",
+      ]).encodeFunctionData("embedded", [12345]);
+
+      const embedded2 = defaultAbiCoder.encode(
+        ["tuple(uint256,address)"],
+        [[67890, AddressOne]],
+      );
+
+      const data = Interface.from([
+        "function test(bytes[])",
+      ]).encodeFunctionData("test", [["0xaabbccdd", embedded1, embedded2]]);
+
+      const conditions = flattenCondition({
+        paramType: AbiType.Calldata,
+        children: [
+          {
+            paramType: AbiType.Array,
+            operator: Operator.Matches,
+            children: [
+              { paramType: AbiType.Dynamic },
+              {
+                paramType: AbiType.Calldata,
+                children: [{ paramType: AbiType.Static }],
+              },
+              {
+                paramType: AbiType.AbiEncoded,
+                children: [
+                  {
+                    paramType: AbiType.Tuple,
+                    children: [
+                      { paramType: AbiType.Static },
+                      { paramType: AbiType.Static },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      });
+
+      const root = toTree(await decoder.inspectFlat(data, conditions));
+      expect(root.children.length).to.equal(1);
+
+      const [array] = root.children;
+      expect(array.children.length).to.equal(3);
+
+      const [_dynamic, calldata, abiEncoded] = array.children;
+      expect(_dynamic.children.length).to.equal(0);
+      expect(calldata.children.length).to.equal(1);
+      expect(abiEncoded.children.length).to.equal(1);
+
+      const [_static] = calldata.children;
+      const [tuple] = abiEncoded.children;
+
+      // // Pluck the entire array
+      expect(await decoder.pluck(data, array.location, array.size)).to.equal(
+        encode(["bytes[]"], [["0xaabbccdd", embedded1, embedded2]], true),
+      );
+
+      expect(
+        await decoder.pluck(data, _static.location, _static.size),
+      ).to.equal(encode(["uint256"], [12345], false));
+
+      expect(await decoder.pluck(data, tuple.location, tuple.size)).to.equal(
+        encode(["tuple(uint256,address)"], [[67890, AddressOne]]),
+      );
+    });
+
+    it("plucks Array.Matches with complex non type variant types", async () => {
+      const { decoder } = await loadFixture(setup);
+
+      const data = Interface.from([
+        "function test(tuple(uint256,address)[] input)",
+      ]).encodeFunctionData("test", [
+        [
+          [100, AddressOne],
+          [200, "0x71C7656EC7ab88b098defB751B7401B5f6d8976F"],
+        ],
+      ]);
+
+      const conditions = flattenCondition({
+        paramType: AbiType.Calldata,
+        children: [
+          {
+            paramType: AbiType.Array,
+            operator: Operator.Matches,
+            children: [
+              {
+                paramType: AbiType.Tuple,
+                children: [
+                  { paramType: AbiType.Static },
+                  { paramType: AbiType.Static },
+                ],
+              },
+              {
+                paramType: AbiType.Tuple,
+                children: [
+                  { paramType: AbiType.Static },
+                  { paramType: AbiType.Static },
+                ],
+              },
+            ],
+          },
+        ],
+      });
+
+      const root = toTree(await decoder.inspectFlat(data, conditions));
+      const [array] = root.children;
+      const [tuple1, tuple2] = array.children;
+
+      expect(array.children.length).to.equal(2);
+
+      expect(await decoder.pluck(data, array.location, array.size)).to.equal(
+        encode(
+          ["tuple(uint256,address)[]"],
+          [
+            [
+              [100, AddressOne],
+              [200, "0x71C7656EC7ab88b098defB751B7401B5f6d8976F"],
+            ],
+          ],
+          true,
+        ),
+      );
+
+      expect(await decoder.pluck(data, tuple1.location, tuple1.size)).to.equal(
+        encode(["tuple(uint256,address)"], [[100, AddressOne]], false),
+      );
+
+      expect(await decoder.pluck(data, tuple2.location, tuple2.size)).to.equal(
+        encode(
+          ["tuple(uint256,address)"],
+          [[200, "0x71C7656EC7ab88b098defB751B7401B5f6d8976F"]],
+          false,
+        ),
+      );
+    });
   });
 
   describe("Embedded Encoded Data", () => {
@@ -898,17 +1171,32 @@ describe("AbiDecoder - Plucking", () => {
       expect(result.children[0].variant).to.equal(true);
       expect(result.children[0].children).to.have.length(2);
 
-      const [dynamic, tuple] = result.children[0].children;
+      const [dynamic, abiEncoded] = result.children[0].children;
+      expect(dynamic.children.length).to.equal(0);
+      expect(abiEncoded.children.length).to.equal(1);
+
+      const [tuple] = abiEncoded.children;
+      expect(tuple.children.length).to.equal(2);
+
+      const [static1, static2] = tuple.children;
+      expect(static1.children.length).to.equal(0);
+      expect(static2.children.length).to.equal(0);
+
       expect(tuple.variant).to.equal(false);
       expect(tuple.overflown).to.equal(false);
 
       expect(dynamic.variant).to.equal(false);
       expect(dynamic.overflown).to.equal(false);
 
-      // Check raw bytes interpretation
       expect(await decoder.pluck(data, tuple.location, tuple.size)).to.equal(
         encode(["tuple(uint256,uint256)"], [[1, 999]], false),
       );
+      expect(
+        await decoder.pluck(data, static1.location, static1.size),
+      ).to.equal(encode(["uint256"], [1], false));
+      expect(
+        await decoder.pluck(data, static2.location, static2.size),
+      ).to.equal(encode(["uint256"], [999], false));
     });
 
     it("variants work under OR", async () => {
@@ -946,28 +1234,43 @@ describe("AbiDecoder - Plucking", () => {
         [innerData],
       );
 
-      const result = await decoder.inspect(data, conditions);
+      const root = await decoder.inspect(data, conditions);
 
-      expect(result.variant).to.equal(false);
-      expect(result.overflown).to.equal(false);
+      expect(root.variant).to.equal(false);
+      expect(root.overflown).to.equal(false);
 
       // AND variant should succeed when both children are valid
-      expect(result.children[0].variant).to.equal(true);
-      expect(result.children[0].children).to.have.length(2);
+      expect(root.children[0].variant).to.equal(true);
+      expect(root.children[0].children).to.have.length(2);
 
-      const [tuple, _static] = result.children[0].children;
-      expect(tuple.variant).to.equal(false);
-      expect(tuple.overflown).to.equal(false);
+      const [abiEncoded1, abiEncoded2] = root.children[0].children;
+      expect(abiEncoded1.variant).to.equal(false);
+      expect(abiEncoded1.overflown).to.equal(false);
 
-      expect(_static.variant).to.equal(false);
-      expect(_static.overflown).to.equal(false);
+      expect(abiEncoded2.variant).to.equal(false);
+      expect(abiEncoded2.overflown).to.equal(false);
+
+      expect(abiEncoded1.children.length).to.equal(1);
+      const [tuple] = abiEncoded1.children;
+
+      expect(tuple.children.length).to.equal(1);
+      const [static1] = tuple.children;
+      expect(static1.children.length).to.equal(0);
+
+      expect(abiEncoded2.children.length).to.equal(1);
+      const [static2] = abiEncoded2.children;
+      expect(static2.children.length).to.equal(0);
 
       expect(await decoder.pluck(data, tuple.location, tuple.size)).to.equal(
         encode(["uint256"], [123467]),
       );
 
       expect(
-        await decoder.pluck(data, _static.location, _static.size),
+        await decoder.pluck(data, static1.location, static1.size),
+      ).to.equal(encode(["uint256"], [123467]));
+
+      expect(
+        await decoder.pluck(data, static2.location, static2.size),
       ).to.equal(encode(["uint256"], [123467]));
     });
 
@@ -1084,13 +1387,12 @@ describe("AbiDecoder - Plucking", () => {
       expect(result.children[0].variant).to.equal(true);
       expect(result.children[0].children).to.have.length(3);
 
+      const [, abiEncoded] = result.children[0].children;
+      const [_static] = abiEncoded.children;
+
       // Check we can decode from the abi-encoded variant
       expect(
-        await decoder.pluck(
-          data,
-          result.children[0].children[1].children[0].location,
-          result.children[0].children[1].children[0].size,
-        ),
+        await decoder.pluck(data, _static.location, _static.size),
       ).to.equal(encode(["uint256"], [12345]));
     });
   });
@@ -1329,3 +1631,49 @@ function encode(types: any, values: any, removeOffset = false) {
   const result = defaultAbiCoder.encode(types, values);
   return removeOffset ? `0x${result.slice(66)}` : result;
 }
+
+type Payload = {
+  location: number;
+  size: number;
+  children: Payload[];
+  variant: boolean;
+  overflown: boolean;
+};
+function toTree(
+  bfsArray: {
+    location: bigint;
+    size: bigint;
+    parent: bigint;
+    variant: boolean;
+    overflown: boolean;
+  }[],
+): Payload {
+  const nodes = bfsArray.map((item) => ({
+    location: Number(item.location),
+    size: Number(item.size),
+    children: [] as Payload[],
+    variant: item.variant,
+    overflown: item.overflown,
+  }));
+
+  // Link children to parents
+  bfsArray.forEach((item, i) => {
+    const parentIndex = Number(item.parent);
+    // Skip self-parented (root node)
+    if (parentIndex !== i) {
+      nodes[parentIndex].children.push(nodes[i]);
+    }
+  });
+
+  // Root node should be the one whose parent == its own index
+  return nodes[0];
+}
+
+// function showCalldat(str: string) {
+//   if (str.length <= 10) return str;
+
+//   const head = str.slice(0, 10);
+//   const tail = str.slice(10).replace(/(.{64})/g, "$1\n");
+
+//   return head + "\n" + tail;
+// }

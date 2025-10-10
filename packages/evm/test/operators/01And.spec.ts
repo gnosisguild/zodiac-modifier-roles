@@ -241,7 +241,7 @@ describe("Operator - And", async () => {
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(
         PermissionCheckerStatus.CalldataOverflow,
-        "0x0000000000000000000000000000000000000000000000000000000000000064",
+        "0x0000000000000000000000000000000000000000000000000000000000000044",
       );
     await expect(invoke(999, [1, 2, 5]))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
