@@ -17,6 +17,9 @@ import {
   unichain,
   mantle,
   ink,
+  katana,
+  worldchain,
+  hyperevm,
 } from "wagmi/chains"
 
 export const CHAINS = {
@@ -91,6 +94,18 @@ export const CHAINS = {
   [ink.id]: {
     ...ink,
     prefix: "ink",
+  },
+  [katana.id]: {
+    ...katana,
+    prefix: "katana",
+  },
+  [worldchain.id]: {
+    ...worldchain,
+    prefix: "wc",
+  },
+  [hyperevm.id]: {
+    ...hyperevm,
+    prefix: "hyperevm",
   },
 }
 

@@ -51,8 +51,10 @@ The contracts have been developed with [Solidity 0.8.21](https://github.com/ethe
 - [Base](https://basescan.org/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
 - [Celo](https://celoscan.io/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
 - [Sonic](https://sonicscan.org/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
+- [Katana](https://katanascan.com/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
 - [Berachain](https://berascan.com/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
 - [HyperEVM](https://www.hyperscan.com/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
+- [World Chain](https://worldscan.org/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
 - [Base Sepolia](https://sepolia.basescan.org/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
 - [Sepolia](https://sepolia.etherscan.io/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
 

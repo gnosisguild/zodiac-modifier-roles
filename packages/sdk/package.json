@@ -18,6 +18,10 @@
       "import": "./build/kit.mjs",
       "require": "./build/kit.js"
     },
+    "./presets": {
+      "import": "./build/presets.mjs",
+      "require": "./build/presets.js"
+    },
     "./swaps": {
       "import": "./build/swaps.mjs",
       "require": "./build/swaps.js"
