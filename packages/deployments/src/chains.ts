@@ -83,4 +83,16 @@ export const chains = {
     name: "hyperevm",
     prefix: "hyperevm",
   },
+  [14]: {
+    name: "flare",
+    prefix: "flr",
+  },
+  [534352]: {
+    name: "scroll",
+    prefix: "scr",
+  },
+  [9745]: {
+    name: "plasma",
+    prefix: "plasma",
+  },
 } as const
