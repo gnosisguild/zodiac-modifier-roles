@@ -352,8 +352,8 @@ const config: HardhatUserConfig = {
         network: "plasma",
         chainId: 1010,
         urls: {
-          apiURL: "https://api.plasma.to/api",
-          browserURL: "https://plasma.to",
+          apiURL: "https://api.plasmascan.to/api",
+          browserURL: "https://plasmascan.to",
         },
       },
     ],
