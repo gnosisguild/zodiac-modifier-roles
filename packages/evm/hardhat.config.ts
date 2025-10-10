@@ -104,10 +104,10 @@ const config: HardhatUserConfig = {
       chainId: 84532,
       url: "https://sepolia.base.org",
     },
-    matic: {
+    polygon: {
       ...sharedNetworkConfig,
       chainId: 137,
-      url: "https://rpc-mainnet.maticvigil.com",
+      url: "https://polygon-rpc.com",
     },
     arbitrum: {
       ...sharedNetworkConfig,
@@ -117,7 +117,7 @@ const config: HardhatUserConfig = {
     avalanche: {
       ...sharedNetworkConfig,
       chainId: 43114,
-      url: "https://rpc.ankr.com/avalanche",
+      url: "https://0xrpc.io/avax",
     },
     zkevm: {
       ...sharedNetworkConfig,
@@ -127,7 +127,7 @@ const config: HardhatUserConfig = {
     bsc: {
       ...sharedNetworkConfig,
       chainId: 56,
-      url: "https://bscrpc.com",
+      url: "https://1rpc.io/bnb",
     },
     celo: {
       ...sharedNetworkConfig,
@@ -186,6 +186,28 @@ const config: HardhatUserConfig = {
       chainId: 480,
       url: "https://worldchain-mainnet.g.alchemy.com/public",
     },
+    // new chains
+    plasma: {
+      ...sharedNetworkConfig,
+      chainId: 9745,
+      url: "https://rpc.plasma.to",
+    },
+    scroll: {
+      ...sharedNetworkConfig,
+      chainId: 534352,
+      url: "https://rpc.scroll.io",
+    },
+    flare: {
+      ...sharedNetworkConfig,
+      chainId: 14,
+      url: "https://flare-api.flare.network/ext/C/rpc",
+    },
+    // waiting for PUSH0 support
+    linea: {
+      ...sharedNetworkConfig,
+      chainId: 59144,
+      url: "https://linea-rpc.publicnode.com",
+    },
   },
   etherscan: {
     apiKey: ETHERSCAN_API_KEY,
@@ -207,7 +229,7 @@ const config: HardhatUserConfig = {
         },
       },
       {
-        network: "matic",
+        network: "polygon",
         chainId: 137,
         urls: {
           apiURL: "https://api.polygonscan.com/api",
@@ -316,6 +338,22 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://api.worldscan.org/api",
           browserURL: "https://worldscan.org",
+        },
+      },
+      {
+        network: "flare",
+        chainId: 14,
+        urls: {
+          apiURL: "https://api.flarescan.com/api",
+          browserURL: "https://flarescan.com",
+        },
+      },
+      {
+        network: "plasma",
+        chainId: 1010,
+        urls: {
+          apiURL: "https://api.plasmascan.to/api",
+          browserURL: "https://plasmascan.to",
         },
       },
     ],

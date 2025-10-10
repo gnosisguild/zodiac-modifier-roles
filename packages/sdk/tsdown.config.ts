@@ -5,8 +5,8 @@ export default defineConfig([
     entry: {
       index: "./src/main/index.ts",
       kit: "./src/kit/index.ts",
-      swaps: "./src/swaps/index.ts",
       annotations: "./src/annotations/index.ts",
+      swaps: "./src/swaps/index.ts",
       typechain: "./src/typechain.ts",
     },
     format: ["cjs", "esm"],
