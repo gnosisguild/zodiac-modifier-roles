@@ -7,7 +7,6 @@ export default defineConfig([
       kit: "./src/kit/index.ts",
       annotations: "./src/annotations/index.ts",
       swaps: "./src/swaps/index.ts",
-      presets: "./src/presets/index.ts",
       typechain: "./src/typechain.ts",
     },
     format: ["cjs", "esm"],
