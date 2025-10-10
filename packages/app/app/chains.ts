@@ -1,3 +1,4 @@
+import { defineChain } from "viem"
 import {
   mainnet,
   sepolia,
@@ -19,11 +20,34 @@ import {
   ink,
   katana,
   worldchain,
-  hyperevm,
   plasma,
   scroll,
   flare,
 } from "wagmi/chains"
+
+const hyperevm = defineChain({
+  id: 999,
+  name: "HyperEVM",
+  nativeCurrency: {
+    decimals: 18,
+    name: "HYPE",
+    symbol: "HYPE",
+  },
+  rpcUrls: {
+    default: {
+      http: ["https://rpc.hypurrscan.io"],
+    },
+  },
+  blockExplorers: {
+    default: { name: "HyperEVMScan", url: "https://hyperevmscan.io" },
+  },
+  contracts: {
+    multicall3: {
+      address: "0xcA11bde05977b3631167028862bE2a173976CA11",
+      blockCreated: 13051,
+    },
+  },
+})
 
 export const CHAINS = {
   [mainnet.id]: {
