@@ -20,6 +20,9 @@ import {
   katana,
   worldchain,
   hyperevm,
+  plasma,
+  scroll,
+  flare,
 } from "wagmi/chains"
 
 export const CHAINS = {
@@ -106,6 +109,18 @@ export const CHAINS = {
   [hyperevm.id]: {
     ...hyperevm,
     prefix: "hyperevm",
+  },
+  [plasma.id]: {
+    ...plasma,
+    prefix: "plasma",
+  },
+  [scroll.id]: {
+    ...scroll,
+    prefix: "scroll",
+  },
+  [flare.id]: {
+    ...flare,
+    prefix: "flare",
   },
 }
 
