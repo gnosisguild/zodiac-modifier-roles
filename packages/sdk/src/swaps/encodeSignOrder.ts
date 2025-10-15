@@ -37,5 +37,5 @@ const CowswapOrderSignerInterface = new Interface([
 ])
 
 const RolesInterface = new Interface([
-  "function execTransactionWithRole(address to, uint256 value, bytes calldata data, Operation operation, bytes32 roleKey, bool shouldRevert)",
+  "function execTransactionWithRole(address to, uint256 value, bytes calldata data, uint8 operation, bytes32 roleKey, bool shouldRevert)",
 ])
