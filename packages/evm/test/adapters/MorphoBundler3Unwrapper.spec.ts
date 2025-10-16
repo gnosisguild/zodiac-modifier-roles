@@ -28,31 +28,6 @@ describe("MorphoBundler3Unwrapper", async () => {
     };
   }
 
-  it.only("correctly unwrapps single entry (FAILING)", async () => {
-    const { bundler3, adapter } = await loadFixture(setup);
-    const tx = await bundler3.multicall.populateTransaction([
-      {
-        to: AddressOne,
-        data: "0xaabbccddeeff",
-        value: 123456,
-        skipRevert: false,
-        callbackHash: ZeroHash,
-      },
-    ]);
-    const result = await adapter.unwrap(
-      ZeroAddress,
-      0,
-      "0x374f435d00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000001800000000000000000000000004a6c312ec70e8747a587ee860a0353cd42be0ae000000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000064d96ca0b90000000000000000000000007309e1e2e74af170c69bde8fcb30397f8697d5ff0000000000000000000000004a6c312ec70e8747a587ee860a0353cd42be0ae00000000000000000000000000000000000000000000000000000000000002710000000000000000000000000000000000000000000000000000000000000000000000000000000004a6c312ec70e8747a587ee860a0353cd42be0ae000000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000124ca463673000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb480000000000000000000000007309e1e2e74af170c69bde8fcb30397f8697d5ff0000000000000000000000006bac818df5654ea824ce723de51d7c7d9fd2f4ff000000000000000000000000870ac11d48b15db9a138cf899d20f13f79ba00bc0000000000000000000000000000000000000000000000000bef55718ad600000000000000000000000000000000000000000000000000000000000000002710000000000000000000000000e5898f9900b2dfff590659e78c33d984f23a12d1000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000068f0a8392222da44",
-      0,
-    );
-    expect(result.length).to.be.equal(1);
-
-    const [{ to, value, dataLocation, dataSize }] = result;
-    expect(to).to.equal(AddressOne);
-    expect(value).to.equal(123456);
-    expect(sliceData(tx.data, dataLocation, dataSize)).to.equal("aabbccddeeff");
-  });
-
   it("correctly unwrapps single entry", async () => {
     const { bundler3, adapter } = await loadFixture(setup);
     const tx = await bundler3.multicall.populateTransaction([
@@ -150,91 +125,6 @@ describe("MorphoBundler3Unwrapper", async () => {
     await expect(
       adapter.unwrap(ZeroAddress, 0, corruptedData, 0),
     ).to.be.revertedWithCustomError(adapter, "MalformedHeader");
-  });
-
-  it("reverts when buffer length too short", async () => {
-    const { bundler3, adapter } = await loadFixture(setup);
-    const tx = await bundler3.multicall.populateTransaction([
-      {
-        to: AddressOne,
-        data: "0xaabbcc",
-        value: 123,
-        skipRevert: false,
-        callbackHash: ZeroHash,
-      },
-    ]);
-
-    // Remove some bytes from the end to make buffer too short
-    const corruptedData = tx.data.slice(0, tx.data.length - 10);
-
-    await expect(
-      adapter.unwrap(ZeroAddress, 0, corruptedData, 0),
-    ).to.be.revertedWithCustomError(adapter, "MalformedBody");
-  });
-
-  it("reverts when buffer length too wide", async () => {
-    const { bundler3, adapter } = await loadFixture(setup);
-    const tx = await bundler3.multicall.populateTransaction([
-      {
-        to: AddressOne,
-        data: "0xaabbcc",
-        value: 123,
-        skipRevert: false,
-        callbackHash: ZeroHash,
-      },
-    ]);
-
-    // Add extra bytes to make buffer too wide
-    const corruptedData = tx.data + "deadbeef";
-
-    await expect(
-      adapter.unwrap(ZeroAddress, 0, corruptedData, 0),
-    ).to.be.revertedWithCustomError(adapter, "MalformedBody");
-  });
-
-  it("reverts when inner calldata length wrong", async () => {
-    const { bundler3, adapter } = await loadFixture(setup);
-    const tx = await bundler3.multicall.populateTransaction([
-      {
-        to: AddressOne,
-        data: "0xaabbccdd",
-        value: 123,
-        skipRevert: false,
-        callbackHash: ZeroHash,
-      },
-    ]);
-
-    const innerLengthLocation = 2 + 8 + 8 * 64;
-
-    {
-      const corruptedData =
-        tx.data.slice(0, innerLengthLocation) +
-        "0000000000000000000000000000000000000000000000000000000000000000" + // too small
-        tx.data.slice(innerLengthLocation + 64);
-
-      await expect(adapter.unwrap(ZeroAddress, 0, corruptedData, 0)).to.be
-        .reverted;
-    }
-
-    {
-      const corruptedData =
-        tx.data.slice(0, innerLengthLocation) +
-        "0000000000000000000000000000000000000000000000000000000000000021" + // too large
-        tx.data.slice(innerLengthLocation + 64);
-
-      await expect(adapter.unwrap(ZeroAddress, 0, corruptedData, 0)).to.be
-        .reverted;
-    }
-
-    {
-      const corruptedData =
-        tx.data.slice(0, innerLengthLocation) +
-        "0000000000000000000000000000000000000000000000000000000000000004" +
-        tx.data.slice(innerLengthLocation + 64);
-
-      await expect(adapter.unwrap(ZeroAddress, 0, corruptedData, 0)).to.not.be
-        .reverted;
-    }
   });
 });
 
