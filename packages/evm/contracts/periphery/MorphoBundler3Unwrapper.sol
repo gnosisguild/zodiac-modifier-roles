@@ -2,6 +2,7 @@
 pragma solidity >=0.8.17 <0.9.0;
 
 import "./Types.sol";
+import "hardhat/console.sol";
 
 /**
  * @title MorphoBundler3Unwrapper - An adapter that unwraps Morpho Bundler3 multicalls
@@ -82,6 +83,9 @@ contract MorphoBundler3Unwrapper is ITransactionUnwrapper {
         for (uint256 i; i < length; i++) {
             size += 32 + _entrySize(data, _tail(data, 68, i));
         }
+
+        console.log(size);
+        console.log(data.length);
 
         // Total length must match calldata
         if (size != data.length) {
