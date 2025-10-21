@@ -282,11 +282,16 @@ type AllowKitMap = {
 const uncapitalize = (s: string) => s.charAt(0).toLowerCase() + s.slice(1)
 export const allow: AllowKitMap = Object.keys(ethSdk).reduce(
   (acc, sdkGetterName) => {
-    if (sdkGetterName === "getContract") return acc
+    if (
+      sdkGetterName === "getContract" ||
+      !sdkGetterName.startsWith("get") ||
+      !sdkGetterName.endsWith("Sdk")
+    ) {
+      return acc
+    }
 
     const network = uncapitalize(sdkGetterName.slice(3, -3))
     acc[network] = mapSdk(
-      // eslint-disable-next-line import/namespace
       ethSdk[sdkGetterName as SdkGetterName](ethers.getDefaultProvider())
     )
     return acc
