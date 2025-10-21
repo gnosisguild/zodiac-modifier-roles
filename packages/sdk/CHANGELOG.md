@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.3.2](https://github.com/gnosisguild/zodiac-modifier-roles/compare/zodiac-roles-sdk-v3.3.1...zodiac-roles-sdk-v3.3.2) (2025-10-21)
+
+
+### Bug Fixes
+
+* fix the npm publish ci job ([#391](https://github.com/gnosisguild/zodiac-modifier-roles/issues/391)) ([e2ea984](https://github.com/gnosisguild/zodiac-modifier-roles/commit/e2ea98488424cc81d7837e899cc6c79677d2976f))
+
 ## [3.3.1](https://github.com/gnosisguild/zodiac-modifier-roles/compare/zodiac-roles-sdk-v3.3.0...zodiac-roles-sdk-v3.3.1) (2025-10-21)
 
 
