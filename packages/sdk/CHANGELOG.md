@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.3.1](https://github.com/gnosisguild/zodiac-modifier-roles/compare/zodiac-roles-sdk-v3.3.0...zodiac-roles-sdk-v3.3.1) (2025-10-21)
+
+
+### Bug Fixes
+
+* in some cases the kit `allow` export is not correctly created (`default` among ethSdk exports) ([#390](https://github.com/gnosisguild/zodiac-modifier-roles/issues/390)) ([afc04a7](https://github.com/gnosisguild/zodiac-modifier-roles/commit/afc04a7f08b114142d2ed3108eed02140a19d7a9))
+* roles interface used in `encodeSignOrderWithRole` ([#387](https://github.com/gnosisguild/zodiac-modifier-roles/issues/387)) ([f087de3](https://github.com/gnosisguild/zodiac-modifier-roles/commit/f087de3517f930e60379414dc9c4313df5d81c24))
+
 ## [3.3.0](https://github.com/gnosisguild/zodiac-modifier-roles/compare/zodiac-roles-sdk-v3.2.5...zodiac-roles-sdk-v3.3.0) (2025-10-10)
 
 
