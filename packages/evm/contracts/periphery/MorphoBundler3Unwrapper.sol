@@ -73,20 +73,6 @@ contract MorphoBundler3Unwrapper is ITransactionUnwrapper {
         if (bytes32(data[4:]) != bytes32(uint256(0x20))) {
             revert MalformedHeader();
         }
-
-        // 4 (selector) + 32 (offset) + 32 (array length)
-        uint256 size = 68;
-        uint256 length = uint256(bytes32(data[36:]));
-
-        // Calculate expected total size based on each entry
-        for (uint256 i; i < length; i++) {
-            size += 32 + _entrySize(data, _tail(data, 68, i));
-        }
-
-        // Total length must match calldata
-        if (size != data.length) {
-            revert MalformedBody();
-        }
     }
 
     function _unwrapEntries(
@@ -123,16 +109,6 @@ contract MorphoBundler3Unwrapper is ITransactionUnwrapper {
         result.value = uint256(bytes32(data[location + 64:]));
     }
 
-    function _entrySize(
-        bytes calldata data,
-        uint256 location
-    ) private pure returns (uint256) {
-        uint256 headSize = 5 * 32; // 5 slots in the head
-        uint256 tailSize = 32 + // 32 bytes for data length
-            _ceil32(uint256(bytes32(data[_tail(data, location, 1):]))); // padded data
-        return headSize + tailSize;
-    }
-
     /**
      * @notice Returns the absolute calldata location of a non-inline slot
      *
@@ -154,12 +130,5 @@ contract MorphoBundler3Unwrapper is ITransactionUnwrapper {
         }
         uint256 offset = uint256(bytes32(data[headLocation + 32 * slot:]));
         location = headLocation + offset;
-    }
-
-    /**
-     * @notice Rounds a length up to the nearest multiple of 32 bytes
-     */
-    function _ceil32(uint256 length) private pure returns (uint256) {
-        return ((length + 32 - 1) / 32) * 32;
     }
 }
