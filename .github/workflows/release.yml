@@ -51,11 +51,11 @@ jobs:
         working-directory: ./packages/deployments
         run: yarn npm publish
         env:
-          NODE_AUTH_TOKEN: ${{secrets.PUBLISH_NPM_TOKEN}}
+          YARN_NPM_AUTH_TOKEN: ${{secrets.PUBLISH_NPM_TOKEN}}
         if: ${{ steps.release.outputs['packages/deployments--release_created'] }}
       - name: Publish sdk package to npm
         working-directory: ./packages/sdk
         run: yarn npm publish
         env:
-          NODE_AUTH_TOKEN: ${{secrets.PUBLISH_NPM_TOKEN}}
+          YARN_NPM_AUTH_TOKEN: ${{secrets.PUBLISH_NPM_TOKEN}}
         if: ${{ steps.release.outputs['packages/sdk--release_created'] }}
