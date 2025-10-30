@@ -4,99 +4,144 @@ pragma solidity >=0.8.17 <0.9.0;
 import "./Types.sol";
 
 /**
- * @title Topology - a library that provides helper functions for dealing with
+ * @title  Topology - a library that provides helper functions for dealing with
  * the flat representation of conditions.
- * @author Cristóvão Honorato - <cristovao.honorato@gnosis.io>
+ *
+ * @author gnosisguild
+ *
  */
 library Topology {
-    struct Bounds {
-        uint256 start;
-        uint256 end;
-        uint256 length;
-    }
+    function childBounds(
+        ConditionFlat[] memory conditions,
+        uint256 index
+    ) internal pure returns (uint256 start, uint256 length) {
+        uint256 len = conditions.length;
+        unchecked {
+            for (uint256 i = index + 1; i < len; ++i) {
+                uint256 parent = conditions[i].parent;
 
-    function childrenBounds(
-        ConditionFlat[] memory conditions
-    ) internal pure returns (Bounds[] memory result) {
-        uint256 count = conditions.length;
-        assert(count > 0);
-
-        // parents are breadth-first
-        result = new Bounds[](count);
-        result[0].start = type(uint256).max;
-
-        // first item is the root
-        for (uint256 i = 1; i < count; ) {
-            result[i].start = type(uint256).max;
-            Bounds memory parentBounds = result[conditions[i].parent];
-            if (parentBounds.start == type(uint256).max) {
-                parentBounds.start = i;
-            }
-            parentBounds.end = i + 1;
-            parentBounds.length = parentBounds.end - parentBounds.start;
-            unchecked {
-                ++i;
+                if (parent == index) {
+                    if (length == 0) start = i;
+                    ++length;
+                } else if (parent > index) {
+                    break;
+                }
             }
         }
     }
 
-    function typeTree(
+    function typeTreeId(
         ConditionFlat[] memory conditions,
-        uint256 entrypoint,
-        Bounds[] memory bounds
-    ) internal pure returns (AbiTypeTree[] memory result) {
-        result = new AbiTypeTree[](conditions.length - entrypoint);
-        uint256 length = typeTree(conditions, bounds, entrypoint, 0, result);
+        uint256 index
+    ) internal pure returns (bytes32) {
+        return _typeTreeId(typeTree(conditions, index));
+    }
 
-        if (length != conditions.length - entrypoint) {
-            assembly {
-                mstore(result, length)
-            }
+    function _typeTreeId(TypeTree memory tree) private pure returns (bytes32) {
+        uint256 childCount = tree.children.length;
+        if (childCount == 0) {
+            return bytes32(uint256(tree._type));
         }
+
+        bytes32[] memory ids = new bytes32[](childCount);
+        for (uint256 i = 0; i < childCount; ++i) {
+            ids[i] = _typeTreeId(tree.children[i]);
+        }
+        return keccak256(abi.encodePacked(bytes32(uint256(tree._type)), ids));
     }
 
     function typeTree(
         ConditionFlat[] memory conditions,
-        Bounds[] memory bounds,
-        uint256 from,
-        uint256 to,
-        AbiTypeTree[] memory result
-    ) internal pure returns (uint256) {
-        AbiType _type = conditions[from].paramType;
-        Operator operator = conditions[from].operator;
-        uint256 start = bounds[from].start;
-        uint256 end = bounds[from].end;
-        bool hasChildren = start < end;
+        uint256 index
+    ) internal pure returns (TypeTree memory node) {
+        node._type = conditions[index].paramType;
 
+        (uint256 childrenStart, uint256 childrenLength) = childBounds(
+            conditions,
+            index
+        );
+
+        if (childrenLength == 0) {
+            return node;
+        }
+
+        Operator operator = conditions[index].operator;
         if (operator >= Operator.And && operator <= Operator.Nor) {
-            return typeTree(conditions, bounds, start, to, result);
+            return _logical(conditions, childrenStart, childrenLength);
         }
 
-        result[to]._type = _type;
-        if (!hasChildren) {
-            return (to + 1);
+        if (node._type == AbiType.Array) {
+            node.children = new TypeTree[](
+                _isVariant(conditions, childrenStart, childrenLength)
+                    ? childrenLength
+                    : 1
+            );
+        } else {
+            node.children = new TypeTree[](childrenLength);
         }
 
-        end = _type == AbiType.Array ? start + 1 : end;
-        uint256[] memory fields = new uint256[](end - start);
+        unchecked {
+            for (uint256 i = 0; i < node.children.length; ++i) {
+                node.children[i] = typeTree(conditions, i + childrenStart);
+            }
+        }
+    }
 
-        (uint256 nextTo, uint256 length) = (to + 1, 0);
-        for (from = start; from < end; from++) {
-            uint256 temp = typeTree(conditions, bounds, from, nextTo, result);
-            if (nextTo != temp) {
-                fields[length] = nextTo;
-                nextTo = temp;
-                length++;
+    function _logical(
+        ConditionFlat[] memory conditions,
+        uint256 childrenStart,
+        uint256 childrenLength
+    ) private pure returns (TypeTree memory node) {
+        if (!_isVariant(conditions, childrenStart, childrenLength)) {
+            return typeTree(conditions, childrenStart);
+        }
+
+        node._type = AbiType.Dynamic;
+        node.children = new TypeTree[](childrenLength);
+        unchecked {
+            for (uint256 i = 0; i < childrenLength; ++i) {
+                node.children[i] = typeTree(conditions, childrenStart + i);
             }
         }
 
-        result[to].fields = fields;
-        if (length != end - start) {
-            assembly {
-                mstore(fields, length)
+        return node;
+    }
+
+    function _isVariant(
+        ConditionFlat[] memory conditions,
+        uint256 childrenStart,
+        uint256 childrenLength
+    ) internal pure returns (bool) {
+        // Need at least 2 children to have a variant
+        if (childrenLength <= 1) {
+            return false;
+        }
+
+        // Check if any child can't be variant (Static, Tuple, Array)
+        // If so, this can't be a variant
+        unchecked {
+            for (uint256 i = 0; i < childrenLength; ++i) {
+                AbiType paramType = conditions[childrenStart + i].paramType;
+                if (
+                    paramType == AbiType.Static ||
+                    paramType == AbiType.Tuple ||
+                    paramType == AbiType.Array
+                ) {
+                    return false;
+                }
             }
         }
 
-        return nextTo;
+        // Compare all children's type tree structures
+        // If any two differ, it's a variant
+        bytes32 id = typeTreeId(conditions, childrenStart);
+        unchecked {
+            for (uint256 i = 1; i < childrenLength; ++i) {
+                if (id != typeTreeId(conditions, childrenStart + i))
+                    return true;
+            }
+        }
+
+        return false;
     }
 }

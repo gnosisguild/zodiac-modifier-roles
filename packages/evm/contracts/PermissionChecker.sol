@@ -5,7 +5,6 @@ import "./_Core.sol";
 import "./_Periphery.sol";
 import "./AbiDecoder.sol";
 import "./Consumptions.sol";
-import "./Topology.sol";
 
 import "./packers/BufferPacker.sol";
 
@@ -218,11 +217,11 @@ abstract contract PermissionChecker is Core, Periphery {
     ) private view returns (Status, Result memory) {
         (
             Condition memory condition,
-            AbiTypeTree[] memory typeTree,
+            TypeTree memory typeTree,
             Consumption[] memory consumptions
         ) = _load(role, key);
 
-        Payload memory payload = AbiDecoder.inspect(data, typeTree, 0);
+        Payload memory payload = AbiDecoder.inspect(data, typeTree);
 
         context.consumptions = context.consumptions.length > 0
             ? Consumptions.merge(context.consumptions, consumptions)
@@ -238,6 +237,15 @@ abstract contract PermissionChecker is Core, Periphery {
         Context memory context
     ) private view returns (Status, Result memory) {
         Operator operator = condition.operator;
+        if (payload.overflown) {
+            return (
+                Status.CalldataOverflow,
+                Result({
+                    consumptions: context.consumptions,
+                    info: bytes32(payload.location)
+                })
+            );
+        }
 
         if (operator < Operator.EqualTo) {
             if (operator == Operator.Pass) {
@@ -343,7 +351,7 @@ abstract contract PermissionChecker is Core, Periphery {
             (status, result) = _walk(
                 data,
                 condition.children[i],
-                payload,
+                payload.variant ? payload.children[i] : payload,
                 Context({
                     to: context.to,
                     value: context.value,
@@ -379,7 +387,7 @@ abstract contract PermissionChecker is Core, Periphery {
             (status, result) = _walk(
                 data,
                 condition.children[i],
-                payload,
+                payload.variant ? payload.children[i] : payload,
                 Context({
                     to: context.to,
                     value: context.value,
@@ -408,7 +416,12 @@ abstract contract PermissionChecker is Core, Periphery {
         Context memory context
     ) private view returns (Status status, Result memory) {
         for (uint256 i; i < condition.children.length; ) {
-            (status, ) = _walk(data, condition.children[i], payload, context);
+            (status, ) = _walk(
+                data,
+                condition.children[i],
+                payload.variant ? payload.children[i] : payload,
+                context
+            );
             if (status == Status.Ok) {
                 return (
                     Status.NorViolation,
@@ -760,7 +773,8 @@ abstract contract PermissionChecker is Core, Periphery {
         CustomConditionViolation,
         AllowanceExceeded,
         CallAllowanceExceeded,
-        EtherAllowanceExceeded
+        EtherAllowanceExceeded,
+        CalldataOverflow
     }
 
     /// Sender is not a member of the role
