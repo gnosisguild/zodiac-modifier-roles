@@ -1,6 +1,5 @@
 import dotenv from "dotenv";
 import "@nomicfoundation/hardhat-toolbox";
-import "@nomicfoundation/hardhat-verify";
 
 import "hardhat-contract-sizer";
 import "hardhat-gas-reporter";
@@ -41,7 +40,7 @@ const config: HardhatUserConfig = {
   solidity: {
     compilers: [
       {
-        version: "0.8.21",
+        version: "0.8.28",
         settings: {
           evmVersion: "shanghai",
           optimizer: {

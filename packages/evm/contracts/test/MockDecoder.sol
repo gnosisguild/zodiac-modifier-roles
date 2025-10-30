@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "../Topology.sol";
 import "../AbiDecoder.sol";
+import "../Topology.sol";
 
 contract MockDecoder {
     function inspect(
@@ -10,24 +10,17 @@ contract MockDecoder {
         ConditionFlat[] memory conditions
     ) public pure returns (PP1 memory r) {
         return
-            copyOut(
-                AbiDecoder.inspect(
-                    data,
-                    Topology.typeTree(
-                        conditions,
-                        0,
-                        Topology.childrenBounds(conditions)
-                    ),
-                    0
-                )
-            );
+            copyOut(AbiDecoder.inspect(data, Topology.typeTree(conditions, 0)));
     }
 
-    function inspectRaw(
+    function inspectFlat(
         bytes calldata data,
-        AbiTypeTree[] memory typeTree
-    ) public pure returns (PP1 memory r) {
-        return copyOut(AbiDecoder.inspect(data, typeTree, 0));
+        ConditionFlat[] memory conditions
+    ) public pure returns (FlatPayload[] memory) {
+        return
+            flattenTree(
+                AbiDecoder.inspect(data, Topology.typeTree(conditions, 0))
+            );
     }
 
     function pluck(
@@ -38,9 +31,59 @@ contract MockDecoder {
         return AbiDecoder.pluck(data, offset, size);
     }
 
+    struct FlatPayload {
+        uint256 parent;
+        uint256 location;
+        uint256 size;
+        /* meta fields */
+        bool variant;
+        bool overflown;
+    }
+
+    function flattenTree(
+        Payload memory root
+    ) internal pure returns (FlatPayload[] memory) {
+        FlatPayload[] memory result = new FlatPayload[](countNodes(root));
+        _flatten(root, 0, 0, result);
+        return result;
+    }
+
+    function _flatten(
+        Payload memory node,
+        uint256 index,
+        uint256 parent,
+        FlatPayload[] memory result
+    ) private pure returns (uint256 next) {
+        result[index] = FlatPayload({
+            parent: parent,
+            location: node.location,
+            size: node.size,
+            variant: node.variant,
+            overflown: node.overflown
+        });
+
+        next = index + 1;
+        for (uint256 i = 0; i < node.children.length; i++) {
+            next = _flatten(node.children[i], next, index, result);
+        }
+        return next;
+    }
+
+    function countNodes(Payload memory tree) private pure returns (uint256) {
+        uint256 count;
+
+        for (uint256 i = 0; i < tree.children.length; i++) {
+            count += countNodes(tree.children[i]);
+        }
+
+        return count + 1;
+    }
+
     function copyOut(
         Payload memory output
     ) private pure returns (PP1 memory result) {
+        result.variant = output.variant;
+        result.overflown = output.overflown;
         result.location = output.location;
         result.size = output.size;
         result.children = new PP2[](output.children.length);
@@ -52,6 +95,8 @@ contract MockDecoder {
     function copyOutTo2(
         Payload memory output
     ) private pure returns (PP2 memory result) {
+        result.variant = output.variant;
+        result.overflown = output.overflown;
         result.location = output.location;
         result.size = output.size;
         result.children = new PP3[](output.children.length);
@@ -63,6 +108,8 @@ contract MockDecoder {
     function copyOutTo3(
         Payload memory output
     ) private pure returns (PP3 memory result) {
+        result.variant = output.variant;
+        result.overflown = output.overflown;
         result.location = output.location;
         result.size = output.size;
         result.children = new PP4[](output.children.length);
@@ -74,6 +121,8 @@ contract MockDecoder {
     function copyOutTo4(
         Payload memory output
     ) private pure returns (PP4 memory result) {
+        result.variant = output.variant;
+        result.overflown = output.overflown;
         result.location = output.location;
         result.size = output.size;
         result.children = new PP5[](output.children.length);
@@ -85,6 +134,8 @@ contract MockDecoder {
     function copyOutTo5(
         Payload memory output
     ) private pure returns (PP5 memory result) {
+        result.variant = output.variant;
+        result.overflown = output.overflown;
         result.location = output.location;
         result.size = output.size;
         result.children = new PP6[](output.children.length);
@@ -96,6 +147,8 @@ contract MockDecoder {
     function copyOutTo6(
         Payload memory output
     ) private pure returns (PP6 memory result) {
+        result.variant = output.variant;
+        result.overflown = output.overflown;
         result.location = output.location;
         result.size = output.size;
         if (output.children.length > 0) {
@@ -104,36 +157,48 @@ contract MockDecoder {
     }
 
     struct PP1 {
+        bool variant;
+        bool overflown;
         uint256 location;
         uint256 size;
         PP2[] children;
     }
 
     struct PP2 {
+        bool variant;
+        bool overflown;
         uint256 location;
         uint256 size;
         PP3[] children;
     }
 
     struct PP3 {
+        bool variant;
+        bool overflown;
         uint256 location;
         uint256 size;
         PP4[] children;
     }
 
     struct PP4 {
+        bool variant;
+        bool overflown;
         uint256 location;
         uint256 size;
         PP5[] children;
     }
 
     struct PP5 {
+        bool variant;
+        bool overflown;
         uint256 location;
         uint256 size;
         PP6[] children;
     }
 
     struct PP6 {
+        bool variant;
+        bool overflown;
         uint256 location;
         uint256 size;
     }
