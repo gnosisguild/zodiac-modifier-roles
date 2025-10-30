@@ -9,7 +9,7 @@ import "../AbiDecoder.sol";
  */
 library EIP712Encoder {
     struct Types {
-        AbiTypeTree[] typeTree;
+        TypeTreeFlat[] typeTree;
         bytes32[] typeHashes;
     }
 
@@ -64,7 +64,7 @@ library EIP712Encoder {
         uint256 index
     ) private pure returns (bytes32) {
         Payload memory payload = AbiDecoder
-            .inspect(data, types.typeTree, index)
+            .inspect(data, _toTree(types.typeTree, index))
             .children[0];
 
         return _hashBlock(data, types, payload);
@@ -89,8 +89,11 @@ library EIP712Encoder {
 
         return
             keccak256(
-                types.typeHashes[_block.index] != bytes32(0)
-                    ? abi.encodePacked(types.typeHashes[_block.index], result)
+                types.typeHashes[_block.typeIndex] != bytes32(0)
+                    ? abi.encodePacked(
+                        types.typeHashes[_block.typeIndex],
+                        result
+                    )
                     : abi.encodePacked(result)
             );
     }
@@ -120,13 +123,28 @@ library EIP712Encoder {
         Types calldata types,
         Payload memory field
     ) private pure returns (bytes32) {
-        AbiType _type = types.typeTree[field.index]._type;
+        AbiType _type = types.typeTree[field.typeIndex]._type;
         if (_type == AbiType.Static) {
             return bytes32(data[field.location:]);
         } else if (_type == AbiType.Dynamic) {
             return _hashDynamic(data, field);
         } else {
             return _hashBlock(data, types, field);
+        }
+    }
+
+    function _toTree(
+        TypeTreeFlat[] calldata flatTypeTree,
+        uint256 index
+    ) private pure returns (TypeTree memory typeTree) {
+        typeTree._type = flatTypeTree[index]._type;
+        typeTree.index = index;
+        if (flatTypeTree[index].fields.length > 0) {
+            uint256[] memory fields = flatTypeTree[index].fields;
+            typeTree.children = new TypeTree[](fields.length);
+            for (uint256 i = 0; i < fields.length; i++) {
+                typeTree.children[i] = _toTree(flatTypeTree, fields[i]);
+            }
         }
     }
 }

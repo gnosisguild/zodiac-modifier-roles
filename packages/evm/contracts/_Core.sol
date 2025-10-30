@@ -27,7 +27,7 @@ abstract contract Core is Modifier {
         internal
         view
         virtual
-        returns (Condition memory, AbiTypeTree[] memory, Consumption[] memory);
+        returns (Condition memory, TypeTree memory, Consumption[] memory);
 
     function _accruedAllowance(
         Allowance memory allowance,

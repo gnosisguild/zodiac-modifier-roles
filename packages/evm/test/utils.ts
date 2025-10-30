@@ -147,6 +147,8 @@ export enum PermissionCheckerStatus {
   CallAllowanceExceeded,
   /// TODO
   EtherAllowanceExceeded,
+  // A Payload overflow was found by the Checker flow
+  CalldataOverflow,
 }
 
 export function removeTrailingOffset(data: string) {
@@ -172,9 +174,9 @@ export const BYTES32_ZERO =
 
 interface Condition {
   paramType: AbiType;
-  operator: Operator;
-  compValue?: `0x${string}`;
-  children?: readonly Condition[];
+  operator?: Operator;
+  compValue?: string;
+  children?: Condition[];
 }
 
 interface ConditionFlat {
@@ -198,8 +200,9 @@ export function flattenCondition(root: Condition): ConditionFlat[] {
       ...result,
       {
         parent,
-        compValue: "0x",
-        ...node,
+        operator: node.operator || Operator.Pass,
+        paramType: node.paramType,
+        compValue: node.compValue || "0x",
       },
     ];
 
