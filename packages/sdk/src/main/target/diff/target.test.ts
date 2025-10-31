@@ -1,10 +1,10 @@
 import { expect, it, suite } from "vitest"
 import { ZeroAddress, ZeroHash } from "ethers"
 import {
+  AbiType,
   Clearance,
   ExecutionOptions,
   Operator,
-  AbiType,
   Target,
 } from "zodiac-roles-deployments"
 

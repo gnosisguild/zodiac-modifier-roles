@@ -1,6 +1,6 @@
 import { TypedData } from "abitype"
 import { AbiCoder, Interface, keccak256 } from "ethers"
-import { Condition, Operator, AbiType, abi } from "zodiac-roles-sdk"
+import { Condition, Operator, AbiType, rolesAbi } from "zodiac-roles-sdk"
 
 import { encodeAbiTypes, toAbiTypes } from "./encode"
 
@@ -91,4 +91,4 @@ function typesCondition(types: TypedData): Condition {
   }
 }
 
-export const iface = Interface.from(abi)
+export const iface = Interface.from(rolesAbi)
