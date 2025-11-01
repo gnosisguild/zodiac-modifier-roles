@@ -10,7 +10,8 @@ const { encodeTypedDomain, encodeTypedMessage, toAbiTypes } = __integration
 type Value = Record<string, any>
 
 async function deployEIP712Encoder() {
-  const EIP7127Encoder = await hre.ethers.getContractFactory("EIP712Encoder")
+  const EIP7127Encoder =
+    await hre.ethers.getContractFactory("MockEIP712Encoder")
   const encoder = await EIP7127Encoder.deploy()
 
   return { encoder }
