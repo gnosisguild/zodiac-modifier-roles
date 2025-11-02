@@ -1,6 +1,6 @@
 import { arrayElementType, isStaticType } from "@/utils/abi"
 import { AbiFunction, AbiParameter } from "viem"
-import { Condition, Operator, ParameterType } from "zodiac-roles-sdk"
+import { AbiType, Condition, Operator } from "zodiac-roles-sdk"
 
 /** Validates if the given ABI fragments matches the condition node's paramType */
 export const matchesAbi = (
@@ -8,20 +8,20 @@ export const matchesAbi = (
   abi: AbiFunction | AbiParameter
 ): boolean => {
   switch (condition.paramType) {
-    case ParameterType.None:
+    case AbiType.None:
       return true
-    case ParameterType.Static:
+    case AbiType.Static:
       return abi.type !== "function" && isStaticType(abi)
-    case ParameterType.Dynamic:
+    case AbiType.Dynamic:
       return abi.type === "function" || !isStaticType(abi)
-    case ParameterType.Tuple:
+    case AbiType.Tuple:
       return "components" in abi && !!abi.components && !arrayElementType(abi)
-    case ParameterType.Array:
+    case AbiType.Array:
       const elementType = arrayElementType(abi)
       return !!elementType
-    case ParameterType.Calldata:
+    case AbiType.Calldata:
       abi.type === "bytes" || abi.type === "function"
-    case ParameterType.AbiEncoded:
+    case AbiType.AbiEncoded:
       return abi.type === "bytes"
   }
 }

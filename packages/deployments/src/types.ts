@@ -15,7 +15,7 @@ export enum Clearance {
   Function = 2,
 }
 
-export enum ParameterType {
+export enum AbiType {
   None = 0,
   Static = 1,
   Dynamic = 2,
@@ -129,7 +129,7 @@ export interface Function {
 }
 
 export interface Condition {
-  paramType: ParameterType
+  paramType: AbiType
   operator: Operator
   compValue?: `0x${string}`
   children?: readonly Condition[]
