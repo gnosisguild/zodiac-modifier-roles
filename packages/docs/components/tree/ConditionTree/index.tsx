@@ -1,5 +1,5 @@
 import React from "react";
-import { Condition, Operator, ParameterType } from "zodiac-roles-sdk";
+import { AbiType, Condition, Operator } from "zodiac-roles-sdk";
 import styles from "./styles.module.css";
 import Tree, { TreeProps } from "../Tree";
 import Node from "../Node/index";
@@ -16,7 +16,7 @@ const ConditionTree: React.FC<Props & TreeProps> = ({ condition, ...rest }) => {
     path = "0",
     abiPath = "0"
   ) => {
-    const isNotPlucking = condition.paramType === ParameterType.None;
+    const isNotPlucking = condition.paramType === AbiType.None;
     return (
       <Node
         key={path}
@@ -47,7 +47,7 @@ const ConditionHead: React.FC<{ condition: Condition }> = ({ condition }) => (
         {hexEllipsis(condition.compValue)}
       </code>
     )}
-    <code className={styles.type}>{ParameterType[condition.paramType]}</code>
+    <code className={styles.type}>{AbiType[condition.paramType]}</code>
   </div>
 );
 
@@ -56,7 +56,7 @@ export const gatherNodeIds = (
   path = "0",
   abiPath = "0"
 ): string[] => {
-  const isNotPlucking = condition.paramType === ParameterType.None;
+  const isNotPlucking = condition.paramType === AbiType.None;
   return [
     abiPath,
     ...(condition.children?.flatMap((child, index) =>

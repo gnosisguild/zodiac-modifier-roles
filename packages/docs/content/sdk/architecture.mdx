@@ -16,11 +16,11 @@ This layer has diffing & patching functions on role configurations, operating on
     {
       selector: "0x84e9bd7e",
       condition: {
-        paramType: ParameterType.Calldata,
+        paramType: AbiType.Calldata,
         operator: Operator.Matches,
         children: [
           {
-            paramType: ParameterType.Static,
+            paramType: AbiType.Static,
             operator: Operator.EqualTo,
             compValue: defaultAbiCoder.encode(["address"], ["0x4F2083f5fBede34C2714aFfb3105539775f7FE64"]),
           }
