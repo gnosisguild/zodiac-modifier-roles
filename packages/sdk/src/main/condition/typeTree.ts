@@ -1,7 +1,7 @@
-import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
+import { AbiType, Condition, Operator } from "zodiac-roles-deployments"
 
 export type TypeTree = {
-  paramType: ParameterType
+  paramType: AbiType
   children: TypeTree[]
 }
 
@@ -60,19 +60,19 @@ export function isLogical({ operator }: { operator: Operator }) {
   return [Operator.And, Operator.Or, Operator.Nor].includes(operator)
 }
 
-export function isComplex({ paramType }: { paramType: ParameterType }) {
+export function isComplex({ paramType }: { paramType: AbiType }) {
   return [
-    ParameterType.AbiEncoded,
-    ParameterType.Calldata,
-    ParameterType.Array,
-    ParameterType.Tuple,
+    AbiType.AbiEncoded,
+    AbiType.Calldata,
+    AbiType.Array,
+    AbiType.Tuple,
   ].includes(paramType)
 }
 
-export function isSimple({ paramType }: { paramType: ParameterType }) {
-  return [ParameterType.Dynamic, ParameterType.Static].includes(paramType)
+export function isSimple({ paramType }: { paramType: AbiType }) {
+  return [AbiType.Dynamic, AbiType.Static].includes(paramType)
 }
 
-export function isArray({ paramType }: { paramType: ParameterType }) {
-  return paramType == ParameterType.Array
+export function isArray({ paramType }: { paramType: AbiType }) {
+  return paramType == AbiType.Array
 }
