@@ -1,8 +1,8 @@
-import { Condition, Operator, ParameterType } from "../types"
+import { AbiType, Condition, Operator } from "../types"
 
 export interface ConditionFlat {
   parent: number
-  paramType: ParameterType
+  paramType: AbiType
   operator: Operator
   compValue?: string
 }

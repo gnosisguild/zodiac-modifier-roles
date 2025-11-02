@@ -1,11 +1,11 @@
 import { expect, it, suite } from "vitest"
-import { Operator, ParameterType } from "../types"
+import { Operator, AbiType } from "../types"
 
 import { abiEncode } from "../abiEncode"
 import { coercePermission } from "./coercePermission"
 
 const DUMMY_COMP = (id: number) => ({
-  paramType: ParameterType.Static,
+  paramType: AbiType.Static,
   operator: Operator.Custom,
   compValue: abiEncode(["uint256"], [id]),
 })

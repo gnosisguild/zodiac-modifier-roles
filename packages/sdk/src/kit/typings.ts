@@ -8,7 +8,7 @@ import {
   isError,
   TransactionRequest,
 } from "ethers"
-import { Condition, Operator, ParameterType } from "../main/types"
+import { Condition, Operator, AbiType } from "../main/types"
 // We import via alias to avoid double bundling of sdk functions
 // eslint does not know about our Typescript path alias
 // eslint-disable-next-line import/no-unresolved
@@ -127,7 +127,7 @@ const makeAllowFunction = <
 }
 
 const emptyCalldataMatches = {
-  paramType: ParameterType.Calldata,
+  paramType: AbiType.Calldata,
   operator: Operator.Matches,
   children: [],
 }
@@ -141,7 +141,7 @@ const applyGlobalAllowance = (
   allowanceCondition: Condition
 ) => {
   if (
-    condition.paramType !== ParameterType.Calldata ||
+    condition.paramType !== AbiType.Calldata ||
     condition.operator !== Operator.Matches
   ) {
     throw new Error(
@@ -169,7 +169,7 @@ const applyOptions = (
     }
 
     condition = applyGlobalAllowance(condition, {
-      paramType: ParameterType.None,
+      paramType: AbiType.None,
       operator: Operator.EtherWithinAllowance,
       compValue: encodeKey(options.etherWithinAllowance),
     })
@@ -177,7 +177,7 @@ const applyOptions = (
 
   if (options.callWithinAllowance) {
     condition = applyGlobalAllowance(condition, {
-      paramType: ParameterType.None,
+      paramType: AbiType.None,
       operator: Operator.CallWithinAllowance,
       compValue: encodeKey(options.callWithinAllowance),
     })
