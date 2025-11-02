@@ -1,10 +1,10 @@
 import { expect, it, suite } from "vitest"
 import { ZeroAddress, ZeroHash } from "ethers"
 import {
+  AbiType,
   Clearance,
   ExecutionOptions,
   Operator,
-  ParameterType,
   Target,
 } from "zodiac-roles-deployments"
 
@@ -521,7 +521,7 @@ suite("diffTarget - Misc", () => {
             executionOptions: 0,
             wildcarded: false,
             condition: {
-              paramType: ParameterType.None,
+              paramType: AbiType.None,
               operator: Operator.Pass,
             },
           },
@@ -561,7 +561,7 @@ suite("diffTarget - Misc", () => {
             executionOptions: 0,
             wildcarded: false,
             condition: {
-              paramType: ParameterType.None,
+              paramType: AbiType.None,
               operator: Operator.Pass,
             },
           },
@@ -580,11 +580,11 @@ suite("diffTarget - Misc", () => {
             executionOptions: 0,
             wildcarded: false,
             condition: {
-              paramType: ParameterType.Calldata,
+              paramType: AbiType.Calldata,
               operator: Operator.Matches,
               children: [
                 {
-                  paramType: ParameterType.Static,
+                  paramType: AbiType.Static,
                   operator: Operator.EqualTo,
                   compValue: "0xaabbccdd",
                 },
@@ -607,11 +607,11 @@ suite("diffTarget - Misc", () => {
         selector: "0x095ea7b3",
         executionOptions: 0,
         condition: {
-          paramType: ParameterType.Calldata,
+          paramType: AbiType.Calldata,
           operator: Operator.Matches,
           children: [
             {
-              paramType: ParameterType.Static,
+              paramType: AbiType.Static,
               operator: Operator.EqualTo,
               compValue: "0xaabbccdd",
             },
@@ -689,7 +689,7 @@ suite("diffTarget - Misc", () => {
             executionOptions: 0,
             wildcarded: false,
             condition: {
-              paramType: ParameterType.None,
+              paramType: AbiType.None,
               operator: Operator.Pass,
             },
           },
@@ -708,7 +708,7 @@ suite("diffTarget - Misc", () => {
             executionOptions: 0,
             wildcarded: false,
             condition: {
-              paramType: ParameterType.Dynamic,
+              paramType: AbiType.Dynamic,
               operator: Operator.EqualTo,
               compValue: "0x00",
             },
@@ -734,7 +734,7 @@ suite("diffTarget - Misc", () => {
           selector: "0x095ea7b3",
           executionOptions: 0,
           condition: normalizeCondition({
-            paramType: ParameterType.None,
+            paramType: AbiType.None,
             operator: Operator.Pass,
           }),
         },

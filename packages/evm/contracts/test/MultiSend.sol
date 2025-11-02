@@ -1,11 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-/// @title Multi Send - Allows to batch multiple transactions into one.
-/// @author Nick Dodson - <nick.dodson@consensys.net>
-/// @author Gonçalo Sá - <goncalo.sa@consensys.net>
-/// @author Stefan George - <stefan@gnosis.io>
-/// @author Richard Meissner - <richard@gnosis.io>
 contract MultiSend {
     address private immutable multisendSingleton;
 

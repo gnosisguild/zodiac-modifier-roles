@@ -1,10 +1,10 @@
 import { expect, it, suite } from "vitest"
 import { processPermissions } from "./processPermissions"
 import {
+  AbiType,
   Clearance,
   ExecutionOptions,
   Operator,
-  ParameterType,
 } from "zodiac-roles-deployments"
 
 import { abiEncode } from "../abiEncode"
@@ -12,7 +12,7 @@ import { normalizeCondition } from "../condition"
 import { PermissionSet } from "./types"
 
 const DUMMY_COMP = (id: number) => ({
-  paramType: ParameterType.Static,
+  paramType: AbiType.Static,
   operator: Operator.Custom,
   compValue: abiEncode(["uint256"], [id]),
 })

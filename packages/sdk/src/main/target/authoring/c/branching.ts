@@ -1,5 +1,5 @@
 import { ParamType } from "ethers"
-import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
+import { AbiType, Condition, Operator } from "zodiac-roles-deployments"
 
 import { mapScoping } from "./matches"
 
@@ -16,7 +16,7 @@ export const or =
     ...branches: Branches
   ): ConditionFunction<T> =>
   (abiType: ParamType) => ({
-    paramType: ParameterType.None,
+    paramType: AbiType.None,
     operator: Operator.Or,
     children: branches.map((branch) => {
       if (branch === undefined) {
@@ -35,11 +35,30 @@ export const and =
     ...branches: Branches
   ): ConditionFunction<T> =>
   (abiType: ParamType) => ({
-    paramType: ParameterType.None,
+    paramType: AbiType.None,
     operator: Operator.And,
     children: branches.map((branch) => {
       if (branch === undefined) {
         throw new Error("and() branch condition must not be undefined")
+      }
+      return mapScoping(branch, abiType) as Condition // cast is safe because of earlier branch check
+    }),
+  })
+
+/**
+ * Passes if all branch conditions are false.
+ * @param branches conditions to be evaluated
+ */
+export const nor =
+  <Branches extends Scoping<T>[], T>(
+    ...branches: Branches
+  ): ConditionFunction<T> =>
+  (abiType: ParamType) => ({
+    paramType: AbiType.None,
+    operator: Operator.Nor,
+    children: branches.map((branch) => {
+      if (branch === undefined) {
+        throw new Error("nor() branch condition must not be undefined")
       }
       return mapScoping(branch, abiType) as Condition // cast is safe because of earlier branch check
     }),
