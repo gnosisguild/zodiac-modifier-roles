@@ -1,4 +1,4 @@
-import { Condition, Operator, ParameterType } from "zodiac-roles-sdk"
+import { AbiType, Condition, Operator } from "zodiac-roles-sdk"
 import { Fragment, ReactNode } from "react"
 import { AbiFunction, AbiParameter, decodeAbiParameters, toHex } from "viem"
 
@@ -21,7 +21,7 @@ export interface Props {
 }
 
 const ConditionView: React.FC<Props> = ({ condition, paramIndex, abi }) => {
-  if (condition.paramType === ParameterType.Calldata) {
+  if (condition.paramType === AbiType.Calldata) {
     return (
       <CalldataConditionView
         condition={condition}
@@ -186,7 +186,7 @@ export const ChildConditions: React.FC<
 > = ({ condition, paramIndex, abi, separator }) => {
   const { children, operator } = condition
   const childrenLength = children?.length || 0
-  const isCalldataCondition = condition.paramType === ParameterType.Calldata
+  const isCalldataCondition = condition.paramType === AbiType.Calldata
   const isLogicalCondition =
     operator >= Operator.And && operator <= Operator.Nor
 
