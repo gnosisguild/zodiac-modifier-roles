@@ -1,5 +1,5 @@
 import { BigNumberish, ParamType } from "ethers"
-import { Operator, ParameterType } from "zodiac-roles-deployments"
+import { Operator, AbiType } from "zodiac-roles-deployments"
 
 import { abiEncode } from "../../../abiEncode"
 
@@ -13,7 +13,7 @@ export const withinAllowance =
       throw new Error("`withinAllowance` is only supported for uint params")
     }
     return {
-      paramType: ParameterType.Static,
+      paramType: AbiType.Static,
       operator: Operator.WithinAllowance,
       compValue: abiEncode(["bytes32"], [allowanceKey]),
     }

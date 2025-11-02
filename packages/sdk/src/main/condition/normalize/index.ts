@@ -1,4 +1,4 @@
-import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
+import { AbiType, Condition, Operator } from "zodiac-roles-deployments"
 
 import { conditionId, rawConditionId } from "../conditionId"
 import { padToMatchTypeTree } from "./padToMatchTypeTree"
@@ -40,12 +40,12 @@ const prunePassNodes = (condition: Condition): Condition => {
   if (condition.operator !== Operator.Matches) return condition
 
   const isDynamicTuple =
-    condition.paramType === ParameterType.Tuple && isDynamicParamType(condition)
+    condition.paramType === AbiType.Tuple && isDynamicParamType(condition)
 
   // We must not apply this to static tuples since removing Static Pass nodes would cause word shifts in the encoding.
   const canPrune =
-    condition.paramType === ParameterType.Calldata ||
-    condition.paramType === ParameterType.AbiEncoded ||
+    condition.paramType === AbiType.Calldata ||
+    condition.paramType === AbiType.AbiEncoded ||
     isDynamicTuple
 
   if (!canPrune) return condition
@@ -54,7 +54,7 @@ const prunePassNodes = (condition: Condition): Condition => {
     child.operator === Operator.EtherWithinAllowance ||
     child.operator === Operator.CallWithinAllowance
 
-  // keep all children nodes with ParameterType.None
+  // keep all children nodes with AbiType.None
   // (EtherWithinAllowance, CallWithinAllowance conditions appear as children of Calldata.Matches)
   const tailChildren = condition.children.filter(isGlobalAllowance)
   const prunableChildren = condition.children.filter(
@@ -155,14 +155,14 @@ const sortBranchesCanonical = (condition: Condition): Condition => {
     // in case of mixed-type children (dynamic & calldata/abiEncoded), those with children must come first
     const front = sorted.filter(
       (child) =>
-        child.paramType === ParameterType.Calldata ||
-        child.paramType === ParameterType.AbiEncoded
+        child.paramType === AbiType.Calldata ||
+        child.paramType === AbiType.AbiEncoded
     )
     const back = sorted.filter(
       (child) =>
         !(
-          child.paramType === ParameterType.Calldata ||
-          child.paramType === ParameterType.AbiEncoded
+          child.paramType === AbiType.Calldata ||
+          child.paramType === AbiType.AbiEncoded
         )
     )
     return {
@@ -183,15 +183,15 @@ const cleanEmptyFields = (condition: Condition): Condition => {
 
 const isDynamicParamType = (condition: Condition): boolean => {
   switch (condition.paramType) {
-    case ParameterType.Static:
+    case AbiType.Static:
       return false
-    case ParameterType.Dynamic:
-    case ParameterType.Array:
+    case AbiType.Dynamic:
+    case AbiType.Array:
       return true
-    case ParameterType.Tuple:
-    case ParameterType.Calldata:
-    case ParameterType.AbiEncoded:
-    case ParameterType.None:
+    case AbiType.Tuple:
+    case AbiType.Calldata:
+    case AbiType.AbiEncoded:
+    case AbiType.None:
       return condition.children?.some(isDynamicParamType) ?? false
     default:
       throw new Error(`Unknown paramType: ${condition.paramType}`)

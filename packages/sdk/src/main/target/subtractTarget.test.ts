@@ -5,7 +5,7 @@ import {
   Function,
   ExecutionOptions,
   Operator,
-  ParameterType,
+  AbiType,
 } from "zodiac-roles-deployments"
 import { subtractTarget } from "./subtractTarget"
 import { abiEncode } from "../abiEncode"
@@ -197,16 +197,16 @@ describe("subtractTarget", () => {
         selector: "0x11111111",
         wildcarded: false,
         condition: {
-          paramType: ParameterType.None,
+          paramType: AbiType.None,
           operator: Operator.Or,
           children: [
             {
-              paramType: ParameterType.Static,
+              paramType: AbiType.Static,
               operator: Operator.EqualTo,
               compValue: abiEncode(["uint256"], [1]),
             },
             {
-              paramType: ParameterType.Static,
+              paramType: AbiType.Static,
               operator: Operator.EqualTo,
               compValue: abiEncode(["uint256"], [2]),
             },
@@ -218,7 +218,7 @@ describe("subtractTarget", () => {
         selector: "0x11111111",
         wildcarded: false,
         condition: {
-          paramType: ParameterType.Static,
+          paramType: AbiType.Static,
           operator: Operator.EqualTo,
           compValue: abiEncode(["uint256"], [1]),
         },
@@ -249,7 +249,7 @@ describe("subtractTarget", () => {
             selector: "0x11111111",
             wildcarded: false,
             condition: {
-              paramType: ParameterType.Static,
+              paramType: AbiType.Static,
               operator: Operator.EqualTo,
               compValue: abiEncode(["uint256"], [2]),
             },

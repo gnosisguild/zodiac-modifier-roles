@@ -67,6 +67,7 @@
     "generate": "yarn eth-sdk"
   },
   "dependencies": {
+    "abitype": "^1.0.8",
     "ethers": "^6.13.5",
     "zodiac-roles-deployments": "workspace:*"
   },
