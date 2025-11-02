@@ -54,7 +54,7 @@ const quoteWithoutFee: Quote = {
   roleKey: encodeKey("test-role"),
 }
 
-describe.skip("postCowOrder", () => {
+describe("postCowOrder", () => {
   beforeEach(() => {
     // Reset all mocks before each test
     mockFetchLicense.mockReset()

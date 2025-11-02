@@ -35,7 +35,7 @@ const OWNER_ADDRESS =
 // 1 ETH in wei
 const ONE_ETH_WEI = 1000000000000000000n
 
-describe.skip("getCowQuote", () => {
+describe("getCowQuote", () => {
   beforeEach(() => {
     // Reset the mock before each test
     mockFetchLicense.mockReset()
