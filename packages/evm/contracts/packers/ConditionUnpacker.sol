@@ -20,23 +20,21 @@ library ConditionUnpacker {
 
         offset += BYTES_PER_HEADER;
 
-        // Create all nodes in an array
         Condition[] memory nodes = new Condition[](nodeCount);
+        uint256 nextChildIndex = 1;
 
-        // First pass: read all nodes and allocate children arrays
         for (uint256 i = 0; i < nodeCount; ) {
-            // Read 4 bytes and align right in 256-bit word
-            uint256 word;
+            uint256 packed;
             assembly {
                 let ptr := add(buffer, add(0x20, offset))
-                word := shr(224, mload(ptr))
+                packed := shr(224, mload(ptr))
             }
 
             // Extract fields:
-            nodes[i].paramType = AbiType((word >> 29) & 0x07);
-            nodes[i].operator = Operator((word >> 24) & 0x1F);
-            uint256 childCount = (word >> 16) & 0xFF;
-            uint256 compValueOffset = word & 0xFFFF;
+            nodes[i].paramType = AbiType((packed >> 29) & 0x07);
+            nodes[i].operator = Operator((packed >> 24) & 0x1F);
+            uint256 childCount = (packed >> 16) & 0xFF;
+            uint256 compValueOffset = packed & 0xFFFF;
 
             if (compValueOffset != 0) {
                 bytes32 compValue;
@@ -52,30 +50,17 @@ library ConditionUnpacker {
 
             if (childCount > 0) {
                 nodes[i].children = new Condition[](childCount);
-            }
-
-            unchecked {
-                offset += BYTES_PER_CONDITION;
-                ++i;
-            }
-        }
-
-        // Second pass: populate children by reference (left-to-right order)
-        // Children are stored consecutively in the buffer after their parent
-        uint256 nextChildIndex = 1;
-        for (uint256 i = 0; i < nodeCount; ) {
-            uint256 childCount = nodes[i].children.length;
-
-            for (uint256 j = 0; j < childCount; ) {
-                nodes[i].children[j] = nodes[nextChildIndex];
-                nextChildIndex++;
-
-                unchecked {
-                    ++j;
+                for (uint256 j = 0; j < childCount; ) {
+                    nodes[i].children[j] = nodes[nextChildIndex];
+                    unchecked {
+                        ++nextChildIndex;
+                        ++j;
+                    }
                 }
             }
 
             unchecked {
+                offset += BYTES_PER_CONDITION;
                 ++i;
             }
         }

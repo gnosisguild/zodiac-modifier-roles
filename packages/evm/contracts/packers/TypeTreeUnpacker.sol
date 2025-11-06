@@ -17,14 +17,12 @@ library TypeTreeUnpacker {
             let ptr := add(buffer, add(0x20, offset))
             nodeCount := shr(240, mload(ptr))
         }
-
         offset += BYTES_PER_HEADER;
 
         TypeTree[] memory nodes = new TypeTree[](nodeCount);
+        uint256 nextChildIndex = 1;
 
-        // First pass: read all nodes and allocate children arrays
         for (uint256 i = 0; i < nodeCount; ) {
-            // Read and unpack the 2-byte node (16 bits)
             uint256 packed;
             assembly {
                 let ptr := add(buffer, add(0x20, offset))
@@ -36,30 +34,18 @@ library TypeTreeUnpacker {
 
             if (childCount > 0) {
                 nodes[i].children = new TypeTree[](childCount);
-            }
 
-            unchecked {
-                offset += BYTES_PER_NODE;
-                ++i;
-            }
-        }
-
-        // Second pass: populate children by reference (left-to-right order)
-        // Children are stored consecutively in the buffer after their parent
-        uint256 nextChildIndex = 1;
-        for (uint256 i = 0; i < nodeCount; ) {
-            uint256 childCount = nodes[i].children.length;
-
-            for (uint256 j = 0; j < childCount; ) {
-                nodes[i].children[j] = nodes[nextChildIndex];
-                nextChildIndex++;
-
-                unchecked {
-                    ++j;
+                for (uint256 j = 0; j < childCount; ) {
+                    nodes[i].children[j] = nodes[nextChildIndex];
+                    unchecked {
+                        ++nextChildIndex;
+                        ++j;
+                    }
                 }
             }
 
             unchecked {
+                offset += BYTES_PER_NODE;
                 ++i;
             }
         }
