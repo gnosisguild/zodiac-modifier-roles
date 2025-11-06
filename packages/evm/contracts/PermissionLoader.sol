@@ -40,14 +40,22 @@ abstract contract PermissionLoader is Core {
             Consumption[] memory consumptions
         )
     {
+        uint256 avatarCount;
         bytes32[] memory allowanceKeys;
-        {
-            (, , address pointer) = FunctionHeaderPacker.unpack(
-                role.scopeConfig[key]
-            );
-            bytes memory buffer = WriteOnce.load(pointer);
-            (condition, typeTree, allowanceKeys, ) = ScopedFunctionUnpacker
-                .unpack(buffer);
+
+        (, , address pointer) = FunctionHeaderPacker.unpack(
+            role.scopeConfig[key]
+        );
+        bytes memory buffer = WriteOnce.load(pointer);
+        (
+            condition,
+            typeTree,
+            allowanceKeys,
+            avatarCount
+        ) = ScopedFunctionUnpacker.unpack(buffer);
+
+        if (avatarCount > 0) {
+            _patchEqualToAvatar(condition);
         }
 
         return (
@@ -76,6 +84,16 @@ abstract contract PermissionLoader is Core {
                 uint64(block.timestamp)
             );
             insert++;
+        }
+    }
+
+    function _patchEqualToAvatar(Condition memory node) private view {
+        if (node.operator == Operator.EqualToAvatar) {
+            node.operator = Operator.EqualTo;
+            node.compValue = keccak256(abi.encode(avatar));
+        }
+        for (uint256 i; i < node.children.length; ++i) {
+            _patchEqualToAvatar(node.children[i]);
         }
     }
 }
