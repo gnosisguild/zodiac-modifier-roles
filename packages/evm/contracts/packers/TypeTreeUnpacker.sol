@@ -29,14 +29,15 @@ library TypeTreeUnpacker {
                 packed := shr(240, mload(ptr))
             }
 
-            nodes[i]._type = AbiType((packed >> 13) & 0x07);
+            TypeTree memory node = nodes[i];
+            node._type = AbiType((packed >> 13) & 0x07);
             uint256 childCount = (packed >> 5) & 0xFF;
 
             if (childCount > 0) {
-                nodes[i].children = new TypeTree[](childCount);
+                node.children = new TypeTree[](childCount);
 
                 for (uint256 j = 0; j < childCount; ) {
-                    nodes[i].children[j] = nodes[nextChildIndex];
+                    node.children[j] = nodes[nextChildIndex];
                     unchecked {
                         ++nextChildIndex;
                         ++j;

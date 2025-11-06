@@ -30,9 +30,11 @@ library ConditionUnpacker {
                 packed := shr(224, mload(ptr))
             }
 
+            Condition memory node = nodes[i];
+
             // Extract fields:
-            nodes[i].paramType = AbiType((packed >> 29) & 0x07);
-            nodes[i].operator = Operator((packed >> 24) & 0x1F);
+            node.paramType = AbiType((packed >> 29) & 0x07);
+            node.operator = Operator((packed >> 24) & 0x1F);
             uint256 childCount = (packed >> 16) & 0xFF;
             uint256 compValueOffset = packed & 0xFFFF;
 
@@ -45,13 +47,13 @@ library ConditionUnpacker {
                     )
                     compValue := mload(ptr)
                 }
-                nodes[i].compValue = compValue;
+                node.compValue = compValue;
             }
 
             if (childCount > 0) {
-                nodes[i].children = new Condition[](childCount);
+                node.children = new Condition[](childCount);
                 for (uint256 j = 0; j < childCount; ) {
-                    nodes[i].children[j] = nodes[nextChildIndex];
+                    node.children[j] = nodes[nextChildIndex];
                     unchecked {
                         ++nextChildIndex;
                         ++j;
