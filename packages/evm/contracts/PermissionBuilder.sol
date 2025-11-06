@@ -2,17 +2,9 @@
 pragma solidity >=0.8.17 <0.9.0;
 
 import "./_Core.sol";
-import "./Integrity.sol";
 
-import "./packers/BufferPacker.sol";
+import "./packers/FunctionHeaderPacker.sol";
 
-/**
- * @title PermissionBuilder - a component of the Zodiac Roles Mod that is
- * responsible for constructing, managing, granting, and revoking all types
- * of permission data.
- * @author Cristóvão Honorato - <cristovao.honorato@gnosis.io>
- * @author Jan-Felix Schwarz  - <jan-felix.schwarz@gnosis.io>
- */
 abstract contract PermissionBuilder is Core {
     event AllowTarget(
         bytes32 roleKey,
@@ -105,8 +97,9 @@ abstract contract PermissionBuilder is Core {
         bytes4 selector,
         ExecutionOptions options
     ) external onlyOwner {
-        roles[roleKey].scopeConfig[_key(targetAddress, selector)] = BufferPacker
-            .packHeaderAsWildcarded(options);
+        roles[roleKey].scopeConfig[
+            _key(targetAddress, selector)
+        ] = FunctionHeaderPacker.packAsWildcarded(options);
 
         emit AllowFunction(roleKey, targetAddress, selector, options);
     }
@@ -137,8 +130,6 @@ abstract contract PermissionBuilder is Core {
         ConditionFlat[] memory conditions,
         ExecutionOptions options
     ) external onlyOwner {
-        Integrity.enforce(conditions);
-
         _store(
             roles[roleKey],
             _key(targetAddress, selector),

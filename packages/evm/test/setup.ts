@@ -49,18 +49,10 @@ export async function deployRolesMod(
     salt: ZeroHash,
     provider,
   });
-  const packer = await hre.artifacts.readArtifact("Packer");
-  const { address: packerAddress } = await deployMastercopy({
-    bytecode: packer.bytecode,
-    constructorArgs: { types: [], values: [] },
-    salt: ZeroHash,
-    provider,
-  });
 
   const Modifier = await hre.ethers.getContractFactory("Roles", {
     libraries: {
       Integrity: integrityAddress,
-      Packer: packerAddress,
     },
   });
   const modifier = await Modifier.deploy(owner, avatar, target);

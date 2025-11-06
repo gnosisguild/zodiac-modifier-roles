@@ -38,10 +38,6 @@ abstract contract Core is Modifier {
         address targetAddress,
         bytes4 selector
     ) internal pure returns (bytes32) {
-        /*
-         * Unoptimized version:
-         * bytes32(abi.encodePacked(targetAddress, selector))
-         */
         return bytes32(bytes20(targetAddress)) | (bytes32(selector) >> 160);
     }
 }

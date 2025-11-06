@@ -6,7 +6,7 @@ import "./_Periphery.sol";
 import "./AbiDecoder.sol";
 import "./Consumptions.sol";
 
-import "./packers/BufferPacker.sol";
+import "./packers/FunctionHeaderPacker.sol";
 
 /**
  * @title PermissionChecker - a component of Zodiac Roles Mod responsible
@@ -135,8 +135,11 @@ abstract contract PermissionChecker is Core, Periphery {
                     );
                 }
 
-                (bool isWildcarded, ExecutionOptions options) = BufferPacker
-                    .unpackOptions(header);
+                (
+                    bool isWildcarded,
+                    ExecutionOptions options,
+
+                ) = FunctionHeaderPacker.unpack(header);
 
                 Status status = _executionOptions(value, operation, options);
                 if (status != Status.Ok) {
