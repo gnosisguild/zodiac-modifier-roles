@@ -12,8 +12,6 @@ import "./packers/FunctionHeaderPacker.sol";
  * @title PermissionChecker - a component of Zodiac Roles Mod responsible
  * for enforcing and authorizing actions performed on behalf of a role.
  *
- * @author Cristóvão Honorato - <cristovao.honorato@gnosis.io>
- * @author Jan-Felix Schwarz  - <jan-felix.schwarz@gnosis.io>
  */
 abstract contract PermissionChecker is Core, Periphery {
     function _authorize(
@@ -514,48 +512,44 @@ abstract contract PermissionChecker is Core, Periphery {
         Payload memory payload,
         Context memory context
     ) private view returns (Status, Result memory result) {
-        result.consumptions = context.consumptions;
-
-        if (
-            payload.children.length == 0 ||
-            payload.children.length > condition.children.length
-        ) {
-            return (Status.ParameterNotSubsetOfAllowed, result);
-        }
-
-        uint256 taken;
-        for (uint256 i; i < payload.children.length; ++i) {
-            bool found = false;
-            for (uint256 j; j < condition.children.length; ++j) {
-                if (taken & (1 << j) != 0) continue;
-
-                (Status status, Result memory _result) = _walk(
-                    data,
-                    condition.children[j],
-                    payload.children[i],
-                    Context({
-                        to: context.to,
-                        value: context.value,
-                        operation: context.operation,
-                        consumptions: result.consumptions
-                    })
-                );
-                if (status == Status.Ok) {
-                    found = true;
-                    taken |= 1 << j;
-                    result = _result;
-                    break;
-                }
-            }
-            if (!found) {
-                return (
-                    Status.ParameterNotSubsetOfAllowed,
-                    Result({consumptions: context.consumptions, info: 0})
-                );
-            }
-        }
-
-        return (Status.Ok, result);
+        // result.consumptions = context.consumptions;
+        // if (
+        //     payload.children.length == 0 ||
+        //     payload.children.length > condition.children.length
+        // ) {
+        //     return (Status.ParameterNotSubsetOfAllowed, result);
+        // }
+        // uint256 taken;
+        // for (uint256 i; i < payload.children.length; ++i) {
+        //     bool found = false;
+        //     for (uint256 j; j < condition.children.length; ++j) {
+        //         if (taken & (1 << j) != 0) continue;
+        //         (Status status, Result memory _result) = _walk(
+        //             data,
+        //             condition.children[j],
+        //             payload.children[i],
+        //             Context({
+        //                 to: context.to,
+        //                 value: context.value,
+        //                 operation: context.operation,
+        //                 consumptions: result.consumptions
+        //             })
+        //         );
+        //         if (status == Status.Ok) {
+        //             found = true;
+        //             taken |= 1 << j;
+        //             result = _result;
+        //             break;
+        //         }
+        //     }
+        //     if (!found) {
+        //         return (
+        //             Status.ParameterNotSubsetOfAllowed,
+        //             Result({consumptions: context.consumptions, info: 0})
+        //         );
+        //     }
+        // }
+        // return (Status.Ok, result);
     }
 
     function _compare(
