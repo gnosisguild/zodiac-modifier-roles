@@ -42,7 +42,6 @@ abstract contract PermissionLoader is Core {
     {
         uint256 avatarCount;
         bytes32[] memory allowanceKeys;
-
         (, , address pointer) = FunctionHeaderPacker.unpack(
             role.scopeConfig[key]
         );

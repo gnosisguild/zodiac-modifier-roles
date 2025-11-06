@@ -17,12 +17,13 @@ describe("Module works with factory", () => {
     const Factory = await hre.ethers.getContractFactory("ModuleProxyFactory");
     const factory = await Factory.deploy();
 
-    const Integrity = await hre.ethers.getContractFactory("Integrity");
-    const integrity = await Integrity.deploy();
+    const FunctionWriter =
+      await hre.ethers.getContractFactory("FunctionWriter");
+    const functionWriter = await FunctionWriter.deploy();
 
     const Modifier = await hre.ethers.getContractFactory("Roles", {
       libraries: {
-        Integrity: await integrity.getAddress(),
+        FunctionWriter: await functionWriter.getAddress(),
       },
     });
     const masterCopy = await Modifier.deploy(

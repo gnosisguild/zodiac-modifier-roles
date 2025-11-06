@@ -28,7 +28,7 @@ library ScopedFunctionUnpacker {
         condition = ConditionUnpacker.unpack(buffer, 6);
 
         // Unpack type tree
-        (, typeTree) = TypeTreeUnpacker.unpack(buffer, typesOffset);
+        typeTree = TypeTreeUnpacker.unpack(buffer, typesOffset);
 
         assembly {
             allowanceKeys := add(buffer, add(0x20, allowanceOffset))

@@ -13,12 +13,9 @@ contract MockTypeTreeUnpacker {
     function unpack(
         bytes memory buffer
     ) external pure returns (FlatNode[] memory result) {
-        (uint256 nodeCount, TypeTree memory root) = TypeTreeUnpacker.unpack(
-            buffer,
-            0
-        );
+        TypeTree memory root = TypeTreeUnpacker.unpack(buffer, 0);
 
-        result = new FlatNode[](nodeCount);
+        result = new FlatNode[](_countNodes(root));
         _flattenBFS(root, result);
     }
 
@@ -53,5 +50,13 @@ contract MockTypeTreeUnpacker {
 
             current++;
         }
+    }
+
+    function _countNodes(TypeTree memory root) private pure returns (uint256) {
+        uint256 count = 1;
+        for (uint256 i; i < root.children.length; i++) {
+            count += _countNodes(root.children[i]);
+        }
+        return count;
     }
 }

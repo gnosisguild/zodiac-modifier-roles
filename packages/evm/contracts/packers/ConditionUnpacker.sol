@@ -10,7 +10,7 @@ library ConditionUnpacker {
     function unpack(
         bytes memory buffer,
         uint256 offset
-    ) internal pure returns (Condition memory condition) {
+    ) internal pure returns (Condition memory) {
         // Load the node count from header (16 bits)
         uint256 nodeCount;
         assembly {
@@ -18,43 +18,32 @@ library ConditionUnpacker {
             nodeCount := shr(240, mload(ptr))
         }
 
-        if (nodeCount == 0) return condition;
-
-        uint256 conditionsOffset = offset + BYTES_PER_HEADER;
+        offset += BYTES_PER_HEADER;
 
         // Create all nodes in an array
         Condition[] memory nodes = new Condition[](nodeCount);
 
         // First pass: read all nodes and allocate children arrays
         for (uint256 i = 0; i < nodeCount; ) {
-            uint256 nodeOffset = conditionsOffset + (i * BYTES_PER_CONDITION);
-
             // Read 4 bytes and align right in 256-bit word
             uint256 word;
             assembly {
-                let ptr := add(add(buffer, 0x20), nodeOffset)
+                let ptr := add(buffer, add(0x20, offset))
                 word := shr(224, mload(ptr))
             }
 
             // Extract fields:
-            uint256 paramType = (word >> 29) & 0x07;
-            uint256 operator = (word >> 24) & 0x1F;
+            nodes[i].paramType = AbiType((word >> 29) & 0x07);
+            nodes[i].operator = Operator((word >> 24) & 0x1F);
             uint256 childCount = (word >> 16) & 0xFF;
             uint256 compValueOffset = word & 0xFFFF;
 
-            nodes[i].paramType = AbiType(paramType);
-            nodes[i].operator = Operator(operator);
-
-            // Get compValue if this operator needs one
-            if (
-                Operator(operator) >= Operator.EqualTo && compValueOffset != 0
-            ) {
-                // for now we jump over the count and just load 32 bytes
+            if (compValueOffset != 0) {
                 bytes32 compValue;
                 assembly {
                     let ptr := add(
-                        add(buffer, 0x20),
-                        add(compValueOffset, 0x02)
+                        buffer,
+                        add(0x20, add(0x02, compValueOffset))
                     )
                     compValue := mload(ptr)
                 }
@@ -66,6 +55,7 @@ library ConditionUnpacker {
             }
 
             unchecked {
+                offset += BYTES_PER_CONDITION;
                 ++i;
             }
         }
@@ -91,6 +81,6 @@ library ConditionUnpacker {
         }
 
         // Return root node
-        condition = nodes[0];
+        return nodes[0];
     }
 }

@@ -10,42 +10,36 @@ library TypeTreeUnpacker {
     function unpack(
         bytes memory buffer,
         uint256 offset
-    ) internal pure returns (uint256 nodeCount, TypeTree memory tree) {
+    ) internal pure returns (TypeTree memory) {
         // Load the node count from header (16 bits)
+        uint256 nodeCount;
         assembly {
-            let ptr := add(add(buffer, 0x20), offset)
+            let ptr := add(buffer, add(0x20, offset))
             nodeCount := shr(240, mload(ptr))
         }
 
-        if (nodeCount == 0) {
-            return (nodeCount, tree);
-        }
-        uint256 nodesOffset = offset + BYTES_PER_HEADER;
+        offset += BYTES_PER_HEADER;
 
-        // Create all nodes in an array
         TypeTree[] memory nodes = new TypeTree[](nodeCount);
 
         // First pass: read all nodes and allocate children arrays
         for (uint256 i = 0; i < nodeCount; ) {
-            uint256 nodeOffset = nodesOffset + (i * BYTES_PER_NODE);
-
             // Read and unpack the 2-byte node (16 bits)
             uint256 packed;
             assembly {
-                let ptr := add(buffer, add(0x20, nodeOffset))
+                let ptr := add(buffer, add(0x20, offset))
                 packed := shr(240, mload(ptr))
             }
 
-            uint256 _type = (packed >> 13) & 0x07;
+            nodes[i]._type = AbiType((packed >> 13) & 0x07);
             uint256 childCount = (packed >> 5) & 0xFF;
-
-            nodes[i]._type = AbiType(_type);
 
             if (childCount > 0) {
                 nodes[i].children = new TypeTree[](childCount);
             }
 
             unchecked {
+                offset += BYTES_PER_NODE;
                 ++i;
             }
         }
@@ -70,7 +64,6 @@ library TypeTreeUnpacker {
             }
         }
 
-        // Return root node
-        return (nodeCount, nodes[0]);
+        return nodes[0];
     }
 }

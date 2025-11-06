@@ -11,7 +11,7 @@ import "./Types.sol";
 library FunctionWriter {
     function store(
         ConditionFlat[] memory conditions
-    ) internal returns (address) {
+    ) external returns (address) {
         Integrity.enforce(conditions);
 
         _removeExtraneousOffsets(conditions);
