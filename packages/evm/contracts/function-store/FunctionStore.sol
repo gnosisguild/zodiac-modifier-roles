@@ -2,31 +2,33 @@
 pragma solidity >=0.8.17 <0.9.0;
 
 import "./Integrity.sol";
-import "./packers/ScopedFunctionPacker.sol";
 import "./Topology.sol";
-import "./WriteOnce.sol";
 
-import "./Types.sol";
+import "./packers/FunctionPacker.sol";
 
-library FunctionWriter {
+import "../WriteOnce.sol";
+import "../ScopeConfig.sol";
+import "../Types.sol";
+
+library FunctionStore {
     function store(
-        ConditionFlat[] memory conditions
-    ) external returns (address) {
+        ConditionFlat[] memory conditions,
+        ExecutionOptions options
+    ) external returns (bytes32) {
         Integrity.enforce(conditions);
 
         _removeExtraneousOffsets(conditions);
 
         TypeTree memory typeNode = Topology.typeTree(conditions, 0);
         bytes32[] memory allowanceKeys = _allowanceKeys(conditions);
-        uint256 avatarCount = _avatarCount(conditions);
 
-        bytes memory buffer = ScopedFunctionPacker.pack(
+        bytes memory buffer = FunctionPacker.pack(
             conditions,
             typeNode,
-            allowanceKeys,
-            avatarCount
+            allowanceKeys
         );
-        return WriteOnce.store(buffer);
+
+        return ScopeConfig.pack(options, WriteOnce.store(buffer));
     }
 
     function _allowanceKeys(
@@ -60,16 +62,6 @@ library FunctionWriter {
         // Truncate result length in-place
         assembly {
             mstore(result, count)
-        }
-    }
-
-    function _avatarCount(
-        ConditionFlat[] memory conditions
-    ) private pure returns (uint256 count) {
-        for (uint256 i = 0; i < conditions.length; ++i) {
-            if (conditions[i].operator == Operator.EqualToAvatar) {
-                count++;
-            }
         }
     }
 

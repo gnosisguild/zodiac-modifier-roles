@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "../Types.sol";
+import "../../Types.sol";
 
 library ConditionUnpacker {
     uint256 private constant BYTES_PER_HEADER = 2;
@@ -10,7 +10,7 @@ library ConditionUnpacker {
     function unpack(
         bytes memory buffer,
         uint256 offset
-    ) internal pure returns (Condition memory) {
+    ) internal view returns (Condition memory) {
         // Load the node count from header (16 bits)
         uint256 nodeCount;
         assembly {
@@ -59,6 +59,9 @@ library ConditionUnpacker {
                         ++j;
                     }
                 }
+            } else if (node.operator == Operator.EqualToAvatar) {
+                node.operator = Operator.EqualTo;
+                node.compValue = keccak256(abi.encode(avatar()));
             }
 
             unchecked {
@@ -69,5 +72,11 @@ library ConditionUnpacker {
 
         // Return root node
         return nodes[0];
+    }
+
+    function avatar() private view returns (address avatar) {
+        assembly {
+            avatar := sload(51)
+        }
     }
 }

@@ -2,12 +2,12 @@
 pragma solidity >=0.8.17 <0.9.0;
 
 import "../../Types.sol";
-import "../../packers/ConditionUnpacker.sol";
+import "../../function-load/unpackers/ConditionUnpacker.sol";
 
 contract MockConditionUnpacker {
     function unpack(
         bytes memory buffer
-    ) external pure returns (ConditionFlat[] memory flat) {
+    ) external view returns (ConditionFlat[] memory flat) {
         Condition memory root = ConditionUnpacker.unpack(buffer, 0);
         return _flatten(root);
     }

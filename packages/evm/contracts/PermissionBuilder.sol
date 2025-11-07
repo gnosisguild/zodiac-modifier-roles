@@ -3,7 +3,7 @@ pragma solidity >=0.8.17 <0.9.0;
 
 import "./_Core.sol";
 
-import "./packers/FunctionHeaderPacker.sol";
+import "./ScopeConfig.sol";
 
 abstract contract PermissionBuilder is Core {
     event AllowTarget(
@@ -97,9 +97,8 @@ abstract contract PermissionBuilder is Core {
         bytes4 selector,
         ExecutionOptions options
     ) external onlyOwner {
-        roles[roleKey].scopeConfig[
-            _key(targetAddress, selector)
-        ] = FunctionHeaderPacker.packAsWildcarded(options);
+        roles[roleKey].scopeConfig[_key(targetAddress, selector)] = ScopeConfig
+            .packAsWildcarded(options);
 
         emit AllowFunction(roleKey, targetAddress, selector, options);
     }

@@ -1,20 +1,19 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "../Types.sol";
-
 import "./ConditionPacker.sol";
 import "./TypeTreePacker.sol";
 
+import "../../Types.sol";
+
 /**
- * ScopedFunctionPacker Memory Layout
+ * ScopedFunction Memory Layout
  *
  * ┌─────────────────────────────────────────────────────────────────────┐
- * │ HEADER (6 bytes)                                                    │
+ * │ HEADER (4 bytes)                                                    │
  * ├─────────────────────────────────────────────────────────────────────┤
  * │ • typesOffset              16 bits (0-65535)                        │
  * │ • allowanceOffset          16 bits (0-65535)                        │
- * │ • avatarCount              16 bits (0-65535)                        │
  * └─────────────────────────────────────────────────────────────────────┘
  *
  * ┌─────────────────────────────────────────────────────────────────────┐
@@ -64,23 +63,21 @@ import "./TypeTreePacker.sol";
  * - Children are implicitly sequential in BFS order (no childrenStart needed)
  */
 
-library ScopedFunctionPacker {
+library FunctionPacker {
     function pack(
         ConditionFlat[] memory conditions,
         TypeTree memory typeNode,
-        bytes32[] memory allowanceKeys,
-        uint256 avatarCount
+        bytes32[] memory allowanceKeys
     ) internal pure returns (bytes memory buffer) {
-        uint256 size = 6 +
+        uint256 size = 4 +
             ConditionPacker.packedSize(conditions) +
             TypeTreePacker.packedSize(typeNode) +
             (32 * (allowanceKeys.length + 1));
 
         buffer = new bytes(size);
 
-        uint256 offset = 6;
+        uint256 offset = 4;
 
-        // pack conditionsOffset
         offset += ConditionPacker.pack(conditions, buffer, offset);
 
         // pack typesOffset
@@ -90,9 +87,6 @@ library ScopedFunctionPacker {
         // pack allowanceOffset
         _mstore(uint16(offset), buffer, 2);
         offset += _mstore(allowanceKeys, buffer, offset);
-
-        // pack avatarCount
-        _mstore(uint16(avatarCount), buffer, 4);
     }
 
     function _mstore(

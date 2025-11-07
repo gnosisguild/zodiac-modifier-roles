@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "../Types.sol";
+import "./Types.sol";
 
-library FunctionHeaderPacker {
-    // HEADER layout:
+library ScopeConfig {
+    // Word Layout:
     // [255..169] -> unused (87 bits)
     // [168]      -> isWildcarded (1 bit)
     // [167..160] -> options (8 bits)
@@ -30,7 +30,7 @@ library FunctionHeaderPacker {
         pure
         returns (bool isWildcarded, ExecutionOptions options, address pointer)
     {
-        isWildcarded = ((1 << 168) & uint256(header)) != 0;
+        isWildcarded = (uint256(header) & (1 << 168)) != 0;
         options = ExecutionOptions((uint256(header) >> 160) & 0xFF);
         pointer = address(uint160(uint256(header)));
     }

@@ -2,12 +2,9 @@
 pragma solidity >=0.8.17 <0.9.0;
 
 import "./_Core.sol";
-import "./Consumptions.sol";
-import "./WriteOnce.sol";
-import "./FunctionWriter.sol";
 
-import "./packers/FunctionHeaderPacker.sol";
-import "./packers/ScopedFunctionUnpacker.sol";
+import "./function-load/FunctionLoader.sol";
+import "./function-store/FunctionStore.sol";
 
 /**
  * @title PermissionLoader - a component of the Zodiac Roles Mod that handles
@@ -23,8 +20,7 @@ abstract contract PermissionLoader is Core {
         ConditionFlat[] memory conditions,
         ExecutionOptions options
     ) internal override {
-        address pointer = FunctionWriter.store(conditions);
-        role.scopeConfig[key] = FunctionHeaderPacker.pack(options, pointer);
+        role.scopeConfig[key] = FunctionStore.store(conditions, options);
     }
 
     function _load(
@@ -40,22 +36,10 @@ abstract contract PermissionLoader is Core {
             Consumption[] memory consumptions
         )
     {
-        uint256 avatarCount;
         bytes32[] memory allowanceKeys;
-        (, , address pointer) = FunctionHeaderPacker.unpack(
+        (condition, typeTree, allowanceKeys) = FunctionLoader.load(
             role.scopeConfig[key]
         );
-        bytes memory buffer = WriteOnce.load(pointer);
-        (
-            condition,
-            typeTree,
-            allowanceKeys,
-            avatarCount
-        ) = ScopedFunctionUnpacker.unpack(buffer);
-
-        if (avatarCount > 0) {
-            _patchEqualToAvatar(condition);
-        }
 
         return (
             condition,
@@ -86,13 +70,13 @@ abstract contract PermissionLoader is Core {
         }
     }
 
-    function _patchEqualToAvatar(Condition memory node) private view {
-        if (node.operator == Operator.EqualToAvatar) {
-            node.operator = Operator.EqualTo;
-            node.compValue = keccak256(abi.encode(avatar));
-        }
-        for (uint256 i; i < node.children.length; ++i) {
-            _patchEqualToAvatar(node.children[i]);
-        }
-    }
+    // function _patchEqualToAvatar(Condition memory node) private view {
+    //     if (node.operator == Operator.EqualToAvatar) {
+    //         node.operator = Operator.EqualTo;
+    //         node.compValue = keccak256(abi.encode(avatar));
+    //     }
+    //     for (uint256 i; i < node.children.length; ++i) {
+    //         _patchEqualToAvatar(node.children[i]);
+    //     }
+    // }
 }

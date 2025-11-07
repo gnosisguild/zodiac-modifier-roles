@@ -2,7 +2,7 @@
 pragma solidity >=0.8.17 <0.9.0;
 
 import "../../Types.sol";
-import "../../packers/ConditionPacker.sol";
+import "../../function-store/packers/ConditionPacker.sol";
 
 contract MockConditionPacker {
     function pack(

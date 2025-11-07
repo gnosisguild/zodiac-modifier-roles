@@ -2,7 +2,7 @@
 pragma solidity >=0.8.17 <0.9.0;
 
 import "../AbiTypes.sol";
-import "../packers/TypeTreePacker.sol";
+import "../function-store/packers/TypeTreePacker.sol";
 
 contract MockTypeTreePacker {
     struct InputFlat {
