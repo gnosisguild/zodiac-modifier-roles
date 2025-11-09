@@ -4,11 +4,16 @@ pragma solidity >=0.8.17 <0.9.0;
 import "../Types.sol";
 
 library ScopeConfig {
-    // Word Layout:
-    // [255..169] -> unused (87 bits)
-    // [168]      -> isWildcarded (1 bit)
-    // [167..160] -> options (8 bits)
-    // [159..0]   -> pointer (address)
+    /**
+     * Bit-packed configuration (bytes32):
+     *
+     * Bits         | Field         | Description
+     * -------------|---------------|------------------------------------------
+     * [255..169]   | (unused)      | 87 bits reserved for future use
+     * [168]        | isWildcarded  | 1 = wildcard (allow all), 0 = scoped
+     * [167..160]   | options       | ExecutionOptions (Send/DelegateCall)
+     * [159..0]     | pointer       | Address of serialized condition data
+     */
 
     function pack(
         ExecutionOptions options,
@@ -24,14 +29,14 @@ library ScopeConfig {
     }
 
     function unpack(
-        bytes32 header
+        bytes32 scopeConfig
     )
         internal
         pure
         returns (bool isWildcarded, ExecutionOptions options, address pointer)
     {
-        isWildcarded = (uint256(header) & (1 << 168)) != 0;
-        options = ExecutionOptions((uint256(header) >> 160) & 0xFF);
-        pointer = address(uint160(uint256(header)));
+        isWildcarded = (uint256(scopeConfig) & (1 << 168)) != 0;
+        options = ExecutionOptions((uint256(scopeConfig) >> 160) & 0xFF);
+        pointer = address(uint160(uint256(scopeConfig)));
     }
 }

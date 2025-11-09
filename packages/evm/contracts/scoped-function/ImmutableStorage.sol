@@ -12,9 +12,6 @@ library ImmutableStorage {
     address public constant SINGLETON_FACTORY =
         0xce0042B868300000d44A59004Da54A005ffdcf9f;
 
-    bytes32 public constant SALT =
-        0x0000000000000000000000000000000000000000000000000000000000000000;
-
     function store(bytes memory data) internal returns (address pointer) {
         bytes memory bytecode = _creationBytecode(data);
         pointer = _address(bytecode);
@@ -27,7 +24,10 @@ library ImmutableStorage {
         if (size == 0) {
             assert(
                 pointer ==
-                    ISingletonFactory(SINGLETON_FACTORY).deploy(bytecode, SALT)
+                    ISingletonFactory(SINGLETON_FACTORY).deploy(
+                        bytecode,
+                        bytes32(0)
+                    )
             );
         }
     }
@@ -59,7 +59,7 @@ library ImmutableStorage {
             abi.encodePacked(
                 bytes1(0xff),
                 SINGLETON_FACTORY,
-                SALT,
+                bytes32(0),
                 keccak256(creationBytecode)
             )
         );
