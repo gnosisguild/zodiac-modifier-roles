@@ -76,7 +76,7 @@ library ConditionUnpacker {
 
     function avatar() private view returns (address avatar) {
         assembly {
-            avatar := sload(51)
+            avatar := sload(101)
         }
     }
 }
