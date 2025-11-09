@@ -2,7 +2,7 @@
 pragma solidity >=0.8.17 <0.9.0;
 
 import "../AbiTypes.sol";
-import "../function-store/packers/TypeTreePacker.sol";
+import "../function-store/FunctionPacker.sol";
 
 contract MockTypeTreePacker {
     struct InputFlat {
@@ -12,9 +12,11 @@ contract MockTypeTreePacker {
     function packFlat(
         InputFlat[] calldata flatNodes
     ) external pure returns (bytes memory buffer) {
-        uint256 size = TypeTreePacker.packedSize(_toTree(flatNodes, 0));
+        uint256 size = FunctionPacker._typeTreePackedSize(
+            _toTree(flatNodes, 0)
+        );
         buffer = new bytes(size);
-        TypeTreePacker.pack(_toTree(flatNodes, 0), buffer, 0);
+        FunctionPacker._packTypeTree(_toTree(flatNodes, 0), buffer, 0);
     }
 
     function _toTree(

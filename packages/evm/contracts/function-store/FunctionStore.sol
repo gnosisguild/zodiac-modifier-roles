@@ -3,8 +3,7 @@ pragma solidity >=0.8.17 <0.9.0;
 
 import "./Integrity.sol";
 import "./Topology.sol";
-
-import "./packers/FunctionPacker.sol";
+import "./FunctionPacker.sol";
 
 import "../WriteOnce.sol";
 import "../ScopeConfig.sol";

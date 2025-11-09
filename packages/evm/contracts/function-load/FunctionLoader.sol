@@ -29,14 +29,4 @@ library FunctionLoader {
         bytes memory buffer = WriteOnce.load(pointer);
         return FunctionUnpacker.unpack(buffer);
     }
-
-    // function _patchEqualToAvatar(Condition memory node) private view {
-    //     if (node.operator == Operator.EqualToAvatar) {
-    //         node.operator = Operator.EqualTo;
-    //         node.compValue = keccak256(abi.encode(avatar));
-    //     }
-    //     for (uint256 i; i < node.children.length; ++i) {
-    //         _patchEqualToAvatar(node.children[i]);
-    //     }
-    // }
 }
