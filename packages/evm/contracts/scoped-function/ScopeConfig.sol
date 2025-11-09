@@ -9,8 +9,8 @@ library ScopeConfig {
      *
      * Bits         | Field         | Description
      * -------------|---------------|------------------------------------------
-     * [255..169]   | (unused)      | 87 bits reserved for future use
-     * [168]        | isWildcarded  | 1 = wildcard (allow all), 0 = scoped
+     * [255..169]   | (unused)      | 87 bits
+     * [168]        | isWildcarded  | 1 = wildcard, 0 = scoped
      * [167..160]   | options       | ExecutionOptions (Send/DelegateCall)
      * [159..0]     | pointer       | Address of serialized condition data
      */
