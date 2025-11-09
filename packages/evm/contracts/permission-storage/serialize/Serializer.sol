@@ -3,13 +3,13 @@ pragma solidity >=0.8.17 <0.9.0;
 
 import "./Integrity.sol";
 import "./Topology.sol";
-import "./FunctionPacker.sol";
+import "./Packer.sol";
 
-import "../WriteOnce.sol";
-import "../ScopeConfig.sol";
-import "../Types.sol";
+import "../../WriteOnce.sol";
+import "../../ScopeConfig.sol";
+import "../../Types.sol";
 
-library FunctionStore {
+library Serializer {
     function store(
         ConditionFlat[] memory conditions,
         ExecutionOptions options
@@ -21,7 +21,7 @@ library FunctionStore {
         TypeTree memory typeNode = Topology.typeTree(conditions, 0);
         bytes32[] memory allowanceKeys = _allowanceKeys(conditions);
 
-        bytes memory buffer = FunctionPacker.pack(
+        bytes memory buffer = Packer.pack(
             conditions,
             typeNode,
             allowanceKeys

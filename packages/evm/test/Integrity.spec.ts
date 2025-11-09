@@ -4,7 +4,7 @@ import { AbiCoder, ZeroHash } from "ethers";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 import { AbiType, flattenCondition, Operator } from "./utils";
-import { ConditionFlatStruct } from "../typechain-types/contracts/Integrity";
+import { ConditionFlatStruct } from "../typechain-types/contracts/PermissionBuilder";
 
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 

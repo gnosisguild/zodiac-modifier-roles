@@ -2,7 +2,7 @@
 pragma solidity >=0.8.17 <0.9.0;
 
 import "../AbiTypes.sol";
-import "../function-load/unpackers/TypeTreeUnpacker.sol";
+import "../permission-storage/deserialize/Unpacker.sol";
 
 contract MockTypeTreeUnpacker {
     struct FlatNode {
@@ -13,7 +13,7 @@ contract MockTypeTreeUnpacker {
     function unpack(
         bytes memory buffer
     ) external pure returns (FlatNode[] memory result) {
-        TypeTree memory root = TypeTreeUnpacker.unpack(buffer, 0);
+        TypeTree memory root = Unpacker._unpackTypeTree(buffer, 0);
 
         result = new FlatNode[](_countNodes(root));
         _flattenBFS(root, result);

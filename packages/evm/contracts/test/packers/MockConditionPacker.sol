@@ -2,14 +2,14 @@
 pragma solidity >=0.8.17 <0.9.0;
 
 import "../../Types.sol";
-import "../../function-store/FunctionPacker.sol";
+import "../../permission-storage/serialize/Packer.sol";
 
 contract MockConditionPacker {
     function pack(
         ConditionFlat[] calldata flat
     ) external pure returns (bytes memory buffer) {
-        uint256 size = FunctionPacker._conditionPackedSize(flat);
+        uint256 size = Packer._conditionPackedSize(flat);
         buffer = new bytes(size);
-        FunctionPacker._packConditions(flat, buffer, 0);
+        Packer._packConditions(flat, buffer, 0);
     }
 }

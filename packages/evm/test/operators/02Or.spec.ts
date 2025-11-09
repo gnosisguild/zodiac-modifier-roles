@@ -13,7 +13,7 @@ import {
   setupOneParamStaticTuple,
   setupTwoParamsStaticDynamic,
 } from "../setup";
-import { ConditionFlatStruct } from "../../typechain-types/contracts/Integrity";
+import { ConditionFlatStruct } from "../../typechain-types/contracts/PermissionBuilder";
 
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 

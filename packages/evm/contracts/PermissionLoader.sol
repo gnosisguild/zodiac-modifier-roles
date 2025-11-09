@@ -3,8 +3,8 @@ pragma solidity >=0.8.17 <0.9.0;
 
 import "./_Core.sol";
 
-import "./function-load/FunctionLoader.sol";
-import "./function-store/FunctionStore.sol";
+import "./permission-storage/deserialize/Deserializer.sol";
+import "./permission-storage/serialize/Serializer.sol";
 
 /**
  * @title PermissionLoader - a component of the Zodiac Roles Mod that handles
@@ -20,7 +20,7 @@ abstract contract PermissionLoader is Core {
         ConditionFlat[] memory conditions,
         ExecutionOptions options
     ) internal override {
-        role.scopeConfig[key] = FunctionStore.store(conditions, options);
+        role.scopeConfig[key] = Serializer.store(conditions, options);
     }
 
     function _load(
@@ -37,7 +37,7 @@ abstract contract PermissionLoader is Core {
         )
     {
         bytes32[] memory allowanceKeys;
-        (condition, typeTree, allowanceKeys) = FunctionLoader.load(
+        (condition, typeTree, allowanceKeys) = Deserializer.load(
             role.scopeConfig[key]
         );
 
@@ -69,14 +69,4 @@ abstract contract PermissionLoader is Core {
             insert++;
         }
     }
-
-    // function _patchEqualToAvatar(Condition memory node) private view {
-    //     if (node.operator == Operator.EqualToAvatar) {
-    //         node.operator = Operator.EqualTo;
-    //         node.compValue = keccak256(abi.encode(avatar));
-    //     }
-    //     for (uint256 i; i < node.children.length; ++i) {
-    //         _patchEqualToAvatar(node.children[i]);
-    //     }
-    // }
 }
