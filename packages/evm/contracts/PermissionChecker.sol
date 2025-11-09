@@ -5,11 +5,15 @@ import "./_Core.sol";
 import "./_Periphery.sol";
 import "./AbiDecoder.sol";
 import "./Consumptions.sol";
+
+import "./scoped-function/deserialize/Deserializer.sol";
 import "./scoped-function/ScopeConfig.sol";
 
 /**
  * @title PermissionChecker - a component of Zodiac Roles Mod responsible
  * for enforcing and authorizing actions performed on behalf of a role.
+ *
+ * @author gnosisguild
  *
  */
 abstract contract PermissionChecker is Core, Periphery {
@@ -119,9 +123,8 @@ abstract contract PermissionChecker is Core, Periphery {
         }
 
         if (role.targets[to].clearance == Clearance.Function) {
-            bytes32 key = _key(to, bytes4(data));
+            bytes32 header = role.scopeConfig[_key(to, bytes4(data))];
             {
-                bytes32 header = role.scopeConfig[key];
                 if (header == 0) {
                     return (
                         Status.FunctionNotAllowed,
@@ -153,8 +156,7 @@ abstract contract PermissionChecker is Core, Periphery {
 
             return
                 _scopedFunction(
-                    role,
-                    key,
+                    header,
                     data,
                     Context({
                         to: to,
@@ -207,16 +209,28 @@ abstract contract PermissionChecker is Core, Periphery {
     }
 
     function _scopedFunction(
-        Role storage role,
-        bytes32 key,
+        bytes32 scopeConfig,
         bytes calldata data,
         Context memory context
     ) private view returns (Status, Result memory) {
+        Consumption[] memory consumptions;
         (
             Condition memory condition,
             TypeTree memory typeTree,
-            Consumption[] memory consumptions
-        ) = _load(role, key);
+            bytes32[] memory allowanceKeys
+        ) = Deserializer.load(scopeConfig);
+
+        if (allowanceKeys.length > 0) {
+            consumptions = new Consumption[](allowanceKeys.length);
+
+            for (uint256 i; i < allowanceKeys.length; ++i) {
+                consumptions[i].allowanceKey = allowanceKeys[i];
+                (consumptions[i].balance, ) = _accruedAllowance(
+                    allowances[allowanceKeys[i]],
+                    uint64(block.timestamp)
+                );
+            }
+        }
 
         Payload memory payload = AbiDecoder.inspect(data, typeTree);
 

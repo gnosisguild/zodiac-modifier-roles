@@ -3,6 +3,7 @@ pragma solidity >=0.8.17 <0.9.0;
 
 import "./_Core.sol";
 
+import "./scoped-function/serialize/Serializer.sol";
 import "./scoped-function/ScopeConfig.sol";
 
 /*
@@ -140,12 +141,8 @@ abstract contract PermissionBuilder is Core {
         ConditionFlat[] memory conditions,
         ExecutionOptions options
     ) external onlyOwner {
-        _store(
-            roles[roleKey],
-            _key(targetAddress, selector),
-            conditions,
-            options
-        );
+        roles[roleKey].scopeConfig[_key(targetAddress, selector)] = Serializer
+            .store(conditions, options);
 
         emit ScopeFunction(
             roleKey,
