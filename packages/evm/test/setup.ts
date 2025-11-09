@@ -10,7 +10,7 @@ import {
 
 import { ExecutionOptions } from "./utils";
 
-import { ConditionFlatStruct } from "../typechain-types/contracts/permission-storage/serialize/Integrity";
+import { ConditionFlatStruct } from "../typechain-types/contracts/scoped-function/serialize/Integrity";
 import { TestContract } from "../typechain-types/contracts/test";
 
 const DEFAULT_ROLE_KEY =

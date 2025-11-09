@@ -2,7 +2,7 @@
 pragma solidity >=0.8.17 <0.9.0;
 
 import "../AbiTypes.sol";
-import "../permission-storage/serialize/Packer.sol";
+import "../scoped-function/serialize/Packer.sol";
 
 contract MockTypeTreePacker {
     struct InputFlat {

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "../../ScopeConfig.sol";
-import "../../WriteOnce.sol";
+import "../ScopeConfig.sol";
+import "../ImmutableStorage.sol";
 
 import "./Unpacker.sol";
 
@@ -26,7 +26,7 @@ library Deserializer {
         )
     {
         (, , address pointer) = ScopeConfig.unpack(scopeConfig);
-        bytes memory buffer = WriteOnce.load(pointer);
+        bytes memory buffer = ImmutableStorage.load(pointer);
         return Unpacker.unpack(buffer);
     }
 }

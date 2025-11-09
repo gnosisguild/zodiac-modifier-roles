@@ -3,8 +3,19 @@ pragma solidity >=0.8.17 <0.9.0;
 
 import "./_Core.sol";
 
-import "./ScopeConfig.sol";
+import "./scoped-function/ScopeConfig.sol";
 
+/*
+ * The Permission Model Hierarchy
+ *
+ * Role → Target (address)
+ *        ├─ ALLOWED     ──→ No rules, blanket approval (just a flag)
+ *        ├─ DISALLOWED  ──→ No rules, blanket denial (just a flag)
+ *        └─ SCOPED      ──→ Per-function rules (THIS is permission-storage)
+ *                           ├─ function1 → [conditions...]
+ *                           ├─ function2 → [conditions...]
+ *                           └─ function3 → [conditions...]
+ */
 abstract contract PermissionBuilder is Core {
     event AllowTarget(
         bytes32 roleKey,

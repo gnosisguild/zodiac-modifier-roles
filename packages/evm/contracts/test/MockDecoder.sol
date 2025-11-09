@@ -2,7 +2,7 @@
 pragma solidity >=0.8.17 <0.9.0;
 
 import "../AbiDecoder.sol";
-import "../permission-storage/serialize/Topology.sol";
+import "../scoped-function/serialize/Topology.sol";
 
 contract MockDecoder {
     function inspect(

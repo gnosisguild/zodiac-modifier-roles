@@ -3,8 +3,8 @@ pragma solidity >=0.8.17 <0.9.0;
 
 import "./_Core.sol";
 
-import "./permission-storage/deserialize/Deserializer.sol";
-import "./permission-storage/serialize/Serializer.sol";
+import "./scoped-function/deserialize/Deserializer.sol";
+import "./scoped-function/serialize/Serializer.sol";
 
 /**
  * @title PermissionLoader - a component of the Zodiac Roles Mod that handles

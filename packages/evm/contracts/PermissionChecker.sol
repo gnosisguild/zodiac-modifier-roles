@@ -5,7 +5,7 @@ import "./_Core.sol";
 import "./_Periphery.sol";
 import "./AbiDecoder.sol";
 import "./Consumptions.sol";
-import "./ScopeConfig.sol";
+import "./scoped-function/ScopeConfig.sol";
 
 /**
  * @title PermissionChecker - a component of Zodiac Roles Mod responsible

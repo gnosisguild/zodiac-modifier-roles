@@ -5,8 +5,8 @@ import "./Integrity.sol";
 import "./Topology.sol";
 import "./Packer.sol";
 
-import "../../WriteOnce.sol";
-import "../../ScopeConfig.sol";
+import "../ImmutableStorage.sol";
+import "../ScopeConfig.sol";
 import "../../Types.sol";
 
 library Serializer {
@@ -27,7 +27,7 @@ library Serializer {
             allowanceKeys
         );
 
-        return ScopeConfig.pack(options, WriteOnce.store(buffer));
+        return ScopeConfig.pack(options, ImmutableStorage.store(buffer));
     }
 
     function _allowanceKeys(

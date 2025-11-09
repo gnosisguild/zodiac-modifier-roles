@@ -8,7 +8,7 @@ interface ISingletonFactory {
     ) external returns (address);
 }
 
-library WriteOnce {
+library ImmutableStorage {
     address public constant SINGLETON_FACTORY =
         0xce0042B868300000d44A59004Da54A005ffdcf9f;
 

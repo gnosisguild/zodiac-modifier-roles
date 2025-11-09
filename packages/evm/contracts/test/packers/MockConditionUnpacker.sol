@@ -2,7 +2,7 @@
 pragma solidity >=0.8.17 <0.9.0;
 
 import "../../Types.sol";
-import "../../permission-storage/deserialize/Unpacker.sol";
+import "../../scoped-function/deserialize/Unpacker.sol";
 
 contract MockConditionUnpacker {
     function unpack(
