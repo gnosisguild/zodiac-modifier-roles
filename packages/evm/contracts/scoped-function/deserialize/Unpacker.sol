@@ -60,13 +60,11 @@ library Unpacker {
         for (uint256 i = 0; i < nodeCount; ) {
             uint256 packed;
             assembly {
-                let ptr := add(buffer, add(0x20, offset))
-                packed := shr(224, mload(ptr))
+                // mload32, but do it inline
+                packed := shr(224, mload(add(buffer, add(0x20, offset))))
             }
 
             Condition memory node = nodes[i];
-
-            // Extract fields:
             node.paramType = AbiType((packed >> 29) & 0x07);
             node.operator = Operator((packed >> 24) & 0x1F);
             uint256 childCount = (packed >> 16) & 0xFF;
@@ -75,11 +73,7 @@ library Unpacker {
             if (compValueOffset != 0) {
                 bytes32 compValue;
                 assembly {
-                    let ptr := add(
-                        buffer,
-                        add(0x20, add(0x02, compValueOffset))
-                    )
-                    compValue := mload(ptr)
+                    compValue := mload(add(buffer, add(0x22, compValueOffset)))
                 }
                 node.compValue = compValue;
             }
@@ -125,9 +119,10 @@ library Unpacker {
 
         for (uint256 i = 0; i < nodeCount; ) {
             uint256 packed;
+
             assembly {
-                let ptr := add(buffer, add(0x20, offset))
-                packed := shr(240, mload(ptr))
+                // mload16, but do it inline
+                packed := shr(240, mload(add(buffer, add(0x20, offset))))
             }
 
             TypeTree memory node = nodes[i];
@@ -164,8 +159,7 @@ library Unpacker {
         uint256 offset
     ) private pure returns (uint256 value) {
         assembly {
-            let ptr := add(add(buffer, 0x20), offset)
-            value := shr(240, mload(ptr))
+            value := shr(240, mload(add(buffer, add(0x20, offset))))
         }
     }
 
