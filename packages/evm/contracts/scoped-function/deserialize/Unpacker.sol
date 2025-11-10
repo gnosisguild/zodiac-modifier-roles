@@ -9,9 +9,7 @@ library Unpacker {
     // Constants
     // ═══════════════════════════════════════════════════════════════════════════
 
-    uint256 private constant CONDITION_HEADER_BYTES = 2;
     uint256 private constant CONDITION_NODE_BYTES = 4;
-    uint256 private constant TYPETREE_HEADER_BYTES = 2;
     uint256 private constant TYPETREE_NODE_BYTES = 2;
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -53,13 +51,8 @@ library Unpacker {
         uint256 offset
     ) internal view returns (Condition memory) {
         // Load the node count from header (16 bits)
-        uint256 nodeCount;
-        assembly {
-            let ptr := add(buffer, add(0x20, offset))
-            nodeCount := shr(240, mload(ptr))
-        }
-
-        offset += CONDITION_HEADER_BYTES;
+        uint256 nodeCount = _mload16(buffer, offset);
+        offset += 2;
 
         Condition[] memory nodes = new Condition[](nodeCount);
         uint256 nextChildIndex = 1;
@@ -124,12 +117,8 @@ library Unpacker {
         uint256 offset
     ) internal pure returns (TypeTree memory) {
         // Load the node count from header (16 bits)
-        uint256 nodeCount;
-        assembly {
-            let ptr := add(buffer, add(0x20, offset))
-            nodeCount := shr(240, mload(ptr))
-        }
-        offset += TYPETREE_HEADER_BYTES;
+        uint256 nodeCount = _mload16(buffer, offset);
+        offset += 2;
 
         TypeTree[] memory nodes = new TypeTree[](nodeCount);
         uint256 nextChildIndex = 1;
