@@ -10,7 +10,7 @@ import {
 
 import { ExecutionOptions } from "./utils";
 
-import { ConditionFlatStruct } from "../typechain-types/contracts/Integrity";
+import { ConditionFlatStruct } from "../typechain-types/contracts/scoped-function/serialize/Integrity";
 import { TestContract } from "../typechain-types/contracts/test";
 
 const DEFAULT_ROLE_KEY =
@@ -42,16 +42,9 @@ export async function deployRolesMod(
   const provider = createEip1193(hre.network.provider, signer);
 
   await deployFactories({ provider });
-  const integrity = await hre.artifacts.readArtifact("Integrity");
-  const { address: integrityAddress } = await deployMastercopy({
-    bytecode: integrity.bytecode,
-    constructorArgs: { types: [], values: [] },
-    salt: ZeroHash,
-    provider,
-  });
-  const packer = await hre.artifacts.readArtifact("Packer");
-  const { address: packerAddress } = await deployMastercopy({
-    bytecode: packer.bytecode,
+  const serializer = await hre.artifacts.readArtifact("Serializer");
+  const { address: serializerAddress } = await deployMastercopy({
+    bytecode: serializer.bytecode,
     constructorArgs: { types: [], values: [] },
     salt: ZeroHash,
     provider,
@@ -59,8 +52,7 @@ export async function deployRolesMod(
 
   const Modifier = await hre.ethers.getContractFactory("Roles", {
     libraries: {
-      Integrity: integrityAddress,
-      Packer: packerAddress,
+      Serializer: serializerAddress,
     },
   });
   const modifier = await Modifier.deploy(owner, avatar, target);

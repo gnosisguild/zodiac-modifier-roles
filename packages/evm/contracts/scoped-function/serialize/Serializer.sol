@@ -1,31 +1,66 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "@gnosis-guild/zodiac-core/contracts/core/Modifier.sol";
+import "./Integrity.sol";
+import "./Topology.sol";
+import "./Packer.sol";
 
-import "./BufferPacker.sol";
+import "../ImmutableStorage.sol";
+import "../ScopeConfig.sol";
+import "../../Types.sol";
 
-/**
- * @title Packer - a library that coordinates the process of packing
- * conditionsFlat into a storage optimized buffer.
- * @author Cristóvão Honorato - <cristovao.honorato@gnosis.io>
- */
-library Packer {
-    function pack(
-        ConditionFlat[] memory conditionsFlat
-    ) external pure returns (bytes memory buffer) {
-        _removeExtraneousOffsets(conditionsFlat);
+library Serializer {
+    function store(
+        ConditionFlat[] memory conditions,
+        ExecutionOptions options
+    ) external returns (bytes32) {
+        Integrity.enforce(conditions);
 
-        buffer = new bytes(BufferPacker.packedSize(conditionsFlat));
+        _removeExtraneousOffsets(conditions);
 
-        uint256 count = conditionsFlat.length;
-        uint256 offset = 32 + count * 2;
-        for (uint256 i; i < count; ++i) {
-            BufferPacker.packCondition(buffer, i, conditionsFlat[i]);
-            if (conditionsFlat[i].operator >= Operator.EqualTo) {
-                BufferPacker.packCompValue(buffer, offset, conditionsFlat[i]);
-                offset += 32;
+        TypeTree memory typeNode = Topology.typeTree(conditions, 0);
+        bytes32[] memory allowanceKeys = _allowanceKeys(conditions);
+
+        bytes memory buffer = Packer.pack(
+            conditions,
+            typeNode,
+            allowanceKeys
+        );
+
+        return ScopeConfig.pack(options, ImmutableStorage.store(buffer));
+    }
+
+    function _allowanceKeys(
+        ConditionFlat[] memory conditions
+    ) private pure returns (bytes32[] memory result) {
+        uint256 maxCount;
+        for (uint256 i; i < conditions.length; ++i) {
+            if (conditions[i].operator >= Operator.WithinAllowance) maxCount++;
+        }
+
+        result = new bytes32[](maxCount);
+        uint256 count;
+
+        for (uint256 i; i < conditions.length; ++i) {
+            if (conditions[i].operator < Operator.WithinAllowance) {
+                continue;
             }
+            bytes32 key = bytes32(conditions[i].compValue);
+            bool fresh = true;
+            for (uint256 j; j < count; ++j) {
+                if (result[j] == key) {
+                    fresh = false;
+                    break;
+                }
+            }
+            if (fresh) {
+                result[count++] = key;
+            }
+        }
+
+        // Truncate result length in-place
+        assembly {
+            mstore(result, count)
         }
     }
 

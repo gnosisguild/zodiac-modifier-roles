@@ -11,8 +11,7 @@ import {
   PermissionCheckerStatus,
 } from "../utils";
 import { deployRolesMod } from "../setup";
-
-import { ConditionFlatStruct } from "../../typechain-types/contracts/Integrity";
+import { ConditionFlatStruct } from "../../typechain-types/contracts/PermissionBuilder";
 
 const AddressOne = "0x0000000000000000000000000000000000000001";
 

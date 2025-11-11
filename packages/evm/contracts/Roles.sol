@@ -4,22 +4,19 @@ pragma solidity >=0.8.17 <0.9.0;
 import "./AllowanceTracker.sol";
 import "./PermissionBuilder.sol";
 import "./PermissionChecker.sol";
-import "./PermissionLoader.sol";
 
 /**
  * @title Zodiac Roles Mod - granular, role-based, access control for your
- * on-chain avatar accounts (like Safe).
- * @author Cristóvão Honorato - <cristovao.honorato@gnosis.io>
- * @author Jan-Felix Schwarz  - <jan-felix.schwarz@gnosis.io>
- * @author Auryn Macmillan    - <auryn.macmillan@gnosis.io>
- * @author Nathan Ginnever    - <nathan.ginnever@gnosis.io>
+ * on-chain avatar accounts.
+ *
+ * @author gnosisguild
+ *
  */
 contract Roles is
     Modifier,
     AllowanceTracker,
     PermissionBuilder,
-    PermissionChecker,
-    PermissionLoader
+    PermissionChecker
 {
     mapping(address => bytes32) public defaultRoles;
 
