@@ -6,14 +6,15 @@ import "./_Periphery.sol";
 import "./AbiDecoder.sol";
 import "./Consumptions.sol";
 
-import "./packers/BufferPacker.sol";
+import "./scoped-function/deserialize/Deserializer.sol";
+import "./scoped-function/ScopeConfig.sol";
 
 /**
  * @title PermissionChecker - a component of Zodiac Roles Mod responsible
  * for enforcing and authorizing actions performed on behalf of a role.
  *
- * @author Cristóvão Honorato - <cristovao.honorato@gnosis.io>
- * @author Jan-Felix Schwarz  - <jan-felix.schwarz@gnosis.io>
+ * @author gnosisguild
+ *
  */
 abstract contract PermissionChecker is Core, Periphery {
     function _authorize(
@@ -122,9 +123,8 @@ abstract contract PermissionChecker is Core, Periphery {
         }
 
         if (role.targets[to].clearance == Clearance.Function) {
-            bytes32 key = _key(to, bytes4(data));
+            bytes32 header = role.scopeConfig[_key(to, bytes4(data))];
             {
-                bytes32 header = role.scopeConfig[key];
                 if (header == 0) {
                     return (
                         Status.FunctionNotAllowed,
@@ -135,8 +135,8 @@ abstract contract PermissionChecker is Core, Periphery {
                     );
                 }
 
-                (bool isWildcarded, ExecutionOptions options) = BufferPacker
-                    .unpackOptions(header);
+                (bool isWildcarded, ExecutionOptions options, ) = ScopeConfig
+                    .unpack(header);
 
                 Status status = _executionOptions(value, operation, options);
                 if (status != Status.Ok) {
@@ -156,8 +156,7 @@ abstract contract PermissionChecker is Core, Periphery {
 
             return
                 _scopedFunction(
-                    role,
-                    key,
+                    header,
                     data,
                     Context({
                         to: to,
@@ -210,16 +209,28 @@ abstract contract PermissionChecker is Core, Periphery {
     }
 
     function _scopedFunction(
-        Role storage role,
-        bytes32 key,
+        bytes32 scopeConfig,
         bytes calldata data,
         Context memory context
     ) private view returns (Status, Result memory) {
+        Consumption[] memory consumptions;
         (
             Condition memory condition,
             TypeTree memory typeTree,
-            Consumption[] memory consumptions
-        ) = _load(role, key);
+            bytes32[] memory allowanceKeys
+        ) = Deserializer.load(scopeConfig);
+
+        if (allowanceKeys.length > 0) {
+            consumptions = new Consumption[](allowanceKeys.length);
+
+            for (uint256 i; i < allowanceKeys.length; ++i) {
+                consumptions[i].allowanceKey = allowanceKeys[i];
+                (consumptions[i].balance, ) = _accruedAllowance(
+                    allowances[allowanceKeys[i]],
+                    uint64(block.timestamp)
+                );
+            }
+        }
 
         Payload memory payload = AbiDecoder.inspect(data, typeTree);
 
@@ -512,20 +523,17 @@ abstract contract PermissionChecker is Core, Periphery {
         Context memory context
     ) private view returns (Status, Result memory result) {
         result.consumptions = context.consumptions;
-
         if (
             payload.children.length == 0 ||
             payload.children.length > condition.children.length
         ) {
             return (Status.ParameterNotSubsetOfAllowed, result);
         }
-
         uint256 taken;
         for (uint256 i; i < payload.children.length; ++i) {
             bool found = false;
             for (uint256 j; j < condition.children.length; ++j) {
                 if (taken & (1 << j) != 0) continue;
-
                 (Status status, Result memory _result) = _walk(
                     data,
                     condition.children[j],
@@ -551,7 +559,6 @@ abstract contract PermissionChecker is Core, Periphery {
                 );
             }
         }
-
         return (Status.Ok, result);
     }
 

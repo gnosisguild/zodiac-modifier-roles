@@ -4,19 +4,14 @@ import { AbiCoder, ZeroHash } from "ethers";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 import { AbiType, flattenCondition, Operator } from "./utils";
-import { ConditionFlatStruct } from "../typechain-types/contracts/Integrity";
+import { ConditionFlatStruct } from "../typechain-types/contracts/PermissionBuilder";
 
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
 async function setup() {
   const Integrity = await hre.ethers.getContractFactory("Integrity");
   const integrity = await Integrity.deploy();
-  const integrityAddress = await integrity.getAddress();
-  const Mock = await hre.ethers.getContractFactory("MockIntegrity", {
-    libraries: {
-      Integrity: integrityAddress,
-    },
-  });
+  const Mock = await hre.ethers.getContractFactory("MockIntegrity");
   const mock = await Mock.deploy();
 
   async function enforce(conditionsFlat: ConditionFlatStruct[]) {

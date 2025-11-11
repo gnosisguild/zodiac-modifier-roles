@@ -7,8 +7,6 @@ import "./_Core.sol";
  * @title AllowanceTracker - a component of the Zodiac Roles Mod that is
  * responsible for loading and calculating allowance balances. Persists
  * consumptions back to storage.
- * @author Cristóvão Honorato - <cristovao.honorato@gnosis.io>
- * @author Jan-Felix Schwarz  - <jan-felix.schwarz@gnosis.io>
  */
 abstract contract AllowanceTracker is Core {
     event ConsumeAllowance(

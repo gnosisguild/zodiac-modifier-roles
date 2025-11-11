@@ -2,16 +2,20 @@
 pragma solidity >=0.8.17 <0.9.0;
 
 import "./_Core.sol";
-import "./Integrity.sol";
 
-import "./packers/BufferPacker.sol";
+import "./scoped-function/serialize/Serializer.sol";
+import "./scoped-function/ScopeConfig.sol";
 
-/**
- * @title PermissionBuilder - a component of the Zodiac Roles Mod that is
- * responsible for constructing, managing, granting, and revoking all types
- * of permission data.
- * @author Cristóvão Honorato - <cristovao.honorato@gnosis.io>
- * @author Jan-Felix Schwarz  - <jan-felix.schwarz@gnosis.io>
+/*
+ * The Permission Model Hierarchy
+ *
+ * Role → Target (address)
+ *        ├─ ALLOWED     ──→ No rules, blanket approval (just a flag)
+ *        ├─ DISALLOWED  ──→ No rules, blanket denial (just a flag)
+ *        └─ SCOPED      ──→ Per-function rules (THIS is permission-storage)
+ *                           ├─ function1 → [conditions...]
+ *                           ├─ function2 → [conditions...]
+ *                           └─ function3 → [conditions...]
  */
 abstract contract PermissionBuilder is Core {
     event AllowTarget(
@@ -105,8 +109,8 @@ abstract contract PermissionBuilder is Core {
         bytes4 selector,
         ExecutionOptions options
     ) external onlyOwner {
-        roles[roleKey].scopeConfig[_key(targetAddress, selector)] = BufferPacker
-            .packHeaderAsWildcarded(options);
+        roles[roleKey].scopeConfig[_key(targetAddress, selector)] = ScopeConfig
+            .packAsWildcarded(options);
 
         emit AllowFunction(roleKey, targetAddress, selector, options);
     }
@@ -137,14 +141,8 @@ abstract contract PermissionBuilder is Core {
         ConditionFlat[] memory conditions,
         ExecutionOptions options
     ) external onlyOwner {
-        Integrity.enforce(conditions);
-
-        _store(
-            roles[roleKey],
-            _key(targetAddress, selector),
-            conditions,
-            options
-        );
+        roles[roleKey].scopeConfig[_key(targetAddress, selector)] = Serializer
+            .store(conditions, options);
 
         emit ScopeFunction(
             roleKey,
