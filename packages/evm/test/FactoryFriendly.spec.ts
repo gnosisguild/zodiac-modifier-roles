@@ -16,16 +16,13 @@ describe("Module works with factory", () => {
     const [deployer] = await hre.ethers.getSigners();
     const Factory = await hre.ethers.getContractFactory("ModuleProxyFactory");
     const factory = await Factory.deploy();
-    const Packer = await hre.ethers.getContractFactory("Packer");
-    const packer = await Packer.deploy();
 
-    const Integrity = await hre.ethers.getContractFactory("Integrity");
-    const integrity = await Integrity.deploy();
+    const Serializer = await hre.ethers.getContractFactory("Serializer");
+    const serializer = await Serializer.deploy();
 
     const Modifier = await hre.ethers.getContractFactory("Roles", {
       libraries: {
-        Integrity: await integrity.getAddress(),
-        Packer: await packer.getAddress(),
+        Serializer: await serializer.getAddress(),
       },
     });
     const masterCopy = await Modifier.deploy(

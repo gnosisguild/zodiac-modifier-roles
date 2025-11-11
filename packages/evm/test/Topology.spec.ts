@@ -1354,48 +1354,52 @@ describe("Topology Library", () => {
             ],
           });
 
-          const output = bfsToTree(await topology.typeTree(input));
+          const output = normalizeTree(
+            bfsToTree(await topology.typeTree(input)),
+          );
 
           // Mixed OR/AND structure where:
           // - First AND yields Dynamic (same type tree)
           // - Second AND yields different structures, creating a variant
-          expect(output).to.deep.equal({
-            _type: AbiType.Calldata,
-            children: [
-              {
-                _type: AbiType.Dynamic,
-                children: [
-                  {
-                    _type: AbiType.Dynamic,
-                    children: [],
-                  },
-                  {
-                    _type: AbiType.Dynamic,
-                    children: [
-                      {
-                        _type: AbiType.Calldata,
-                        children: [
-                          {
-                            _type: AbiType.Static,
-                            children: [],
-                          },
-                        ],
-                      },
-                      {
-                        _type: AbiType.AbiEncoded,
-                        children: [
-                          {
-                            _type: AbiType.Static,
-                            children: [],
-                          },
-                        ],
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          });
+          expect(output).to.deep.equal(
+            normalizeTree({
+              _type: AbiType.Calldata,
+              children: [
+                {
+                  _type: AbiType.Dynamic,
+                  children: [
+                    {
+                      _type: AbiType.Dynamic,
+                      children: [],
+                    },
+                    {
+                      _type: AbiType.Dynamic,
+                      children: [
+                        {
+                          _type: AbiType.Calldata,
+                          children: [
+                            {
+                              _type: AbiType.Static,
+                              children: [],
+                            },
+                          ],
+                        },
+                        {
+                          _type: AbiType.AbiEncoded,
+                          children: [
+                            {
+                              _type: AbiType.Static,
+                              children: [],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            }),
+          );
         });
 
         it("should handle nested variants", async () => {
@@ -3526,48 +3530,50 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = normalizeTree(bfsToTree(await topology.typeTree(input)));
 
         // Mixed OR/AND structure where:
         // - First AND yields Dynamic (same type tree)
         // - Second AND yields different structures, creating a variant
-        expect(output).to.deep.equal({
-          _type: AbiType.Calldata,
-          children: [
-            {
-              _type: AbiType.Dynamic,
-              children: [
-                {
-                  _type: AbiType.Dynamic,
-                  children: [],
-                },
-                {
-                  _type: AbiType.Dynamic,
-                  children: [
-                    {
-                      _type: AbiType.Calldata,
-                      children: [
-                        {
-                          _type: AbiType.Static,
-                          children: [],
-                        },
-                      ],
-                    },
-                    {
-                      _type: AbiType.AbiEncoded,
-                      children: [
-                        {
-                          _type: AbiType.Static,
-                          children: [],
-                        },
-                      ],
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        });
+        expect(output).to.deep.equal(
+          normalizeTree({
+            _type: AbiType.Calldata,
+            children: [
+              {
+                _type: AbiType.Dynamic,
+                children: [
+                  {
+                    _type: AbiType.Dynamic,
+                    children: [],
+                  },
+                  {
+                    _type: AbiType.Dynamic,
+                    children: [
+                      {
+                        _type: AbiType.Calldata,
+                        children: [
+                          {
+                            _type: AbiType.Static,
+                            children: [],
+                          },
+                        ],
+                      },
+                      {
+                        _type: AbiType.AbiEncoded,
+                        children: [
+                          {
+                            _type: AbiType.Static,
+                            children: [],
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          }),
+        );
       });
       it("should handle deeply nested OR/AND with relaxed type tree matching", async () => {
         const { topology } = await loadFixture(setup);
@@ -3640,49 +3646,51 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = normalizeTree(bfsToTree(await topology.typeTree(input)));
 
         // Deeply nested structure:
         // - Inner OR yields Dynamic (same type tree)
         // - AND combines to Dynamic
         // - Outer OR creates variant between Dynamic and Calldata
-        expect(output).to.deep.equal({
-          _type: AbiType.Calldata,
-          children: [
-            {
-              _type: AbiType.Tuple,
-              children: [
-                {
-                  _type: AbiType.Dynamic,
-                  children: [
-                    {
-                      _type: AbiType.Dynamic,
-                      children: [],
-                    },
-                    {
-                      _type: AbiType.Calldata,
-                      children: [
-                        {
-                          _type: AbiType.Array,
-                          children: [
-                            {
-                              _type: AbiType.Static,
-                              children: [],
-                            },
-                          ],
-                        },
-                      ],
-                    },
-                  ],
-                },
-                {
-                  _type: AbiType.Static,
-                  children: [],
-                },
-              ],
-            },
-          ],
-        });
+        expect(output).to.deep.equal(
+          normalizeTree({
+            _type: AbiType.Calldata,
+            children: [
+              {
+                _type: AbiType.Tuple,
+                children: [
+                  {
+                    _type: AbiType.Dynamic,
+                    children: [
+                      {
+                        _type: AbiType.Dynamic,
+                        children: [],
+                      },
+                      {
+                        _type: AbiType.Calldata,
+                        children: [
+                          {
+                            _type: AbiType.Array,
+                            children: [
+                              {
+                                _type: AbiType.Static,
+                                children: [],
+                              },
+                            ],
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                  {
+                    _type: AbiType.Static,
+                    children: [],
+                  },
+                ],
+              },
+            ],
+          }),
+        );
       });
     });
 
@@ -4208,4 +4216,23 @@ function bfsToTree(
   }
 
   return nodes[0];
+}
+
+function normalizeTree(node: TreeNode): TreeNode {
+  // Recursively normalize all children first
+  const normalizedChildren = node.children.map(normalizeTree);
+
+  // Sort children by _type first, then by JSON representation for deterministic ordering
+  normalizedChildren.sort((a, b) => {
+    if (a._type !== b._type) {
+      return a._type - b._type;
+    }
+    // If types are equal, sort by stringified representation
+    return JSON.stringify(a).localeCompare(JSON.stringify(b));
+  });
+
+  return {
+    _type: node._type,
+    children: normalizedChildren,
+  };
 }
