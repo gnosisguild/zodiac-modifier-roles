@@ -25,7 +25,7 @@ library Integrity {
 
     error UnsuitableChildTypeTree(uint256 index);
 
-    function enforce(ConditionFlat[] memory conditions) external pure {
+    function enforce(ConditionFlat[] memory conditions) internal pure {
         _root(conditions);
         _bfs(conditions);
         for (uint256 i = 0; i < conditions.length; ++i) {
