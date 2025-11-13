@@ -219,8 +219,8 @@ library Packer {
 
         // Count non-structural children from the end (they're guaranteed to come last)
         uint256 nonStructuralCount = 0;
-        for (uint256 i = length - 1; i >= 0; --i) {
-            if (_isNonStructural(conditions, start + i)) {
+        for (uint256 i = length; i > 0; --i) {
+            if (_isNonStructural(conditions, start + i - 1)) {
                 ++nonStructuralCount;
             } else {
                 break;

@@ -1688,6 +1688,38 @@ describe("Topology Library", () => {
         });
       });
 
+      it("should filter out complete subtrees that are non-structural", async () => {
+        const { topology } = await loadFixture(setup);
+
+        const input = flattenCondition({
+          paramType: AbiType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: AbiType.None,
+              operator: Operator.And,
+              children: [
+                {
+                  paramType: AbiType.None,
+                  operator: Operator.EtherWithinAllowance,
+                },
+                {
+                  paramType: AbiType.None,
+                  operator: Operator.CallWithinAllowance,
+                },
+              ],
+            },
+          ],
+        });
+
+        const output = bfsToTree(await topology.typeTree(input));
+
+        expect(output).to.deep.equal({
+          _type: AbiType.Calldata,
+          children: [],
+        });
+      });
+
       it("should handle EtherWithinAllowance as first node", async () => {
         const { topology } = await loadFixture(setup);
 
