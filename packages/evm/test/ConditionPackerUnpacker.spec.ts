@@ -375,7 +375,6 @@ describe("ConditionPacker and ConditionUnpacker", () => {
 
       expect(pruneResult(unpacked)).to.deep.equal(hashEqualToCompValues(input));
     });
-
   });
 });
 

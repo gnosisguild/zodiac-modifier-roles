@@ -437,7 +437,6 @@ describe("Integrity", () => {
           .to.be.revertedWithCustomError(integrity, "UnsuitableChildCount")
           .withArgs(1);
       });
-
     });
 
     describe("Allowance Operators (EtherWithinAllowance, CallWithinAllowance)", () => {

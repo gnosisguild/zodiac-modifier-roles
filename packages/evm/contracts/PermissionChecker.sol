@@ -236,15 +236,14 @@ abstract contract PermissionChecker is Core, Periphery {
                     uint64(block.timestamp)
                 );
             }
+
+            context.consumptions = context.consumptions.length > 0
+                ? Consumptions.merge(context.consumptions, consumptions)
+                : consumptions;
         }
 
-        Payload memory payload = AbiDecoder.inspect(data, typeTree);
-
-        context.consumptions = context.consumptions.length > 0
-            ? Consumptions.merge(context.consumptions, consumptions)
-            : consumptions;
-
-        return _walk(data, condition, payload, context);
+        return
+            _walk(data, condition, AbiDecoder.inspect(data, typeTree), context);
     }
 
     function _walk(
