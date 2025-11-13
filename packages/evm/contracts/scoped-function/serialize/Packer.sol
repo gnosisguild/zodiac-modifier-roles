@@ -214,13 +214,20 @@ library Packer {
     function _structuralChildCount(
         ConditionFlat[] memory conditions,
         uint256 index
-    ) private pure returns (uint256 count) {
+    ) private pure returns (uint256) {
         (uint256 start, uint256 length) = _childBounds(conditions, index);
-        for (uint256 i; i < length; ++i) {
-            if (!_isNonStructural(conditions, start + i)) {
-                ++count;
+
+        // Count non-structural children from the end (they're guaranteed to come last)
+        uint256 nonStructuralCount = 0;
+        for (uint256 i = length - 1; i >= 0; --i) {
+            if (_isNonStructural(conditions, start + i)) {
+                ++nonStructuralCount;
+            } else {
+                break;
             }
         }
+
+        return length - nonStructuralCount;
     }
 
     function _isNonStructural(
