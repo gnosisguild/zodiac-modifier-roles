@@ -159,7 +159,7 @@ abstract contract PermissionChecker is Core, Periphery {
                 value: value,
                 operation: operation
             });
-            Payload memory dummyPayload;
+            Payload memory placeholder;
 
             return
                 _scopedFunction(
@@ -168,7 +168,7 @@ abstract contract PermissionChecker is Core, Periphery {
                     Context({
                         call: callParams,
                         consumptions: consumptions,
-                        parentPayload: dummyPayload
+                        parentPayload: placeholder
                     })
                 );
         } else if (role.targets[to].clearance == Clearance.Target) {
