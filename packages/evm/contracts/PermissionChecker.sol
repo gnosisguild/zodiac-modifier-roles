@@ -369,7 +369,7 @@ abstract contract PermissionChecker is Core, Periphery {
                 Context({
                     call: context.call,
                     consumptions: result.consumptions,
-                    parentPayload: payload
+                    parentPayload: context.parentPayload
                 })
             );
             if (status != Status.Ok) {
@@ -407,7 +407,7 @@ abstract contract PermissionChecker is Core, Periphery {
                 Context({
                     call: context.call,
                     consumptions: result.consumptions,
-                    parentPayload: payload
+                    parentPayload: context.parentPayload
                 })
             );
             if (status == Status.Ok) {
