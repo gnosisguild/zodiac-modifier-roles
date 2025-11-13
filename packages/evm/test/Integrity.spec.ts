@@ -380,7 +380,7 @@ describe("Integrity", () => {
       });
     });
 
-    describe("Array Operators (ArraySome, ArrayEvery, ArraySubset)", () => {
+    describe("Array Operators (ArraySome, ArrayEvery)", () => {
       it("should revert if ArraySome is not used on an Array type", async () => {
         const { integrity, enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
@@ -438,25 +438,6 @@ describe("Integrity", () => {
           .withArgs(1);
       });
 
-      it("should revert if ArraySubset has more than 256 children", async () => {
-        const { integrity, enforce } = await loadFixture(setup);
-        const conditions = flattenCondition({
-          paramType: AbiType.Calldata,
-          children: [
-            {
-              paramType: AbiType.Array,
-              operator: Operator.ArraySubset,
-              children: Array(257).fill({
-                paramType: AbiType.Static,
-                operator: Operator.Pass,
-              }),
-            },
-          ],
-        });
-        await expect(enforce(conditions))
-          .to.be.revertedWithCustomError(integrity, "UnsuitableChildCount")
-          .withArgs(1);
-      });
     });
 
     describe("Allowance Operators (EtherWithinAllowance, CallWithinAllowance)", () => {
@@ -1251,7 +1232,7 @@ describe("Integrity", () => {
         ]),
       ).to.not.be.reverted;
     });
-    it("and/or/nor mismatch - recursive", async () => {
+    it("and/or mismatch - recursive", async () => {
       const { integrity, enforce } = await loadFixture(setup);
 
       const conditions = [
@@ -1264,7 +1245,7 @@ describe("Integrity", () => {
         {
           parent: 0,
           paramType: AbiType.None,
-          operator: Operator.Nor,
+          operator: Operator.Or,
           compValue: "0x",
         },
         {
@@ -1620,7 +1601,7 @@ describe("Integrity", () => {
               children: [
                 {
                   paramType: AbiType.None,
-                  operator: Operator.Nor,
+                  operator: Operator.Or,
                   children: [
                     {
                       paramType: AbiType.Calldata,

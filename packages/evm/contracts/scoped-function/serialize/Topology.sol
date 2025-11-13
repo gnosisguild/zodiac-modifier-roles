@@ -25,7 +25,7 @@ library Topology {
 
         Operator op = conditions[index].operator;
 
-        // Logical operators (And, Or, Nor) have special handling
+        // Logical operators (And, Or) have special handling
         if (_isLogical(op)) {
             return _buildLogicalTree(conditions, children);
         }
@@ -112,7 +112,7 @@ library Topology {
     }
 
     function _isLogical(Operator op) private pure returns (bool) {
-        return op >= Operator.And && op <= Operator.Nor;
+        return op == Operator.And || op == Operator.Or;
     }
 
     function _isNonStructural(

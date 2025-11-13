@@ -376,35 +376,6 @@ describe("ConditionPacker and ConditionUnpacker", () => {
       expect(pruneResult(unpacked)).to.deep.equal(hashEqualToCompValues(input));
     });
 
-    it("should handle Nor operator", async () => {
-      const { packer, unpacker } = await loadFixture(setup);
-
-      const input = flattenCondition({
-        paramType: AbiType.None,
-        operator: Operator.Nor,
-        children: [
-          {
-            paramType: AbiType.Static,
-            operator: Operator.EqualTo,
-            compValue:
-              "0x0000000000000000000000000000000000000000000000000000000000000001",
-            children: [],
-          },
-          {
-            paramType: AbiType.Static,
-            operator: Operator.EqualTo,
-            compValue:
-              "0x0000000000000000000000000000000000000000000000000000000000000002",
-            children: [],
-          },
-        ],
-      });
-
-      const packed = await packer.pack(input);
-      const unpacked = await unpacker.unpack(packed);
-
-      expect(pruneResult(unpacked)).to.deep.equal(hashEqualToCompValues(input));
-    });
   });
 });
 

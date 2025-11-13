@@ -278,15 +278,11 @@ abstract contract PermissionChecker is Core, Periphery {
                 return _and(data, condition, payload, context);
             } else if (operator == Operator.Or) {
                 return _or(data, condition, payload, context);
-            } else if (operator == Operator.Nor) {
-                return _nor(data, condition, payload, context);
             } else if (operator == Operator.ArraySome) {
                 return _arraySome(data, condition, payload, context);
-            } else if (operator == Operator.ArrayEvery) {
-                return _arrayEvery(data, condition, payload, context);
             } else {
-                assert(operator == Operator.ArraySubset);
-                return _arraySubset(data, condition, payload, context);
+                assert(operator == Operator.ArrayEvery);
+                return _arrayEvery(data, condition, payload, context);
             }
         } else {
             if (operator <= Operator.LessThan) {
@@ -527,35 +523,6 @@ abstract contract PermissionChecker is Core, Periphery {
         );
     }
 
-    function _nor(
-        bytes calldata data,
-        Condition memory condition,
-        Payload memory payload,
-        Context memory context
-    ) private view returns (Status status, Result memory) {
-        for (uint256 i; i < condition.children.length; ) {
-            (status, ) = _walk(
-                data,
-                condition.children[i],
-                payload.variant ? payload.children[i] : payload,
-                context
-            );
-            if (status == Status.Ok) {
-                return (
-                    Status.NorViolation,
-                    Result({consumptions: context.consumptions, info: 0})
-                );
-            }
-            unchecked {
-                ++i;
-            }
-        }
-        return (
-            Status.Ok,
-            Result({consumptions: context.consumptions, info: 0})
-        );
-    }
-
     function _arraySome(
         bytes calldata data,
         Condition memory condition,
@@ -620,49 +587,6 @@ abstract contract PermissionChecker is Core, Periphery {
             }
             unchecked {
                 ++i;
-            }
-        }
-        return (Status.Ok, result);
-    }
-
-    function _arraySubset(
-        bytes calldata data,
-        Condition memory condition,
-        Payload memory payload,
-        Context memory context
-    ) private view returns (Status, Result memory result) {
-        result.consumptions = context.consumptions;
-        if (
-            payload.children.length == 0 ||
-            payload.children.length > condition.children.length
-        ) {
-            return (Status.ParameterNotSubsetOfAllowed, result);
-        }
-        uint256 taken;
-        context.parentPayload = payload;
-        for (uint256 i; i < payload.children.length; ++i) {
-            bool found = false;
-            for (uint256 j; j < condition.children.length; ++j) {
-                if (taken & (1 << j) != 0) continue;
-                context.consumptions = result.consumptions;
-                (Status status, Result memory _result) = _walk(
-                    data,
-                    condition.children[j],
-                    payload.children[i],
-                    context
-                );
-                if (status == Status.Ok) {
-                    found = true;
-                    taken |= 1 << j;
-                    result = _result;
-                    break;
-                }
-            }
-            if (!found) {
-                return (
-                    Status.ParameterNotSubsetOfAllowed,
-                    Result({consumptions: context.consumptions, info: 0})
-                );
             }
         }
         return (Status.Ok, result);
@@ -864,8 +788,8 @@ abstract contract PermissionChecker is Core, Periphery {
         SendNotAllowed,
         /// Or conition not met
         OrViolation,
-        /// Nor conition not met
-        NorViolation,
+        /// @deprecated Nor operator has been removed
+        _DeprecatedNorViolation,
         /// Parameter value is not equal to allowed
         ParameterNotAllowed,
         /// Parameter value less than allowed
@@ -878,8 +802,8 @@ abstract contract PermissionChecker is Core, Periphery {
         NotEveryArrayElementPasses,
         /// Array elements do not meet allowed criteria for at least one element
         NoArrayElementPasses,
-        /// Parameter value not a subset of allowed
-        ParameterNotSubsetOfAllowed,
+        /// @deprecated ArraySubset operator has been removed
+        _DeprecatedParameterNotSubsetOfAllowed,
         /// Bitmask exceeded value length
         BitmaskOverflow,
         /// Bitmask not an allowed value

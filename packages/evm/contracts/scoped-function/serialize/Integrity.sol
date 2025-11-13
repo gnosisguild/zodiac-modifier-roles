@@ -76,7 +76,7 @@ library Integrity {
             if (condition.compValue.length != 0) {
                 revert UnsuitableCompValue(index);
             }
-        } else if (operator >= Operator.And && operator <= Operator.Nor) {
+        } else if (operator == Operator.And || operator == Operator.Or) {
             if (_type != AbiType.None) {
                 revert UnsuitableParameterType(index);
             }
@@ -96,9 +96,7 @@ library Integrity {
                 revert UnsuitableCompValue(index);
             }
         } else if (
-            operator == Operator.ArraySome ||
-            operator == Operator.ArrayEvery ||
-            operator == Operator.ArraySubset
+            operator == Operator.ArraySome || operator == Operator.ArrayEvery
         ) {
             if (_type != AbiType.Array) {
                 revert UnsuitableParameterType(index);
@@ -205,8 +203,8 @@ library Integrity {
                     revert UnsuitableChildCount(i);
                 }
                 if (
-                    (condition.operator >= Operator.And &&
-                        condition.operator <= Operator.Nor)
+                    condition.operator == Operator.And ||
+                    condition.operator == Operator.Or
                 ) {
                     if (childrenLength == 0) {
                         revert UnsuitableChildCount(i);
@@ -238,11 +236,6 @@ library Integrity {
                     (condition.operator == Operator.ArraySome ||
                         condition.operator == Operator.ArrayEvery) &&
                     childrenLength != 1
-                ) {
-                    revert UnsuitableChildCount(i);
-                } else if (
-                    condition.operator == Operator.ArraySubset &&
-                    childrenLength > 256
                 ) {
                     revert UnsuitableChildCount(i);
                 }
@@ -304,9 +297,9 @@ library Integrity {
         for (uint256 i = 0; i < conditions.length; i++) {
             ConditionFlat memory condition = conditions[i];
             if (
-                ((condition.operator >= Operator.And &&
-                    condition.operator <= Operator.Nor) ||
-                    condition.paramType == AbiType.Array)
+                condition.operator == Operator.And ||
+                condition.operator == Operator.Or ||
+                condition.paramType == AbiType.Array
             ) {
                 if (
                     !_isTypeMatch(conditions, i) &&
@@ -377,8 +370,8 @@ library Integrity {
     {
         for (uint256 j = conditions[i].parent; ; ) {
             bool isCalldata = conditions[j].paramType == AbiType.Calldata;
-            bool isLogical = (conditions[j].operator >= Operator.And &&
-                conditions[j].operator <= Operator.Nor);
+            bool isLogical = (conditions[j].operator == Operator.And ||
+                conditions[j].operator == Operator.Or);
 
             if (isCalldata) {
                 ++countCalldata;
