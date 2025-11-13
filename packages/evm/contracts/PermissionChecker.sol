@@ -154,23 +154,21 @@ abstract contract PermissionChecker is Core, Periphery {
                 }
             }
 
+            ContextCall memory callParams = ContextCall({
+                to: to,
+                value: value,
+                operation: operation
+            });
+            Payload memory dummyPayload;
+
             return
                 _scopedFunction(
                     header,
                     data,
                     Context({
-                        to: to,
-                        value: value,
-                        operation: operation,
+                        call: callParams,
                         consumptions: consumptions,
-                        parentPayload: Payload({
-                            location: 0,
-                            size: 0,
-                            children: new Payload[](0),
-                            variant: false,
-                            overflown: false,
-                            typeIndex: 0
-                        })
+                        parentPayload: dummyPayload
                     })
                 );
         } else if (role.targets[to].clearance == Clearance.Target) {
@@ -333,9 +331,7 @@ abstract contract PermissionChecker is Core, Periphery {
                 condition.children[i],
                 payload.children[i],
                 Context({
-                    to: context.to,
-                    value: context.value,
-                    operation: context.operation,
+                    call: context.call,
                     consumptions: result.consumptions,
                     parentPayload: payload
                 })
@@ -365,9 +361,7 @@ abstract contract PermissionChecker is Core, Periphery {
                 condition.children[i],
                 payload,
                 Context({
-                    to: context.to,
-                    value: context.value,
-                    operation: context.operation,
+                    call: context.call,
                     consumptions: result.consumptions,
                     parentPayload: payload
                 })
@@ -403,9 +397,7 @@ abstract contract PermissionChecker is Core, Periphery {
                 condition.children[i],
                 payload.variant ? payload.children[i] : payload,
                 Context({
-                    to: context.to,
-                    value: context.value,
-                    operation: context.operation,
+                    call: context.call,
                     consumptions: result.consumptions,
                     parentPayload: payload
                 })
@@ -434,9 +426,7 @@ abstract contract PermissionChecker is Core, Periphery {
                 condition.children[i],
                 payload,
                 Context({
-                    to: context.to,
-                    value: context.value,
-                    operation: context.operation,
+                    call: context.call,
                     consumptions: result.consumptions,
                     parentPayload: payload
                 })
@@ -472,9 +462,7 @@ abstract contract PermissionChecker is Core, Periphery {
                 condition.children[i],
                 payload.variant ? payload.children[i] : payload,
                 Context({
-                    to: context.to,
-                    value: context.value,
-                    operation: context.operation,
+                    call: context.call,
                     consumptions: result.consumptions,
                     parentPayload: payload
                 })
@@ -490,9 +478,7 @@ abstract contract PermissionChecker is Core, Periphery {
                         condition.children[j],
                         payload,
                         Context({
-                            to: context.to,
-                            value: context.value,
-                            operation: context.operation,
+                            call: context.call,
                             consumptions: result.consumptions,
                             parentPayload: payload
                         })
@@ -538,9 +524,7 @@ abstract contract PermissionChecker is Core, Periphery {
                 condition.children[0],
                 payload.children[i],
                 Context({
-                    to: context.to,
-                    value: context.value,
-                    operation: context.operation,
+                    call: context.call,
                     consumptions: result.consumptions,
                     parentPayload: payload
                 })
@@ -572,9 +556,7 @@ abstract contract PermissionChecker is Core, Periphery {
                 condition.children[0],
                 payload.children[i],
                 Context({
-                    to: context.to,
-                    value: context.value,
-                    operation: context.operation,
+                    call: context.call,
                     consumptions: result.consumptions,
                     parentPayload: payload
                 })
@@ -685,10 +667,10 @@ abstract contract PermissionChecker is Core, Periphery {
         bytes12 extra = bytes12(uint96(uint256(condition.compValue)));
 
         (bool success, bytes32 info) = adapter.check(
-            context.to,
-            context.value,
+            context.call.to,
+            context.call.value,
             data,
-            context.operation,
+            context.call.operation,
             payload.location,
             payload.size,
             extra
@@ -714,7 +696,7 @@ abstract contract PermissionChecker is Core, Periphery {
         Context memory context
     ) private pure returns (Status status, Result memory result) {
         (status, result) = __consume(
-            context.value,
+            context.call.value,
             condition,
             context.consumptions
         );
@@ -764,11 +746,15 @@ abstract contract PermissionChecker is Core, Periphery {
     }
 
     struct Context {
+        ContextCall call;
+        Consumption[] consumptions;
+        Payload parentPayload;
+    }
+
+    struct ContextCall {
         address to;
         uint256 value;
         Operation operation;
-        Consumption[] consumptions;
-        Payload parentPayload;
     }
 
     struct Result {
