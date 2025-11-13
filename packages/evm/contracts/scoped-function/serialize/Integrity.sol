@@ -25,6 +25,8 @@ library Integrity {
 
     error UnsuitableChildTypeTree(uint256 index);
 
+    error NonStructuralChildrenMustComeLast(uint256 index);
+
     function enforce(ConditionFlat[] memory conditions) internal pure {
         _root(conditions);
         _bfs(conditions);
@@ -33,6 +35,7 @@ library Integrity {
         }
         _parents(conditions);
         _children(conditions);
+        _nonStructuralOrdering(conditions);
         _typeTree(conditions);
 
         if (Topology.typeTree(conditions, 0)._type != AbiType.Calldata) {
@@ -245,6 +248,56 @@ library Integrity {
                 }
             }
         }
+    }
+
+    function _nonStructuralOrdering(
+        ConditionFlat[] memory conditions
+    ) private pure {
+        for (uint256 i = 0; i < conditions.length; ++i) {
+            (uint256 childrenStart, uint256 childrenLength) = Topology
+                .childBounds(conditions, i);
+
+            if (childrenLength == 0) continue;
+
+            // Once we see a non-structural child, all remaining must be non-structural
+            bool seenNonStructural = false;
+            for (uint256 j = 0; j < childrenLength; j++) {
+                uint256 childIndex = childrenStart + j;
+                bool isNonStructural = _isNonStructural(conditions, childIndex);
+
+                if (seenNonStructural && !isNonStructural) {
+                    // Structural child found after non-structural child
+                    revert NonStructuralChildrenMustComeLast(i);
+                }
+
+                if (isNonStructural) {
+                    seenNonStructural = true;
+                }
+            }
+        }
+    }
+
+    function _isNonStructural(
+        ConditionFlat[] memory conditions,
+        uint256 index
+    ) private pure returns (bool) {
+        // NonStructural if paramType is None and all descendants are None
+        if (conditions[index].paramType != AbiType.None) {
+            return false;
+        }
+
+        // Check all descendants recursively
+        for (uint256 i = index + 1; i < conditions.length; i++) {
+            if (conditions[i].parent == index) {
+                if (!_isNonStructural(conditions, i)) {
+                    return false;
+                }
+            } else if (conditions[i].parent > index) {
+                break;
+            }
+        }
+
+        return true;
     }
 
     function _typeTree(ConditionFlat[] memory conditions) private pure {
