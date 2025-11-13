@@ -21,11 +21,7 @@ library Serializer {
         TypeTree memory typeNode = Topology.typeTree(conditions, 0);
         bytes32[] memory allowanceKeys = _allowanceKeys(conditions);
 
-        bytes memory buffer = Packer.pack(
-            conditions,
-            typeNode,
-            allowanceKeys
-        );
+        bytes memory buffer = Packer.pack(conditions, typeNode, allowanceKeys);
 
         return ScopeConfig.pack(options, ImmutableStorage.store(buffer));
     }

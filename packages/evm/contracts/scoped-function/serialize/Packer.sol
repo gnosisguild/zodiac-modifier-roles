@@ -20,11 +20,12 @@ import "../../AbiTypes.sol";
  * │ Header (2 bytes):                                                   │
  * │   • nodeCount              16 bits (0-65535)                        │
  * ├─────────────────────────────────────────────────────────────────────┤
- * │ Nodes (nodeCount × 4 bytes each):                                   │
- * │   Each node (32 bits):                                              │
+ * │ Nodes (nodeCount × 5 bytes each):                                   │
+ * │   Each node (40 bits):                                              │
  * │     • paramType             3 bits                                  │
  * │     • operator              5 bits                                  │
  * │     • childCount            8 bits  (0-255)                         │
+ * │     • structuralChildCount  8 bits  (0-255)                         │
  * │     • compValueOffset      16 bits  (0 if no value)                 │
  * ├─────────────────────────────────────────────────────────────────────┤
  * │ CompValues (variable length):                                       │
@@ -66,7 +67,7 @@ library Packer {
     // ═══════════════════════════════════════════════════════════════════════════
 
     uint256 private constant CONDITION_COUNT_BYTES = 2;
-    uint256 private constant CONDITION_NODE_BYTES = 4;
+    uint256 private constant CONDITION_NODE_BYTES = 5;
     uint256 private constant TYPETREE_COUNT_BYTES = 2;
     uint256 private constant TYPETREE_NODE_BYTES = 2;
 
@@ -150,22 +151,24 @@ library Packer {
             (conditions.length * CONDITION_NODE_BYTES);
 
         for (uint256 i; i < conditions.length; ++i) {
-            (, uint256 childrenCount) = _childBounds(conditions, i);
+            (, uint256 childCount) = _childBounds(conditions, i);
+            uint256 structuralChildCount = _structuralChildCount(conditions, i);
 
             // Node
             {
                 uint8 b1 = (uint8(conditions[i].paramType) << 5) |
                     uint8(conditions[i].operator);
-                uint8 b2 = uint8(childrenCount);
-                uint8 b3 = uint8(compValueOffset >> 8) & 0xFF;
-                uint8 b4 = uint8(compValueOffset) & 0xFF;
+                uint8 b2 = uint8(childCount);
+                uint8 b3 = uint8(structuralChildCount);
+                uint8 b4 = uint8(compValueOffset >> 8);
+                uint8 b5 = uint8(compValueOffset);
 
                 assembly {
-                    let ptr := add(buffer, add(0x20, offset))
-                    mstore8(ptr, b1)
-                    mstore8(add(ptr, 0x01), b2)
-                    mstore8(add(ptr, 0x02), b3)
-                    mstore8(add(ptr, 0x03), b4)
+                    mstore8(add(buffer, add(0x20, offset)), b1)
+                    mstore8(add(buffer, add(0x21, offset)), b2)
+                    mstore8(add(buffer, add(0x22, offset)), b3)
+                    mstore8(add(buffer, add(0x23, offset)), b4)
+                    mstore8(add(buffer, add(0x24, offset)), b5)
                 }
                 offset += CONDITION_NODE_BYTES;
             }
@@ -206,6 +209,40 @@ library Packer {
                 }
             }
         }
+    }
+
+    function _structuralChildCount(
+        ConditionFlat[] memory conditions,
+        uint256 index
+    ) private pure returns (uint256 count) {
+        (uint256 start, uint256 length) = _childBounds(conditions, index);
+        for (uint256 i; i < length; ++i) {
+            if (!_isNonStructural(conditions, start + i)) {
+                ++count;
+            }
+        }
+    }
+
+    function _isNonStructural(
+        ConditionFlat[] memory conditions,
+        uint256 index
+    ) private pure returns (bool) {
+        // NonStructural if paramType is None and all descendants are None
+        if (conditions[index].paramType != AbiType.None) {
+            return false;
+        }
+
+        for (uint256 i = index + 1; i < conditions.length; ++i) {
+            if (conditions[i].parent == index) {
+                if (!_isNonStructural(conditions, i)) {
+                    return false;
+                }
+            } else if (conditions[i].parent > index) {
+                break;
+            }
+        }
+
+        return true;
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
