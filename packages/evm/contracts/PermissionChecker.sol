@@ -318,47 +318,16 @@ abstract contract PermissionChecker is Core, Periphery {
     ) private view returns (Status status, Result memory result) {
         result.consumptions = context.consumptions;
 
-        // Structural children must match payload children count
-        if (condition.structuralChildCount != payload.children.length) {
+        uint256 structuralChildCount = condition.structuralChildCount;
+        if (structuralChildCount != payload.children.length) {
             return (Status.ParameterNotAMatch, result);
         }
 
-        // Iterate structural children with their corresponding payload children
-        for (uint256 i; i < condition.structuralChildCount; ) {
+        for (uint256 i; i < condition.children.length; ) {
             (status, result) = _walk(
                 data,
                 condition.children[i],
-                payload.children[i],
-                Context({
-                    call: context.call,
-                    consumptions: result.consumptions,
-                    parentPayload: payload
-                })
-            );
-            if (status != Status.Ok) {
-                return (
-                    status,
-                    Result({
-                        consumptions: context.consumptions,
-                        info: result.info
-                    })
-                );
-            }
-            unchecked {
-                ++i;
-            }
-        }
-
-        // Iterate non-structural children with parent payload
-        for (
-            uint256 i = condition.structuralChildCount;
-            i < condition.children.length;
-
-        ) {
-            (status, result) = _walk(
-                data,
-                condition.children[i],
-                payload,
+                i < structuralChildCount ? payload.children[i] : payload,
                 Context({
                     call: context.call,
                     consumptions: result.consumptions,
@@ -390,40 +359,13 @@ abstract contract PermissionChecker is Core, Periphery {
     ) private view returns (Status status, Result memory result) {
         result.consumptions = context.consumptions;
 
-        for (uint256 i; i < condition.structuralChildCount; ) {
+        for (uint256 i; i < condition.children.length; ) {
             (status, result) = _walk(
                 data,
                 condition.children[i],
-                payload.variant ? payload.children[i] : payload,
-                Context({
-                    call: context.call,
-                    consumptions: result.consumptions,
-                    parentPayload: payload
-                })
-            );
-            if (status != Status.Ok) {
-                return (
-                    status,
-                    Result({
-                        consumptions: context.consumptions,
-                        info: result.info
-                    })
-                );
-            }
-            unchecked {
-                ++i;
-            }
-        }
-
-        for (
-            uint256 i = condition.structuralChildCount;
-            i < condition.children.length;
-
-        ) {
-            (status, result) = _walk(
-                data,
-                condition.children[i],
-                payload,
+                i < condition.structuralChildCount && payload.variant
+                    ? payload.children[i]
+                    : payload,
                 Context({
                     call: context.call,
                     consumptions: result.consumptions,
@@ -455,11 +397,13 @@ abstract contract PermissionChecker is Core, Periphery {
     ) private view returns (Status status, Result memory result) {
         result.consumptions = context.consumptions;
 
-        for (uint256 i; i < condition.structuralChildCount; ) {
+        for (uint256 i; i < condition.children.length; ) {
             (status, result) = _walk(
                 data,
                 condition.children[i],
-                payload.variant ? payload.children[i] : payload,
+                i < condition.structuralChildCount && payload.variant
+                    ? payload.children[i]
+                    : payload,
                 Context({
                     call: context.call,
                     consumptions: result.consumptions,
@@ -467,34 +411,6 @@ abstract contract PermissionChecker is Core, Periphery {
                 })
             );
             if (status == Status.Ok) {
-                for (
-                    uint256 j = condition.structuralChildCount;
-                    j < condition.children.length;
-
-                ) {
-                    (status, result) = _walk(
-                        data,
-                        condition.children[j],
-                        payload,
-                        Context({
-                            call: context.call,
-                            consumptions: result.consumptions,
-                            parentPayload: payload
-                        })
-                    );
-                    if (status != Status.Ok) {
-                        return (
-                            status,
-                            Result({
-                                consumptions: context.consumptions,
-                                info: result.info
-                            })
-                        );
-                    }
-                    unchecked {
-                        ++j;
-                    }
-                }
                 return (Status.Ok, result);
             }
             unchecked {
