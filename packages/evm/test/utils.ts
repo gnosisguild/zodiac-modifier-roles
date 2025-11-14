@@ -55,7 +55,7 @@ export enum Operator {
   //          🚫 compValue
   /* 01: */ And,
   /* 02: */ Or,
-  /* 03: */ Nor,
+  /* 03: */ _Placeholder03,
   /* 04: */ _Placeholder04,
   // ------------------------------------------------------------
   // 05-14: COMPLEX EXPRESSIONS
@@ -65,7 +65,7 @@ export enum Operator {
   /* 05: */ Matches,
   /* 06: */ ArraySome,
   /* 07: */ ArrayEvery,
-  /* 08: */ ArraySubset,
+  /* 08: */ _Placeholder08,
   /* 09: */ _Placeholder09,
   /* 10: */ _Placeholder10,
   /* 11: */ _Placeholder11,

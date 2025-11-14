@@ -12,9 +12,7 @@ contract MockTypeTreePacker {
     function packFlat(
         InputFlat[] calldata flatNodes
     ) external pure returns (bytes memory buffer) {
-        uint256 size = Packer._typeTreePackedSize(
-            _toTree(flatNodes, 0)
-        );
+        uint256 size = Packer._typeTreePackedSize(_toTree(flatNodes, 0));
         buffer = new bytes(size);
         Packer._packTypeTree(_toTree(flatNodes, 0), buffer, 0);
     }
