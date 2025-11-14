@@ -154,8 +154,6 @@ library AbiDecoder {
                 isArray && i >= typeNode.children.length ? 0 : i
             ];
 
-            if (typeChild._type == AbiType.None) continue;
-
             bool isInline = _isInline(typeChild);
 
             uint256 childLocation = _locationInBlock(

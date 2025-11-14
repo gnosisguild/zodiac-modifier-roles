@@ -1103,7 +1103,7 @@ describe("Topology Library", () => {
                   },
                   // These will be ignored - Array only processes first child
                   {
-                    paramType: AbiType.Static,
+                    paramType: AbiType.Dynamic,
                     operator: Operator.Pass,
                     children: [],
                   },
@@ -1161,6 +1161,10 @@ describe("Topology Library", () => {
                         children: [],
                       },
                     ],
+                  },
+                  {
+                    _type: AbiType.Dynamic,
+                    children: [],
                   },
                 ],
               },
@@ -1599,10 +1603,6 @@ describe("Topology Library", () => {
           _type: AbiType.Calldata,
           children: [
             {
-              _type: AbiType.None,
-              children: [],
-            },
-            {
               _type: AbiType.Static,
               children: [],
             },
@@ -1639,10 +1639,6 @@ describe("Topology Library", () => {
               _type: AbiType.Static,
               children: [],
             },
-            {
-              _type: AbiType.None,
-              children: [],
-            },
           ],
         });
       });
@@ -1666,12 +1662,7 @@ describe("Topology Library", () => {
 
         expect(output).to.deep.equal({
           _type: AbiType.Calldata,
-          children: [
-            {
-              _type: AbiType.None,
-              children: [],
-            },
-          ],
+          children: [],
         });
       });
 
@@ -1693,12 +1684,39 @@ describe("Topology Library", () => {
 
         expect(output).to.deep.equal({
           _type: AbiType.Calldata,
+          children: [],
+        });
+      });
+
+      it("should filter out complete subtrees that are non-structural", async () => {
+        const { topology } = await loadFixture(setup);
+
+        const input = flattenCondition({
+          paramType: AbiType.Calldata,
+          operator: Operator.Matches,
           children: [
             {
-              _type: AbiType.None,
-              children: [],
+              paramType: AbiType.None,
+              operator: Operator.And,
+              children: [
+                {
+                  paramType: AbiType.None,
+                  operator: Operator.EtherWithinAllowance,
+                },
+                {
+                  paramType: AbiType.None,
+                  operator: Operator.CallWithinAllowance,
+                },
+              ],
             },
           ],
+        });
+
+        const output = bfsToTree(await topology.typeTree(input));
+
+        expect(output).to.deep.equal({
+          _type: AbiType.Calldata,
+          children: [],
         });
       });
 
@@ -1732,10 +1750,6 @@ describe("Topology Library", () => {
         expect(output).to.deep.equal({
           _type: AbiType.Calldata,
           children: [
-            {
-              _type: AbiType.None,
-              children: [],
-            },
             {
               _type: AbiType.Static,
               children: [],
@@ -1784,10 +1798,6 @@ describe("Topology Library", () => {
             },
             {
               _type: AbiType.Dynamic,
-              children: [],
-            },
-            {
-              _type: AbiType.None,
               children: [],
             },
           ],
@@ -1840,13 +1850,10 @@ describe("Topology Library", () => {
 
         const output = bfsToTree(await topology.typeTree(input));
 
-        // OR with different type trees creates a variant
+        // NonStructural nodes filtered out; both OR branches identical -> collapses to single branch
         expect(output).to.deep.equal({
           _type: AbiType.Calldata,
-          children: [
-            { _type: AbiType.Static, children: [] },
-            { _type: AbiType.None, children: [] },
-          ],
+          children: [{ _type: AbiType.Static, children: [] }],
         });
       });
 
@@ -2675,10 +2682,6 @@ describe("Topology Library", () => {
           _type: AbiType.Calldata,
           children: [
             {
-              _type: AbiType.None,
-              children: [],
-            },
-            {
               _type: AbiType.Static,
               children: [],
             },
@@ -2712,10 +2715,6 @@ describe("Topology Library", () => {
           children: [
             {
               _type: AbiType.Static,
-              children: [],
-            },
-            {
-              _type: AbiType.None,
               children: [],
             },
           ],
@@ -2792,12 +2791,7 @@ describe("Topology Library", () => {
 
         expect(output).to.deep.equal({
           _type: AbiType.Calldata,
-          children: [
-            {
-              _type: AbiType.None,
-              children: [],
-            },
-          ],
+          children: [],
         });
       });
 
@@ -2820,12 +2814,7 @@ describe("Topology Library", () => {
 
         expect(output).to.deep.equal({
           _type: AbiType.Calldata,
-          children: [
-            {
-              _type: AbiType.None,
-              children: [],
-            },
-          ],
+          children: [],
         });
       });
 
@@ -2859,10 +2848,6 @@ describe("Topology Library", () => {
         expect(output).to.deep.equal({
           _type: AbiType.Calldata,
           children: [
-            {
-              _type: AbiType.None,
-              children: [],
-            },
             {
               _type: AbiType.Static,
               children: [],
@@ -2911,10 +2896,6 @@ describe("Topology Library", () => {
             },
             {
               _type: AbiType.Dynamic,
-              children: [],
-            },
-            {
-              _type: AbiType.None,
               children: [],
             },
           ],
@@ -2967,13 +2948,10 @@ describe("Topology Library", () => {
 
         const output = bfsToTree(await topology.typeTree(input));
 
-        // OR with different type trees creates a variant
+        // NonStructural nodes filtered out; both OR branches identical -> collapses to single branch
         expect(output).to.deep.equal({
           _type: AbiType.Calldata,
-          children: [
-            { _type: AbiType.Static, children: [] },
-            { _type: AbiType.None, children: [] },
-          ],
+          children: [{ _type: AbiType.Static, children: [] }],
         });
       });
     });
@@ -4038,9 +4016,8 @@ describe("Topology Library", () => {
                     },
                   ],
                 },
-                // These will be ignored - Array only processes first child
                 {
-                  paramType: AbiType.Static,
+                  paramType: AbiType.Dynamic,
                   operator: Operator.Pass,
                   children: [],
                 },
@@ -4098,6 +4075,10 @@ describe("Topology Library", () => {
                       children: [],
                     },
                   ],
+                },
+                {
+                  _type: AbiType.Dynamic,
+                  children: [],
                 },
               ],
             },
