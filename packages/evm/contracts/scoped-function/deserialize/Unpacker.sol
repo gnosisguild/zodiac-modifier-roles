@@ -9,7 +9,7 @@ library Unpacker {
     // Constants
     // ═══════════════════════════════════════════════════════════════════════════
 
-    uint256 private constant CONDITION_NODE_BYTES = 4;
+    uint256 private constant CONDITION_NODE_BYTES = 5;
     uint256 private constant TYPETREE_NODE_BYTES = 2;
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -60,14 +60,15 @@ library Unpacker {
         for (uint256 i = 0; i < nodeCount; ) {
             uint256 packed;
             assembly {
-                // mload32, but do it inline
-                packed := shr(224, mload(add(buffer, add(0x20, offset))))
+                // Load 5 bytes (40 bits) for the condition node
+                packed := shr(216, mload(add(buffer, add(0x20, offset))))
             }
 
             Condition memory node = nodes[i];
-            node.paramType = AbiType((packed >> 29) & 0x07);
-            node.operator = Operator((packed >> 24) & 0x1F);
-            uint256 childCount = (packed >> 16) & 0xFF;
+            node.paramType = AbiType((packed >> 37) & 0x07);
+            node.operator = Operator((packed >> 32) & 0x1F);
+            uint256 childCount = (packed >> 24) & 0xFF;
+            node.structuralChildCount = (packed >> 16) & 0xFF;
             uint256 compValueOffset = packed & 0xFFFF;
 
             if (compValueOffset != 0) {

@@ -380,7 +380,7 @@ describe("Integrity", () => {
       });
     });
 
-    describe("Array Operators (ArraySome, ArrayEvery, ArraySubset)", () => {
+    describe("Array Operators (ArraySome, ArrayEvery)", () => {
       it("should revert if ArraySome is not used on an Array type", async () => {
         const { integrity, enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
@@ -434,26 +434,6 @@ describe("Integrity", () => {
             }),
           ),
         )
-          .to.be.revertedWithCustomError(integrity, "UnsuitableChildCount")
-          .withArgs(1);
-      });
-
-      it("should revert if ArraySubset has more than 256 children", async () => {
-        const { integrity, enforce } = await loadFixture(setup);
-        const conditions = flattenCondition({
-          paramType: AbiType.Calldata,
-          children: [
-            {
-              paramType: AbiType.Array,
-              operator: Operator.ArraySubset,
-              children: Array(257).fill({
-                paramType: AbiType.Static,
-                operator: Operator.Pass,
-              }),
-            },
-          ],
-        });
-        await expect(enforce(conditions))
           .to.be.revertedWithCustomError(integrity, "UnsuitableChildCount")
           .withArgs(1);
       });
@@ -891,6 +871,116 @@ describe("Integrity", () => {
     });
   });
 
+  describe("Non-Structural Children Ordering", () => {
+    it("should pass when non-structural children come last", async () => {
+      const { enforce } = await loadFixture(setup);
+      const conditions = flattenCondition({
+        paramType: AbiType.Calldata,
+        children: [
+          // Structural child first
+          { paramType: AbiType.Static, operator: Operator.Pass },
+          // Non-structural children last
+          {
+            paramType: AbiType.None,
+            operator: Operator.EtherWithinAllowance,
+            compValue: ZeroHash,
+          },
+          {
+            paramType: AbiType.None,
+            operator: Operator.CallWithinAllowance,
+            compValue: ZeroHash,
+          },
+        ],
+      });
+      await expect(enforce(conditions)).to.not.be.reverted;
+    });
+
+    it("should pass when all children are structural", async () => {
+      const { enforce } = await loadFixture(setup);
+      const conditions = flattenCondition({
+        paramType: AbiType.Calldata,
+        children: [
+          { paramType: AbiType.Static, operator: Operator.Pass },
+          { paramType: AbiType.Dynamic, operator: Operator.Pass },
+          { paramType: AbiType.Static, operator: Operator.Pass },
+        ],
+      });
+      await expect(enforce(conditions)).to.not.be.reverted;
+    });
+
+    it("should pass when all children are non-structural", async () => {
+      const { enforce } = await loadFixture(setup);
+      const conditions = flattenCondition({
+        paramType: AbiType.Calldata,
+        children: [
+          {
+            paramType: AbiType.None,
+            operator: Operator.EtherWithinAllowance,
+            compValue: ZeroHash,
+          },
+          {
+            paramType: AbiType.None,
+            operator: Operator.CallWithinAllowance,
+            compValue: ZeroHash,
+          },
+        ],
+      });
+      await expect(enforce(conditions)).to.not.be.reverted;
+    });
+
+    it("should revert when a structural child comes after a non-structural child", async () => {
+      const { integrity, enforce } = await loadFixture(setup);
+      const conditions = flattenCondition({
+        paramType: AbiType.Calldata,
+        children: [
+          // Non-structural child first (incorrect)
+          {
+            paramType: AbiType.None,
+            operator: Operator.EtherWithinAllowance,
+            compValue: ZeroHash,
+          },
+          // Structural child after non-structural (incorrect)
+          { paramType: AbiType.Static, operator: Operator.Pass },
+        ],
+      });
+      await expect(enforce(conditions))
+        .to.be.revertedWithCustomError(
+          integrity,
+          "NonStructuralChildrenMustComeLast",
+        )
+        .withArgs(0);
+    });
+
+    it("should revert when structural children are interleaved with non-structural", async () => {
+      const { integrity, enforce } = await loadFixture(setup);
+      const conditions = flattenCondition({
+        paramType: AbiType.Calldata,
+        children: [
+          { paramType: AbiType.Static, operator: Operator.Pass },
+          {
+            paramType: AbiType.None,
+            operator: Operator.Or,
+            children: [
+              {
+                paramType: AbiType.None,
+                operator: Operator.EtherWithinAllowance,
+                compValue: ZeroHash,
+              },
+            ],
+          },
+          // This structural child after non-structural is invalid
+          { paramType: AbiType.Dynamic, operator: Operator.Pass },
+        ],
+      });
+      await expect(enforce(conditions))
+        .to.be.revertedWithCustomError(
+          integrity,
+          "NonStructuralChildrenMustComeLast",
+        )
+        .withArgs(0);
+    });
+  });
+
   describe("Valid Complex Structures (Happy Paths)", () => {
     it("should pass for a complex, deeply nested valid structure", async () => {
       const { enforce } = await loadFixture(setup);
@@ -1141,7 +1231,7 @@ describe("Integrity", () => {
         ]),
       ).to.not.be.reverted;
     });
-    it("and/or/nor mismatch - recursive", async () => {
+    it("and/or mismatch - recursive", async () => {
       const { integrity, enforce } = await loadFixture(setup);
 
       const conditions = [
@@ -1154,7 +1244,7 @@ describe("Integrity", () => {
         {
           parent: 0,
           paramType: AbiType.None,
-          operator: Operator.Nor,
+          operator: Operator.Or,
           compValue: "0x",
         },
         {
@@ -1510,7 +1600,7 @@ describe("Integrity", () => {
               children: [
                 {
                   paramType: AbiType.None,
-                  operator: Operator.Nor,
+                  operator: Operator.Or,
                   children: [
                     {
                       paramType: AbiType.Calldata,
