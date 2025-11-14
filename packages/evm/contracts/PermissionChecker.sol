@@ -154,15 +154,21 @@ abstract contract PermissionChecker is Core, Periphery {
                 }
             }
 
+            ContextCall memory callParams = ContextCall({
+                to: to,
+                value: value,
+                operation: operation
+            });
+            Payload memory placeholder;
+
             return
                 _scopedFunction(
                     header,
                     data,
                     Context({
-                        to: to,
-                        value: value,
-                        operation: operation,
-                        consumptions: consumptions
+                        call: callParams,
+                        consumptions: consumptions,
+                        parentPayload: placeholder
                     })
                 );
         } else if (role.targets[to].clearance == Clearance.Target) {
@@ -230,15 +236,14 @@ abstract contract PermissionChecker is Core, Periphery {
                     uint64(block.timestamp)
                 );
             }
+
+            context.consumptions = context.consumptions.length > 0
+                ? Consumptions.merge(context.consumptions, consumptions)
+                : consumptions;
         }
 
-        Payload memory payload = AbiDecoder.inspect(data, typeTree);
-
-        context.consumptions = context.consumptions.length > 0
-            ? Consumptions.merge(context.consumptions, consumptions)
-            : consumptions;
-
-        return _walk(data, condition, payload, context);
+        return
+            _walk(data, condition, AbiDecoder.inspect(data, typeTree), context);
     }
 
     function _walk(
@@ -270,15 +275,11 @@ abstract contract PermissionChecker is Core, Periphery {
                 return _and(data, condition, payload, context);
             } else if (operator == Operator.Or) {
                 return _or(data, condition, payload, context);
-            } else if (operator == Operator.Nor) {
-                return _nor(data, condition, payload, context);
             } else if (operator == Operator.ArraySome) {
                 return _arraySome(data, condition, payload, context);
-            } else if (operator == Operator.ArrayEvery) {
-                return _arrayEvery(data, condition, payload, context);
             } else {
-                assert(operator == Operator.ArraySubset);
-                return _arraySubset(data, condition, payload, context);
+                assert(operator == Operator.ArrayEvery);
+                return _arrayEvery(data, condition, payload, context);
             }
         } else {
             if (operator <= Operator.LessThan) {
@@ -317,7 +318,8 @@ abstract contract PermissionChecker is Core, Periphery {
     ) private view returns (Status status, Result memory result) {
         result.consumptions = context.consumptions;
 
-        if (condition.children.length != payload.children.length) {
+        uint256 structuralChildCount = condition.structuralChildCount;
+        if (structuralChildCount != payload.children.length) {
             return (Status.ParameterNotAMatch, result);
         }
 
@@ -325,12 +327,11 @@ abstract contract PermissionChecker is Core, Periphery {
             (status, result) = _walk(
                 data,
                 condition.children[i],
-                payload.children[i],
+                i < structuralChildCount ? payload.children[i] : payload,
                 Context({
-                    to: context.to,
-                    value: context.value,
-                    operation: context.operation,
-                    consumptions: result.consumptions
+                    call: context.call,
+                    consumptions: result.consumptions,
+                    parentPayload: payload
                 })
             );
             if (status != Status.Ok) {
@@ -362,12 +363,13 @@ abstract contract PermissionChecker is Core, Periphery {
             (status, result) = _walk(
                 data,
                 condition.children[i],
-                payload.variant ? payload.children[i] : payload,
+                i < condition.structuralChildCount && payload.variant
+                    ? payload.children[i]
+                    : payload,
                 Context({
-                    to: context.to,
-                    value: context.value,
-                    operation: context.operation,
-                    consumptions: result.consumptions
+                    call: context.call,
+                    consumptions: result.consumptions,
+                    parentPayload: context.parentPayload
                 })
             );
             if (status != Status.Ok) {
@@ -383,6 +385,7 @@ abstract contract PermissionChecker is Core, Periphery {
                 ++i;
             }
         }
+
         return (Status.Ok, result);
     }
 
@@ -398,16 +401,17 @@ abstract contract PermissionChecker is Core, Periphery {
             (status, result) = _walk(
                 data,
                 condition.children[i],
-                payload.variant ? payload.children[i] : payload,
+                i < condition.structuralChildCount && payload.variant
+                    ? payload.children[i]
+                    : payload,
                 Context({
-                    to: context.to,
-                    value: context.value,
-                    operation: context.operation,
-                    consumptions: result.consumptions
+                    call: context.call,
+                    consumptions: result.consumptions,
+                    parentPayload: context.parentPayload
                 })
             );
             if (status == Status.Ok) {
-                return (status, result);
+                return (Status.Ok, result);
             }
             unchecked {
                 ++i;
@@ -416,35 +420,6 @@ abstract contract PermissionChecker is Core, Periphery {
 
         return (
             Status.OrViolation,
-            Result({consumptions: context.consumptions, info: 0})
-        );
-    }
-
-    function _nor(
-        bytes calldata data,
-        Condition memory condition,
-        Payload memory payload,
-        Context memory context
-    ) private view returns (Status status, Result memory) {
-        for (uint256 i; i < condition.children.length; ) {
-            (status, ) = _walk(
-                data,
-                condition.children[i],
-                payload.variant ? payload.children[i] : payload,
-                context
-            );
-            if (status == Status.Ok) {
-                return (
-                    Status.NorViolation,
-                    Result({consumptions: context.consumptions, info: 0})
-                );
-            }
-            unchecked {
-                ++i;
-            }
-        }
-        return (
-            Status.Ok,
             Result({consumptions: context.consumptions, info: 0})
         );
     }
@@ -464,10 +439,9 @@ abstract contract PermissionChecker is Core, Periphery {
                 condition.children[0],
                 payload.children[i],
                 Context({
-                    to: context.to,
-                    value: context.value,
-                    operation: context.operation,
-                    consumptions: result.consumptions
+                    call: context.call,
+                    consumptions: result.consumptions,
+                    parentPayload: payload
                 })
             );
             if (status == Status.Ok) {
@@ -497,10 +471,9 @@ abstract contract PermissionChecker is Core, Periphery {
                 condition.children[0],
                 payload.children[i],
                 Context({
-                    to: context.to,
-                    value: context.value,
-                    operation: context.operation,
-                    consumptions: result.consumptions
+                    call: context.call,
+                    consumptions: result.consumptions,
+                    parentPayload: payload
                 })
             );
             if (status != Status.Ok) {
@@ -511,52 +484,6 @@ abstract contract PermissionChecker is Core, Periphery {
             }
             unchecked {
                 ++i;
-            }
-        }
-        return (Status.Ok, result);
-    }
-
-    function _arraySubset(
-        bytes calldata data,
-        Condition memory condition,
-        Payload memory payload,
-        Context memory context
-    ) private view returns (Status, Result memory result) {
-        result.consumptions = context.consumptions;
-        if (
-            payload.children.length == 0 ||
-            payload.children.length > condition.children.length
-        ) {
-            return (Status.ParameterNotSubsetOfAllowed, result);
-        }
-        uint256 taken;
-        for (uint256 i; i < payload.children.length; ++i) {
-            bool found = false;
-            for (uint256 j; j < condition.children.length; ++j) {
-                if (taken & (1 << j) != 0) continue;
-                (Status status, Result memory _result) = _walk(
-                    data,
-                    condition.children[j],
-                    payload.children[i],
-                    Context({
-                        to: context.to,
-                        value: context.value,
-                        operation: context.operation,
-                        consumptions: result.consumptions
-                    })
-                );
-                if (status == Status.Ok) {
-                    found = true;
-                    taken |= 1 << j;
-                    result = _result;
-                    break;
-                }
-            }
-            if (!found) {
-                return (
-                    Status.ParameterNotSubsetOfAllowed,
-                    Result({consumptions: context.consumptions, info: 0})
-                );
             }
         }
         return (Status.Ok, result);
@@ -655,10 +582,10 @@ abstract contract PermissionChecker is Core, Periphery {
         bytes12 extra = bytes12(uint96(uint256(condition.compValue)));
 
         (bool success, bytes32 info) = adapter.check(
-            context.to,
-            context.value,
+            context.call.to,
+            context.call.value,
             data,
-            context.operation,
+            context.call.operation,
             payload.location,
             payload.size,
             extra
@@ -684,7 +611,7 @@ abstract contract PermissionChecker is Core, Periphery {
         Context memory context
     ) private pure returns (Status status, Result memory result) {
         (status, result) = __consume(
-            context.value,
+            context.call.value,
             condition,
             context.consumptions
         );
@@ -734,9 +661,14 @@ abstract contract PermissionChecker is Core, Periphery {
     }
 
     struct Context {
+        ContextCall call;
+        Consumption[] consumptions;
+        Payload parentPayload;
+    }
+
+    struct ContextCall {
         address to;
         uint256 value;
-        Consumption[] consumptions;
         Operation operation;
     }
 
@@ -757,8 +689,8 @@ abstract contract PermissionChecker is Core, Periphery {
         SendNotAllowed,
         /// Or conition not met
         OrViolation,
-        /// Nor conition not met
-        NorViolation,
+        /// @deprecated Nor operator has been removed
+        _DeprecatedNorViolation,
         /// Parameter value is not equal to allowed
         ParameterNotAllowed,
         /// Parameter value less than allowed
@@ -771,8 +703,8 @@ abstract contract PermissionChecker is Core, Periphery {
         NotEveryArrayElementPasses,
         /// Array elements do not meet allowed criteria for at least one element
         NoArrayElementPasses,
-        /// Parameter value not a subset of allowed
-        ParameterNotSubsetOfAllowed,
+        /// @deprecated ArraySubset operator has been removed
+        _DeprecatedParameterNotSubsetOfAllowed,
         /// Bitmask exceeded value length
         BitmaskOverflow,
         /// Bitmask not an allowed value
