@@ -8,6 +8,17 @@ import "./Topology.sol";
  *
  * @author gnosisguild
  */
+
+/*
+ * TODO:
+ * Enture and test that for WithinRatio operators, its ParamType is None
+ * Ensure that either minRatio or maxRatio are provided
+ * Ensure and test that for WithinRatio, its left and right indices respect the following:
+ * - the nearest parent has at child indexLeft and child indexRight children that:
+ *    * are non variant
+ *    * its sub type tree resolves to Static
+ */
+
 library Integrity {
     error UnsuitableRootNode();
 
@@ -155,7 +166,8 @@ library Integrity {
             }
         } else if (
             operator == Operator.EtherWithinAllowance ||
-            operator == Operator.CallWithinAllowance
+            operator == Operator.CallWithinAllowance ||
+            operator == Operator.WithinRatio
         ) {
             if (_type != AbiType.None) {
                 revert UnsuitableParameterType(index);
@@ -174,7 +186,8 @@ library Integrity {
         for (uint256 i = 0; i < length; ++i) {
             if (
                 (conditions[i].operator == Operator.EtherWithinAllowance ||
-                    conditions[i].operator == Operator.CallWithinAllowance)
+                    conditions[i].operator == Operator.CallWithinAllowance ||
+                    conditions[i].operator == Operator.WithinRatio)
             ) {
                 (
                     uint256 countCalldataNodes,
@@ -197,7 +210,8 @@ library Integrity {
             if (condition.paramType == AbiType.None) {
                 if (
                     (condition.operator == Operator.EtherWithinAllowance ||
-                        condition.operator == Operator.CallWithinAllowance) &&
+                        condition.operator == Operator.CallWithinAllowance ||
+                        condition.operator == Operator.WithinRatio) &&
                     childrenLength != 0
                 ) {
                     revert UnsuitableChildCount(i);

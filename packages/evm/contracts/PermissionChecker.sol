@@ -9,6 +9,8 @@ import "./Consumptions.sol";
 import "./scoped-function/deserialize/Deserializer.sol";
 import "./scoped-function/ScopeConfig.sol";
 
+import "./checkers/WithinRatioChecker.sol";
+
 /**
  * @title PermissionChecker - a component of Zodiac Roles Mod responsible
  * for enforcing and authorizing actions performed on behalf of a role.
@@ -299,6 +301,8 @@ abstract contract PermissionChecker is Core, Periphery {
                 );
             } else if (operator == Operator.Custom) {
                 return _custom(data, condition, payload, context);
+            } else if (operator == Operator.WithinRatio) {
+                return _withinRatio(data, condition, context);
             } else if (operator == Operator.WithinAllowance) {
                 return _withinAllowance(data, condition, payload, context);
             } else if (operator == Operator.EtherWithinAllowance) {
@@ -632,6 +636,20 @@ abstract contract PermissionChecker is Core, Periphery {
         );
     }
 
+    function _withinRatio(
+        bytes calldata data,
+        Condition memory condition,
+        Context memory context
+    ) private view returns (Status, Result memory) {
+        Status status = WithinRatioChecker.check(
+            data,
+            condition.compValue,
+            context.parentPayload
+        );
+
+        return (status, Result({consumptions: context.consumptions, info: 0}));
+    }
+
     function __consume(
         uint256 value,
         Condition memory condition,
@@ -675,45 +693,6 @@ abstract contract PermissionChecker is Core, Periphery {
     struct Result {
         Consumption[] consumptions;
         bytes32 info;
-    }
-
-    enum Status {
-        Ok,
-        /// Role not allowed to delegate call to target address
-        DelegateCallNotAllowed,
-        /// Role not allowed to call target address
-        TargetAddressNotAllowed,
-        /// Role not allowed to call this function on target address
-        FunctionNotAllowed,
-        /// Role not allowed to send to target address
-        SendNotAllowed,
-        /// Or conition not met
-        OrViolation,
-        /// @deprecated Nor operator has been removed
-        _DeprecatedNorViolation,
-        /// Parameter value is not equal to allowed
-        ParameterNotAllowed,
-        /// Parameter value less than allowed
-        ParameterLessThanAllowed,
-        /// Parameter value greater than maximum allowed by role
-        ParameterGreaterThanAllowed,
-        /// Parameter value does not match
-        ParameterNotAMatch,
-        /// Array elements do not meet allowed criteria for every element
-        NotEveryArrayElementPasses,
-        /// Array elements do not meet allowed criteria for at least one element
-        NoArrayElementPasses,
-        /// @deprecated ArraySubset operator has been removed
-        _DeprecatedParameterNotSubsetOfAllowed,
-        /// Bitmask exceeded value length
-        BitmaskOverflow,
-        /// Bitmask not an allowed value
-        BitmaskNotAllowed,
-        CustomConditionViolation,
-        AllowanceExceeded,
-        CallAllowanceExceeded,
-        EtherAllowanceExceeded,
-        CalldataOverflow
     }
 
     /// Sender is not a member of the role

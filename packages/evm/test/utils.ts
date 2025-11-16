@@ -90,7 +90,7 @@ export enum Operator {
   /* 20: */ SignedIntLessThan, // paramType: Static
   /* 21: */ Bitmask, // paramType: Static / Dynamic
   /* 22: */ Custom, // paramType: Static / Dynamic / Tuple / Array
-  /* 23: */ _Placeholder23,
+  /* 23: */ WithinRatio, // paramType: None
   /* 24: */ _Placeholder24,
   /* 25: */ _Placeholder25,
   /* 26: */ _Placeholder26,
@@ -149,6 +149,11 @@ export enum PermissionCheckerStatus {
   EtherAllowanceExceeded,
   // A Payload overflow was found by the Checker flow
   CalldataOverflow,
+  RatioBelowMin,
+  RatioAboveMax,
+  WithinRatioInvalidLeftIndex,
+  WithinRatioInvalidRightIndex,
+  WithinRatioDivisionByZero,
 }
 
 export function removeTrailingOffset(data: string) {
