@@ -76,7 +76,7 @@ library Unpacker {
                 assembly {
                     compValue := mload(add(buffer, add(0x22, compValueOffset)))
                 }
-                node.compValue = compValue;
+                node.compValue = abi.encodePacked(compValue);
             }
 
             if (childCount > 0) {
@@ -90,7 +90,7 @@ library Unpacker {
                 }
             } else if (node.operator == Operator.EqualToAvatar) {
                 node.operator = Operator.EqualTo;
-                node.compValue = keccak256(abi.encode(_avatar()));
+                node.compValue = abi.encodePacked(keccak256(abi.encode(_avatar())));
             }
 
             unchecked {

@@ -95,7 +95,7 @@ struct ConditionFlat {
 struct Condition {
     AbiType paramType;
     Operator operator;
-    bytes32 compValue;
+    bytes compValue;
     uint256 structuralChildCount;
     Condition[] children;
 }

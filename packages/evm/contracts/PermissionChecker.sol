@@ -499,7 +499,7 @@ abstract contract PermissionChecker is Core, Periphery {
         Payload memory payload
     ) private pure returns (Status) {
         Operator operator = condition.operator;
-        bytes32 compValue = condition.compValue;
+        bytes32 compValue = bytes32(condition.compValue);
         bytes32 value = operator == Operator.EqualTo
             ? keccak256(AbiDecoder.pluck(data, payload.location, payload.size))
             : AbiDecoder.word(data, payload.location);
@@ -521,7 +521,7 @@ abstract contract PermissionChecker is Core, Periphery {
         Payload memory payload
     ) private pure returns (Status) {
         Operator operator = condition.operator;
-        int256 compValue = int256(uint256(condition.compValue));
+        int256 compValue = int256(uint256(bytes32(condition.compValue)));
         int256 value = int256(uint256(AbiDecoder.word(data, payload.location)));
 
         if (operator == Operator.SignedIntGreaterThan && value <= compValue) {
@@ -547,7 +547,7 @@ abstract contract PermissionChecker is Core, Periphery {
         Condition memory condition,
         Payload memory payload
     ) private pure returns (Status) {
-        bytes32 compValue = condition.compValue;
+        bytes32 compValue = bytes32(condition.compValue);
         bool isInline = condition.paramType == AbiType.Static;
         bytes calldata value = AbiDecoder.pluck(
             data,
@@ -580,10 +580,10 @@ abstract contract PermissionChecker is Core, Periphery {
     ) private view returns (Status, Result memory) {
         // 20 bytes on the left
         ICustomCondition adapter = ICustomCondition(
-            address(bytes20(condition.compValue))
+            address(bytes20(bytes32(condition.compValue)))
         );
         // 12 bytes on the right
-        bytes12 extra = bytes12(uint96(uint256(condition.compValue)));
+        bytes12 extra = bytes12(uint96(uint256(bytes32(condition.compValue))));
 
         (bool success, bytes32 info) = adapter.check(
             context.call.to,
@@ -657,7 +657,7 @@ abstract contract PermissionChecker is Core, Periphery {
     ) private pure returns (Status, Result memory) {
         (uint256 index, bool found) = Consumptions.find(
             consumptions,
-            condition.compValue
+            bytes32(condition.compValue)
         );
         assert(found);
 

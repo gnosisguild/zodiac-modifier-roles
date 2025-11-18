@@ -64,16 +64,17 @@ library WithinRatioChecker {
      */
     function check(
         bytes calldata data,
-        bytes32 compValue,
+        bytes memory compValue,
         Payload memory parentPayload
     ) internal view returns (Status) {
-        ScaleFactors memory factors = _factors(compValue);
+        bytes32 compValue32 = bytes32(compValue);
+        ScaleFactors memory factors = _factors(compValue32);
 
-        uint8 referenceIndex = uint8(bytes1(compValue));
-        uint8 relativeIndex = uint8(bytes1(compValue << 16));
-        uint32 minRatio = uint32(bytes4(compValue << 32));
-        uint32 maxRatio = uint32(bytes4(compValue << 64));
-        address adapter = address(bytes20(compValue << 96));
+        uint8 referenceIndex = uint8(bytes1(compValue32));
+        uint8 relativeIndex = uint8(bytes1(compValue32 << 16));
+        uint32 minRatio = uint32(bytes4(compValue32 << 32));
+        uint32 maxRatio = uint32(bytes4(compValue32 << 64));
+        address adapter = address(bytes20(compValue32 << 96));
 
         uint256 referenceAmount = uint256(
             AbiDecoder.word(
