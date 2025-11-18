@@ -23,17 +23,21 @@ import "../adapters/IPriceAdapter.sol";
  *
  * ### The Ratio Formula
  *
- *                 relativeAmount
- *   ratio (bps) = ────────────────────────── × 10,000
- *                 referenceAmount × price
+ *                 relativeAmount × relativePrice
+ *   ratio (bps) = ──────────────────────────────── × 10,000
+ *                 referenceAmount × referencePrice
  *
  * Where:
  * - `relativeAmount`: Value extracted from calldata[relativeIndex], scaled to common precision
  * - `referenceAmount`: Value extracted from calldata[referenceIndex], scaled to common precision
- * - `price`: Oracle price from adapter (18 decimals), or 1e18 if no adapter
+ * - `relativePrice`: Price from relativeAdapter (18 decimals), or 1e18 if no adapter
+ * - `referencePrice`: Price from referenceAdapter (18 decimals), or 1e18 if no adapter
+ *
+ * Both amounts are converted to a common base (e.g., USD) via their respective adapters,
+ * then compared. This avoids needing pair-specific adapters.
  *
  *
- * ## CompValue Encoding (32 bytes)
+ * ## CompValue Encoding (52 bytes)
  *
  *   byte 0      (1 byte):  referenceIndex      - index in parent.children
  *   byte 1      (1 byte):  referenceDecimals   - decimals of reference token
@@ -41,8 +45,13 @@ import "../adapters/IPriceAdapter.sol";
  *   byte 3      (1 byte):  relativeDecimals    - decimals of relative token
  *   bytes 4–7   (4 bytes): minRatio (bps)      - 0 = no lower bound
  *   bytes 8–11  (4 bytes): maxRatio (bps)      - 0 = no upper bound
- *   bytes 12–31 (20 bytes): adapter address    - oracle returning the price of the "relative asset" in terms of "reference asset" with
- *                                                18 decimals precision. 0x0 = no oracle (price = 1e18).
+ *   bytes 12–31 (20 bytes): referenceAdapter   - converts reference token to common base (e.g., ETH/USD)
+ *                                                0x0 = no conversion (use 1.0)
+ *   bytes 32–51 (20 bytes): relativeAdapter    - converts relative token to common base (e.g., BTC/USD)
+ *                                                0x0 = no conversion (use 1.0)
+ *
+ * Example: To validate BTC amount vs ETH amount, use ETH/USD and BTC/USD adapters
+ * instead of needing a custom ETH/BTC adapter.
  *
  *
  * ## Use Case: Slippage Guard
@@ -68,64 +77,92 @@ library WithinRatioChecker {
         Payload memory parentPayload
     ) internal view returns (Status) {
         bytes32 compValue32 = bytes32(compValue);
-        ScaleFactors memory factors = _factors(compValue32);
+        (
+            ScaleFactors memory factors,
+            uint256 conversionRef,
+            uint256 conversionRel
+        ) = _conversions(compValue);
 
-        uint8 referenceIndex = uint8(bytes1(compValue32));
-        uint8 relativeIndex = uint8(bytes1(compValue32 << 16));
         uint32 minRatio = uint32(bytes4(compValue32 << 32));
         uint32 maxRatio = uint32(bytes4(compValue32 << 64));
-        address adapter = address(bytes20(compValue32 << 96));
 
         uint256 referenceAmount = uint256(
             AbiDecoder.word(
                 data,
-                parentPayload.children[referenceIndex].location
+                parentPayload.children[uint8(bytes1(compValue32))].location
             )
         ) * factors.reference_;
 
         uint256 relativeAmount = uint256(
             AbiDecoder.word(
                 data,
-                parentPayload.children[relativeIndex].location
+                parentPayload
+                    .children[uint8(bytes1(compValue32 << 16))]
+                    .location
             )
         ) * factors.relative;
 
-        uint256 price = adapter != address(0)
-            ? IPriceAdapter(adapter).getPrice() * factors.price
-            : factors.denominator;
+        // Calculate ratio
+        uint256 expected = (referenceAmount * conversionRef) /
+            factors.denominator;
+        uint256 actual = (relativeAmount * conversionRel) / factors.denominator;
+        uint256 ratio = (actual * BPS) / expected;
 
-        {
-            uint256 expected = (referenceAmount * price) / factors.denominator;
-            uint256 ratio = (relativeAmount * BPS) / expected;
-            if (minRatio > 0 && ratio < minRatio) {
-                return Status.RatioBelowMin;
-            }
-            if (maxRatio > 0 && ratio > maxRatio) {
-                return Status.RatioAboveMax;
-            }
+        if (minRatio > 0 && ratio < minRatio) {
+            return Status.RatioBelowMin;
+        }
+        if (maxRatio > 0 && ratio > maxRatio) {
+            return Status.RatioAboveMax;
         }
 
         return Status.Ok;
     }
 
-    function _factors(
-        bytes32 compValue
-    ) private pure returns (ScaleFactors memory) {
-        uint8 referenceDecimals = uint8(bytes1(compValue << 8));
-        uint8 relativeDecimals = uint8(bytes1(compValue << 24));
+    function _conversions(
+        bytes memory compValue
+    )
+        private
+        view
+        returns (
+            ScaleFactors memory,
+            uint256 conversionRef,
+            uint256 conversionRel
+        )
+    {
+        bytes32 compValue32 = bytes32(compValue);
+
+        uint8 referenceDecimals = uint8(bytes1(compValue32 << 8));
+        uint8 relativeDecimals = uint8(bytes1(compValue32 << 24));
         uint8 priceDecimals = 18;
         uint256 max = referenceDecimals > relativeDecimals
             ? referenceDecimals
             : relativeDecimals;
         max = max > priceDecimals ? max : priceDecimals;
 
-        return
-            ScaleFactors({
-                reference_: 10 ** (max - referenceDecimals),
-                relative: 10 ** (max - relativeDecimals),
-                price: 10 ** (max - priceDecimals),
-                denominator: 10 ** max
-            });
+        ScaleFactors memory factors = ScaleFactors({
+            reference_: 10 ** (max - referenceDecimals),
+            relative: 10 ** (max - relativeDecimals),
+            price: 10 ** (max - priceDecimals),
+            denominator: 10 ** max
+        });
+
+        // Extract and get price for reference adapter
+        address referenceAdapter = address(bytes20(compValue32 << 96));
+        conversionRef = referenceAdapter != address(0)
+            ? IPriceAdapter(referenceAdapter).getPrice() * factors.price
+            : factors.denominator;
+
+        // Extract and get price for relative adapter
+        address relativeAdapter;
+        assembly {
+            let ptr := add(add(compValue, 0x20), 32)
+            relativeAdapter := shr(96, mload(ptr))
+        }
+        conversionRel = relativeAdapter != address(0)
+            ? IPriceAdapter(relativeAdapter).getPrice() * factors.price
+            : factors.denominator;
+
+        return (factors, conversionRef, conversionRel);
     }
 
     struct ScaleFactors {

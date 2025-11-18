@@ -79,7 +79,7 @@ describe("Operator - WithinRatio", async () => {
         const adapterAddress = await adapter.getAddress();
 
         const compValue = encodeWithinRatioCompValue({
-          adapter: adapterAddress,
+          referenceAdapter: adapterAddress,
           referenceIndex: 0,
           referenceDecimals: 0,
           relativeIndex: 1,
@@ -186,7 +186,7 @@ describe("Operator - WithinRatio", async () => {
         const adapterAddress = await adapter.getAddress();
 
         const compValue = encodeWithinRatioCompValue({
-          adapter: adapterAddress,
+          referenceAdapter: adapterAddress,
           referenceIndex: 0,
           referenceDecimals: 0,
           relativeIndex: 1,
@@ -301,7 +301,7 @@ describe("Operator - WithinRatio", async () => {
         const adapterAddress = await adapter.getAddress();
 
         const compValue = encodeWithinRatioCompValue({
-          adapter: adapterAddress,
+          referenceAdapter: adapterAddress,
           referenceIndex: 0,
           referenceDecimals: 0,
           relativeIndex: 1,
@@ -408,7 +408,7 @@ describe("Operator - WithinRatio", async () => {
         const adapterAddress = await adapter.getAddress();
 
         const compValue = encodeWithinRatioCompValue({
-          adapter: adapterAddress,
+          referenceAdapter: adapterAddress,
           referenceIndex: 0,
           referenceDecimals: 0,
           relativeIndex: 1,
@@ -537,7 +537,8 @@ describe("Operator - WithinRatio", async () => {
 });
 
 function encodeWithinRatioCompValue({
-  adapter = "0x0000000000000000000000000000000000000000",
+  referenceAdapter = "0x0000000000000000000000000000000000000000",
+  relativeAdapter = "0x0000000000000000000000000000000000000000",
   referenceIndex,
   referenceDecimals,
   relativeIndex,
@@ -545,7 +546,8 @@ function encodeWithinRatioCompValue({
   minRatio,
   maxRatio,
 }: {
-  adapter?: string;
+  referenceAdapter?: string;
+  relativeAdapter?: string;
   referenceIndex: number;
   referenceDecimals: number;
   relativeIndex: number;
@@ -554,7 +556,16 @@ function encodeWithinRatioCompValue({
   maxRatio: number;
 }): string {
   return solidityPacked(
-    ["uint8", "uint8", "uint8", "uint8", "uint32", "uint32", "address"],
+    [
+      "uint8",
+      "uint8",
+      "uint8",
+      "uint8",
+      "uint32",
+      "uint32",
+      "address",
+      "address",
+    ],
     [
       referenceIndex,
       referenceDecimals,
@@ -562,7 +573,8 @@ function encodeWithinRatioCompValue({
       relativeDecimals,
       minRatio,
       maxRatio,
-      adapter,
+      referenceAdapter,
+      relativeAdapter,
     ],
   );
 }

@@ -166,13 +166,19 @@ library Integrity {
             }
         } else if (
             operator == Operator.EtherWithinAllowance ||
-            operator == Operator.CallWithinAllowance ||
-            operator == Operator.WithinRatio
+            operator == Operator.CallWithinAllowance
         ) {
             if (_type != AbiType.None) {
                 revert UnsuitableParameterType(index);
             }
             if (compValue.length != 32) {
+                revert UnsuitableCompValue(index);
+            }
+        } else if (operator == Operator.WithinRatio) {
+            if (_type != AbiType.None) {
+                revert UnsuitableParameterType(index);
+            }
+            if (compValue.length < 32 || compValue.length > 52) {
                 revert UnsuitableCompValue(index);
             }
         } else {
