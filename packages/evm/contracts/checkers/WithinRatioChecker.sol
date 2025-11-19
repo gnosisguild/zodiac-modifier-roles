@@ -81,105 +81,111 @@ library WithinRatioChecker {
     /// @dev 100% = 10000 bps
     uint256 private constant BPS = 10000;
 
+    struct CompValue {
+        uint8 referenceIndex;
+        uint8 referenceDecimals;
+        uint8 relativeIndex;
+        uint8 relativeDecimals;
+        uint32 minRatio;
+        uint32 maxRatio;
+        address referenceAdapter;
+        address relativeAdapter;
+    }
+
     function check(
         bytes calldata data,
         bytes memory compValue,
         Payload memory parentPayload
     ) internal view returns (Status) {
-        bytes32 compValue32 = bytes32(compValue);
-        (
-            ScaleFactors memory factors,
-            uint256 priceRef,
-            uint256 priceRel
-        ) = _conversions(compValue);
+        CompValue memory config = _unpack(compValue);
 
-        uint32 minRatio = uint32(bytes4(compValue32 << 32));
-        uint32 maxRatio = uint32(bytes4(compValue32 << 64));
+        (uint256 referenceAmount, uint256 relativeAmount) = _scaleAndConvert(
+            data,
+            config,
+            parentPayload
+        );
 
-        uint256 referenceAmount = uint256(
-            AbiDecoder.word(
-                data,
-                parentPayload.children[uint8(bytes1(compValue32))].location
-            )
-        ) * factors.reference_;
+        uint256 ratio = (relativeAmount * BPS) / referenceAmount;
 
-        uint256 relativeAmount = uint256(
-            AbiDecoder.word(
-                data,
-                parentPayload
-                    .children[uint8(bytes1(compValue32 << 16))]
-                    .location
-            )
-        ) * factors.relative;
-
-        // Calculate ratio by converting both amounts to common base
-        uint256 denominator = 10 ** factors.precision;
-        uint256 referenceInBase = (referenceAmount * priceRef) / denominator;
-        uint256 relativeInBase = (relativeAmount * priceRel) / denominator;
-        uint256 ratio = (relativeInBase * BPS) / referenceInBase;
-
-        if (minRatio > 0 && ratio < minRatio) {
+        if (config.minRatio > 0 && ratio < config.minRatio) {
             return Status.RatioBelowMin;
         }
-        if (maxRatio > 0 && ratio > maxRatio) {
+        if (config.maxRatio > 0 && ratio > config.maxRatio) {
             return Status.RatioAboveMax;
         }
 
         return Status.Ok;
     }
 
-    function _conversions(
+    function _unpack(
         bytes memory compValue
+    ) private pure returns (CompValue memory config) {
+        bytes32 compValue32 = bytes32(compValue);
+
+        config.referenceIndex = uint8(bytes1(compValue32));
+        config.referenceDecimals = uint8(bytes1(compValue32 << 8));
+        config.relativeIndex = uint8(bytes1(compValue32 << 16));
+        config.relativeDecimals = uint8(bytes1(compValue32 << 24));
+        config.minRatio = uint32(bytes4(compValue32 << 32));
+        config.maxRatio = uint32(bytes4(compValue32 << 64));
+        config.referenceAdapter = address(bytes20(compValue32 << 96));
+        if (compValue.length > 32) {
+            assembly {
+                mstore(add(config, 0xe0), shr(96, mload(add(compValue, 0x40))))
+            }
+        }
+    }
+
+    function _scaleAndConvert(
+        bytes calldata data,
+        CompValue memory config,
+        Payload memory parentPayload
     )
         private
         view
         returns (
-            ScaleFactors memory factors,
-            uint256 priceRef,
-            uint256 priceRel
+            uint256 convertedReferenceAmount,
+            uint256 convertedRelativeAmount
         )
     {
-        bytes32 compValue32 = bytes32(compValue);
+        // Calculate precision
+        uint256 precision = config.referenceDecimals > config.relativeDecimals
+            ? config.referenceDecimals
+            : config.relativeDecimals;
+        precision = precision > 18 ? precision : 18;
 
-        uint8 referenceDecimals = uint8(bytes1(compValue32 << 8));
-        uint8 relativeDecimals = uint8(bytes1(compValue32 << 24));
-        uint8 priceDecimals = 18;
-        uint256 precision = referenceDecimals > relativeDecimals
-            ? referenceDecimals
-            : relativeDecimals;
-        precision = precision > priceDecimals ? precision : priceDecimals;
+        // Extract and scale amounts
+        uint256 referenceAmount = uint256(
+            AbiDecoder.word(
+                data,
+                parentPayload.children[config.referenceIndex].location
+            )
+        ) * (10 ** (precision - config.referenceDecimals));
 
-        factors = ScaleFactors({
-            reference_: 10 ** (precision - referenceDecimals),
-            relative: 10 ** (precision - relativeDecimals),
-            price: 10 ** (precision - priceDecimals),
-            precision: precision
-        });
+        uint256 relativeAmount = uint256(
+            AbiDecoder.word(
+                data,
+                parentPayload.children[config.relativeIndex].location
+            )
+        ) * (10 ** (precision - config.relativeDecimals));
 
-        // Extract and get price for reference adapter
-        address referenceAdapter = address(bytes20(compValue32 << 96));
-        priceRef = referenceAdapter != address(0)
-            ? IPriceAdapter(referenceAdapter).getPrice() * factors.price
+        // Get prices from adapters
+        uint256 priceScale = 10 ** (precision - 18);
+        uint256 priceReference = config.referenceAdapter != address(0)
+            ? IPriceAdapter(config.referenceAdapter).getPrice() * priceScale
             : (10 ** precision);
 
-        // Extract and get price for relative adapter
-        address relativeAdapter;
-        if (compValue.length > 32) {
-            assembly {
-                relativeAdapter := shr(96, mload(add(compValue, 0x40)))
-            }
-        }
-        priceRel = relativeAdapter != address(0)
-            ? IPriceAdapter(relativeAdapter).getPrice() * factors.price
+        uint256 priceRelative = config.relativeAdapter != address(0)
+            ? IPriceAdapter(config.relativeAdapter).getPrice() * priceScale
             : (10 ** precision);
 
-        return (factors, priceRef, priceRel);
-    }
-
-    struct ScaleFactors {
-        uint256 reference_;
-        uint256 relative;
-        uint256 price;
-        uint256 precision;
+        // Convert to common base
+        uint256 denominator = 10 ** precision;
+        convertedReferenceAmount =
+            (referenceAmount * priceReference) /
+            denominator;
+        convertedRelativeAmount =
+            (relativeAmount * priceRelative) /
+            denominator;
     }
 }

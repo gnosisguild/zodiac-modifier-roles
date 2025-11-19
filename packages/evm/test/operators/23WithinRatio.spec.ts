@@ -12,7 +12,7 @@ import {
 } from "../utils";
 import { setupTwoParamsStatic } from "../setup";
 
-describe.only("WithinRatio Operator", () => {
+describe("WithinRatio Operator", () => {
   describe("Core Functionality", () => {
     describe("maxRatio enforcement", () => {
       it("enforces maxRatio bound with proper boundary behavior", async () => {
