@@ -8,69 +8,79 @@ import "../Types.sol";
 import "../adapters/IPriceAdapter.sol";
 
 /**
- * @title WithinRatioChecker - A library for validating that two calldata
- * amounts fall within an acceptable ratio
- * @author gnosisguild
+ * @title WithinRatioChecker
+ * @notice
+ * Validates that a “relative” amount falls within a ratio range when compared
+ * to a “reference” amount, optionally converting none/one/both through price
+ * adapters into a common base denomination.
  *
+ * ---
+ * # 1. How it Works
+ * Extract two amounts from calldata (by index in the parent), normalize their
+ * decimals, optionally convert via adapters, compute their ratio in basis
+ * points, and check if it falls within [minRatio, maxRatio].
  *
- * Validates that a *relative* amount is within acceptable bounds compared to
- * a *reference* amount, with optional price conversion between different asset
- * denominations. The check extracts both amounts from calldata using their
- * specified child indices, normalizes them to a common decimal precision,
- * applies the price conversion if provided, then verifies the resulting ratio
- * falls within [minRatio, maxRatio] bounds (expressed in basis points).
+ * Steps:
+ *  1. Read amounts from calldata by index
+ *  2. Scale amounts to shared precision
+ *  3. Apply optional price adapters
+ *  4. Compute ratio = (relative × priceRel) / (reference × priceRef)
+ *  5. Validate ratio in bps (10,000 = 100%)
  *
+ * ---
+ * # 2. Inputs
+ * - **data**: Calldata being inspected
+ * - **compValue**: 52-byte configuration (see bellow)
+ * - **parentPayload**: Structural parent payload. WithinRatio is a
+ *   non-structural operator, so it receives the nearest structural parent’s
+ *   payload and indexes into its children.
  *
- * ### The Ratio Formula
+ * ---
+ * # 3. Ratio Formula
  *
- *                 relativeAmount × relativePrice
- *   ratio (bps) = ──────────────────────────────── × 10,000
- *                 referenceAmount × referencePrice
+ *                 relativeAmount × priceRel
+ *   ratio (bps) = ───────────────────────── × 10,000
+ *                 referenceAmount × priceRef
  *
- * Where:
- * - `relativeAmount`: Value extracted from calldata[relativeIndex], scaled to common precision
- * - `referenceAmount`: Value extracted from calldata[referenceIndex], scaled to common precision
- * - `relativePrice`: Price from relativeAdapter (18 decimals), or 1e18 if no adapter
- * - `referencePrice`: Price from referenceAdapter (18 decimals), or 1e18 if no adapter
+ * Scaling rules:
+ * - Amounts scale to max(referenceDecimals, relativeDecimals, 18)
+ * - Price adapters return 18-dec prices; are also scaled to precision
+ * - Disabled adapter → price = 10^precision
+ * - Bounds are inclusive
  *
- * Both amounts are converted to a common base (e.g., USD) via their respective adapters,
- * then compared. This avoids needing pair-specific adapters.
+ * ---
+ * # 4. CompValue Layout (52 bytes)
  *
+ *   0      : referenceIndex      (uint8)
+ *   1      : referenceDecimals   (uint8)
+ *   2      : relativeIndex       (uint8)
+ *   3      : relativeDecimals    (uint8)
+ *   4–7    : minRatio  (uint32, bps; 0 = no min)
+ *   8–11   : maxRatio  (uint32, bps; 0 = no max)
+ *   12–31  : referenceAdapter (address; 0 = disabled)
+ *   32–51  : relativeAdapter  (address; 0 = disabled)
  *
- * ## CompValue Encoding (52 bytes)
+ * ---
+ * # 5. Adapter Examples
  *
- *   byte 0      (1 byte):  referenceIndex      - index in parent.children
- *   byte 1      (1 byte):  referenceDecimals   - decimals of reference token
- *   byte 2      (1 byte):  relativeIndex       - index in parent.children
- *   byte 3      (1 byte):  relativeDecimals    - decimals of relative token
- *   bytes 4–7   (4 bytes): minRatio (bps)      - 0 = no lower bound
- *   bytes 8–11  (4 bytes): maxRatio (bps)      - 0 = no upper bound
- *   bytes 12–31 (20 bytes): referenceAdapter   - converts reference token to common base (e.g., ETH/USD)
- *                                                0x0 = no conversion (use 1.0)
- *   bytes 32–51 (20 bytes): relativeAdapter    - converts relative token to common base (e.g., BTC/USD)
- *                                                0x0 = no conversion (use 1.0)
+ * - Two adapters (BTC vs ETH via USD):
+ *     referenceAdapter = ETH/USD
+ *     relativeAdapter  = BTC/USD
  *
- * Example: To validate BTC amount vs ETH amount, use ETH/USD and BTC/USD adapters
- * instead of needing a custom ETH/BTC adapter.
+ * - One adapter (WBTC vs ETH, base = ETH):
+ *     referenceAdapter = 0
+ *     relativeAdapter  = WBTC/ETH
  *
+ * ---
+ * # 6. Use Cases
  *
- * ## Use Case: Slippage Guard
- *
- * Primary application is AMM slippage protection:
- * - Enforce `minAmountOut` ≥ X% of expected output given `amountIn`
- * - Enforce `maxAmountIn` ≤ Y% of expected input given `amountOut`
- *
- * Example: Set minRatio = 9950 bps to allow maximum 50 basis points (0.5%)
- * of slippage, ensuring user receives at least 99.5% of expected amount.
+ * - Output slippage:  minRatio = 9950 (≥ 99.5%)
+ * - Input slippage:   maxRatio = 10050 (≤ 100.5%)
  */
-
 library WithinRatioChecker {
-    /// @dev Basis points denominator (100% = 10000 bps)
+    /// @dev 100% = 10000 bps
     uint256 private constant BPS = 10000;
 
-    /**
-     * @notice Checks if relative amount is within acceptable bounds of the reference amount
-     */
     function check(
         bytes calldata data,
         bytes memory compValue,
