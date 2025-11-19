@@ -79,8 +79,8 @@ library WithinRatioChecker {
         bytes32 compValue32 = bytes32(compValue);
         (
             ScaleFactors memory factors,
-            uint256 conversionRef,
-            uint256 conversionRel
+            uint256 priceRef,
+            uint256 priceRel
         ) = _conversions(compValue);
 
         uint32 minRatio = uint32(bytes4(compValue32 << 32));
@@ -102,11 +102,11 @@ library WithinRatioChecker {
             )
         ) * factors.relative;
 
-        // Calculate ratio
-        uint256 expected = (referenceAmount * conversionRef) /
-            factors.denominator;
-        uint256 actual = (relativeAmount * conversionRel) / factors.denominator;
-        uint256 ratio = (actual * BPS) / expected;
+        // Calculate ratio by converting both amounts to common base
+        uint256 denominator = 10 ** factors.precision;
+        uint256 referenceInBase = (referenceAmount * priceRef) / denominator;
+        uint256 relativeInBase = (relativeAmount * priceRel) / denominator;
+        uint256 ratio = (relativeInBase * BPS) / referenceInBase;
 
         if (minRatio > 0 && ratio < minRatio) {
             return Status.RatioBelowMin;
@@ -124,9 +124,9 @@ library WithinRatioChecker {
         private
         view
         returns (
-            ScaleFactors memory,
-            uint256 conversionRef,
-            uint256 conversionRel
+            ScaleFactors memory factors,
+            uint256 priceRef,
+            uint256 priceRel
         )
     {
         bytes32 compValue32 = bytes32(compValue);
@@ -134,41 +134,42 @@ library WithinRatioChecker {
         uint8 referenceDecimals = uint8(bytes1(compValue32 << 8));
         uint8 relativeDecimals = uint8(bytes1(compValue32 << 24));
         uint8 priceDecimals = 18;
-        uint256 max = referenceDecimals > relativeDecimals
+        uint256 precision = referenceDecimals > relativeDecimals
             ? referenceDecimals
             : relativeDecimals;
-        max = max > priceDecimals ? max : priceDecimals;
+        precision = precision > priceDecimals ? precision : priceDecimals;
 
-        ScaleFactors memory factors = ScaleFactors({
-            reference_: 10 ** (max - referenceDecimals),
-            relative: 10 ** (max - relativeDecimals),
-            price: 10 ** (max - priceDecimals),
-            denominator: 10 ** max
+        factors = ScaleFactors({
+            reference_: 10 ** (precision - referenceDecimals),
+            relative: 10 ** (precision - relativeDecimals),
+            price: 10 ** (precision - priceDecimals),
+            precision: precision
         });
 
         // Extract and get price for reference adapter
         address referenceAdapter = address(bytes20(compValue32 << 96));
-        conversionRef = referenceAdapter != address(0)
+        priceRef = referenceAdapter != address(0)
             ? IPriceAdapter(referenceAdapter).getPrice() * factors.price
-            : factors.denominator;
+            : (10 ** precision);
 
         // Extract and get price for relative adapter
         address relativeAdapter;
-        assembly {
-            let ptr := add(add(compValue, 0x20), 32)
-            relativeAdapter := shr(96, mload(ptr))
+        if (compValue.length > 32) {
+            assembly {
+                relativeAdapter := shr(96, mload(add(compValue, 0x40)))
+            }
         }
-        conversionRel = relativeAdapter != address(0)
+        priceRel = relativeAdapter != address(0)
             ? IPriceAdapter(relativeAdapter).getPrice() * factors.price
-            : factors.denominator;
+            : (10 ** precision);
 
-        return (factors, conversionRef, conversionRel);
+        return (factors, priceRef, priceRel);
     }
 
     struct ScaleFactors {
         uint256 reference_;
         uint256 relative;
         uint256 price;
-        uint256 denominator;
+        uint256 precision;
     }
 }

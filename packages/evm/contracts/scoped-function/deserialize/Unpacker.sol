@@ -72,11 +72,24 @@ library Unpacker {
             uint256 compValueOffset = packed & 0xFFFF;
 
             if (compValueOffset != 0) {
-                bytes32 compValue;
+                // Read 16-bit length field
+                uint256 length;
                 assembly {
-                    compValue := mload(add(buffer, add(0x22, compValueOffset)))
+                    length := shr(
+                        240,
+                        mload(add(buffer, add(0x20, compValueOffset)))
+                    )
                 }
-                node.compValue = abi.encodePacked(compValue);
+
+                bytes memory compValue = new bytes(length);
+                assembly {
+                    // buffer data + offset + 2 byte length
+                    let src := add(buffer, add(compValueOffset, 0x22))
+                    let dst := add(compValue, 0x20)
+
+                    mcopy(dst, src, length)
+                }
+                node.compValue = compValue;
             }
 
             if (childCount > 0) {
@@ -90,7 +103,9 @@ library Unpacker {
                 }
             } else if (node.operator == Operator.EqualToAvatar) {
                 node.operator = Operator.EqualTo;
-                node.compValue = abi.encodePacked(keccak256(abi.encode(_avatar())));
+                node.compValue = abi.encodePacked(
+                    keccak256(abi.encode(_avatar()))
+                );
             }
 
             unchecked {

@@ -151,9 +151,6 @@ export enum PermissionCheckerStatus {
   CalldataOverflow,
   RatioBelowMin,
   RatioAboveMax,
-  WithinRatioInvalidLeftIndex,
-  WithinRatioInvalidRightIndex,
-  WithinRatioDivisionByZero,
 }
 
 export function removeTrailingOffset(data: string) {

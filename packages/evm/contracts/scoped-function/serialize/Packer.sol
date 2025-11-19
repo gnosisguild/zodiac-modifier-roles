@@ -112,10 +112,13 @@ library Packer {
         // Header (2 bytes) + nodes
         result = CONDITION_COUNT_BYTES + count * CONDITION_NODE_BYTES;
 
-        // Add space for compValues (32 bytes each for operators >= EqualTo)
+        // Add space for compValues (variable length for operators >= EqualTo)
         for (uint256 i; i < count; ) {
             if (conditions[i].operator >= Operator.EqualTo) {
-                result += 32 + 2;
+                result += 2; // 2 bytes for length field
+                result += conditions[i].operator == Operator.EqualTo
+                    ? 32 // keccak256 hash is always 32 bytes
+                    : conditions[i].compValue.length;
             }
             unchecked {
                 ++i;
@@ -175,19 +178,34 @@ library Packer {
 
             // CompValue
             if (conditions[i].operator >= Operator.EqualTo) {
-                uint8 b1 = 0;
-                uint8 b2 = 32;
-                bytes32 compValue = conditions[i].operator == Operator.EqualTo
-                    ? keccak256(conditions[i].compValue)
-                    : bytes32(conditions[i].compValue);
+                bytes memory compValueData = conditions[i].operator ==
+                    Operator.EqualTo
+                    ? abi.encodePacked(keccak256(conditions[i].compValue))
+                    : conditions[i].compValue;
+
+                uint256 len = compValueData.length;
+                require(len <= 65535, "CompValue too long");
+
+                uint8 b1 = uint8(len >> 8);
+                uint8 b2 = uint8(len);
 
                 assembly {
                     let ptr := add(buffer, add(0x20, compValueOffset))
                     mstore8(ptr, b1)
                     mstore8(add(ptr, 0x01), b2)
-                    mstore(add(ptr, 0x02), compValue)
+
+                    // Copy compValue data
+                    let src := add(compValueData, 0x20)
+                    let dst := add(ptr, 0x02)
+                    for {
+                        let j := 0
+                    } lt(j, len) {
+                        j := add(j, 32)
+                    } {
+                        mstore(add(dst, j), mload(add(src, j)))
+                    }
                 }
-                compValueOffset += 34;
+                compValueOffset += len + 2;
             }
         }
     }

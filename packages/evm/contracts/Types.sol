@@ -169,8 +169,5 @@ enum Status {
     EtherAllowanceExceeded,
     CalldataOverflow,
     RatioBelowMin,
-    RatioAboveMax,
-    WithinRatioInvalidLeftIndex,
-    WithinRatioInvalidRightIndex,
-    WithinRatioDivisionByZero
+    RatioAboveMax
 }
