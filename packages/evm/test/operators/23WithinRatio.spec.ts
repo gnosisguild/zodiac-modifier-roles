@@ -12,34 +12,6 @@ import {
 } from "../utils";
 import { setupTwoParamsStatic } from "../setup";
 
-/**
- * # WithinRatio Operator Test Suite
- *
- * ## What's tested
- *
- * ### 1. Core Ratio Validation
- * - **Ratio Calculation**: Validates that ratio = (relativeAmount × relativePrice) / (referenceAmount × referencePrice)
- * - **Min/Max Bounds**: Tests enforcement of minRatio and maxRatio thresholds (in basis points)
- * - **Boundary Conditions**: Verifies exact boundary values (ratio == minRatio, ratio == maxRatio)
- *
- * ### 2. Price Adapter Scenarios
- * - **No Adapters (0x0, 0x0)**: Direct 1:1 comparison of amounts
- * - **Reference Only (adapter, 0x0)**: Converts reference to base, relative stays 1:1
- * - **Relative Only (0x0, adapter)**: Converts relative to base, reference stays 1:1
- * - **Both Adapters (adapter1, adapter2)**: Converts both to common base (e.g., ETH/USD + BTC/USD)
- *
- * ### 3. Decimal Normalization
- * - Tests tokens with different decimal places (6, 18, 36, etc.)
- * - Validates upscaling to common precision before comparison
- *
- * ### 4. Parameter Extraction
- * - **Calldata**: Operator as child of Calldata (Matches)
- * - **Tuple**: Operator as child of Tuple
- * - **Array**: Operator as child of Array
- * - Ensures correct extraction of amounts from different payload structures
- *
- */
-
 describe.only("WithinRatio Operator", () => {
   describe("Core Functionality", () => {
     describe("maxRatio enforcement", () => {
@@ -231,8 +203,8 @@ describe.only("WithinRatio Operator", () => {
     });
 
     describe("price adapter scenarios", () => {
-      it("no adapters - direct 1:1 comparison", async () => {
-        const { scopeFunction, invoke } =
+      it("no adapters - min 1/4 ratio (≥25%)", async () => {
+        const { roles, scopeFunction, invoke } =
           await loadFixture(setupTwoParamsStatic);
 
         const compValue = encodeWithinRatioCompValue({
@@ -240,8 +212,8 @@ describe.only("WithinRatio Operator", () => {
           referenceDecimals: 18,
           relativeIndex: 1,
           relativeDecimals: 18,
-          minRatio: 9500, // 95%
-          maxRatio: 10500, // 105%
+          minRatio: 2500, // 25%
+          maxRatio: 0, // no upper bound
         });
 
         await scopeFunction(
@@ -260,23 +232,73 @@ describe.only("WithinRatio Operator", () => {
           }),
         );
 
-        // Reference: param 0 (1000 tokens, 18 decimals, no adapter → price = 1)
-        // Relative: param 1 (1000 tokens, 18 decimals, no adapter → price = 1)
-        // Ratio = (1000 × 1) / (1000 × 1) = 100% → pass (within 95%-105%)
-        await expect(invoke(1000n * 10n ** 18n, 1000n * 10n ** 18n)).to.not.be
+        // Reference: 1000 tokens (18 decimals)
+        // Relative: 249 tokens (18 decimals)
+        // Ratio = 249 / 1000 = 24.9% → fail
+        await expect(invoke(1000n * 10n ** 18n, 249n * 10n ** 18n))
+          .to.be.revertedWithCustomError(roles, "ConditionViolation")
+          .withArgs(PermissionCheckerStatus.RatioBelowMin, ZeroHash);
+
+        // Relative: 250 tokens
+        // Ratio = 250 / 1000 = 25% → pass
+        await expect(invoke(1000n * 10n ** 18n, 250n * 10n ** 18n)).to.not.be
           .reverted;
 
-        // Relative: 949.9 tokens → ratio = 94.99% < 95% → fail
-        await expect(invoke(1000n * 10n ** 18n, 9499n * 10n ** 18n)).to.be
-          .reverted;
-
-        // Relative: 1051 tokens → ratio = 105.1% > 105% → fail
-        await expect(invoke(1000n * 10n ** 18n, 1051n * 10n ** 18n)).to.be
+        // Relative: 300 tokens
+        // Ratio = 300 / 1000 = 30% → pass
+        await expect(invoke(1000n * 10n ** 18n, 300n * 10n ** 18n)).to.not.be
           .reverted;
       });
 
+      it("no adapters - max 5x ratio (≤500%)", async () => {
+        const { roles, scopeFunction, invoke } =
+          await loadFixture(setupTwoParamsStatic);
+
+        const compValue = encodeWithinRatioCompValue({
+          referenceIndex: 0,
+          referenceDecimals: 18,
+          relativeIndex: 1,
+          relativeDecimals: 18,
+          minRatio: 0, // no lower bound
+          maxRatio: 50000, // 500%
+        });
+
+        await scopeFunction(
+          flattenCondition({
+            paramType: AbiType.Calldata,
+            operator: Operator.Matches,
+            children: [
+              { paramType: AbiType.Static, operator: Operator.Pass },
+              { paramType: AbiType.Static, operator: Operator.Pass },
+              {
+                paramType: AbiType.None,
+                operator: Operator.WithinRatio,
+                compValue,
+              },
+            ],
+          }),
+        );
+
+        // Reference: 1000 tokens (18 decimals)
+        // Relative: 4900 tokens (18 decimals)
+        // Ratio = 4900 / 1000 = 490% → pass
+        await expect(invoke(1000n * 10n ** 18n, 4900n * 10n ** 18n)).to.not.be
+          .reverted;
+
+        // Relative: 5000 tokens
+        // Ratio = 5000 / 1000 = 500% → pass
+        await expect(invoke(1000n * 10n ** 18n, 5000n * 10n ** 18n)).to.not.be
+          .reverted;
+
+        // Relative: 5001 tokens
+        // Ratio = 5001 / 1000 = 500.1% → fail
+        await expect(invoke(1000n * 10n ** 18n, 5001n * 10n ** 18n))
+          .to.be.revertedWithCustomError(roles, "ConditionViolation")
+          .withArgs(PermissionCheckerStatus.RatioAboveMax, ZeroHash);
+      });
+
       it("ETH/USD - ETH converts to USD base", async () => {
-        const { scopeFunction, invoke } =
+        const { roles, scopeFunction, invoke } =
           await loadFixture(setupTwoParamsStatic);
 
         // Deploy ETH/USD adapter: 1 ETH = 2000 USD
@@ -311,23 +333,27 @@ describe.only("WithinRatio Operator", () => {
           }),
         );
 
-        // Reference: param 0 = 10 ETH (18 decimals, adapter → price = 2000 USD/ETH)
-        // Relative: param 1 = 20,000 USD (18 decimals, no adapter → price = 1)
-        // Ratio = (20,000 × 1) / (10 × 2000) = 20,000 / 20,000 = 100% → pass (within 99.5%-100.5%)
+        // Reference: 10 ETH (18 decimals)
+        // Relative: 20,000 USD (18 decimals)
+        // Ratio = (20,000 × 1) / (10 × 2000) = 100% → pass
         await expect(invoke(10n * 10n ** 18n, 20000n * 10n ** 18n)).to.not.be
           .reverted;
 
-        // Relative: 19,880 USD → ratio = 19,880 / 20,000 = 99.4% < 99.5% → fail
-        await expect(invoke(10n * 10n ** 18n, 19880n * 10n ** 18n)).to.be
-          .reverted;
+        // Relative: 19,880 USD
+        // Ratio = (19,880 × 1) / (10 × 2000) = 99.4% → fail
+        await expect(invoke(10n * 10n ** 18n, 19880n * 10n ** 18n))
+          .to.be.revertedWithCustomError(roles, "ConditionViolation")
+          .withArgs(PermissionCheckerStatus.RatioBelowMin, ZeroHash);
 
-        // Relative: 20,120 USD → ratio = 20,120 / 20,000 = 100.6% > 100.5% → fail
-        await expect(invoke(10n * 10n ** 18n, 20120n * 10n ** 18n)).to.be
-          .reverted;
+        // Relative: 20,120 USD
+        // Ratio = (20,120 × 1) / (10 × 2000) = 100.6% → fail
+        await expect(invoke(10n * 10n ** 18n, 20120n * 10n ** 18n))
+          .to.be.revertedWithCustomError(roles, "ConditionViolation")
+          .withArgs(PermissionCheckerStatus.RatioAboveMax, ZeroHash);
       });
 
       it("USD/WBTC - WBTC converts to USD base", async () => {
-        const { scopeFunction, invoke } =
+        const { roles, scopeFunction, invoke } =
           await loadFixture(setupTwoParamsStatic);
 
         // Deploy WBTC/USD adapter: 1 WBTC = 150,000 USD
@@ -364,29 +390,32 @@ describe.only("WithinRatio Operator", () => {
           }),
         );
 
-        // Reference: param 0 = 45,000 USD (18 decimals, no adapter → price = 1)
-        // Relative: param 1 = 0.3 WBTC (8 decimals, adapter → price = 150,000 USD/WBTC)
-        // Ratio = (0.3 × 150,000) / (45,000 × 1) = 45,000 / 45,000 = 100% → pass (within 99%-101%)
+        // Reference: 45,000 USD (18 decimals)
+        // Relative: 0.3 WBTC (8 decimals)
+        // Ratio = (0.3 × 150,000) / (45,000 × 1) = 100% → pass
         await expect(invoke(45000n * 10n ** 18n, 3n * 10n ** 7n)).to.not.be
           .reverted;
 
-        // Reference: param 0 = 45,000 USD, Relative: param 1 = 0.297 WBTC
-        // Ratio = (0.297 × 150,000) / (45,000 × 1) = 44,550 / 45,000 = 99% → pass (boundary)
+        // Relative: 0.297 WBTC
+        // Ratio = (0.297 × 150,000) / (45,000 × 1) = 99% → pass
         await expect(invoke(45000n * 10n ** 18n, 297n * 10n ** 5n)).to.not.be
           .reverted;
 
-        // Reference: param 0 = 45,000 USD, Relative: param 1 = 0.2967 WBTC
-        // Ratio = (0.2967 × 150,000) / (45,000 × 1) = 44,505 / 45,000 = 98.9% < 99% → fail
-        await expect(invoke(45000n * 10n ** 18n, 2967n * 10n ** 4n)).to.be
-          .reverted;
+        // Relative: 0.2967 WBTC
+        // Ratio = (0.2967 × 150,000) / (45,000 × 1) = 98.9% → fail
+        await expect(invoke(45000n * 10n ** 18n, 2967n * 10n ** 4n))
+          .to.be.revertedWithCustomError(roles, "ConditionViolation")
+          .withArgs(PermissionCheckerStatus.RatioBelowMin, ZeroHash);
 
-        // Reference: param 0 = 45,000 USD, Relative: param 1 = 0.30303 WBTC
-        // Ratio = (0.30303 × 150,000) / (45,000 × 1) = 45,454.5 / 45,000 = 101.01% > 101% → fail
-        await expect(invoke(45000n * 10n ** 18n, 30303000n)).to.be.reverted;
+        // Relative: 0.30303 WBTC
+        // Ratio = (0.30303 × 150,000) / (45,000 × 1) = 101.01% → fail
+        await expect(invoke(45000n * 10n ** 18n, 30303000n))
+          .to.be.revertedWithCustomError(roles, "ConditionViolation")
+          .withArgs(PermissionCheckerStatus.RatioAboveMax, ZeroHash);
       });
 
       it("ETH/BTC - both convert to USD base", async () => {
-        const { scopeFunction, invoke } =
+        const { roles, scopeFunction, invoke } =
           await loadFixture(setupTwoParamsStatic);
 
         // Deploy ETH/USD adapter: 1 ETH = 2000 USD
@@ -426,30 +455,32 @@ describe.only("WithinRatio Operator", () => {
           }),
         );
 
-        // Reference: param 0 = 22.5 ETH (18 decimals, adapter → price = 2000 USD/ETH)
-        // Relative: param 1 = 0.3 BTC (8 decimals, adapter → price = 150,000 USD/BTC)
-        // Ratio = (0.3 × 150,000) / (22.5 × 2000) = 45,000 / 45,000 = 100% → pass (within 99.5%-100.5%)
+        // Reference: 22.5 ETH (18 decimals)
+        // Relative: 0.3 BTC (8 decimals)
+        // Ratio = (0.3 × 150,000) / (22.5 × 2000) = 100% → pass
         await expect(invoke(225n * 10n ** 17n, 3n * 10n ** 7n)).to.not.be
           .reverted;
 
-        // Reference: param 0 = 22.5 ETH, Relative: param 1 = 0.2985 BTC
-        // Ratio = (0.2985 × 150,000) / (22.5 × 2000) = 44,775 / 45,000 = 99.5% → pass (boundary)
+        // Relative: 0.2985 BTC
+        // Ratio = (0.2985 × 150,000) / (22.5 × 2000) = 99.5% → pass
         await expect(invoke(225n * 10n ** 17n, 2985n * 10n ** 4n)).to.not.be
           .reverted;
 
-        // Reference: param 0 = 22.5 ETH, Relative: param 1 = 0.29848 BTC
-        // Ratio = (0.29848 × 150,000) / (22.5 × 2000) = 44,772 / 45,000 = 99.49% < 99.5% → fail
-        await expect(invoke(225n * 10n ** 17n, 29848n * 10n ** 4n)).to.be
-          .reverted;
+        // Relative: 0.29848 BTC
+        // Ratio = (0.29848 × 150,000) / (22.5 × 2000) = 99.49% → fail
+        await expect(invoke(225n * 10n ** 17n, 29848n * 10n ** 4n))
+          .to.be.revertedWithCustomError(roles, "ConditionViolation")
+          .withArgs(PermissionCheckerStatus.RatioAboveMax, ZeroHash);
 
-        // Reference: param 0 = 22.5 ETH, Relative: param 1 = 0.30225 BTC
-        // Ratio = (0.30225 × 150,000) / (22.5 × 2000) = 45,337.5 / 45,000 = 100.75% > 100.5% → fail
-        await expect(invoke(225n * 10n ** 17n, 30225n * 10n ** 4n)).to.be
-          .reverted;
+        // Relative: 0.30225 BTC
+        // Ratio = (0.30225 × 150,000) / (22.5 × 2000) = 100.75% → fail
+        await expect(invoke(225n * 10n ** 17n, 30225n * 10n ** 4n))
+          .to.be.revertedWithCustomError(roles, "ConditionViolation")
+          .withArgs(PermissionCheckerStatus.RatioAboveMax, ZeroHash);
       });
 
       it("ETH/WBTC - both convert to WBTC base", async () => {
-        const { scopeFunction, invoke } =
+        const { roles, scopeFunction, invoke } =
           await loadFixture(setupTwoParamsStatic);
 
         // Deploy ETH/WBTC adapter: 1 ETH = 0.045 WBTC
@@ -484,30 +515,32 @@ describe.only("WithinRatio Operator", () => {
           }),
         );
 
-        // Reference: param 0 = 1 WBTC (8 decimals, no adapter → price = 1)
-        // Relative: param 1 = 22.222222... ETH (18 decimals, adapter → price = 0.045 WBTC/ETH)
-        // Ratio = (22.222222... × 0.045) / (1 × 1) = 1 / 1 = 100% → pass (within 98%-102%)
+        // Reference: 1 WBTC (8 decimals)
+        // Relative: 22.222222... ETH (18 decimals)
+        // Ratio = (22.222222... × 0.045) / (1 × 1) = 100% → pass
         await expect(invoke(1n * 10n ** 8n, 22222222222222222222n)).to.not.be
           .reverted;
 
-        // Reference: param 0 = 1 WBTC, Relative: param 1 = 21.777777... ETH
-        // Ratio = (21.777777... × 0.045) / (1 × 1) = 0.98 / 1 = 98% → pass (boundary)
+        // Relative: 21.777777... ETH
+        // Ratio = (21.777777... × 0.045) / (1 × 1) = 98% → pass
         await expect(invoke(1n * 10n ** 8n, 21777777777777777778n)).to.not.be
           .reverted;
 
-        // Reference: param 0 = 1 WBTC, Relative: param 1 = 21.755555... ETH
-        // Ratio = (21.755555... × 0.045) / (1 × 1) = 0.979 / 1 = 97.9% < 98% → fail
-        await expect(invoke(1n * 10n ** 8n, 21755555555555555556n)).to.be
-          .reverted;
+        // Relative: 21.755555... ETH
+        // Ratio = (21.755555... × 0.045) / (1 × 1) = 97.9% → fail
+        await expect(invoke(1n * 10n ** 8n, 21755555555555555556n))
+          .to.be.revertedWithCustomError(roles, "ConditionViolation")
+          .withArgs(PermissionCheckerStatus.RatioBelowMin, ZeroHash);
 
-        // Reference: param 0 = 1 WBTC, Relative: param 1 = 22.688888... ETH
-        // Ratio = (22.688888... × 0.045) / (1 × 1) = 1.021 / 1 = 102.1% > 102% → fail
-        await expect(invoke(1n * 10n ** 8n, 22688888888888888889n)).to.be
-          .reverted;
+        // Relative: 22.688888... ETH
+        // Ratio = (22.688888... × 0.045) / (1 × 1) = 102.1% → fail
+        await expect(invoke(1n * 10n ** 8n, 22688888888888888889n))
+          .to.be.revertedWithCustomError(roles, "ConditionViolation")
+          .withArgs(PermissionCheckerStatus.RatioAboveMax, ZeroHash);
       });
 
       it("ETH/WBTC - both convert to ETH base", async () => {
-        const { scopeFunction, invoke } =
+        const { roles, scopeFunction, invoke } =
           await loadFixture(setupTwoParamsStatic);
 
         // Deploy WBTC/ETH adapter: 1 WBTC = 10 ETH
@@ -542,29 +575,32 @@ describe.only("WithinRatio Operator", () => {
           }),
         );
 
-        // Reference: param 0 = 10 ETH (18 decimals, no adapter → price = 1)
-        // Relative: param 1 = 1 WBTC (8 decimals, adapter → price = 10 ETH/WBTC)
-        // Ratio = (1 × 10) / (10 × 1) = 10 / 10 = 100% → pass (within 95%-105%)
+        // Reference: 10 ETH (18 decimals)
+        // Relative: 1 WBTC (8 decimals)
+        // Ratio = (1 × 10) / (10 × 1) = 100% → pass
         await expect(invoke(10n * 10n ** 18n, 1n * 10n ** 8n)).to.not.be
           .reverted;
 
-        // Reference: param 0 = 10 ETH, Relative: param 1 = 0.95 WBTC
-        // Ratio = (0.95 × 10) / (10 × 1) = 9.5 / 10 = 95% → pass (boundary)
+        // Relative: 0.95 WBTC
+        // Ratio = (0.95 × 10) / (10 × 1) = 95% → pass
         await expect(invoke(10n * 10n ** 18n, 95n * 10n ** 6n)).to.not.be
           .reverted;
 
-        // Reference: param 0 = 10 ETH, Relative: param 1 = 0.949 WBTC
-        // Ratio = (0.949 × 10) / (10 × 1) = 9.49 / 10 = 94.9% < 95% → fail
-        await expect(invoke(10n * 10n ** 18n, 949n * 10n ** 5n)).to.be.reverted;
+        // Relative: 0.949 WBTC
+        // Ratio = (0.949 × 10) / (10 × 1) = 94.9% → fail
+        await expect(invoke(10n * 10n ** 18n, 949n * 10n ** 5n))
+          .to.be.revertedWithCustomError(roles, "ConditionViolation")
+          .withArgs(PermissionCheckerStatus.RatioBelowMin, ZeroHash);
 
-        // Reference: param 0 = 10 ETH, Relative: param 1 = 1.051 WBTC
-        // Ratio = (1.051 × 10) / (10 × 1) = 10.51 / 10 = 105.1% > 105% → fail
-        await expect(invoke(10n * 10n ** 18n, 1051n * 10n ** 5n)).to.be
-          .reverted;
+        // Relative: 1.051 WBTC
+        // Ratio = (1.051 × 10) / (10 × 1) = 105.1% → fail
+        await expect(invoke(10n * 10n ** 18n, 1051n * 10n ** 5n))
+          .to.be.revertedWithCustomError(roles, "ConditionViolation")
+          .withArgs(PermissionCheckerStatus.RatioAboveMax, ZeroHash);
       });
 
       it("USDC/FunkyToken - large decimal normalization (6 vs 37 decimals)", async () => {
-        const { scopeFunction, invoke } =
+        const { roles, scopeFunction, invoke } =
           await loadFixture(setupTwoParamsStatic);
 
         // Deploy FunkyToken/USDC adapter: 1 FunkyToken = 2 USDC (price adapters always return 18 decimals)
@@ -599,26 +635,28 @@ describe.only("WithinRatio Operator", () => {
           }),
         );
 
-        // Reference: param 0 = 1000 USDC (6 decimals, no adapter → price = 1)
-        // Relative: param 1 = 500 FunkyToken (37 decimals, adapter → price = 2 USDC/FunkyToken)
-        // Ratio = (500 × 2) / (1000 × 1) = 1000 / 1000 = 100% → pass (within 99.75%-100.25%)
+        // Reference: 1000 USDC (6 decimals)
+        // Relative: 500 FunkyToken (37 decimals)
+        // Ratio = (500 × 2) / (1000 × 1) = 100% → pass
         await expect(invoke(1000n * 10n ** 6n, 500n * 10n ** 37n)).to.not.be
           .reverted;
 
-        // Reference: param 0 = 1000 USDC, Relative: param 1 = 498.75 FunkyToken
-        // Ratio = (498.75 × 2) / (1000 × 1) = 997.5 / 1000 = 99.75% → pass (boundary)
+        // Relative: 498.75 FunkyToken
+        // Ratio = (498.75 × 2) / (1000 × 1) = 99.75% → pass
         await expect(invoke(1000n * 10n ** 6n, 49875n * 10n ** 35n)).to.not.be
           .reverted;
 
-        // Reference: param 0 = 1000 USDC, Relative: param 1 = 498.7 FunkyToken
-        // Ratio = (498.7 × 2) / (1000 × 1) = 997.4 / 1000 = 99.74% < 99.75% → fail
-        await expect(invoke(1000n * 10n ** 6n, 4987n * 10n ** 34n)).to.be
-          .reverted;
+        // Relative: 498.7 FunkyToken
+        // Ratio = (498.7 × 2) / (1000 × 1) = 99.74% → fail
+        await expect(invoke(1000n * 10n ** 6n, 4987n * 10n ** 34n))
+          .to.be.revertedWithCustomError(roles, "ConditionViolation")
+          .withArgs(PermissionCheckerStatus.RatioBelowMin, ZeroHash);
 
-        // Reference: param 0 = 1000 USDC, Relative: param 1 = 501.3 FunkyToken
-        // Ratio = (501.3 × 2) / (1000 × 1) = 1002.6 / 1000 = 100.26% > 100.25% → fail
-        await expect(invoke(1000n * 10n ** 6n, 5013n * 10n ** 34n)).to.be
-          .reverted;
+        // Relative: 501.3 FunkyToken
+        // Ratio = (501.3 × 2) / (1000 × 1) = 100.26% → fail
+        await expect(invoke(1000n * 10n ** 6n, 5013n * 10n ** 34n))
+          .to.be.revertedWithCustomError(roles, "ConditionViolation")
+          .withArgs(PermissionCheckerStatus.RatioBelowMin, ZeroHash);
       });
     });
   });
