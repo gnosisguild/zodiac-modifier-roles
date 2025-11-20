@@ -10,13 +10,6 @@ contract MockTopology {
         return flattenTree(Topology.typeTree(conditions, 0));
     }
 
-    function typeTreeAt(
-        ConditionFlat[] memory conditions,
-        uint256 entrypoint
-    ) public pure returns (FlatNode[] memory result) {
-        return flattenTree(Topology.typeTree(conditions, entrypoint));
-    }
-
     // Flat structure with parent reference
     struct FlatNode {
         uint256 parent;

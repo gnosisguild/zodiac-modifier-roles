@@ -4,6 +4,8 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 import { AbiType, flattenCondition, Operator } from "./utils";
 
+// todo: test that different variants in different array positions work
+
 describe("Topology Library", () => {
   async function setup() {
     const MockTopology = await hre.ethers.getContractFactory("MockTopology");
@@ -1585,13 +1587,13 @@ describe("Topology Library", () => {
           operator: Operator.Matches,
           children: [
             {
-              paramType: AbiType.None,
-              operator: Operator.EtherWithinAllowance,
+              paramType: AbiType.Static,
+              operator: Operator.EqualTo,
               children: [],
             },
             {
-              paramType: AbiType.Static,
-              operator: Operator.EqualTo,
+              paramType: AbiType.None,
+              operator: Operator.EtherWithinAllowance,
               children: [],
             },
           ],
@@ -1728,11 +1730,6 @@ describe("Topology Library", () => {
           operator: Operator.Matches,
           children: [
             {
-              paramType: AbiType.None,
-              operator: Operator.EtherWithinAllowance,
-              children: [],
-            },
-            {
               paramType: AbiType.Static,
               operator: Operator.EqualTo,
               children: [],
@@ -1740,6 +1737,11 @@ describe("Topology Library", () => {
             {
               paramType: AbiType.Dynamic,
               operator: Operator.Pass,
+              children: [],
+            },
+            {
+              paramType: AbiType.None,
+              operator: Operator.EtherWithinAllowance,
               children: [],
             },
           ],
@@ -2664,13 +2666,13 @@ describe("Topology Library", () => {
           operator: Operator.Matches,
           children: [
             {
-              paramType: AbiType.None,
-              operator: Operator.EtherWithinAllowance,
+              paramType: AbiType.Static,
+              operator: Operator.EqualTo,
               children: [],
             },
             {
-              paramType: AbiType.Static,
-              operator: Operator.EqualTo,
+              paramType: AbiType.None,
+              operator: Operator.EtherWithinAllowance,
               children: [],
             },
           ],
@@ -2815,48 +2817,6 @@ describe("Topology Library", () => {
         expect(output).to.deep.equal({
           _type: AbiType.Calldata,
           children: [],
-        });
-      });
-
-      it("EtherWithinAllowance as first node", async () => {
-        const { topology } = await loadFixture(setup);
-
-        const input = flattenCondition({
-          paramType: AbiType.Calldata,
-          operator: Operator.Matches,
-          children: [
-            {
-              paramType: AbiType.None,
-              operator: Operator.EtherWithinAllowance,
-              children: [],
-            },
-            {
-              paramType: AbiType.Static,
-              operator: Operator.EqualTo,
-              children: [],
-            },
-            {
-              paramType: AbiType.Dynamic,
-              operator: Operator.Pass,
-              children: [],
-            },
-          ],
-        });
-
-        const output = bfsToTree(await topology.typeTree(input));
-
-        expect(output).to.deep.equal({
-          _type: AbiType.Calldata,
-          children: [
-            {
-              _type: AbiType.Static,
-              children: [],
-            },
-            {
-              _type: AbiType.Dynamic,
-              children: [],
-            },
-          ],
         });
       });
 

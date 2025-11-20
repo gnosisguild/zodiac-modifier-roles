@@ -217,7 +217,7 @@ library Integrity {
     function _children(ConditionFlat[] memory conditions) private pure {
         for (uint256 i = 0; i < conditions.length; i++) {
             ConditionFlat memory condition = conditions[i];
-            (, uint256 childrenLength) = Topology.childBounds(conditions, i);
+            (, uint256 childrenLength) = _childBounds(conditions, i);
 
             if (condition.paramType == AbiType.None) {
                 if (
@@ -273,8 +273,10 @@ library Integrity {
         ConditionFlat[] memory conditions
     ) private pure {
         for (uint256 i = 0; i < conditions.length; ++i) {
-            (uint256 childrenStart, uint256 childrenLength) = Topology
-                .childBounds(conditions, i);
+            (uint256 childrenStart, uint256 childrenLength) = _childBounds(
+                conditions,
+                i
+            );
 
             if (childrenLength == 0) continue;
 
@@ -343,7 +345,7 @@ library Integrity {
         ConditionFlat[] memory conditions,
         uint256 index
     ) private pure returns (bool) {
-        (uint256 childrenStart, uint256 childrenLength) = Topology.childBounds(
+        (uint256 childrenStart, uint256 childrenLength) = _childBounds(
             conditions,
             index
         );
@@ -364,7 +366,7 @@ library Integrity {
         ConditionFlat[] memory conditions,
         uint256 index
     ) private pure returns (bool) {
-        (uint256 childrenStart, uint256 childrenLength) = Topology.childBounds(
+        (uint256 childrenStart, uint256 childrenLength) = _childBounds(
             conditions,
             index
         );
@@ -456,10 +458,7 @@ library Integrity {
         }
 
         // Get parent's children bounds
-        (uint256 childrenStart, ) = Topology.childBounds(
-            conditions,
-            parentIndex
-        );
+        (uint256 childrenStart, ) = _childBounds(conditions, parentIndex);
 
         {
             // Check reference child is Static
@@ -480,6 +479,25 @@ library Integrity {
             );
             if (typeNode._type != AbiType.Static) {
                 revert WithinRatioTargetNotStatic(i);
+            }
+        }
+    }
+
+    function _childBounds(
+        ConditionFlat[] memory conditions,
+        uint256 index
+    ) private pure returns (uint256 start, uint256 length) {
+        uint256 len = conditions.length;
+        unchecked {
+            for (uint256 i = index + 1; i < len; ++i) {
+                uint256 parent = conditions[i].parent;
+
+                if (parent == index) {
+                    if (length == 0) start = i;
+                    ++length;
+                } else if (parent > index) {
+                    break;
+                }
             }
         }
     }
