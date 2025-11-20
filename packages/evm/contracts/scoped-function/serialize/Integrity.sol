@@ -10,7 +10,7 @@ import "./Topology.sol";
  */
 
 /*
- * TODO:
+ * TODO test following aspects:
  * Enture and test that for WithinRatio operators, its ParamType is None
  * Ensure that either minRatio or maxRatio are provided
  * Ensure and test that for WithinRatio, its left and right indices respect the following:
@@ -37,6 +37,12 @@ library Integrity {
     error UnsuitableChildTypeTree(uint256 index);
 
     error NonStructuralChildrenMustComeLast(uint256 index);
+
+    error WithinRatioIndexOutOfBounds(uint256 index);
+
+    error WithinRatioTargetNotStatic(uint256 index);
+
+    error WithinRatioNoRatioProvided(uint256 index);
 
     function enforce(ConditionFlat[] memory conditions) internal pure {
         _root(conditions);
@@ -314,7 +320,7 @@ library Integrity {
     }
 
     function _typeTree(ConditionFlat[] memory conditions) private pure {
-        for (uint256 i = 0; i < conditions.length; i++) {
+        for (uint256 i = 0; i < conditions.length; ++i) {
             ConditionFlat memory condition = conditions[i];
             if (
                 condition.operator == Operator.And ||
@@ -328,6 +334,8 @@ library Integrity {
                     revert UnsuitableChildTypeTree(i);
                 }
             }
+
+            _withinRatio(conditions, i);
         }
     }
 
@@ -410,6 +418,69 @@ library Integrity {
             }
 
             j = conditions[j].parent;
+        }
+    }
+
+    /**
+     * @notice Validates WithinRatio operator constraints
+     * @dev Checks that:
+     *      1. At least one ratio bound (min or max) is provided
+     *      2. Referenced indices are within parent's children bounds
+     *      3. Referenced children resolve to non-variant Static types
+     */
+    function _withinRatio(
+        ConditionFlat[] memory conditions,
+        uint256 i
+    ) private pure {
+        if (conditions[i].operator != Operator.WithinRatio) {
+            return;
+        }
+
+        bytes memory compValue = conditions[i].compValue;
+        bytes32 compValue32 = bytes32(compValue);
+
+        // Extract indices and ratios from compValue
+        uint8 referenceIndex = uint8(bytes1(compValue32));
+        uint8 relativeIndex = uint8(bytes1(compValue32 << 16));
+        uint32 minRatio = uint32(bytes4(compValue32 << 32));
+        uint32 maxRatio = uint32(bytes4(compValue32 << 64));
+        // Validate that at least one ratio is provided
+        if (minRatio == 0 && maxRatio == 0) {
+            revert WithinRatioNoRatioProvided(i);
+        }
+
+        // Find nearest structural parent (should be Calldata/Tuple/Array)
+        uint256 parentIndex = conditions[i].parent;
+        while (conditions[parentIndex].paramType == AbiType.None) {
+            parentIndex = conditions[parentIndex].parent;
+        }
+
+        // Get parent's children bounds
+        (uint256 childrenStart, ) = Topology.childBounds(
+            conditions,
+            parentIndex
+        );
+
+        {
+            // Check reference child is Static
+            TypeTree memory typeNode = Topology.typeTree(
+                conditions,
+                childrenStart + referenceIndex
+            );
+            if (typeNode._type != AbiType.Static) {
+                revert WithinRatioTargetNotStatic(i);
+            }
+        }
+
+        {
+            // Check relative child is Static
+            TypeTree memory typeNode = Topology.typeTree(
+                conditions,
+                childrenStart + relativeIndex
+            );
+            if (typeNode._type != AbiType.Static) {
+                revert WithinRatioTargetNotStatic(i);
+            }
         }
     }
 }

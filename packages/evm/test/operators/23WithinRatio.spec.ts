@@ -78,7 +78,7 @@ describe("WithinRatio Operator", () => {
           referenceDecimals: 0,
           relativeIndex: 1,
           relativeDecimals: 0,
-          minRatio: 0,
+          minRatio: 12000,
           maxRatio: 0, // no upper bound
         });
 
@@ -97,6 +97,8 @@ describe("WithinRatio Operator", () => {
             ],
           }),
         );
+
+        await expect(invoke(1000, 1199)).to.be.reverted;
 
         // Reference: param 0 = 1000, Relative: param 1 = 1200
         // Ratio = 1200/1000 = 120% → pass (maxRatio=0 means no upper bound)
@@ -173,7 +175,7 @@ describe("WithinRatio Operator", () => {
           relativeIndex: 1,
           relativeDecimals: 0,
           minRatio: 0, // no lower bound
-          maxRatio: 0,
+          maxRatio: 10000,
         });
 
         await scopeFunction(
