@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
-import "./Topology.sol";
+
+import "./TypeTree.sol";
 
 /**
  * @title Integrity, A library that validates condition integrity, and
@@ -55,7 +56,7 @@ library Integrity {
         _nonStructuralOrdering(conditions);
         _typeTree(conditions);
 
-        if (Topology.typeTree(conditions, 0)._type != AbiType.Calldata) {
+        if (TypeTree.inspect(conditions, 0)._type != AbiType.Calldata) {
             revert UnsuitableRootNode();
         }
     }
@@ -354,10 +355,9 @@ library Integrity {
             return true;
         }
 
-        bytes32 id = Topology.typeTreeId(conditions, childrenStart);
+        bytes32 id = TypeTree.id(conditions, childrenStart);
         for (uint256 i = 1; i < childrenLength; ++i) {
-            if (id != Topology.typeTreeId(conditions, childrenStart + i))
-                return false;
+            if (id != TypeTree.id(conditions, childrenStart + i)) return false;
         }
 
         return true;
@@ -372,8 +372,8 @@ library Integrity {
         );
 
         for (uint256 i = 0; i < childrenLength; ++i) {
-            AbiType _type = Topology
-                .typeTree(conditions, childrenStart + i)
+            AbiType _type = TypeTree
+                .inspect(conditions, childrenStart + i)
                 ._type;
             if (
                 _type != AbiType.Dynamic &&
@@ -462,7 +462,7 @@ library Integrity {
 
         {
             // Check reference child is Static
-            Layout memory layout = Topology.typeTree(
+            Layout memory layout = TypeTree.inspect(
                 conditions,
                 childrenStart + referenceIndex
             );
@@ -473,7 +473,7 @@ library Integrity {
 
         {
             // Check relative child is Static
-            Layout memory layout = Topology.typeTree(
+            Layout memory layout = TypeTree.inspect(
                 conditions,
                 childrenStart + relativeIndex
             );

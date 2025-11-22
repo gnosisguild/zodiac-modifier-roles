@@ -6,17 +6,17 @@ import { AbiType, flattenCondition, Operator } from "./utils";
 
 // todo: test that different variants in different array positions work
 
-describe("Topology Library", () => {
+describe("TypeTree Library", () => {
   async function setup() {
-    const MockTopology = await hre.ethers.getContractFactory("MockTopology");
-    const topology = await MockTopology.deploy();
-    return { topology };
+    const MockTypeTree = await hre.ethers.getContractFactory("MockTypeTree");
+    const typeTree = await MockTypeTree.deploy();
+    return { typeTree };
   }
 
-  describe("typeTree()", () => {
+  describe("inspect()", () => {
     describe("Basic Type Representation", () => {
       it("should correctly represent a Static type", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -30,7 +30,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         expect(output).to.deep.equal({
           _type: AbiType.Calldata,
@@ -44,7 +44,7 @@ describe("Topology Library", () => {
       });
 
       it("should correctly represent a Dynamic type", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -58,7 +58,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         expect(output).to.deep.equal({
           _type: AbiType.Calldata,
@@ -72,7 +72,7 @@ describe("Topology Library", () => {
       });
 
       it("should correctly represent a simple Tuple of basic types", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -97,7 +97,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         expect(output).to.deep.equal({
           _type: AbiType.Calldata,
@@ -120,7 +120,7 @@ describe("Topology Library", () => {
       });
 
       it("should correctly represent a simple Array of a basic type", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -140,7 +140,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         expect(output).to.deep.equal({
           _type: AbiType.Calldata,
@@ -159,7 +159,7 @@ describe("Topology Library", () => {
       });
 
       it("should process only first element of Array, ignoring subsequent siblings", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -189,7 +189,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         // Array should only process its first child, ignoring the rest
         expect(output).to.deep.equal({
@@ -211,7 +211,7 @@ describe("Topology Library", () => {
 
     describe("Complex Nested Structures", () => {
       it("should handle deeply nested Tuples", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -253,7 +253,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         expect(output).to.deep.equal({
           _type: AbiType.Calldata,
@@ -290,7 +290,7 @@ describe("Topology Library", () => {
       });
 
       it("should handle multi-dimensional Arrays", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -316,7 +316,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         expect(output).to.deep.equal({
           _type: AbiType.Calldata,
@@ -340,7 +340,7 @@ describe("Topology Library", () => {
       });
 
       it("should handle Arrays of Tuples", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -371,7 +371,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         expect(output).to.deep.equal({
           _type: AbiType.Calldata,
@@ -399,7 +399,7 @@ describe("Topology Library", () => {
       });
 
       it("should handle Tuples containing Arrays", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -435,7 +435,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         expect(output).to.deep.equal({
           _type: AbiType.Calldata,
@@ -470,7 +470,7 @@ describe("Topology Library", () => {
     describe("Logical Operator Behavior (AND, OR, NOR)", () => {
       describe("Non-Variant Children", () => {
         it("should resolve AND with homogeneous children to a single representative type tree", async () => {
-          const { topology } = await loadFixture(setup);
+          const { typeTree } = await loadFixture(setup);
 
           const input = flattenCondition({
             paramType: AbiType.Calldata,
@@ -495,7 +495,7 @@ describe("Topology Library", () => {
             ],
           });
 
-          const output = bfsToTree(await topology.typeTree(input));
+          const output = bfsToTree(await typeTree.inspect(input));
 
           // All AND children produce same type tree (Dynamic with no children)
           // So this should NOT create a variant, just return the first child's tree
@@ -511,7 +511,7 @@ describe("Topology Library", () => {
         });
 
         it("should resolve OR with homogeneous children to a single representative type tree", async () => {
-          const { topology } = await loadFixture(setup);
+          const { typeTree } = await loadFixture(setup);
 
           const input = flattenCondition({
             paramType: AbiType.Calldata,
@@ -541,7 +541,7 @@ describe("Topology Library", () => {
             ],
           });
 
-          const output = bfsToTree(await topology.typeTree(input));
+          const output = bfsToTree(await typeTree.inspect(input));
 
           // All OR children produce same type tree (Dynamic with no children)
           // This should NOT create a variant, just return the first child's tree
@@ -557,7 +557,7 @@ describe("Topology Library", () => {
         });
 
         it("should unfold OR within Tuple when children have same type tree", async () => {
-          const { topology } = await loadFixture(setup);
+          const { typeTree } = await loadFixture(setup);
 
           const input = flattenCondition({
             paramType: AbiType.Calldata,
@@ -610,7 +610,7 @@ describe("Topology Library", () => {
             ],
           });
 
-          const output = bfsToTree(await topology.typeTree(input));
+          const output = bfsToTree(await typeTree.inspect(input));
 
           expect(output).to.deep.equal({
             _type: AbiType.Calldata,
@@ -642,7 +642,7 @@ describe("Topology Library", () => {
         });
 
         it("should unfold OR within Array when children have same type tree", async () => {
-          const { topology } = await loadFixture(setup);
+          const { typeTree } = await loadFixture(setup);
 
           const input = flattenCondition({
             paramType: AbiType.Calldata,
@@ -689,7 +689,7 @@ describe("Topology Library", () => {
             ],
           });
 
-          const output = bfsToTree(await topology.typeTree(input));
+          const output = bfsToTree(await typeTree.inspect(input));
 
           expect(output).to.deep.equal({
             _type: AbiType.Calldata,
@@ -723,7 +723,7 @@ describe("Topology Library", () => {
 
       describe("Variant Children", () => {
         it("should resolve OR with heterogeneous children to a Dynamic variant type", async () => {
-          const { topology } = await loadFixture(setup);
+          const { typeTree } = await loadFixture(setup);
 
           const input = flattenCondition({
             paramType: AbiType.Calldata,
@@ -765,7 +765,7 @@ describe("Topology Library", () => {
             ],
           });
 
-          const output = bfsToTree(await topology.typeTree(input));
+          const output = bfsToTree(await typeTree.inspect(input));
 
           // OR children have different type trees, so this creates a variant
           expect(output).to.deep.equal({
@@ -803,7 +803,7 @@ describe("Topology Library", () => {
         });
 
         it("should correctly represent all variant children under the Dynamic type", async () => {
-          const { topology } = await loadFixture(setup);
+          const { typeTree } = await loadFixture(setup);
 
           const input = flattenCondition({
             paramType: AbiType.Calldata,
@@ -861,7 +861,7 @@ describe("Topology Library", () => {
             ],
           });
 
-          const output = bfsToTree(await topology.typeTree(input));
+          const output = bfsToTree(await typeTree.inspect(input));
 
           // OR with mixed child types creates a variant payload node
           expect(output).to.deep.equal({
@@ -912,7 +912,7 @@ describe("Topology Library", () => {
         });
 
         it("should handle variants within nested structures (e.g., inside a Tuple)", async () => {
-          const { topology } = await loadFixture(setup);
+          const { typeTree } = await loadFixture(setup);
 
           const input = flattenCondition({
             paramType: AbiType.Calldata,
@@ -982,7 +982,7 @@ describe("Topology Library", () => {
             ],
           });
 
-          const output = bfsToTree(await topology.typeTree(input));
+          const output = bfsToTree(await typeTree.inspect(input));
 
           // Variant within Tuple: second element is OR with different structures
           expect(output).to.deep.equal({
@@ -1043,7 +1043,7 @@ describe("Topology Library", () => {
         });
 
         it("should handle variants within Array structures", async () => {
-          const { topology } = await loadFixture(setup);
+          const { typeTree } = await loadFixture(setup);
 
           const input = flattenCondition({
             paramType: AbiType.Calldata,
@@ -1114,7 +1114,7 @@ describe("Topology Library", () => {
             ],
           });
 
-          const output = bfsToTree(await topology.typeTree(input));
+          const output = bfsToTree(await typeTree.inspect(input));
 
           // Array contains OR variant as first child (others ignored)
           expect(output).to.deep.equal({
@@ -1175,7 +1175,7 @@ describe("Topology Library", () => {
         });
 
         it("should handle AND with heterogeneous children as variant", async () => {
-          const { topology } = await loadFixture(setup);
+          const { typeTree } = await loadFixture(setup);
 
           const input = flattenCondition({
             paramType: AbiType.Calldata,
@@ -1206,7 +1206,7 @@ describe("Topology Library", () => {
             ],
           });
 
-          const output = bfsToTree(await topology.typeTree(input));
+          const output = bfsToTree(await typeTree.inspect(input));
 
           // AND children have different type trees, so this creates a variant
           expect(output).to.deep.equal({
@@ -1237,7 +1237,7 @@ describe("Topology Library", () => {
 
       describe("Edge Cases for Logical Operators", () => {
         it("should handle a logical operator with only a single child", async () => {
-          const { topology } = await loadFixture(setup);
+          const { typeTree } = await loadFixture(setup);
 
           const input = flattenCondition({
             paramType: AbiType.Calldata,
@@ -1257,7 +1257,7 @@ describe("Topology Library", () => {
             ],
           });
 
-          const output = bfsToTree(await topology.typeTree(input));
+          const output = bfsToTree(await typeTree.inspect(input));
 
           expect(output).to.deep.equal({
             _type: AbiType.Calldata,
@@ -1271,7 +1271,7 @@ describe("Topology Library", () => {
         });
 
         it("should handle multiple nested logical operators", async () => {
-          const { topology } = await loadFixture(setup);
+          const { typeTree } = await loadFixture(setup);
 
           const input = flattenCondition({
             paramType: AbiType.Calldata,
@@ -1307,7 +1307,7 @@ describe("Topology Library", () => {
             ],
           });
 
-          const output = bfsToTree(await topology.typeTree(input));
+          const output = bfsToTree(await typeTree.inspect(input));
 
           expect(output).to.deep.equal({
             _type: AbiType.Calldata,
@@ -1321,7 +1321,7 @@ describe("Topology Library", () => {
         });
 
         it("should handle mixed OR/AND structures with relaxed equivalence", async () => {
-          const { topology } = await loadFixture(setup);
+          const { typeTree } = await loadFixture(setup);
 
           const input = flattenCondition({
             paramType: AbiType.Calldata,
@@ -1361,7 +1361,7 @@ describe("Topology Library", () => {
           });
 
           const output = normalizeTree(
-            bfsToTree(await topology.typeTree(input)),
+            bfsToTree(await typeTree.inspect(input)),
           );
 
           // Mixed OR/AND structure where:
@@ -1409,7 +1409,7 @@ describe("Topology Library", () => {
         });
 
         it("should handle nested variants", async () => {
-          const { topology } = await loadFixture(setup);
+          const { typeTree } = await loadFixture(setup);
 
           const input = flattenCondition({
             paramType: AbiType.Calldata,
@@ -1457,7 +1457,7 @@ describe("Topology Library", () => {
             ],
           });
 
-          const output = bfsToTree(await topology.typeTree(input));
+          const output = bfsToTree(await typeTree.inspect(input));
 
           // Nested variants: outer OR contains inner OR with different structures
           expect(output).to.deep.equal({
@@ -1502,7 +1502,7 @@ describe("Topology Library", () => {
 
       describe("Top-level Variant Unfolding", () => {
         it("should unfold top-level OR variants to their entrypoint form", async () => {
-          const { topology } = await loadFixture(setup);
+          const { typeTree } = await loadFixture(setup);
 
           const input = flattenCondition({
             paramType: AbiType.None,
@@ -1559,7 +1559,7 @@ describe("Topology Library", () => {
             ],
           });
 
-          const output = bfsToTree(await topology.typeTree(input));
+          const output = bfsToTree(await typeTree.inspect(input));
 
           expect(output).to.deep.equal({
             _type: AbiType.Calldata,
@@ -1580,7 +1580,7 @@ describe("Topology Library", () => {
 
     describe("Specialized Operator and Type Handling", () => {
       it("should treat EtherWithinAllowance as a None type in the tree", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -1599,7 +1599,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         expect(output).to.deep.equal({
           _type: AbiType.Calldata,
@@ -1613,7 +1613,7 @@ describe("Topology Library", () => {
       });
 
       it("should treat CallWithinAllowance as a None type in the tree", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -1632,7 +1632,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         expect(output).to.deep.equal({
           _type: AbiType.Calldata,
@@ -1646,7 +1646,7 @@ describe("Topology Library", () => {
       });
 
       it("should handle EtherWithinAllowance as lone node", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -1660,7 +1660,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         expect(output).to.deep.equal({
           _type: AbiType.Calldata,
@@ -1669,7 +1669,7 @@ describe("Topology Library", () => {
       });
 
       it("should handle CallWithinAllowance as lone node", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -1682,7 +1682,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         expect(output).to.deep.equal({
           _type: AbiType.Calldata,
@@ -1691,7 +1691,7 @@ describe("Topology Library", () => {
       });
 
       it("should filter out complete subtrees that are non-structural", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -1714,7 +1714,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         expect(output).to.deep.equal({
           _type: AbiType.Calldata,
@@ -1723,7 +1723,7 @@ describe("Topology Library", () => {
       });
 
       it("should handle EtherWithinAllowance as first node", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -1747,7 +1747,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         expect(output).to.deep.equal({
           _type: AbiType.Calldata,
@@ -1765,7 +1765,7 @@ describe("Topology Library", () => {
       });
 
       it("should handle CallWithinAllowance as last node", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -1789,7 +1789,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         expect(output).to.deep.equal({
           _type: AbiType.Calldata,
@@ -1807,7 +1807,7 @@ describe("Topology Library", () => {
       });
 
       it("should handle EtherWithinAllowance as child of OR variant", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const condition = {
           paramType: AbiType.None,
@@ -1850,7 +1850,7 @@ describe("Topology Library", () => {
 
         const input = flattenCondition(condition);
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         // NonStructural nodes filtered out; both OR branches identical -> collapses to single branch
         expect(output).to.deep.equal({
@@ -1860,7 +1860,7 @@ describe("Topology Library", () => {
       });
 
       it("should represent non-top-level Calldata types directly within the tree", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -1891,7 +1891,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         expect(output).to.deep.equal({
           _type: AbiType.Calldata,
@@ -1919,7 +1919,7 @@ describe("Topology Library", () => {
       });
 
       it("should represent non-top-level AbiEncoded types directly within the tree", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -1947,7 +1947,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         expect(output).to.deep.equal({
           _type: AbiType.Calldata,
@@ -1980,7 +1980,7 @@ describe("Topology Library", () => {
       });
 
       it("should correctly handle an AbiEncoded type within a variant structure", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -2011,7 +2011,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         expect(output).to.deep.equal({
           _type: AbiType.Calldata,
@@ -2039,7 +2039,7 @@ describe("Topology Library", () => {
       });
 
       it("should handle nested non-top-level Calldata in complex structures", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -2082,7 +2082,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         expect(output).to.deep.equal({
           _type: AbiType.Calldata,
@@ -2122,7 +2122,7 @@ describe("Topology Library", () => {
 
     describe("Array Variant Handling", () => {
       it("should include only first Array element when children have same type tree", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -2153,7 +2153,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         // OR with homogeneous children (all Dynamic) is not a variant
         // Array should only have first child
@@ -2174,7 +2174,7 @@ describe("Topology Library", () => {
       });
 
       it("should include only first Array element for simple non-variant types", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -2192,7 +2192,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         // Multiple Static children - all same type, not a variant
         // Array should only have first child
@@ -2213,7 +2213,7 @@ describe("Topology Library", () => {
       });
 
       it("should include all Array elements when children form a variant", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -2245,7 +2245,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         // OR with heterogeneous children (Dynamic, Calldata, AbiEncoded) creates a variant
         // Array should contain all variant children
@@ -2280,7 +2280,7 @@ describe("Topology Library", () => {
   describe("toTypeTree - OLD TESTS", () => {
     describe("basic cases", () => {
       it("a tuple type tree", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -2316,7 +2316,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         expect(output).to.deep.equal({
           _type: AbiType.Calldata,
@@ -2347,7 +2347,7 @@ describe("Topology Library", () => {
         });
       });
       it("a logical type tree", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -2372,7 +2372,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         expect(output).to.deep.equal({
           _type: AbiType.Calldata,
@@ -2385,7 +2385,7 @@ describe("Topology Library", () => {
         });
       });
       it("top level variants get unfolded to its entrypoint form", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.None,
@@ -2442,7 +2442,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         expect(output).to.deep.equal({
           _type: AbiType.Calldata,
@@ -2459,7 +2459,7 @@ describe("Topology Library", () => {
         });
       });
       it("AND gets unfolded to Static", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -2484,7 +2484,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         expect(output).to.deep.equal({
           _type: AbiType.Calldata,
@@ -2497,7 +2497,7 @@ describe("Topology Library", () => {
         });
       });
       it("OR gets unfolded to Array - From Tuple", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -2550,7 +2550,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         expect(output).to.deep.equal({
           _type: AbiType.Calldata,
@@ -2581,7 +2581,7 @@ describe("Topology Library", () => {
         });
       });
       it("OR gets unfolded to Static - From Array", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -2628,7 +2628,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         expect(output).to.deep.equal({
           _type: AbiType.Calldata,
@@ -2659,7 +2659,7 @@ describe("Topology Library", () => {
         });
       });
       it("EtherWithinAllowance in Calldata gets inspected as None", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -2678,7 +2678,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         expect(output).to.deep.equal({
           _type: AbiType.Calldata,
@@ -2691,7 +2691,7 @@ describe("Topology Library", () => {
         });
       });
       it("CallWithinAllowance Value trailing in Calldata gets inspected as None", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -2710,7 +2710,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         expect(output).to.deep.equal({
           _type: AbiType.Calldata,
@@ -2723,7 +2723,7 @@ describe("Topology Library", () => {
         });
       });
       it("Array resolves to first element only in type tree", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -2753,7 +2753,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         // Array should only process its first child, ignoring the rest
         expect(output).to.deep.equal({
@@ -2775,7 +2775,7 @@ describe("Topology Library", () => {
 
     describe("Ether/CallWithinAllowance", () => {
       it("EtherWithinAllowance as lone node", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -2789,7 +2789,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         expect(output).to.deep.equal({
           _type: AbiType.Calldata,
@@ -2798,7 +2798,7 @@ describe("Topology Library", () => {
       });
 
       it("CallWithinAllowance as lone node", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -2812,7 +2812,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         expect(output).to.deep.equal({
           _type: AbiType.Calldata,
@@ -2821,7 +2821,7 @@ describe("Topology Library", () => {
       });
 
       it("CallWithinAllowance as last node", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -2845,7 +2845,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         expect(output).to.deep.equal({
           _type: AbiType.Calldata,
@@ -2863,7 +2863,7 @@ describe("Topology Library", () => {
       });
 
       it("EtherWithinAllowance as child of OR variant", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const condition = {
           paramType: AbiType.None,
@@ -2906,7 +2906,7 @@ describe("Topology Library", () => {
 
         const input = flattenCondition(condition);
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         // NonStructural nodes filtered out; both OR branches identical -> collapses to single branch
         expect(output).to.deep.equal({
@@ -2918,7 +2918,7 @@ describe("Topology Library", () => {
 
     describe("Non-top level Calldata/AbiEncoded handling", () => {
       it("should represent non-top level Calldata directly", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -2949,7 +2949,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         expect(output).to.deep.equal({
           _type: AbiType.Calldata,
@@ -2976,7 +2976,7 @@ describe("Topology Library", () => {
         });
       });
       it("should represent non-top level AbiEncoded directly", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -3013,7 +3013,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         expect(output).to.deep.equal({
           _type: AbiType.Calldata,
@@ -3045,7 +3045,7 @@ describe("Topology Library", () => {
         });
       });
       it("should handle nested non-top level Calldata directly in complex structures", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -3088,7 +3088,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         expect(output).to.deep.equal({
           _type: AbiType.Calldata,
@@ -3125,7 +3125,7 @@ describe("Topology Library", () => {
         });
       });
       it("should represent AbiEncoded within OR structure as variant with Dynamic wrapper", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -3156,7 +3156,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         expect(output).to.deep.equal({
           _type: AbiType.Calldata,
@@ -3187,7 +3187,7 @@ describe("Topology Library", () => {
     // OR/AND children with relaxed type tree equivalence
     describe("OR/AND children with type tree equivalence rules", () => {
       it("should handle OR with children translating to same type tree - non-variant payload", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
         const input = flattenCondition({
           paramType: AbiType.Calldata,
           operator: Operator.Matches,
@@ -3216,7 +3216,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         // All OR children produce same type tree (Dynamic with no children)
         // This should NOT create a variant, just return the first child's tree
@@ -3231,7 +3231,7 @@ describe("Topology Library", () => {
         });
       });
       it("should handle AND with children translating to same type tree - non-variant payload", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -3256,7 +3256,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         // All AND children produce same type tree (Dynamic with no children)
         // So this should NOT create a variant, just return the first child's tree
@@ -3271,7 +3271,7 @@ describe("Topology Library", () => {
         });
       });
       it("should handle OR with children translating to different type trees - variant payload", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -3313,7 +3313,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         // OR children have different type trees, so this creates a variant
         expect(output).to.deep.equal({
@@ -3350,7 +3350,7 @@ describe("Topology Library", () => {
         });
       });
       it("should handle AND with children translating to different type trees - variant payload", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -3381,7 +3381,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         // AND children have different type trees, so this creates a variant
         expect(output).to.deep.equal({
@@ -3409,7 +3409,7 @@ describe("Topology Library", () => {
         });
       });
       it("should handle mixed OR/AND structures with relaxed equivalence", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -3468,7 +3468,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = normalizeTree(bfsToTree(await topology.typeTree(input)));
+        const output = normalizeTree(bfsToTree(await typeTree.inspect(input)));
 
         // Mixed OR/AND structure where:
         // - First AND yields Dynamic (same type tree)
@@ -3514,7 +3514,7 @@ describe("Topology Library", () => {
         );
       });
       it("should handle deeply nested OR/AND with relaxed type tree matching", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -3584,7 +3584,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = normalizeTree(bfsToTree(await topology.typeTree(input)));
+        const output = normalizeTree(bfsToTree(await typeTree.inspect(input)));
 
         // Deeply nested structure:
         // - Inner OR yields Dynamic (same type tree)
@@ -3635,7 +3635,7 @@ describe("Topology Library", () => {
     // Variant payload nodes with multiple children
     describe("Variant payload nodes with multiple children", () => {
       it("should create variant payload node with multiple Static children", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -3665,7 +3665,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         expect(output).to.deep.equal({
           _type: AbiType.Calldata,
@@ -3678,7 +3678,7 @@ describe("Topology Library", () => {
         });
       });
       it("should create variant payload node with mixed child types", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -3736,7 +3736,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         // OR with mixed child types creates a variant payload node
         expect(output).to.deep.equal({
@@ -3786,7 +3786,7 @@ describe("Topology Library", () => {
         });
       });
       it("should handle variant payload nodes within Tuple structures", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -3856,7 +3856,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         // Variant within Tuple: second element is OR with different structures
         expect(output).to.deep.equal({
@@ -3916,7 +3916,7 @@ describe("Topology Library", () => {
         });
       });
       it("should handle variant payload nodes within Array structures", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -3986,7 +3986,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         // Array contains OR variant as first child (others ignored)
         expect(output).to.deep.equal({
@@ -4046,7 +4046,7 @@ describe("Topology Library", () => {
         });
       });
       it("should handle nested variant payload nodes", async () => {
-        const { topology } = await loadFixture(setup);
+        const { typeTree } = await loadFixture(setup);
 
         const input = flattenCondition({
           paramType: AbiType.Calldata,
@@ -4094,7 +4094,7 @@ describe("Topology Library", () => {
           ],
         });
 
-        const output = bfsToTree(await topology.typeTree(input));
+        const output = bfsToTree(await typeTree.inspect(input));
 
         // Nested variants: outer OR contains inner OR with different structures
         expect(output).to.deep.equal({

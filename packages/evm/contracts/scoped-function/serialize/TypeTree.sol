@@ -4,16 +4,16 @@ pragma solidity >=0.8.17 <0.9.0;
 import "../../Types.sol";
 
 /**
- * @title  Topology
+ * @title  TypeTree
  *
  * @author gnosisguild
  *
  */
-library Topology {
+library TypeTree {
     /**
      * @notice Builds a Layout from flat conditions starting at index
      */
-    function typeTree(
+    function inspect(
         ConditionFlat[] memory conditions,
         uint256 index
     ) internal pure returns (Layout memory node) {
@@ -25,7 +25,7 @@ library Topology {
         );
 
         if (isLogical && isVariant == false) {
-            return typeTree(conditions, childStart);
+            return inspect(conditions, childStart);
         }
 
         /*
@@ -41,18 +41,18 @@ library Topology {
             node._type == AbiType.Array && isVariant == false ? 1 : childLength
         );
         for (uint256 i = 0; i < node.children.length; ++i) {
-            node.children[i] = typeTree(conditions, childStart + i);
+            node.children[i] = inspect(conditions, childStart + i);
         }
     }
 
     /**
      * @notice Computes a unique hash for a type tree structure
      */
-    function typeTreeId(
+    function id(
         ConditionFlat[] memory conditions,
         uint256 index
     ) internal pure returns (bytes32) {
-        return _hashTree(typeTree(conditions, index));
+        return _hashTree(inspect(conditions, index));
     }
 
     // =========================================================================
@@ -100,9 +100,9 @@ library Topology {
         );
         if (childLength <= 1) return false;
 
-        bytes32 id = typeTreeId(conditions, childStart);
+        bytes32 idHash = id(conditions, childStart);
         for (uint256 i = 1; i < childLength; ++i) {
-            if (id != typeTreeId(conditions, childStart + i)) return true;
+            if (idHash != id(conditions, childStart + i)) return true;
         }
 
         return false;

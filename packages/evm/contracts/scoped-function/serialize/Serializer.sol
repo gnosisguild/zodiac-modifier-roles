@@ -2,8 +2,8 @@
 pragma solidity >=0.8.17 <0.9.0;
 
 import "./Integrity.sol";
-import "./Topology.sol";
 import "./Packer.sol";
+import "./TypeTree.sol";
 
 import "../ImmutableStorage.sol";
 import "../ScopeConfig.sol";
@@ -18,7 +18,7 @@ library Serializer {
 
         _removeExtraneousOffsets(conditions);
 
-        Layout memory layout = Topology.typeTree(conditions, 0);
+        Layout memory layout = TypeTree.inspect(conditions, 0);
         bytes32[] memory allowanceKeys = _allowanceKeys(conditions);
 
         bytes memory buffer = Packer.pack(conditions, layout, allowanceKeys);

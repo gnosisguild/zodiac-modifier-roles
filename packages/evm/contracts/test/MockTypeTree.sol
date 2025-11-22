@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "../scoped-function/serialize/Topology.sol";
+import "../scoped-function/serialize/TypeTree.sol";
 
-contract MockTopology {
-    function typeTree(
+contract MockTypeTree {
+    function inspect(
         ConditionFlat[] memory conditions
     ) public pure returns (FlatNode[] memory result) {
-        return flattenTree(Topology.typeTree(conditions, 0));
+        return flattenTree(TypeTree.inspect(conditions, 0));
     }
 
     // Flat structure with parent reference
