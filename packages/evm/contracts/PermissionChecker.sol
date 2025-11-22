@@ -548,7 +548,7 @@ abstract contract PermissionChecker is Core, Periphery {
         Payload memory payload
     ) private pure returns (Status) {
         bytes32 compValue = bytes32(condition.compValue);
-        bool isInline = condition.paramType == AbiType.Static;
+        bool isInline = payload.size == 32;
         bytes calldata value = AbiDecoder.pluck(
             data,
             payload.location + (isInline ? 0 : 32),
