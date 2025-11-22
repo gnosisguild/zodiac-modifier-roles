@@ -11,12 +11,12 @@ import "../../Types.sol";
  */
 library Topology {
     /**
-     * @notice Builds a TypeTree from flat conditions starting at index
+     * @notice Builds a Layout from flat conditions starting at index
      */
     function typeTree(
         ConditionFlat[] memory conditions,
         uint256 index
-    ) internal pure returns (TypeTree memory node) {
+    ) internal pure returns (Layout memory node) {
         bool isLogical = _isLogical(conditions, index);
         bool isVariant = _isVariant(conditions, index);
         (uint256 childStart, uint256 childLength) = _structuralChildBounds(
@@ -37,7 +37,7 @@ library Topology {
          * We traver and establish children. Except for non variant arrays, where
          * we just take the first element as Template
          */
-        node.children = new TypeTree[](
+        node.children = new Layout[](
             node._type == AbiType.Array && isVariant == false ? 1 : childLength
         );
         for (uint256 i = 0; i < node.children.length; ++i) {
@@ -58,7 +58,7 @@ library Topology {
     // =========================================================================
     // Private Helpers
     // =========================================================================
-    function _hashTree(TypeTree memory tree) private pure returns (bytes32) {
+    function _hashTree(Layout memory tree) private pure returns (bytes32) {
         if (tree.children.length == 0) {
             return bytes32(uint256(tree._type));
         }

@@ -10,7 +10,7 @@ library Unpacker {
     // ═══════════════════════════════════════════════════════════════════════════
 
     uint256 private constant CONDITION_NODE_BYTES = 5;
-    uint256 private constant TYPETREE_NODE_BYTES = 2;
+    uint256 private constant LAYOUT_NODE_BYTES = 2;
 
     // ═══════════════════════════════════════════════════════════════════════════
     // Main Unpacking Function
@@ -23,7 +23,7 @@ library Unpacker {
         view
         returns (
             Condition memory condition,
-            TypeTree memory typeTree,
+            Layout memory layout,
             bytes32[] memory allowanceKeys
         )
     {
@@ -34,8 +34,8 @@ library Unpacker {
         // Unpack condition tree
         condition = _unpackCondition(buffer, 4);
 
-        // Unpack type tree
-        typeTree = _unpackTypeTree(buffer, typesOffset);
+        // Unpack layout
+        layout = _unpackLayout(buffer, typesOffset);
 
         assembly {
             allowanceKeys := add(buffer, add(0x20, allowanceOffset))
@@ -131,13 +131,13 @@ library Unpacker {
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // TypeTree Unpacking
+    // Layout Unpacking
     // ═══════════════════════════════════════════════════════════════════════════
 
-    function _unpackTypeTree(
+    function _unpackLayout(
         bytes memory buffer,
         uint256 offset
-    ) internal pure returns (TypeTree memory) {
+    ) internal pure returns (Layout memory) {
         // Load the node count from header (16 bits)
         uint256 nodeCount;
         assembly {
@@ -146,7 +146,7 @@ library Unpacker {
             offset := add(offset, 2)
         }
 
-        TypeTree[] memory nodes = new TypeTree[](nodeCount);
+        Layout[] memory nodes = new Layout[](nodeCount);
         uint256 nextChildBFS = 1;
 
         for (uint256 i = 0; i < nodeCount; ) {
@@ -163,12 +163,12 @@ library Unpacker {
              * └──────────────────────────────────────────────────┘
              */
 
-            TypeTree memory node = nodes[i];
+            Layout memory node = nodes[i];
             node._type = AbiType((packed >> 13));
             uint256 childCount = (packed >> 5) & 0xFF;
 
             if (childCount > 0) {
-                node.children = new TypeTree[](childCount);
+                node.children = new Layout[](childCount);
 
                 for (uint256 j = 0; j < childCount; ) {
                     node.children[j] = nodes[nextChildBFS];
@@ -180,7 +180,7 @@ library Unpacker {
             }
 
             unchecked {
-                offset += TYPETREE_NODE_BYTES;
+                offset += LAYOUT_NODE_BYTES;
                 ++i;
             }
         }

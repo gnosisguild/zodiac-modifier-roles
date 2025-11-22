@@ -8,7 +8,7 @@ import "./AbiTypes.sol";
  *
  * @author gnosisguild
  *
- * @notice This library inspects ABI-encoded calldata according to a TypeTree
+ * @notice This library inspects ABI-encoded calldata according to type Layout
  *         definition, producing Payload mappings that describe where each
  *         parameter resides in calldata and how large it is.
  *
@@ -24,20 +24,20 @@ library AbiDecoder {
 
     /**
      * @dev Maps the location and size of a parameter in calldata according to
-     *      an ABI `typeTree`.
+     *      a Layout.
      *
      * @param data      The encoded transaction data to be inspected.
-     * @param typeNode  Array of ABI type definitions forming the typeTree.
+     * @param layout    The Layout defining the type structure.
      * @return payload  The mapped location and size of parameters in the encoded
      *                  transaction data.
      */
     function inspect(
         bytes calldata data,
-        TypeTree memory typeNode
+        Layout memory layout
     ) internal pure returns (Payload memory payload) {
         assert(
-            typeNode._type == AbiType.Calldata ||
-                typeNode._type == AbiType.AbiEncoded
+            layout._type == AbiType.Calldata ||
+                layout._type == AbiType.AbiEncoded
         );
         /*
          * The parameter encoding area consists of a head region, divided into
@@ -51,9 +51,9 @@ library AbiDecoder {
          */
         __block__(
             data,
-            typeNode._type == AbiType.Calldata ? 4 : 0,
-            typeNode.children.length,
-            typeNode,
+            layout._type == AbiType.Calldata ? 4 : 0,
+            layout.children.length,
+            layout,
             payload
         );
         payload.size = data.length;
@@ -65,42 +65,36 @@ library AbiDecoder {
      *
      * @param data     The encoded transaction data.
      * @param location The current absolute position within calldata.
-     * @param typeNode Todo
+     * @param layout   The layout node
      * @param payload  The output payload containing the parameter's location
      *                 and size in calldata.
      */
     function _walk(
         bytes calldata data,
         uint256 location,
-        TypeTree memory typeNode,
+        Layout memory layout,
         Payload memory payload
     ) private pure {
         assert(location + 32 <= data.length);
 
-        payload.typeIndex = typeNode.index;
+        payload.typeIndex = layout.index;
 
-        AbiType _type = typeNode._type;
+        AbiType _type = layout._type;
         if (_type == AbiType.Static) {
             payload.size = 32;
         } else if (_type == AbiType.Dynamic) {
-            if (typeNode.children.length > 0) {
-                _variant(data, location, typeNode, payload);
+            if (layout.children.length > 0) {
+                _variant(data, location, layout, payload);
             }
             payload.size = 32 + _ceil32(uint256(word(data, location)));
         } else if (_type == AbiType.Tuple) {
-            __block__(
-                data,
-                location,
-                typeNode.children.length,
-                typeNode,
-                payload
-            );
+            __block__(data, location, layout.children.length, layout, payload);
         } else if (_type == AbiType.Array) {
             __block__(
                 data,
                 location + 32,
                 uint256(word(data, location)),
-                typeNode,
+                layout,
                 payload
             );
             payload.size += 32;
@@ -108,8 +102,8 @@ library AbiDecoder {
             __block__(
                 data,
                 location + 32 + (_type == AbiType.Calldata ? 4 : 0),
-                typeNode.children.length,
-                typeNode,
+                layout.children.length,
+                layout,
                 payload
             );
             payload.size = 32 + _ceil32(uint256(word(data, location)));
@@ -128,12 +122,12 @@ library AbiDecoder {
      * @param data      The encoded transaction data
      * @param location  Starting byte position of the block in calldata
      * @param length    Number of elements to decode in this block
-     * @param typeNode  Type definition tree for this block
+     * @param layout  Type definition tree for this block
      * @param payload   Output payload to populate with decoded data
      *
      * @notice Key differences:
-     *        - Arrays: All elements share the same type (typeNode.children[0])
-     *        - Tuples: Each element has its own type (typeNode.children[i])
+     *        - Arrays: All elements share the same type (layout.children[0])
+     *        - Tuples: Each element has its own type (layout.children[i])
      *        - Inline elements are stored directly in HEAD region
      *        - Non-inline elements store a pointer in HEAD, data in TAIL
      */
@@ -141,17 +135,17 @@ library AbiDecoder {
         bytes calldata data,
         uint256 location,
         uint256 length,
-        TypeTree memory typeNode,
+        Layout memory layout,
         Payload memory payload
     ) private pure {
         Payload[] memory children = new Payload[](length);
 
-        bool isArray = typeNode._type == AbiType.Array;
+        bool isArray = layout._type == AbiType.Array;
         uint256 offset;
         for (uint256 i; i < length; ++i) {
             Payload memory child = children[i];
-            TypeTree memory typeChild = typeNode.children[
-                isArray && i >= typeNode.children.length ? 0 : i
+            Layout memory typeChild = layout.children[
+                isArray && i >= layout.children.length ? 0 : i
             ];
 
             bool isInline = _isInline(typeChild);
@@ -190,7 +184,7 @@ library AbiDecoder {
      *
      * @param data      The encoded transaction data
      * @param location  Starting byte position in calldata
-     * @param typeNode  Type node containing variant interpretations as children
+     * @param layout    Type node containing variant interpretations as children
      * @param payload   Output payload marked as variant with child payloads
      *
      * @notice The payload is marked as overflown=true by default. It's only set
@@ -200,10 +194,10 @@ library AbiDecoder {
     function _variant(
         bytes calldata data,
         uint256 location,
-        TypeTree memory typeNode,
+        Layout memory layout,
         Payload memory payload
     ) private pure {
-        uint256 length = typeNode.children.length;
+        uint256 length = layout.children.length;
 
         payload.variant = true;
         payload.overflown = true;
@@ -211,12 +205,7 @@ library AbiDecoder {
 
         unchecked {
             for (uint256 i; i < length; ++i) {
-                _walk(
-                    data,
-                    location,
-                    typeNode.children[i],
-                    payload.children[i]
-                );
+                _walk(data, location, layout.children[i], payload.children[i]);
                 payload.overflown =
                     payload.overflown &&
                     payload.children[i].overflown;
@@ -275,8 +264,8 @@ library AbiDecoder {
      * @dev Determines if a parameter is stored inline (in HEAD region) versus
      *      offset pointing to TAIL region.
      *
-     * @param node The type tree node to check
-     * @return     `true` if inline, `false` if requires pointer
+     * @param layout The layout node to check
+     * @return       `true` if inline, `false` if requires pointer
      *
      * @notice Inline types:
      *         - Static: always inline (32 bytes)
@@ -287,8 +276,8 @@ library AbiDecoder {
      *         - Array: length prefix + elements
      *         - Calldata/AbiEncoded: embedded structures
      */
-    function _isInline(TypeTree memory node) private pure returns (bool) {
-        AbiType _type = node._type;
+    function _isInline(Layout memory layout) private pure returns (bool) {
+        AbiType _type = layout._type;
         if (_type == AbiType.Static) {
             return true;
         } else if (
@@ -299,9 +288,9 @@ library AbiDecoder {
         ) {
             return false;
         } else {
-            uint256 length = node.children.length;
+            uint256 length = layout.children.length;
             for (uint256 i; i < length; ) {
-                if (!_isInline(node.children[i])) {
+                if (!_isInline(layout.children[i])) {
                     return false;
                 }
                 unchecked {

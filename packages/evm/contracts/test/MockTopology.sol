@@ -19,11 +19,11 @@ contract MockTopology {
     // Queue item for BFS
     struct QueueItem {
         uint256 parent;
-        TypeTree node;
+        Layout node;
     }
 
     function flattenTree(
-        TypeTree memory root
+        Layout memory root
     ) internal pure returns (FlatNode[] memory result) {
         // Count nodes first to allocate array
         uint256 totalNodes = countNodes(root);
@@ -68,7 +68,7 @@ contract MockTopology {
     }
 
     // Recursive helper to count nodes
-    function countNodes(TypeTree memory tree) private pure returns (uint256) {
+    function countNodes(Layout memory tree) private pure returns (uint256) {
         uint256 count;
 
         for (uint256 i = 0; i < tree.children.length; i++) {

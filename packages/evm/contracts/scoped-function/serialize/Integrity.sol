@@ -462,22 +462,22 @@ library Integrity {
 
         {
             // Check reference child is Static
-            TypeTree memory typeNode = Topology.typeTree(
+            Layout memory layout = Topology.typeTree(
                 conditions,
                 childrenStart + referenceIndex
             );
-            if (typeNode._type != AbiType.Static) {
+            if (layout._type != AbiType.Static) {
                 revert WithinRatioTargetNotStatic(i);
             }
         }
 
         {
             // Check relative child is Static
-            TypeTree memory typeNode = Topology.typeTree(
+            Layout memory layout = Topology.typeTree(
                 conditions,
                 childrenStart + relativeIndex
             );
-            if (typeNode._type != AbiType.Static) {
+            if (layout._type != AbiType.Static) {
                 revert WithinRatioTargetNotStatic(i);
             }
         }

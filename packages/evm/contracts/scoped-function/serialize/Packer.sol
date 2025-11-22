@@ -10,7 +10,7 @@ import "../../AbiTypes.sol";
  * ┌─────────────────────────────────────────────────────────────────────┐
  * │ HEADER (4 bytes)                                                    │
  * ├─────────────────────────────────────────────────────────────────────┤
- * │ • typesOffset              16 bits (0-65535)                        │
+ * │ • layoutOffset             16 bits (0-65535)                        │
  * │ • allowanceOffset          16 bits (0-65535)                        │
  * └─────────────────────────────────────────────────────────────────────┘
  *
@@ -35,7 +35,7 @@ import "../../AbiTypes.sol";
  * └─────────────────────────────────────────────────────────────────────┘
  *
  * ┌─────────────────────────────────────────────────────────────────────┐
- * │ TYPE TREE SECTION (at typeTreeOffset)                               │
+ * │ LAYOUT SECTION (at layoutOffset)                                    │
  * ├─────────────────────────────────────────────────────────────────────┤
  * │ Header (2 bytes):                                                   │
  * │   • nodeCount              16 bits (0-65535)                        │
@@ -67,7 +67,7 @@ library Packer {
     // ═══════════════════════════════════════════════════════════════════════════
 
     uint256 private constant CONDITION_NODE_BYTES = 5;
-    uint256 private constant TYPETREE_NODE_BYTES = 2;
+    uint256 private constant LAYOUT_NODE_BYTES = 2;
 
     // ═══════════════════════════════════════════════════════════════════════════
     // Main Packing Function
@@ -75,12 +75,12 @@ library Packer {
 
     function pack(
         ConditionFlat[] memory conditions,
-        TypeTree memory typeNode,
+        Layout memory typeNode,
         bytes32[] memory allowanceKeys
     ) internal pure returns (bytes memory buffer) {
         uint256 size = 4 +
             _conditionPackedSize(conditions) +
-            _typeTreePackedSize(typeNode) +
+            _layoutPackedSize(typeNode) +
             (32 * (allowanceKeys.length + 1));
 
         buffer = new bytes(size);
@@ -89,9 +89,9 @@ library Packer {
 
         offset += _packConditions(conditions, buffer, offset);
 
-        // pack at position 0 -> typesOffset
+        // pack at position 0 -> layoutOffset
         _packUInt16(offset, buffer, 0);
-        offset += _packTypeTree(typeNode, buffer, offset);
+        offset += _packLayout(typeNode, buffer, offset);
 
         // pack at position 2 -> allowanceOffset
         _packUInt16(offset, buffer, 2);
@@ -242,22 +242,22 @@ library Packer {
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // TypeTree Packing
+    // Layout Packing
     // ═══════════════════════════════════════════════════════════════════════════
 
-    function _typeTreePackedSize(
-        TypeTree memory node
+    function _layoutPackedSize(
+        Layout memory node
     ) internal pure returns (uint256 result) {
         // Header (2 bytes) + all nodes (2 bytes each)
-        result = 2 + _countNodes(node) * TYPETREE_NODE_BYTES;
+        result = 2 + _countNodes(node) * LAYOUT_NODE_BYTES;
     }
 
-    function _packTypeTree(
-        TypeTree memory tree,
+    function _packLayout(
+        Layout memory tree,
         bytes memory buffer,
         uint256 offset
     ) internal pure returns (uint256) {
-        TypeNodeFlat[] memory nodes = _flattenTypeTree(tree);
+        LayoutNodeFlat[] memory nodes = _flattenLayout(tree);
 
         offset += _packUInt16(nodes.length, buffer, offset);
 
@@ -270,16 +270,16 @@ library Packer {
             buffer[offset++] = bytes1(uint8(packed));
         }
 
-        return 2 + nodes.length * TYPETREE_NODE_BYTES;
+        return 2 + nodes.length * LAYOUT_NODE_BYTES;
     }
 
-    function _flattenTypeTree(
-        TypeTree memory root
-    ) internal pure returns (TypeNodeFlat[] memory) {
+    function _flattenLayout(
+        Layout memory root
+    ) internal pure returns (LayoutNodeFlat[] memory) {
         uint256 total = _countNodes(root);
-        TypeNodeFlat[] memory result = new TypeNodeFlat[](total);
+        LayoutNodeFlat[] memory result = new LayoutNodeFlat[](total);
 
-        TypeTree[] memory queue = new TypeTree[](total);
+        Layout[] memory queue = new Layout[](total);
         uint256[] memory parents = new uint256[](total);
 
         queue[0] = root;
@@ -290,12 +290,12 @@ library Packer {
         uint256 current = 0;
 
         while (head < tail) {
-            TypeTree memory node = queue[head];
+            Layout memory node = queue[head];
             uint256 parent = parents[head];
             head++;
 
             // Record this node
-            result[current] = TypeNodeFlat({
+            result[current] = LayoutNodeFlat({
                 _type: node._type,
                 parent: parent,
                 childCount: node.children.length
@@ -315,7 +315,7 @@ library Packer {
     }
 
     function _countNodes(
-        TypeTree memory node
+        Layout memory node
     ) internal pure returns (uint256 count) {
         count = 1;
         for (uint256 i = 0; i < node.children.length; ++i) {
@@ -323,7 +323,7 @@ library Packer {
         }
     }
 
-    struct TypeNodeFlat {
+    struct LayoutNodeFlat {
         uint256 parent;
         AbiType _type;
         uint256 childCount;

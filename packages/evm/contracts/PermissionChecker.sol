@@ -224,7 +224,7 @@ abstract contract PermissionChecker is Core, Periphery {
         Consumption[] memory consumptions;
         (
             Condition memory condition,
-            TypeTree memory typeTree,
+            Layout memory layout,
             bytes32[] memory allowanceKeys
         ) = Deserializer.load(scopeConfig);
 
@@ -245,7 +245,7 @@ abstract contract PermissionChecker is Core, Periphery {
         }
 
         return
-            _walk(data, condition, AbiDecoder.inspect(data, typeTree), context);
+            _walk(data, condition, AbiDecoder.inspect(data, layout), context);
     }
 
     function _walk(

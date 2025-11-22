@@ -14,7 +14,7 @@ library Deserializer {
         view
         returns (
             Condition memory condition,
-            TypeTree memory typeTree,
+            Layout memory layout,
             bytes32[] memory allowanceKeys
         )
     {
