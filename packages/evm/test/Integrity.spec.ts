@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import hre from "hardhat";
-import { AbiCoder, ZeroHash } from "ethers";
+import { AbiCoder, ZeroHash, solidityPacked } from "ethers";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 import { AbiType, flattenCondition, Operator } from "./utils";
@@ -1791,4 +1791,291 @@ describe("Integrity", () => {
       });
     });
   });
+
+  describe("Type matching with non-structural children", () => {
+    it("allows Array with matching Static children and non-structural WithinRatio", async () => {
+      const { enforce } = await loadFixture(setup);
+
+      const compValue = encodeWithinRatioCompValue({
+        referenceIndex: 0,
+        referenceDecimals: 0,
+        relativeIndex: 1,
+        relativeDecimals: 0,
+        minRatio: 0,
+        maxRatio: 15000,
+      });
+
+      // All structural children (Static) match, non-structural WithinRatio should be ignored
+      const conditions = flattenCondition({
+        paramType: AbiType.Calldata,
+        operator: Operator.Matches,
+        children: [
+          {
+            paramType: AbiType.Array,
+            operator: Operator.Matches,
+            children: [
+              { paramType: AbiType.Static, operator: Operator.Pass },
+              { paramType: AbiType.Static, operator: Operator.Pass },
+              { paramType: AbiType.Static, operator: Operator.Pass },
+              {
+                paramType: AbiType.None,
+                operator: Operator.WithinRatio,
+                compValue,
+              },
+            ],
+          },
+        ],
+      });
+      await expect(enforce(conditions)).to.not.be.reverted;
+    });
+
+    it("allows Tuple with matching Static children and non-structural WithinRatio", async () => {
+      const { enforce } = await loadFixture(setup);
+
+      const compValue = encodeWithinRatioCompValue({
+        referenceIndex: 0,
+        referenceDecimals: 0,
+        relativeIndex: 1,
+        relativeDecimals: 0,
+        minRatio: 0,
+        maxRatio: 15000,
+      });
+
+      const conditions = flattenCondition({
+        paramType: AbiType.Calldata,
+        operator: Operator.Matches,
+        children: [
+          {
+            paramType: AbiType.Tuple,
+            operator: Operator.Matches,
+            children: [
+              { paramType: AbiType.Static, operator: Operator.Pass },
+              { paramType: AbiType.Static, operator: Operator.Pass },
+              { paramType: AbiType.Static, operator: Operator.Pass },
+              {
+                paramType: AbiType.None,
+                operator: Operator.WithinRatio,
+                compValue,
+              },
+            ],
+          },
+        ],
+      });
+      await expect(enforce(conditions)).to.not.be.reverted;
+    });
+
+    it("allows And operator with matching structural children and non-structural WithinRatio", async () => {
+      const { enforce } = await loadFixture(setup);
+
+      const compValue = encodeWithinRatioCompValue({
+        referenceIndex: 0,
+        referenceDecimals: 0,
+        relativeIndex: 1,
+        relativeDecimals: 0,
+        minRatio: 0,
+        maxRatio: 15000,
+      });
+
+      const conditions = flattenCondition({
+        paramType: AbiType.Calldata,
+        operator: Operator.Matches,
+        children: [
+          {
+            paramType: AbiType.None,
+            operator: Operator.And,
+            children: [
+              { paramType: AbiType.Static, operator: Operator.Pass },
+              { paramType: AbiType.Static, operator: Operator.Pass },
+              {
+                paramType: AbiType.None,
+                operator: Operator.WithinRatio,
+                compValue,
+              },
+            ],
+          },
+          { paramType: AbiType.Static, operator: Operator.Pass },
+          { paramType: AbiType.Static, operator: Operator.Pass },
+        ],
+      });
+      await expect(enforce(conditions)).to.not.be.reverted;
+    });
+
+    it("allows Or operator with matching structural children and non-structural WithinRatio", async () => {
+      const { enforce } = await loadFixture(setup);
+
+      const compValue = encodeWithinRatioCompValue({
+        referenceIndex: 0,
+        referenceDecimals: 0,
+        relativeIndex: 1,
+        relativeDecimals: 0,
+        minRatio: 0,
+        maxRatio: 15000,
+      });
+
+      const conditions = flattenCondition({
+        paramType: AbiType.Calldata,
+        operator: Operator.Matches,
+        children: [
+          {
+            paramType: AbiType.None,
+            operator: Operator.Or,
+            children: [
+              { paramType: AbiType.Static, operator: Operator.Pass },
+              { paramType: AbiType.Static, operator: Operator.Pass },
+              {
+                paramType: AbiType.None,
+                operator: Operator.WithinRatio,
+                compValue,
+              },
+            ],
+          },
+          { paramType: AbiType.Static, operator: Operator.Pass },
+          { paramType: AbiType.Static, operator: Operator.Pass },
+        ],
+      });
+      await expect(enforce(conditions)).to.not.be.reverted;
+    });
+
+    it("allows And with type-equivalent Dynamic children and non-structural EtherWithinAllowance", async () => {
+      const { enforce } = await loadFixture(setup);
+
+      // Type-equivalent structural children, non-structural should be ignored
+      const conditions = flattenCondition({
+        paramType: AbiType.Calldata,
+        operator: Operator.Matches,
+        children: [
+          {
+            paramType: AbiType.None,
+            operator: Operator.And,
+            children: [
+              { paramType: AbiType.Dynamic, operator: Operator.Pass },
+              { paramType: AbiType.Dynamic, operator: Operator.Pass },
+              {
+                paramType: AbiType.None,
+                operator: Operator.EtherWithinAllowance,
+                compValue: ZeroHash,
+              },
+            ],
+          },
+        ],
+      });
+      await expect(enforce(conditions)).to.not.be.reverted;
+    });
+
+    it("rejects Array with non-matching structural children despite non-structural child", async () => {
+      const { integrity, enforce } = await loadFixture(setup);
+
+      const compValue = encodeWithinRatioCompValue({
+        referenceIndex: 0,
+        referenceDecimals: 0,
+        relativeIndex: 1,
+        relativeDecimals: 0,
+        minRatio: 0,
+        maxRatio: 15000,
+      });
+
+      // Mixing Static and Dynamic structural children should still fail
+      const conditions = flattenCondition({
+        paramType: AbiType.Calldata,
+        operator: Operator.Matches,
+        children: [
+          {
+            paramType: AbiType.Array,
+            operator: Operator.Matches,
+            children: [
+              { paramType: AbiType.Static, operator: Operator.Pass },
+              { paramType: AbiType.Dynamic, operator: Operator.Pass }, // Doesn't match previous
+              {
+                paramType: AbiType.None,
+                operator: Operator.WithinRatio,
+                compValue,
+              },
+            ],
+          },
+        ],
+      });
+      await expect(enforce(conditions))
+        .to.be.revertedWithCustomError(integrity, "UnsuitableChildTypeTree")
+        .withArgs(1);
+    });
+
+    it("rejects And operator with non-matching structural children despite non-structural child", async () => {
+      const { integrity, enforce } = await loadFixture(setup);
+
+      const compValue = encodeWithinRatioCompValue({
+        referenceIndex: 0,
+        referenceDecimals: 0,
+        relativeIndex: 1,
+        relativeDecimals: 0,
+        minRatio: 0,
+        maxRatio: 15000,
+      });
+
+      const conditions = flattenCondition({
+        paramType: AbiType.Calldata,
+        operator: Operator.Matches,
+        children: [
+          {
+            paramType: AbiType.None,
+            operator: Operator.And,
+            children: [
+              { paramType: AbiType.Static, operator: Operator.Pass },
+              { paramType: AbiType.Dynamic, operator: Operator.Pass }, // Doesn't match previous
+              {
+                paramType: AbiType.None,
+                operator: Operator.WithinRatio,
+                compValue,
+              },
+            ],
+          },
+        ],
+      });
+      await expect(enforce(conditions))
+        .to.be.revertedWithCustomError(integrity, "UnsuitableChildTypeTree")
+        .withArgs(1);
+    });
+  });
 });
+
+function encodeWithinRatioCompValue({
+  referenceAdapter = "0x0000000000000000000000000000000000000000",
+  relativeAdapter = "0x0000000000000000000000000000000000000000",
+  referenceIndex,
+  referenceDecimals,
+  relativeIndex,
+  relativeDecimals,
+  minRatio,
+  maxRatio,
+}: {
+  referenceAdapter?: string;
+  relativeAdapter?: string;
+  referenceIndex: number;
+  referenceDecimals: number;
+  relativeIndex: number;
+  relativeDecimals: number;
+  minRatio: number;
+  maxRatio: number;
+}): string {
+  return solidityPacked(
+    [
+      "uint8",
+      "uint8",
+      "uint8",
+      "uint8",
+      "uint32",
+      "uint32",
+      "address",
+      "address",
+    ],
+    [
+      referenceIndex,
+      referenceDecimals,
+      relativeIndex,
+      relativeDecimals,
+      minRatio,
+      maxRatio,
+      referenceAdapter,
+      relativeAdapter,
+    ],
+  );
+}

@@ -2,7 +2,7 @@
 pragma solidity >=0.8.17 <0.9.0;
 
 import "../AbiDecoder.sol";
-import "../scoped-function/serialize/Topology.sol";
+import "../scoped-function/serialize/TypeTree.sol";
 
 contract MockDecoder {
     function inspect(
@@ -10,7 +10,7 @@ contract MockDecoder {
         ConditionFlat[] memory conditions
     ) public pure returns (PP1 memory r) {
         return
-            copyOut(AbiDecoder.inspect(data, Topology.typeTree(conditions, 0)));
+            copyOut(AbiDecoder.inspect(data, TypeTree.inspect(conditions, 0)));
     }
 
     function inspectFlat(
@@ -19,7 +19,7 @@ contract MockDecoder {
     ) public pure returns (FlatPayload[] memory) {
         return
             flattenTree(
-                AbiDecoder.inspect(data, Topology.typeTree(conditions, 0))
+                AbiDecoder.inspect(data, TypeTree.inspect(conditions, 0))
             );
     }
 

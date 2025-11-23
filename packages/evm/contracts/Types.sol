@@ -58,7 +58,7 @@ enum Operator {
     /* 20: */ SignedIntLessThan, // paramType: Static
     /* 21: */ Bitmask, // paramType: Static / Dynamic
     /* 22: */ Custom, // paramType: Static / Dynamic / Tuple / Array
-    /* 23: */ _Placeholder23,
+    /* 23: */ WithinRatio, // paramType: None
     /* 24: */ _Placeholder24,
     /* 25: */ _Placeholder25,
     /* 26: */ _Placeholder26,
@@ -95,8 +95,8 @@ struct ConditionFlat {
 struct Condition {
     AbiType paramType;
     Operator operator;
-    bytes32 compValue;
-    uint256 structuralChildCount;
+    bytes compValue;
+    uint256 sChildCount;
     Condition[] children;
 }
 
@@ -129,4 +129,45 @@ struct Consumption {
     bytes32 allowanceKey;
     uint128 balance;
     uint128 consumed;
+}
+
+enum Status {
+    Ok,
+    /// Role not allowed to delegate call to target address
+    DelegateCallNotAllowed,
+    /// Role not allowed to call target address
+    TargetAddressNotAllowed,
+    /// Role not allowed to call this function on target address
+    FunctionNotAllowed,
+    /// Role not allowed to send to target address
+    SendNotAllowed,
+    /// Or conition not met
+    OrViolation,
+    /// @deprecated Nor operator has been removed
+    _DeprecatedNorViolation,
+    /// Parameter value is not equal to allowed
+    ParameterNotAllowed,
+    /// Parameter value less than allowed
+    ParameterLessThanAllowed,
+    /// Parameter value greater than maximum allowed by role
+    ParameterGreaterThanAllowed,
+    /// Parameter value does not match
+    ParameterNotAMatch,
+    /// Array elements do not meet allowed criteria for every element
+    NotEveryArrayElementPasses,
+    /// Array elements do not meet allowed criteria for at least one element
+    NoArrayElementPasses,
+    /// @deprecated ArraySubset operator has been removed
+    _DeprecatedParameterNotSubsetOfAllowed,
+    /// Bitmask exceeded value length
+    BitmaskOverflow,
+    /// Bitmask not an allowed value
+    BitmaskNotAllowed,
+    CustomConditionViolation,
+    AllowanceExceeded,
+    CallAllowanceExceeded,
+    EtherAllowanceExceeded,
+    CalldataOverflow,
+    RatioBelowMin,
+    RatioAboveMax
 }

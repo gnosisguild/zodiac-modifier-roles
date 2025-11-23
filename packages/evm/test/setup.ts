@@ -265,7 +265,7 @@ export async function setupTwoParamsStatic() {
     execTransactionFromModule,
   } = await setupAvatarAndRoles();
 
-  async function invoke(a: number, b: number) {
+  async function invoke(a: BigNumberish, b: BigNumberish) {
     return execTransactionFromModule({
       data: (await testContract.twoParamsStatic.populateTransaction(a, b)).data,
     });

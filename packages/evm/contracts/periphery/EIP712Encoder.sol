@@ -9,7 +9,7 @@ import "../AbiDecoder.sol";
  */
 library EIP712Encoder {
     struct Types {
-        TypeTreeFlat[] typeTree;
+        LayoutFlat[] layout;
         bytes32[] typeHashes;
     }
 
@@ -64,7 +64,7 @@ library EIP712Encoder {
         uint256 index
     ) private pure returns (bytes32) {
         Payload memory payload = AbiDecoder
-            .inspect(data, _toTree(types.typeTree, index))
+            .inspect(data, _toTree(types.layout, index))
             .children[0];
 
         return _hashBlock(data, types, payload);
@@ -123,7 +123,7 @@ library EIP712Encoder {
         Types calldata types,
         Payload memory field
     ) private pure returns (bytes32) {
-        AbiType _type = types.typeTree[field.typeIndex]._type;
+        AbiType _type = types.layout[field.typeIndex]._type;
         if (_type == AbiType.Static) {
             return bytes32(data[field.location:]);
         } else if (_type == AbiType.Dynamic) {
@@ -134,16 +134,16 @@ library EIP712Encoder {
     }
 
     function _toTree(
-        TypeTreeFlat[] calldata flatTypeTree,
+        LayoutFlat[] calldata flatLayout,
         uint256 index
-    ) private pure returns (TypeTree memory typeTree) {
-        typeTree._type = flatTypeTree[index]._type;
-        typeTree.index = index;
-        if (flatTypeTree[index].fields.length > 0) {
-            uint256[] memory fields = flatTypeTree[index].fields;
-            typeTree.children = new TypeTree[](fields.length);
+    ) private pure returns (Layout memory layout) {
+        layout._type = flatLayout[index]._type;
+        layout.index = index;
+        if (flatLayout[index].fields.length > 0) {
+            uint256[] memory fields = flatLayout[index].fields;
+            layout.children = new Layout[](fields.length);
             for (uint256 i = 0; i < fields.length; i++) {
-                typeTree.children[i] = _toTree(flatTypeTree, fields[i]);
+                layout.children[i] = _toTree(flatLayout, fields[i]);
             }
         }
     }
