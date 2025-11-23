@@ -80,7 +80,7 @@ export function toAbiTypes({
   ].map((a) => ({ ...a, fields: a.fields.map((f) => f + rootTypes.length) }))
 
   return {
-    typeTree: abiTypes,
+    layout: abiTypes,
     typeHashes: abiTypes.map(({ typeHash }) => typeHash),
   }
 }
