@@ -11,7 +11,7 @@ enum AbiType {
     AbiEncoded
 }
 
-struct TypeTreeFlat {
+struct LayoutFlat {
     AbiType _type;
     uint256[] fields;
 }
@@ -19,12 +19,12 @@ struct TypeTreeFlat {
 /**
  * @dev Structure representing an ABI type definition in a hierarchical tree
  * @param _type The ABI type category (Static, Dynamic, Tuple, Array, etc.)
- * @param children Array of child TypeTree nodes for complex types (tuples, arrays)
- * @param index bfs order from the original flat TypeTreeFlat representation
+ * @param children Array of child Layout nodes for complex types (tuples, arrays)
+ * @param index bfs order from the original flat LayoutFlat representation
  */
-struct TypeTree {
+struct Layout {
     AbiType _type;
-    TypeTree[] children;
+    Layout[] children;
     uint256 index;
 }
 
@@ -35,7 +35,7 @@ struct TypeTree {
  * @param children Array of child payloads for complex types (tuples, arrays)
  * @param variant Indicates this node represents an OR/AND/NOR variant branch container where multiple type interpretations are attempted
  * @param overflown true if decoding failed due to insufficient calldata or invalid offsets
- * @param typeIndex The breadth-first search index from the original flat TypeTreeFlat representation, used to correlate decoded payloads back to their type definitions
+ * @param typeIndex The breadth-first search index from the original flat LayoutFlat representation, used to correlate decoded payloads back to their type definitions
  */
 struct Payload {
     uint256 location;

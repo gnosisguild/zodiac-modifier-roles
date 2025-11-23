@@ -106,7 +106,7 @@ contract SignTypedMessageLib is SafeStorage {
 
     /**
      * We make the signTypedMessage function available under any selector. This
-     * allows scoping different type trees under different signTypedMessage
+     * allows scoping different layouts under different signTypedMessage
      * aliases. Useful for expressing roles permissions
      */
     fallback() external {

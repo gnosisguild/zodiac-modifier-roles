@@ -9,6 +9,8 @@ import "./Consumptions.sol";
 import "./scoped-function/deserialize/Deserializer.sol";
 import "./scoped-function/ScopeConfig.sol";
 
+import "./checkers/WithinRatioChecker.sol";
+
 /**
  * @title PermissionChecker - a component of Zodiac Roles Mod responsible
  * for enforcing and authorizing actions performed on behalf of a role.
@@ -159,17 +161,12 @@ abstract contract PermissionChecker is Core, Periphery {
                 value: value,
                 operation: operation
             });
-            Payload memory placeholder;
 
             return
                 _scopedFunction(
                     header,
                     data,
-                    Context({
-                        call: callParams,
-                        consumptions: consumptions,
-                        parentPayload: placeholder
-                    })
+                    Context({call: callParams, consumptions: consumptions})
                 );
         } else if (role.targets[to].clearance == Clearance.Target) {
             return (
@@ -222,7 +219,7 @@ abstract contract PermissionChecker is Core, Periphery {
         Consumption[] memory consumptions;
         (
             Condition memory condition,
-            TypeTree memory typeTree,
+            Layout memory layout,
             bytes32[] memory allowanceKeys
         ) = Deserializer.load(scopeConfig);
 
@@ -243,7 +240,7 @@ abstract contract PermissionChecker is Core, Periphery {
         }
 
         return
-            _walk(data, condition, AbiDecoder.inspect(data, typeTree), context);
+            _walk(data, condition, AbiDecoder.inspect(data, layout), context);
     }
 
     function _walk(
@@ -299,6 +296,8 @@ abstract contract PermissionChecker is Core, Periphery {
                 );
             } else if (operator == Operator.Custom) {
                 return _custom(data, condition, payload, context);
+            } else if (operator == Operator.WithinRatio) {
+                return _withinRatio(data, condition, payload, context);
             } else if (operator == Operator.WithinAllowance) {
                 return _withinAllowance(data, condition, payload, context);
             } else if (operator == Operator.EtherWithinAllowance) {
@@ -318,8 +317,8 @@ abstract contract PermissionChecker is Core, Periphery {
     ) private view returns (Status status, Result memory result) {
         result.consumptions = context.consumptions;
 
-        uint256 structuralChildCount = condition.structuralChildCount;
-        if (structuralChildCount != payload.children.length) {
+        uint256 sChildCount = condition.sChildCount;
+        if (sChildCount != payload.children.length) {
             return (Status.ParameterNotAMatch, result);
         }
 
@@ -327,12 +326,8 @@ abstract contract PermissionChecker is Core, Periphery {
             (status, result) = _walk(
                 data,
                 condition.children[i],
-                i < structuralChildCount ? payload.children[i] : payload,
-                Context({
-                    call: context.call,
-                    consumptions: result.consumptions,
-                    parentPayload: payload
-                })
+                i < sChildCount ? payload.children[i] : payload,
+                Context({call: context.call, consumptions: result.consumptions})
             );
             if (status != Status.Ok) {
                 return (
@@ -363,14 +358,8 @@ abstract contract PermissionChecker is Core, Periphery {
             (status, result) = _walk(
                 data,
                 condition.children[i],
-                i < condition.structuralChildCount && payload.variant
-                    ? payload.children[i]
-                    : payload,
-                Context({
-                    call: context.call,
-                    consumptions: result.consumptions,
-                    parentPayload: context.parentPayload
-                })
+                payload.variant ? payload.children[i] : payload,
+                Context({call: context.call, consumptions: result.consumptions})
             );
             if (status != Status.Ok) {
                 return (
@@ -401,14 +390,8 @@ abstract contract PermissionChecker is Core, Periphery {
             (status, result) = _walk(
                 data,
                 condition.children[i],
-                i < condition.structuralChildCount && payload.variant
-                    ? payload.children[i]
-                    : payload,
-                Context({
-                    call: context.call,
-                    consumptions: result.consumptions,
-                    parentPayload: context.parentPayload
-                })
+                payload.variant ? payload.children[i] : payload,
+                Context({call: context.call, consumptions: result.consumptions})
             );
             if (status == Status.Ok) {
                 return (Status.Ok, result);
@@ -432,17 +415,13 @@ abstract contract PermissionChecker is Core, Periphery {
     ) private view returns (Status status, Result memory result) {
         result.consumptions = context.consumptions;
 
-        uint256 length = condition.children.length;
+        uint256 length = payload.children.length;
         for (uint256 i; i < length; ) {
             (status, result) = _walk(
                 data,
                 condition.children[0],
                 payload.children[i],
-                Context({
-                    call: context.call,
-                    consumptions: result.consumptions,
-                    parentPayload: payload
-                })
+                Context({call: context.call, consumptions: result.consumptions})
             );
             if (status == Status.Ok) {
                 return (status, result);
@@ -470,11 +449,7 @@ abstract contract PermissionChecker is Core, Periphery {
                 data,
                 condition.children[0],
                 payload.children[i],
-                Context({
-                    call: context.call,
-                    consumptions: result.consumptions,
-                    parentPayload: payload
-                })
+                Context({call: context.call, consumptions: result.consumptions})
             );
             if (status != Status.Ok) {
                 return (
@@ -495,7 +470,7 @@ abstract contract PermissionChecker is Core, Periphery {
         Payload memory payload
     ) private pure returns (Status) {
         Operator operator = condition.operator;
-        bytes32 compValue = condition.compValue;
+        bytes32 compValue = bytes32(condition.compValue);
         bytes32 value = operator == Operator.EqualTo
             ? keccak256(AbiDecoder.pluck(data, payload.location, payload.size))
             : AbiDecoder.word(data, payload.location);
@@ -517,7 +492,7 @@ abstract contract PermissionChecker is Core, Periphery {
         Payload memory payload
     ) private pure returns (Status) {
         Operator operator = condition.operator;
-        int256 compValue = int256(uint256(condition.compValue));
+        int256 compValue = int256(uint256(bytes32(condition.compValue)));
         int256 value = int256(uint256(AbiDecoder.word(data, payload.location)));
 
         if (operator == Operator.SignedIntGreaterThan && value <= compValue) {
@@ -543,8 +518,8 @@ abstract contract PermissionChecker is Core, Periphery {
         Condition memory condition,
         Payload memory payload
     ) private pure returns (Status) {
-        bytes32 compValue = condition.compValue;
-        bool isInline = condition.paramType == AbiType.Static;
+        bytes32 compValue = bytes32(condition.compValue);
+        bool isInline = payload.size == 32;
         bytes calldata value = AbiDecoder.pluck(
             data,
             payload.location + (isInline ? 0 : 32),
@@ -576,10 +551,10 @@ abstract contract PermissionChecker is Core, Periphery {
     ) private view returns (Status, Result memory) {
         // 20 bytes on the left
         ICustomCondition adapter = ICustomCondition(
-            address(bytes20(condition.compValue))
+            address(bytes20(bytes32(condition.compValue)))
         );
         // 12 bytes on the right
-        bytes12 extra = bytes12(uint96(uint256(condition.compValue)));
+        bytes12 extra = bytes12(uint96(uint256(bytes32(condition.compValue))));
 
         (bool success, bytes32 info) = adapter.check(
             context.call.to,
@@ -632,6 +607,21 @@ abstract contract PermissionChecker is Core, Periphery {
         );
     }
 
+    function _withinRatio(
+        bytes calldata data,
+        Condition memory condition,
+        Payload memory payload,
+        Context memory context
+    ) private view returns (Status, Result memory) {
+        Status status = WithinRatioChecker.check(
+            data,
+            condition.compValue,
+            payload
+        );
+
+        return (status, Result({consumptions: context.consumptions, info: 0}));
+    }
+
     function __consume(
         uint256 value,
         Condition memory condition,
@@ -639,7 +629,7 @@ abstract contract PermissionChecker is Core, Periphery {
     ) private pure returns (Status, Result memory) {
         (uint256 index, bool found) = Consumptions.find(
             consumptions,
-            condition.compValue
+            bytes32(condition.compValue)
         );
         assert(found);
 
@@ -663,7 +653,6 @@ abstract contract PermissionChecker is Core, Periphery {
     struct Context {
         ContextCall call;
         Consumption[] consumptions;
-        Payload parentPayload;
     }
 
     struct ContextCall {
@@ -675,45 +664,6 @@ abstract contract PermissionChecker is Core, Periphery {
     struct Result {
         Consumption[] consumptions;
         bytes32 info;
-    }
-
-    enum Status {
-        Ok,
-        /// Role not allowed to delegate call to target address
-        DelegateCallNotAllowed,
-        /// Role not allowed to call target address
-        TargetAddressNotAllowed,
-        /// Role not allowed to call this function on target address
-        FunctionNotAllowed,
-        /// Role not allowed to send to target address
-        SendNotAllowed,
-        /// Or conition not met
-        OrViolation,
-        /// @deprecated Nor operator has been removed
-        _DeprecatedNorViolation,
-        /// Parameter value is not equal to allowed
-        ParameterNotAllowed,
-        /// Parameter value less than allowed
-        ParameterLessThanAllowed,
-        /// Parameter value greater than maximum allowed by role
-        ParameterGreaterThanAllowed,
-        /// Parameter value does not match
-        ParameterNotAMatch,
-        /// Array elements do not meet allowed criteria for every element
-        NotEveryArrayElementPasses,
-        /// Array elements do not meet allowed criteria for at least one element
-        NoArrayElementPasses,
-        /// @deprecated ArraySubset operator has been removed
-        _DeprecatedParameterNotSubsetOfAllowed,
-        /// Bitmask exceeded value length
-        BitmaskOverflow,
-        /// Bitmask not an allowed value
-        BitmaskNotAllowed,
-        CustomConditionViolation,
-        AllowanceExceeded,
-        CallAllowanceExceeded,
-        EtherAllowanceExceeded,
-        CalldataOverflow
     }
 
     /// Sender is not a member of the role
