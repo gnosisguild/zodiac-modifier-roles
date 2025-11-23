@@ -4,7 +4,7 @@ pragma solidity >=0.8.17 <0.9.0;
 import "../AbiTypes.sol";
 import "../scoped-function/serialize/Packer.sol";
 
-contract MockTypeTreePacker {
+contract MockLayoutPacker {
     struct InputFlat {
         AbiType _type;
         uint256 parent;
@@ -12,15 +12,15 @@ contract MockTypeTreePacker {
     function packFlat(
         InputFlat[] calldata flatNodes
     ) external pure returns (bytes memory buffer) {
-        uint256 size = Packer._typeTreePackedSize(_toTree(flatNodes, 0));
+        uint256 size = Packer._layoutPackedSize(_toTree(flatNodes, 0));
         buffer = new bytes(size);
-        Packer._packTypeTree(_toTree(flatNodes, 0), buffer, 0);
+        Packer._packLayout(_toTree(flatNodes, 0), buffer, 0);
     }
 
     function _toTree(
         InputFlat[] calldata flatNodes,
         uint256 index
-    ) private pure returns (TypeTree memory node) {
+    ) private pure returns (Layout memory node) {
         node._type = flatNodes[index]._type;
         node.index = index;
         (uint256 start, uint256 length) = childBounds(flatNodes, index);
@@ -28,7 +28,7 @@ contract MockTypeTreePacker {
         if (length == 0) {
             return node;
         }
-        node.children = new TypeTree[](length);
+        node.children = new Layout[](length);
 
         for (uint256 i; i < length; i++) {
             node.children[i] = _toTree(flatNodes, start + i);

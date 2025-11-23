@@ -40,9 +40,9 @@ const config: HardhatUserConfig = {
   solidity: {
     compilers: [
       {
-        version: "0.8.28",
+        version: "0.8.29",
         settings: {
-          evmVersion: "shanghai",
+          evmVersion: "cancun",
           optimizer: {
             enabled: true,
             runs: 100,

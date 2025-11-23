@@ -4,7 +4,7 @@ pragma solidity >=0.8.17 <0.9.0;
 import "../AbiTypes.sol";
 import "../scoped-function/deserialize/Unpacker.sol";
 
-contract MockTypeTreeUnpacker {
+contract MockLayoutUnpacker {
     struct FlatNode {
         AbiType _type;
         uint256 parent;
@@ -13,18 +13,18 @@ contract MockTypeTreeUnpacker {
     function unpack(
         bytes memory buffer
     ) external pure returns (FlatNode[] memory result) {
-        TypeTree memory root = Unpacker._unpackTypeTree(buffer, 0);
+        Layout memory layout = Unpacker._unpackLayout(buffer, 0);
 
-        result = new FlatNode[](_countNodes(root));
-        _flattenBFS(root, result);
+        result = new FlatNode[](_countNodes(layout));
+        _flattenBFS(layout, result);
     }
 
     function _flattenBFS(
-        TypeTree memory root,
+        Layout memory root,
         FlatNode[] memory result
     ) private pure {
         // Create a queue for BFS traversal with parent tracking
-        TypeTree[] memory queue = new TypeTree[](result.length);
+        Layout[] memory queue = new Layout[](result.length);
         uint256[] memory parents = new uint256[](result.length);
 
         queue[0] = root;
@@ -35,7 +35,7 @@ contract MockTypeTreeUnpacker {
         uint256 current = 0;
 
         while (head < tail) {
-            TypeTree memory node = queue[head];
+            Layout memory node = queue[head];
             uint256 parent = parents[head];
             head++;
 
@@ -52,7 +52,7 @@ contract MockTypeTreeUnpacker {
         }
     }
 
-    function _countNodes(TypeTree memory root) private pure returns (uint256) {
+    function _countNodes(Layout memory root) private pure returns (uint256) {
         uint256 count = 1;
         for (uint256 i; i < root.children.length; i++) {
             count += _countNodes(root.children[i]);
