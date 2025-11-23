@@ -161,17 +161,12 @@ abstract contract PermissionChecker is Core, Periphery {
                 value: value,
                 operation: operation
             });
-            Payload memory placeholder;
 
             return
                 _scopedFunction(
                     header,
                     data,
-                    Context({
-                        call: callParams,
-                        consumptions: consumptions,
-                        parentPayload: placeholder
-                    })
+                    Context({call: callParams, consumptions: consumptions})
                 );
         } else if (role.targets[to].clearance == Clearance.Target) {
             return (
@@ -302,7 +297,7 @@ abstract contract PermissionChecker is Core, Periphery {
             } else if (operator == Operator.Custom) {
                 return _custom(data, condition, payload, context);
             } else if (operator == Operator.WithinRatio) {
-                return _withinRatio(data, condition, context);
+                return _withinRatio(data, condition, payload, context);
             } else if (operator == Operator.WithinAllowance) {
                 return _withinAllowance(data, condition, payload, context);
             } else if (operator == Operator.EtherWithinAllowance) {
@@ -332,11 +327,7 @@ abstract contract PermissionChecker is Core, Periphery {
                 data,
                 condition.children[i],
                 i < sChildCount ? payload.children[i] : payload,
-                Context({
-                    call: context.call,
-                    consumptions: result.consumptions,
-                    parentPayload: payload
-                })
+                Context({call: context.call, consumptions: result.consumptions})
             );
             if (status != Status.Ok) {
                 return (
@@ -367,14 +358,8 @@ abstract contract PermissionChecker is Core, Periphery {
             (status, result) = _walk(
                 data,
                 condition.children[i],
-                i < condition.sChildCount && payload.variant
-                    ? payload.children[i]
-                    : payload,
-                Context({
-                    call: context.call,
-                    consumptions: result.consumptions,
-                    parentPayload: context.parentPayload
-                })
+                payload.variant ? payload.children[i] : payload,
+                Context({call: context.call, consumptions: result.consumptions})
             );
             if (status != Status.Ok) {
                 return (
@@ -405,14 +390,8 @@ abstract contract PermissionChecker is Core, Periphery {
             (status, result) = _walk(
                 data,
                 condition.children[i],
-                i < condition.sChildCount && payload.variant
-                    ? payload.children[i]
-                    : payload,
-                Context({
-                    call: context.call,
-                    consumptions: result.consumptions,
-                    parentPayload: context.parentPayload
-                })
+                payload.variant ? payload.children[i] : payload,
+                Context({call: context.call, consumptions: result.consumptions})
             );
             if (status == Status.Ok) {
                 return (Status.Ok, result);
@@ -436,17 +415,13 @@ abstract contract PermissionChecker is Core, Periphery {
     ) private view returns (Status status, Result memory result) {
         result.consumptions = context.consumptions;
 
-        uint256 length = condition.children.length;
+        uint256 length = payload.children.length;
         for (uint256 i; i < length; ) {
             (status, result) = _walk(
                 data,
                 condition.children[0],
                 payload.children[i],
-                Context({
-                    call: context.call,
-                    consumptions: result.consumptions,
-                    parentPayload: payload
-                })
+                Context({call: context.call, consumptions: result.consumptions})
             );
             if (status == Status.Ok) {
                 return (status, result);
@@ -474,11 +449,7 @@ abstract contract PermissionChecker is Core, Periphery {
                 data,
                 condition.children[0],
                 payload.children[i],
-                Context({
-                    call: context.call,
-                    consumptions: result.consumptions,
-                    parentPayload: payload
-                })
+                Context({call: context.call, consumptions: result.consumptions})
             );
             if (status != Status.Ok) {
                 return (
@@ -639,12 +610,13 @@ abstract contract PermissionChecker is Core, Periphery {
     function _withinRatio(
         bytes calldata data,
         Condition memory condition,
+        Payload memory payload,
         Context memory context
     ) private view returns (Status, Result memory) {
         Status status = WithinRatioChecker.check(
             data,
             condition.compValue,
-            context.parentPayload
+            payload
         );
 
         return (status, Result({consumptions: context.consumptions, info: 0}));
@@ -681,7 +653,6 @@ abstract contract PermissionChecker is Core, Periphery {
     struct Context {
         ContextCall call;
         Consumption[] consumptions;
-        Payload parentPayload;
     }
 
     struct ContextCall {
