@@ -37,10 +37,10 @@ export const scopeSignTypedMessage = ({
 }
 
 function typesCondition(types: TypedData): Condition {
-  const { typeTree, typeHashes } = toAbiTypes({ types })
+  const { layout, typeHashes } = toAbiTypes({ types })
   const compValue = AbiCoder.defaultAbiCoder().encode(
     ["tuple(tuple(uint8,uint256[])[], bytes32[])"],
-    [[typeTree.map((p) => [p._type, p.fields]), typeHashes]]
+    [[layout.map((p) => [p._type, p.fields]), typeHashes]]
   )
 
   const left: Condition = {

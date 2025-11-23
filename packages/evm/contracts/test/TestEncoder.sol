@@ -94,4 +94,48 @@ contract TestEncoder {
     function arrayStaticTupleItems(StaticTuple[] memory) external {}
 
     function arrayDynamicTupleItems(DynamicTuple[] memory) external {}
+
+    // For WithinRatio tests
+    struct TwoUints {
+        uint256 a;
+        uint256 b;
+    }
+
+    struct NestedTwoUints {
+        TwoUints inner;
+    }
+
+    struct MixedTuple {
+        uint256 amount;
+        uint256 second;
+        uint256 limit;
+        uint256 fourth;
+    }
+
+    struct ThreeAmounts {
+        uint256 first;
+        uint256 second;
+        uint256 third;
+    }
+
+    function dynamicStatic(bytes memory) external {}
+
+    function tupleStatic(TwoUints memory) external {}
+
+    function nestedTupleStatic(NestedTwoUints memory) external {}
+
+    function uint256ArrayStatic(uint256[] memory) external {}
+
+    function tuplesArrayStatic(TwoUints[] memory) external {}
+
+    // New functions for varied WithinRatio tests
+    function threeParams(uint256, uint256, uint256) external {}
+
+    function mixedParams(uint256, bytes memory, uint256) external {}
+
+    function mixedTuple(MixedTuple memory) external {}
+
+    function threeAmountsTuple(ThreeAmounts memory) external {}
+
+    function threeAmountsArray(ThreeAmounts[] memory) external {}
 }

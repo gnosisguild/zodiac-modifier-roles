@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "../../Types.sol";
-import "../../scoped-function/deserialize/Unpacker.sol";
+import "../scoped-function/deserialize/Unpacker.sol";
+
+import "../Types.sol";
 
 contract MockConditionUnpacker {
     function unpack(

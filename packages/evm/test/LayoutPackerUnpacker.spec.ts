@@ -4,12 +4,12 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 import { AbiType } from "./utils";
 
-describe("TypeTreePacker and TypeTreeUnpacker", () => {
+describe("LayoutPacker and LayoutUnpacker", () => {
   async function setup() {
     const MockPacker =
-      await hre.ethers.getContractFactory("MockTypeTreePacker");
+      await hre.ethers.getContractFactory("MockLayoutPacker");
     const MockUnpacker = await hre.ethers.getContractFactory(
-      "MockTypeTreeUnpacker",
+      "MockLayoutUnpacker",
     );
 
     const packer = await MockPacker.deploy();

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
+
 import "./Topology.sol";
+import "./TypeTree.sol";
 
 /**
  * @title Integrity, A library that validates condition integrity, and
@@ -8,6 +10,20 @@ import "./Topology.sol";
  *
  * @author gnosisguild
  */
+
+/*
+ * TODO test following aspects:
+ * Enture and test that for WithinRatio operators, its ParamType is None
+ * Ensure that either minRatio or maxRatio are provided
+ * Ensure and test that for WithinRatio, its left and right indices respect the following:
+ * - the nearest parent has at child indexLeft and child indexRight children that:
+ *    * are non variant
+ *    * its sub type tree resolves to Static
+ * Enforce Tuples and Arrays to have children
+ * Enforce in general nodes to have at least one structural children, for nodes that require children
+ * Validated variants accross different Array entries as well
+ */
+
 library Integrity {
     error UnsuitableRootNode();
 
@@ -27,6 +43,12 @@ library Integrity {
 
     error NonStructuralChildrenMustComeLast(uint256 index);
 
+    error WithinRatioIndexOutOfBounds(uint256 index);
+
+    error WithinRatioTargetNotStatic(uint256 index);
+
+    error WithinRatioNoRatioProvided(uint256 index);
+
     function enforce(ConditionFlat[] memory conditions) internal pure {
         _root(conditions);
         _bfs(conditions);
@@ -38,7 +60,7 @@ library Integrity {
         _nonStructuralOrdering(conditions);
         _typeTree(conditions);
 
-        if (Topology.typeTree(conditions, 0)._type != AbiType.Calldata) {
+        if (TypeTree.inspect(conditions, 0)._type != AbiType.Calldata) {
             revert UnsuitableRootNode();
         }
     }
@@ -163,6 +185,13 @@ library Integrity {
             if (compValue.length != 32) {
                 revert UnsuitableCompValue(index);
             }
+        } else if (operator == Operator.WithinRatio) {
+            if (_type != AbiType.None) {
+                revert UnsuitableParameterType(index);
+            }
+            if (compValue.length < 32 || compValue.length > 52) {
+                revert UnsuitableCompValue(index);
+            }
         } else {
             revert UnsupportedOperator(index);
         }
@@ -173,8 +202,8 @@ library Integrity {
 
         for (uint256 i = 0; i < length; ++i) {
             if (
-                (conditions[i].operator == Operator.EtherWithinAllowance ||
-                    conditions[i].operator == Operator.CallWithinAllowance)
+                conditions[i].operator == Operator.EtherWithinAllowance ||
+                conditions[i].operator == Operator.CallWithinAllowance
             ) {
                 (
                     uint256 countCalldataNodes,
@@ -185,6 +214,11 @@ library Integrity {
                 if (countCalldataNodes != 1 || countOtherNodes > 0) {
                     revert UnsuitableParent(i);
                 }
+            } else if (conditions[i].operator == Operator.WithinRatio) {
+                // WithinRatio can be anywhere except as the root node
+                if (conditions[i].parent == i) {
+                    revert UnsuitableParent(i);
+                }
             }
         }
     }
@@ -192,13 +226,14 @@ library Integrity {
     function _children(ConditionFlat[] memory conditions) private pure {
         for (uint256 i = 0; i < conditions.length; i++) {
             ConditionFlat memory condition = conditions[i];
-            (, uint256 childrenLength) = Topology.childBounds(conditions, i);
+            (, uint256 childCount, ) = Topology.childBounds(conditions, i);
 
             if (condition.paramType == AbiType.None) {
                 if (
                     (condition.operator == Operator.EtherWithinAllowance ||
-                        condition.operator == Operator.CallWithinAllowance) &&
-                    childrenLength != 0
+                        condition.operator == Operator.CallWithinAllowance ||
+                        condition.operator == Operator.WithinRatio) &&
+                    childCount != 0
                 ) {
                     revert UnsuitableChildCount(i);
                 }
@@ -206,7 +241,7 @@ library Integrity {
                     condition.operator == Operator.And ||
                     condition.operator == Operator.Or
                 ) {
-                    if (childrenLength == 0) {
+                    if (childCount == 0) {
                         revert UnsuitableChildCount(i);
                     }
                 }
@@ -214,7 +249,7 @@ library Integrity {
                 condition.paramType == AbiType.Static ||
                 condition.paramType == AbiType.Dynamic
             ) {
-                if (childrenLength != 0) {
+                if (childCount != 0) {
                     revert UnsuitableChildCount(i);
                 }
             } else if (
@@ -222,20 +257,20 @@ library Integrity {
                 condition.paramType == AbiType.Calldata ||
                 condition.paramType == AbiType.AbiEncoded
             ) {
-                if (childrenLength == 0) {
+                if (childCount == 0) {
                     revert UnsuitableChildCount(i);
                 }
             } else {
                 assert(condition.paramType == AbiType.Array);
 
-                if (childrenLength == 0) {
+                if (childCount == 0) {
                     revert UnsuitableChildCount(i);
                 }
 
                 if (
                     (condition.operator == Operator.ArraySome ||
                         condition.operator == Operator.ArrayEvery) &&
-                    childrenLength != 1
+                    childCount != 1
                 ) {
                     revert UnsuitableChildCount(i);
                 }
@@ -247,54 +282,36 @@ library Integrity {
         ConditionFlat[] memory conditions
     ) private pure {
         for (uint256 i = 0; i < conditions.length; ++i) {
-            (uint256 childrenStart, uint256 childrenLength) = Topology
-                .childBounds(conditions, i);
+            (uint256 childStart, uint256 childCount, ) = Topology.childBounds(
+                conditions,
+                i
+            );
 
-            if (childrenLength == 0) continue;
+            if (childCount == 0) continue;
 
             // Once we see a non-structural child, all remaining must be non-structural
             bool seenNonStructural = false;
-            for (uint256 j = 0; j < childrenLength; j++) {
-                uint256 childIndex = childrenStart + j;
-                bool isNonStructural = _isNonStructural(conditions, childIndex);
+            for (uint256 j = 0; j < childCount; j++) {
+                uint256 childIndex = childStart + j;
+                bool isStructural = Topology.isStructural(
+                    conditions,
+                    childIndex
+                );
 
-                if (seenNonStructural && !isNonStructural) {
+                if (seenNonStructural && isStructural) {
                     // Structural child found after non-structural child
                     revert NonStructuralChildrenMustComeLast(i);
                 }
 
-                if (isNonStructural) {
+                if (!isStructural) {
                     seenNonStructural = true;
                 }
             }
         }
     }
 
-    function _isNonStructural(
-        ConditionFlat[] memory conditions,
-        uint256 index
-    ) private pure returns (bool) {
-        // NonStructural if paramType is None and all descendants are None
-        if (conditions[index].paramType != AbiType.None) {
-            return false;
-        }
-
-        // Check all descendants recursively
-        for (uint256 i = index + 1; i < conditions.length; i++) {
-            if (conditions[i].parent == index) {
-                if (!_isNonStructural(conditions, i)) {
-                    return false;
-                }
-            } else if (conditions[i].parent > index) {
-                break;
-            }
-        }
-
-        return true;
-    }
-
     function _typeTree(ConditionFlat[] memory conditions) private pure {
-        for (uint256 i = 0; i < conditions.length; i++) {
+        for (uint256 i = 0; i < conditions.length; ++i) {
             ConditionFlat memory condition = conditions[i];
             if (
                 condition.operator == Operator.And ||
@@ -308,6 +325,8 @@ library Integrity {
                     revert UnsuitableChildTypeTree(i);
                 }
             }
+
+            _withinRatio(conditions, i);
         }
     }
 
@@ -315,19 +334,18 @@ library Integrity {
         ConditionFlat[] memory conditions,
         uint256 index
     ) private pure returns (bool) {
-        (uint256 childrenStart, uint256 childrenLength) = Topology.childBounds(
+        (uint256 childStart, , uint256 sChildCount) = Topology.childBounds(
             conditions,
             index
         );
 
-        if (childrenLength == 1) {
+        if (sChildCount == 1) {
             return true;
         }
 
-        bytes32 id = Topology.typeTreeId(conditions, childrenStart);
-        for (uint256 i = 1; i < childrenLength; ++i) {
-            if (id != Topology.typeTreeId(conditions, childrenStart + i))
-                return false;
+        bytes32 id = TypeTree.id(conditions, childStart);
+        for (uint256 i = 1; i < sChildCount; ++i) {
+            if (id != TypeTree.id(conditions, childStart + i)) return false;
         }
 
         return true;
@@ -336,15 +354,13 @@ library Integrity {
         ConditionFlat[] memory conditions,
         uint256 index
     ) private pure returns (bool) {
-        (uint256 childrenStart, uint256 childrenLength) = Topology.childBounds(
+        (uint256 childStart, , uint256 sChildCount) = Topology.childBounds(
             conditions,
             index
         );
 
-        for (uint256 i = 0; i < childrenLength; ++i) {
-            AbiType _type = Topology
-                .typeTree(conditions, childrenStart + i)
-                ._type;
+        for (uint256 i = 0; i < sChildCount; ++i) {
+            AbiType _type = TypeTree.inspect(conditions, childStart + i)._type;
             if (
                 _type != AbiType.Dynamic &&
                 _type != AbiType.Calldata &&
@@ -390,6 +406,69 @@ library Integrity {
             }
 
             j = conditions[j].parent;
+        }
+    }
+
+    /**
+     * @notice Validates WithinRatio operator constraints
+     * @dev Checks that:
+     *      1. At least one ratio bound (min or max) is provided
+     *      2. Referenced indices are within parent's children bounds
+     *      3. Referenced children resolve to non-variant Static types
+     */
+    function _withinRatio(
+        ConditionFlat[] memory conditions,
+        uint256 i
+    ) private pure {
+        if (conditions[i].operator != Operator.WithinRatio) {
+            return;
+        }
+
+        bytes memory compValue = conditions[i].compValue;
+        bytes32 compValue32 = bytes32(compValue);
+
+        // Extract indices and ratios from compValue
+        uint8 referenceIndex = uint8(bytes1(compValue32));
+        uint8 relativeIndex = uint8(bytes1(compValue32 << 16));
+        uint32 minRatio = uint32(bytes4(compValue32 << 32));
+        uint32 maxRatio = uint32(bytes4(compValue32 << 64));
+        // Validate that at least one ratio is provided
+        if (minRatio == 0 && maxRatio == 0) {
+            revert WithinRatioNoRatioProvided(i);
+        }
+
+        // Find nearest structural parent (should be Calldata/Tuple/Array)
+        uint256 parentIndex = conditions[i].parent;
+        while (conditions[parentIndex].paramType == AbiType.None) {
+            parentIndex = conditions[parentIndex].parent;
+        }
+
+        // Get parent's children bounds
+        (uint256 childStart, , ) = Topology.childBounds(
+            conditions,
+            parentIndex
+        );
+
+        {
+            // Check reference child is Static
+            Layout memory layout = TypeTree.inspect(
+                conditions,
+                childStart + referenceIndex
+            );
+            if (layout._type != AbiType.Static) {
+                revert WithinRatioTargetNotStatic(i);
+            }
+        }
+
+        {
+            // Check relative child is Static
+            Layout memory layout = TypeTree.inspect(
+                conditions,
+                childStart + relativeIndex
+            );
+            if (layout._type != AbiType.Static) {
+                revert WithinRatioTargetNotStatic(i);
+            }
         }
     }
 }

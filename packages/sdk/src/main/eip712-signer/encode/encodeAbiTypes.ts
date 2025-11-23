@@ -10,9 +10,9 @@ export function encodeAbiTypes({
   domain?: TypedDataDomain
   types: TypedData
 }) {
-  const { typeTree, typeHashes } = toAbiTypes({ domain, types })
+  const { layout, typeHashes } = toAbiTypes({ domain, types })
   return AbiCoder.defaultAbiCoder().encode(
     ["tuple(tuple(uint8,uint256[])[], bytes32[])"],
-    [[typeTree.map((p) => [p._type, p.fields]), typeHashes]]
+    [[layout.map((p) => [p._type, p.fields]), typeHashes]]
   ) as `0x${string}`
 }
