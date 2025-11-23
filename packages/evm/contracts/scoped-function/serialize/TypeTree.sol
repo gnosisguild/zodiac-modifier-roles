@@ -1,17 +1,21 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
+import "./Topology.sol";
+
 import "../../Types.sol";
 
 /**
  * @title  TypeTree
+ * @notice Extracts type trees from flat conditions for use in decoding.
+ *         Variants can appear in logical or array nodes and must be handled.
+ *         See inline comments for rules
  *
  * @author gnosisguild
- *
  */
 library TypeTree {
     /**
-     * @notice Builds a Layout from flat conditions starting at index
+     * @notice Extracts type tree for flat node at index
      */
     function inspect(
         ConditionFlat[] memory conditions,
@@ -19,27 +23,37 @@ library TypeTree {
     ) internal pure returns (Layout memory node) {
         bool isLogical = _isLogical(conditions, index);
         bool isVariant = _isVariant(conditions, index);
-        (uint256 childStart, uint256 childLength) = _structuralChildBounds(
+
+        /*
+         * Type trees only include structural children
+         */
+        (uint256 childStart, , uint256 sChildCount) = Topology.childBounds(
             conditions,
             index
         );
 
-        if (isLogical && isVariant == false) {
+        /*
+         * Non-variant logical nodes: first child defines the type tree,
+         * others have the same structure and don't influence the result
+         */
+        if (isLogical && !isVariant) {
             return inspect(conditions, childStart);
         }
 
         /*
-         * if its logical, then it's variant, because we returned on variant false
-         * in that case, we represent Variants by a Dynamic type with children
+         * Logical nodes that are variant use Dynamic as a container to
+         * indicate the variant. All other nodes use their declared paramType
          */
         node._type = isLogical ? AbiType.Dynamic : conditions[index].paramType;
+
         /*
-         * We traver and establish children. Except for non variant arrays, where
-         * we just take the first element as Template
+         * For non-variant arrays, the first child serves as a template for
+         * all elements. For all other nodes, traverse all structural children
          */
         node.children = new Layout[](
-            node._type == AbiType.Array && isVariant == false ? 1 : childLength
+            node._type == AbiType.Array && !isVariant ? 1 : sChildCount
         );
+
         for (uint256 i = 0; i < node.children.length; ++i) {
             node.children[i] = inspect(conditions, childStart + i);
         }
@@ -55,9 +69,40 @@ library TypeTree {
         return _hashTree(inspect(conditions, index));
     }
 
-    // =========================================================================
-    // Private Helpers
-    // =========================================================================
+    function _isVariant(
+        ConditionFlat[] memory conditions,
+        uint256 index
+    ) private pure returns (bool) {
+        bool isArray = conditions[index].paramType == AbiType.Array;
+        bool isLogical = _isLogical(conditions, index);
+
+        if (!isArray && !isLogical) {
+            return false;
+        }
+
+        (uint256 childStart, , uint256 sChildCount) = Topology.childBounds(
+            conditions,
+            index
+        );
+        if (sChildCount <= 1) return false;
+
+        bytes32 idHash = id(conditions, childStart);
+        for (uint256 i = 1; i < sChildCount; ++i) {
+            if (idHash != id(conditions, childStart + i)) return true;
+        }
+
+        return false;
+    }
+
+    function _isLogical(
+        ConditionFlat[] memory conditions,
+        uint256 index
+    ) private pure returns (bool) {
+        return
+            conditions[index].operator == Operator.And ||
+            conditions[index].operator == Operator.Or;
+    }
+
     function _hashTree(Layout memory tree) private pure returns (bytes32) {
         if (tree.children.length == 0) {
             return bytes32(uint256(tree._type));
@@ -72,82 +117,5 @@ library TypeTree {
             keccak256(
                 abi.encodePacked(bytes32(uint256(tree._type)), childHashes)
             );
-    }
-
-    function _isLogical(
-        ConditionFlat[] memory conditions,
-        uint256 index
-    ) private pure returns (bool) {
-        return
-            conditions[index].operator == Operator.And ||
-            conditions[index].operator == Operator.Or;
-    }
-
-    function _isVariant(
-        ConditionFlat[] memory conditions,
-        uint256 index
-    ) private pure returns (bool) {
-        if (
-            !_isLogical(conditions, index) &&
-            conditions[index].paramType != AbiType.Array
-        ) {
-            return false;
-        }
-
-        (uint256 childStart, uint256 childLength) = _structuralChildBounds(
-            conditions,
-            index
-        );
-        if (childLength <= 1) return false;
-
-        bytes32 idHash = id(conditions, childStart);
-        for (uint256 i = 1; i < childLength; ++i) {
-            if (idHash != id(conditions, childStart + i)) return true;
-        }
-
-        return false;
-    }
-
-    function _isNonStructural(
-        ConditionFlat[] memory conditions,
-        uint256 index
-    ) private pure returns (bool) {
-        // NonStructural if paramType is None and all descendants are None
-        if (conditions[index].paramType != AbiType.None) {
-            return false;
-        }
-
-        // Check all direct children
-        for (uint256 i = index + 1; i < conditions.length; ++i) {
-            if (conditions[i].parent == index) {
-                // Recursively check if child is nonStructural
-                if (!_isNonStructural(conditions, i)) {
-                    return false;
-                }
-            } else if (conditions[i].parent > index) {
-                break;
-            }
-        }
-
-        return true;
-    }
-
-    function _structuralChildBounds(
-        ConditionFlat[] memory conditions,
-        uint256 index
-    ) private pure returns (uint256 start, uint256 length) {
-        for (uint256 i = index + 1; i < conditions.length; ++i) {
-            uint256 parent = conditions[i].parent;
-
-            if (parent == index) {
-                // non structural nodes and sub trees come last
-                if (_isNonStructural(conditions, i)) break;
-                if (length == 0) start = i;
-
-                ++length;
-            } else if (parent > index) {
-                break;
-            }
-        }
     }
 }

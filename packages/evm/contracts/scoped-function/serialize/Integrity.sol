@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
+import "./Topology.sol";
 import "./TypeTree.sol";
 
 /**
@@ -18,6 +19,8 @@ import "./TypeTree.sol";
  * - the nearest parent has at child indexLeft and child indexRight children that:
  *    * are non variant
  *    * its sub type tree resolves to Static
+ * Enforce Tuples and Arrays to have children
+ * Enforce in general nodes to have at least one structural children, for nodes that require children
  */
 
 library Integrity {
@@ -218,14 +221,14 @@ library Integrity {
     function _children(ConditionFlat[] memory conditions) private pure {
         for (uint256 i = 0; i < conditions.length; i++) {
             ConditionFlat memory condition = conditions[i];
-            (, uint256 childrenLength) = _childBounds(conditions, i);
+            (, uint256 childCount, ) = Topology.childBounds(conditions, i);
 
             if (condition.paramType == AbiType.None) {
                 if (
                     (condition.operator == Operator.EtherWithinAllowance ||
                         condition.operator == Operator.CallWithinAllowance ||
                         condition.operator == Operator.WithinRatio) &&
-                    childrenLength != 0
+                    childCount != 0
                 ) {
                     revert UnsuitableChildCount(i);
                 }
@@ -233,7 +236,7 @@ library Integrity {
                     condition.operator == Operator.And ||
                     condition.operator == Operator.Or
                 ) {
-                    if (childrenLength == 0) {
+                    if (childCount == 0) {
                         revert UnsuitableChildCount(i);
                     }
                 }
@@ -241,7 +244,7 @@ library Integrity {
                 condition.paramType == AbiType.Static ||
                 condition.paramType == AbiType.Dynamic
             ) {
-                if (childrenLength != 0) {
+                if (childCount != 0) {
                     revert UnsuitableChildCount(i);
                 }
             } else if (
@@ -249,20 +252,20 @@ library Integrity {
                 condition.paramType == AbiType.Calldata ||
                 condition.paramType == AbiType.AbiEncoded
             ) {
-                if (childrenLength == 0) {
+                if (childCount == 0) {
                     revert UnsuitableChildCount(i);
                 }
             } else {
                 assert(condition.paramType == AbiType.Array);
 
-                if (childrenLength == 0) {
+                if (childCount == 0) {
                     revert UnsuitableChildCount(i);
                 }
 
                 if (
                     (condition.operator == Operator.ArraySome ||
                         condition.operator == Operator.ArrayEvery) &&
-                    childrenLength != 1
+                    childCount != 1
                 ) {
                     revert UnsuitableChildCount(i);
                 }
@@ -274,52 +277,32 @@ library Integrity {
         ConditionFlat[] memory conditions
     ) private pure {
         for (uint256 i = 0; i < conditions.length; ++i) {
-            (uint256 childrenStart, uint256 childrenLength) = _childBounds(
+            (uint256 childStart, uint256 childCount, ) = Topology.childBounds(
                 conditions,
                 i
             );
 
-            if (childrenLength == 0) continue;
+            if (childCount == 0) continue;
 
             // Once we see a non-structural child, all remaining must be non-structural
             bool seenNonStructural = false;
-            for (uint256 j = 0; j < childrenLength; j++) {
-                uint256 childIndex = childrenStart + j;
-                bool isNonStructural = _isNonStructural(conditions, childIndex);
+            for (uint256 j = 0; j < childCount; j++) {
+                uint256 childIndex = childStart + j;
+                bool isStructural = Topology.isStructural(
+                    conditions,
+                    childIndex
+                );
 
-                if (seenNonStructural && !isNonStructural) {
+                if (seenNonStructural && isStructural) {
                     // Structural child found after non-structural child
                     revert NonStructuralChildrenMustComeLast(i);
                 }
 
-                if (isNonStructural) {
+                if (!isStructural) {
                     seenNonStructural = true;
                 }
             }
         }
-    }
-
-    function _isNonStructural(
-        ConditionFlat[] memory conditions,
-        uint256 index
-    ) private pure returns (bool) {
-        // NonStructural if paramType is None and all descendants are None
-        if (conditions[index].paramType != AbiType.None) {
-            return false;
-        }
-
-        // Check all descendants recursively
-        for (uint256 i = index + 1; i < conditions.length; i++) {
-            if (conditions[i].parent == index) {
-                if (!_isNonStructural(conditions, i)) {
-                    return false;
-                }
-            } else if (conditions[i].parent > index) {
-                break;
-            }
-        }
-
-        return true;
     }
 
     function _typeTree(ConditionFlat[] memory conditions) private pure {
@@ -346,18 +329,18 @@ library Integrity {
         ConditionFlat[] memory conditions,
         uint256 index
     ) private pure returns (bool) {
-        (uint256 childrenStart, uint256 childrenLength) = _childBounds(
+        (uint256 childStart, uint256 childCount, ) = Topology.childBounds(
             conditions,
             index
         );
 
-        if (childrenLength == 1) {
+        if (childCount == 1) {
             return true;
         }
 
-        bytes32 id = TypeTree.id(conditions, childrenStart);
-        for (uint256 i = 1; i < childrenLength; ++i) {
-            if (id != TypeTree.id(conditions, childrenStart + i)) return false;
+        bytes32 id = TypeTree.id(conditions, childStart);
+        for (uint256 i = 1; i < childCount; ++i) {
+            if (id != TypeTree.id(conditions, childStart + i)) return false;
         }
 
         return true;
@@ -366,15 +349,13 @@ library Integrity {
         ConditionFlat[] memory conditions,
         uint256 index
     ) private pure returns (bool) {
-        (uint256 childrenStart, uint256 childrenLength) = _childBounds(
+        (uint256 childStart, uint256 childCount, ) = Topology.childBounds(
             conditions,
             index
         );
 
-        for (uint256 i = 0; i < childrenLength; ++i) {
-            AbiType _type = TypeTree
-                .inspect(conditions, childrenStart + i)
-                ._type;
+        for (uint256 i = 0; i < childCount; ++i) {
+            AbiType _type = TypeTree.inspect(conditions, childStart + i)._type;
             if (
                 _type != AbiType.Dynamic &&
                 _type != AbiType.Calldata &&
@@ -458,13 +439,16 @@ library Integrity {
         }
 
         // Get parent's children bounds
-        (uint256 childrenStart, ) = _childBounds(conditions, parentIndex);
+        (uint256 childStart, , ) = Topology.childBounds(
+            conditions,
+            parentIndex
+        );
 
         {
             // Check reference child is Static
             Layout memory layout = TypeTree.inspect(
                 conditions,
-                childrenStart + referenceIndex
+                childStart + referenceIndex
             );
             if (layout._type != AbiType.Static) {
                 revert WithinRatioTargetNotStatic(i);
@@ -475,29 +459,10 @@ library Integrity {
             // Check relative child is Static
             Layout memory layout = TypeTree.inspect(
                 conditions,
-                childrenStart + relativeIndex
+                childStart + relativeIndex
             );
             if (layout._type != AbiType.Static) {
                 revert WithinRatioTargetNotStatic(i);
-            }
-        }
-    }
-
-    function _childBounds(
-        ConditionFlat[] memory conditions,
-        uint256 index
-    ) private pure returns (uint256 start, uint256 length) {
-        uint256 len = conditions.length;
-        unchecked {
-            for (uint256 i = index + 1; i < len; ++i) {
-                uint256 parent = conditions[i].parent;
-
-                if (parent == index) {
-                    if (length == 0) start = i;
-                    ++length;
-                } else if (parent > index) {
-                    break;
-                }
             }
         }
     }
