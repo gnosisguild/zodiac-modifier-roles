@@ -96,7 +96,7 @@ struct Condition {
     AbiType paramType;
     Operator operator;
     bytes compValue;
-    uint256 structuralChildCount;
+    uint256 sChildCount;
     Condition[] children;
 }
 

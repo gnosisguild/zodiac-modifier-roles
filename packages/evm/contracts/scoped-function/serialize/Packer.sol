@@ -25,7 +25,7 @@ import "../../AbiTypes.sol";
  * │     • paramType             3 bits                                  │
  * │     • operator              5 bits                                  │
  * │     • childCount            8 bits  (0-255)                         │
- * │     • structuralChildCount  8 bits  (0-255)                         │
+ * │     • sChildCount           8 bits  (0-255)                         │
  * │     • compValueOffset      16 bits  (0 if no value)                 │
  * ├─────────────────────────────────────────────────────────────────────┤
  * │ CompValues (variable length):                                       │
@@ -135,7 +135,7 @@ library Packer {
             (conditions.length * CONDITION_NODE_BYTES);
 
         for (uint256 i; i < conditions.length; ++i) {
-            (, uint256 childCount, uint256 structuralChildCount) = _childBounds(
+            (, uint256 childCount, uint256 sChildCount) = _childBounds(
                 conditions,
                 i
             );
@@ -150,7 +150,7 @@ library Packer {
                 // byte 2
                 buffer[offset++] = bytes1(uint8(childCount));
                 // byte 3
-                buffer[offset++] = bytes1(uint8(structuralChildCount));
+                buffer[offset++] = bytes1(uint8(sChildCount));
                 // todo encode a test with a high number of compValues, make sure both bytes on the tailOffset are considered
                 // byte 4
                 buffer[offset++] = bytes1(uint8(tailOffset >> 8));
@@ -190,11 +190,7 @@ library Packer {
     )
         private
         pure
-        returns (
-            uint256 childStart,
-            uint256 childCount,
-            uint256 structuralChildCount
-        )
+        returns (uint256 childStart, uint256 childCount, uint256 sChildCount)
     {
         for (uint256 i = index + 1; i < conditions.length; ++i) {
             uint256 parent = conditions[i].parent;
@@ -207,11 +203,11 @@ library Packer {
             }
         }
 
-        structuralChildCount = childCount;
+        sChildCount = childCount;
         for (uint256 i = childStart + childCount; i > childStart; --i) {
             if (_isNonStructural(conditions, i - 1)) {
                 // non structural come last
-                --structuralChildCount;
+                --sChildCount;
             } else {
                 // break once structural, all the rest will also be
                 break;

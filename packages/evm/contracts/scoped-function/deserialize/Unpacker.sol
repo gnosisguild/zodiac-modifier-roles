@@ -73,7 +73,7 @@ library Unpacker {
              * │  • paramType             3 bits                       │
              * │  • operator              5 bits                       │
              * │  • childCount            8 bits  (0-255)              │
-             * │  • structuralChildCount  8 bits  (0-255)              │
+             * │  • sChildCount           8 bits  (0-255)              │
              * │  • compValueOffset      16 bits  (0 if no value)      │
              * └───────────────────────────────────────────────────────┘
              */
@@ -82,7 +82,7 @@ library Unpacker {
             node.paramType = AbiType((packed >> 37) & 0x07);
             node.operator = Operator((packed >> 32) & 0x1F);
             uint256 childCount = (packed >> 24) & 0xFF;
-            node.structuralChildCount = (packed >> 16) & 0xFF;
+            node.sChildCount = (packed >> 16) & 0xFF;
             uint256 offsetCompValue = packed & 0xFFFF;
 
             if (offsetCompValue != 0) {
