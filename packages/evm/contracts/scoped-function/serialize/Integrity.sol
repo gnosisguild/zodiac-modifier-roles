@@ -202,9 +202,8 @@ library Integrity {
 
         for (uint256 i = 0; i < length; ++i) {
             if (
-                (conditions[i].operator == Operator.EtherWithinAllowance ||
-                    conditions[i].operator == Operator.CallWithinAllowance ||
-                    conditions[i].operator == Operator.WithinRatio)
+                conditions[i].operator == Operator.EtherWithinAllowance ||
+                conditions[i].operator == Operator.CallWithinAllowance
             ) {
                 (
                     uint256 countCalldataNodes,
@@ -213,6 +212,11 @@ library Integrity {
                 ) = _countParentNodes(conditions, i);
 
                 if (countCalldataNodes != 1 || countOtherNodes > 0) {
+                    revert UnsuitableParent(i);
+                }
+            } else if (conditions[i].operator == Operator.WithinRatio) {
+                // WithinRatio can be anywhere except as the root node
+                if (conditions[i].parent == i) {
                     revert UnsuitableParent(i);
                 }
             }
@@ -330,17 +334,17 @@ library Integrity {
         ConditionFlat[] memory conditions,
         uint256 index
     ) private pure returns (bool) {
-        (uint256 childStart, uint256 childCount, ) = Topology.childBounds(
+        (uint256 childStart, , uint256 sChildCount) = Topology.childBounds(
             conditions,
             index
         );
 
-        if (childCount == 1) {
+        if (sChildCount == 1) {
             return true;
         }
 
         bytes32 id = TypeTree.id(conditions, childStart);
-        for (uint256 i = 1; i < childCount; ++i) {
+        for (uint256 i = 1; i < sChildCount; ++i) {
             if (id != TypeTree.id(conditions, childStart + i)) return false;
         }
 
@@ -350,12 +354,12 @@ library Integrity {
         ConditionFlat[] memory conditions,
         uint256 index
     ) private pure returns (bool) {
-        (uint256 childStart, uint256 childCount, ) = Topology.childBounds(
+        (uint256 childStart, , uint256 sChildCount) = Topology.childBounds(
             conditions,
             index
         );
 
-        for (uint256 i = 0; i < childCount; ++i) {
+        for (uint256 i = 0; i < sChildCount; ++i) {
             AbiType _type = TypeTree.inspect(conditions, childStart + i)._type;
             if (
                 _type != AbiType.Dynamic &&

@@ -10,7 +10,8 @@ import {
   Operator,
   PermissionCheckerStatus,
 } from "../utils";
-import { setupTwoParamsStatic } from "../setup";
+import { setupTwoParamsStatic, deployRolesMod } from "../setup";
+import { ConditionFlatStruct } from "../../typechain-types/contracts/Roles";
 
 describe("WithinRatio Operator", () => {
   describe("Core Functionality", () => {
@@ -664,22 +665,334 @@ describe("WithinRatio Operator", () => {
   });
 
   describe("Parameter Extraction", () => {
-    describe("as child of Calldata", () => {
-      it("extracts reference and relative amounts correctly", async () => {
-        // TODO: Implement - simple passing case to verify extraction
+    async function setupWithEncoder() {
+      const [owner, member] = await hre.ethers.getSigners();
+
+      const Avatar = await hre.ethers.getContractFactory("TestAvatar");
+      const avatar = await Avatar.deploy();
+      const avatarAddress = await avatar.getAddress();
+
+      const TestContract = await hre.ethers.getContractFactory("TestEncoder");
+      const testContract = await TestContract.deploy();
+      const testContractAddress = await testContract.getAddress();
+
+      const roles = await deployRolesMod(
+        hre,
+        owner.address,
+        avatarAddress,
+        avatarAddress,
+      );
+
+      await roles.connect(owner).enableModule(member.address);
+
+      const roleKey =
+        "0x0000000000000000000000000000000000000000000000000000000000000001";
+      await roles.connect(owner).assignRoles(member.address, [roleKey], [true]);
+      await roles.connect(owner).setDefaultRole(member.address, roleKey);
+      await roles.connect(owner).scopeTarget(roleKey, testContractAddress);
+
+      const scopeFunction = (
+        selector: string,
+        conditions: ConditionFlatStruct[],
+
+        options?: number,
+      ) =>
+        roles
+          .connect(owner)
+          .scopeFunction(
+            roleKey,
+            testContractAddress,
+            selector,
+            conditions,
+            options || 0,
+          );
+
+      const execTransactionFromModule = async (data: string) =>
+        roles
+          .connect(member)
+          .execTransactionFromModule(testContractAddress, 0, data, 0);
+
+      return { roles, testContract, scopeFunction, execTransactionFromModule };
+    }
+
+    it("from Calldata", async () => {
+      const { roles, testContract, scopeFunction, execTransactionFromModule } =
+        await loadFixture(setupWithEncoder);
+
+      // Check ratio between first and third params, skipping dynamic middle param
+      const compValue = encodeWithinRatioCompValue({
+        referenceIndex: 0,
+        referenceDecimals: 0,
+        relativeIndex: 2,
+        relativeDecimals: 0,
+        minRatio: 0,
+        maxRatio: 12000, // 120%
       });
+
+      await scopeFunction(
+        testContract.interface.getFunction("mixedParams").selector,
+        flattenCondition({
+          paramType: AbiType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            { paramType: AbiType.Static, operator: Operator.Pass },
+            { paramType: AbiType.Dynamic, operator: Operator.Pass },
+            { paramType: AbiType.Static, operator: Operator.Pass },
+            {
+              paramType: AbiType.None,
+              operator: Operator.WithinRatio,
+              compValue,
+            },
+          ],
+        }),
+        0,
+      );
+
+      // params[2] / params[0] <= 120%
+      // 1200 / 1000 = 120% - pass
+      await expect(
+        execTransactionFromModule(
+          (
+            await testContract.mixedParams.populateTransaction(
+              1000,
+              "0xaabbcc",
+              1200,
+            )
+          ).data!,
+        ),
+      ).to.not.be.reverted;
+
+      // 1210 / 1000 = 120.1% > 120% - fail
+      await expect(
+        execTransactionFromModule(
+          (
+            await testContract.mixedParams.populateTransaction(
+              1000,
+              "0xaabbcc",
+              1201,
+            )
+          ).data!,
+        ),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.RatioAboveMax, ZeroHash);
+
+      // 1210 / 1000 = 120% <= 120% - ok
+      await expect(
+        execTransactionFromModule(
+          (
+            await testContract.mixedParams.populateTransaction(
+              1000,
+              "0xaabbcc",
+              1200,
+            )
+          ).data!,
+        ),
+      ).to.not.be.reverted;
     });
 
-    describe("as child of Tuple", () => {
-      it("extracts reference and relative amounts correctly", async () => {
-        // TODO: Implement - simple passing case to verify extraction
+    it("from AbiEncoded", async () => {
+      const { roles, testContract, scopeFunction, execTransactionFromModule } =
+        await loadFixture(setupWithEncoder);
+
+      // Check ratio between first and third encoded values
+      const compValue = encodeWithinRatioCompValue({
+        referenceIndex: 0,
+        referenceDecimals: 0,
+        relativeIndex: 2,
+        relativeDecimals: 0,
+        minRatio: 0,
+        maxRatio: 8000, // 80%
       });
+
+      await scopeFunction(
+        testContract.interface.getFunction("dynamicStatic").selector,
+        flattenCondition({
+          paramType: AbiType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: AbiType.AbiEncoded,
+              operator: Operator.Matches,
+              children: [
+                { paramType: AbiType.Static, operator: Operator.Pass },
+                { paramType: AbiType.Static, operator: Operator.Pass },
+                { paramType: AbiType.Static, operator: Operator.Pass },
+                {
+                  paramType: AbiType.None,
+                  operator: Operator.WithinRatio,
+                  compValue,
+                },
+              ],
+            },
+          ],
+        }),
+        0,
+      );
+
+      const abiCoder = AbiCoder.defaultAbiCoder();
+
+      // encoded[2] / encoded[0] <= 80%
+      // 800 / 1000 = 80% - pass
+      const encoded = abiCoder.encode(
+        ["uint256", "uint256", "uint256"],
+        [1000, 500, 800],
+      );
+      await expect(
+        execTransactionFromModule(
+          (await testContract.dynamicStatic.populateTransaction(encoded)).data!,
+        ),
+      ).to.not.be.reverted;
+
+      // 801 / 1000 = 80.1% > 80% - fail
+      const encodedFail = abiCoder.encode(
+        ["uint256", "uint256", "uint256"],
+        [1000, 500, 801],
+      );
+      await expect(
+        execTransactionFromModule(
+          (await testContract.dynamicStatic.populateTransaction(encodedFail))
+            .data!,
+        ),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.RatioAboveMax, ZeroHash);
     });
 
-    describe("as child of Array", () => {
-      it("extracts reference and relative amounts correctly", async () => {
-        // TODO: Implement - simple passing case to verify extraction
+    it("from Tuple", async () => {
+      const { roles, testContract, scopeFunction, execTransactionFromModule } =
+        await loadFixture(setupWithEncoder);
+
+      // MixedTuple has: amount(0), second(1), limit(2), fourth(3)
+      const compValue = encodeWithinRatioCompValue({
+        referenceIndex: 1,
+        referenceDecimals: 0,
+        relativeIndex: 3,
+        relativeDecimals: 0,
+        minRatio: 0,
+        maxRatio: 15000, // 150%
       });
+
+      await scopeFunction(
+        testContract.interface.getFunction("mixedTuple").selector,
+        flattenCondition({
+          paramType: AbiType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: AbiType.Tuple,
+              operator: Operator.Matches,
+              children: [
+                { paramType: AbiType.Static, operator: Operator.Pass }, // amount
+                { paramType: AbiType.Static, operator: Operator.Pass }, // second
+                { paramType: AbiType.Static, operator: Operator.Pass }, // limit
+                { paramType: AbiType.Static, operator: Operator.Pass }, // fourth
+                {
+                  paramType: AbiType.None,
+                  operator: Operator.WithinRatio,
+                  compValue,
+                },
+              ],
+            },
+          ],
+        }),
+        0,
+      );
+
+      // fourth / second <= 150%
+      // 1500 / 1000 = 150% - pass
+      await expect(
+        execTransactionFromModule(
+          (
+            await testContract.mixedTuple.populateTransaction({
+              amount: 500,
+              second: 1000,
+              limit: 800,
+              fourth: 1500,
+            })
+          ).data!,
+        ),
+      ).to.not.be.reverted;
+
+      // 1501 / 1000 = 150.1% > 150% - fail
+      await expect(
+        execTransactionFromModule(
+          (
+            await testContract.mixedTuple.populateTransaction({
+              amount: 500,
+              second: 1000,
+              limit: 800,
+              fourth: 1501,
+            })
+          ).data!,
+        ),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.RatioAboveMax, ZeroHash);
+    });
+
+    it("from Array", async () => {
+      const { roles, testContract, scopeFunction, execTransactionFromModule } =
+        await loadFixture(setupWithEncoder);
+
+      const compValue = encodeWithinRatioCompValue({
+        referenceIndex: 0,
+        referenceDecimals: 0,
+        relativeIndex: 2,
+        relativeDecimals: 0,
+        minRatio: 0,
+        maxRatio: 12000, // 120%
+      });
+
+      await scopeFunction(
+        testContract.interface.getFunction("uint256ArrayStatic").selector,
+        flattenCondition({
+          paramType: AbiType.Calldata,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: AbiType.Array,
+              operator: Operator.Matches,
+              children: [
+                { paramType: AbiType.Static, operator: Operator.Pass },
+                { paramType: AbiType.Static, operator: Operator.Pass },
+                { paramType: AbiType.Static, operator: Operator.Pass },
+                {
+                  paramType: AbiType.None,
+                  operator: Operator.WithinRatio,
+                  compValue,
+                },
+              ],
+            },
+          ],
+        }),
+        0,
+      );
+
+      // array[2] / array[0] <= 120%
+      // 1200 / 1000 = 120% - pass
+      await expect(
+        execTransactionFromModule(
+          (
+            await testContract.uint256ArrayStatic.populateTransaction([
+              1000, 500, 1200,
+            ])
+          ).data!,
+        ),
+      ).to.not.be.reverted;
+
+      // 1201 / 1000 = 120.1% > 120% - fail
+      await expect(
+        execTransactionFromModule(
+          (
+            await testContract.uint256ArrayStatic.populateTransaction([
+              1000, 500, 1201,
+            ])
+          ).data!,
+        ),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.RatioAboveMax, ZeroHash);
     });
   });
 });
