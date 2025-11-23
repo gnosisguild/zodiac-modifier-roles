@@ -21,6 +21,7 @@ import "./TypeTree.sol";
  *    * its sub type tree resolves to Static
  * Enforce Tuples and Arrays to have children
  * Enforce in general nodes to have at least one structural children, for nodes that require children
+ * Validated variants accross different Array entries as well
  */
 
 library Integrity {

@@ -10,6 +10,19 @@ contract MockTypeTree {
         return flattenTree(TypeTree.inspect(conditions, 0));
     }
 
+    function id(
+        ConditionFlat[] memory conditions
+    ) public pure returns (bytes32) {
+        return TypeTree.id(conditions, 0);
+    }
+
+    function id(
+        ConditionFlat[] memory conditions,
+        uint256 index
+    ) public pure returns (bytes32) {
+        return TypeTree.id(conditions, index);
+    }
+
     // Flat structure with parent reference
     struct FlatNode {
         uint256 parent;
