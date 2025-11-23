@@ -10,7 +10,7 @@ library Unpacker {
     // ═══════════════════════════════════════════════════════════════════════════
 
     uint256 private constant CONDITION_NODE_BYTES = 5;
-    uint256 private constant TYPETREE_NODE_BYTES = 2;
+    uint256 private constant LAYOUT_NODE_BYTES = 2;
 
     // ═══════════════════════════════════════════════════════════════════════════
     // Main Unpacking Function
@@ -23,7 +23,7 @@ library Unpacker {
         view
         returns (
             Condition memory condition,
-            TypeTree memory typeTree,
+            Layout memory layout,
             bytes32[] memory allowanceKeys
         )
     {
@@ -34,8 +34,8 @@ library Unpacker {
         // Unpack condition tree
         condition = _unpackCondition(buffer, 4);
 
-        // Unpack type tree
-        typeTree = _unpackTypeTree(buffer, typesOffset);
+        // Unpack layout
+        layout = _unpackLayout(buffer, typesOffset);
 
         assembly {
             allowanceKeys := add(buffer, add(0x20, allowanceOffset))
@@ -51,30 +51,55 @@ library Unpacker {
         uint256 offset
     ) internal view returns (Condition memory) {
         // Load the node count from header (16 bits)
-        uint256 nodeCount = _mload16(buffer, offset);
-        offset += 2;
+        uint256 nodeCount;
+        assembly {
+            offset := add(0x20, add(buffer, offset))
+            nodeCount := shr(240, mload(offset))
+            offset := add(offset, 2)
+        }
 
         Condition[] memory nodes = new Condition[](nodeCount);
-        uint256 nextChildIndex = 1;
+        uint256 nextChildBFS = 1;
 
         for (uint256 i = 0; i < nodeCount; ) {
             uint256 packed;
             assembly {
-                // Load 5 bytes (40 bits) for the condition node
-                packed := shr(216, mload(add(buffer, add(0x20, offset))))
+                packed := shr(216, mload(offset)) // Load 5 bytes, 40 bits
             }
+
+            /*
+             * ┌───────────────────────────────────────────────────────┐
+             * │Each node 40 bits, 5 bytes:                            │
+             * │  • paramType             3 bits                       │
+             * │  • operator              5 bits                       │
+             * │  • childCount            8 bits  (0-255)              │
+             * │  • sChildCount           8 bits  (0-255)              │
+             * │  • compValueOffset      16 bits  (0 if no value)      │
+             * └───────────────────────────────────────────────────────┘
+             */
 
             Condition memory node = nodes[i];
             node.paramType = AbiType((packed >> 37) & 0x07);
             node.operator = Operator((packed >> 32) & 0x1F);
             uint256 childCount = (packed >> 24) & 0xFF;
-            node.structuralChildCount = (packed >> 16) & 0xFF;
-            uint256 compValueOffset = packed & 0xFFFF;
+            node.sChildCount = (packed >> 16) & 0xFF;
+            uint256 offsetCompValue = packed & 0xFFFF;
 
-            if (compValueOffset != 0) {
-                bytes32 compValue;
+            if (offsetCompValue != 0) {
+                uint256 length;
                 assembly {
-                    compValue := mload(add(buffer, add(0x22, compValueOffset)))
+                    // load 2 bytes, 16 bits
+                    length := shr(
+                        240,
+                        mload(add(0x20, add(buffer, offsetCompValue)))
+                    )
+                }
+
+                bytes memory compValue = new bytes(length);
+                assembly {
+                    let src := add(0x22, add(buffer, offsetCompValue))
+                    let dst := add(0x20, compValue)
+                    mcopy(dst, src, length)
                 }
                 node.compValue = compValue;
             }
@@ -82,15 +107,17 @@ library Unpacker {
             if (childCount > 0) {
                 node.children = new Condition[](childCount);
                 for (uint256 j = 0; j < childCount; ) {
-                    node.children[j] = nodes[nextChildIndex];
+                    node.children[j] = nodes[nextChildBFS];
                     unchecked {
-                        ++nextChildIndex;
+                        ++nextChildBFS;
                         ++j;
                     }
                 }
             } else if (node.operator == Operator.EqualToAvatar) {
                 node.operator = Operator.EqualTo;
-                node.compValue = keccak256(abi.encode(_avatar()));
+                node.compValue = abi.encodePacked(
+                    keccak256(abi.encode(_avatar()))
+                );
             }
 
             unchecked {
@@ -104,46 +131,56 @@ library Unpacker {
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // TypeTree Unpacking
+    // Layout Unpacking
     // ═══════════════════════════════════════════════════════════════════════════
 
-    function _unpackTypeTree(
+    function _unpackLayout(
         bytes memory buffer,
         uint256 offset
-    ) internal pure returns (TypeTree memory) {
+    ) internal pure returns (Layout memory) {
         // Load the node count from header (16 bits)
-        uint256 nodeCount = _mload16(buffer, offset);
-        offset += 2;
+        uint256 nodeCount;
+        assembly {
+            offset := add(0x20, add(buffer, offset))
+            nodeCount := shr(240, mload(offset))
+            offset := add(offset, 2)
+        }
 
-        TypeTree[] memory nodes = new TypeTree[](nodeCount);
-        uint256 nextChildIndex = 1;
+        Layout[] memory nodes = new Layout[](nodeCount);
+        uint256 nextChildBFS = 1;
 
         for (uint256 i = 0; i < nodeCount; ) {
-            uint256 packed;
-
+            uint16 packed;
             assembly {
-                // mload16, but do it inline
-                packed := shr(240, mload(add(buffer, add(0x20, offset))))
+                packed := shr(240, mload(offset)) // Load 2 bytes (16 bits)
             }
+            /*
+             * ┌──────────────────────────────────────────────────┐
+             * │Each node (11 bits, padded to 2 bytes):           │
+             * │  • type                  3 bits  (AbiType 0-7)   │
+             * │  • childCount            8 bits  (0-255)         │
+             * │  • reserved              5 bits                  │
+             * └──────────────────────────────────────────────────┘
+             */
 
-            TypeTree memory node = nodes[i];
-            node._type = AbiType((packed >> 13) & 0x07);
+            Layout memory node = nodes[i];
+            node._type = AbiType((packed >> 13));
             uint256 childCount = (packed >> 5) & 0xFF;
 
             if (childCount > 0) {
-                node.children = new TypeTree[](childCount);
+                node.children = new Layout[](childCount);
 
                 for (uint256 j = 0; j < childCount; ) {
-                    node.children[j] = nodes[nextChildIndex];
+                    node.children[j] = nodes[nextChildBFS];
                     unchecked {
-                        ++nextChildIndex;
+                        ++nextChildBFS;
                         ++j;
                     }
                 }
             }
 
             unchecked {
-                offset += TYPETREE_NODE_BYTES;
+                offset += LAYOUT_NODE_BYTES;
                 ++i;
             }
         }

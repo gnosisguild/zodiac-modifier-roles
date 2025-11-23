@@ -10,7 +10,7 @@ import "../../AbiTypes.sol";
  * ┌─────────────────────────────────────────────────────────────────────┐
  * │ HEADER (4 bytes)                                                    │
  * ├─────────────────────────────────────────────────────────────────────┤
- * │ • typesOffset              16 bits (0-65535)                        │
+ * │ • layoutOffset             16 bits (0-65535)                        │
  * │ • allowanceOffset          16 bits (0-65535)                        │
  * └─────────────────────────────────────────────────────────────────────┘
  *
@@ -25,7 +25,7 @@ import "../../AbiTypes.sol";
  * │     • paramType             3 bits                                  │
  * │     • operator              5 bits                                  │
  * │     • childCount            8 bits  (0-255)                         │
- * │     • structuralChildCount  8 bits  (0-255)                         │
+ * │     • sChildCount           8 bits  (0-255)                         │
  * │     • compValueOffset      16 bits  (0 if no value)                 │
  * ├─────────────────────────────────────────────────────────────────────┤
  * │ CompValues (variable length):                                       │
@@ -35,7 +35,7 @@ import "../../AbiTypes.sol";
  * └─────────────────────────────────────────────────────────────────────┘
  *
  * ┌─────────────────────────────────────────────────────────────────────┐
- * │ TYPE TREE SECTION (at typeTreeOffset)                               │
+ * │ LAYOUT SECTION (at layoutOffset)                                    │
  * ├─────────────────────────────────────────────────────────────────────┤
  * │ Header (2 bytes):                                                   │
  * │   • nodeCount              16 bits (0-65535)                        │
@@ -66,10 +66,8 @@ library Packer {
     // Constants
     // ═══════════════════════════════════════════════════════════════════════════
 
-    uint256 private constant CONDITION_COUNT_BYTES = 2;
     uint256 private constant CONDITION_NODE_BYTES = 5;
-    uint256 private constant TYPETREE_COUNT_BYTES = 2;
-    uint256 private constant TYPETREE_NODE_BYTES = 2;
+    uint256 private constant LAYOUT_NODE_BYTES = 2;
 
     // ═══════════════════════════════════════════════════════════════════════════
     // Main Packing Function
@@ -77,12 +75,12 @@ library Packer {
 
     function pack(
         ConditionFlat[] memory conditions,
-        TypeTree memory typeNode,
+        Layout memory typeNode,
         bytes32[] memory allowanceKeys
     ) internal pure returns (bytes memory buffer) {
         uint256 size = 4 +
             _conditionPackedSize(conditions) +
-            _typeTreePackedSize(typeNode) +
+            _layoutPackedSize(typeNode) +
             (32 * (allowanceKeys.length + 1));
 
         buffer = new bytes(size);
@@ -91,13 +89,13 @@ library Packer {
 
         offset += _packConditions(conditions, buffer, offset);
 
-        // Pack typesOffset
-        _mstore(uint16(offset), buffer, 0);
-        offset += _packTypeTree(typeNode, buffer, offset);
+        // pack at position 0 -> layoutOffset
+        _packUInt16(offset, buffer, 0);
+        offset += _packLayout(typeNode, buffer, offset);
 
-        // Pack allowanceOffset
-        _mstore(uint16(offset), buffer, 2);
-        offset += _mstore(allowanceKeys, buffer, offset);
+        // pack at position 2 -> allowanceOffset
+        _packUInt16(offset, buffer, 2);
+        offset += _packBytes32Array(allowanceKeys, buffer, offset);
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -110,15 +108,16 @@ library Packer {
         uint256 count = conditions.length;
 
         // Header (2 bytes) + nodes
-        result = CONDITION_COUNT_BYTES + count * CONDITION_NODE_BYTES;
+        result = 2 + count * CONDITION_NODE_BYTES;
 
-        // Add space for compValues (32 bytes each for operators >= EqualTo)
-        for (uint256 i; i < count; ) {
+        // Add space for compValues (variable length for operators >= EqualTo)
+        for (uint256 i; i < count; ++i) {
             if (conditions[i].operator >= Operator.EqualTo) {
-                result += 32 + 2;
-            }
-            unchecked {
-                ++i;
+                // 2 bytes for length field
+                result += 2;
+                result += conditions[i].operator == Operator.EqualTo
+                    ? 32 // keccak256 hash is always 32 bytes
+                    : conditions[i].compValue.length;
             }
         }
     }
@@ -128,106 +127,92 @@ library Packer {
         bytes memory buffer,
         uint256 offset
     ) internal pure returns (uint256) {
-        // Pack nodeCount
-        uint8 b1 = uint8(conditions.length >> 8) & 0xFF;
-        uint8 b2 = uint8(conditions.length) & 0xFF;
-        assembly {
-            let ptr := add(buffer, add(0x20, offset))
-            mstore8(ptr, b1)
-            mstore8(add(ptr, 0x01), b2)
-        }
-        _packConditionNodes(conditions, buffer, offset + CONDITION_COUNT_BYTES);
+        uint256 startOffset = offset;
 
-        return _conditionPackedSize(conditions);
-    }
+        offset += _packUInt16(conditions.length, buffer, offset);
 
-    function _packConditionNodes(
-        ConditionFlat[] memory conditions,
-        bytes memory buffer,
-        uint256 offset
-    ) private pure {
-        // Calculate compValues start offset
-        uint256 compValueOffset = offset +
+        uint256 tailOffset = offset +
             (conditions.length * CONDITION_NODE_BYTES);
 
         for (uint256 i; i < conditions.length; ++i) {
-            (, uint256 childCount) = _childBounds(conditions, i);
-            uint256 structuralChildCount = _structuralChildCount(conditions, i);
+            (, uint256 childCount, uint256 sChildCount) = _childBounds(
+                conditions,
+                i
+            );
 
-            // Node
+            // Pack Node
             {
-                uint8 b1 = (uint8(conditions[i].paramType) << 5) |
-                    uint8(conditions[i].operator);
-                uint8 b2 = uint8(childCount);
-                uint8 b3 = uint8(structuralChildCount);
-                uint8 b4 = uint8(compValueOffset >> 8);
-                uint8 b5 = uint8(compValueOffset);
-
-                assembly {
-                    mstore8(add(buffer, add(0x20, offset)), b1)
-                    mstore8(add(buffer, add(0x21, offset)), b2)
-                    mstore8(add(buffer, add(0x22, offset)), b3)
-                    mstore8(add(buffer, add(0x23, offset)), b4)
-                    mstore8(add(buffer, add(0x24, offset)), b5)
-                }
-                offset += CONDITION_NODE_BYTES;
+                // byte 1
+                buffer[offset++] = bytes1(
+                    (uint8(conditions[i].paramType) << 5) |
+                        uint8(conditions[i].operator)
+                );
+                // byte 2
+                buffer[offset++] = bytes1(uint8(childCount));
+                // byte 3
+                buffer[offset++] = bytes1(uint8(sChildCount));
+                // todo encode a test with a high number of compValues, make sure both bytes on the tailOffset are considered
+                // byte 4
+                buffer[offset++] = bytes1(uint8(tailOffset >> 8));
+                // byte 5
+                buffer[offset++] = bytes1(uint8(tailOffset));
             }
 
-            // CompValue
-            if (conditions[i].operator >= Operator.EqualTo) {
-                uint8 b1 = 0;
-                uint8 b2 = 32;
-                bytes32 compValue = conditions[i].operator == Operator.EqualTo
-                    ? keccak256(conditions[i].compValue)
-                    : bytes32(conditions[i].compValue);
+            if (conditions[i].operator < Operator.EqualTo) {
+                continue;
+            }
+
+            // Pack CompValue
+            {
+                bytes memory compValue = conditions[i].operator ==
+                    Operator.EqualTo
+                    ? abi.encodePacked(keccak256(conditions[i].compValue))
+                    : conditions[i].compValue;
+
+                uint256 length = compValue.length;
+                buffer[tailOffset++] = bytes1(uint8(length >> 8));
+                buffer[tailOffset++] = bytes1(uint8(length));
 
                 assembly {
-                    let ptr := add(buffer, add(0x20, compValueOffset))
-                    mstore8(ptr, b1)
-                    mstore8(add(ptr, 0x01), b2)
-                    mstore(add(ptr, 0x02), compValue)
+                    let src := add(0x20, compValue)
+                    let dst := add(add(0x20, buffer), tailOffset)
+                    mcopy(dst, src, length)
                 }
-                compValueOffset += 34;
+                tailOffset += length;
             }
         }
+        return tailOffset - startOffset;
     }
 
     function _childBounds(
         ConditionFlat[] memory conditions,
         uint256 index
-    ) private pure returns (uint256 start, uint256 length) {
-        uint256 len = conditions.length;
-        unchecked {
-            for (uint256 i = index + 1; i < len; ++i) {
-                uint256 parent = conditions[i].parent;
+    )
+        private
+        pure
+        returns (uint256 childStart, uint256 childCount, uint256 sChildCount)
+    {
+        for (uint256 i = index + 1; i < conditions.length; ++i) {
+            uint256 parent = conditions[i].parent;
 
-                if (parent == index) {
-                    if (length == 0) start = i;
-                    ++length;
-                } else if (parent > index) {
-                    break;
-                }
-            }
-        }
-    }
-
-    function _structuralChildCount(
-        ConditionFlat[] memory conditions,
-        uint256 index
-    ) private pure returns (uint256) {
-        (uint256 start, uint256 length) = _childBounds(conditions, index);
-
-        // Count non-structural children from the end (they're guaranteed to come last)
-        uint256 nonStructuralCount = 0;
-        for (uint256 i = length; i > 0; --i) {
-            if (_isNonStructural(conditions, start + i - 1)) {
-                ++nonStructuralCount;
-            } else {
+            if (parent == index) {
+                if (childCount == 0) childStart = i;
+                ++childCount;
+            } else if (parent > index) {
                 break;
             }
         }
 
-        return length - nonStructuralCount;
+        sChildCount = childCount;
+        for (uint256 i = childStart + childCount; i > childStart; --i) {
+            if (_isNonStructural(conditions, i - 1)) {
+                // non structural come last
+                --sChildCount;
+            } else {
+                // break once structural, all the rest will also be
+                break;
+            }
+        }
     }
 
     function _isNonStructural(
@@ -253,65 +238,44 @@ library Packer {
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // TypeTree Packing
+    // Layout Packing
     // ═══════════════════════════════════════════════════════════════════════════
 
-    function _typeTreePackedSize(
-        TypeTree memory node
+    function _layoutPackedSize(
+        Layout memory node
     ) internal pure returns (uint256 result) {
         // Header (2 bytes) + all nodes (2 bytes each)
-        result = TYPETREE_COUNT_BYTES + _countNodes(node) * TYPETREE_NODE_BYTES;
+        result = 2 + _countNodes(node) * LAYOUT_NODE_BYTES;
     }
 
-    function _packTypeTree(
-        TypeTree memory tree,
+    function _packLayout(
+        Layout memory tree,
         bytes memory buffer,
         uint256 offset
     ) internal pure returns (uint256) {
-        TypeNodeFlat[] memory nodes = _flattenBFS(tree);
+        LayoutNodeFlat[] memory nodes = _flattenLayout(tree);
 
-        // Write header: [16 bits nodeCount]
-        uint256 childCount = nodes.length;
-        assembly {
-            let ptr := add(buffer, add(0x20, offset))
-            mstore(ptr, shl(240, childCount))
-        }
-        offset += TYPETREE_COUNT_BYTES;
+        offset += _packUInt16(nodes.length, buffer, offset);
 
         // Pack all nodes (2 bytes each)
-        for (uint256 i; i < nodes.length; ) {
-            // Pack 16 bits:
-            // Bits 0-2: type (3 bits)
-            // Bits 3-10: childCount (8 bits)
-            // Bits 11-15: reserved (5 bits)
-            uint256 mask = ~(uint256(0xFFFFFFFF) << 240);
-            uint256 packed = ((uint256(nodes[i]._type) << 13) |
-                ((nodes[i].childCount & 0xFF) << 5)) << 240;
+        for (uint256 i; i < nodes.length; ++i) {
+            uint16 packed = (uint16(nodes[i]._type) << 13) |
+                (uint16(nodes[i].childCount) << 5);
 
-            // Write 2 bytes
-            assembly {
-                let ptr := add(buffer, add(0x20, offset))
-                let existing := mload(ptr)
-                existing := and(existing, mask)
-                mstore(ptr, or(packed, existing))
-            }
-
-            unchecked {
-                offset += TYPETREE_NODE_BYTES;
-                ++i;
-            }
+            buffer[offset++] = bytes1(uint8(packed >> 8));
+            buffer[offset++] = bytes1(uint8(packed));
         }
 
-        return TYPETREE_COUNT_BYTES + nodes.length * TYPETREE_NODE_BYTES;
+        return 2 + nodes.length * LAYOUT_NODE_BYTES;
     }
 
-    function _flattenBFS(
-        TypeTree memory root
-    ) internal pure returns (TypeNodeFlat[] memory) {
+    function _flattenLayout(
+        Layout memory root
+    ) internal pure returns (LayoutNodeFlat[] memory) {
         uint256 total = _countNodes(root);
-        TypeNodeFlat[] memory result = new TypeNodeFlat[](total);
+        LayoutNodeFlat[] memory result = new LayoutNodeFlat[](total);
 
-        TypeTree[] memory queue = new TypeTree[](total);
+        Layout[] memory queue = new Layout[](total);
         uint256[] memory parents = new uint256[](total);
 
         queue[0] = root;
@@ -322,12 +286,12 @@ library Packer {
         uint256 current = 0;
 
         while (head < tail) {
-            TypeTree memory node = queue[head];
+            Layout memory node = queue[head];
             uint256 parent = parents[head];
             head++;
 
             // Record this node
-            result[current] = TypeNodeFlat({
+            result[current] = LayoutNodeFlat({
                 _type: node._type,
                 parent: parent,
                 childCount: node.children.length
@@ -347,7 +311,7 @@ library Packer {
     }
 
     function _countNodes(
-        TypeTree memory node
+        Layout memory node
     ) internal pure returns (uint256 count) {
         count = 1;
         for (uint256 i = 0; i < node.children.length; ++i) {
@@ -355,47 +319,40 @@ library Packer {
         }
     }
 
-    struct TypeNodeFlat {
+    struct LayoutNodeFlat {
         uint256 parent;
         AbiType _type;
         uint256 childCount;
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // Storage Helpers
+    // Buffer Helpers
     // ═══════════════════════════════════════════════════════════════════════════
 
-    function _mstore(
-        uint16 value,
+    function _packUInt16(
+        uint256 value,
         bytes memory buffer,
         uint256 offset
     ) private pure returns (uint256) {
-        uint8 b1 = uint8((value >> 8) & 0xff);
-        uint8 b2 = uint8(value & 0xff);
-        assembly {
-            let ptr := add(buffer, add(0x20, offset))
-            mstore8(ptr, b1)
-            mstore8(add(ptr, 0x01), b2)
-        }
+        assert(value < type(uint16).max);
+
+        buffer[offset] = bytes1(uint8((value >> 8)));
+        buffer[offset + 1] = bytes1(uint8((value)));
+
         return 2;
     }
 
-    function _mstore(
+    function _packBytes32Array(
         bytes32[] memory keys,
         bytes memory buffer,
         uint256 offset
     ) private pure returns (uint256) {
-        uint256 len = keys.length;
+        uint256 length = 32 * (keys.length + 1);
         assembly {
-            mstore(add(buffer, add(0x20, offset)), len)
+            let dst := add(buffer, add(offset, 0x20))
+            let src := keys
+            mcopy(dst, src, length)
         }
-        for (uint256 i; i < keys.length; ++i) {
-            uint256 keyOffset = offset + 32 + i * 32;
-            bytes32 key = keys[i];
-            assembly {
-                mstore(add(buffer, add(0x20, keyOffset)), key)
-            }
-        }
-        return 32 * (len + 1);
+        return length;
     }
 }
