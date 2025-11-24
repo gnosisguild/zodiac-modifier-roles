@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "../../Types.sol";
-import "../../AbiTypes.sol";
+import "../../types/All.sol";
 
 /**
  * ScopedFunction Layout in Contract Storage
@@ -22,8 +21,8 @@ import "../../AbiTypes.sol";
  * ├─────────────────────────────────────────────────────────────────────┤
  * │ Nodes (nodeCount × 5 bytes each):                                   │
  * │   Each node (40 bits):                                              │
- * │     • paramType             3 bits                                  │
  * │     • operator              5 bits                                  │
+ * │     • unused                3 bits                                  │
  * │     • childCount            8 bits  (0-255)                         │
  * │     • sChildCount           8 bits  (0-255)                         │
  * │     • compValueOffset      16 bits  (0 if no value)                 │
@@ -42,9 +41,9 @@ import "../../AbiTypes.sol";
  * ├─────────────────────────────────────────────────────────────────────┤
  * │ Nodes (nodeCount × 2 bytes each):                                   │
  * │   Each node (11 bits, padded to 2 bytes):                           │
- * │     • type                  3 bits  (AbiType 0-7)                   │
+ * │     • encoding              3 bits  (0-7)                           │
  * │     • childCount            8 bits  (0-255)                         │
- * │     • reserved              5 bits                                  │
+ * │     • unused                5 bits                                  │
  * └─────────────────────────────────────────────────────────────────────┘
  *
  * ┌─────────────────────────────────────────────────────────────────────┐
@@ -142,11 +141,8 @@ library Packer {
 
             // Pack Node
             {
-                // byte 1
-                buffer[offset++] = bytes1(
-                    (uint8(conditions[i].paramType) << 5) |
-                        uint8(conditions[i].operator)
-                );
+                // byte 1: operator (5 bits) shifted left, 3 trailing unused bits
+                buffer[offset++] = bytes1(uint8(conditions[i].operator) << 3);
                 // byte 2
                 buffer[offset++] = bytes1(uint8(childCount));
                 // byte 3
@@ -220,7 +216,7 @@ library Packer {
         uint256 index
     ) private pure returns (bool) {
         // NonStructural if paramType is None and all descendants are None
-        if (conditions[index].paramType != AbiType.None) {
+        if (conditions[index].paramType != Encoding.None) {
             return false;
         }
 
@@ -259,7 +255,7 @@ library Packer {
 
         // Pack all nodes (2 bytes each)
         for (uint256 i; i < nodes.length; ++i) {
-            uint16 packed = (uint16(nodes[i]._type) << 13) |
+            uint16 packed = (uint16(nodes[i].encoding) << 13) |
                 (uint16(nodes[i].childCount) << 5);
 
             buffer[offset++] = bytes1(uint8(packed >> 8));
@@ -292,7 +288,7 @@ library Packer {
 
             // Record this node
             result[current] = LayoutNodeFlat({
-                _type: node._type,
+                encoding: node.encoding,
                 parent: parent,
                 childCount: node.children.length
             });
@@ -321,7 +317,7 @@ library Packer {
 
     struct LayoutNodeFlat {
         uint256 parent;
-        AbiType _type;
+        Encoding encoding;
         uint256 childCount;
     }
 

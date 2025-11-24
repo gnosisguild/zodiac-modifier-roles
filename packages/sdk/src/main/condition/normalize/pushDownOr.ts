@@ -1,4 +1,4 @@
-import { AbiType, Condition, Operator } from "zodiac-roles-deployments"
+import { Encoding, Condition, Operator } from "zodiac-roles-deployments"
 
 import { conditionId } from "../conditionId"
 
@@ -21,7 +21,7 @@ export function pushDownOr(
   }
 
   // does not support Array
-  if (children.some(({ paramType }) => paramType == AbiType.Array)) {
+  if (children.some(({ paramType }) => paramType == Encoding.Array)) {
     return condition
   }
 
@@ -61,7 +61,7 @@ function matches(children: Condition[]): Condition[] {
     i !== hingeIndex
       ? child
       : {
-          paramType: AbiType.None,
+          paramType: Encoding.None,
           operator: Operator.Or,
           children: children.map((c) => c.children![hingeIndex]),
         }
@@ -83,7 +83,7 @@ function and(children: Condition[]): Condition[] {
     i !== hingeIndex
       ? child
       : {
-          paramType: AbiType.None,
+          paramType: Encoding.None,
           operator: Operator.Or,
           children: children.map(
             (child, j) => child.children![hingeIndices[j]]

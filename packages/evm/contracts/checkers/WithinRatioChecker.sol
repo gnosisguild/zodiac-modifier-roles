@@ -2,10 +2,10 @@
 pragma solidity >=0.8.17 <0.9.0;
 
 import "../AbiDecoder.sol";
-import "../AbiTypes.sol";
-import "../Types.sol";
 
 import "../adapters/IPriceAdapter.sol";
+
+import "../types/All.sol";
 
 /**
  * @title WithinRatioChecker

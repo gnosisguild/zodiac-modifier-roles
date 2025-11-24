@@ -2,7 +2,8 @@
 pragma solidity >=0.8.17 <0.9.0;
 
 import "@gnosis-guild/zodiac-core/contracts/core/Modifier.sol";
-import "./Types.sol";
+
+import "./types/All.sol";
 
 /**
  * @title Core is the base contract for the Zodiac Roles Mod, which defines

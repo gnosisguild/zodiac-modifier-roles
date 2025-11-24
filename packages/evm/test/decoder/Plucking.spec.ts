@@ -3,7 +3,7 @@ import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { AbiCoder, Interface } from "ethers";
 
-import { AbiType, flattenCondition, Operator } from "../utils";
+import { Encoding, flattenCondition, Operator } from "../utils";
 
 const AddressOne = "0x0000000000000000000000000000000000000001";
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
@@ -24,8 +24,8 @@ describe("AbiDecoder - Plucking", () => {
       ]).encodeFunctionData("entrypoint", ["0xeeff3344"]);
 
       const conditions = flattenCondition({
-        paramType: AbiType.Calldata,
-        children: [{ paramType: AbiType.Static }],
+        paramType: Encoding.Calldata,
+        children: [{ paramType: Encoding.Static }],
       });
 
       const result = await decoder.inspect(data, conditions);
@@ -42,8 +42,8 @@ describe("AbiDecoder - Plucking", () => {
       ]).encodeFunctionData("dynamic", ["0xaabbccdd"]);
 
       const conditions = flattenCondition({
-        paramType: AbiType.Calldata,
-        children: [{ paramType: AbiType.Dynamic }],
+        paramType: Encoding.Calldata,
+        children: [{ paramType: Encoding.Dynamic }],
       });
 
       const result = await decoder.inspect(data, conditions);
@@ -60,10 +60,10 @@ describe("AbiDecoder - Plucking", () => {
       ]).encodeFunctionData("staticDynamic", [956, "0xaabbccddeeff"]);
 
       const conditions = flattenCondition({
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         children: [
-          { paramType: AbiType.Static },
-          { paramType: AbiType.Dynamic },
+          { paramType: Encoding.Static },
+          { paramType: Encoding.Dynamic },
         ],
       });
 
@@ -90,16 +90,16 @@ describe("AbiDecoder - Plucking", () => {
       ]).encodeFunctionData("staticTuple", [{ a: 1999, b: AddressOne }, 2000]);
 
       const conditions = flattenCondition({
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         children: [
           {
-            paramType: AbiType.Tuple,
+            paramType: Encoding.Tuple,
             children: [
-              { paramType: AbiType.Static },
-              { paramType: AbiType.Static },
+              { paramType: Encoding.Static },
+              { paramType: Encoding.Static },
             ],
           },
-          { paramType: AbiType.Static },
+          { paramType: Encoding.Static },
         ],
       });
 
@@ -121,11 +121,11 @@ describe("AbiDecoder - Plucking", () => {
       ]);
 
       const conditions = flattenCondition({
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         children: [
           {
-            paramType: AbiType.Tuple,
-            children: [{ paramType: AbiType.Dynamic }],
+            paramType: Encoding.Tuple,
+            children: [{ paramType: Encoding.Dynamic }],
           },
         ],
       });
@@ -151,18 +151,18 @@ describe("AbiDecoder - Plucking", () => {
       ]);
 
       const conditions = flattenCondition({
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         children: [
           {
-            paramType: AbiType.Tuple,
+            paramType: Encoding.Tuple,
             children: [
-              { paramType: AbiType.Static },
-              { paramType: AbiType.Dynamic },
+              { paramType: Encoding.Static },
+              { paramType: Encoding.Dynamic },
               {
-                paramType: AbiType.Tuple,
+                paramType: Encoding.Tuple,
                 children: [
-                  { paramType: AbiType.Static },
-                  { paramType: AbiType.Static },
+                  { paramType: Encoding.Static },
+                  { paramType: Encoding.Static },
                 ],
               },
             ],
@@ -214,28 +214,28 @@ describe("AbiDecoder - Plucking", () => {
       ]);
 
       const conditions = flattenCondition({
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         children: [
           {
-            paramType: AbiType.Tuple,
+            paramType: Encoding.Tuple,
             children: [
-              { paramType: AbiType.Dynamic },
+              { paramType: Encoding.Dynamic },
               {
-                paramType: AbiType.Tuple,
+                paramType: Encoding.Tuple,
                 children: [
-                  { paramType: AbiType.Static },
-                  { paramType: AbiType.Static },
+                  { paramType: Encoding.Static },
+                  { paramType: Encoding.Static },
                 ],
               },
-              { paramType: AbiType.Static },
+              { paramType: Encoding.Static },
               {
-                paramType: AbiType.Tuple,
+                paramType: Encoding.Tuple,
                 children: [
-                  { paramType: AbiType.Dynamic },
-                  { paramType: AbiType.Static },
+                  { paramType: Encoding.Dynamic },
+                  { paramType: Encoding.Static },
                   {
-                    paramType: AbiType.Array,
-                    children: [{ paramType: AbiType.Static }],
+                    paramType: Encoding.Array,
+                    children: [{ paramType: Encoding.Static }],
                   },
                 ],
               },
@@ -305,13 +305,13 @@ describe("AbiDecoder - Plucking", () => {
       ]).encodeFunctionData("entrypoint", [AddressOne, "0xabcd", [10, 32, 55]]);
 
       const conditions = flattenCondition({
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         children: [
-          { paramType: AbiType.Static },
-          { paramType: AbiType.Dynamic },
+          { paramType: Encoding.Static },
+          { paramType: Encoding.Dynamic },
           {
-            paramType: AbiType.Array,
-            children: [{ paramType: AbiType.Static }],
+            paramType: Encoding.Array,
+            children: [{ paramType: Encoding.Static }],
           },
         ],
       });
@@ -332,11 +332,11 @@ describe("AbiDecoder - Plucking", () => {
       ]).encodeFunctionData("entrypoint", [["0xaabbcc", "0x004466ff00"]]);
 
       const conditions = flattenCondition({
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         children: [
           {
-            paramType: AbiType.Array,
-            children: [{ paramType: AbiType.Dynamic }],
+            paramType: Encoding.Array,
+            children: [{ paramType: Encoding.Dynamic }],
           },
         ],
       });
@@ -363,16 +363,16 @@ describe("AbiDecoder - Plucking", () => {
       ]);
 
       const conditions = flattenCondition({
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         children: [
           {
-            paramType: AbiType.Array,
+            paramType: Encoding.Array,
             children: [
               {
-                paramType: AbiType.Tuple,
+                paramType: Encoding.Tuple,
                 children: [
-                  { paramType: AbiType.Static },
-                  { paramType: AbiType.Static },
+                  { paramType: Encoding.Static },
+                  { paramType: Encoding.Static },
                 ],
               },
             ],
@@ -407,19 +407,19 @@ describe("AbiDecoder - Plucking", () => {
       ]);
 
       const conditions = flattenCondition({
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         children: [
           {
-            paramType: AbiType.Array,
+            paramType: Encoding.Array,
             children: [
               {
-                paramType: AbiType.Tuple,
+                paramType: Encoding.Tuple,
                 children: [
-                  { paramType: AbiType.Dynamic },
-                  { paramType: AbiType.Static },
+                  { paramType: Encoding.Dynamic },
+                  { paramType: Encoding.Static },
                   {
-                    paramType: AbiType.Array,
-                    children: [{ paramType: AbiType.Static }],
+                    paramType: Encoding.Array,
+                    children: [{ paramType: Encoding.Static }],
                   },
                 ],
               },
@@ -481,21 +481,21 @@ describe("AbiDecoder - Plucking", () => {
       ]);
 
       const conditions = flattenCondition({
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         children: [
           {
-            paramType: AbiType.Tuple,
+            paramType: Encoding.Tuple,
             children: [
-              { paramType: AbiType.Static },
-              { paramType: AbiType.Dynamic },
+              { paramType: Encoding.Static },
+              { paramType: Encoding.Dynamic },
               {
-                paramType: AbiType.Array,
+                paramType: Encoding.Array,
                 children: [
                   {
-                    paramType: AbiType.Tuple,
+                    paramType: Encoding.Tuple,
                     children: [
-                      { paramType: AbiType.Static },
-                      { paramType: AbiType.Static },
+                      { paramType: Encoding.Static },
+                      { paramType: Encoding.Static },
                     ],
                   },
                 ],
@@ -537,25 +537,25 @@ describe("AbiDecoder - Plucking", () => {
       const conditions = [
         {
           parent: 0,
-          paramType: AbiType.Calldata,
+          paramType: Encoding.Calldata,
           operator: Operator.Pass,
           compValue: "0x",
         }, // 0 (root, self-parent)
         {
           parent: 0,
-          paramType: AbiType.Array,
+          paramType: Encoding.Array,
           operator: Operator.Pass,
           compValue: "0x",
         }, // 1
         {
           parent: 1,
-          paramType: AbiType.Calldata,
+          paramType: Encoding.Calldata,
           operator: Operator.Pass,
           compValue: "0x",
         }, // 2
         {
           parent: 2,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.Pass,
           compValue: "0x",
         }, // 3
@@ -594,12 +594,12 @@ describe("AbiDecoder - Plucking", () => {
       ]).encodeFunctionData("test", [[10, 20, 30]]);
 
       const conditions = flattenCondition({
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         children: [
           {
-            paramType: AbiType.Array,
+            paramType: Encoding.Array,
             operator: Operator.Matches,
-            children: [{ paramType: AbiType.Static }],
+            children: [{ paramType: Encoding.Static }],
           },
         ],
       });
@@ -619,20 +619,20 @@ describe("AbiDecoder - Plucking", () => {
       ]).encodeFunctionData("test", [[42, 100, 256]]);
 
       const conditions = flattenCondition({
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         children: [
           {
-            paramType: AbiType.Array,
+            paramType: Encoding.Array,
             operator: Operator.Matches,
             children: [
-              { paramType: AbiType.Static },
+              { paramType: Encoding.Static },
               {
-                paramType: AbiType.Static,
+                paramType: Encoding.Static,
                 operator: Operator.EqualTo,
                 compValue: defaultAbiCoder.encode(["uint256"], [42]),
               },
               {
-                paramType: AbiType.Static,
+                paramType: Encoding.Static,
                 operator: Operator.GreaterThan,
                 compValue: defaultAbiCoder.encode(["uint256"], [50]),
               },
@@ -666,25 +666,25 @@ describe("AbiDecoder - Plucking", () => {
       ]).encodeFunctionData("test", [["0xaabbccdd", embedded1, embedded2]]);
 
       const conditions = flattenCondition({
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         children: [
           {
-            paramType: AbiType.Array,
+            paramType: Encoding.Array,
             operator: Operator.Matches,
             children: [
-              { paramType: AbiType.Dynamic },
+              { paramType: Encoding.Dynamic },
               {
-                paramType: AbiType.Calldata,
-                children: [{ paramType: AbiType.Static }],
+                paramType: Encoding.Calldata,
+                children: [{ paramType: Encoding.Static }],
               },
               {
-                paramType: AbiType.AbiEncoded,
+                paramType: Encoding.AbiEncoded,
                 children: [
                   {
-                    paramType: AbiType.Tuple,
+                    paramType: Encoding.Tuple,
                     children: [
-                      { paramType: AbiType.Static },
-                      { paramType: AbiType.Static },
+                      { paramType: Encoding.Static },
+                      { paramType: Encoding.Static },
                     ],
                   },
                 ],
@@ -735,24 +735,24 @@ describe("AbiDecoder - Plucking", () => {
       ]);
 
       const conditions = flattenCondition({
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         children: [
           {
-            paramType: AbiType.Array,
+            paramType: Encoding.Array,
             operator: Operator.Matches,
             children: [
               {
-                paramType: AbiType.Tuple,
+                paramType: Encoding.Tuple,
                 children: [
-                  { paramType: AbiType.Static },
-                  { paramType: AbiType.Static },
+                  { paramType: Encoding.Static },
+                  { paramType: Encoding.Static },
                 ],
               },
               {
-                paramType: AbiType.Tuple,
+                paramType: Encoding.Tuple,
                 children: [
-                  { paramType: AbiType.Static },
-                  { paramType: AbiType.Static },
+                  { paramType: Encoding.Static },
+                  { paramType: Encoding.Static },
                 ],
               },
             ],
@@ -806,16 +806,16 @@ describe("AbiDecoder - Plucking", () => {
       ]).encodeFunctionData("dynamic", [embedded]);
 
       const conditions = flattenCondition({
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         children: [
           {
-            paramType: AbiType.Calldata,
+            paramType: Encoding.Calldata,
             children: [
               {
-                paramType: AbiType.Tuple,
+                paramType: Encoding.Tuple,
                 children: [
-                  { paramType: AbiType.Static },
-                  { paramType: AbiType.Static },
+                  { paramType: Encoding.Static },
+                  { paramType: Encoding.Static },
                 ],
               },
             ],
@@ -845,16 +845,16 @@ describe("AbiDecoder - Plucking", () => {
       ]).encodeFunctionData("dynamic", [embedded]);
 
       const conditions = flattenCondition({
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         children: [
           {
-            paramType: AbiType.AbiEncoded,
+            paramType: Encoding.AbiEncoded,
             children: [
               {
-                paramType: AbiType.Tuple,
+                paramType: Encoding.Tuple,
                 children: [
-                  { paramType: AbiType.Static },
-                  { paramType: AbiType.Dynamic },
+                  { paramType: Encoding.Static },
+                  { paramType: Encoding.Dynamic },
                 ],
               },
             ],
@@ -883,16 +883,16 @@ describe("AbiDecoder - Plucking", () => {
       ]).encodeFunctionData("dynamic", [embedded]);
 
       const conditions = flattenCondition({
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         children: [
           {
-            paramType: AbiType.Calldata,
+            paramType: Encoding.Calldata,
             children: [
               {
-                paramType: AbiType.Tuple,
+                paramType: Encoding.Tuple,
                 children: [
-                  { paramType: AbiType.Static },
-                  { paramType: AbiType.Dynamic },
+                  { paramType: Encoding.Static },
+                  { paramType: Encoding.Dynamic },
                 ],
               },
             ],
@@ -927,16 +927,16 @@ describe("AbiDecoder - Plucking", () => {
       ]).encodeFunctionData("dynamic", [embedded]);
 
       const conditions = flattenCondition({
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         children: [
           {
-            paramType: AbiType.AbiEncoded,
+            paramType: Encoding.AbiEncoded,
             children: [
               {
-                paramType: AbiType.Tuple,
+                paramType: Encoding.Tuple,
                 children: [
-                  { paramType: AbiType.Static },
-                  { paramType: AbiType.Static },
+                  { paramType: Encoding.Static },
+                  { paramType: Encoding.Static },
                 ],
               },
             ],
@@ -982,31 +982,31 @@ describe("AbiDecoder - Plucking", () => {
       ]);
 
       const conditions = flattenCondition({
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         children: [
           {
-            paramType: AbiType.Tuple,
+            paramType: Encoding.Tuple,
             children: [
               {
-                paramType: AbiType.Calldata,
+                paramType: Encoding.Calldata,
                 children: [
                   {
-                    paramType: AbiType.Tuple,
+                    paramType: Encoding.Tuple,
                     children: [
-                      { paramType: AbiType.Dynamic },
-                      { paramType: AbiType.Static },
+                      { paramType: Encoding.Dynamic },
+                      { paramType: Encoding.Static },
                       {
-                        paramType: AbiType.Array,
-                        children: [{ paramType: AbiType.Static }],
+                        paramType: Encoding.Array,
+                        children: [{ paramType: Encoding.Static }],
                       },
                     ],
                   },
                 ],
               },
-              { paramType: AbiType.Static },
+              { paramType: Encoding.Static },
               {
-                paramType: AbiType.Array,
-                children: [{ paramType: AbiType.Static }],
+                paramType: Encoding.Array,
+                children: [{ paramType: Encoding.Static }],
               },
             ],
           },
@@ -1049,19 +1049,19 @@ describe("AbiDecoder - Plucking", () => {
       ]).encodeFunctionData("dynamicArray", [[nestedData1, nestedData2]]);
 
       const conditions = flattenCondition({
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         children: [
           {
-            paramType: AbiType.Array,
+            paramType: Encoding.Array,
             children: [
               {
-                paramType: AbiType.Calldata,
+                paramType: Encoding.Calldata,
                 children: [
-                  { paramType: AbiType.Dynamic },
-                  { paramType: AbiType.Static },
+                  { paramType: Encoding.Dynamic },
+                  { paramType: Encoding.Static },
                   {
-                    paramType: AbiType.Array,
-                    children: [{ paramType: AbiType.Static }],
+                    paramType: Encoding.Array,
+                    children: [{ paramType: Encoding.Static }],
                   },
                 ],
               },
@@ -1096,16 +1096,16 @@ describe("AbiDecoder - Plucking", () => {
       ]).encodeFunctionData("dynamic", [embedded]);
 
       const conditions = flattenCondition({
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         children: [
           {
-            paramType: AbiType.AbiEncoded,
+            paramType: Encoding.AbiEncoded,
             children: [
-              { paramType: AbiType.Dynamic },
-              { paramType: AbiType.Static },
+              { paramType: Encoding.Dynamic },
+              { paramType: Encoding.Static },
               {
-                paramType: AbiType.Array,
-                children: [{ paramType: AbiType.Static }],
+                paramType: Encoding.Array,
+                children: [{ paramType: Encoding.Static }],
               },
             ],
           },
@@ -1131,21 +1131,21 @@ describe("AbiDecoder - Plucking", () => {
       const { decoder } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         children: [
           {
-            paramType: AbiType.None,
+            paramType: Encoding.None,
             operator: Operator.And,
             children: [
-              { paramType: AbiType.Dynamic },
+              { paramType: Encoding.Dynamic },
               {
-                paramType: AbiType.AbiEncoded,
+                paramType: Encoding.AbiEncoded,
                 children: [
                   {
-                    paramType: AbiType.Tuple,
+                    paramType: Encoding.Tuple,
                     children: [
-                      { paramType: AbiType.Static }, // uint256
-                      { paramType: AbiType.Static }, // address
+                      { paramType: Encoding.Static }, // uint256
+                      { paramType: Encoding.Static }, // address
                     ],
                   },
                 ],
@@ -1203,24 +1203,24 @@ describe("AbiDecoder - Plucking", () => {
       const { decoder } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         children: [
           {
-            paramType: AbiType.None,
+            paramType: Encoding.None,
             operator: Operator.Or,
             children: [
               {
-                paramType: AbiType.AbiEncoded,
+                paramType: Encoding.AbiEncoded,
                 children: [
                   {
-                    paramType: AbiType.Tuple,
-                    children: [{ paramType: AbiType.Static }],
+                    paramType: Encoding.Tuple,
+                    children: [{ paramType: Encoding.Static }],
                   },
                 ],
               },
               {
-                paramType: AbiType.AbiEncoded,
-                children: [{ paramType: AbiType.Static }],
+                paramType: Encoding.AbiEncoded,
+                children: [{ paramType: Encoding.Static }],
               },
             ],
           },
@@ -1288,27 +1288,27 @@ describe("AbiDecoder - Plucking", () => {
       );
 
       const conditions = flattenCondition({
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         children: [
           {
-            paramType: AbiType.None,
+            paramType: Encoding.None,
             operator: Operator.Or,
             children: [
               {
-                paramType: AbiType.AbiEncoded, // This should work
+                paramType: Encoding.AbiEncoded, // This should work
                 children: [
-                  { paramType: AbiType.Static },
-                  { paramType: AbiType.Static },
-                  { paramType: AbiType.Static },
+                  { paramType: Encoding.Static },
+                  { paramType: Encoding.Static },
+                  { paramType: Encoding.Static },
                 ],
               },
               {
-                paramType: AbiType.AbiEncoded, // This should overflow
+                paramType: Encoding.AbiEncoded, // This should overflow
                 children: [
-                  { paramType: AbiType.Static },
-                  { paramType: AbiType.Static },
-                  { paramType: AbiType.Static },
-                  { paramType: AbiType.Static },
+                  { paramType: Encoding.Static },
+                  { paramType: Encoding.Static },
+                  { paramType: Encoding.Static },
+                  { paramType: Encoding.Static },
                 ],
               },
             ],
@@ -1361,20 +1361,20 @@ describe("AbiDecoder - Plucking", () => {
       );
 
       const conditions = flattenCondition({
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         children: [
           {
-            paramType: AbiType.None,
+            paramType: Encoding.None,
             operator: Operator.Or,
             children: [
-              { paramType: AbiType.Dynamic }, // Valid: raw bytes
+              { paramType: Encoding.Dynamic }, // Valid: raw bytes
               {
-                paramType: AbiType.AbiEncoded, // Valid: abi-encoded uint256
-                children: [{ paramType: AbiType.Static }],
+                paramType: Encoding.AbiEncoded, // Valid: abi-encoded uint256
+                children: [{ paramType: Encoding.Static }],
               },
               {
-                paramType: AbiType.Calldata, // Valid: calldata with selector
-                children: [{ paramType: AbiType.Static }],
+                paramType: Encoding.Calldata, // Valid: calldata with selector
+                children: [{ paramType: Encoding.Static }],
               },
             ],
           },
@@ -1405,8 +1405,8 @@ describe("AbiDecoder - Plucking", () => {
       ]).encodeFunctionData("dynamic", ["0x"]);
 
       const conditions = flattenCondition({
-        paramType: AbiType.Calldata,
-        children: [{ paramType: AbiType.Dynamic }],
+        paramType: Encoding.Calldata,
+        children: [{ paramType: Encoding.Dynamic }],
       });
 
       const result = await decoder.inspect(data, conditions);
@@ -1429,13 +1429,13 @@ describe("AbiDecoder - Plucking", () => {
       ]);
 
       const conditions = flattenCondition({
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         children: [
-          { paramType: AbiType.Static },
-          { paramType: AbiType.Dynamic },
+          { paramType: Encoding.Static },
+          { paramType: Encoding.Dynamic },
           {
-            paramType: AbiType.Array,
-            children: [{ paramType: AbiType.Static }],
+            paramType: Encoding.Array,
+            children: [{ paramType: Encoding.Static }],
           },
         ],
       });
@@ -1478,13 +1478,13 @@ describe("AbiDecoder - Plucking", () => {
       ]);
 
       const conditions = flattenCondition({
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         children: [
-          { paramType: AbiType.Dynamic },
-          { paramType: AbiType.Static },
+          { paramType: Encoding.Dynamic },
+          { paramType: Encoding.Static },
           {
-            paramType: AbiType.Array,
-            children: [{ paramType: AbiType.Static }],
+            paramType: Encoding.Array,
+            children: [{ paramType: Encoding.Static }],
           },
         ],
       });
@@ -1530,28 +1530,28 @@ describe("AbiDecoder - Plucking", () => {
       ]);
 
       const conditions = flattenCondition({
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         children: [
           {
-            paramType: AbiType.Tuple,
+            paramType: Encoding.Tuple,
             children: [
-              { paramType: AbiType.Dynamic },
+              { paramType: Encoding.Dynamic },
               {
-                paramType: AbiType.Tuple,
+                paramType: Encoding.Tuple,
                 children: [
-                  { paramType: AbiType.Static },
-                  { paramType: AbiType.Static },
+                  { paramType: Encoding.Static },
+                  { paramType: Encoding.Static },
                 ],
               },
-              { paramType: AbiType.Static },
+              { paramType: Encoding.Static },
               {
-                paramType: AbiType.Tuple,
+                paramType: Encoding.Tuple,
                 children: [
-                  { paramType: AbiType.Dynamic },
-                  { paramType: AbiType.Static },
+                  { paramType: Encoding.Dynamic },
+                  { paramType: Encoding.Static },
                   {
-                    paramType: AbiType.Array,
-                    children: [{ paramType: AbiType.Static }],
+                    paramType: Encoding.Array,
+                    children: [{ paramType: Encoding.Static }],
                   },
                 ],
               },
@@ -1583,32 +1583,32 @@ describe("AbiDecoder - Plucking", () => {
       );
 
       const conditions = flattenCondition({
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         children: [
           {
-            paramType: AbiType.None,
+            paramType: Encoding.None,
             operator: Operator.Or,
             children: [
               {
-                paramType: AbiType.AbiEncoded,
+                paramType: Encoding.AbiEncoded,
                 children: [
                   {
-                    paramType: AbiType.Tuple,
+                    paramType: Encoding.Tuple,
                     children: [
-                      { paramType: AbiType.Static },
-                      { paramType: AbiType.Static },
+                      { paramType: Encoding.Static },
+                      { paramType: Encoding.Static },
                     ],
                   },
                 ],
               },
               {
-                paramType: AbiType.AbiEncoded,
+                paramType: Encoding.AbiEncoded,
                 children: [
                   {
-                    paramType: AbiType.Tuple,
+                    paramType: Encoding.Tuple,
                     children: [
-                      { paramType: AbiType.Dynamic },
-                      { paramType: AbiType.Static },
+                      { paramType: Encoding.Dynamic },
+                      { paramType: Encoding.Static },
                     ],
                   },
                 ],

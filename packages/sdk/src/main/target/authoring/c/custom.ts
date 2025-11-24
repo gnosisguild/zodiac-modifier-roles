@@ -1,5 +1,5 @@
 import { BigNumberish, BytesLike, getAddress, hexlify, ParamType } from "ethers"
-import { AbiType, Operator } from "zodiac-roles-deployments"
+import { Encoding, Operator } from "zodiac-roles-deployments"
 
 import { ConditionFunction } from "../types"
 
@@ -19,7 +19,7 @@ export const avatarIsOwnerOfErc721: ConditionFunction<BigNumberish> = (
     )
   }
   return {
-    paramType: AbiType.Static,
+    paramType: Encoding.Static,
     operator: Operator.Custom,
     compValue: encodeCustomCompValue(AVATAR_IS_OWNER_OF_ERC_721_ADDRESS),
   }

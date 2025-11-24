@@ -4,7 +4,7 @@ import {
   ExecutionOptions,
   Function,
   Operator,
-  AbiType,
+  Encoding,
 } from "zodiac-roles-deployments"
 
 import { diffFunction, diffFunctions } from "./function"
@@ -16,7 +16,7 @@ const targetAddress = ZeroAddress as `0x${string}`
 const selector: `0x${string}` = "0xaabbccdd"
 
 const staticComp = (id: number) => ({
-  paramType: AbiType.Static,
+  paramType: Encoding.Static,
   operator: Operator.Custom,
   compValue: abiEncode(["uint256"], [id]),
 })
@@ -235,12 +235,12 @@ suite("diffFunction", () => {
   })
   it("was scoped, now is scoped, equivalent conditions (normalize to same)", () => {
     const condition1 = {
-      paramType: AbiType.None,
+      paramType: Encoding.None,
       operator: Operator.And,
       children: [staticComp(0), staticComp(0), staticComp(1)],
     }
     const condition2 = {
-      paramType: AbiType.None,
+      paramType: Encoding.None,
       operator: Operator.And,
       children: [staticComp(0), staticComp(1)],
     }

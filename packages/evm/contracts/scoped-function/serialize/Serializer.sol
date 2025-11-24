@@ -7,7 +7,8 @@ import "./TypeTree.sol";
 
 import "../ImmutableStorage.sol";
 import "../ScopeConfig.sol";
-import "../../Types.sol";
+
+import "../../types/All.sol";
 
 library Serializer {
     function store(
@@ -98,14 +99,14 @@ library Serializer {
         ConditionFlat[] memory conditions,
         uint256 index
     ) private pure returns (bool) {
-        AbiType paramType = conditions[index].paramType;
-        if (paramType == AbiType.Static) {
+        Encoding paramType = conditions[index].paramType;
+        if (paramType == Encoding.Static) {
             return true;
         } else if (
-            paramType == AbiType.Dynamic ||
-            paramType == AbiType.Array ||
-            paramType == AbiType.Calldata ||
-            paramType == AbiType.AbiEncoded
+            paramType == Encoding.Dynamic ||
+            paramType == Encoding.Array ||
+            paramType == Encoding.Calldata ||
+            paramType == Encoding.AbiEncoded
         ) {
             return false;
         } else {

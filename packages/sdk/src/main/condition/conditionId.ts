@@ -7,7 +7,7 @@ import {
   keccak256,
   toBeHex,
 } from "ethers"
-import { AbiType, Condition, Operator } from "zodiac-roles-deployments"
+import { Encoding, Condition, Operator } from "zodiac-roles-deployments"
 
 import { abiEncode } from "../abiEncode"
 
@@ -110,9 +110,9 @@ const removeExtraneousOffsets = (conditions: ConditionFlat[]) => {
 const isInline = (conditions: ConditionFlat[], index: number) => {
   const paramType = conditions[index].paramType
   switch (paramType) {
-    case AbiType.Static:
+    case Encoding.Static:
       return true
-    case AbiType.Tuple:
+    case Encoding.Tuple:
       for (let j = index + 1; j < conditions.length; ++j) {
         const parent = conditions[j].parent
         if (parent < index) continue
