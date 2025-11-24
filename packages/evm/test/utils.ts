@@ -32,7 +32,7 @@ export interface SafeTransaction extends MetaTransaction {
   nonce: string | number;
 }
 
-export enum AbiType {
+export enum Encoding {
   None = 0,
   Static,
   Dynamic,
@@ -175,7 +175,7 @@ export const BYTES32_ZERO =
   "0x0000000000000000000000000000000000000000000000000000000000000000";
 
 interface Condition {
-  paramType: AbiType;
+  paramType: Encoding;
   operator?: Operator;
   compValue?: string;
   children?: Condition[];
@@ -183,7 +183,7 @@ interface Condition {
 
 interface ConditionFlat {
   parent: number;
-  paramType: AbiType;
+  paramType: Encoding;
   operator: Operator;
   compValue: string;
 }

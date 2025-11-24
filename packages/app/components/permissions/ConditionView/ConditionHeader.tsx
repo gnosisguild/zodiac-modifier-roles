@@ -1,4 +1,4 @@
-import { AbiType, Condition, Operator } from "zodiac-roles-sdk"
+import { Encoding, Condition, Operator } from "zodiac-roles-sdk"
 import { AbiFunction, AbiParameter } from "viem"
 import { ReactNode } from "react"
 import { BsLightningCharge } from "react-icons/bs"
@@ -28,7 +28,7 @@ const ConditionHeader: React.FC<Props> = ({
   const paramName =
     paramIndex !== undefined ? abi?.name || `[${paramIndex}]` : "" // e.g.: array elements don't have a param name
 
-  const paramTypeLabel = !abi || "inputs" in abi ? AbiType[paramType] : abi.type
+  const paramTypeLabel = !abi || "inputs" in abi ? Encoding[paramType] : abi.type
 
   const abiMismatch = abi && condition && !matchesAbi(condition, abi)
 
@@ -36,7 +36,7 @@ const ConditionHeader: React.FC<Props> = ({
 
   // only conditions that aren't used are collapsible
   const isCollapsible =
-    paramType >= AbiType.Tuple &&
+    paramType >= Encoding.Tuple &&
     !(
       condition.operator >= Operator.Matches &&
       condition.operator <= Operator.ArraySubset
@@ -73,7 +73,7 @@ const ConditionHeader: React.FC<Props> = ({
               >
                 {paramTypeLabel}
                 <BsLightningCharge />
-                {AbiType[paramType]}
+                {Encoding[paramType]}
               </Flex>
             ) : (
               paramTypeLabel

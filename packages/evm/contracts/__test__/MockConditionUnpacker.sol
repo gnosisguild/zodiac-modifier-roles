@@ -3,7 +3,7 @@ pragma solidity >=0.8.17 <0.9.0;
 
 import "../scoped-function/deserialize/Unpacker.sol";
 
-import "../Types.sol";
+import "../types/All.sol";
 
 contract MockConditionUnpacker {
     function unpack(
@@ -44,7 +44,7 @@ contract MockConditionUnpacker {
 
             flat[bfsIndex] = ConditionFlat({
                 parent: uint8(parent),
-                paramType: node.paramType,
+                paramType: Encoding.None, // paramType is no longer packed/unpacked
                 operator: node.operator,
                 compValue: compValue
             });

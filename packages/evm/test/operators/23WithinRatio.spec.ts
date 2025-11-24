@@ -5,7 +5,7 @@ import hre from "hardhat";
 import { AbiCoder, solidityPacked, ZeroHash } from "ethers";
 
 import {
-  AbiType,
+  Encoding,
   flattenCondition,
   Operator,
   PermissionCheckerStatus,
@@ -31,13 +31,13 @@ describe("WithinRatio Operator", () => {
 
         await scopeFunction(
           flattenCondition({
-            paramType: AbiType.Calldata,
+            paramType: Encoding.Calldata,
             operator: Operator.Matches,
             children: [
-              { paramType: AbiType.Static, operator: Operator.Pass },
-              { paramType: AbiType.Static, operator: Operator.Pass },
+              { paramType: Encoding.Static, operator: Operator.Pass },
+              { paramType: Encoding.Static, operator: Operator.Pass },
               {
-                paramType: AbiType.None,
+                paramType: Encoding.None,
                 operator: Operator.WithinRatio,
                 compValue,
               },
@@ -85,13 +85,13 @@ describe("WithinRatio Operator", () => {
 
         await scopeFunction(
           flattenCondition({
-            paramType: AbiType.Calldata,
+            paramType: Encoding.Calldata,
             operator: Operator.Matches,
             children: [
-              { paramType: AbiType.Static, operator: Operator.Pass },
-              { paramType: AbiType.Static, operator: Operator.Pass },
+              { paramType: Encoding.Static, operator: Operator.Pass },
+              { paramType: Encoding.Static, operator: Operator.Pass },
               {
-                paramType: AbiType.None,
+                paramType: Encoding.None,
                 operator: Operator.WithinRatio,
                 compValue,
               },
@@ -127,13 +127,13 @@ describe("WithinRatio Operator", () => {
 
         await scopeFunction(
           flattenCondition({
-            paramType: AbiType.Calldata,
+            paramType: Encoding.Calldata,
             operator: Operator.Matches,
             children: [
-              { paramType: AbiType.Static, operator: Operator.Pass },
-              { paramType: AbiType.Static, operator: Operator.Pass },
+              { paramType: Encoding.Static, operator: Operator.Pass },
+              { paramType: Encoding.Static, operator: Operator.Pass },
               {
-                paramType: AbiType.None,
+                paramType: Encoding.None,
                 operator: Operator.WithinRatio,
                 compValue,
               },
@@ -181,13 +181,13 @@ describe("WithinRatio Operator", () => {
 
         await scopeFunction(
           flattenCondition({
-            paramType: AbiType.Calldata,
+            paramType: Encoding.Calldata,
             operator: Operator.Matches,
             children: [
-              { paramType: AbiType.Static, operator: Operator.Pass },
-              { paramType: AbiType.Static, operator: Operator.Pass },
+              { paramType: Encoding.Static, operator: Operator.Pass },
+              { paramType: Encoding.Static, operator: Operator.Pass },
               {
-                paramType: AbiType.None,
+                paramType: Encoding.None,
                 operator: Operator.WithinRatio,
                 compValue,
               },
@@ -221,13 +221,13 @@ describe("WithinRatio Operator", () => {
 
         await scopeFunction(
           flattenCondition({
-            paramType: AbiType.Calldata,
+            paramType: Encoding.Calldata,
             operator: Operator.Matches,
             children: [
-              { paramType: AbiType.Static, operator: Operator.Pass },
-              { paramType: AbiType.Static, operator: Operator.Pass },
+              { paramType: Encoding.Static, operator: Operator.Pass },
+              { paramType: Encoding.Static, operator: Operator.Pass },
               {
-                paramType: AbiType.None,
+                paramType: Encoding.None,
                 operator: Operator.WithinRatio,
                 compValue,
               },
@@ -268,13 +268,13 @@ describe("WithinRatio Operator", () => {
 
         await scopeFunction(
           flattenCondition({
-            paramType: AbiType.Calldata,
+            paramType: Encoding.Calldata,
             operator: Operator.Matches,
             children: [
-              { paramType: AbiType.Static, operator: Operator.Pass },
-              { paramType: AbiType.Static, operator: Operator.Pass },
+              { paramType: Encoding.Static, operator: Operator.Pass },
+              { paramType: Encoding.Static, operator: Operator.Pass },
               {
-                paramType: AbiType.None,
+                paramType: Encoding.None,
                 operator: Operator.WithinRatio,
                 compValue,
               },
@@ -322,13 +322,13 @@ describe("WithinRatio Operator", () => {
 
         await scopeFunction(
           flattenCondition({
-            paramType: AbiType.Calldata,
+            paramType: Encoding.Calldata,
             operator: Operator.Matches,
             children: [
-              { paramType: AbiType.Static, operator: Operator.Pass },
-              { paramType: AbiType.Static, operator: Operator.Pass },
+              { paramType: Encoding.Static, operator: Operator.Pass },
+              { paramType: Encoding.Static, operator: Operator.Pass },
               {
-                paramType: AbiType.None,
+                paramType: Encoding.None,
                 operator: Operator.WithinRatio,
                 compValue,
               },
@@ -379,13 +379,13 @@ describe("WithinRatio Operator", () => {
 
         await scopeFunction(
           flattenCondition({
-            paramType: AbiType.Calldata,
+            paramType: Encoding.Calldata,
             operator: Operator.Matches,
             children: [
-              { paramType: AbiType.Static, operator: Operator.Pass },
-              { paramType: AbiType.Static, operator: Operator.Pass },
+              { paramType: Encoding.Static, operator: Operator.Pass },
+              { paramType: Encoding.Static, operator: Operator.Pass },
               {
-                paramType: AbiType.None,
+                paramType: Encoding.None,
                 operator: Operator.WithinRatio,
                 compValue,
               },
@@ -444,13 +444,13 @@ describe("WithinRatio Operator", () => {
 
         await scopeFunction(
           flattenCondition({
-            paramType: AbiType.Calldata,
+            paramType: Encoding.Calldata,
             operator: Operator.Matches,
             children: [
-              { paramType: AbiType.Static, operator: Operator.Pass },
-              { paramType: AbiType.Static, operator: Operator.Pass },
+              { paramType: Encoding.Static, operator: Operator.Pass },
+              { paramType: Encoding.Static, operator: Operator.Pass },
               {
-                paramType: AbiType.None,
+                paramType: Encoding.None,
                 operator: Operator.WithinRatio,
                 compValue,
               },
@@ -504,13 +504,13 @@ describe("WithinRatio Operator", () => {
 
         await scopeFunction(
           flattenCondition({
-            paramType: AbiType.Calldata,
+            paramType: Encoding.Calldata,
             operator: Operator.Matches,
             children: [
-              { paramType: AbiType.Static, operator: Operator.Pass },
-              { paramType: AbiType.Static, operator: Operator.Pass },
+              { paramType: Encoding.Static, operator: Operator.Pass },
+              { paramType: Encoding.Static, operator: Operator.Pass },
               {
-                paramType: AbiType.None,
+                paramType: Encoding.None,
                 operator: Operator.WithinRatio,
                 compValue,
               },
@@ -564,13 +564,13 @@ describe("WithinRatio Operator", () => {
 
         await scopeFunction(
           flattenCondition({
-            paramType: AbiType.Calldata,
+            paramType: Encoding.Calldata,
             operator: Operator.Matches,
             children: [
-              { paramType: AbiType.Static, operator: Operator.Pass },
-              { paramType: AbiType.Static, operator: Operator.Pass },
+              { paramType: Encoding.Static, operator: Operator.Pass },
+              { paramType: Encoding.Static, operator: Operator.Pass },
               {
-                paramType: AbiType.None,
+                paramType: Encoding.None,
                 operator: Operator.WithinRatio,
                 compValue,
               },
@@ -624,13 +624,13 @@ describe("WithinRatio Operator", () => {
 
         await scopeFunction(
           flattenCondition({
-            paramType: AbiType.Calldata,
+            paramType: Encoding.Calldata,
             operator: Operator.Matches,
             children: [
-              { paramType: AbiType.Static, operator: Operator.Pass },
-              { paramType: AbiType.Static, operator: Operator.Pass },
+              { paramType: Encoding.Static, operator: Operator.Pass },
+              { paramType: Encoding.Static, operator: Operator.Pass },
               {
-                paramType: AbiType.None,
+                paramType: Encoding.None,
                 operator: Operator.WithinRatio,
                 compValue,
               },
@@ -732,14 +732,14 @@ describe("WithinRatio Operator", () => {
       await scopeFunction(
         testContract.interface.getFunction("mixedParams").selector,
         flattenCondition({
-          paramType: AbiType.Calldata,
+          paramType: Encoding.Calldata,
           operator: Operator.Matches,
           children: [
-            { paramType: AbiType.Static, operator: Operator.Pass },
-            { paramType: AbiType.Dynamic, operator: Operator.Pass },
-            { paramType: AbiType.Static, operator: Operator.Pass },
+            { paramType: Encoding.Static, operator: Operator.Pass },
+            { paramType: Encoding.Dynamic, operator: Operator.Pass },
+            { paramType: Encoding.Static, operator: Operator.Pass },
             {
-              paramType: AbiType.None,
+              paramType: Encoding.None,
               operator: Operator.WithinRatio,
               compValue,
             },
@@ -808,18 +808,18 @@ describe("WithinRatio Operator", () => {
       await scopeFunction(
         testContract.interface.getFunction("dynamicStatic").selector,
         flattenCondition({
-          paramType: AbiType.Calldata,
+          paramType: Encoding.Calldata,
           operator: Operator.Matches,
           children: [
             {
-              paramType: AbiType.AbiEncoded,
+              paramType: Encoding.AbiEncoded,
               operator: Operator.Matches,
               children: [
-                { paramType: AbiType.Static, operator: Operator.Pass },
-                { paramType: AbiType.Static, operator: Operator.Pass },
-                { paramType: AbiType.Static, operator: Operator.Pass },
+                { paramType: Encoding.Static, operator: Operator.Pass },
+                { paramType: Encoding.Static, operator: Operator.Pass },
+                { paramType: Encoding.Static, operator: Operator.Pass },
                 {
-                  paramType: AbiType.None,
+                  paramType: Encoding.None,
                   operator: Operator.WithinRatio,
                   compValue,
                 },
@@ -876,19 +876,19 @@ describe("WithinRatio Operator", () => {
       await scopeFunction(
         testContract.interface.getFunction("mixedTuple").selector,
         flattenCondition({
-          paramType: AbiType.Calldata,
+          paramType: Encoding.Calldata,
           operator: Operator.Matches,
           children: [
             {
-              paramType: AbiType.Tuple,
+              paramType: Encoding.Tuple,
               operator: Operator.Matches,
               children: [
-                { paramType: AbiType.Static, operator: Operator.Pass }, // amount
-                { paramType: AbiType.Static, operator: Operator.Pass }, // second
-                { paramType: AbiType.Static, operator: Operator.Pass }, // limit
-                { paramType: AbiType.Static, operator: Operator.Pass }, // fourth
+                { paramType: Encoding.Static, operator: Operator.Pass }, // amount
+                { paramType: Encoding.Static, operator: Operator.Pass }, // second
+                { paramType: Encoding.Static, operator: Operator.Pass }, // limit
+                { paramType: Encoding.Static, operator: Operator.Pass }, // fourth
                 {
-                  paramType: AbiType.None,
+                  paramType: Encoding.None,
                   operator: Operator.WithinRatio,
                   compValue,
                 },
@@ -947,18 +947,18 @@ describe("WithinRatio Operator", () => {
       await scopeFunction(
         testContract.interface.getFunction("uint256ArrayStatic").selector,
         flattenCondition({
-          paramType: AbiType.Calldata,
+          paramType: Encoding.Calldata,
           operator: Operator.Matches,
           children: [
             {
-              paramType: AbiType.Array,
+              paramType: Encoding.Array,
               operator: Operator.Matches,
               children: [
-                { paramType: AbiType.Static, operator: Operator.Pass },
-                { paramType: AbiType.Static, operator: Operator.Pass },
-                { paramType: AbiType.Static, operator: Operator.Pass },
+                { paramType: Encoding.Static, operator: Operator.Pass },
+                { paramType: Encoding.Static, operator: Operator.Pass },
+                { paramType: Encoding.Static, operator: Operator.Pass },
                 {
-                  paramType: AbiType.None,
+                  paramType: Encoding.None,
                   operator: Operator.WithinRatio,
                   compValue,
                 },

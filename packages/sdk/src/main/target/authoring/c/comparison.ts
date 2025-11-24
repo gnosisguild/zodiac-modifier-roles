@@ -7,7 +7,7 @@ import {
   ParamType,
   toBeHex,
 } from "ethers"
-import { AbiType, Operator } from "zodiac-roles-deployments"
+import { Encoding, Operator } from "zodiac-roles-deployments"
 
 import { abiEncode } from "../../../abiEncode"
 import { describeStructure } from "./helpers/describeStructure"
@@ -57,7 +57,7 @@ export const gt =
       throw new Error("`gt` is only supported for uint and int params")
     }
     return {
-      paramType: AbiType.Static,
+      paramType: Encoding.Static,
       operator: type.type.startsWith("uint")
         ? Operator.GreaterThan
         : Operator.SignedIntGreaterThan,
@@ -83,7 +83,7 @@ export const lt =
       throw new Error("`lt` is only supported for uint and int params")
     }
     return {
-      paramType: AbiType.Static,
+      paramType: Encoding.Static,
       operator: type.type.startsWith("uint")
         ? Operator.LessThan
         : Operator.SignedIntLessThan,
@@ -105,9 +105,9 @@ export const bitmask =
   (abiType: ParamType) => {
     const paramType = parameterType(ParamType.from(abiType))
 
-    if (paramType !== AbiType.Static && paramType !== AbiType.Dynamic) {
+    if (paramType !== Encoding.Static && paramType !== Encoding.Dynamic) {
       throw new Error(
-        `Bitmask can only be used for parameters with type Static or Dynamic, got: ${AbiType[paramType]}`
+        `Bitmask can only be used for parameters with type Static or Dynamic, got: ${Encoding[paramType]}`
       )
     }
 
