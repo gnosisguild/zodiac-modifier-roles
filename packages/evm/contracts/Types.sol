@@ -93,7 +93,6 @@ struct ConditionFlat {
 }
 
 struct Condition {
-    Encoding encoding;
     Operator operator;
     bytes compValue;
     uint256 sChildCount;

@@ -22,8 +22,7 @@ import "../../Encodings.sol";
  * ├─────────────────────────────────────────────────────────────────────┤
  * │ Nodes (nodeCount × 5 bytes each):                                   │
  * │   Each node (40 bits):                                              │
- * │     • paramType             3 bits                                  │
- * │     • operator              5 bits                                  │
+ * │     • operator              5 bits  (3 bits unused)                 │
  * │     • childCount            8 bits  (0-255)                         │
  * │     • sChildCount           8 bits  (0-255)                         │
  * │     • compValueOffset      16 bits  (0 if no value)                 │
@@ -142,11 +141,8 @@ library Packer {
 
             // Pack Node
             {
-                // byte 1
-                buffer[offset++] = bytes1(
-                    (uint8(conditions[i].paramType) << 5) |
-                        uint8(conditions[i].operator)
-                );
+                // byte 1: operator (5 bits, 3 bits unused)
+                buffer[offset++] = bytes1(uint8(conditions[i].operator));
                 // byte 2
                 buffer[offset++] = bytes1(uint8(childCount));
                 // byte 3

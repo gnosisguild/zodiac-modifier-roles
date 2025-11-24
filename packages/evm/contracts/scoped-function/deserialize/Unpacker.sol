@@ -70,8 +70,7 @@ library Unpacker {
             /*
              * ┌───────────────────────────────────────────────────────┐
              * │Each node 40 bits, 5 bytes:                            │
-             * │  • paramType             3 bits                       │
-             * │  • operator              5 bits                       │
+             * │  • operator              5 bits  (3 bits unused)      │
              * │  • childCount            8 bits  (0-255)              │
              * │  • sChildCount           8 bits  (0-255)              │
              * │  • compValueOffset      16 bits  (0 if no value)      │
@@ -79,7 +78,6 @@ library Unpacker {
              */
 
             Condition memory node = nodes[i];
-            node.encoding = Encoding((packed >> 37) & 0x07);
             node.operator = Operator((packed >> 32) & 0x1F);
             uint256 childCount = (packed >> 24) & 0xFF;
             node.sChildCount = (packed >> 16) & 0xFF;

@@ -32,7 +32,7 @@ describe("ConditionPacker and ConditionUnpacker", () => {
       const packed = await packer.pack(input);
       const unpacked = await unpacker.unpack(packed);
 
-      expect(pruneResult(unpacked)).to.deep.equal(input);
+      expect(pruneResult(unpacked)).to.deep.equal(withoutParamType(input));
     });
 
     it("should handle a simple tree with one child", async () => {
@@ -53,7 +53,7 @@ describe("ConditionPacker and ConditionUnpacker", () => {
       const packed = await packer.pack(input);
       const unpacked = await unpacker.unpack(packed);
 
-      expect(pruneResult(unpacked)).to.deep.equal(input);
+      expect(pruneResult(unpacked)).to.deep.equal(withoutParamType(input));
     });
 
     it("should handle a binary tree (two children)", async () => {
@@ -79,7 +79,7 @@ describe("ConditionPacker and ConditionUnpacker", () => {
       const packed = await packer.pack(input);
       const unpacked = await unpacker.unpack(packed);
 
-      expect(pruneResult(unpacked)).to.deep.equal(input);
+      expect(pruneResult(unpacked)).to.deep.equal(withoutParamType(input));
     });
 
     it("should handle a deeper tree (depth 3)", async () => {
@@ -116,7 +116,7 @@ describe("ConditionPacker and ConditionUnpacker", () => {
       const packed = await packer.pack(input);
       const unpacked = await unpacker.unpack(packed);
 
-      expect(pruneResult(unpacked)).to.deep.equal(input);
+      expect(pruneResult(unpacked)).to.deep.equal(withoutParamType(input));
     });
 
     it("should handle a wide tree (many children)", async () => {
@@ -152,7 +152,7 @@ describe("ConditionPacker and ConditionUnpacker", () => {
       const packed = await packer.pack(input);
       const unpacked = await unpacker.unpack(packed);
 
-      expect(pruneResult(unpacked)).to.deep.equal(input);
+      expect(pruneResult(unpacked)).to.deep.equal(withoutParamType(input));
     });
 
     it("should handle operators with compValues (EqualTo)", async () => {
@@ -311,7 +311,7 @@ describe("ConditionPacker and ConditionUnpacker", () => {
       const packed = await packer.pack(input);
       const unpacked = await unpacker.unpack(packed);
 
-      expect(pruneResult(unpacked)).to.deep.equal(input);
+      expect(pruneResult(unpacked)).to.deep.equal(withoutParamType(input));
     });
 
     it("should handle deep nesting (depth 5)", async () => {
@@ -350,7 +350,7 @@ describe("ConditionPacker and ConditionUnpacker", () => {
       const packed = await packer.pack(input);
       const unpacked = await unpacker.unpack(packed);
 
-      expect(pruneResult(unpacked)).to.deep.equal(input);
+      expect(pruneResult(unpacked)).to.deep.equal(withoutParamType(input));
     });
 
     it("should handle ArraySome operator with nested structure", async () => {
@@ -380,17 +380,31 @@ describe("ConditionPacker and ConditionUnpacker", () => {
 
 /**
  * Converts Result objects from contract calls to plain objects with parent
+ * Note: paramType is no longer packed/unpacked, so it's excluded from comparison
  */
 function pruneResult(result: any): {
   parent: number;
-  paramType: Encoding;
   operator: Operator;
   compValue: string;
 }[] {
   return result.map((node: any) => ({
     parent: Number(node.parent),
-    paramType: Number(node.paramType),
     operator: Number(node.operator),
+    compValue: node.compValue,
+  }));
+}
+
+/**
+ * Removes paramType from input for comparison
+ */
+function withoutParamType(input: any[]): {
+  parent: number;
+  operator: Operator;
+  compValue: string;
+}[] {
+  return input.map((node: any) => ({
+    parent: node.parent,
+    operator: node.operator,
     compValue: node.compValue,
   }));
 }
@@ -407,12 +421,12 @@ function hashEqualToCompValues(
   }[],
 ): {
   parent: number;
-  paramType: Encoding;
   operator: Operator;
   compValue: string;
 }[] {
   return input.map((node) => ({
-    ...node,
+    parent: node.parent,
+    operator: node.operator,
     compValue:
       node.operator === Operator.EqualTo && node.compValue !== "0x"
         ? hre.ethers.keccak256(node.compValue)

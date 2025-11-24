@@ -44,7 +44,7 @@ contract MockConditionUnpacker {
 
             flat[bfsIndex] = ConditionFlat({
                 parent: uint8(parent),
-                paramType: node.encoding,
+                paramType: Encoding.None, // paramType is no longer packed/unpacked
                 operator: node.operator,
                 compValue: compValue
             });
