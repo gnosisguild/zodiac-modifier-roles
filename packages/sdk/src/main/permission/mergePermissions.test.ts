@@ -1,5 +1,5 @@
 import { describe, expect, it, suite } from "vitest"
-import { AbiType, Operator } from "zodiac-roles-deployments"
+import { Encoding, Operator } from "zodiac-roles-deployments"
 
 import { abiEncode } from "../abiEncode"
 import { mergePermissions } from "./mergePermissions"
@@ -12,7 +12,7 @@ import {
 import { Permission } from "./types"
 
 const DUMMY_COMP = (id: number) => ({
-  paramType: AbiType.Static,
+  paramType: Encoding.Static,
   operator: Operator.Custom,
   compValue: abiEncode(["uint256"], [id]),
 })
@@ -337,7 +337,7 @@ suite("mergePermissions()", () => {
           targetAddress: AddressOne,
           selector: "0x1",
           condition: {
-            paramType: AbiType.None,
+            paramType: Encoding.None,
             operator: Operator.Or,
             children: [DUMMY_COMP(1), DUMMY_COMP(2)],
           },

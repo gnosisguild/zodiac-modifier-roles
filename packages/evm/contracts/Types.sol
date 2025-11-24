@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "./AbiTypes.sol";
+import "./Encodings.sol";
 
 /**
  * @title Types - a file that contains all of the type definitions used throughout
@@ -87,13 +87,13 @@ enum Clearance {
 // (ABI does not support recursive types)
 struct ConditionFlat {
     uint8 parent;
-    AbiType paramType;
+    Encoding paramType;
     Operator operator;
     bytes compValue;
 }
 
 struct Condition {
-    AbiType paramType;
+    Encoding paramType;
     Operator operator;
     bytes compValue;
     uint256 sChildCount;

@@ -2,7 +2,7 @@
 pragma solidity >=0.8.17 <0.9.0;
 
 import "../../Types.sol";
-import "../../AbiTypes.sol";
+import "../../Encodings.sol";
 
 /**
  * ScopedFunction Layout in Contract Storage
@@ -42,7 +42,7 @@ import "../../AbiTypes.sol";
  * ├─────────────────────────────────────────────────────────────────────┤
  * │ Nodes (nodeCount × 2 bytes each):                                   │
  * │   Each node (11 bits, padded to 2 bytes):                           │
- * │     • type                  3 bits  (AbiType 0-7)                   │
+ * │     • type                  3 bits  (Encoding 0-7)                  │
  * │     • childCount            8 bits  (0-255)                         │
  * │     • reserved              5 bits                                  │
  * └─────────────────────────────────────────────────────────────────────┘
@@ -220,7 +220,7 @@ library Packer {
         uint256 index
     ) private pure returns (bool) {
         // NonStructural if paramType is None and all descendants are None
-        if (conditions[index].paramType != AbiType.None) {
+        if (conditions[index].paramType != Encoding.None) {
             return false;
         }
 
@@ -321,7 +321,7 @@ library Packer {
 
     struct LayoutNodeFlat {
         uint256 parent;
-        AbiType _type;
+        Encoding _type;
         uint256 childCount;
     }
 

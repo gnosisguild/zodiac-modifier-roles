@@ -2,7 +2,7 @@ import { expect } from "chai";
 import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import { AbiType, ExecutionOptions, Operator } from "./utils";
+import { Encoding, ExecutionOptions, Operator } from "./utils";
 import { deployRolesMod } from "./setup";
 
 const AddressOne = "0x0000000000000000000000000000000000000001";
@@ -83,13 +83,13 @@ describe("EmitsEvent", async () => {
         [
           {
             parent: 0,
-            paramType: AbiType.Calldata,
+            paramType: Encoding.Calldata,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: AbiType.Static,
+            paramType: Encoding.Static,
             operator: Operator.Pass,
             compValue: "0x",
           },

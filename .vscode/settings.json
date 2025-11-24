@@ -1,0 +1,8 @@
+{  
+  "prettier.configPath": "packages/evm/.prettierrc",
+  "prettier.prettierPath": "packages/evm/node_modules/prettier",  
+   "[solidity]": {
+     "editor.defaultFormatter": "esbenp.prettier-vscode",
+     "editor.formatOnSave": true
+   },
+}

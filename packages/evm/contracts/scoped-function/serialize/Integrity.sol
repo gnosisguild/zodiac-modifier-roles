@@ -60,7 +60,7 @@ library Integrity {
         _nonStructuralOrdering(conditions);
         _typeTree(conditions);
 
-        if (TypeTree.inspect(conditions, 0)._type != AbiType.Calldata) {
+        if (TypeTree.inspect(conditions, 0)._type != Encoding.Calldata) {
             revert UnsuitableRootNode();
         }
     }
@@ -92,14 +92,14 @@ library Integrity {
 
     function _node(ConditionFlat memory condition, uint256 index) private pure {
         Operator operator = condition.operator;
-        AbiType _type = condition.paramType;
+        Encoding _type = condition.paramType;
         bytes memory compValue = condition.compValue;
         if (operator == Operator.Pass) {
             if (condition.compValue.length != 0) {
                 revert UnsuitableCompValue(index);
             }
         } else if (operator == Operator.And || operator == Operator.Or) {
-            if (_type != AbiType.None) {
+            if (_type != Encoding.None) {
                 revert UnsuitableParameterType(index);
             }
             if (condition.compValue.length != 0) {
@@ -107,10 +107,10 @@ library Integrity {
             }
         } else if (operator == Operator.Matches) {
             if (
-                _type != AbiType.Tuple &&
-                _type != AbiType.Array &&
-                _type != AbiType.Calldata &&
-                _type != AbiType.AbiEncoded
+                _type != Encoding.Tuple &&
+                _type != Encoding.Array &&
+                _type != Encoding.Calldata &&
+                _type != Encoding.AbiEncoded
             ) {
                 revert UnsuitableParameterType(index);
             }
@@ -120,14 +120,14 @@ library Integrity {
         } else if (
             operator == Operator.ArraySome || operator == Operator.ArrayEvery
         ) {
-            if (_type != AbiType.Array) {
+            if (_type != Encoding.Array) {
                 revert UnsuitableParameterType(index);
             }
             if (compValue.length != 0) {
                 revert UnsuitableCompValue(index);
             }
         } else if (operator == Operator.EqualToAvatar) {
-            if (_type != AbiType.Static) {
+            if (_type != Encoding.Static) {
                 revert UnsuitableParameterType(index);
             }
             if (compValue.length != 0) {
@@ -135,10 +135,10 @@ library Integrity {
             }
         } else if (operator == Operator.EqualTo) {
             if (
-                _type != AbiType.Static &&
-                _type != AbiType.Dynamic &&
-                _type != AbiType.Tuple &&
-                _type != AbiType.Array
+                _type != Encoding.Static &&
+                _type != Encoding.Dynamic &&
+                _type != Encoding.Tuple &&
+                _type != Encoding.Array
             ) {
                 revert UnsuitableParameterType(index);
             }
@@ -151,14 +151,14 @@ library Integrity {
             operator == Operator.SignedIntGreaterThan ||
             operator == Operator.SignedIntLessThan
         ) {
-            if (_type != AbiType.Static) {
+            if (_type != Encoding.Static) {
                 revert UnsuitableParameterType(index);
             }
             if (compValue.length != 32) {
                 revert UnsuitableCompValue(index);
             }
         } else if (operator == Operator.Bitmask) {
-            if (_type != AbiType.Static && _type != AbiType.Dynamic) {
+            if (_type != Encoding.Static && _type != Encoding.Dynamic) {
                 revert UnsuitableParameterType(index);
             }
             if (compValue.length != 32) {
@@ -169,7 +169,7 @@ library Integrity {
                 revert UnsuitableCompValue(index);
             }
         } else if (operator == Operator.WithinAllowance) {
-            if (_type != AbiType.Static) {
+            if (_type != Encoding.Static) {
                 revert UnsuitableParameterType(index);
             }
             if (compValue.length != 32) {
@@ -179,14 +179,14 @@ library Integrity {
             operator == Operator.EtherWithinAllowance ||
             operator == Operator.CallWithinAllowance
         ) {
-            if (_type != AbiType.None) {
+            if (_type != Encoding.None) {
                 revert UnsuitableParameterType(index);
             }
             if (compValue.length != 32) {
                 revert UnsuitableCompValue(index);
             }
         } else if (operator == Operator.WithinRatio) {
-            if (_type != AbiType.None) {
+            if (_type != Encoding.None) {
                 revert UnsuitableParameterType(index);
             }
             if (compValue.length < 32 || compValue.length > 52) {
@@ -228,7 +228,7 @@ library Integrity {
             ConditionFlat memory condition = conditions[i];
             (, uint256 childCount, ) = Topology.childBounds(conditions, i);
 
-            if (condition.paramType == AbiType.None) {
+            if (condition.paramType == Encoding.None) {
                 if (
                     (condition.operator == Operator.EtherWithinAllowance ||
                         condition.operator == Operator.CallWithinAllowance ||
@@ -246,22 +246,22 @@ library Integrity {
                     }
                 }
             } else if (
-                condition.paramType == AbiType.Static ||
-                condition.paramType == AbiType.Dynamic
+                condition.paramType == Encoding.Static ||
+                condition.paramType == Encoding.Dynamic
             ) {
                 if (childCount != 0) {
                     revert UnsuitableChildCount(i);
                 }
             } else if (
-                condition.paramType == AbiType.Tuple ||
-                condition.paramType == AbiType.Calldata ||
-                condition.paramType == AbiType.AbiEncoded
+                condition.paramType == Encoding.Tuple ||
+                condition.paramType == Encoding.Calldata ||
+                condition.paramType == Encoding.AbiEncoded
             ) {
                 if (childCount == 0) {
                     revert UnsuitableChildCount(i);
                 }
             } else {
-                assert(condition.paramType == AbiType.Array);
+                assert(condition.paramType == Encoding.Array);
 
                 if (childCount == 0) {
                     revert UnsuitableChildCount(i);
@@ -316,7 +316,7 @@ library Integrity {
             if (
                 condition.operator == Operator.And ||
                 condition.operator == Operator.Or ||
-                condition.paramType == AbiType.Array
+                condition.paramType == Encoding.Array
             ) {
                 if (
                     !_isTypeMatch(conditions, i) &&
@@ -360,11 +360,11 @@ library Integrity {
         );
 
         for (uint256 i = 0; i < sChildCount; ++i) {
-            AbiType _type = TypeTree.inspect(conditions, childStart + i)._type;
+            Encoding _type = TypeTree.inspect(conditions, childStart + i)._type;
             if (
-                _type != AbiType.Dynamic &&
-                _type != AbiType.Calldata &&
-                _type != AbiType.AbiEncoded
+                _type != Encoding.Dynamic &&
+                _type != Encoding.Calldata &&
+                _type != Encoding.AbiEncoded
             ) {
                 return false;
             }
@@ -385,7 +385,7 @@ library Integrity {
         )
     {
         for (uint256 j = conditions[i].parent; ; ) {
-            bool isCalldata = conditions[j].paramType == AbiType.Calldata;
+            bool isCalldata = conditions[j].paramType == Encoding.Calldata;
             bool isLogical = (conditions[j].operator == Operator.And ||
                 conditions[j].operator == Operator.Or);
 
@@ -439,7 +439,7 @@ library Integrity {
 
         // Find nearest structural parent (should be Calldata/Tuple/Array)
         uint256 parentIndex = conditions[i].parent;
-        while (conditions[parentIndex].paramType == AbiType.None) {
+        while (conditions[parentIndex].paramType == Encoding.None) {
             parentIndex = conditions[parentIndex].parent;
         }
 
@@ -455,7 +455,7 @@ library Integrity {
                 conditions,
                 childStart + referenceIndex
             );
-            if (layout._type != AbiType.Static) {
+            if (layout._type != Encoding.Static) {
                 revert WithinRatioTargetNotStatic(i);
             }
         }
@@ -466,7 +466,7 @@ library Integrity {
                 conditions,
                 childStart + relativeIndex
             );
-            if (layout._type != AbiType.Static) {
+            if (layout._type != Encoding.Static) {
                 revert WithinRatioTargetNotStatic(i);
             }
         }

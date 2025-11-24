@@ -44,14 +44,14 @@ library TypeTree {
          * Logical nodes that are variant use Dynamic as a container to
          * indicate the variant. All other nodes use their declared paramType
          */
-        node._type = isLogical ? AbiType.Dynamic : conditions[index].paramType;
+        node._type = isLogical ? Encoding.Dynamic : conditions[index].paramType;
 
         /*
          * For non-variant arrays, the first child serves as a template for
          * all elements. For all other nodes, traverse all structural children
          */
         node.children = new Layout[](
-            node._type == AbiType.Array && !isVariant ? 1 : sChildCount
+            node._type == Encoding.Array && !isVariant ? 1 : sChildCount
         );
 
         for (uint256 i = 0; i < node.children.length; ++i) {
@@ -73,7 +73,7 @@ library TypeTree {
         ConditionFlat[] memory conditions,
         uint256 index
     ) private pure returns (bool) {
-        bool isArray = conditions[index].paramType == AbiType.Array;
+        bool isArray = conditions[index].paramType == Encoding.Array;
         bool isLogical = _isLogical(conditions, index);
 
         if (!isArray && !isLogical) {

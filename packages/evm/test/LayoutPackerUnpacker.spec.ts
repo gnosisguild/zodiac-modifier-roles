@@ -2,15 +2,13 @@ import hre from "hardhat";
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import { AbiType } from "./utils";
+import { Encoding } from "./utils";
 
 describe("LayoutPacker and LayoutUnpacker", () => {
   async function setup() {
-    const MockPacker =
-      await hre.ethers.getContractFactory("MockLayoutPacker");
-    const MockUnpacker = await hre.ethers.getContractFactory(
-      "MockLayoutUnpacker",
-    );
+    const MockPacker = await hre.ethers.getContractFactory("MockLayoutPacker");
+    const MockUnpacker =
+      await hre.ethers.getContractFactory("MockLayoutUnpacker");
 
     const packer = await MockPacker.deploy();
     const unpacker = await MockUnpacker.deploy();
@@ -23,7 +21,7 @@ describe("LayoutPacker and LayoutUnpacker", () => {
       const { packer, unpacker } = await loadFixture(setup);
 
       const input = flattenTypeTree({
-        _type: AbiType.Static,
+        _type: Encoding.Static,
       });
 
       const packed = await packer.packFlat(input);
@@ -36,10 +34,10 @@ describe("LayoutPacker and LayoutUnpacker", () => {
       const { packer, unpacker } = await loadFixture(setup);
 
       const input = flattenTypeTree({
-        _type: AbiType.Tuple,
+        _type: Encoding.Tuple,
         children: [
           {
-            _type: AbiType.Static,
+            _type: Encoding.Static,
           },
         ],
       });
@@ -54,13 +52,13 @@ describe("LayoutPacker and LayoutUnpacker", () => {
       const { packer, unpacker } = await loadFixture(setup);
 
       const input = flattenTypeTree({
-        _type: AbiType.Tuple,
+        _type: Encoding.Tuple,
         children: [
           {
-            _type: AbiType.Static,
+            _type: Encoding.Static,
           },
           {
-            _type: AbiType.Dynamic,
+            _type: Encoding.Dynamic,
           },
         ],
       });
@@ -75,21 +73,21 @@ describe("LayoutPacker and LayoutUnpacker", () => {
       const { packer, unpacker } = await loadFixture(setup);
 
       const input = flattenTypeTree({
-        _type: AbiType.Tuple,
+        _type: Encoding.Tuple,
         children: [
           {
-            _type: AbiType.Tuple,
+            _type: Encoding.Tuple,
             children: [
               {
-                _type: AbiType.Static,
+                _type: Encoding.Static,
               },
               {
-                _type: AbiType.Dynamic,
+                _type: Encoding.Dynamic,
               },
             ],
           },
           {
-            _type: AbiType.Static,
+            _type: Encoding.Static,
           },
         ],
       });
@@ -104,12 +102,12 @@ describe("LayoutPacker and LayoutUnpacker", () => {
       const { packer, unpacker } = await loadFixture(setup);
 
       const input = flattenTypeTree({
-        _type: AbiType.Tuple,
+        _type: Encoding.Tuple,
         children: [
-          { _type: AbiType.Static },
-          { _type: AbiType.Dynamic },
-          { _type: AbiType.Tuple },
-          { _type: AbiType.Array },
+          { _type: Encoding.Static },
+          { _type: Encoding.Dynamic },
+          { _type: Encoding.Tuple },
+          { _type: Encoding.Array },
         ],
       });
 
@@ -123,10 +121,10 @@ describe("LayoutPacker and LayoutUnpacker", () => {
       const { packer, unpacker } = await loadFixture(setup);
 
       const input = flattenTypeTree({
-        _type: AbiType.Array,
+        _type: Encoding.Array,
         children: [
           {
-            _type: AbiType.Static,
+            _type: Encoding.Static,
           },
         ],
       });
@@ -141,14 +139,14 @@ describe("LayoutPacker and LayoutUnpacker", () => {
       const { packer, unpacker } = await loadFixture(setup);
 
       const input = flattenTypeTree({
-        _type: AbiType.Calldata,
+        _type: Encoding.Calldata,
         children: [
-          { _type: AbiType.None },
-          { _type: AbiType.Static },
-          { _type: AbiType.Dynamic },
-          { _type: AbiType.Tuple },
-          { _type: AbiType.Array },
-          { _type: AbiType.AbiEncoded },
+          { _type: Encoding.None },
+          { _type: Encoding.Static },
+          { _type: Encoding.Dynamic },
+          { _type: Encoding.Tuple },
+          { _type: Encoding.Array },
+          { _type: Encoding.AbiEncoded },
         ],
       });
 
@@ -162,19 +160,19 @@ describe("LayoutPacker and LayoutUnpacker", () => {
       const { packer, unpacker } = await loadFixture(setup);
 
       const input = flattenTypeTree({
-        _type: AbiType.Tuple,
+        _type: Encoding.Tuple,
         children: [
           {
-            _type: AbiType.Tuple,
+            _type: Encoding.Tuple,
             children: [
               {
-                _type: AbiType.Tuple,
+                _type: Encoding.Tuple,
                 children: [
                   {
-                    _type: AbiType.Tuple,
+                    _type: Encoding.Tuple,
                     children: [
                       {
-                        _type: AbiType.Static,
+                        _type: Encoding.Static,
                       },
                     ],
                   },
@@ -195,22 +193,22 @@ describe("LayoutPacker and LayoutUnpacker", () => {
       const { packer, unpacker } = await loadFixture(setup);
 
       const input = flattenTypeTree({
-        _type: AbiType.Tuple,
+        _type: Encoding.Tuple,
         children: [
           {
-            _type: AbiType.Array,
+            _type: Encoding.Array,
             children: [
               {
-                _type: AbiType.Tuple,
+                _type: Encoding.Tuple,
                 children: [
-                  { _type: AbiType.Static },
-                  { _type: AbiType.Dynamic },
+                  { _type: Encoding.Static },
+                  { _type: Encoding.Dynamic },
                 ],
               },
             ],
           },
           {
-            _type: AbiType.Static,
+            _type: Encoding.Static,
           },
         ],
       });
@@ -231,7 +229,7 @@ function pruneResult(result: any) {
 }
 
 interface TypeTreeInput {
-  _type: AbiType;
+  _type: Encoding;
   children?: TypeTreeInput[];
 }
 function flattenTypeTree(root: TypeTreeInput) {

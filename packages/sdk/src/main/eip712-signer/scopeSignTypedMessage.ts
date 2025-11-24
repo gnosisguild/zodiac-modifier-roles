@@ -1,6 +1,6 @@
 import { TypedData } from "abitype"
 import { AbiCoder, Interface, keccak256 } from "ethers"
-import { Condition, Operator, AbiType, rolesAbi } from "zodiac-roles-sdk"
+import { Condition, Operator, Encoding, rolesAbi } from "zodiac-roles-sdk"
 
 import { encodeAbiTypes, toAbiTypes } from "./encode"
 
@@ -13,11 +13,11 @@ export const scopeSignTypedMessage = ({
   message: Condition
   types: TypedData
 }): { selector: `0x${string}`; condition: Condition } => {
-  if (domain.paramType !== AbiType.AbiEncoded) {
+  if (domain.paramType !== Encoding.AbiEncoded) {
     throw new Error("Domain is not and AbiEncoded condition")
   }
 
-  if (message.paramType !== AbiType.AbiEncoded) {
+  if (message.paramType !== Encoding.AbiEncoded) {
     throw new Error("Message is not and AbiEncoded condition")
   }
 
@@ -29,7 +29,7 @@ export const scopeSignTypedMessage = ({
   return {
     selector: selector as `0x${string}`,
     condition: {
-      paramType: AbiType.Calldata,
+      paramType: Encoding.Calldata,
       operator: Operator.Matches,
       children: [domain, message, typesCondition(types)],
     },
@@ -44,24 +44,24 @@ function typesCondition(types: TypedData): Condition {
   )
 
   const left: Condition = {
-    paramType: AbiType.Array,
+    paramType: Encoding.Array,
     operator: Operator.Pass,
     compValue: "0x",
     children: [
       {
-        paramType: AbiType.Tuple,
+        paramType: Encoding.Tuple,
         operator: Operator.Pass,
         children: [
           {
-            paramType: AbiType.Static,
+            paramType: Encoding.Static,
             operator: Operator.Pass,
           },
           {
-            paramType: AbiType.Array,
+            paramType: Encoding.Array,
             operator: Operator.Pass,
             children: [
               {
-                paramType: AbiType.Static,
+                paramType: Encoding.Static,
                 operator: Operator.Pass,
               },
             ],
@@ -72,19 +72,19 @@ function typesCondition(types: TypedData): Condition {
   }
 
   const right: Condition = {
-    paramType: AbiType.Array,
+    paramType: Encoding.Array,
     operator: Operator.Pass,
     compValue: "0x",
     children: [
       {
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.Pass,
         compValue: "0x",
       },
     ],
   }
   return {
-    paramType: AbiType.Tuple,
+    paramType: Encoding.Tuple,
     operator: Operator.EqualTo,
     compValue: compValue as any,
     children: [left, right],

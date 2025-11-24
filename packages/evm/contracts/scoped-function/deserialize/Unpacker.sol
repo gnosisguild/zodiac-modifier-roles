@@ -2,7 +2,7 @@
 pragma solidity >=0.8.17 <0.9.0;
 
 import "../../Types.sol";
-import "../../AbiTypes.sol";
+import "../../Encodings.sol";
 
 library Unpacker {
     // ═══════════════════════════════════════════════════════════════════════════
@@ -79,7 +79,7 @@ library Unpacker {
              */
 
             Condition memory node = nodes[i];
-            node.paramType = AbiType((packed >> 37) & 0x07);
+            node.paramType = Encoding((packed >> 37) & 0x07);
             node.operator = Operator((packed >> 32) & 0x1F);
             uint256 childCount = (packed >> 24) & 0xFF;
             node.sChildCount = (packed >> 16) & 0xFF;
@@ -157,14 +157,14 @@ library Unpacker {
             /*
              * ┌──────────────────────────────────────────────────┐
              * │Each node (11 bits, padded to 2 bytes):           │
-             * │  • type                  3 bits  (AbiType 0-7)   │
+             * │  • type                  3 bits  (Encoding 0-7)  │
              * │  • childCount            8 bits  (0-255)         │
              * │  • reserved              5 bits                  │
              * └──────────────────────────────────────────────────┘
              */
 
             Layout memory node = nodes[i];
-            node._type = AbiType((packed >> 13));
+            node._type = Encoding((packed >> 13));
             uint256 childCount = (packed >> 5) & 0xFF;
 
             if (childCount > 0) {

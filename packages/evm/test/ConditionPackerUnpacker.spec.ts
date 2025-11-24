@@ -2,7 +2,7 @@ import hre from "hardhat";
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import { AbiType, flattenCondition, Operator, BYTES32_ZERO } from "./utils";
+import { Encoding, flattenCondition, Operator, BYTES32_ZERO } from "./utils";
 
 describe("ConditionPacker and ConditionUnpacker", () => {
   async function setup() {
@@ -24,7 +24,7 @@ describe("ConditionPacker and ConditionUnpacker", () => {
       const { packer, unpacker } = await loadFixture(setup);
 
       const input = flattenCondition({
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.Pass,
         children: [],
       });
@@ -39,11 +39,11 @@ describe("ConditionPacker and ConditionUnpacker", () => {
       const { packer, unpacker } = await loadFixture(setup);
 
       const input = flattenCondition({
-        paramType: AbiType.None,
+        paramType: Encoding.None,
         operator: Operator.And,
         children: [
           {
-            paramType: AbiType.Static,
+            paramType: Encoding.Static,
             operator: Operator.Pass,
             children: [],
           },
@@ -60,16 +60,16 @@ describe("ConditionPacker and ConditionUnpacker", () => {
       const { packer, unpacker } = await loadFixture(setup);
 
       const input = flattenCondition({
-        paramType: AbiType.None,
+        paramType: Encoding.None,
         operator: Operator.Or,
         children: [
           {
-            paramType: AbiType.Static,
+            paramType: Encoding.Static,
             operator: Operator.Pass,
             children: [],
           },
           {
-            paramType: AbiType.Dynamic,
+            paramType: Encoding.Dynamic,
             operator: Operator.Pass,
             children: [],
           },
@@ -86,27 +86,27 @@ describe("ConditionPacker and ConditionUnpacker", () => {
       const { packer, unpacker } = await loadFixture(setup);
 
       const input = flattenCondition({
-        paramType: AbiType.None,
+        paramType: Encoding.None,
         operator: Operator.And,
         children: [
           {
-            paramType: AbiType.None,
+            paramType: Encoding.None,
             operator: Operator.Or,
             children: [
               {
-                paramType: AbiType.Static,
+                paramType: Encoding.Static,
                 operator: Operator.Pass,
                 children: [],
               },
               {
-                paramType: AbiType.Dynamic,
+                paramType: Encoding.Dynamic,
                 operator: Operator.Pass,
                 children: [],
               },
             ],
           },
           {
-            paramType: AbiType.Static,
+            paramType: Encoding.Static,
             operator: Operator.Pass,
             children: [],
           },
@@ -123,26 +123,26 @@ describe("ConditionPacker and ConditionUnpacker", () => {
       const { packer, unpacker } = await loadFixture(setup);
 
       const input = flattenCondition({
-        paramType: AbiType.None,
+        paramType: Encoding.None,
         operator: Operator.And,
         children: [
           {
-            paramType: AbiType.Static,
+            paramType: Encoding.Static,
             operator: Operator.Pass,
             children: [],
           },
           {
-            paramType: AbiType.Dynamic,
+            paramType: Encoding.Dynamic,
             operator: Operator.Pass,
             children: [],
           },
           {
-            paramType: AbiType.Tuple,
+            paramType: Encoding.Tuple,
             operator: Operator.Pass,
             children: [],
           },
           {
-            paramType: AbiType.Array,
+            paramType: Encoding.Array,
             operator: Operator.Pass,
             children: [],
           },
@@ -159,7 +159,7 @@ describe("ConditionPacker and ConditionUnpacker", () => {
       const { packer, unpacker } = await loadFixture(setup);
 
       const input = flattenCondition({
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.EqualTo,
         compValue:
           "0x000000000000000000000000000000000000000000000000000000000000007b",
@@ -176,18 +176,18 @@ describe("ConditionPacker and ConditionUnpacker", () => {
       const { packer, unpacker } = await loadFixture(setup);
 
       const input = flattenCondition({
-        paramType: AbiType.None,
+        paramType: Encoding.None,
         operator: Operator.And,
         children: [
           {
-            paramType: AbiType.Static,
+            paramType: Encoding.Static,
             operator: Operator.EqualTo,
             compValue:
               "0x000000000000000000000000000000000000000000000000000000000000007b",
             children: [],
           },
           {
-            paramType: AbiType.Static,
+            paramType: Encoding.Static,
             operator: Operator.GreaterThan,
             compValue:
               "0x0000000000000000000000000000000000000000000000000000000000000064",
@@ -206,18 +206,18 @@ describe("ConditionPacker and ConditionUnpacker", () => {
       const { packer, unpacker } = await loadFixture(setup);
 
       const input = flattenCondition({
-        paramType: AbiType.None,
+        paramType: Encoding.None,
         operator: Operator.Or,
         children: [
           {
-            paramType: AbiType.Static,
+            paramType: Encoding.Static,
             operator: Operator.EqualTo,
             compValue:
               "0x000000000000000000000000000000000000000000000000000000000000007b",
             children: [],
           },
           {
-            paramType: AbiType.Static,
+            paramType: Encoding.Static,
             operator: Operator.Pass,
             children: [],
           },
@@ -234,22 +234,22 @@ describe("ConditionPacker and ConditionUnpacker", () => {
       const { packer, unpacker } = await loadFixture(setup);
 
       const input = flattenCondition({
-        paramType: AbiType.None,
+        paramType: Encoding.None,
         operator: Operator.And,
         children: [
           {
-            paramType: AbiType.None,
+            paramType: Encoding.None,
             operator: Operator.Or,
             children: [
               {
-                paramType: AbiType.Static,
+                paramType: Encoding.Static,
                 operator: Operator.EqualTo,
                 compValue:
                   "0x0000000000000000000000000000000000000000000000000000000000000001",
                 children: [],
               },
               {
-                paramType: AbiType.Static,
+                paramType: Encoding.Static,
                 operator: Operator.EqualTo,
                 compValue:
                   "0x0000000000000000000000000000000000000000000000000000000000000002",
@@ -258,7 +258,7 @@ describe("ConditionPacker and ConditionUnpacker", () => {
             ],
           },
           {
-            paramType: AbiType.Static,
+            paramType: Encoding.Static,
             operator: Operator.GreaterThan,
             compValue:
               "0x0000000000000000000000000000000000000000000000000000000000000064",
@@ -277,31 +277,31 @@ describe("ConditionPacker and ConditionUnpacker", () => {
       const { packer, unpacker } = await loadFixture(setup);
 
       const input = flattenCondition({
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         children: [
           {
-            paramType: AbiType.Static,
+            paramType: Encoding.Static,
             operator: Operator.Pass,
             children: [],
           },
           {
-            paramType: AbiType.Dynamic,
+            paramType: Encoding.Dynamic,
             operator: Operator.Pass,
             children: [],
           },
           {
-            paramType: AbiType.Tuple,
+            paramType: Encoding.Tuple,
             operator: Operator.Pass,
             children: [],
           },
           {
-            paramType: AbiType.Array,
+            paramType: Encoding.Array,
             operator: Operator.Pass,
             children: [],
           },
           {
-            paramType: AbiType.AbiEncoded,
+            paramType: Encoding.AbiEncoded,
             operator: Operator.Pass,
             children: [],
           },
@@ -318,23 +318,23 @@ describe("ConditionPacker and ConditionUnpacker", () => {
       const { packer, unpacker } = await loadFixture(setup);
 
       const input = flattenCondition({
-        paramType: AbiType.None,
+        paramType: Encoding.None,
         operator: Operator.And,
         children: [
           {
-            paramType: AbiType.None,
+            paramType: Encoding.None,
             operator: Operator.Or,
             children: [
               {
-                paramType: AbiType.None,
+                paramType: Encoding.None,
                 operator: Operator.And,
                 children: [
                   {
-                    paramType: AbiType.None,
+                    paramType: Encoding.None,
                     operator: Operator.Or,
                     children: [
                       {
-                        paramType: AbiType.Static,
+                        paramType: Encoding.Static,
                         operator: Operator.Pass,
                         children: [],
                       },
@@ -357,11 +357,11 @@ describe("ConditionPacker and ConditionUnpacker", () => {
       const { packer, unpacker } = await loadFixture(setup);
 
       const input = flattenCondition({
-        paramType: AbiType.Array,
+        paramType: Encoding.Array,
         operator: Operator.ArraySome,
         children: [
           {
-            paramType: AbiType.Static,
+            paramType: Encoding.Static,
             operator: Operator.EqualTo,
             compValue:
               "0x000000000000000000000000000000000000000000000000000000000000007b",
@@ -383,7 +383,7 @@ describe("ConditionPacker and ConditionUnpacker", () => {
  */
 function pruneResult(result: any): {
   parent: number;
-  paramType: AbiType;
+  paramType: Encoding;
   operator: Operator;
   compValue: string;
 }[] {
@@ -401,13 +401,13 @@ function pruneResult(result: any): {
 function hashEqualToCompValues(
   input: {
     parent: number;
-    paramType: AbiType;
+    paramType: Encoding;
     operator: Operator;
     compValue: string;
   }[],
 ): {
   parent: number;
-  paramType: AbiType;
+  paramType: Encoding;
   operator: Operator;
   compValue: string;
 }[] {

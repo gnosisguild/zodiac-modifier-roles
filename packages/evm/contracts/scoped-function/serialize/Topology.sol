@@ -56,7 +56,7 @@ library Topology {
         uint256 index
     ) internal pure returns (bool) {
         // Structural if paramType is not None
-        if (conditions[index].paramType != AbiType.None) {
+        if (conditions[index].paramType != Encoding.None) {
             return true;
         }
 

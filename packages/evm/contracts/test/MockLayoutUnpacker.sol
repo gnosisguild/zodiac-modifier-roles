@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "../AbiTypes.sol";
+import "../Encodings.sol";
 import "../scoped-function/deserialize/Unpacker.sol";
 
 contract MockLayoutUnpacker {
     struct FlatNode {
-        AbiType _type;
+        Encoding _type;
         uint256 parent;
     }
 

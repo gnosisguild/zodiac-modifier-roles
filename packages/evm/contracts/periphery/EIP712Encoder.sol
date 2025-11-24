@@ -123,10 +123,10 @@ library EIP712Encoder {
         Types calldata types,
         Payload memory field
     ) private pure returns (bytes32) {
-        AbiType _type = types.layout[field.typeIndex]._type;
-        if (_type == AbiType.Static) {
+        Encoding _type = types.layout[field.typeIndex]._type;
+        if (_type == Encoding.Static) {
             return bytes32(data[field.location:]);
-        } else if (_type == AbiType.Dynamic) {
+        } else if (_type == Encoding.Dynamic) {
             return _hashDynamic(data, field);
         } else {
             return _hashBlock(data, types, field);

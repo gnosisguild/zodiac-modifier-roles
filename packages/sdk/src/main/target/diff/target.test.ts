@@ -1,7 +1,7 @@
 import { expect, it, suite } from "vitest"
 import { ZeroAddress, ZeroHash } from "ethers"
 import {
-  AbiType,
+  Encoding,
   Clearance,
   ExecutionOptions,
   Operator,
@@ -521,7 +521,7 @@ suite("diffTarget - Misc", () => {
             executionOptions: 0,
             wildcarded: false,
             condition: {
-              paramType: AbiType.None,
+              paramType: Encoding.None,
               operator: Operator.Pass,
             },
           },
@@ -561,7 +561,7 @@ suite("diffTarget - Misc", () => {
             executionOptions: 0,
             wildcarded: false,
             condition: {
-              paramType: AbiType.None,
+              paramType: Encoding.None,
               operator: Operator.Pass,
             },
           },
@@ -580,11 +580,11 @@ suite("diffTarget - Misc", () => {
             executionOptions: 0,
             wildcarded: false,
             condition: {
-              paramType: AbiType.Calldata,
+              paramType: Encoding.Calldata,
               operator: Operator.Matches,
               children: [
                 {
-                  paramType: AbiType.Static,
+                  paramType: Encoding.Static,
                   operator: Operator.EqualTo,
                   compValue: "0xaabbccdd",
                 },
@@ -607,11 +607,11 @@ suite("diffTarget - Misc", () => {
         selector: "0x095ea7b3",
         executionOptions: 0,
         condition: {
-          paramType: AbiType.Calldata,
+          paramType: Encoding.Calldata,
           operator: Operator.Matches,
           children: [
             {
-              paramType: AbiType.Static,
+              paramType: Encoding.Static,
               operator: Operator.EqualTo,
               compValue: "0xaabbccdd",
             },
@@ -689,7 +689,7 @@ suite("diffTarget - Misc", () => {
             executionOptions: 0,
             wildcarded: false,
             condition: {
-              paramType: AbiType.None,
+              paramType: Encoding.None,
               operator: Operator.Pass,
             },
           },
@@ -708,7 +708,7 @@ suite("diffTarget - Misc", () => {
             executionOptions: 0,
             wildcarded: false,
             condition: {
-              paramType: AbiType.Dynamic,
+              paramType: Encoding.Dynamic,
               operator: Operator.EqualTo,
               compValue: "0x00",
             },
@@ -734,7 +734,7 @@ suite("diffTarget - Misc", () => {
           selector: "0x095ea7b3",
           executionOptions: 0,
           condition: normalizeCondition({
-            paramType: AbiType.None,
+            paramType: Encoding.None,
             operator: Operator.Pass,
           }),
         },

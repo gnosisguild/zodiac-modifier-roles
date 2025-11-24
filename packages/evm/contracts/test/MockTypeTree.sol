@@ -26,7 +26,7 @@ contract MockTypeTree {
     // Flat structure with parent reference
     struct FlatNode {
         uint256 parent;
-        AbiType _type;
+        Encoding _type;
     }
 
     // Queue item for BFS

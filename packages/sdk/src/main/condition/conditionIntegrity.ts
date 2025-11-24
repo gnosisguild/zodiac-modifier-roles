@@ -1,10 +1,10 @@
-import { Condition, Operator, AbiType } from "zodiac-roles-deployments"
+import { Condition, Operator, Encoding } from "zodiac-roles-deployments"
 
 export const checkRootConditionIntegrity = (condition: Condition): void => {
   const rootType = checkConsistentChildrenTypes(condition)
-  if (rootType !== AbiType.Calldata) {
+  if (rootType !== Encoding.Calldata) {
     throw new Error(
-      `Root param type must be \`Calldata\`, got \`${AbiType[rootType]}\``
+      `Root param type must be \`Calldata\`, got \`${Encoding[rootType]}\``
     )
   }
   checkConditionIntegrityRecursive(condition)
@@ -19,15 +19,15 @@ export const checkConditionIntegrity = (condition: Condition): void => {
  * Validates that logical condition children have consistent types.
  * Since the children conditions address the very same value it does not make sense for them to declare incompatible param types.
  * */
-const checkConsistentChildrenTypes = (condition: Condition): AbiType => {
-  if (condition.paramType !== AbiType.None) {
+const checkConsistentChildrenTypes = (condition: Condition): Encoding => {
+  if (condition.paramType !== Encoding.None) {
     return condition.paramType
   }
 
   const [first, ...rest] = condition.children || []
   const expectedType = first
     ? checkConsistentChildrenTypes(first)
-    : AbiType.None
+    : Encoding.None
 
   rest.forEach((child) => {
     const childType = checkConsistentChildrenTypes(child)
@@ -38,31 +38,31 @@ const checkConsistentChildrenTypes = (condition: Condition): AbiType => {
 }
 
 export const checkParameterTypeCompatibility = (
-  left: AbiType,
-  right: AbiType
+  left: Encoding,
+  right: Encoding
 ): void => {
-  if (right === AbiType.None) return
+  if (right === Encoding.None) return
 
   if (right === left) return
 
   if (
-    right === AbiType.Dynamic &&
-    (left === AbiType.Calldata || left === AbiType.AbiEncoded)
+    right === Encoding.Dynamic &&
+    (left === Encoding.Calldata || left === Encoding.AbiEncoded)
   ) {
     return
   }
 
   if (
-    (right === AbiType.Calldata || right === AbiType.AbiEncoded) &&
-    left === AbiType.Dynamic
+    (right === Encoding.Calldata || right === Encoding.AbiEncoded) &&
+    left === Encoding.Dynamic
   ) {
     throw new Error(
-      `Mixed children types: \`${AbiType[right]}\` must appear before \`${AbiType[left]}\``
+      `Mixed children types: \`${Encoding[right]}\` must appear before \`${Encoding[left]}\``
     )
   }
 
   throw new Error(
-    `Inconsistent children types (\`${AbiType[left]}\` and \`${AbiType[right]}\`)`
+    `Inconsistent children types (\`${Encoding[left]}\` and \`${Encoding[right]}\`)`
   )
 }
 
@@ -77,55 +77,55 @@ const checkConditionIntegrityRecursive = (condition: Condition): void => {
 const checkParamTypeIntegrity = (condition: Condition): void => {
   const COMPATIBLE_TYPES = {
     [Operator.Pass]: [
-      AbiType.Static,
-      AbiType.Dynamic,
-      AbiType.Tuple,
-      AbiType.Array,
-      AbiType.Calldata,
-      AbiType.AbiEncoded,
+      Encoding.Static,
+      Encoding.Dynamic,
+      Encoding.Tuple,
+      Encoding.Array,
+      Encoding.Calldata,
+      Encoding.AbiEncoded,
     ],
 
-    [Operator.And]: [AbiType.None],
-    [Operator.Or]: [AbiType.None],
-    [Operator.Nor]: [AbiType.None],
+    [Operator.And]: [Encoding.None],
+    [Operator.Or]: [Encoding.None],
+    [Operator.Nor]: [Encoding.None],
 
     [Operator.Matches]: [
-      AbiType.Calldata,
-      AbiType.AbiEncoded,
-      AbiType.Tuple,
-      AbiType.Array,
+      Encoding.Calldata,
+      Encoding.AbiEncoded,
+      Encoding.Tuple,
+      Encoding.Array,
     ],
 
-    [Operator.ArraySome]: [AbiType.Array],
-    [Operator.ArrayEvery]: [AbiType.Array],
-    [Operator.ArraySubset]: [AbiType.Array],
+    [Operator.ArraySome]: [Encoding.Array],
+    [Operator.ArrayEvery]: [Encoding.Array],
+    [Operator.ArraySubset]: [Encoding.Array],
 
-    [Operator.EqualToAvatar]: [AbiType.Static],
+    [Operator.EqualToAvatar]: [Encoding.Static],
     [Operator.EqualTo]: [
-      AbiType.Static,
-      AbiType.Dynamic,
-      AbiType.Tuple,
-      AbiType.Array,
+      Encoding.Static,
+      Encoding.Dynamic,
+      Encoding.Tuple,
+      Encoding.Array,
     ],
 
-    [Operator.GreaterThan]: [AbiType.Static],
-    [Operator.LessThan]: [AbiType.Static],
-    [Operator.SignedIntGreaterThan]: [AbiType.Static],
-    [Operator.SignedIntLessThan]: [AbiType.Static],
+    [Operator.GreaterThan]: [Encoding.Static],
+    [Operator.LessThan]: [Encoding.Static],
+    [Operator.SignedIntGreaterThan]: [Encoding.Static],
+    [Operator.SignedIntLessThan]: [Encoding.Static],
 
-    [Operator.Bitmask]: [AbiType.Static, AbiType.Dynamic],
+    [Operator.Bitmask]: [Encoding.Static, Encoding.Dynamic],
 
     [Operator.Custom]: [
-      AbiType.Static,
-      AbiType.Dynamic,
-      AbiType.Tuple,
-      AbiType.Array,
+      Encoding.Static,
+      Encoding.Dynamic,
+      Encoding.Tuple,
+      Encoding.Array,
     ],
 
-    [Operator.WithinAllowance]: [AbiType.Static],
+    [Operator.WithinAllowance]: [Encoding.Static],
 
-    [Operator.EtherWithinAllowance]: [AbiType.None],
-    [Operator.CallWithinAllowance]: [AbiType.None],
+    [Operator.EtherWithinAllowance]: [Encoding.None],
+    [Operator.CallWithinAllowance]: [Encoding.None],
   }
   const compatibleTypes = COMPATIBLE_TYPES[condition.operator]
 
@@ -134,7 +134,7 @@ const checkParamTypeIntegrity = (condition: Condition): void => {
       `\`${
         Operator[condition.operator]
       }\` condition not supported for paramType \`${
-        AbiType[condition.paramType]
+        Encoding[condition.paramType]
       }\``
     )
   }
@@ -156,13 +156,13 @@ const checkCompValueIntegrity = (condition: Condition): void => {
 
 const checkChildrenIntegrity = (condition: Condition): void => {
   if (
-    condition.paramType === AbiType.Tuple ||
-    condition.paramType === AbiType.Array
+    condition.paramType === Encoding.Tuple ||
+    condition.paramType === Encoding.Array
   ) {
     if (!condition.children || condition.children.length === 0) {
       throw new Error(
         `Condition on \`${
-          AbiType[condition.paramType]
+          Encoding[condition.paramType]
         }\` params must have children to describe the type structure, found violation in \`${
           Operator[condition.operator]
         }\` condition`
@@ -197,15 +197,15 @@ const checkChildrenIntegrity = (condition: Condition): void => {
   if (
     condition.operator >= Operator.EqualToAvatar &&
     condition.operator !== Operator.Custom && // TODO Does this make sense? Can Custom have children?
-    condition.paramType !== AbiType.Calldata &&
-    condition.paramType !== AbiType.AbiEncoded &&
-    condition.paramType !== AbiType.Tuple &&
-    condition.paramType !== AbiType.Array
+    condition.paramType !== Encoding.Calldata &&
+    condition.paramType !== Encoding.AbiEncoded &&
+    condition.paramType !== Encoding.Tuple &&
+    condition.paramType !== Encoding.Array
   ) {
     if (condition.children && condition.children?.length > 0) {
       throw new Error(
         `\`${Operator[condition.operator]}\` condition on \`${
-          AbiType[condition.paramType]
+          Encoding[condition.paramType]
         }\` type param must not have children`
       )
     }
