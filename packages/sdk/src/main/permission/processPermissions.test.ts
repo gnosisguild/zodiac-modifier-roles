@@ -1,7 +1,7 @@
 import { expect, it, suite } from "vitest"
 import { processPermissions } from "./processPermissions"
 import {
-  AbiType,
+  Encoding,
   Clearance,
   ExecutionOptions,
   Operator,
@@ -12,7 +12,7 @@ import { normalizeCondition } from "../condition"
 import { PermissionSet } from "./types"
 
 const DUMMY_COMP = (id: number) => ({
-  paramType: AbiType.Static,
+  paramType: Encoding.Static,
   operator: Operator.Custom,
   compValue: abiEncode(["uint256"], [id]),
 })

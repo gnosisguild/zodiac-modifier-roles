@@ -1,4 +1,4 @@
-import { AbiType, Condition, Operator } from "zodiac-roles-deployments"
+import { Encoding, Condition, Operator } from "zodiac-roles-deployments"
 
 import {
   isPermissionAllowed,
@@ -103,7 +103,7 @@ const mergeConditions = (a: Condition, b: Condition): Condition | undefined => {
   const bBranches = b.operator === Operator.Or ? b.children : [b]
 
   return {
-    paramType: AbiType.None,
+    paramType: Encoding.None,
     operator: Operator.Or,
     children: [...(aBranches || []), ...(bBranches || [])],
   }

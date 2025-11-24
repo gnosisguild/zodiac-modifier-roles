@@ -2,7 +2,7 @@ import { BigNumberish, isHexString, ParamType } from "ethers"
 import {
   Condition,
   Operator,
-  AbiType as ParameterType,
+  Encoding as ParameterType,
 } from "zodiac-roles-deployments"
 
 import { coercePermission } from "../../../permission/coercePermission"
@@ -21,7 +21,7 @@ import {
   TupleScopings,
 } from "../types"
 
-type AbiType = string | ParamType
+type Encoding = string | ParamType
 
 /**
  * Matches a tuple or array against a structure of conditions.
@@ -105,7 +105,7 @@ export const matches =
 const calldataMatchesScopings =
   <S extends TupleScopings<any>>(
     scopings: S,
-    abiTypes: readonly AbiType[],
+    abiTypes: readonly Encoding[],
     options: {
       selector?: `0x${string}`
       etherWithinAllowance?: `0x${string}`
@@ -219,7 +219,7 @@ type CalldataMatches = {
    **/
   <S extends TupleScopings<any>>(
     scopings: S,
-    abiTypes: readonly AbiType[],
+    abiTypes: readonly Encoding[],
     options?: {
       selector?: `0x${string}`
       etherWithinAllowance?: `0x${string}`
@@ -240,7 +240,7 @@ type CalldataMatches = {
 
 export const calldataMatches: CalldataMatches = <S extends TupleScopings<any>>(
   scopingsOrFunctionPermission: S | FunctionPermission,
-  abiTypes?: readonly AbiType[],
+  abiTypes?: readonly Encoding[],
   options?: {
     selector?: `0x${string}`
     etherWithinAllowance?: `0x${string}`
@@ -265,7 +265,7 @@ export const calldataMatches: CalldataMatches = <S extends TupleScopings<any>>(
  * @param abiTypes The parameter types defining how to decode bytes
  **/
 export const abiEncodedMatches =
-  <S extends TupleScopings<any>>(scopings: S, abiTypes: AbiType[]) =>
+  <S extends TupleScopings<any>>(scopings: S, abiTypes: Encoding[]) =>
   (abiType?: ParamType) => {
     const paramTypes = abiTypes.map((abiType) => ParamType.from(abiType))
 

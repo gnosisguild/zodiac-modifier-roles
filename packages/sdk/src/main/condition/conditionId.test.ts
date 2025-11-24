@@ -1,5 +1,5 @@
 import { expect, it, suite } from "vitest"
-import { AbiType, Operator } from "zodiac-roles-deployments"
+import { Encoding, Operator } from "zodiac-roles-deployments"
 
 import { conditionAddress } from "./conditionId"
 import { normalizeCondition } from "./normalize"
@@ -8,35 +8,35 @@ suite("conditionAddress", () => {
   it("calculates the create2 storage address of the condition", () => {
     const normalizedCondition = normalizeCondition({
       operator: Operator.Matches,
-      paramType: AbiType.Calldata,
+      paramType: Encoding.Calldata,
       children: [
         {
           operator: Operator.Matches,
-          paramType: AbiType.Tuple,
+          paramType: Encoding.Tuple,
           children: [
             {
               operator: Operator.EqualToAvatar,
-              paramType: AbiType.Static,
+              paramType: Encoding.Static,
             },
             {
               operator: Operator.EqualTo,
-              paramType: AbiType.Dynamic,
+              paramType: Encoding.Dynamic,
               compValue:
                 "0x00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000016617262697472756d666f756e646174696f6e2e65746800000000000000000000",
             },
-            { operator: Operator.Pass, paramType: AbiType.Static },
-            { operator: Operator.Pass, paramType: AbiType.Static },
+            { operator: Operator.Pass, paramType: Encoding.Static },
+            { operator: Operator.Pass, paramType: Encoding.Static },
             {
               operator: Operator.Pass,
-              paramType: AbiType.Array,
+              paramType: Encoding.Array,
               children: [
-                { operator: Operator.Pass, paramType: AbiType.Static },
+                { operator: Operator.Pass, paramType: Encoding.Static },
               ],
             },
-            { operator: Operator.Pass, paramType: AbiType.Dynamic },
+            { operator: Operator.Pass, paramType: Encoding.Dynamic },
             {
               operator: Operator.EqualTo,
-              paramType: AbiType.Dynamic,
+              paramType: Encoding.Dynamic,
               compValue:
                 "0x00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000008736e617073686f74000000000000000000000000000000000000000000000000",
             },
@@ -44,11 +44,11 @@ suite("conditionAddress", () => {
         },
         {
           operator: Operator.Matches,
-          paramType: AbiType.Tuple,
+          paramType: Encoding.Tuple,
           children: [
             {
               operator: Operator.EqualTo,
-              paramType: AbiType.Dynamic,
+              paramType: Encoding.Dynamic,
               compValue:
                 "0x00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000008736e617073686f74000000000000000000000000000000000000000000000000",
             },

@@ -3,7 +3,7 @@ import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import {
-  AbiType,
+  Encoding,
   BYTES32_ZERO,
   ExecutionOptions,
   Operator,
@@ -31,13 +31,13 @@ describe("Operator - Custom", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.Custom,
         compValue: `${customerCheckerAddress}${extra}`,
       },
@@ -54,13 +54,13 @@ describe("Operator - Custom", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.Custom,
         compValue: `${customerCheckerAddress}${extra}`,
       },
@@ -83,13 +83,13 @@ describe("Operator - Custom", async () => {
       [
         {
           parent: 0,
-          paramType: AbiType.Calldata,
+          paramType: Encoding.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.Custom,
           compValue: `${customerCheckerAddress}${extra}`,
         },
@@ -111,13 +111,13 @@ describe("Operator - Custom", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.Custom,
         compValue: AddressOne.padEnd(66, "0"),
       },

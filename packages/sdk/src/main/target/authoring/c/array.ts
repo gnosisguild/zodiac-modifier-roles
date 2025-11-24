@@ -1,5 +1,5 @@
 import { ParamType } from "ethers"
-import { AbiType, Condition, Operator } from "zodiac-roles-deployments"
+import { Encoding, Condition, Operator } from "zodiac-roles-deployments"
 
 import { mapScoping } from "./matches"
 
@@ -21,7 +21,7 @@ export const every =
       throw new Error("every() element condition must not be undefined")
     }
     return {
-      paramType: AbiType.Array,
+      paramType: Encoding.Array,
       operator: Operator.ArrayEvery,
       children: [
         mapScoping(elementScoping, abiType.arrayChildren!) as Condition, // cast is safe because of earlier elementScoping check
@@ -45,7 +45,7 @@ export const some =
       throw new Error("some() element condition must not be undefined")
     }
     return {
-      paramType: AbiType.Array,
+      paramType: Encoding.Array,
       operator: Operator.ArraySome,
       children: [
         mapScoping(elementScoping, abiType.arrayChildren!) as Condition, // cast is safe because of earlier elementScoping check
@@ -66,7 +66,7 @@ export const subset =
       throw new Error("subset() can only be used on array types")
     }
     return {
-      paramType: AbiType.Array,
+      paramType: Encoding.Array,
       operator: Operator.ArraySubset,
       children: elementScopings.map((elementScoping) => {
         if (elementScoping === undefined) {

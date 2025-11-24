@@ -3,7 +3,7 @@ import z from "zod"
 import {
   Condition,
   Operator,
-  AbiType,
+  Encoding,
   Clearance,
   ExecutionOptions,
 } from "zodiac-roles-sdk"
@@ -26,7 +26,7 @@ export const zHex = z
   .transform((value) => value.toLowerCase() as `0x${string}`)
 
 const zCondition = z.object({
-  paramType: z.nativeEnum(AbiType),
+  paramType: z.nativeEnum(Encoding),
   operator: z.nativeEnum(Operator),
   compValue: zHex.optional(),
   children: z.lazy(() => z.array(zCondition)).optional(),

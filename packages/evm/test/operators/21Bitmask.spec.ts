@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 import {
-  AbiType,
+  Encoding,
   BYTES32_ZERO,
   Operator,
   PermissionCheckerStatus,
@@ -22,13 +22,13 @@ describe("Operator - Bitmask", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.Bitmask,
         compValue,
       },
@@ -72,13 +72,13 @@ describe("Operator - Bitmask", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.Bitmask,
         compValue,
       },
@@ -120,13 +120,13 @@ describe("Operator - Bitmask", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.Bitmask,
         compValue,
       },
@@ -169,13 +169,13 @@ describe("Operator - Bitmask", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.Bitmask,
         compValue,
       },
@@ -202,13 +202,13 @@ describe("Operator - Bitmask", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: AbiType.Dynamic,
+        paramType: Encoding.Dynamic,
         operator: Operator.Bitmask,
         compValue,
       },
@@ -234,13 +234,13 @@ describe("Operator - Bitmask", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: AbiType.Dynamic,
+        paramType: Encoding.Dynamic,
         operator: Operator.Bitmask,
         compValue,
       },
@@ -265,13 +265,13 @@ describe("Operator - Bitmask", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: AbiType.Dynamic,
+        paramType: Encoding.Dynamic,
         operator: Operator.Bitmask,
         compValue,
       },
@@ -294,19 +294,19 @@ describe("Operator - Bitmask", async () => {
       scopeFunction([
         {
           parent: 0,
-          paramType: AbiType.Calldata,
+          paramType: Encoding.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: AbiType.Tuple,
+          paramType: Encoding.Tuple,
           operator: Operator.Bitmask,
           compValue,
         },
         {
           parent: 1,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.Pass,
           compValue: "0x",
         },
@@ -317,19 +317,19 @@ describe("Operator - Bitmask", async () => {
       scopeFunction([
         {
           parent: 0,
-          paramType: AbiType.Calldata,
+          paramType: Encoding.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: AbiType.Array,
+          paramType: Encoding.Array,
           operator: Operator.Bitmask,
           compValue,
         },
         {
           parent: 1,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.Pass,
           compValue: "0x",
         },
