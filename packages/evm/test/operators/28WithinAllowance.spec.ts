@@ -5,7 +5,7 @@ import { AbiCoder, BigNumberish } from "ethers";
 
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
-import { AbiType, Operator, PermissionCheckerStatus } from "../utils";
+import { Encoding, Operator, PermissionCheckerStatus } from "../utils";
 import { setupOneParamStatic, setupTwoParamsStatic } from "../setup";
 import { Roles } from "../../typechain-types";
 
@@ -55,13 +55,13 @@ describe("Operator - WithinAllowance", async () => {
       await scopeFunction([
         {
           parent: 0,
-          paramType: AbiType.Calldata,
+          paramType: Encoding.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.WithinAllowance,
           compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
         },
@@ -86,13 +86,13 @@ describe("Operator - WithinAllowance", async () => {
       await scopeFunction([
         {
           parent: 0,
-          paramType: AbiType.Calldata,
+          paramType: Encoding.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.WithinAllowance,
           compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
         },
@@ -124,13 +124,13 @@ describe("Operator - WithinAllowance", async () => {
       await scopeFunction([
         {
           parent: 0,
-          paramType: AbiType.Calldata,
+          paramType: Encoding.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.WithinAllowance,
           compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
         },
@@ -162,13 +162,13 @@ describe("Operator - WithinAllowance", async () => {
       await scopeFunction([
         {
           parent: 0,
-          paramType: AbiType.Calldata,
+          paramType: Encoding.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.WithinAllowance,
           compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
         },
@@ -202,13 +202,13 @@ describe("Operator - WithinAllowance", async () => {
       await scopeFunction([
         {
           parent: 0,
-          paramType: AbiType.Calldata,
+          paramType: Encoding.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.WithinAllowance,
           compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
         },
@@ -238,13 +238,13 @@ describe("Operator - WithinAllowance", async () => {
       await scopeFunction([
         {
           parent: 0,
-          paramType: AbiType.Calldata,
+          paramType: Encoding.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.WithinAllowance,
           compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
         },
@@ -278,19 +278,19 @@ describe("Operator - WithinAllowance", async () => {
       await scopeFunction([
         {
           parent: 0,
-          paramType: AbiType.Calldata,
+          paramType: Encoding.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.WithinAllowance,
           compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
         },
         {
           parent: 0,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.WithinAllowance,
           compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
         },
@@ -325,19 +325,19 @@ describe("Operator - WithinAllowance", async () => {
       await scopeFunction([
         {
           parent: 0,
-          paramType: AbiType.Calldata,
+          paramType: Encoding.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.WithinAllowance,
           compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
         },
         {
           parent: 0,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.WithinAllowance,
           compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
         },
@@ -370,13 +370,13 @@ describe("Operator - WithinAllowance", async () => {
       await scopeFunction([
         {
           parent: 0,
-          paramType: AbiType.Calldata,
+          paramType: Encoding.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.WithinAllowance,
           compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
         },
@@ -409,13 +409,13 @@ describe("Operator - WithinAllowance", async () => {
       await scopeFunction([
         {
           parent: 0,
-          paramType: AbiType.Calldata,
+          paramType: Encoding.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.WithinAllowance,
           compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
         },
@@ -444,13 +444,13 @@ describe("Operator - WithinAllowance", async () => {
       await scopeFunction([
         {
           parent: 0,
-          paramType: AbiType.Calldata,
+          paramType: Encoding.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.WithinAllowance,
           compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
         },
@@ -482,13 +482,13 @@ describe("Operator - WithinAllowance", async () => {
       await scopeFunction([
         {
           parent: 0,
-          paramType: AbiType.Calldata,
+          paramType: Encoding.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.WithinAllowance,
           compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
         },

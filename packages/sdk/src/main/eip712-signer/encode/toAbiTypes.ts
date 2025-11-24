@@ -8,7 +8,7 @@ import {
   parseType,
   typesForDomain,
 } from "../types"
-import { AbiType } from "zodiac-roles-deployments"
+import { Encoding } from "zodiac-roles-deployments"
 
 export function toAbiTypes({
   domain,
@@ -28,7 +28,7 @@ export function toAbiTypes({
 
   const abiTypes = [
     ...rootTypes.map((_, index) => ({
-      _type: AbiType.AbiEncoded,
+      encoding: Encoding.AbiEncoded,
       typeHash: ZeroHash as `0x${string}`,
       typeSignature: "",
       fields: [index],
@@ -45,7 +45,7 @@ export function toAbiTypes({
       if (isStruct) {
         const { typeSignature, typeHash } = hashType({ types, type })
         return {
-          _type: AbiType.Tuple,
+          encoding: Encoding.Tuple,
           typeHash,
           typeSignature,
           fields: types[type].map((field) => allTypes.indexOf(field.type)),
@@ -54,7 +54,7 @@ export function toAbiTypes({
 
       if (isArray && fixedLength) {
         return {
-          _type: AbiType.Tuple,
+          encoding: Encoding.Tuple,
           typeHash: ZeroHash as `0x${string}`,
           typeSignature: "",
           fields: new Array(fixedLength).fill(allTypes.indexOf(baseType)),
@@ -63,7 +63,7 @@ export function toAbiTypes({
 
       if (isArray && !fixedLength) {
         return {
-          _type: AbiType.Array,
+          encoding: Encoding.Array,
           typeHash: ZeroHash as `0x${string}`,
           typeSignature: "",
           fields: [allTypes.indexOf(baseType)],
@@ -71,7 +71,7 @@ export function toAbiTypes({
       }
 
       return {
-        _type: isAtomic ? AbiType.Static : AbiType.Dynamic,
+        encoding: isAtomic ? Encoding.Static : Encoding.Dynamic,
         typeHash: ZeroHash as `0x${string}`,
         typeSignature: "",
         fields: [],
@@ -80,7 +80,7 @@ export function toAbiTypes({
   ].map((a) => ({ ...a, fields: a.fields.map((f) => f + rootTypes.length) }))
 
   return {
-    layout: abiTypes,
+    layout: abiTypes.map(({ encoding, fields }) => ({ encoding, fields })),
     typeHashes: abiTypes.map(({ typeHash }) => typeHash),
   }
 }

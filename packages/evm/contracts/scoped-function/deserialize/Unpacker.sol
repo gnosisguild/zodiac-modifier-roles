@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "../../Types.sol";
-import "../../AbiTypes.sol";
+import "../../types/All.sol";
 
 library Unpacker {
     // ═══════════════════════════════════════════════════════════════════════════
@@ -70,8 +69,8 @@ library Unpacker {
             /*
              * ┌───────────────────────────────────────────────────────┐
              * │Each node 40 bits, 5 bytes:                            │
-             * │  • paramType             3 bits                       │
              * │  • operator              5 bits                       │
+             * │  • unused                3 bits                       │
              * │  • childCount            8 bits  (0-255)              │
              * │  • sChildCount           8 bits  (0-255)              │
              * │  • compValueOffset      16 bits  (0 if no value)      │
@@ -79,8 +78,7 @@ library Unpacker {
              */
 
             Condition memory node = nodes[i];
-            node.paramType = AbiType((packed >> 37) & 0x07);
-            node.operator = Operator((packed >> 32) & 0x1F);
+            node.operator = Operator((packed >> 35) & 0x1F);
             uint256 childCount = (packed >> 24) & 0xFF;
             node.sChildCount = (packed >> 16) & 0xFF;
             uint256 offsetCompValue = packed & 0xFFFF;
@@ -157,14 +155,14 @@ library Unpacker {
             /*
              * ┌──────────────────────────────────────────────────┐
              * │Each node (11 bits, padded to 2 bytes):           │
-             * │  • type                  3 bits  (AbiType 0-7)   │
+             * │  • encoding              3 bits  (Encoding 0-7)  │
              * │  • childCount            8 bits  (0-255)         │
-             * │  • reserved              5 bits                  │
+             * │  • unused                5 bits                  │
              * └──────────────────────────────────────────────────┘
              */
 
             Layout memory node = nodes[i];
-            node._type = AbiType((packed >> 13));
+            node.encoding = Encoding((packed >> 13));
             uint256 childCount = (packed >> 5) & 0xFF;
 
             if (childCount > 0) {

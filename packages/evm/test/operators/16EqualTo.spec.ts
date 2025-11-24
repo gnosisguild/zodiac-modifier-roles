@@ -6,7 +6,7 @@ import { AbiCoder } from "ethers";
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
 import {
-  AbiType,
+  Encoding,
   BYTES32_ZERO,
   Operator,
   PermissionCheckerStatus,
@@ -36,13 +36,13 @@ describe("Operator - EqualTo", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["uint256"], [123]),
       },
@@ -61,13 +61,13 @@ describe("Operator - EqualTo", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["uint8"], [50]),
       },
@@ -85,13 +85,13 @@ describe("Operator - EqualTo", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["int256"], [-5555]),
       },
@@ -110,13 +110,13 @@ describe("Operator - EqualTo", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["int8"], [-55]),
       },
@@ -139,13 +139,13 @@ describe("Operator - EqualTo", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["bytes32"], [value]),
       },
@@ -164,13 +164,13 @@ describe("Operator - EqualTo", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["bytes1"], ["0xa1"]),
       },
@@ -188,13 +188,13 @@ describe("Operator - EqualTo", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: AbiType.Dynamic,
+        paramType: Encoding.Dynamic,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["string"], ["Hello World!"]),
       },
@@ -212,13 +212,13 @@ describe("Operator - EqualTo", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: AbiType.Dynamic,
+        paramType: Encoding.Dynamic,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["string"], [""]),
       },
@@ -238,13 +238,13 @@ describe("Operator - EqualTo", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: AbiType.Dynamic,
+        paramType: Encoding.Dynamic,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["string"], [value]),
       },
@@ -266,13 +266,13 @@ describe("Operator - EqualTo", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: AbiType.Dynamic,
+        paramType: Encoding.Dynamic,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["bytes"], ["0xbadfed"]),
       },
@@ -296,13 +296,13 @@ describe("Operator - EqualTo", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: AbiType.Dynamic,
+        paramType: Encoding.Dynamic,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["bytes"], [largeValue]),
       },
@@ -323,13 +323,13 @@ describe("Operator - EqualTo", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: AbiType.Dynamic,
+        paramType: Encoding.Dynamic,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["bytes"], ["0x"]),
       },
@@ -351,19 +351,19 @@ describe("Operator - EqualTo", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: AbiType.Array,
+        paramType: Encoding.Array,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["uint256[]"], [[4, 5, 6]]),
       },
       {
         parent: 1,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.Pass,
         compValue: "0x",
       },
@@ -385,19 +385,19 @@ describe("Operator - EqualTo", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: AbiType.Array,
+        paramType: Encoding.Array,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["uint256[]"], [[]]),
       },
       {
         parent: 1,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.Pass,
         compValue: "0x",
       },
@@ -420,13 +420,13 @@ describe("Operator - EqualTo", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: AbiType.Tuple,
+        paramType: Encoding.Tuple,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(
           ["tuple(uint256,bool)"],
@@ -435,19 +435,19 @@ describe("Operator - EqualTo", async () => {
       },
       {
         parent: 0,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.Pass,
         compValue: "0x",
       },
       {
         parent: 1,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.Pass,
         compValue: "0x",
       },
       {
         parent: 1,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.Pass,
         compValue: "0x",
       },
@@ -471,13 +471,13 @@ describe("Operator - EqualTo", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: AbiType.Tuple,
+        paramType: Encoding.Tuple,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(
           ["tuple(uint256,tuple(uint256, bool))"],
@@ -486,25 +486,25 @@ describe("Operator - EqualTo", async () => {
       },
       {
         parent: 1,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.Pass,
         compValue: "0x",
       },
       {
         parent: 1,
-        paramType: AbiType.Tuple,
+        paramType: Encoding.Tuple,
         operator: Operator.Pass,
         compValue: "0x",
       },
       {
         parent: 3,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.Pass,
         compValue: "0x",
       },
       {
         parent: 3,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.Pass,
         compValue: "0x",
       },
@@ -524,13 +524,13 @@ describe("Operator - EqualTo", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: AbiType.Tuple,
+        paramType: Encoding.Tuple,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(
           ["tuple(uint256,bytes)"],
@@ -539,13 +539,13 @@ describe("Operator - EqualTo", async () => {
       },
       {
         parent: 1,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.Pass,
         compValue: "0x",
       },
       {
         parent: 1,
-        paramType: AbiType.Dynamic,
+        paramType: Encoding.Dynamic,
         operator: Operator.Pass,
         compValue: "0x",
       },
@@ -568,13 +568,13 @@ describe("Operator - EqualTo", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: AbiType.Tuple,
+        paramType: Encoding.Tuple,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(
           ["tuple(uint256,tuple(uint256,bytes))"],
@@ -583,25 +583,25 @@ describe("Operator - EqualTo", async () => {
       },
       {
         parent: 1,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.Pass,
         compValue: "0x",
       },
       {
         parent: 1,
-        paramType: AbiType.Tuple,
+        paramType: Encoding.Tuple,
         operator: Operator.Pass,
         compValue: "0x",
       },
       {
         parent: 3,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.Pass,
         compValue: "0x",
       },
       {
         parent: 3,
-        paramType: AbiType.Dynamic,
+        paramType: Encoding.Dynamic,
         operator: Operator.Pass,
         compValue: "0x",
       },

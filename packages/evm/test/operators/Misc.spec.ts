@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 import {
-  AbiType,
+  Encoding,
   BYTES32_ZERO,
   flattenCondition,
   Operator,
@@ -38,44 +38,44 @@ describe("Operator - Misc", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: AbiType.None,
+        paramType: Encoding.None,
         operator: Operator.And,
         compValue: "0x",
       },
       {
         parent: 1,
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 1,
-        paramType: AbiType.None,
+        paramType: Encoding.None,
         operator: Operator.Or,
         compValue: "0x",
       },
       {
         parent: 2,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["uint256"], [123456]),
       },
 
       {
         parent: 3,
-        paramType: AbiType.Dynamic,
+        paramType: Encoding.Dynamic,
         operator: Operator.Bitmask,
         compValue: maskCompValue(fnAllowed1.selector),
       },
       {
         parent: 3,
-        paramType: AbiType.Dynamic,
+        paramType: Encoding.Dynamic,
         operator: Operator.Bitmask,
         compValue: maskCompValue(fnAllowed2.selector),
       },
@@ -119,43 +119,43 @@ describe("Operator - Misc", async () => {
       scopeFunction([
         {
           parent: 0,
-          paramType: AbiType.Calldata,
+          paramType: Encoding.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: AbiType.None,
+          paramType: Encoding.None,
           operator: Operator.And,
           compValue: "0x",
         },
         {
           parent: 1,
-          paramType: AbiType.None,
+          paramType: Encoding.None,
           operator: Operator.Or,
           compValue: "0x",
         },
         {
           parent: 1,
-          paramType: AbiType.Calldata,
+          paramType: Encoding.Calldata,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 2,
-          paramType: AbiType.Dynamic,
+          paramType: Encoding.Dynamic,
           operator: Operator.Bitmask,
           compValue: maskCompValue(fnAllowed1.selector),
         },
         {
           parent: 2,
-          paramType: AbiType.Dynamic,
+          paramType: Encoding.Dynamic,
           operator: Operator.Bitmask,
           compValue: maskCompValue(fnAllowed2.selector),
         },
         {
           parent: 3,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["uint256"], [123456]),
         },
@@ -169,24 +169,24 @@ describe("Operator - Misc", async () => {
     );
 
     const conditions = flattenCondition({
-      paramType: AbiType.Calldata,
+      paramType: Encoding.Calldata,
       operator: Operator.Matches,
       children: [
         {
-          paramType: AbiType.Array,
+          paramType: Encoding.Array,
           operator: Operator.ArrayEvery,
           children: [
             {
-              paramType: AbiType.None,
+              paramType: Encoding.None,
               operator: Operator.Or,
               children: [
                 // Variant 1: AbiEncoded with single uint256
                 {
-                  paramType: AbiType.AbiEncoded,
+                  paramType: Encoding.AbiEncoded,
                   operator: Operator.Matches,
                   children: [
                     {
-                      paramType: AbiType.Static,
+                      paramType: Encoding.Static,
                       operator: Operator.GreaterThan,
                       compValue: defaultAbiCoder.encode(["uint256"], [100]),
                     },
@@ -194,20 +194,20 @@ describe("Operator - Misc", async () => {
                 },
                 // Variant 2: AbiEncoded with tuple(uint256, bytes)
                 {
-                  paramType: AbiType.AbiEncoded,
+                  paramType: Encoding.AbiEncoded,
                   operator: Operator.Matches,
                   children: [
                     {
-                      paramType: AbiType.Tuple,
+                      paramType: Encoding.Tuple,
                       operator: Operator.Matches,
                       children: [
                         {
-                          paramType: AbiType.Static,
+                          paramType: Encoding.Static,
                           operator: Operator.EqualTo,
                           compValue: defaultAbiCoder.encode(["uint256"], [25]),
                         },
                         {
-                          paramType: AbiType.Dynamic,
+                          paramType: Encoding.Dynamic,
                           operator: Operator.EqualTo,
                           compValue: encode(["bytes"], ["0xaabbcc"]),
                         },

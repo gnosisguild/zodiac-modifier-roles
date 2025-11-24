@@ -3,7 +3,7 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { AbiCoder, Interface, ZeroHash } from "ethers";
 
 import {
-  AbiType,
+  Encoding,
   flattenCondition,
   Operator,
   PermissionCheckerStatus,
@@ -25,19 +25,19 @@ describe("Operator - Or", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: AbiType.None,
+        paramType: Encoding.None,
         operator: Operator.Or,
         compValue: "0x",
       },
       {
         parent: 1,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["uint256"], [1]),
       },
@@ -57,25 +57,25 @@ describe("Operator - Or", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: AbiType.None,
+        paramType: Encoding.None,
         operator: Operator.Or,
         compValue: "0x",
       },
       {
         parent: 1,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["uint256"], [15]),
       },
       {
         parent: 1,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["uint256"], [30]),
       },
@@ -104,40 +104,40 @@ describe("Operator - Or", async () => {
     );
 
     const conditions = flattenCondition({
-      paramType: AbiType.Calldata,
+      paramType: Encoding.Calldata,
       operator: Operator.Matches,
       children: [
         {
-          paramType: AbiType.None,
+          paramType: Encoding.None,
           operator: Operator.Or,
           children: [
             {
-              paramType: AbiType.Tuple,
+              paramType: Encoding.Tuple,
               operator: Operator.Matches,
               children: [
                 {
-                  paramType: AbiType.Static,
+                  paramType: Encoding.Static,
                   operator: Operator.EqualTo,
                   compValue: defaultAbiCoder.encode(["uint256"], [123]),
                 },
                 {
-                  paramType: AbiType.Static,
+                  paramType: Encoding.Static,
                   operator: Operator.EqualTo,
                   compValue: defaultAbiCoder.encode(["bool"], [true]),
                 },
               ],
             },
             {
-              paramType: AbiType.Tuple,
+              paramType: Encoding.Tuple,
               operator: Operator.Matches,
               children: [
                 {
-                  paramType: AbiType.Static,
+                  paramType: Encoding.Static,
                   operator: Operator.EqualTo,
                   compValue: defaultAbiCoder.encode(["uint256"], [345]),
                 },
                 {
-                  paramType: AbiType.Static,
+                  paramType: Encoding.Static,
                   operator: Operator.EqualTo,
                   compValue: defaultAbiCoder.encode(["bool"], [false]),
                 },
@@ -170,24 +170,24 @@ describe("Operator - Or", async () => {
     } = await loadFixture(setupTwoParamsStaticDynamic);
 
     const conditions = flattenCondition({
-      paramType: AbiType.Calldata,
+      paramType: Encoding.Calldata,
       operator: Operator.Matches,
       children: [
         {
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["uint256"], [987]),
         },
         {
-          paramType: AbiType.None,
+          paramType: Encoding.None,
           operator: Operator.Or,
           children: [
             {
-              paramType: AbiType.AbiEncoded,
+              paramType: Encoding.AbiEncoded,
               operator: Operator.Matches,
               children: [
                 {
-                  paramType: AbiType.Dynamic,
+                  paramType: Encoding.Dynamic,
                   operator: Operator.EqualTo,
                   compValue: defaultAbiCoder.encode(
                     ["bytes"],
@@ -197,11 +197,11 @@ describe("Operator - Or", async () => {
               ],
             },
             {
-              paramType: AbiType.Calldata,
+              paramType: Encoding.Calldata,
               operator: Operator.Matches,
               children: [
                 {
-                  paramType: AbiType.Static,
+                  paramType: Encoding.Static,
                   operator: Operator.EqualTo,
                   compValue: defaultAbiCoder.encode(["uint256"], [12345]),
                 },
