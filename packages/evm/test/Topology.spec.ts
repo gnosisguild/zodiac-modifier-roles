@@ -2,7 +2,7 @@ import hre from "hardhat";
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import { AbiType, flattenCondition, Operator } from "./utils";
+import { Encoding, flattenCondition, Operator } from "./utils";
 
 describe("Topology Library", () => {
   async function setup() {
@@ -16,11 +16,11 @@ describe("Topology Library", () => {
       const { topology } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         children: [
           {
-            paramType: AbiType.Static,
+            paramType: Encoding.Static,
             operator: Operator.Pass,
             children: [],
           },
@@ -42,20 +42,20 @@ describe("Topology Library", () => {
       const { topology } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         children: [
           {
-            paramType: AbiType.Tuple,
+            paramType: Encoding.Tuple,
             operator: Operator.Pass,
             children: [
               {
-                paramType: AbiType.Static,
+                paramType: Encoding.Static,
                 operator: Operator.Pass,
                 children: [],
               },
               {
-                paramType: AbiType.Dynamic,
+                paramType: Encoding.Dynamic,
                 operator: Operator.Pass,
                 children: [],
               },
@@ -79,20 +79,20 @@ describe("Topology Library", () => {
       const { topology } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         children: [
           {
-            paramType: AbiType.Tuple,
+            paramType: Encoding.Tuple,
             operator: Operator.Pass,
             children: [
               {
-                paramType: AbiType.Static,
+                paramType: Encoding.Static,
                 operator: Operator.Pass,
                 children: [],
               },
               {
-                paramType: AbiType.None,
+                paramType: Encoding.None,
                 operator: Operator.WithinRatio,
                 children: [],
               },
@@ -116,30 +116,30 @@ describe("Topology Library", () => {
       const { topology } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         children: [
           {
-            paramType: AbiType.Tuple,
+            paramType: Encoding.Tuple,
             operator: Operator.Pass,
             children: [
               {
-                paramType: AbiType.Static,
+                paramType: Encoding.Static,
                 operator: Operator.Pass,
                 children: [],
               },
               {
-                paramType: AbiType.Dynamic,
+                paramType: Encoding.Dynamic,
                 operator: Operator.Pass,
                 children: [],
               },
               {
-                paramType: AbiType.None,
+                paramType: Encoding.None,
                 operator: Operator.EtherWithinAllowance,
                 children: [],
               },
               {
-                paramType: AbiType.None,
+                paramType: Encoding.None,
                 operator: Operator.CallWithinAllowance,
                 children: [],
               },
@@ -163,22 +163,22 @@ describe("Topology Library", () => {
       const { topology } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         children: [
           {
-            paramType: AbiType.Tuple,
+            paramType: Encoding.Tuple,
             operator: Operator.Pass,
             children: [
               {
-                paramType: AbiType.Static,
+                paramType: Encoding.Static,
                 operator: Operator.Pass,
                 children: [],
               },
             ],
           },
           {
-            paramType: AbiType.Dynamic,
+            paramType: Encoding.Dynamic,
             operator: Operator.Pass,
             children: [],
           },
@@ -200,25 +200,25 @@ describe("Topology Library", () => {
       const { topology } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         children: [
           {
-            paramType: AbiType.Static,
+            paramType: Encoding.Static,
             operator: Operator.Pass,
             children: [],
           },
           {
-            paramType: AbiType.Dynamic,
+            paramType: Encoding.Dynamic,
             operator: Operator.Pass,
             children: [],
           },
           {
-            paramType: AbiType.Tuple,
+            paramType: Encoding.Tuple,
             operator: Operator.Pass,
             children: [
               {
-                paramType: AbiType.Static,
+                paramType: Encoding.Static,
                 operator: Operator.Pass,
                 children: [],
               },
@@ -242,40 +242,40 @@ describe("Topology Library", () => {
       const { topology } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         children: [
           {
-            paramType: AbiType.Tuple,
+            paramType: Encoding.Tuple,
             operator: Operator.Pass,
             children: [
               {
-                paramType: AbiType.Static,
+                paramType: Encoding.Static,
                 operator: Operator.Pass,
                 children: [],
               },
               {
-                paramType: AbiType.None,
+                paramType: Encoding.None,
                 operator: Operator.And,
                 children: [
                   {
-                    paramType: AbiType.None,
+                    paramType: Encoding.None,
                     operator: Operator.WithinRatio,
                     children: [],
                   },
                   {
-                    paramType: AbiType.None,
+                    paramType: Encoding.None,
                     operator: Operator.EtherWithinAllowance,
                     children: [],
                   },
                 ],
               },
               {
-                paramType: AbiType.None,
+                paramType: Encoding.None,
                 operator: Operator.And,
                 children: [
                   {
-                    paramType: AbiType.Static,
+                    paramType: Encoding.Static,
                     operator: Operator.Pass,
                   },
                 ],
@@ -283,7 +283,7 @@ describe("Topology Library", () => {
             ],
           },
           {
-            paramType: AbiType.None,
+            paramType: Encoding.None,
             operator: Operator.CallWithinAllowance,
             children: [],
           },
@@ -307,11 +307,11 @@ describe("Topology Library", () => {
       const { topology } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         children: [
           {
-            paramType: AbiType.Static,
+            paramType: Encoding.Static,
             operator: Operator.Pass,
             children: [],
           },
@@ -326,30 +326,30 @@ describe("Topology Library", () => {
       const { topology } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         children: [
           {
-            paramType: AbiType.Static,
+            paramType: Encoding.Static,
             operator: Operator.Pass,
             children: [],
           },
           {
-            paramType: AbiType.None,
+            paramType: Encoding.None,
             operator: Operator.And,
             children: [
               {
-                paramType: AbiType.None,
+                paramType: Encoding.None,
                 operator: Operator.WithinRatio,
                 children: [],
               },
               {
-                paramType: AbiType.None,
+                paramType: Encoding.None,
                 operator: Operator.EtherWithinAllowance,
                 children: [],
               },
               {
-                paramType: AbiType.None,
+                paramType: Encoding.None,
                 operator: Operator.CallWithinAllowance,
                 children: [],
               },
@@ -365,20 +365,20 @@ describe("Topology Library", () => {
       const { topology } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         children: [
           {
-            paramType: AbiType.None,
+            paramType: Encoding.None,
             operator: Operator.And,
             children: [
               {
-                paramType: AbiType.Static,
+                paramType: Encoding.Static,
                 operator: Operator.Pass,
                 children: [],
               },
               {
-                paramType: AbiType.None,
+                paramType: Encoding.None,
                 operator: Operator.WithinRatio,
                 children: [],
               },
@@ -394,19 +394,19 @@ describe("Topology Library", () => {
       const { topology } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         children: [
           {
-            paramType: AbiType.None,
+            paramType: Encoding.None,
             operator: Operator.And,
             children: [
               {
-                paramType: AbiType.None,
+                paramType: Encoding.None,
                 operator: Operator.Or,
                 children: [
                   {
-                    paramType: AbiType.Static,
+                    paramType: Encoding.Static,
                     operator: Operator.Pass,
                     children: [],
                   },
@@ -425,16 +425,16 @@ describe("Topology Library", () => {
       const { topology } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         children: [
           {
-            paramType: AbiType.None,
+            paramType: Encoding.None,
             operator: Operator.WithinRatio,
             children: [],
           },
           {
-            paramType: AbiType.Static,
+            paramType: Encoding.Static,
             operator: Operator.Pass,
             children: [],
           },
@@ -449,16 +449,16 @@ describe("Topology Library", () => {
       const { topology } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         children: [
           {
-            paramType: AbiType.Static,
+            paramType: Encoding.Static,
             operator: Operator.Pass,
             children: [],
           },
           {
-            paramType: AbiType.None,
+            paramType: Encoding.None,
             operator: Operator.EtherWithinAllowance,
             children: [],
           },

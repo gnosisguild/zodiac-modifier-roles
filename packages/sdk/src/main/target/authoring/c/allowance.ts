@@ -1,5 +1,5 @@
 import { BigNumberish, ParamType } from "ethers"
-import { Operator, AbiType } from "../../../types"
+import { Operator, Encoding } from "../../../types"
 
 import { abiEncode } from "../../../abiEncode"
 import { encodeKey } from "../../../keys"
@@ -19,7 +19,7 @@ export const withinAllowance =
       throw new Error("`withinAllowance` is only supported for uint params")
     }
     return {
-      paramType: AbiType.Static,
+      paramType: Encoding.Static,
       operator: Operator.WithinAllowance,
       compValue: abiEncode(["bytes32"], [encodeKey(allowanceKey)]),
     }

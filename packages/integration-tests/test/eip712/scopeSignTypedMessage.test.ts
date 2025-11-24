@@ -13,7 +13,7 @@ import {
   Condition,
   ExecutionOptions,
   Operator,
-  AbiType,
+  Encoding,
   encodeSignTypedMessage,
   scopeSignTypedMessage,
   __integration,
@@ -109,25 +109,25 @@ describe("scopeSignTypedMessage()", () => {
     }
 
     const conditionDomain: Condition = {
-      paramType: AbiType.AbiEncoded,
+      paramType: Encoding.AbiEncoded,
       operator: Operator.Matches,
       children: [
         {
-          paramType: AbiType.Tuple,
+          paramType: Encoding.Tuple,
           operator: Operator.Matches,
           children: [
             {
-              paramType: AbiType.Dynamic,
+              paramType: Encoding.Dynamic,
               operator: Operator.Pass,
               compValue: "0x",
             },
             {
-              paramType: AbiType.Dynamic,
+              paramType: Encoding.Dynamic,
               operator: Operator.Pass,
               compValue: "0x",
             },
             {
-              paramType: AbiType.Static,
+              paramType: Encoding.Static,
               operator: Operator.EqualTo,
               compValue: AbiCoder.defaultAbiCoder().encode(
                 ["uint256"],
@@ -135,7 +135,7 @@ describe("scopeSignTypedMessage()", () => {
               ) as any,
             },
             {
-              paramType: AbiType.Static,
+              paramType: Encoding.Static,
               operator: Operator.EqualTo,
               compValue: AbiCoder.defaultAbiCoder().encode(
                 ["address"],
@@ -148,15 +148,15 @@ describe("scopeSignTypedMessage()", () => {
     }
 
     const conditionMessage: Condition = {
-      paramType: AbiType.AbiEncoded,
+      paramType: Encoding.AbiEncoded,
       operator: Operator.Matches,
       children: [
         {
-          paramType: AbiType.Tuple,
+          paramType: Encoding.Tuple,
           operator: Operator.Matches,
           children: [
             {
-              paramType: AbiType.Dynamic,
+              paramType: Encoding.Dynamic,
               operator: Operator.EqualTo,
               compValue: AbiCoder.defaultAbiCoder().encode(
                 ["string"],
@@ -164,7 +164,7 @@ describe("scopeSignTypedMessage()", () => {
               ) as any,
             },
             {
-              paramType: AbiType.Static,
+              paramType: Encoding.Static,
               operator: Operator.EqualTo,
               compValue: AbiCoder.defaultAbiCoder().encode(
                 ["address"],
@@ -172,17 +172,17 @@ describe("scopeSignTypedMessage()", () => {
               ) as any,
             },
             {
-              paramType: AbiType.Array,
+              paramType: Encoding.Array,
               operator: Operator.Pass,
               compValue: "0x",
               children: [
                 {
-                  paramType: AbiType.Tuple,
+                  paramType: Encoding.Tuple,
                   operator: Operator.Pass,
                   compValue: "0x",
                   children: [
                     {
-                      paramType: AbiType.Dynamic,
+                      paramType: Encoding.Dynamic,
                       operator: Operator.Pass,
                       compValue: "0x",
                     },

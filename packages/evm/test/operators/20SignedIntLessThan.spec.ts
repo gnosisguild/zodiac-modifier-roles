@@ -6,7 +6,7 @@ import { AbiCoder } from "ethers";
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
 import {
-  AbiType,
+  Encoding,
   BYTES32_ZERO,
   Operator,
   PermissionCheckerStatus,
@@ -21,13 +21,13 @@ describe("Operator - SignedIntLessThan", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.SignedIntLessThan,
         compValue: defaultAbiCoder.encode(["int256"], [1000]),
       },
@@ -61,13 +61,13 @@ describe("Operator - SignedIntLessThan", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.SignedIntLessThan,
         compValue: defaultAbiCoder.encode(["int256"], [-1000]),
       },
@@ -105,13 +105,13 @@ describe("Operator - SignedIntLessThan", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.SignedIntLessThan,
         compValue: defaultAbiCoder.encode(["int8"], [50]),
       },
@@ -146,13 +146,13 @@ describe("Operator - SignedIntLessThan", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: AbiType.Calldata,
+        paramType: Encoding.Calldata,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.SignedIntLessThan,
         compValue: defaultAbiCoder.encode(["int8"], [-99]),
       },

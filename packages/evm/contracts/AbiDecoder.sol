@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0
 pragma solidity >=0.8.21 <0.9.0;
 
-import "./AbiTypes.sol";
+import "./types/All.sol";
 
 /**
  * @title AbiDecoder - Inspects calldata and determines parameter locations
@@ -36,8 +36,8 @@ library AbiDecoder {
         Layout memory layout
     ) internal pure returns (Payload memory payload) {
         assert(
-            layout._type == AbiType.Calldata ||
-                layout._type == AbiType.AbiEncoded
+            layout.encoding == Encoding.Calldata ||
+                layout.encoding == Encoding.AbiEncoded
         );
         /*
          * The parameter encoding area consists of a head region, divided into
@@ -51,7 +51,7 @@ library AbiDecoder {
          */
         __block__(
             data,
-            layout._type == AbiType.Calldata ? 4 : 0,
+            layout.encoding == Encoding.Calldata ? 4 : 0,
             layout.children.length,
             layout,
             payload
@@ -79,17 +79,17 @@ library AbiDecoder {
 
         payload.typeIndex = layout.index;
 
-        AbiType _type = layout._type;
-        if (_type == AbiType.Static) {
+        Encoding encoding = layout.encoding;
+        if (encoding == Encoding.Static) {
             payload.size = 32;
-        } else if (_type == AbiType.Dynamic) {
+        } else if (encoding == Encoding.Dynamic) {
             if (layout.children.length > 0) {
                 _variant(data, location, layout, payload);
             }
             payload.size = 32 + _ceil32(uint256(word(data, location)));
-        } else if (_type == AbiType.Tuple) {
+        } else if (encoding == Encoding.Tuple) {
             __block__(data, location, layout.children.length, layout, payload);
-        } else if (_type == AbiType.Array) {
+        } else if (encoding == Encoding.Array) {
             __block__(
                 data,
                 location + 32,
@@ -98,10 +98,10 @@ library AbiDecoder {
                 payload
             );
             payload.size += 32;
-        } else if (_type == AbiType.Calldata || _type == AbiType.AbiEncoded) {
+        } else if (encoding == Encoding.Calldata || encoding == Encoding.AbiEncoded) {
             __block__(
                 data,
-                location + 32 + (_type == AbiType.Calldata ? 4 : 0),
+                location + 32 + (encoding == Encoding.Calldata ? 4 : 0),
                 layout.children.length,
                 layout,
                 payload
@@ -140,7 +140,7 @@ library AbiDecoder {
     ) private pure {
         Payload[] memory children = new Payload[](length);
 
-        bool isArray = layout._type == AbiType.Array;
+        bool isArray = layout.encoding == Encoding.Array;
         uint256 offset;
         for (uint256 i; i < length; ++i) {
             Payload memory child = children[i];
@@ -277,14 +277,14 @@ library AbiDecoder {
      *         - Calldata/AbiEncoded: embedded structures
      */
     function _isInline(Layout memory layout) private pure returns (bool) {
-        AbiType _type = layout._type;
-        if (_type == AbiType.Static) {
+        Encoding encoding = layout.encoding;
+        if (encoding == Encoding.Static) {
             return true;
         } else if (
-            _type == AbiType.Dynamic ||
-            _type == AbiType.Array ||
-            _type == AbiType.Calldata ||
-            _type == AbiType.AbiEncoded
+            encoding == Encoding.Dynamic ||
+            encoding == Encoding.Array ||
+            encoding == Encoding.Calldata ||
+            encoding == Encoding.AbiEncoded
         ) {
             return false;
         } else {

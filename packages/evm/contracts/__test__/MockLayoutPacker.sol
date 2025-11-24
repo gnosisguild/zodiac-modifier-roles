@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "../AbiTypes.sol";
 import "../scoped-function/serialize/Packer.sol";
+
+import "../types/All.sol";
 
 contract MockLayoutPacker {
     struct InputFlat {
-        AbiType _type;
+        Encoding encoding;
         uint256 parent;
     }
     function packFlat(
@@ -21,7 +22,7 @@ contract MockLayoutPacker {
         InputFlat[] calldata flatNodes,
         uint256 index
     ) private pure returns (Layout memory node) {
-        node._type = flatNodes[index]._type;
+        node.encoding = flatNodes[index].encoding;
         node.index = index;
         (uint256 start, uint256 length) = childBounds(flatNodes, index);
 

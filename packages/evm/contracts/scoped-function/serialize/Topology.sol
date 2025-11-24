@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "../../Types.sol";
+import "../../types/All.sol";
 
 /**
  * @title  Topology
@@ -56,7 +56,7 @@ library Topology {
         uint256 index
     ) internal pure returns (bool) {
         // Structural if paramType is not None
-        if (conditions[index].paramType != AbiType.None) {
+        if (conditions[index].paramType != Encoding.None) {
             return true;
         }
 

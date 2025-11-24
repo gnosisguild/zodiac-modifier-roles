@@ -3,7 +3,7 @@ pragma solidity >=0.8.17 <0.9.0;
 
 import "../scoped-function/serialize/Packer.sol";
 
-import "../Types.sol";
+import "../types/All.sol";
 
 contract MockConditionPacker {
     function pack(
