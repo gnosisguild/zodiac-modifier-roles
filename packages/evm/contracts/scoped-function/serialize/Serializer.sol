@@ -7,7 +7,8 @@ import "./TypeTree.sol";
 
 import "../ImmutableStorage.sol";
 import "../ScopeConfig.sol";
-import "../../Types.sol";
+
+import "../../types/All.sol";
 
 library Serializer {
     function store(

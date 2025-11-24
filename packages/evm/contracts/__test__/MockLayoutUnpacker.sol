@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "../Encodings.sol";
 import "../scoped-function/deserialize/Unpacker.sol";
+
+import "../types/All.sol";
 
 contract MockLayoutUnpacker {
     struct FlatNode {
@@ -39,7 +40,10 @@ contract MockLayoutUnpacker {
             uint256 parent = parents[head];
             head++;
 
-            result[current] = FlatNode({encoding: node.encoding, parent: parent});
+            result[current] = FlatNode({
+                encoding: node.encoding,
+                parent: parent
+            });
 
             // enqueue children
             for (uint256 i = 0; i < node.children.length; ++i) {

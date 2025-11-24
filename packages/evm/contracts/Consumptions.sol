@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "./Types.sol";
+import "./types/All.sol";
 
 /**
  * @title Consumptions - a library that provides helper functions for dealing
  * with collection of Consumptions.
- * @author Cristóvão Honorato - <cristovao.honorato@gnosis.io>
+ *
+ * @author gnosisguild
  */
 library Consumptions {
     function clone(

@@ -5,7 +5,7 @@ import "../AbiDecoder.sol";
 
 import "../adapters/IPriceAdapter.sol";
 
-import "../Types.sol";
+import "../types/All.sol";
 
 /**
  * @title WithinRatioChecker
