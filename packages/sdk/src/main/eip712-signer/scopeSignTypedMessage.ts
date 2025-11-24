@@ -40,7 +40,7 @@ function typesCondition(types: TypedData): Condition {
   const { layout, typeHashes } = toAbiTypes({ types })
   const compValue = AbiCoder.defaultAbiCoder().encode(
     ["tuple(tuple(uint8,uint256[])[], bytes32[])"],
-    [[layout.map((p) => [p._type, p.fields]), typeHashes]]
+    [[layout.map((p) => [p.encoding, p.fields]), typeHashes]]
   )
 
   const left: Condition = {

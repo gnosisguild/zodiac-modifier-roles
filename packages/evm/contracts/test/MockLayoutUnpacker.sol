@@ -6,7 +6,7 @@ import "../scoped-function/deserialize/Unpacker.sol";
 
 contract MockLayoutUnpacker {
     struct FlatNode {
-        Encoding _type;
+        Encoding encoding;
         uint256 parent;
     }
 
@@ -39,7 +39,7 @@ contract MockLayoutUnpacker {
             uint256 parent = parents[head];
             head++;
 
-            result[current] = FlatNode({_type: node._type, parent: parent});
+            result[current] = FlatNode({encoding: node.encoding, parent: parent});
 
             // enqueue children
             for (uint256 i = 0; i < node.children.length; ++i) {

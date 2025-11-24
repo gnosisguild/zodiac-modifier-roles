@@ -6,7 +6,7 @@ import "../scoped-function/serialize/Packer.sol";
 
 contract MockLayoutPacker {
     struct InputFlat {
-        Encoding _type;
+        Encoding encoding;
         uint256 parent;
     }
     function packFlat(
@@ -21,7 +21,7 @@ contract MockLayoutPacker {
         InputFlat[] calldata flatNodes,
         uint256 index
     ) private pure returns (Layout memory node) {
-        node._type = flatNodes[index]._type;
+        node.encoding = flatNodes[index].encoding;
         node.index = index;
         (uint256 start, uint256 length) = childBounds(flatNodes, index);
 

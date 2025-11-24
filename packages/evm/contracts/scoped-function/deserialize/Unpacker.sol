@@ -79,7 +79,7 @@ library Unpacker {
              */
 
             Condition memory node = nodes[i];
-            node.paramType = Encoding((packed >> 37) & 0x07);
+            node.encoding = Encoding((packed >> 37) & 0x07);
             node.operator = Operator((packed >> 32) & 0x1F);
             uint256 childCount = (packed >> 24) & 0xFF;
             node.sChildCount = (packed >> 16) & 0xFF;
@@ -157,14 +157,14 @@ library Unpacker {
             /*
              * ┌──────────────────────────────────────────────────┐
              * │Each node (11 bits, padded to 2 bytes):           │
-             * │  • type                  3 bits  (Encoding 0-7)  │
+             * │  • encoding              3 bits  (Encoding 0-7)  │
              * │  • childCount            8 bits  (0-255)         │
              * │  • reserved              5 bits                  │
              * └──────────────────────────────────────────────────┘
              */
 
             Layout memory node = nodes[i];
-            node._type = Encoding((packed >> 13));
+            node.encoding = Encoding((packed >> 13));
             uint256 childCount = (packed >> 5) & 0xFF;
 
             if (childCount > 0) {

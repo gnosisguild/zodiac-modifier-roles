@@ -44,14 +44,14 @@ library TypeTree {
          * Logical nodes that are variant use Dynamic as a container to
          * indicate the variant. All other nodes use their declared paramType
          */
-        node._type = isLogical ? Encoding.Dynamic : conditions[index].paramType;
+        node.encoding = isLogical ? Encoding.Dynamic : conditions[index].paramType;
 
         /*
          * For non-variant arrays, the first child serves as a template for
          * all elements. For all other nodes, traverse all structural children
          */
         node.children = new Layout[](
-            node._type == Encoding.Array && !isVariant ? 1 : sChildCount
+            node.encoding == Encoding.Array && !isVariant ? 1 : sChildCount
         );
 
         for (uint256 i = 0; i < node.children.length; ++i) {
@@ -105,7 +105,7 @@ library TypeTree {
 
     function _hashTree(Layout memory tree) private pure returns (bytes32) {
         if (tree.children.length == 0) {
-            return bytes32(uint256(tree._type));
+            return bytes32(uint256(tree.encoding));
         }
 
         bytes32[] memory childHashes = new bytes32[](tree.children.length);
@@ -115,7 +115,7 @@ library TypeTree {
 
         return
             keccak256(
-                abi.encodePacked(bytes32(uint256(tree._type)), childHashes)
+                abi.encodePacked(bytes32(uint256(tree.encoding)), childHashes)
             );
     }
 }

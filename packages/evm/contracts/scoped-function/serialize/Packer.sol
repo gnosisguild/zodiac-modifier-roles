@@ -42,7 +42,7 @@ import "../../Encodings.sol";
  * ├─────────────────────────────────────────────────────────────────────┤
  * │ Nodes (nodeCount × 2 bytes each):                                   │
  * │   Each node (11 bits, padded to 2 bytes):                           │
- * │     • type                  3 bits  (Encoding 0-7)                  │
+ * │     • encoding              3 bits  (0-7)                           │
  * │     • childCount            8 bits  (0-255)                         │
  * │     • reserved              5 bits                                  │
  * └─────────────────────────────────────────────────────────────────────┘
@@ -259,7 +259,7 @@ library Packer {
 
         // Pack all nodes (2 bytes each)
         for (uint256 i; i < nodes.length; ++i) {
-            uint16 packed = (uint16(nodes[i]._type) << 13) |
+            uint16 packed = (uint16(nodes[i].encoding) << 13) |
                 (uint16(nodes[i].childCount) << 5);
 
             buffer[offset++] = bytes1(uint8(packed >> 8));
@@ -292,7 +292,7 @@ library Packer {
 
             // Record this node
             result[current] = LayoutNodeFlat({
-                _type: node._type,
+                encoding: node.encoding,
                 parent: parent,
                 childCount: node.children.length
             });
@@ -321,7 +321,7 @@ library Packer {
 
     struct LayoutNodeFlat {
         uint256 parent;
-        Encoding _type;
+        Encoding encoding;
         uint256 childCount;
     }
 

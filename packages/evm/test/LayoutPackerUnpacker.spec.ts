@@ -21,7 +21,7 @@ describe("LayoutPacker and LayoutUnpacker", () => {
       const { packer, unpacker } = await loadFixture(setup);
 
       const input = flattenTypeTree({
-        _type: Encoding.Static,
+        encoding: Encoding.Static,
       });
 
       const packed = await packer.packFlat(input);
@@ -34,10 +34,10 @@ describe("LayoutPacker and LayoutUnpacker", () => {
       const { packer, unpacker } = await loadFixture(setup);
 
       const input = flattenTypeTree({
-        _type: Encoding.Tuple,
+        encoding: Encoding.Tuple,
         children: [
           {
-            _type: Encoding.Static,
+            encoding: Encoding.Static,
           },
         ],
       });
@@ -52,13 +52,13 @@ describe("LayoutPacker and LayoutUnpacker", () => {
       const { packer, unpacker } = await loadFixture(setup);
 
       const input = flattenTypeTree({
-        _type: Encoding.Tuple,
+        encoding: Encoding.Tuple,
         children: [
           {
-            _type: Encoding.Static,
+            encoding: Encoding.Static,
           },
           {
-            _type: Encoding.Dynamic,
+            encoding: Encoding.Dynamic,
           },
         ],
       });
@@ -73,21 +73,21 @@ describe("LayoutPacker and LayoutUnpacker", () => {
       const { packer, unpacker } = await loadFixture(setup);
 
       const input = flattenTypeTree({
-        _type: Encoding.Tuple,
+        encoding: Encoding.Tuple,
         children: [
           {
-            _type: Encoding.Tuple,
+            encoding: Encoding.Tuple,
             children: [
               {
-                _type: Encoding.Static,
+                encoding: Encoding.Static,
               },
               {
-                _type: Encoding.Dynamic,
+                encoding: Encoding.Dynamic,
               },
             ],
           },
           {
-            _type: Encoding.Static,
+            encoding: Encoding.Static,
           },
         ],
       });
@@ -102,12 +102,12 @@ describe("LayoutPacker and LayoutUnpacker", () => {
       const { packer, unpacker } = await loadFixture(setup);
 
       const input = flattenTypeTree({
-        _type: Encoding.Tuple,
+        encoding: Encoding.Tuple,
         children: [
-          { _type: Encoding.Static },
-          { _type: Encoding.Dynamic },
-          { _type: Encoding.Tuple },
-          { _type: Encoding.Array },
+          { encoding: Encoding.Static },
+          { encoding: Encoding.Dynamic },
+          { encoding: Encoding.Tuple },
+          { encoding: Encoding.Array },
         ],
       });
 
@@ -121,10 +121,10 @@ describe("LayoutPacker and LayoutUnpacker", () => {
       const { packer, unpacker } = await loadFixture(setup);
 
       const input = flattenTypeTree({
-        _type: Encoding.Array,
+        encoding: Encoding.Array,
         children: [
           {
-            _type: Encoding.Static,
+            encoding: Encoding.Static,
           },
         ],
       });
@@ -139,14 +139,14 @@ describe("LayoutPacker and LayoutUnpacker", () => {
       const { packer, unpacker } = await loadFixture(setup);
 
       const input = flattenTypeTree({
-        _type: Encoding.Calldata,
+        encoding: Encoding.Calldata,
         children: [
-          { _type: Encoding.None },
-          { _type: Encoding.Static },
-          { _type: Encoding.Dynamic },
-          { _type: Encoding.Tuple },
-          { _type: Encoding.Array },
-          { _type: Encoding.AbiEncoded },
+          { encoding: Encoding.None },
+          { encoding: Encoding.Static },
+          { encoding: Encoding.Dynamic },
+          { encoding: Encoding.Tuple },
+          { encoding: Encoding.Array },
+          { encoding: Encoding.AbiEncoded },
         ],
       });
 
@@ -160,19 +160,19 @@ describe("LayoutPacker and LayoutUnpacker", () => {
       const { packer, unpacker } = await loadFixture(setup);
 
       const input = flattenTypeTree({
-        _type: Encoding.Tuple,
+        encoding: Encoding.Tuple,
         children: [
           {
-            _type: Encoding.Tuple,
+            encoding: Encoding.Tuple,
             children: [
               {
-                _type: Encoding.Tuple,
+                encoding: Encoding.Tuple,
                 children: [
                   {
-                    _type: Encoding.Tuple,
+                    encoding: Encoding.Tuple,
                     children: [
                       {
-                        _type: Encoding.Static,
+                        encoding: Encoding.Static,
                       },
                     ],
                   },
@@ -193,22 +193,22 @@ describe("LayoutPacker and LayoutUnpacker", () => {
       const { packer, unpacker } = await loadFixture(setup);
 
       const input = flattenTypeTree({
-        _type: Encoding.Tuple,
+        encoding: Encoding.Tuple,
         children: [
           {
-            _type: Encoding.Array,
+            encoding: Encoding.Array,
             children: [
               {
-                _type: Encoding.Tuple,
+                encoding: Encoding.Tuple,
                 children: [
-                  { _type: Encoding.Static },
-                  { _type: Encoding.Dynamic },
+                  { encoding: Encoding.Static },
+                  { encoding: Encoding.Dynamic },
                 ],
               },
             ],
           },
           {
-            _type: Encoding.Static,
+            encoding: Encoding.Static,
           },
         ],
       });
@@ -223,13 +223,13 @@ describe("LayoutPacker and LayoutUnpacker", () => {
 
 function pruneResult(result: any) {
   return result.map((node: any) => ({
-    _type: Number(node._type),
+    encoding: Number(node.encoding),
     parent: Number(node.parent),
   }));
 }
 
 interface TypeTreeInput {
-  _type: Encoding;
+  encoding: Encoding;
   children?: TypeTreeInput[];
 }
 function flattenTypeTree(root: TypeTreeInput) {
@@ -245,7 +245,7 @@ function flattenTypeTree(root: TypeTreeInput) {
     queueHead++;
 
     result.push({
-      _type: node._type,
+      encoding: node.encoding,
       parent: parent,
     });
 

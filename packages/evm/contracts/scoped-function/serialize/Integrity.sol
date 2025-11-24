@@ -60,7 +60,7 @@ library Integrity {
         _nonStructuralOrdering(conditions);
         _typeTree(conditions);
 
-        if (TypeTree.inspect(conditions, 0)._type != Encoding.Calldata) {
+        if (TypeTree.inspect(conditions, 0).encoding != Encoding.Calldata) {
             revert UnsuitableRootNode();
         }
     }
@@ -92,14 +92,14 @@ library Integrity {
 
     function _node(ConditionFlat memory condition, uint256 index) private pure {
         Operator operator = condition.operator;
-        Encoding _type = condition.paramType;
+        Encoding encoding = condition.paramType;
         bytes memory compValue = condition.compValue;
         if (operator == Operator.Pass) {
             if (condition.compValue.length != 0) {
                 revert UnsuitableCompValue(index);
             }
         } else if (operator == Operator.And || operator == Operator.Or) {
-            if (_type != Encoding.None) {
+            if (encoding != Encoding.None) {
                 revert UnsuitableParameterType(index);
             }
             if (condition.compValue.length != 0) {
@@ -107,10 +107,10 @@ library Integrity {
             }
         } else if (operator == Operator.Matches) {
             if (
-                _type != Encoding.Tuple &&
-                _type != Encoding.Array &&
-                _type != Encoding.Calldata &&
-                _type != Encoding.AbiEncoded
+                encoding != Encoding.Tuple &&
+                encoding != Encoding.Array &&
+                encoding != Encoding.Calldata &&
+                encoding != Encoding.AbiEncoded
             ) {
                 revert UnsuitableParameterType(index);
             }
@@ -120,14 +120,14 @@ library Integrity {
         } else if (
             operator == Operator.ArraySome || operator == Operator.ArrayEvery
         ) {
-            if (_type != Encoding.Array) {
+            if (encoding != Encoding.Array) {
                 revert UnsuitableParameterType(index);
             }
             if (compValue.length != 0) {
                 revert UnsuitableCompValue(index);
             }
         } else if (operator == Operator.EqualToAvatar) {
-            if (_type != Encoding.Static) {
+            if (encoding != Encoding.Static) {
                 revert UnsuitableParameterType(index);
             }
             if (compValue.length != 0) {
@@ -135,10 +135,10 @@ library Integrity {
             }
         } else if (operator == Operator.EqualTo) {
             if (
-                _type != Encoding.Static &&
-                _type != Encoding.Dynamic &&
-                _type != Encoding.Tuple &&
-                _type != Encoding.Array
+                encoding != Encoding.Static &&
+                encoding != Encoding.Dynamic &&
+                encoding != Encoding.Tuple &&
+                encoding != Encoding.Array
             ) {
                 revert UnsuitableParameterType(index);
             }
@@ -151,14 +151,14 @@ library Integrity {
             operator == Operator.SignedIntGreaterThan ||
             operator == Operator.SignedIntLessThan
         ) {
-            if (_type != Encoding.Static) {
+            if (encoding != Encoding.Static) {
                 revert UnsuitableParameterType(index);
             }
             if (compValue.length != 32) {
                 revert UnsuitableCompValue(index);
             }
         } else if (operator == Operator.Bitmask) {
-            if (_type != Encoding.Static && _type != Encoding.Dynamic) {
+            if (encoding != Encoding.Static && encoding != Encoding.Dynamic) {
                 revert UnsuitableParameterType(index);
             }
             if (compValue.length != 32) {
@@ -169,7 +169,7 @@ library Integrity {
                 revert UnsuitableCompValue(index);
             }
         } else if (operator == Operator.WithinAllowance) {
-            if (_type != Encoding.Static) {
+            if (encoding != Encoding.Static) {
                 revert UnsuitableParameterType(index);
             }
             if (compValue.length != 32) {
@@ -179,14 +179,14 @@ library Integrity {
             operator == Operator.EtherWithinAllowance ||
             operator == Operator.CallWithinAllowance
         ) {
-            if (_type != Encoding.None) {
+            if (encoding != Encoding.None) {
                 revert UnsuitableParameterType(index);
             }
             if (compValue.length != 32) {
                 revert UnsuitableCompValue(index);
             }
         } else if (operator == Operator.WithinRatio) {
-            if (_type != Encoding.None) {
+            if (encoding != Encoding.None) {
                 revert UnsuitableParameterType(index);
             }
             if (compValue.length < 32 || compValue.length > 52) {
@@ -360,11 +360,11 @@ library Integrity {
         );
 
         for (uint256 i = 0; i < sChildCount; ++i) {
-            Encoding _type = TypeTree.inspect(conditions, childStart + i)._type;
+            Encoding encoding = TypeTree.inspect(conditions, childStart + i).encoding;
             if (
-                _type != Encoding.Dynamic &&
-                _type != Encoding.Calldata &&
-                _type != Encoding.AbiEncoded
+                encoding != Encoding.Dynamic &&
+                encoding != Encoding.Calldata &&
+                encoding != Encoding.AbiEncoded
             ) {
                 return false;
             }
@@ -455,7 +455,7 @@ library Integrity {
                 conditions,
                 childStart + referenceIndex
             );
-            if (layout._type != Encoding.Static) {
+            if (layout.encoding != Encoding.Static) {
                 revert WithinRatioTargetNotStatic(i);
             }
         }
@@ -466,7 +466,7 @@ library Integrity {
                 conditions,
                 childStart + relativeIndex
             );
-            if (layout._type != Encoding.Static) {
+            if (layout.encoding != Encoding.Static) {
                 revert WithinRatioTargetNotStatic(i);
             }
         }

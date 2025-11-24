@@ -19,7 +19,7 @@ describe("TypeTree", () => {
       });
       const output = bfsToTree(await typeTree.inspect(input));
       expect(output).to.deep.equal({
-        _type: Encoding.Static,
+        encoding: Encoding.Static,
         children: [],
       });
     });
@@ -32,7 +32,7 @@ describe("TypeTree", () => {
       });
       const output = bfsToTree(await typeTree.inspect(input));
       expect(output).to.deep.equal({
-        _type: Encoding.Dynamic,
+        encoding: Encoding.Dynamic,
         children: [],
       });
     });
@@ -49,10 +49,10 @@ describe("TypeTree", () => {
       });
       const output = bfsToTree(await typeTree.inspect(input));
       expect(output).to.deep.equal({
-        _type: Encoding.Tuple,
+        encoding: Encoding.Tuple,
         children: [
-          { _type: Encoding.Static, children: [] },
-          { _type: Encoding.Dynamic, children: [] },
+          { encoding: Encoding.Static, children: [] },
+          { encoding: Encoding.Dynamic, children: [] },
         ],
       });
     });
@@ -66,8 +66,8 @@ describe("TypeTree", () => {
       });
       const output = bfsToTree(await typeTree.inspect(input));
       expect(output).to.deep.equal({
-        _type: Encoding.Array,
-        children: [{ _type: Encoding.Static, children: [] }],
+        encoding: Encoding.Array,
+        children: [{ encoding: Encoding.Static, children: [] }],
       });
     });
 
@@ -80,8 +80,8 @@ describe("TypeTree", () => {
       });
       const output = bfsToTree(await typeTree.inspect(input));
       expect(output).to.deep.equal({
-        _type: Encoding.Calldata,
-        children: [{ _type: Encoding.Static, children: [] }],
+        encoding: Encoding.Calldata,
+        children: [{ encoding: Encoding.Static, children: [] }],
       });
     });
 
@@ -94,8 +94,8 @@ describe("TypeTree", () => {
       });
       const output = bfsToTree(await typeTree.inspect(input));
       expect(output).to.deep.equal({
-        _type: Encoding.AbiEncoded,
-        children: [{ _type: Encoding.Dynamic, children: [] }],
+        encoding: Encoding.AbiEncoded,
+        children: [{ encoding: Encoding.Dynamic, children: [] }],
       });
     });
   });
@@ -113,7 +113,7 @@ describe("TypeTree", () => {
       });
       const output = bfsToTree(await typeTree.inspect(input));
       expect(output).to.deep.equal({
-        _type: Encoding.Static,
+        encoding: Encoding.Static,
         children: [],
       });
     });
@@ -130,7 +130,7 @@ describe("TypeTree", () => {
       });
       const output = bfsToTree(await typeTree.inspect(input));
       expect(output).to.deep.equal({
-        _type: Encoding.Dynamic,
+        encoding: Encoding.Dynamic,
         children: [],
       });
     });
@@ -144,7 +144,7 @@ describe("TypeTree", () => {
       });
       const output = bfsToTree(await typeTree.inspect(input));
       expect(output).to.deep.equal({
-        _type: Encoding.Dynamic,
+        encoding: Encoding.Dynamic,
         children: [],
       });
     });
@@ -158,7 +158,7 @@ describe("TypeTree", () => {
       });
       const output = bfsToTree(await typeTree.inspect(input));
       expect(output).to.deep.equal({
-        _type: Encoding.Static,
+        encoding: Encoding.Static,
         children: [],
       });
     });
@@ -177,10 +177,10 @@ describe("TypeTree", () => {
       });
       const output = bfsToTree(await typeTree.inspect(input));
       expect(output).to.deep.equal({
-        _type: Encoding.Dynamic,
+        encoding: Encoding.Dynamic,
         children: [
-          { _type: Encoding.Static, children: [] },
-          { _type: Encoding.Dynamic, children: [] },
+          { encoding: Encoding.Static, children: [] },
+          { encoding: Encoding.Dynamic, children: [] },
         ],
       });
     });
@@ -201,12 +201,12 @@ describe("TypeTree", () => {
       });
       const output = bfsToTree(await typeTree.inspect(input));
       expect(output).to.deep.equal({
-        _type: Encoding.Dynamic,
+        encoding: Encoding.Dynamic,
         children: [
-          { _type: Encoding.Dynamic, children: [] },
+          { encoding: Encoding.Dynamic, children: [] },
           {
-            _type: Encoding.Calldata,
-            children: [{ _type: Encoding.Static, children: [] }],
+            encoding: Encoding.Calldata,
+            children: [{ encoding: Encoding.Static, children: [] }],
           },
         ],
       });
@@ -227,8 +227,8 @@ describe("TypeTree", () => {
       });
       const output = bfsToTree(await typeTree.inspect(input));
       expect(output).to.deep.equal({
-        _type: Encoding.Array,
-        children: [{ _type: Encoding.Static, children: [] }],
+        encoding: Encoding.Array,
+        children: [{ encoding: Encoding.Static, children: [] }],
       });
     });
 
@@ -244,10 +244,10 @@ describe("TypeTree", () => {
       });
       const output = bfsToTree(await typeTree.inspect(input));
       expect(output).to.deep.equal({
-        _type: Encoding.Array,
+        encoding: Encoding.Array,
         children: [
-          { _type: Encoding.Static, children: [] },
-          { _type: Encoding.Dynamic, children: [] },
+          { encoding: Encoding.Static, children: [] },
+          { encoding: Encoding.Dynamic, children: [] },
         ],
       });
     });
@@ -274,15 +274,15 @@ describe("TypeTree", () => {
       });
       const output = bfsToTree(await typeTree.inspect(input));
       expect(output).to.deep.equal({
-        _type: Encoding.Array,
+        encoding: Encoding.Array,
         children: [
           {
-            _type: Encoding.Tuple,
-            children: [{ _type: Encoding.Static, children: [] }],
+            encoding: Encoding.Tuple,
+            children: [{ encoding: Encoding.Static, children: [] }],
           },
           {
-            _type: Encoding.Tuple,
-            children: [{ _type: Encoding.Dynamic, children: [] }],
+            encoding: Encoding.Tuple,
+            children: [{ encoding: Encoding.Dynamic, children: [] }],
           },
         ],
       });
@@ -313,10 +313,10 @@ describe("TypeTree", () => {
       });
       const out = await typeTree.inspect(input);
       const tree = bfsToTree(out);
-      expect(tree._type).to.equal(Encoding.Calldata);
-      expect(tree.children[0]._type).to.equal(Encoding.Tuple);
-      expect(tree.children[0].children[0]._type).to.equal(Encoding.Tuple);
-      expect(tree.children[0].children[0].children[0]._type).to.equal(
+      expect(tree.encoding).to.equal(Encoding.Calldata);
+      expect(tree.children[0].encoding).to.equal(Encoding.Tuple);
+      expect(tree.children[0].children[0].encoding).to.equal(Encoding.Tuple);
+      expect(tree.children[0].children[0].children[0].encoding).to.equal(
         Encoding.Static,
       );
     });
@@ -344,10 +344,10 @@ describe("TypeTree", () => {
       });
       const out = await typeTree.inspect(input);
       const tree = bfsToTree(out);
-      expect(tree._type).to.equal(Encoding.Calldata);
-      expect(tree.children[0]._type).to.equal(Encoding.Array);
-      expect(tree.children[0].children[0]._type).to.equal(Encoding.Array);
-      expect(tree.children[0].children[0].children[0]._type).to.equal(
+      expect(tree.encoding).to.equal(Encoding.Calldata);
+      expect(tree.children[0].encoding).to.equal(Encoding.Array);
+      expect(tree.children[0].children[0].encoding).to.equal(Encoding.Array);
+      expect(tree.children[0].children[0].children[0].encoding).to.equal(
         Encoding.Static,
       );
     });
@@ -376,8 +376,8 @@ describe("TypeTree", () => {
       });
       const out = await typeTree.inspect(input);
       const tree = bfsToTree(out);
-      expect(tree.children[0]._type).to.equal(Encoding.Array);
-      expect(tree.children[0].children[0]._type).to.equal(Encoding.Static);
+      expect(tree.children[0].encoding).to.equal(Encoding.Array);
+      expect(tree.children[0].children[0].encoding).to.equal(Encoding.Static);
     });
 
     it("handles deep nesting with mixed types", async () => {
@@ -409,10 +409,10 @@ describe("TypeTree", () => {
       });
       const out = await typeTree.inspect(input);
       const tree = bfsToTree(out);
-      expect(tree._type).to.equal(Encoding.Calldata);
-      expect(tree.children[0]._type).to.equal(Encoding.Tuple);
-      expect(tree.children[0].children[0]._type).to.equal(Encoding.Array);
-      expect(tree.children[0].children[0].children[0]._type).to.equal(
+      expect(tree.encoding).to.equal(Encoding.Calldata);
+      expect(tree.children[0].encoding).to.equal(Encoding.Tuple);
+      expect(tree.children[0].children[0].encoding).to.equal(Encoding.Array);
+      expect(tree.children[0].children[0].children[0].encoding).to.equal(
         Encoding.Tuple,
       );
     });
@@ -434,10 +434,10 @@ describe("TypeTree", () => {
       });
       const output = bfsToTree(await typeTree.inspect(input));
       expect(output).to.deep.equal({
-        _type: Encoding.Calldata,
+        encoding: Encoding.Calldata,
         children: [
-          { _type: Encoding.Static, children: [] },
-          { _type: Encoding.Dynamic, children: [] },
+          { encoding: Encoding.Static, children: [] },
+          { encoding: Encoding.Dynamic, children: [] },
         ],
       });
     });
@@ -454,7 +454,7 @@ describe("TypeTree", () => {
       });
       const output = bfsToTree(await typeTree.inspect(input));
       expect(output).to.deep.equal({
-        _type: Encoding.Calldata,
+        encoding: Encoding.Calldata,
         children: [],
       });
     });
@@ -495,10 +495,10 @@ describe("TypeTree", () => {
       });
       const output = bfsToTree(await typeTree.inspect(input));
       expect(output).to.deep.equal({
-        _type: Encoding.Calldata,
+        encoding: Encoding.Calldata,
         children: [
-          { _type: Encoding.Static, children: [] },
-          { _type: Encoding.Dynamic, children: [] },
+          { encoding: Encoding.Static, children: [] },
+          { encoding: Encoding.Dynamic, children: [] },
         ],
       });
     });
@@ -543,27 +543,27 @@ describe("TypeTree", () => {
       });
       const output = bfsToTree(await typeTree.inspect(input));
       expect(output).to.deep.equal({
-        _type: Encoding.Calldata,
+        encoding: Encoding.Calldata,
         children: [
           {
-            _type: Encoding.Dynamic,
+            encoding: Encoding.Dynamic,
             children: [
               {
-                _type: Encoding.Calldata,
+                encoding: Encoding.Calldata,
                 children: [
                   {
-                    _type: Encoding.Dynamic,
+                    encoding: Encoding.Dynamic,
                     children: [
-                      { _type: Encoding.Dynamic, children: [] },
+                      { encoding: Encoding.Dynamic, children: [] },
                       {
-                        _type: Encoding.AbiEncoded,
-                        children: [{ _type: Encoding.Static, children: [] }],
+                        encoding: Encoding.AbiEncoded,
+                        children: [{ encoding: Encoding.Static, children: [] }],
                       },
                     ],
                   },
                 ],
               },
-              { _type: Encoding.Dynamic, children: [] },
+              { encoding: Encoding.Dynamic, children: [] },
             ],
           },
         ],
@@ -702,15 +702,15 @@ describe("TypeTree", () => {
 
 // Helper to convert BFS flat array to tree structure for complex assertions
 interface TreeNode {
-  _type: number;
+  encoding: number;
   children: TreeNode[];
 }
 
 function bfsToTree(
-  bfsArray: { _type: bigint; parent: number | bigint }[],
+  bfsArray: { encoding: bigint; parent: number | bigint }[],
 ): TreeNode {
   const nodes = bfsArray.map((item) => ({
-    _type: Number(item._type),
+    encoding: Number(item.encoding),
     children: [] as TreeNode[],
   }));
 

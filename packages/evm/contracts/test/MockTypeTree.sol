@@ -26,7 +26,7 @@ contract MockTypeTree {
     // Flat structure with parent reference
     struct FlatNode {
         uint256 parent;
-        Encoding _type;
+        Encoding encoding;
     }
 
     // Queue item for BFS
@@ -61,7 +61,7 @@ contract MockTypeTree {
 
             // Add current node to result
             result[resultIndex] = FlatNode({
-                _type: current.node._type,
+                encoding: current.node.encoding,
                 parent: current.parent
             });
 

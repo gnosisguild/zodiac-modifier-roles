@@ -12,18 +12,18 @@ enum Encoding {
 }
 
 struct LayoutFlat {
-    Encoding _type;
+    Encoding encoding;
     uint256[] fields;
 }
 
 /**
  * @dev Structure representing an ABI type definition in a hierarchical tree
- * @param _type The ABI type category (Static, Dynamic, Tuple, Array, etc.)
+ * @param encoding The ABIish kind
  * @param children Array of child Layout nodes for complex types (tuples, arrays)
  * @param index bfs order from the original flat LayoutFlat representation
  */
 struct Layout {
-    Encoding _type;
+    Encoding encoding;
     Layout[] children;
     uint256 index;
 }

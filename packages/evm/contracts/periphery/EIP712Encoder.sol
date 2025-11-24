@@ -123,10 +123,10 @@ library EIP712Encoder {
         Types calldata types,
         Payload memory field
     ) private pure returns (bytes32) {
-        Encoding _type = types.layout[field.typeIndex]._type;
-        if (_type == Encoding.Static) {
+        Encoding encoding = types.layout[field.typeIndex].encoding;
+        if (encoding == Encoding.Static) {
             return bytes32(data[field.location:]);
-        } else if (_type == Encoding.Dynamic) {
+        } else if (encoding == Encoding.Dynamic) {
             return _hashDynamic(data, field);
         } else {
             return _hashBlock(data, types, field);
@@ -137,7 +137,7 @@ library EIP712Encoder {
         LayoutFlat[] calldata flatLayout,
         uint256 index
     ) private pure returns (Layout memory layout) {
-        layout._type = flatLayout[index]._type;
+        layout.encoding = flatLayout[index].encoding;
         layout.index = index;
         if (flatLayout[index].fields.length > 0) {
             uint256[] memory fields = flatLayout[index].fields;
