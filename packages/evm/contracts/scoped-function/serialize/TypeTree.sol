@@ -44,7 +44,9 @@ library TypeTree {
          * Logical nodes that are variant use Dynamic as a container to
          * indicate the variant. All other nodes use their declared paramType
          */
-        node.encoding = isLogical ? Encoding.Dynamic : conditions[index].paramType;
+        node.encoding = isLogical
+            ? Encoding.Dynamic
+            : conditions[index].paramType;
 
         /*
          * For non-variant arrays, the first child serves as a template for
