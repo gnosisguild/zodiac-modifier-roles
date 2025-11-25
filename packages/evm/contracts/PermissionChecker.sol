@@ -274,9 +274,11 @@ abstract contract PermissionChecker is Core, Periphery {
                 return _or(data, condition, payload, context);
             } else if (operator == Operator.ArraySome) {
                 return _arraySome(data, condition, payload, context);
-            } else {
-                assert(operator == Operator.ArrayEvery);
+            } else if (operator == Operator.ArrayEvery) {
                 return _arrayEvery(data, condition, payload, context);
+            } else {
+                assert(operator == Operator.ArrayTailMatches);
+                return _arrayTailMatches(data, condition, payload, context);
             }
         } else {
             if (operator <= Operator.LessThan) {
@@ -461,6 +463,47 @@ abstract contract PermissionChecker is Core, Periphery {
                 ++i;
             }
         }
+        return (Status.Ok, result);
+    }
+
+    function _arrayTailMatches(
+        bytes calldata data,
+        Condition memory condition,
+        Payload memory payload,
+        Context memory context
+    ) private view returns (Status status, Result memory result) {
+        result.consumptions = context.consumptions;
+
+        uint256 conditionCount = condition.children.length;
+        uint256 childCount = payload.children.length;
+
+        if (childCount < conditionCount) {
+            return (Status.ParameterNotAMatch, result);
+        }
+
+        uint256 tailOffset = childCount - conditionCount;
+
+        for (uint256 i; i < conditionCount; ) {
+            (status, result) = _walk(
+                data,
+                condition.children[i],
+                payload.children[tailOffset + i],
+                Context({call: context.call, consumptions: result.consumptions})
+            );
+            if (status != Status.Ok) {
+                return (
+                    status,
+                    Result({
+                        consumptions: context.consumptions,
+                        info: result.info
+                    })
+                );
+            }
+            unchecked {
+                ++i;
+            }
+        }
+
         return (Status.Ok, result);
     }
 
