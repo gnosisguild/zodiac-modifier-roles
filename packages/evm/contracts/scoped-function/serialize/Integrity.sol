@@ -126,6 +126,13 @@ library Integrity {
             if (compValue.length != 0) {
                 revert UnsuitableCompValue(index);
             }
+        } else if (operator == Operator.ArrayTailMatches) {
+            if (encoding != Encoding.Array) {
+                revert UnsuitableParameterType(index);
+            }
+            if (compValue.length != 0) {
+                revert UnsuitableCompValue(index);
+            }
         } else if (operator == Operator.EqualToAvatar) {
             if (encoding != Encoding.Static) {
                 revert UnsuitableParameterType(index);
