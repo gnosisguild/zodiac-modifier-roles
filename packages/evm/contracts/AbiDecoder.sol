@@ -98,7 +98,9 @@ library AbiDecoder {
                 payload
             );
             payload.size += 32;
-        } else if (encoding == Encoding.Calldata || encoding == Encoding.AbiEncoded) {
+        } else if (
+            encoding == Encoding.Calldata || encoding == Encoding.AbiEncoded
+        ) {
             __block__(
                 data,
                 location + 32 + (encoding == Encoding.Calldata ? 4 : 0),
