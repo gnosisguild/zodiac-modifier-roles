@@ -164,6 +164,39 @@ describe("Integrity", () => {
           .withArgs(1);
       });
 
+      it("should revert if a Tuple node has no structural children even with non-structural ones", async () => {
+        const { integrity, enforce } = await loadFixture(setup);
+
+        const compValue = encodeWithinRatioCompValue({
+          referenceIndex: 0,
+          referenceDecimals: 0,
+          relativeIndex: 1,
+          relativeDecimals: 0,
+          minRatio: 0,
+          maxRatio: 15000,
+        });
+
+        const conditions = flattenCondition({
+          paramType: Encoding.Calldata,
+          children: [
+            {
+              paramType: Encoding.Tuple,
+              operator: Operator.Matches,
+              children: [
+                {
+                  paramType: Encoding.None,
+                  operator: Operator.WithinRatio,
+                  compValue,
+                },
+              ],
+            },
+          ],
+        });
+        await expect(enforce(conditions))
+          .to.be.revertedWithCustomError(integrity, "UnsuitableChildCount")
+          .withArgs(1);
+      });
+
       it("should revert if a Calldata node has no children", async () => {
         const { integrity, enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
@@ -180,6 +213,39 @@ describe("Integrity", () => {
         const conditions = flattenCondition({
           paramType: Encoding.Calldata,
           children: [{ paramType: Encoding.Array, operator: Operator.Matches }],
+        });
+        await expect(enforce(conditions))
+          .to.be.revertedWithCustomError(integrity, "UnsuitableChildCount")
+          .withArgs(1);
+      });
+
+      it("should revert if an Array node has no structural children even with non-structural ones", async () => {
+        const { integrity, enforce } = await loadFixture(setup);
+
+        const compValue = encodeWithinRatioCompValue({
+          referenceIndex: 0,
+          referenceDecimals: 0,
+          relativeIndex: 1,
+          relativeDecimals: 0,
+          minRatio: 0,
+          maxRatio: 15000,
+        });
+
+        const conditions = flattenCondition({
+          paramType: Encoding.Calldata,
+          children: [
+            {
+              paramType: Encoding.Array,
+              operator: Operator.Matches,
+              children: [
+                {
+                  paramType: Encoding.None,
+                  operator: Operator.WithinRatio,
+                  compValue,
+                },
+              ],
+            },
+          ],
         });
         await expect(enforce(conditions))
           .to.be.revertedWithCustomError(integrity, "UnsuitableChildCount")
@@ -434,6 +500,60 @@ describe("Integrity", () => {
             }),
           ),
         )
+          .to.be.revertedWithCustomError(integrity, "UnsuitableChildCount")
+          .withArgs(1);
+      });
+
+      it("should revert if ArrayTailMatches is not used on an Array type", async () => {
+        const { integrity, enforce } = await loadFixture(setup);
+        const conditions = flattenCondition({
+          paramType: Encoding.Calldata,
+          children: [
+            {
+              paramType: Encoding.Tuple,
+              operator: Operator.ArrayTailMatches,
+              children: [
+                { paramType: Encoding.Static, operator: Operator.Pass },
+              ],
+            },
+          ],
+        });
+        await expect(enforce(conditions))
+          .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
+          .withArgs(1);
+      });
+
+      it("should revert if ArrayTailMatches has non-structural children", async () => {
+        const { integrity, enforce } = await loadFixture(setup);
+
+        const compValue = encodeWithinRatioCompValue({
+          referenceIndex: 0,
+          referenceDecimals: 0,
+          relativeIndex: 1,
+          relativeDecimals: 0,
+          minRatio: 0,
+          maxRatio: 15000,
+        });
+
+        const conditions = flattenCondition({
+          paramType: Encoding.Calldata,
+          children: [
+            {
+              paramType: Encoding.Array,
+              operator: Operator.ArrayTailMatches,
+              children: [
+                { paramType: Encoding.Static, operator: Operator.Pass },
+                { paramType: Encoding.Static, operator: Operator.Pass },
+                {
+                  paramType: Encoding.None,
+                  operator: Operator.WithinRatio,
+                  compValue,
+                },
+              ],
+            },
+          ],
+        });
+        await expect(enforce(conditions))
           .to.be.revertedWithCustomError(integrity, "UnsuitableChildCount")
           .withArgs(1);
       });

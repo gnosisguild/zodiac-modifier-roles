@@ -474,24 +474,20 @@ abstract contract PermissionChecker is Core, Periphery {
     ) private view returns (Status status, Result memory result) {
         result.consumptions = context.consumptions;
 
-        uint256 sChildCount = condition.sChildCount;
-        uint256 payloadLength = payload.children.length;
+        uint256 conditionCount = condition.children.length;
+        uint256 childCount = payload.children.length;
 
-        // Payload must have at least sChildCount elements
-        if (payloadLength < sChildCount) {
+        if (childCount < conditionCount) {
             return (Status.ParameterNotAMatch, result);
         }
 
-        // Calculate offset to start from the tail
-        uint256 tailOffset = payloadLength - sChildCount;
+        uint256 tailOffset = childCount - conditionCount;
 
-        for (uint256 i; i < condition.children.length; ) {
+        for (uint256 i; i < conditionCount; ) {
             (status, result) = _walk(
                 data,
                 condition.children[i],
-                // For structural children (i < sChildCount): use payload.children[tailOffset + i]
-                // For non-structural children: use payload
-                i < sChildCount ? payload.children[tailOffset + i] : payload,
+                payload.children[tailOffset + i],
                 Context({call: context.call, consumptions: result.consumptions})
             );
             if (status != Status.Ok) {

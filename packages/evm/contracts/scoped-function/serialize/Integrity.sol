@@ -13,12 +13,6 @@ import "./TypeTree.sol";
 
 /*
  * TODO test following aspects:
- * Enture and test that for WithinRatio operators, its ParamType is None
- * Ensure that either minRatio or maxRatio are provided
- * Ensure and test that for WithinRatio, its left and right indices respect the following:
- * - the nearest parent has at child indexLeft and child indexRight children that:
- *    * are non variant
- *    * its sub type tree resolves to Static
  * Enforce Tuples and Arrays to have children
  * Enforce in general nodes to have at least one structural children, for nodes that require children
  * Validated variants accross different Array entries as well
@@ -233,7 +227,10 @@ library Integrity {
     function _children(ConditionFlat[] memory conditions) private pure {
         for (uint256 i = 0; i < conditions.length; i++) {
             ConditionFlat memory condition = conditions[i];
-            (, uint256 childCount, ) = Topology.childBounds(conditions, i);
+            (, uint256 childCount, uint256 sChildCount) = Topology.childBounds(
+                conditions,
+                i
+            );
 
             if (condition.paramType == Encoding.None) {
                 if (
@@ -259,8 +256,11 @@ library Integrity {
                 if (childCount != 0) {
                     revert UnsuitableChildCount(i);
                 }
+            } else if (condition.paramType == Encoding.Tuple) {
+                if (sChildCount == 0) {
+                    revert UnsuitableChildCount(i);
+                }
             } else if (
-                condition.paramType == Encoding.Tuple ||
                 condition.paramType == Encoding.Calldata ||
                 condition.paramType == Encoding.AbiEncoded
             ) {
@@ -270,7 +270,7 @@ library Integrity {
             } else {
                 assert(condition.paramType == Encoding.Array);
 
-                if (childCount == 0) {
+                if (sChildCount == 0) {
                     revert UnsuitableChildCount(i);
                 }
 
@@ -278,6 +278,16 @@ library Integrity {
                     (condition.operator == Operator.ArraySome ||
                         condition.operator == Operator.ArrayEvery) &&
                     childCount != 1
+                ) {
+                    revert UnsuitableChildCount(i);
+                }
+
+                // Enforce only structural children for array iteration operators
+                if (
+                    (condition.operator == Operator.ArraySome ||
+                        condition.operator == Operator.ArrayEvery ||
+                        condition.operator == Operator.ArrayTailMatches) &&
+                    childCount != sChildCount
                 ) {
                     revert UnsuitableChildCount(i);
                 }
@@ -367,7 +377,9 @@ library Integrity {
         );
 
         for (uint256 i = 0; i < sChildCount; ++i) {
-            Encoding encoding = TypeTree.inspect(conditions, childStart + i).encoding;
+            Encoding encoding = TypeTree
+                .inspect(conditions, childStart + i)
+                .encoding;
             if (
                 encoding != Encoding.Dynamic &&
                 encoding != Encoding.Calldata &&
