@@ -17,28 +17,15 @@ library Unpacker {
 
     function unpack(
         bytes memory buffer
-    )
-        internal
-        view
-        returns (
-            Condition memory condition,
-            Layout memory layout,
-            bytes32[] memory allowanceKeys
-        )
-    {
-        // Read header offsets (2 × 16 bits = 4 bytes)
-        uint256 typesOffset = _mload16(buffer, 0);
-        uint256 allowanceOffset = _mload16(buffer, 2);
+    ) internal view returns (Condition memory condition, Layout memory layout) {
+        // Read header offset (16 bits = 2 bytes)
+        uint256 layoutOffset = _mload16(buffer, 0);
 
         // Unpack condition tree
-        condition = _unpackCondition(buffer, 4);
+        condition = _unpackCondition(buffer, 2);
 
         // Unpack layout
-        layout = _unpackLayout(buffer, typesOffset);
-
-        assembly {
-            allowanceKeys := add(buffer, add(0x20, allowanceOffset))
-        }
+        layout = _unpackLayout(buffer, layoutOffset);
     }
 
     // ═══════════════════════════════════════════════════════════════════════════

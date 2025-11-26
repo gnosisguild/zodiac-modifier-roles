@@ -20,45 +20,10 @@ library Serializer {
         _removeExtraneousOffsets(conditions);
 
         Layout memory layout = TypeTree.inspect(conditions, 0);
-        bytes32[] memory allowanceKeys = _allowanceKeys(conditions);
 
-        bytes memory buffer = Packer.pack(conditions, layout, allowanceKeys);
+        bytes memory buffer = Packer.pack(conditions, layout);
 
         return ScopeConfig.pack(options, ImmutableStorage.store(buffer));
-    }
-
-    function _allowanceKeys(
-        ConditionFlat[] memory conditions
-    ) private pure returns (bytes32[] memory result) {
-        uint256 maxCount;
-        for (uint256 i; i < conditions.length; ++i) {
-            if (conditions[i].operator >= Operator.WithinAllowance) maxCount++;
-        }
-
-        result = new bytes32[](maxCount);
-        uint256 count;
-
-        for (uint256 i; i < conditions.length; ++i) {
-            if (conditions[i].operator < Operator.WithinAllowance) {
-                continue;
-            }
-            bytes32 key = bytes32(conditions[i].compValue);
-            bool fresh = true;
-            for (uint256 j; j < count; ++j) {
-                if (result[j] == key) {
-                    fresh = false;
-                    break;
-                }
-            }
-            if (fresh) {
-                result[count++] = key;
-            }
-        }
-
-        // Truncate result length in-place
-        assembly {
-            mstore(result, count)
-        }
     }
 
     /**

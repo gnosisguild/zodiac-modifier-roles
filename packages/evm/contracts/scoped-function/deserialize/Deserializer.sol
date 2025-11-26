@@ -9,15 +9,7 @@ import "./Unpacker.sol";
 library Deserializer {
     function load(
         bytes32 scopeConfig
-    )
-        internal
-        view
-        returns (
-            Condition memory condition,
-            Layout memory layout,
-            bytes32[] memory allowanceKeys
-        )
-    {
+    ) internal view returns (Condition memory condition, Layout memory layout) {
         (, , address pointer) = ScopeConfig.unpack(scopeConfig);
         bytes memory buffer = ImmutableStorage.load(pointer);
         return Unpacker.unpack(buffer);

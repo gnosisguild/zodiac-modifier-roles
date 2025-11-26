@@ -216,11 +216,9 @@ abstract contract PermissionChecker is Core, Periphery {
         bytes calldata data,
         Context memory context
     ) private view returns (Status, Result memory) {
-        (
-            Condition memory condition,
-            Layout memory layout,
-            bytes32[] memory allowanceKeys
-        ) = Deserializer.load(scopeConfig);
+        (Condition memory condition, Layout memory layout) = Deserializer.load(
+            scopeConfig
+        );
 
         return
             _walk(data, condition, AbiDecoder.inspect(data, layout), context);

@@ -7,10 +7,9 @@ import "../../types/All.sol";
  * ScopedFunction Layout in Contract Storage
  *
  * ┌─────────────────────────────────────────────────────────────────────┐
- * │ HEADER (4 bytes)                                                    │
+ * │ HEADER (2 bytes)                                                    │
  * ├─────────────────────────────────────────────────────────────────────┤
  * │ • layoutOffset             16 bits (0-65535)                        │
- * │ • allowanceOffset          16 bits (0-65535)                        │
  * └─────────────────────────────────────────────────────────────────────┘
  *
  * ┌─────────────────────────────────────────────────────────────────────┐
@@ -46,14 +45,6 @@ import "../../types/All.sol";
  * │     • unused                5 bits                                  │
  * └─────────────────────────────────────────────────────────────────────┘
  *
- * ┌─────────────────────────────────────────────────────────────────────┐
- * │ ALLOWANCE Keys (at allowanceOffset)                                 │
- * ├─────────────────────────────────────────────────────────────────────┤
- * │ • length                   32 bytes                                 │
- * │ • keys[]                   32 bytes × length                        │
- * └─────────────────────────────────────────────────────────────────────┘
- *
- *
  * NOTES:
  * - All offsets are relative to the start of the buffer
  * - Offsets are in bytes
@@ -74,27 +65,21 @@ library Packer {
 
     function pack(
         ConditionFlat[] memory conditions,
-        Layout memory typeNode,
-        bytes32[] memory allowanceKeys
+        Layout memory typeNode
     ) internal pure returns (bytes memory buffer) {
-        uint256 size = 4 +
+        uint256 size = 2 +
             _conditionPackedSize(conditions) +
-            _layoutPackedSize(typeNode) +
-            (32 * (allowanceKeys.length + 1));
+            _layoutPackedSize(typeNode);
 
         buffer = new bytes(size);
 
-        uint256 offset = 4;
+        uint256 offset = 2;
 
         offset += _packConditions(conditions, buffer, offset);
 
         // pack at position 0 -> layoutOffset
         _packUInt16(offset, buffer, 0);
-        offset += _packLayout(typeNode, buffer, offset);
-
-        // pack at position 2 -> allowanceOffset
-        _packUInt16(offset, buffer, 2);
-        offset += _packBytes32Array(allowanceKeys, buffer, offset);
+        _packLayout(typeNode, buffer, offset);
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -336,19 +321,5 @@ library Packer {
         buffer[offset + 1] = bytes1(uint8((value)));
 
         return 2;
-    }
-
-    function _packBytes32Array(
-        bytes32[] memory keys,
-        bytes memory buffer,
-        uint256 offset
-    ) private pure returns (uint256) {
-        uint256 length = 32 * (keys.length + 1);
-        assembly {
-            let dst := add(buffer, add(offset, 0x20))
-            let src := keys
-            mcopy(dst, src, length)
-        }
-        return length;
     }
 }
