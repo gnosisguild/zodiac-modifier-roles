@@ -4,7 +4,6 @@ pragma solidity >=0.8.17 <0.9.0;
 import "./_Core.sol";
 import "./_Periphery.sol";
 import "./AbiDecoder.sol";
-import "./Consumptions.sol";
 
 import "./scoped-function/deserialize/Deserializer.sol";
 import "./scoped-function/ScopeConfig.sol";
@@ -606,10 +605,8 @@ abstract contract PermissionChecker is Core, Periphery {
     ) private view returns (Status, Result memory) {
         uint256 value = uint256(AbiDecoder.word(data, payload.location));
         bytes32 allowanceKey = bytes32(condition.compValue);
-        (
-            bool success,
-            Consumption[] memory consumptions
-        ) = AllowanceChecker.check(value, allowanceKey, context.consumptions);
+        (bool success, Consumption[] memory consumptions) = AllowanceChecker
+            .check(value, allowanceKey, context.consumptions);
 
         return (
             success ? Status.Ok : Status.AllowanceExceeded,
@@ -625,14 +622,8 @@ abstract contract PermissionChecker is Core, Periphery {
         Context memory context
     ) private view returns (Status, Result memory) {
         bytes32 allowanceKey = bytes32(condition.compValue);
-        (
-            bool success,
-            Consumption[] memory consumptions
-        ) = AllowanceChecker.check(
-                context.call.value,
-                allowanceKey,
-                context.consumptions
-            );
+        (bool success, Consumption[] memory consumptions) = AllowanceChecker
+            .check(context.call.value, allowanceKey, context.consumptions);
 
         return (
             success ? Status.Ok : Status.EtherAllowanceExceeded,
@@ -648,10 +639,8 @@ abstract contract PermissionChecker is Core, Periphery {
         Context memory context
     ) private view returns (Status, Result memory) {
         bytes32 allowanceKey = bytes32(condition.compValue);
-        (
-            bool success,
-            Consumption[] memory consumptions
-        ) = AllowanceChecker.check(1, allowanceKey, context.consumptions);
+        (bool success, Consumption[] memory consumptions) = AllowanceChecker
+            .check(1, allowanceKey, context.consumptions);
 
         return (
             success ? Status.Ok : Status.CallAllowanceExceeded,
