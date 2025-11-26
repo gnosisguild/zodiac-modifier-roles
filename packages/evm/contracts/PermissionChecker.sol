@@ -9,6 +9,7 @@ import "./Consumptions.sol";
 import "./scoped-function/deserialize/Deserializer.sol";
 import "./scoped-function/ScopeConfig.sol";
 
+import "./checkers/AllowanceChecker.sol";
 import "./checkers/WithinRatioChecker.sol";
 
 /**
@@ -18,7 +19,7 @@ import "./checkers/WithinRatioChecker.sol";
  * @author gnosisguild
  *
  */
-abstract contract PermissionChecker is Core, Periphery {
+abstract contract PermissionChecker is Core, Periphery, AllowanceChecker {
     function _authorize(
         bytes32 roleKey,
         address to,
@@ -216,28 +217,11 @@ abstract contract PermissionChecker is Core, Periphery {
         bytes calldata data,
         Context memory context
     ) private view returns (Status, Result memory) {
-        Consumption[] memory consumptions;
         (
             Condition memory condition,
             Layout memory layout,
             bytes32[] memory allowanceKeys
         ) = Deserializer.load(scopeConfig);
-
-        if (allowanceKeys.length > 0) {
-            consumptions = new Consumption[](allowanceKeys.length);
-
-            for (uint256 i; i < allowanceKeys.length; ++i) {
-                consumptions[i].allowanceKey = allowanceKeys[i];
-                (consumptions[i].balance, ) = _accruedAllowance(
-                    allowances[allowanceKeys[i]],
-                    uint64(block.timestamp)
-                );
-            }
-
-            context.consumptions = context.consumptions.length > 0
-                ? Consumptions.merge(context.consumptions, consumptions)
-                : consumptions;
-        }
 
         return
             _walk(data, condition, AbiDecoder.inspect(data, layout), context);
@@ -619,7 +603,7 @@ abstract contract PermissionChecker is Core, Periphery {
         Condition memory condition,
         Payload memory payload,
         Context memory context
-    ) private pure returns (Status, Result memory) {
+    ) private view returns (Status, Result memory) {
         uint256 value = uint256(AbiDecoder.word(data, payload.location));
         return __consume(value, condition, context.consumptions);
     }
@@ -627,7 +611,7 @@ abstract contract PermissionChecker is Core, Periphery {
     function _etherWithinAllowance(
         Condition memory condition,
         Context memory context
-    ) private pure returns (Status status, Result memory result) {
+    ) private view returns (Status status, Result memory result) {
         (status, result) = __consume(
             context.call.value,
             condition,
@@ -642,7 +626,7 @@ abstract contract PermissionChecker is Core, Periphery {
     function _callWithinAllowance(
         Condition memory condition,
         Context memory context
-    ) private pure returns (Status status, Result memory result) {
+    ) private view returns (Status status, Result memory result) {
         (status, result) = __consume(1, condition, context.consumptions);
         return (
             status == Status.Ok ? Status.Ok : Status.CallAllowanceExceeded,
@@ -669,28 +653,24 @@ abstract contract PermissionChecker is Core, Periphery {
         uint256 value,
         Condition memory condition,
         Consumption[] memory consumptions
-    ) private pure returns (Status, Result memory) {
-        (uint256 index, bool found) = Consumptions.find(
-            consumptions,
-            bytes32(condition.compValue)
+    ) private view returns (Status, Result memory) {
+        bytes32 allowanceKey = bytes32(condition.compValue);
+        (bool success, Consumption[] memory updatedConsumptions) = checkzzz(
+            value,
+            allowanceKey,
+            consumptions
         );
-        assert(found);
 
-        if (
-            value + consumptions[index].consumed > consumptions[index].balance
-        ) {
-            return (
-                Status.AllowanceExceeded,
-                Result({
-                    consumptions: consumptions,
-                    info: consumptions[index].allowanceKey
-                })
-            );
-        } else {
-            consumptions = Consumptions.clone(consumptions);
-            consumptions[index].consumed += uint128(value);
-            return (Status.Ok, Result({consumptions: consumptions, info: 0}));
-        }
+        return
+            success
+                ? (
+                    Status.Ok,
+                    Result({consumptions: updatedConsumptions, info: 0})
+                )
+                : (
+                    Status.AllowanceExceeded,
+                    Result({consumptions: consumptions, info: allowanceKey})
+                );
     }
 
     struct Context {

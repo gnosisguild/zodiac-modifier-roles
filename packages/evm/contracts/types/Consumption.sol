@@ -5,4 +5,5 @@ struct Consumption {
     bytes32 allowanceKey;
     uint128 balance;
     uint128 consumed;
+    uint64 timestamp;
 }

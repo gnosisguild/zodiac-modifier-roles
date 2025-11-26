@@ -23,6 +23,7 @@ describe("Consumptions library", async () => {
           allowanceKey: "0xff".padEnd(66, "0"),
           balance: 1,
           consumed: 2,
+          timestamp: 0,
         },
       ];
 
@@ -39,6 +40,7 @@ describe("Consumptions library", async () => {
           allowanceKey: "0xff".padEnd(66, "0"),
           balance: 1,
           consumed: 2,
+          timestamp: 0,
         },
       ];
 
@@ -55,6 +57,7 @@ describe("Consumptions library", async () => {
           allowanceKey: "0xa".padEnd(66, "0"),
           balance: 1,
           consumed: 11,
+          timestamp: 0,
         },
       ];
       const c2 = [
@@ -62,6 +65,7 @@ describe("Consumptions library", async () => {
           allowanceKey: "0xb".padEnd(66, "0"),
           balance: 2,
           consumed: 22,
+          timestamp: 0,
         },
       ];
 
@@ -72,11 +76,13 @@ describe("Consumptions library", async () => {
           allowanceKey: "0xa".padEnd(66, "0"),
           balance: 1,
           consumed: 11,
+          timestamp: 0,
         },
         {
           allowanceKey: "0xb".padEnd(66, "0"),
           balance: 2,
           consumed: 22,
+          timestamp: 0,
         },
       ]);
     });
@@ -89,11 +95,13 @@ describe("Consumptions library", async () => {
           allowanceKey: "0xaa".padEnd(66, "0"),
           balance: 1,
           consumed: 100,
+          timestamp: 0,
         },
         {
           allowanceKey: "0xbb".padEnd(66, "0"),
           balance: 1,
           consumed: 100,
+          timestamp: 0,
         },
       ];
       const c2 = [
@@ -101,11 +109,13 @@ describe("Consumptions library", async () => {
           allowanceKey: "0xbb".padEnd(66, "0"),
           balance: 1,
           consumed: 200,
+          timestamp: 0,
         },
         {
           allowanceKey: "0xaa".padEnd(66, "0"),
           balance: 1,
           consumed: 400,
+          timestamp: 0,
         },
       ];
 
@@ -116,11 +126,13 @@ describe("Consumptions library", async () => {
           allowanceKey: "0xaa".padEnd(66, "0"),
           balance: 1,
           consumed: 500,
+          timestamp: 0,
         },
         {
           allowanceKey: "0xbb".padEnd(66, "0"),
           balance: 1,
           consumed: 300,
+          timestamp: 0,
         },
       ]);
     });
@@ -133,16 +145,19 @@ describe("Consumptions library", async () => {
           allowanceKey: "0xaa".padEnd(66, "0"),
           balance: 1,
           consumed: 100,
+          timestamp: 0,
         },
         {
           allowanceKey: "0xbb".padEnd(66, "0"),
           balance: 1,
           consumed: 200,
+          timestamp: 0,
         },
         {
           allowanceKey: "0xdd".padEnd(66, "0"),
           balance: 1,
           consumed: 300,
+          timestamp: 0,
         },
       ];
       const c2 = [
@@ -150,11 +165,13 @@ describe("Consumptions library", async () => {
           allowanceKey: "0xcc".padEnd(66, "0"),
           balance: 1,
           consumed: 1,
+          timestamp: 0,
         },
         {
           allowanceKey: "0xaa".padEnd(66, "0"),
           balance: 1,
           consumed: 1,
+          timestamp: 0,
         },
       ];
 
@@ -165,21 +182,25 @@ describe("Consumptions library", async () => {
           allowanceKey: "0xaa".padEnd(66, "0"),
           balance: 1,
           consumed: 101,
+          timestamp: 0,
         },
         {
           allowanceKey: "0xbb".padEnd(66, "0"),
           balance: 1,
           consumed: 200,
+          timestamp: 0,
         },
         {
           allowanceKey: "0xdd".padEnd(66, "0"),
           balance: 1,
           consumed: 300,
+          timestamp: 0,
         },
         {
           allowanceKey: "0xcc".padEnd(66, "0"),
           balance: 1,
           consumed: 1,
+          timestamp: 0,
         },
       ]);
     });
@@ -187,9 +208,10 @@ describe("Consumptions library", async () => {
 });
 
 function filter(a: ConsumptionStructOutput[]) {
-  return a.map(({ allowanceKey, balance, consumed }) => ({
+  return a.map(({ allowanceKey, balance, consumed, timestamp }) => ({
     allowanceKey,
     balance,
     consumed,
+    timestamp,
   }));
 }

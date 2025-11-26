@@ -2,6 +2,7 @@
 pragma solidity >=0.8.17 <0.9.0;
 
 import "./_Core.sol";
+import "./AllowanceLoader.sol";
 
 /**
  * @title AllowanceTracker - a component of the Zodiac Roles Mod that is
@@ -15,33 +16,6 @@ abstract contract AllowanceTracker is Core {
         uint128 newBalance
     );
 
-    function _accruedAllowance(
-        Allowance memory allowance,
-        uint64 blockTimestamp
-    ) internal pure override returns (uint128 balance, uint64 timestamp) {
-        if (
-            allowance.period == 0 ||
-            blockTimestamp < (allowance.timestamp + allowance.period)
-        ) {
-            return (allowance.balance, allowance.timestamp);
-        }
-
-        uint64 elapsedIntervals = (blockTimestamp - allowance.timestamp) /
-            allowance.period;
-
-        if (allowance.balance < allowance.maxRefill) {
-            balance = allowance.balance + allowance.refill * elapsedIntervals;
-
-            balance = balance < allowance.maxRefill
-                ? balance
-                : allowance.maxRefill;
-        } else {
-            balance = allowance.balance;
-        }
-
-        timestamp = allowance.timestamp + elapsedIntervals * allowance.period;
-    }
-
     /**
      * @dev Flushes the consumption of allowances back into storage, before
      * execution. This flush is not final
@@ -54,22 +28,13 @@ abstract contract AllowanceTracker is Core {
         for (uint256 i; i < count; ) {
             Consumption memory consumption = consumptions[i];
 
-            bytes32 key = consumption.allowanceKey;
-            uint128 consumed = consumption.consumed;
+            assert(consumption.consumed <= consumption.balance);
 
-            // Retrieve the allowance and calculate its current updated balance
-            // and next refill timestamp.
-            Allowance storage allowance = allowances[key];
-            (uint128 balance, uint64 timestamp) = _accruedAllowance(
-                allowance,
-                uint64(block.timestamp)
+            AllowanceLoader.store(
+                consumption.allowanceKey,
+                consumption.timestamp,
+                consumption.balance - consumption.consumed
             );
-
-            assert(balance == consumption.balance);
-            assert(consumed <= balance);
-            // Flush
-            allowance.balance = balance - consumed;
-            allowance.timestamp = timestamp;
 
             unchecked {
                 ++i;
@@ -92,15 +57,17 @@ abstract contract AllowanceTracker is Core {
         uint256 count = consumptions.length;
         for (uint256 i; i < count; ) {
             Consumption memory consumption = consumptions[i];
-            bytes32 key = consumption.allowanceKey;
             if (success) {
                 emit ConsumeAllowance(
-                    key,
+                    consumption.allowanceKey,
                     consumption.consumed,
                     consumption.balance - consumption.consumed
                 );
             } else {
-                allowances[key].balance = consumption.balance;
+                AllowanceLoader.store(
+                    consumption.allowanceKey,
+                    consumption.balance
+                );
             }
             unchecked {
                 ++i;

@@ -16,11 +16,6 @@ abstract contract Core is Modifier {
     mapping(bytes32 => Role) internal roles;
     mapping(bytes32 => Allowance) public allowances;
 
-    function _accruedAllowance(
-        Allowance memory allowance,
-        uint64 blockTimestamp
-    ) internal pure virtual returns (uint128 balance, uint64 timestamp);
-
     function _key(
         address targetAddress,
         bytes4 selector
