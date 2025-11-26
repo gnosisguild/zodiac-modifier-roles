@@ -19,7 +19,7 @@ import "./checkers/WithinRatioChecker.sol";
  * @author gnosisguild
  *
  */
-abstract contract PermissionChecker is Core, Periphery, AllowanceChecker {
+abstract contract PermissionChecker is Core, Periphery {
     function _authorize(
         bytes32 roleKey,
         address to,
@@ -605,32 +605,60 @@ abstract contract PermissionChecker is Core, Periphery, AllowanceChecker {
         Context memory context
     ) private view returns (Status, Result memory) {
         uint256 value = uint256(AbiDecoder.word(data, payload.location));
-        return __consume(value, condition, context.consumptions);
+        bytes32 allowanceKey = bytes32(condition.compValue);
+        (
+            bool success,
+            Consumption[] memory consumptions
+        ) = AllowanceChecker.check(value, allowanceKey, context.consumptions);
+
+        return (
+            success ? Status.Ok : Status.AllowanceExceeded,
+            Result({
+                consumptions: consumptions,
+                info: success ? bytes32(0) : allowanceKey
+            })
+        );
     }
 
     function _etherWithinAllowance(
         Condition memory condition,
         Context memory context
-    ) private view returns (Status status, Result memory result) {
-        (status, result) = __consume(
-            context.call.value,
-            condition,
-            context.consumptions
-        );
+    ) private view returns (Status, Result memory) {
+        bytes32 allowanceKey = bytes32(condition.compValue);
+        (
+            bool success,
+            Consumption[] memory consumptions
+        ) = AllowanceChecker.check(
+                context.call.value,
+                allowanceKey,
+                context.consumptions
+            );
+
         return (
-            status == Status.Ok ? Status.Ok : Status.EtherAllowanceExceeded,
-            result
+            success ? Status.Ok : Status.EtherAllowanceExceeded,
+            Result({
+                consumptions: consumptions,
+                info: success ? bytes32(0) : allowanceKey
+            })
         );
     }
 
     function _callWithinAllowance(
         Condition memory condition,
         Context memory context
-    ) private view returns (Status status, Result memory result) {
-        (status, result) = __consume(1, condition, context.consumptions);
+    ) private view returns (Status, Result memory) {
+        bytes32 allowanceKey = bytes32(condition.compValue);
+        (
+            bool success,
+            Consumption[] memory consumptions
+        ) = AllowanceChecker.check(1, allowanceKey, context.consumptions);
+
         return (
-            status == Status.Ok ? Status.Ok : Status.CallAllowanceExceeded,
-            result
+            success ? Status.Ok : Status.CallAllowanceExceeded,
+            Result({
+                consumptions: consumptions,
+                info: success ? bytes32(0) : allowanceKey
+            })
         );
     }
 
@@ -647,30 +675,6 @@ abstract contract PermissionChecker is Core, Periphery, AllowanceChecker {
         );
 
         return (status, Result({consumptions: context.consumptions, info: 0}));
-    }
-
-    function __consume(
-        uint256 value,
-        Condition memory condition,
-        Consumption[] memory consumptions
-    ) private view returns (Status, Result memory) {
-        bytes32 allowanceKey = bytes32(condition.compValue);
-        (bool success, Consumption[] memory updatedConsumptions) = checkzzz(
-            value,
-            allowanceKey,
-            consumptions
-        );
-
-        return
-            success
-                ? (
-                    Status.Ok,
-                    Result({consumptions: updatedConsumptions, info: 0})
-                )
-                : (
-                    Status.AllowanceExceeded,
-                    Result({consumptions: consumptions, info: allowanceKey})
-                );
     }
 
     struct Context {

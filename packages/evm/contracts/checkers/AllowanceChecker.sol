@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "../_Core.sol";
 import "../AllowanceLoader.sol";
 import "../types/All.sol";
 
@@ -12,8 +11,8 @@ import "../types/All.sol";
  *
  * @author gnosisguild
  */
-abstract contract AllowanceChecker is Core {
-    function checkzzz(
+library AllowanceChecker {
+    function check(
         uint256 value,
         bytes32 allowanceKey,
         Consumption[] memory consumptions
