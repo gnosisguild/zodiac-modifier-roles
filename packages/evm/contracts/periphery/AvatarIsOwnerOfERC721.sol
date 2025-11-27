@@ -2,7 +2,7 @@
 pragma solidity >=0.8.17 <0.9.0;
 
 import "@openzeppelin/contracts/interfaces/IERC721.sol";
-import "./Types.sol";
+import "./interfaces/ICustomCondition.sol";
 
 interface IModifier {
     function avatar() external view returns (address);
