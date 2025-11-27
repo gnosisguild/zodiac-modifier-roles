@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "../../core/conditions/deserialize/Unpacker.sol";
+import "../../core/condition/ConditionUnpack.sol";
 
 import "../../types/All.sol";
 
@@ -14,7 +14,7 @@ contract MockLayoutUnpacker {
     function unpack(
         bytes memory buffer
     ) external pure returns (FlatNode[] memory result) {
-        Layout memory layout = Unpacker._unpackLayout(buffer, 0);
+        Layout memory layout = ConditionUnpack._unpackLayout(buffer, 0);
 
         result = new FlatNode[](_countNodes(layout));
         _flattenBFS(layout, result);

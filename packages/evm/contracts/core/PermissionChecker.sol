@@ -6,7 +6,7 @@ import "./_Periphery.sol";
 
 import "./checkers/AllowanceChecker.sol";
 import "./checkers/WithinRatioChecker.sol";
-import "./conditions/deserialize/Unpacker.sol";
+import "./condition/ConditionUnpack.sol";
 
 import "../libraries/AbiDecoder.sol";
 import "../libraries/ImmutableStorage.sol";
@@ -222,9 +222,8 @@ abstract contract PermissionChecker is Core, Periphery {
 
         bytes memory buffer = ImmutableStorage.load(pointer);
 
-        (Condition memory condition, Layout memory layout) = Unpacker.unpack(
-            buffer
-        );
+        (Condition memory condition, Layout memory layout) = ConditionUnpack
+            .unpack(buffer);
 
         return
             _walk(data, condition, AbiDecoder.inspect(data, layout), context);

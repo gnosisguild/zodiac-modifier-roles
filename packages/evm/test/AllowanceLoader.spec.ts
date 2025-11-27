@@ -11,9 +11,9 @@ describe("AllowanceLoader", async () => {
     const provider = createEip1193(hre.network.provider, owner);
 
     await deployFactories({ provider });
-    const scopeConfigWriter = await hre.artifacts.readArtifact("ScopeConfigWriter");
-    const { address: scopeConfigWriterAddress } = await deployMastercopy({
-      bytecode: scopeConfigWriter.bytecode,
+    const conditionsTransform = await hre.artifacts.readArtifact("ConditionsTransform");
+    const { address: conditionsTransformAddress } = await deployMastercopy({
+      bytecode: conditionsTransform.bytecode,
       constructorArgs: { types: [], values: [] },
       salt: ZeroHash,
       provider,
@@ -21,7 +21,7 @@ describe("AllowanceLoader", async () => {
 
     const MockAllowanceLoader = await hre.ethers.getContractFactory(
       "MockAllowanceLoader",
-      { libraries: { ScopeConfigWriter: scopeConfigWriterAddress } },
+      { libraries: { ConditionsTransform: conditionsTransformAddress } },
     );
     const mock = await MockAllowanceLoader.deploy(
       owner.address,

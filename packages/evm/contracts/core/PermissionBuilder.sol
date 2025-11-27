@@ -3,7 +3,10 @@ pragma solidity >=0.8.17 <0.9.0;
 
 import "./_Core.sol";
 
-import "./ScopeConfigWriter.sol";
+import "./condition/ConditionsTransform.sol";
+
+import "../libraries/ImmutableStorage.sol";
+import "../libraries/ScopeConfig.sol";
 
 /*
  * Permission Model
@@ -161,9 +164,11 @@ abstract contract PermissionBuilder is Core {
         ConditionFlat[] memory conditions,
         ExecutionOptions options
     ) external onlyOwner {
-        roles[roleKey].scopeConfig[
-            _key(targetAddress, selector)
-        ] = ScopeConfigWriter.store(conditions, options);
+        bytes memory buffer = ConditionsTransform.pack(conditions);
+        address pointer = ImmutableStorage.store(buffer);
+
+        roles[roleKey].scopeConfig[_key(targetAddress, selector)] = ScopeConfig
+            .pack(options, pointer);
 
         emit ScopeFunction(
             roleKey,

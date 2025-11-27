@@ -1,20 +1,23 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "./Packer.sol";
+import "./ConditionPack.sol";
+import "./Integrity.sol";
 import "./TypeTree.sol";
 
-import "../../../types/All.sol";
+import "../../types/All.sol";
 
-library Serializer {
-    function serialize(
+library ConditionsTransform {
+    function pack(
         ConditionFlat[] memory conditions
-    ) internal pure returns (bytes memory) {
+    ) external pure returns (bytes memory) {
+        Integrity.enforce(conditions);
+
         _removeExtraneousOffsets(conditions);
 
         Layout memory layout = TypeTree.inspect(conditions, 0);
 
-        return Packer.pack(conditions, layout);
+        return ConditionPack.pack(conditions, layout);
     }
 
     /**
