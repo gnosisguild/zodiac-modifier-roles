@@ -11,9 +11,9 @@ describe("AllowanceLoader", async () => {
     const provider = createEip1193(hre.network.provider, owner);
 
     await deployFactories({ provider });
-    const serializer = await hre.artifacts.readArtifact("Serializer");
-    const { address: serializerAddress } = await deployMastercopy({
-      bytecode: serializer.bytecode,
+    const scopeConfigWriter = await hre.artifacts.readArtifact("ScopeConfigWriter");
+    const { address: scopeConfigWriterAddress } = await deployMastercopy({
+      bytecode: scopeConfigWriter.bytecode,
       constructorArgs: { types: [], values: [] },
       salt: ZeroHash,
       provider,
@@ -21,7 +21,7 @@ describe("AllowanceLoader", async () => {
 
     const MockAllowanceLoader = await hre.ethers.getContractFactory(
       "MockAllowanceLoader",
-      { libraries: { Serializer: serializerAddress } },
+      { libraries: { ScopeConfigWriter: scopeConfigWriterAddress } },
     );
     const mock = await MockAllowanceLoader.deploy(
       owner.address,

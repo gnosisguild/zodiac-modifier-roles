@@ -54,14 +54,14 @@ library Unpacker {
             }
 
             /*
-             * ┌───────────────────────────────────────────────────────┐
-             * │Each node 40 bits, 5 bytes:                            │
-             * │  • operator              5 bits                       │
-             * │  • unused                3 bits                       │
-             * │  • childCount            8 bits  (0-255)              │
-             * │  • sChildCount           8 bits  (0-255)              │
-             * │  • compValueOffset      16 bits  (0 if no value)      │
-             * └───────────────────────────────────────────────────────┘
+             * ┌───────────────────────────────────────────────────────────┐
+             * │Each node 40 bits, 5 bytes:                                │
+             * │  • operator              5 bits                           │
+             * │  • unused                3 bits                           │
+             * │  • childCount            8 bits  (0-255)                  │
+             * │  • sChildCount           8 bits  (0-255)                  │
+             * │  • compValueOffset      16 bits  (0 if no value)          │
+             * └───────────────────────────────────────────────────────────┘
              */
 
             Condition memory node = nodes[i];
@@ -140,12 +140,12 @@ library Unpacker {
                 packed := shr(240, mload(offset)) // Load 2 bytes (16 bits)
             }
             /*
-             * ┌──────────────────────────────────────────────────┐
-             * │Each node (11 bits, padded to 2 bytes):           │
-             * │  • encoding              3 bits  (Encoding 0-7)  │
-             * │  • childCount            8 bits  (0-255)         │
-             * │  • unused                5 bits                  │
-             * └──────────────────────────────────────────────────┘
+             * ┌──────────────────────────────────────────────────────────┐
+             * │Each node (11 bits, padded to 2 bytes):                   │
+             * │  • encoding              3 bits  (Encoding 0-7)          │
+             * │  • childCount            8 bits  (0-255)                 │
+             * │  • unused                5 bits                          │
+             * └──────────────────────────────────────────────────────────┘
              */
 
             Layout memory node = nodes[i];

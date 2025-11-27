@@ -3,14 +3,15 @@ pragma solidity >=0.8.17 <0.9.0;
 
 import "./_Core.sol";
 import "./_Periphery.sol";
-import "../libraries/AbiDecoder.sol";
-import "../periphery/interfaces/ICustomCondition.sol";
-
-import "./conditions/deserialize/Deserializer.sol";
-import "../libraries/ScopeConfig.sol";
 
 import "./checkers/AllowanceChecker.sol";
 import "./checkers/WithinRatioChecker.sol";
+import "./conditions/deserialize/Unpacker.sol";
+
+import "../libraries/AbiDecoder.sol";
+import "../libraries/ImmutableStorage.sol";
+import "../libraries/ScopeConfig.sol";
+import "../periphery/interfaces/ICustomCondition.sol";
 
 /**
  * @title PermissionChecker - a component of Zodiac Roles Mod responsible
@@ -217,8 +218,12 @@ abstract contract PermissionChecker is Core, Periphery {
         bytes calldata data,
         Context memory context
     ) private view returns (Status, Result memory) {
-        (Condition memory condition, Layout memory layout) = Deserializer.load(
-            scopeConfig
+        (, , address pointer) = ScopeConfig.unpack(scopeConfig);
+
+        bytes memory buffer = ImmutableStorage.load(pointer);
+
+        (Condition memory condition, Layout memory layout) = Unpacker.unpack(
+            buffer
         );
 
         return

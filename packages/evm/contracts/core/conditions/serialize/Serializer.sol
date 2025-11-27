@@ -1,29 +1,20 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "./Integrity.sol";
 import "./Packer.sol";
 import "./TypeTree.sol";
-
-import "../../../libraries/ImmutableStorage.sol";
-import "../../../libraries/ScopeConfig.sol";
 
 import "../../../types/All.sol";
 
 library Serializer {
-    function store(
-        ConditionFlat[] memory conditions,
-        ExecutionOptions options
-    ) external returns (bytes32) {
-        Integrity.enforce(conditions);
-
+    function serialize(
+        ConditionFlat[] memory conditions
+    ) internal pure returns (bytes memory) {
         _removeExtraneousOffsets(conditions);
 
         Layout memory layout = TypeTree.inspect(conditions, 0);
 
-        bytes memory buffer = Packer.pack(conditions, layout);
-
-        return ScopeConfig.pack(options, ImmutableStorage.store(buffer));
+        return Packer.pack(conditions, layout);
     }
 
     /**

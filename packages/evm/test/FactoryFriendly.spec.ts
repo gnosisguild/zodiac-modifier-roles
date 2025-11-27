@@ -17,12 +17,12 @@ describe("Module works with factory", () => {
     const Factory = await hre.ethers.getContractFactory("ModuleProxyFactory");
     const factory = await Factory.deploy();
 
-    const Serializer = await hre.ethers.getContractFactory("Serializer");
-    const serializer = await Serializer.deploy();
+    const ScopeConfigWriter = await hre.ethers.getContractFactory("ScopeConfigWriter");
+    const scopeConfigWriter = await ScopeConfigWriter.deploy();
 
     const Modifier = await hre.ethers.getContractFactory("Roles", {
       libraries: {
-        Serializer: await serializer.getAddress(),
+        ScopeConfigWriter: await scopeConfigWriter.getAddress(),
       },
     });
     const masterCopy = await Modifier.deploy(
