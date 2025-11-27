@@ -6,15 +6,36 @@ import "./_Core.sol";
 import "./ScopeConfigWriter.sol";
 
 /*
- * The Permission Model Hierarchy
+ * Permission Model
  *
- * Role → Target (address)
- *        ├─ ALLOWED     ──→ No rules, blanket approval (just a flag)
- *        ├─ DISALLOWED  ──→ No rules, blanket denial (just a flag)
- *        └─ SCOPED      ──→ Per-function rules (THIS is permission-storage)
- *                           ├─ function1 → [conditions...]
- *                           ├─ function2 → [conditions...]
- *                           └─ function3 → [conditions...]
+ * Role
+ *  │
+ *  ├─ members ───────────────────────► who can use this role
+ *  │
+ *  ├─ targets (address → Clearance)
+ *  │   │
+ *  │   ├─ Clearance.None ────────────► target blocked (default)
+ *  │   │
+ *  │   ├─ Clearance.Target ──────────► all functions allowed
+ *  │   │                               + ExecutionOptions (send/delegatecall)
+ *  │   │
+ *  │   └─ Clearance.Function ────────► only specific functions allowed
+ *  │                                   (see scopeConfig below)
+ *  │
+ *  └─ scopeConfig (target + selector → ScopeConfig)
+ *      │
+ *      │   Used when Clearance.Function
+ *      │
+ *      ├─ not set ───────────────────► function blocked
+ *      │
+ *      ├─ wildcarded ────────────────► function allowed, no parameter checks
+ *      │                               + ExecutionOptions
+ *      │
+ *      └─ scoped ────────────────────► function allowed with conditions
+ *                                      + ExecutionOptions
+ *                                      + Condition tree (parameter constraints)
+ *
+ * Allowances (separate storage, referenced by conditions)
  */
 abstract contract PermissionBuilder is Core {
     event AllowTarget(
