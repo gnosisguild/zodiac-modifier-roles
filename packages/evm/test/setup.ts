@@ -42,7 +42,9 @@ export async function deployRolesMod(
   const provider = createEip1193(hre.network.provider, signer);
 
   await deployFactories({ provider });
-  const conditionsTransform = await hre.artifacts.readArtifact("ConditionsTransform");
+  const conditionsTransform = await hre.artifacts.readArtifact(
+    "ConditionsTransform",
+  );
   const { address: conditionsTransformAddress } = await deployMastercopy({
     bytecode: conditionsTransform.bytecode,
     constructorArgs: { types: [], values: [] },
