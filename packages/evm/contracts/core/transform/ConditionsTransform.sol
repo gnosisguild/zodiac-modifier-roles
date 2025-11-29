@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "./ConditionPack.sol";
+import "./ConditionPacker.sol";
 import "./Integrity.sol";
 import "./TypeTree.sol";
 
@@ -17,7 +17,7 @@ library ConditionsTransform {
 
         Layout memory layout = TypeTree.inspect(conditions, 0);
 
-        return ConditionPack.pack(conditions, layout);
+        return ConditionPacker.pack(conditions, layout);
     }
 
     /**

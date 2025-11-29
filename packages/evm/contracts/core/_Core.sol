@@ -15,6 +15,7 @@ import "../types/All.sol";
 abstract contract Core is Modifier {
     mapping(bytes32 => Role) internal roles;
     mapping(bytes32 => Allowance) public allowances;
+    mapping(bytes32 => address) public unwrappers;
 
     function _key(
         address targetAddress,

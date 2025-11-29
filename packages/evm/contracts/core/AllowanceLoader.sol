@@ -12,9 +12,6 @@ import "../types/All.sol";
  *   word1 (slot):   | maxRefill (128) | refill (128) |
  *   word2 (slot+1): | timestamp (64)  | balance (128) | period (64) |
  *
- * Note: Fields appear reversed because Solidity packs struct members
- * starting from the least significant bits.
- *
  * @author gnosisguild
  */
 library AllowanceLoader {

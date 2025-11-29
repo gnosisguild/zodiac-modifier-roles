@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "../../core/condition/ConditionPack.sol";
+import "../../core/transform/ConditionPacker.sol";
 
 import "../../types/All.sol";
 
@@ -13,9 +13,9 @@ contract MockLayoutPacker {
     function packFlat(
         InputFlat[] calldata flatNodes
     ) external pure returns (bytes memory buffer) {
-        uint256 size = ConditionPack._layoutPackedSize(_toTree(flatNodes, 0));
+        uint256 size = ConditionPacker._layoutPackedSize(_toTree(flatNodes, 0));
         buffer = new bytes(size);
-        ConditionPack._packLayout(_toTree(flatNodes, 0), buffer, 0);
+        ConditionPacker._packLayout(_toTree(flatNodes, 0), buffer, 0);
     }
 
     function _toTree(

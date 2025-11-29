@@ -8,3 +8,8 @@ struct Layout {
     Layout[] children;
     uint256 index;
 }
+
+struct LayoutFlat {
+    Encoding encoding;
+    uint256[] fields;
+}

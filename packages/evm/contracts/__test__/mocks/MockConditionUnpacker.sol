@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "../../core/condition/ConditionUnpack.sol";
+import "../../core/transform/ConditionUnpacker.sol";
 
 import "../../types/All.sol";
 
@@ -9,7 +9,7 @@ contract MockConditionUnpacker {
     function unpack(
         bytes memory buffer
     ) external view returns (ConditionFlat[] memory flat) {
-        Condition memory root = ConditionUnpack._unpackCondition(buffer, 0);
+        Condition memory root = ConditionUnpacker._unpackCondition(buffer, 0);
         return _flatten(root);
     }
 

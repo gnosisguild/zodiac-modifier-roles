@@ -96,7 +96,7 @@ library WithinRatioChecker {
         bytes calldata data,
         bytes memory compValue,
         Payload memory parentPayload
-    ) internal view returns (Status) {
+    ) internal view returns (AuthorizationStatus) {
         CompValue memory config = _unpack(compValue);
 
         (uint256 referenceAmount, uint256 relativeAmount) = _scaleAndConvert(
@@ -108,13 +108,13 @@ library WithinRatioChecker {
         uint256 ratio = (relativeAmount * BPS) / referenceAmount;
 
         if (config.minRatio > 0 && ratio < config.minRatio) {
-            return Status.RatioBelowMin;
+            return AuthorizationStatus.RatioBelowMin;
         }
         if (config.maxRatio > 0 && ratio > config.maxRatio) {
-            return Status.RatioAboveMax;
+            return AuthorizationStatus.RatioAboveMax;
         }
 
-        return Status.Ok;
+        return AuthorizationStatus.Ok;
     }
 
     function _unpack(

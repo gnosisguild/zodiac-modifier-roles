@@ -51,7 +51,7 @@ import "../../types/All.sol";
  * - Children are implicitly sequential in BFS order (no childrenStart needed)
  */
 
-library ConditionPack {
+library ConditionPacker {
     // ═══════════════════════════════════════════════════════════════════════════
     // Constants
     // ═══════════════════════════════════════════════════════════════════════════

@@ -6,14 +6,14 @@ import "../AllowanceLoader.sol";
 import "../../periphery/interfaces/IPriceAdapter.sol";
 
 /**
- * @title AllowanceChecker
+ * @title WithinAllowanceChecker
  * @notice Validates allowance consumption with optional price conversion.
  *
  * @dev When a price adapter is used, the spent amount is converted into the
- *      allowance’s base denomination. This conversion accounts for two
+ *      allowance's base denomination. This conversion accounts for two
  *      distinct decimal domains:
  *
- *      • accrueDecimals — decimals of the allowance’s base unit
+ *      • accrueDecimals — decimals of the allowance's base unit
  *      • paramDecimals  — decimals of the asset being spent
  *
  *      This allows multiple assets with different decimal formats to be
@@ -22,7 +22,7 @@ import "../../periphery/interfaces/IPriceAdapter.sol";
  * @author gnosisguild
  */
 
-library AllowanceChecker {
+library WithinAllowanceChecker {
     struct CompValue {
         bytes32 allowanceKey;
         address adapter;
