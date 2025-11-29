@@ -16,6 +16,8 @@ import "./TypeTree.sol";
  * Enforce Tuples and Arrays to have children
  * Enforce in general nodes to have at least one structural children, for nodes that require children
  * Validated variants accross different Array entries as well
+ * Validate compValue for allowance to be either: 32 bytes, 52 bytes or 54 bytes
+ * Validate allowance decimals are equal or smaller than 18
  */
 
 library Integrity {
@@ -173,16 +175,25 @@ library Integrity {
             if (encoding != Encoding.Static) {
                 revert UnsuitableParameterType(index);
             }
-            if (compValue.length != 32) {
+            // 32 bytes: allowanceKey only (legacy)
+            // 54 bytes: allowanceKey + adapter + accrueDecimals + paramDecimals
+            if (compValue.length != 32 && compValue.length != 54) {
                 revert UnsuitableCompValue(index);
             }
-        } else if (
-            operator == Operator.EtherWithinAllowance ||
-            operator == Operator.CallWithinAllowance
-        ) {
+        } else if (operator == Operator.EtherWithinAllowance) {
             if (encoding != Encoding.None) {
                 revert UnsuitableParameterType(index);
             }
+            // 32 bytes: allowanceKey only (legacy)
+            // 54 bytes: allowanceKey + adapter + accrueDecimals + paramDecimals
+            if (compValue.length != 32 && compValue.length != 54) {
+                revert UnsuitableCompValue(index);
+            }
+        } else if (operator == Operator.CallWithinAllowance) {
+            if (encoding != Encoding.None) {
+                revert UnsuitableParameterType(index);
+            }
+            // CallWithinAllowance always uses value=1, price adapter doesn't make sense
             if (compValue.length != 32) {
                 revert UnsuitableCompValue(index);
             }
