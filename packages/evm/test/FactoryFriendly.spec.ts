@@ -17,7 +17,9 @@ describe("Module works with factory", () => {
     const Factory = await hre.ethers.getContractFactory("ModuleProxyFactory");
     const factory = await Factory.deploy();
 
-    const ConditionsTransform = await hre.ethers.getContractFactory("ConditionsTransform");
+    const ConditionsTransform = await hre.ethers.getContractFactory(
+      "ConditionsTransform",
+    );
     const conditionsTransform = await ConditionsTransform.deploy();
 
     const Modifier = await hre.ethers.getContractFactory("Roles", {

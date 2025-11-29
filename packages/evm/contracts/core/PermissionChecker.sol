@@ -607,15 +607,14 @@ abstract contract PermissionChecker is Core, Periphery {
         Context memory context
     ) private view returns (Status, Result memory) {
         uint256 value = uint256(AbiDecoder.word(data, payload.location));
-        bytes32 allowanceKey = bytes32(condition.compValue);
         (bool success, Consumption[] memory consumptions) = AllowanceChecker
-            .check(value, allowanceKey, context.consumptions);
+            .check(value, condition.compValue, context.consumptions);
 
         return (
             success ? Status.Ok : Status.AllowanceExceeded,
             Result({
                 consumptions: consumptions,
-                info: success ? bytes32(0) : allowanceKey
+                info: success ? bytes32(0) : bytes32(condition.compValue)
             })
         );
     }
@@ -624,15 +623,18 @@ abstract contract PermissionChecker is Core, Periphery {
         Condition memory condition,
         Context memory context
     ) private view returns (Status, Result memory) {
-        bytes32 allowanceKey = bytes32(condition.compValue);
         (bool success, Consumption[] memory consumptions) = AllowanceChecker
-            .check(context.call.value, allowanceKey, context.consumptions);
+            .check(
+                context.call.value,
+                condition.compValue,
+                context.consumptions
+            );
 
         return (
             success ? Status.Ok : Status.EtherAllowanceExceeded,
             Result({
                 consumptions: consumptions,
-                info: success ? bytes32(0) : allowanceKey
+                info: success ? bytes32(0) : bytes32(condition.compValue)
             })
         );
     }
