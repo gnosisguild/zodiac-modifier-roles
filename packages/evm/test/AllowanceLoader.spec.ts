@@ -11,7 +11,9 @@ describe("AllowanceLoader", async () => {
     const provider = createEip1193(hre.network.provider, owner);
 
     await deployFactories({ provider });
-    const conditionsTransform = await hre.artifacts.readArtifact("ConditionsTransform");
+    const conditionsTransform = await hre.artifacts.readArtifact(
+      "ConditionsTransform",
+    );
     const { address: conditionsTransformAddress } = await deployMastercopy({
       bytecode: conditionsTransform.bytecode,
       constructorArgs: { types: [], values: [] },

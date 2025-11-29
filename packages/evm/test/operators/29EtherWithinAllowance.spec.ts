@@ -2,7 +2,7 @@ import { expect } from "chai";
 import hre from "hardhat";
 import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
 
-import { AbiCoder, BigNumberish, parseEther } from "ethers";
+import { AbiCoder, BigNumberish, parseEther, solidityPacked } from "ethers";
 
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
@@ -342,6 +342,115 @@ describe("Operator - EtherWithinAllowance", async () => {
       await expect(invoke(1, value2))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(PermissionCheckerStatus.OrViolation, BYTES32_ZERO);
+    });
+  });
+
+  describe("EtherWithinAllowance - Price Adapter", () => {
+    it("works with PriceAdapter", async () => {
+      const Avatar = await hre.ethers.getContractFactory("TestAvatar");
+      const avatar = await Avatar.deploy();
+
+      const TestContract = await hre.ethers.getContractFactory("TestContract");
+      const testContract = await TestContract.deploy();
+
+      const [owner, invoker] = await hre.ethers.getSigners();
+      const testAddress = await testContract.getAddress();
+      const avatarAddress = await avatar.getAddress();
+
+      /*
+       * ETH(18) → accrue USDC(6)
+       */
+
+      // fund avatar with 10 ETH
+      await invoker.sendTransaction({
+        to: avatarAddress,
+        value: parseEther("10"),
+      });
+
+      const roles = await deployRolesMod(
+        hre,
+        owner.address,
+        avatarAddress,
+        avatarAddress,
+      );
+      await roles.enableModule(invoker.address);
+      await roles
+        .connect(owner)
+        .assignRoles(invoker.address, [ROLE_KEY], [true]);
+      await roles.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
+      await roles.connect(owner).scopeTarget(ROLE_KEY, testAddress);
+
+      const allowanceKey =
+        "0x0000000000000000000000000000000000000000000000000000000000000001";
+
+      // Deploy ETH/USD adapter: 1 ETH = 2000 USD
+      const MockPriceAdapter =
+        await hre.ethers.getContractFactory("MockPriceAdapter");
+      const ethUsdAdapter = await MockPriceAdapter.deploy(2000n * 10n ** 18n);
+
+      // Set allowance: 5000 USDC (6 decimals)
+      await roles
+        .connect(owner)
+        .setAllowance(allowanceKey, 5000n * 10n ** 6n, 0, 0, 0, 0);
+
+      const compValue = solidityPacked(
+        ["bytes32", "address", "uint8", "uint8"],
+        [allowanceKey, await ethUsdAdapter.getAddress(), 6, 18],
+      );
+
+      const SELECTOR = testContract.interface.getFunction(
+        "receiveEthAndDoNothing",
+      ).selector;
+
+      await roles.connect(owner).scopeFunction(
+        ROLE_KEY,
+        testAddress,
+        SELECTOR,
+        [
+          {
+            parent: 0,
+            paramType: Encoding.Calldata,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: Encoding.None,
+            operator: Operator.EtherWithinAllowance,
+            compValue,
+          },
+        ],
+        ExecutionOptions.Send,
+      );
+
+      async function sendEth(value: BigNumberish) {
+        return roles
+          .connect(invoker)
+          .execTransactionFromModule(
+            testAddress,
+            value,
+            (await testContract.receiveEthAndDoNothing.populateTransaction())
+              .data as string,
+            0,
+          );
+      }
+
+      // Send 2 ETH → 2 * 2000 = 4000 USDC consumed
+      await expect(sendEth(parseEther("2"))).to.not.be.reverted;
+
+      let allowance = await roles.allowances(allowanceKey);
+      expect(allowance.balance).to.equal(1000n * 10n ** 6n); // 5000 - 4000 = 1000 USDC
+
+      // Send 0.5 ETH → 1000 USDC consumed, total 5000
+      await expect(sendEth(parseEther("0.5"))).to.not.be.reverted;
+
+      allowance = await roles.allowances(allowanceKey);
+      expect(allowance.balance).to.equal(0);
+
+      // Any more reverts (0.001 ETH = 2 USDC, but balance is 0)
+      await expect(sendEth(parseEther("0.001")))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.EtherAllowanceExceeded, allowanceKey);
     });
   });
 });
