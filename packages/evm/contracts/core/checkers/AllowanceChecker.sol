@@ -10,10 +10,14 @@ import "../../periphery/interfaces/IPriceAdapter.sol";
  * @notice Validates allowance consumption with optional price conversion.
  *
  * @dev When a price adapter is used, the spent amount is converted into the
- *      allowance’s base denomination. `accrueDecimals` defines the decimals of
- *      that base unit, and `paramDecimals` defines the decimals of the asset
- *      being spent. This allows multiple assets (with different decimals) to be
- *      aggregated under a single denominated allowance.
+ *      allowance’s base denomination. This conversion accounts for two
+ *      distinct decimal domains:
+ *
+ *      • accrueDecimals — decimals of the allowance’s base unit
+ *      • paramDecimals  — decimals of the asset being spent
+ *
+ *      This allows multiple assets with different decimal formats to be
+ *      aggregated under a single allowance.
  *
  * @author gnosisguild
  */
@@ -33,12 +37,16 @@ library AllowanceChecker {
     ) internal view returns (bool success, Consumption[] memory) {
         CompValue memory config = _unpack(compValue);
 
-        /*
-         * Apply price conversion if adapter is provided
-         * Convert `value` expressed in the allowance’s base denomination
-         */
         if (config.adapter != address(0)) {
+            /*
+             *             value × price     10^accrueDecimals
+             *   result = ─────────────── × ───────────────────
+             *                 10^18          10^paramDecimals
+             *
+             */
             uint256 price = IPriceAdapter(config.adapter).getPrice();
+
+            // Do all multiplications before division to preserve precision
             value =
                 (value * price * (10 ** config.accrueDecimals)) /
                 (10 ** (18 + config.paramDecimals));
@@ -122,21 +130,27 @@ library AllowanceChecker {
 
     /**
      * @dev Returns a shallow clone of `consumptions`. If `extend` is true,
-     * the new array has length + 1.
+     * the returned array has length `consumptions.length + 1` (with the last
+     * slot left uninitialized).
      */
     function _shallowClone(
         Consumption[] memory consumptions,
         bool extend
     ) private pure returns (Consumption[] memory result) {
         uint256 prevLength = consumptions.length;
-        uint256 nextLength = prevLength + (extend ? 1 : 0);
+        uint256 length = prevLength + (extend ? 1 : 0);
 
         assembly {
+            // Load the free memory pointer
             result := mload(0x40)
-            mstore(0x40, add(result, mul(add(nextLength, 1), 0x20)))
 
-            mstore(result, nextLength)
+            // allocate array, by advancing free memory pointer
+            mstore(0x40, add(result, mul(add(length, 1), 0x20)))
 
+            // Store the new array length
+            mstore(result, length)
+
+            // Copy the previous elements (shallow copy of pointers)
             let dst := add(result, 0x20)
             let src := add(consumptions, 0x20)
             let size := mul(prevLength, 0x20)

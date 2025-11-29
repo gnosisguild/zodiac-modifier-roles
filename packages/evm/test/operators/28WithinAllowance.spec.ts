@@ -1023,5 +1023,103 @@ describe("Operator - WithinAllowance", async () => {
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
     });
+
+    it("preserves decimal precision when scaling down (18 → 6)", async () => {
+      const { owner, roles, scopeFunction, invoke } =
+        await loadFixture(setupOneParamStatic);
+
+      const MockPriceAdapter =
+        await hre.ethers.getContractFactory("MockPriceAdapter");
+      const adapter = await MockPriceAdapter.deploy(10n ** 18n); // 1:1 price
+
+      // 1.123456789123456789 in 18 decimals
+      const valueInParamDecimals = 1123456789123456789n;
+      // Expected: 1.123456 in 6 decimals (truncates after 6 decimals)
+      const valueInAccrueDecimals = 1123456n;
+
+      await setAllowance(await roles.connect(owner), allowanceKey, {
+        balance: valueInAccrueDecimals,
+        period: 0,
+        refill: 0,
+        timestamp: 0,
+      });
+
+      await scopeFunction([
+        {
+          parent: 0,
+          paramType: Encoding.Calldata,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: encodeAllowanceCompValue({
+            allowanceKey,
+            adapter: await adapter.getAddress(),
+            accrueDecimals: 6,
+            paramDecimals: 18,
+          }),
+        },
+      ]);
+
+      let allowance = await roles.allowances(allowanceKey);
+      expect(allowance.balance).to.equal(valueInAccrueDecimals);
+
+      await expect(invoke(valueInParamDecimals)).to.not.be.reverted;
+
+      allowance = await roles.allowances(allowanceKey);
+      expect(allowance.balance).to.equal(0);
+    });
+
+    it("preserves decimal precision when scaling up (6 → 18)", async () => {
+      const { owner, roles, scopeFunction, invoke } =
+        await loadFixture(setupOneParamStatic);
+
+      const MockPriceAdapter =
+        await hre.ethers.getContractFactory("MockPriceAdapter");
+      const adapter = await MockPriceAdapter.deploy(10n ** 18n); // 1:1 price
+
+      // 1.123456 in 6 decimals
+      const valueInParamDecimals = 1123456n;
+      // Expected: 1.123456000000000000 in 18 decimals
+      const valueInAccrueDecimals = 1123456000000000000n;
+
+      await setAllowance(await roles.connect(owner), allowanceKey, {
+        balance: valueInAccrueDecimals,
+        period: 0,
+        refill: 0,
+        timestamp: 0,
+      });
+
+      await scopeFunction([
+        {
+          parent: 0,
+          paramType: Encoding.Calldata,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: encodeAllowanceCompValue({
+            allowanceKey,
+            adapter: await adapter.getAddress(),
+            accrueDecimals: 18,
+            paramDecimals: 6,
+          }),
+        },
+      ]);
+
+      let allowance = await roles.allowances(allowanceKey);
+      expect(allowance.balance).to.equal(valueInAccrueDecimals);
+
+      await expect(invoke(valueInParamDecimals)).to.not.be.reverted;
+
+      allowance = await roles.allowances(allowanceKey);
+      expect(allowance.balance).to.equal(0);
+    });
   });
 });
