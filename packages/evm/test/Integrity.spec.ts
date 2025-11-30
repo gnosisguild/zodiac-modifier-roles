@@ -9,8 +9,6 @@ import { ConditionFlatStruct } from "../typechain-types/contracts/PermissionBuil
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
 async function setup() {
-  const Integrity = await hre.ethers.getContractFactory("Integrity");
-  const integrity = await Integrity.deploy();
   const Mock = await hre.ethers.getContractFactory("MockIntegrity");
   const mock = await Mock.deploy();
 
@@ -20,52 +18,52 @@ async function setup() {
 
   return {
     enforce,
-    integrity,
+    mock,
   };
 }
 
 describe("Integrity", () => {
   describe("Global Structure Validation", () => {
     it("should revert if the conditions array is empty", async () => {
-      const { integrity, enforce } = await loadFixture(setup);
+      const { mock, enforce } = await loadFixture(setup);
       await expect(enforce([])).to.be.revertedWithCustomError(
-        integrity,
+        mock,
         "UnsuitableRootNode",
       );
     });
 
     it("should revert if there is no root node (parent === index)", async () => {
-      const { integrity, enforce } = await loadFixture(setup);
+      const { mock, enforce } = await loadFixture(setup);
       await expect(
         enforce([
           { parent: 1, paramType: 0, operator: 0, compValue: "0x" },
           { parent: 0, paramType: 0, operator: 0, compValue: "0x" },
         ]),
-      ).to.be.revertedWithCustomError(integrity, "UnsuitableRootNode");
+      ).to.be.revertedWithCustomError(mock, "UnsuitableRootNode");
     });
 
     it("should revert if there is more than one root node", async () => {
-      const { integrity, enforce } = await loadFixture(setup);
+      const { mock, enforce } = await loadFixture(setup);
       await expect(
         enforce([
           { parent: 0, paramType: 0, operator: 0, compValue: "0x" },
           { parent: 1, paramType: 0, operator: 0, compValue: "0x" },
         ]),
-      ).to.be.revertedWithCustomError(integrity, "UnsuitableRootNode");
+      ).to.be.revertedWithCustomError(mock, "UnsuitableRootNode");
     });
 
     it("should revert if the root node is not at index 0", async () => {
-      const { integrity, enforce } = await loadFixture(setup);
+      const { mock, enforce } = await loadFixture(setup);
       await expect(
         enforce([
           { parent: 1, paramType: 0, operator: 0, compValue: "0x" },
           { parent: 0, paramType: 0, operator: 0, compValue: "0x" },
         ]),
-      ).to.be.revertedWithCustomError(integrity, "UnsuitableRootNode");
+      ).to.be.revertedWithCustomError(mock, "UnsuitableRootNode");
     });
 
     it("should revert if the nodes are not in BFS (Breadth-First Search) order", async () => {
-      const { integrity, enforce } = await loadFixture(setup);
+      const { mock, enforce } = await loadFixture(setup);
       await expect(
         enforce([
           {
@@ -87,20 +85,20 @@ describe("Integrity", () => {
             compValue: "0x",
           },
         ]),
-      ).to.be.revertedWithCustomError(integrity, "NotBFS");
+      ).to.be.revertedWithCustomError(mock, "NotBFS");
     });
   });
 
   describe("Root Node Validation", () => {
     it("should revert if the final resolved root type is not Calldata", async () => {
-      const { integrity, enforce } = await loadFixture(setup);
+      const { mock, enforce } = await loadFixture(setup);
       // This tree resolves to Static, not Calldata
       const conditions = flattenCondition({
         paramType: Encoding.Static,
         operator: Operator.Pass,
       });
       await expect(enforce(conditions)).to.be.revertedWithCustomError(
-        integrity,
+        mock,
         "UnsuitableRootNode",
       );
     });
@@ -118,7 +116,7 @@ describe("Integrity", () => {
 
   describe("Parent-Child Relationship Rules", () => {
     it("should revert if a node's parent comes after the node itself", async () => {
-      const { integrity, enforce } = await loadFixture(setup);
+      const { mock, enforce } = await loadFixture(setup);
       // This is covered by the root node check (must be at index 0)
       // and the BFS check.
       await expect(
@@ -142,14 +140,14 @@ describe("Integrity", () => {
             compValue: "0x",
           },
         ]),
-      ).to.be.revertedWithCustomError(integrity, "NotBFS");
+      ).to.be.revertedWithCustomError(mock, "NotBFS");
     });
   });
 
   describe("Node-Specific Validation", () => {
     describe("Container Nodes (Tuple, Array, Calldata, AbiEncoded)", () => {
       it("should revert if a Tuple node has no children", async () => {
-        const { integrity, enforce } = await loadFixture(setup);
+        const { mock, enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
           paramType: Encoding.Calldata,
           children: [
@@ -160,12 +158,12 @@ describe("Integrity", () => {
           ],
         });
         await expect(enforce(conditions))
-          .to.be.revertedWithCustomError(integrity, "UnsuitableChildCount")
+          .to.be.revertedWithCustomError(mock, "UnsuitableChildCount")
           .withArgs(1);
       });
 
       it("should revert if a Tuple node has no structural children even with non-structural ones", async () => {
-        const { integrity, enforce } = await loadFixture(setup);
+        const { mock, enforce } = await loadFixture(setup);
 
         const compValue = encodeWithinRatioCompValue({
           referenceIndex: 0,
@@ -193,34 +191,34 @@ describe("Integrity", () => {
           ],
         });
         await expect(enforce(conditions))
-          .to.be.revertedWithCustomError(integrity, "UnsuitableChildCount")
+          .to.be.revertedWithCustomError(mock, "UnsuitableChildCount")
           .withArgs(1);
       });
 
       it("should revert if a Calldata node has no children", async () => {
-        const { integrity, enforce } = await loadFixture(setup);
+        const { mock, enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
           paramType: Encoding.Calldata,
           operator: Operator.Matches,
         });
         await expect(enforce(conditions))
-          .to.be.revertedWithCustomError(integrity, "UnsuitableChildCount")
+          .to.be.revertedWithCustomError(mock, "UnsuitableChildCount")
           .withArgs(0);
       });
 
       it("should revert if an Array node has no children", async () => {
-        const { integrity, enforce } = await loadFixture(setup);
+        const { mock, enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
           paramType: Encoding.Calldata,
           children: [{ paramType: Encoding.Array, operator: Operator.Matches }],
         });
         await expect(enforce(conditions))
-          .to.be.revertedWithCustomError(integrity, "UnsuitableChildCount")
+          .to.be.revertedWithCustomError(mock, "UnsuitableChildCount")
           .withArgs(1);
       });
 
       it("should revert if an Array node has no structural children even with non-structural ones", async () => {
-        const { integrity, enforce } = await loadFixture(setup);
+        const { mock, enforce } = await loadFixture(setup);
 
         const compValue = encodeWithinRatioCompValue({
           referenceIndex: 0,
@@ -248,7 +246,7 @@ describe("Integrity", () => {
           ],
         });
         await expect(enforce(conditions))
-          .to.be.revertedWithCustomError(integrity, "UnsuitableChildCount")
+          .to.be.revertedWithCustomError(mock, "UnsuitableChildCount")
           .withArgs(1);
       });
 
@@ -272,7 +270,7 @@ describe("Integrity", () => {
 
     describe("Leaf Nodes (Static, Dynamic)", () => {
       it("should revert if a Static node has children", async () => {
-        const { integrity, enforce } = await loadFixture(setup);
+        const { mock, enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
           paramType: Encoding.Calldata,
           children: [
@@ -283,12 +281,12 @@ describe("Integrity", () => {
           ],
         });
         await expect(enforce(conditions))
-          .to.be.revertedWithCustomError(integrity, "UnsuitableChildCount")
+          .to.be.revertedWithCustomError(mock, "UnsuitableChildCount")
           .withArgs(1);
       });
 
       it("should revert if a Dynamic node has children", async () => {
-        const { integrity, enforce } = await loadFixture(setup);
+        const { mock, enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
           paramType: Encoding.Calldata,
           children: [
@@ -299,14 +297,14 @@ describe("Integrity", () => {
           ],
         });
         await expect(enforce(conditions))
-          .to.be.revertedWithCustomError(integrity, "UnsuitableChildCount")
+          .to.be.revertedWithCustomError(mock, "UnsuitableChildCount")
           .withArgs(1);
       });
     });
 
     describe("Logical Nodes (AND, OR, NOR)", () => {
       it("should revert if a logical node's paramType is not None", async () => {
-        const { integrity, enforce } = await loadFixture(setup);
+        const { mock, enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
           paramType: Encoding.Calldata,
           children: [
@@ -318,12 +316,12 @@ describe("Integrity", () => {
           ],
         });
         await expect(enforce(conditions))
-          .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
+          .to.be.revertedWithCustomError(mock, "UnsuitableParameterType")
           .withArgs(1);
       });
 
       it("should revert if a logical node has a non-empty compValue", async () => {
-        const { integrity, enforce } = await loadFixture(setup);
+        const { mock, enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
           paramType: Encoding.Calldata,
           children: [
@@ -338,18 +336,18 @@ describe("Integrity", () => {
           ],
         });
         await expect(enforce(conditions))
-          .to.be.revertedWithCustomError(integrity, "UnsuitableCompValue")
+          .to.be.revertedWithCustomError(mock, "UnsuitableCompValue")
           .withArgs(1);
       });
 
       it("should revert if a logical node has no children", async () => {
-        const { integrity, enforce } = await loadFixture(setup);
+        const { mock, enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
           paramType: Encoding.Calldata,
           children: [{ paramType: Encoding.None, operator: Operator.And }],
         });
         await expect(enforce(conditions))
-          .to.be.revertedWithCustomError(integrity, "UnsuitableChildCount")
+          .to.be.revertedWithCustomError(mock, "UnsuitableChildCount")
           .withArgs(1);
       });
     });
@@ -358,7 +356,7 @@ describe("Integrity", () => {
   describe("Operator-Specific Validation", () => {
     describe("Comparison Operators (EqualTo, GreaterThan, LessThan, etc.)", () => {
       it("should revert if GreaterThan is used with a non-Static type", async () => {
-        const { integrity, enforce } = await loadFixture(setup);
+        const { mock, enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
           paramType: Encoding.Calldata,
           children: [
@@ -370,12 +368,12 @@ describe("Integrity", () => {
           ],
         });
         await expect(enforce(conditions))
-          .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
+          .to.be.revertedWithCustomError(mock, "UnsuitableParameterType")
           .withArgs(1);
       });
 
       it("should revert if EqualTo is used with an invalid type like None", async () => {
-        const { integrity, enforce } = await loadFixture(setup);
+        const { mock, enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
           paramType: Encoding.Calldata,
           children: [
@@ -387,12 +385,12 @@ describe("Integrity", () => {
           ],
         });
         await expect(enforce(conditions))
-          .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
+          .to.be.revertedWithCustomError(mock, "UnsuitableParameterType")
           .withArgs(1);
       });
 
       it("should revert if GreaterThan has a compValue that is not 32 bytes", async () => {
-        const { integrity, enforce } = await loadFixture(setup);
+        const { mock, enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
           paramType: Encoding.Calldata,
           children: [
@@ -404,12 +402,12 @@ describe("Integrity", () => {
           ],
         });
         await expect(enforce(conditions))
-          .to.be.revertedWithCustomError(integrity, "UnsuitableCompValue")
+          .to.be.revertedWithCustomError(mock, "UnsuitableCompValue")
           .withArgs(1);
       });
 
       it("should revert if EqualTo has an empty or non-32-byte-multiple compValue", async () => {
-        const { integrity, enforce } = await loadFixture(setup);
+        const { mock, enforce } = await loadFixture(setup);
         await expect(
           enforce(
             flattenCondition({
@@ -424,7 +422,7 @@ describe("Integrity", () => {
             }),
           ),
         )
-          .to.be.revertedWithCustomError(integrity, "UnsuitableCompValue")
+          .to.be.revertedWithCustomError(mock, "UnsuitableCompValue")
           .withArgs(1);
 
         await expect(
@@ -441,14 +439,14 @@ describe("Integrity", () => {
             }),
           ),
         )
-          .to.be.revertedWithCustomError(integrity, "UnsuitableCompValue")
+          .to.be.revertedWithCustomError(mock, "UnsuitableCompValue")
           .withArgs(1);
       });
     });
 
     describe("Array Operators (ArraySome, ArrayEvery)", () => {
       it("should revert if ArraySome is not used on an Array type", async () => {
-        const { integrity, enforce } = await loadFixture(setup);
+        const { mock, enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
           paramType: Encoding.Calldata,
           children: [
@@ -462,12 +460,12 @@ describe("Integrity", () => {
           ],
         });
         await expect(enforce(conditions))
-          .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
+          .to.be.revertedWithCustomError(mock, "UnsuitableParameterType")
           .withArgs(1);
       });
 
       it("should revert if ArraySome does not have exactly one child", async () => {
-        const { integrity, enforce } = await loadFixture(setup);
+        const { mock, enforce } = await loadFixture(setup);
         // No children
         await expect(
           enforce(
@@ -479,7 +477,7 @@ describe("Integrity", () => {
             }),
           ),
         )
-          .to.be.revertedWithCustomError(integrity, "UnsuitableChildCount")
+          .to.be.revertedWithCustomError(mock, "UnsuitableChildCount")
           .withArgs(1);
 
         // More than one child
@@ -500,12 +498,12 @@ describe("Integrity", () => {
             }),
           ),
         )
-          .to.be.revertedWithCustomError(integrity, "UnsuitableChildCount")
+          .to.be.revertedWithCustomError(mock, "UnsuitableChildCount")
           .withArgs(1);
       });
 
       it("should revert if ArrayTailMatches is not used on an Array type", async () => {
-        const { integrity, enforce } = await loadFixture(setup);
+        const { mock, enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
           paramType: Encoding.Calldata,
           children: [
@@ -519,12 +517,12 @@ describe("Integrity", () => {
           ],
         });
         await expect(enforce(conditions))
-          .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
+          .to.be.revertedWithCustomError(mock, "UnsuitableParameterType")
           .withArgs(1);
       });
 
       it("should revert if ArrayTailMatches has non-structural children", async () => {
-        const { integrity, enforce } = await loadFixture(setup);
+        const { mock, enforce } = await loadFixture(setup);
 
         const compValue = encodeWithinRatioCompValue({
           referenceIndex: 0,
@@ -554,14 +552,14 @@ describe("Integrity", () => {
           ],
         });
         await expect(enforce(conditions))
-          .to.be.revertedWithCustomError(integrity, "UnsuitableChildCount")
+          .to.be.revertedWithCustomError(mock, "UnsuitableChildCount")
           .withArgs(1);
       });
     });
 
     describe("Allowance Operators (EtherWithinAllowance, CallWithinAllowance)", () => {
       it("should revert if they have children", async () => {
-        const { integrity, enforce } = await loadFixture(setup);
+        const { mock, enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
           paramType: Encoding.Calldata,
           children: [
@@ -576,12 +574,12 @@ describe("Integrity", () => {
           ],
         });
         await expect(enforce(conditions))
-          .to.be.revertedWithCustomError(integrity, "UnsuitableChildCount")
+          .to.be.revertedWithCustomError(mock, "UnsuitableChildCount")
           .withArgs(1);
       });
 
       it("should revert if their paramType is not None", async () => {
-        const { integrity, enforce } = await loadFixture(setup);
+        const { mock, enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
           paramType: Encoding.Calldata,
           children: [
@@ -593,12 +591,12 @@ describe("Integrity", () => {
           ],
         });
         await expect(enforce(conditions))
-          .to.be.revertedWithCustomError(integrity, "UnsuitableParameterType")
+          .to.be.revertedWithCustomError(mock, "UnsuitableParameterType")
           .withArgs(1);
       });
 
       it("should revert if not nested under a top-level Calldata node (e.g., inside a Tuple)", async () => {
-        const { integrity, enforce } = await loadFixture(setup);
+        const { mock, enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
           paramType: Encoding.Calldata,
           children: [
@@ -616,7 +614,7 @@ describe("Integrity", () => {
           ],
         });
         await expect(enforce(conditions))
-          .to.be.revertedWithCustomError(integrity, "UnsuitableParent")
+          .to.be.revertedWithCustomError(mock, "UnsuitableParent")
           .withArgs(2);
       });
 
@@ -637,7 +635,7 @@ describe("Integrity", () => {
     });
 
     it("should revert for any unsupported or placeholder operator", async () => {
-      const { integrity, enforce } = await loadFixture(setup);
+      const { mock, enforce } = await loadFixture(setup);
       const conditions = flattenCondition({
         paramType: Encoding.Calldata,
         children: [
@@ -648,14 +646,14 @@ describe("Integrity", () => {
         ],
       });
       await expect(enforce(conditions))
-        .to.be.revertedWithCustomError(integrity, "UnsupportedOperator")
+        .to.be.revertedWithCustomError(mock, "UnsupportedOperator")
         .withArgs(1);
     });
   });
 
   describe("Type Tree Equivalence", () => {
     it("should revert if children of a logical operator have different, non-variant type trees", async () => {
-      const { integrity, enforce } = await loadFixture(setup);
+      const { mock, enforce } = await loadFixture(setup);
       {
         const conditions = flattenCondition({
           paramType: Encoding.Calldata,
@@ -674,7 +672,7 @@ describe("Integrity", () => {
           ],
         });
         await expect(enforce(conditions)).to.be.revertedWithCustomError(
-          integrity,
+          mock,
           "UnsuitableChildTypeTree",
         );
       }
@@ -694,7 +692,7 @@ describe("Integrity", () => {
           ],
         });
         await expect(enforce(conditions)).to.be.revertedWithCustomError(
-          integrity,
+          mock,
           "UnsuitableChildTypeTree",
         );
       }
@@ -722,14 +720,14 @@ describe("Integrity", () => {
           ],
         });
         await expect(enforce(conditions)).to.be.revertedWithCustomError(
-          integrity,
+          mock,
           "UnsuitableChildTypeTree",
         );
       }
     });
 
     it("should revert if nested children of a logical operator have different, non-variant type trees  (e.g., Or(Or(T1, T2)))", async () => {
-      const { integrity, enforce } = await loadFixture(setup);
+      const { mock, enforce } = await loadFixture(setup);
       // Or with a single child that is itself an Or containing variants
       const conditions = flattenCondition({
         paramType: Encoding.Calldata,
@@ -751,7 +749,7 @@ describe("Integrity", () => {
         ],
       });
       await expect(enforce(conditions)).to.be.revertedWithCustomError(
-        integrity,
+        mock,
         "UnsuitableChildTypeTree",
       );
     });
@@ -800,7 +798,7 @@ describe("Integrity", () => {
     });
 
     it("should revert if children of an Array have different type trees", async () => {
-      const { integrity, enforce } = await loadFixture(setup);
+      const { mock, enforce } = await loadFixture(setup);
       const conditions = flattenCondition({
         paramType: Encoding.Calldata,
         children: [
@@ -815,7 +813,7 @@ describe("Integrity", () => {
         ],
       });
       await expect(enforce(conditions)).to.be.revertedWithCustomError(
-        integrity,
+        mock,
         "UnsuitableChildTypeTree",
       );
     });
@@ -967,7 +965,7 @@ describe("Integrity", () => {
       });
 
       it("should revert when Array.Matches children have incompatible type trees", async () => {
-        const { integrity, enforce } = await loadFixture(setup);
+        const { mock, enforce } = await loadFixture(setup);
         {
           const conditions = flattenCondition({
             paramType: Encoding.Calldata,
@@ -984,7 +982,7 @@ describe("Integrity", () => {
             ],
           });
           await expect(enforce(conditions))
-            .to.be.revertedWithCustomError(integrity, "UnsuitableChildTypeTree")
+            .to.be.revertedWithCustomError(mock, "UnsuitableChildTypeTree")
             .withArgs(1);
         }
       });
@@ -1049,7 +1047,7 @@ describe("Integrity", () => {
     });
 
     it("should revert when a structural child comes after a non-structural child", async () => {
-      const { integrity, enforce } = await loadFixture(setup);
+      const { mock, enforce } = await loadFixture(setup);
       const conditions = flattenCondition({
         paramType: Encoding.Calldata,
         children: [
@@ -1065,14 +1063,14 @@ describe("Integrity", () => {
       });
       await expect(enforce(conditions))
         .to.be.revertedWithCustomError(
-          integrity,
+          mock,
           "NonStructuralChildrenMustComeLast",
         )
         .withArgs(0);
     });
 
     it("should revert when structural children are interleaved with non-structural", async () => {
-      const { integrity, enforce } = await loadFixture(setup);
+      const { mock, enforce } = await loadFixture(setup);
       const conditions = flattenCondition({
         paramType: Encoding.Calldata,
         children: [
@@ -1094,7 +1092,7 @@ describe("Integrity", () => {
       });
       await expect(enforce(conditions))
         .to.be.revertedWithCustomError(
-          integrity,
+          mock,
           "NonStructuralChildrenMustComeLast",
         )
         .withArgs(0);
@@ -1166,7 +1164,7 @@ describe("Integrity", () => {
 
   describe("compatible childTypeTree - OLD TESTS", () => {
     it("and/or/nor mismatch", async () => {
-      const { integrity, enforce } = await loadFixture(setup);
+      const { mock, enforce } = await loadFixture(setup);
 
       const conditions = [
         {
@@ -1201,7 +1199,7 @@ describe("Integrity", () => {
         },
       ];
       await expect(enforce(conditions)).to.be.revertedWithCustomError(
-        integrity,
+        mock,
         "UnsuitableChildTypeTree",
       );
 
@@ -1241,7 +1239,7 @@ describe("Integrity", () => {
       ).to.not.be.reverted;
     });
     it("and/or/nor mismatch - order counts", async () => {
-      const { integrity, enforce } = await loadFixture(setup);
+      const { mock, enforce } = await loadFixture(setup);
 
       const conditions = [
         {
@@ -1294,7 +1292,7 @@ describe("Integrity", () => {
         },
       ];
       await expect(enforce(conditions)).to.be.revertedWithCustomError(
-        integrity,
+        mock,
         "UnsuitableChildTypeTree",
       );
 
@@ -1352,7 +1350,7 @@ describe("Integrity", () => {
       ).to.not.be.reverted;
     });
     it("and/or mismatch - recursive", async () => {
-      const { integrity, enforce } = await loadFixture(setup);
+      const { mock, enforce } = await loadFixture(setup);
 
       const conditions = [
         {
@@ -1394,7 +1392,7 @@ describe("Integrity", () => {
       ];
 
       await expect(enforce(conditions)).to.be.revertedWithCustomError(
-        integrity,
+        mock,
         "UnsuitableChildTypeTree",
       );
 
@@ -1403,7 +1401,7 @@ describe("Integrity", () => {
       await expect(enforce(conditions)).to.not.be.reverted;
     });
     it("array mismatch", async () => {
-      const { integrity, enforce } = await loadFixture(setup);
+      const { mock, enforce } = await loadFixture(setup);
 
       const conditions = flattenCondition({
         paramType: Encoding.Calldata,
@@ -1455,7 +1453,7 @@ describe("Integrity", () => {
       });
 
       await expect(enforce(conditions)).to.be.revertedWithCustomError(
-        integrity,
+        mock,
         "UnsuitableChildTypeTree",
       );
 
@@ -1464,7 +1462,7 @@ describe("Integrity", () => {
       await expect(enforce(conditions)).to.not.be.reverted;
     });
     it("array mismatch - order counts", async () => {
-      const { integrity, enforce } = await loadFixture(setup);
+      const { mock, enforce } = await loadFixture(setup);
 
       const conditions = [
         {
@@ -1520,7 +1518,7 @@ describe("Integrity", () => {
       ];
 
       await expect(enforce(conditions)).to.be.revertedWithCustomError(
-        integrity,
+        mock,
         "UnsuitableChildTypeTree",
       );
 
@@ -1531,7 +1529,7 @@ describe("Integrity", () => {
       await expect(enforce(conditions)).to.not.be.reverted;
     });
     it("array mismatch - different length", async () => {
-      const { integrity, enforce } = await loadFixture(setup);
+      const { mock, enforce } = await loadFixture(setup);
 
       const conditions = [
         {
@@ -1590,10 +1588,10 @@ describe("Integrity", () => {
 
       await expect(
         enforce(conditions.slice(0, -1)),
-      ).to.be.revertedWithCustomError(integrity, "UnsuitableChildTypeTree");
+      ).to.be.revertedWithCustomError(mock, "UnsuitableChildTypeTree");
     });
     it("array mismatch - recursive", async () => {
-      const { integrity, enforce } = await loadFixture(setup);
+      const { mock, enforce } = await loadFixture(setup);
 
       const conditions = [
         {
@@ -1635,7 +1633,7 @@ describe("Integrity", () => {
       ];
 
       await expect(enforce(conditions)).to.be.revertedWithCustomError(
-        integrity,
+        mock,
         "UnsuitableChildTypeTree",
       );
 
@@ -1839,7 +1837,7 @@ describe("Integrity", () => {
       });
 
       it("rejects Static as sibling in type variant point", async () => {
-        const { integrity, enforce } = await loadFixture(setup);
+        const { mock, enforce } = await loadFixture(setup);
         await expect(
           enforce(
             flattenCondition({
@@ -1872,12 +1870,12 @@ describe("Integrity", () => {
             }),
           ),
         )
-          .to.be.revertedWithCustomError(integrity, "UnsuitableChildTypeTree")
+          .to.be.revertedWithCustomError(mock, "UnsuitableChildTypeTree")
           .withArgs(1);
       });
 
       it("rejects Tuple as sibling in type variant point", async () => {
-        const { integrity, enforce } = await loadFixture(setup);
+        const { mock, enforce } = await loadFixture(setup);
         await expect(
           enforce(
             flattenCondition({
@@ -1906,7 +1904,7 @@ describe("Integrity", () => {
             }),
           ),
         )
-          .to.be.revertedWithCustomError(integrity, "UnsuitableChildTypeTree")
+          .to.be.revertedWithCustomError(mock, "UnsuitableChildTypeTree")
           .withArgs(1);
       });
     });
@@ -2083,7 +2081,7 @@ describe("Integrity", () => {
     });
 
     it("rejects Array with non-matching structural children despite non-structural child", async () => {
-      const { integrity, enforce } = await loadFixture(setup);
+      const { mock, enforce } = await loadFixture(setup);
 
       const compValue = encodeWithinRatioCompValue({
         referenceIndex: 0,
@@ -2115,12 +2113,12 @@ describe("Integrity", () => {
         ],
       });
       await expect(enforce(conditions))
-        .to.be.revertedWithCustomError(integrity, "UnsuitableChildTypeTree")
+        .to.be.revertedWithCustomError(mock, "UnsuitableChildTypeTree")
         .withArgs(1);
     });
 
     it("rejects And operator with non-matching structural children despite non-structural child", async () => {
-      const { integrity, enforce } = await loadFixture(setup);
+      const { mock, enforce } = await loadFixture(setup);
 
       const compValue = encodeWithinRatioCompValue({
         referenceIndex: 0,
@@ -2151,7 +2149,7 @@ describe("Integrity", () => {
         ],
       });
       await expect(enforce(conditions))
-        .to.be.revertedWithCustomError(integrity, "UnsuitableChildTypeTree")
+        .to.be.revertedWithCustomError(mock, "UnsuitableChildTypeTree")
         .withArgs(1);
     });
   });

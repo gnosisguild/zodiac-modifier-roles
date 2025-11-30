@@ -6,3 +6,5 @@ import "./Authorization.sol";
 import "./Condition.sol";
 import "./Operator.sol";
 import "./Permission.sol";
+import "./RolesError.sol";
+import "./RolesEvent.sol";
