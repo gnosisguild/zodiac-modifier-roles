@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "./_Core.sol";
+import "../common/ImmutableStorage.sol";
+import "../common/ScopeConfig.sol";
 
-import "./condition/ConditionsTransform.sol";
+import "./condition/transform/ConditionsTransform.sol";
 
-import "../libraries/ImmutableStorage.sol";
-import "../libraries/ScopeConfig.sol";
+import {TargetAddress, Clearance} from "../types/Permission.sol";
+
+import "./Storage.sol";
 
 /*
  * Permission Model
@@ -40,7 +42,7 @@ import "../libraries/ScopeConfig.sol";
  *
  * Allowances (separate storage, referenced by conditions)
  */
-abstract contract PermissionBuilder is Core {
+abstract contract Setup is RolesStorage {
     event AllowTarget(
         bytes32 roleKey,
         address targetAddress,
@@ -76,6 +78,8 @@ abstract contract PermissionBuilder is Core {
         uint64 period,
         uint64 timestamp
     );
+
+    event SetUnwrapAdapter(address to, bytes4 selector, address adapter);
 
     /// @dev Allows transactions to a target address.
     /// @param roleKey identifier of the role to be modified.
@@ -198,5 +202,14 @@ abstract contract PermissionBuilder is Core {
             balance: balance
         });
         emit SetAllowance(key, balance, maxRefill, refill, period, timestamp);
+    }
+
+    function setTransactionUnwrapper(
+        address to,
+        bytes4 selector,
+        address adapter
+    ) external onlyOwner {
+        unwrappers[bytes32(bytes20(to)) | (bytes32(selector) >> 160)] = adapter;
+        emit SetUnwrapAdapter(to, selector, adapter);
     }
 }

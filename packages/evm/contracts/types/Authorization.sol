@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-enum Status {
+import "@gnosis-guild/zodiac-core/contracts/core/Operation.sol";
+
+import {Consumption} from "./Allowance.sol";
+
+enum AuthorizationStatus {
     Ok,
     /// Role not allowed to delegate call to target address
     DelegateCallNotAllowed,
@@ -40,4 +44,21 @@ enum Status {
     CalldataOverflow,
     RatioBelowMin,
     RatioAboveMax
+}
+
+struct AuthorizationContext {
+    AuthorizationContextCall call;
+    Consumption[] consumptions;
+}
+
+struct AuthorizationContextCall {
+    address to;
+    uint256 value;
+    Operation operation;
+}
+
+struct AuthorizationResult {
+    AuthorizationStatus status;
+    Consumption[] consumptions;
+    bytes32 info;
 }
