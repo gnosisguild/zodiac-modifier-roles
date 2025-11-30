@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0
 pragma solidity >=0.8.21 <0.9.0;
 
-import "../../libraries/AbiDecoder.sol";
+import "../../common/AbiDecoder.sol";
+import {LayoutFlat} from "../../types/Condition.sol";
 
 /**
  * @title EIP712Encoder - Encodes and hashes EIP-712 typed structured data

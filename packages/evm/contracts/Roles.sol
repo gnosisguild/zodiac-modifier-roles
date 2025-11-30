@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "./core/ConsumptionTracker.sol";
-import "./core/PermissionBuilder.sol";
-import "./core/PermissionChecker.sol";
+import "./core/allowance/ConsumptionTracker.sol";
+import "./core/Setup.sol";
+import "./core/Authorization.sol";
 
 /**
  * @title Zodiac Roles Mod - granular, role-based, access control for your
@@ -12,12 +12,7 @@ import "./core/PermissionChecker.sol";
  * @author gnosisguild
  *
  */
-contract Roles is
-    Modifier,
-    ConsumptionTracker,
-    PermissionBuilder,
-    PermissionChecker
-{
+contract Roles is Modifier, ConsumptionTracker, Setup, Authorization {
     mapping(address => bytes32) public defaultRoles;
 
     event AssignRoles(address module, bytes32[] roleKeys, bool[] memberOf);
