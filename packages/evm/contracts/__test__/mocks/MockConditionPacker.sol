@@ -3,7 +3,7 @@ pragma solidity >=0.8.17 <0.9.0;
 
 import "../../core/condition/transform/ConditionPacker.sol";
 
-import "../../types/All.sol";
+import {ConditionFlat} from "../../types/Condition.sol";
 
 contract MockConditionPacker {
     function pack(

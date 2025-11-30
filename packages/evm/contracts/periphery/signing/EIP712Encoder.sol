@@ -2,6 +2,7 @@
 pragma solidity >=0.8.21 <0.9.0;
 
 import "../../common/AbiDecoder.sol";
+import {LayoutFlat} from "../../types/Condition.sol";
 
 /**
  * @title EIP712Encoder - Encodes and hashes EIP-712 typed structured data

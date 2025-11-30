@@ -3,7 +3,7 @@ pragma solidity >=0.8.17 <0.9.0;
 
 import "@gnosis-guild/zodiac-core/contracts/core/Operation.sol";
 
-import {Consumption} from "./Consumption.sol";
+import {Consumption} from "./Allowance.sol";
 
 enum AuthorizationStatus {
     Ok,

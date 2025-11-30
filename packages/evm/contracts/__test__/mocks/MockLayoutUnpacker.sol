@@ -3,7 +3,7 @@ pragma solidity >=0.8.17 <0.9.0;
 
 import "../../core/condition/transform/ConditionUnpacker.sol";
 
-import "../../types/All.sol";
+import {Encoding, Layout} from "../../types/Condition.sol";
 
 contract MockLayoutUnpacker {
     struct FlatNode {

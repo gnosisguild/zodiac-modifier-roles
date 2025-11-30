@@ -3,7 +3,8 @@ pragma solidity >=0.8.17 <0.9.0;
 
 import "@gnosis-guild/zodiac-core/contracts/core/Modifier.sol";
 
-import "../types/All.sol";
+import {Role} from "../types/Permission.sol";
+import {Allowance} from "../types/Allowance.sol";
 
 /**
  * @title RolesStorage

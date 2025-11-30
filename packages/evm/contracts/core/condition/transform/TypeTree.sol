@@ -3,7 +3,8 @@ pragma solidity >=0.8.17 <0.9.0;
 
 import "./Topology.sol";
 
-import "../../../types/All.sol";
+import {ConditionFlat, Layout, Encoding} from "../../../types/Condition.sol";
+import {Operator} from "../../../types/Operator.sol";
 
 /**
  * @title  TypeTree

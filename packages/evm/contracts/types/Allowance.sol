@@ -29,3 +29,10 @@ struct Allowance {
     uint128 balance;
     uint64 timestamp;
 }
+
+struct Consumption {
+    bytes32 allowanceKey;
+    uint128 balance;
+    uint128 consumed;
+    uint64 timestamp;
+}

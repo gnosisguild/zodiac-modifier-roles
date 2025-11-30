@@ -4,7 +4,7 @@ pragma solidity >=0.8.17 <0.9.0;
 import "../allowance/AllowanceLoader.sol";
 import "../../periphery/interfaces/IPriceAdapter.sol";
 
-import "../../types/All.sol";
+import {Consumption} from "../../types/Allowance.sol";
 
 /**
  * @title WithinAllowanceChecker

@@ -7,6 +7,10 @@ import "./WithinRatioChecker.sol";
 import "../../common/AbiDecoder.sol";
 import "../../periphery/interfaces/ICustomCondition.sol";
 
+import {Condition} from "../../types/Condition.sol";
+import {Operator} from "../../types/Operator.sol";
+import {AuthorizationContext, AuthorizationResult, AuthorizationStatus} from "../../types/Authorization.sol";
+
 /**
  * @title ConditionLogic
  * @notice Evaluates condition trees on scoped function calls.

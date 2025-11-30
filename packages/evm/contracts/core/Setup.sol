@@ -6,6 +6,8 @@ import "../common/ScopeConfig.sol";
 
 import "./condition/transform/ConditionsTransform.sol";
 
+import {TargetAddress, Clearance} from "../types/Permission.sol";
+
 import "./Storage.sol";
 
 /*

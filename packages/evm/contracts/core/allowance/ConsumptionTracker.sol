@@ -3,6 +3,8 @@ pragma solidity >=0.8.17 <0.9.0;
 
 import "../Storage.sol";
 
+import {Consumption} from "../../types/Allowance.sol";
+
 /**
  * @title ConsumptionTracker
  * @notice Persists allowance consumptions to storage using a two-phase commit.

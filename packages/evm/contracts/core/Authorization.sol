@@ -11,6 +11,10 @@ import "./condition/transform/ConditionUnpacker.sol";
 
 import "../periphery/interfaces/ITransactionUnwrapper.sol";
 
+import {AuthorizationContext, AuthorizationContextCall, AuthorizationResult, AuthorizationStatus} from "../types/Authorization.sol";
+import {Consumption} from "../types/Allowance.sol";
+import {Clearance} from "../types/Permission.sol";
+
 /**
  * @title Authorization - a component of Zodiac Roles Mod responsible
  * for authorizing actions performed on behalf of a role.
