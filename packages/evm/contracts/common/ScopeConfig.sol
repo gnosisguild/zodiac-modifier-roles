@@ -1,20 +1,16 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import {ExecutionOptions} from "../types/ExecutionOptions.sol";
+import {ExecutionOptions} from "../types/Permission.sol";
 
 library ScopeConfig {
     /**
      * Bit-packed configuration (bytes32):
-     *
-     * Bits         | Field         | Description
-     * -------------|---------------|------------------------------------------
-     * [255..169]   | (unused)      | 87 bits
-     * [168]        | isWildcarded  | 1 = wildcard, 0 = scoped
-     * [167..160]   | options       | ExecutionOptions (Send/DelegateCall)
-     * [159..0]     | pointer       | Address of serialized condition data
+     * ┌───────────────────┬────────────┬─────────┬───────────────────────┐
+     * │      (unused)     │ wildcarded │ options │        pointer        │
+     * │      87 bits      │   1 bit    │ 8 bits  │        160 bits       │
+     * └───────────────────┴────────────┴─────────┴───────────────────────┘
      */
-
     function pack(
         ExecutionOptions options,
         address pointer
