@@ -3,18 +3,19 @@ pragma solidity >=0.8.17 <0.9.0;
 
 import "@gnosis-guild/zodiac-core/contracts/core/Modifier.sol";
 
-import "../types/All.sol";
+import "../types/Types.sol";
 
 /**
- * @title Core is the base contract for the Zodiac Roles Mod, which defines
- * the common abstract connection points between Builder, Loader, and Checker.
+ * @title RolesStorage
+ * @notice Base contract defining shared storage for Zodiac Roles Mod
  *
  * @author gnosisguild
  *
  */
-abstract contract Core is Modifier {
+abstract contract RolesStorage is Modifier {
     mapping(bytes32 => Role) internal roles;
     mapping(bytes32 => Allowance) public allowances;
+    mapping(bytes32 => address) public unwrappers;
 
     function _key(
         address targetAddress,
