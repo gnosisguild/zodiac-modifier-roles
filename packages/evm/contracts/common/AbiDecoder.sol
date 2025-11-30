@@ -2,6 +2,7 @@
 pragma solidity >=0.8.21 <0.9.0;
 
 import {Encoding, Layout, Payload} from "../types/Condition.sol";
+import {IRolesError} from "../types/RolesError.sol";
 
 /**
  * @title AbiDecoder - Inspects calldata and determines parameter locations
@@ -20,8 +21,6 @@ import {Encoding, Layout, Payload} from "../types/Condition.sol";
  *         which leverages it for cheap calldata slicing.
  */
 library AbiDecoder {
-    error CalldataOutOfBounds();
-
     /**
      * @dev Maps the location and size of a parameter in calldata according to
      *      a Layout.
@@ -329,7 +328,7 @@ library AbiDecoder {
         uint256 location
     ) internal pure returns (bytes32 result) {
         if (location + 32 > data.length) {
-            revert CalldataOutOfBounds();
+            revert IRolesError.CalldataOutOfBounds();
         }
         assembly {
             result := calldataload(add(data.offset, location))
