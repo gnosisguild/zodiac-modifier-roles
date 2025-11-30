@@ -29,15 +29,15 @@ abstract contract Authorization is RolesStorage {
         // We never authorize the zero role, as it could clash with the
         // unassigned default role
         if (roleKey == 0) {
-            revert IRolesError.NoMembership();
+            revert NoMembership();
         }
 
         Role storage role = roles[roleKey];
         if (!role.members[sentOrSignedByModule()]) {
-            revert IRolesError.NoMembership();
+            revert NoMembership();
         }
 
-        AuthorizationResult memory result;
+        Result memory result;
         address adapter = unwrappers[_key(to, bytes4(data))];
         if (adapter == address(0)) {
             result = _transaction(
@@ -49,7 +49,7 @@ abstract contract Authorization is RolesStorage {
                 result.consumptions
             );
         } else {
-            result = _multiEntrypoint(
+            result = _transactionBundle(
                 ITransactionUnwrapper(adapter),
                 role,
                 to,
@@ -58,21 +58,21 @@ abstract contract Authorization is RolesStorage {
                 operation
             );
         }
-        if (result.status != AuthorizationStatus.Ok) {
-            revert IRolesError.ConditionViolation(result.status, result.info);
+        if (result.status != Status.Ok) {
+            revert ConditionViolation(result.status, result.info);
         }
 
         return result.consumptions;
     }
 
-    function _multiEntrypoint(
+    function _transactionBundle(
         ITransactionUnwrapper adapter,
         Role storage role,
         address to,
         uint256 value,
         bytes calldata data,
         Operation operation
-    ) private view returns (AuthorizationResult memory result) {
+    ) private view returns (Result memory result) {
         try adapter.unwrap(to, value, data, operation) returns (
             UnwrappedTransaction[] memory transactions
         ) {
@@ -88,7 +88,7 @@ abstract contract Authorization is RolesStorage {
                     transaction.operation,
                     result.consumptions
                 );
-                if (result.status != AuthorizationStatus.Ok) {
+                if (result.status != Status.Ok) {
                     return result;
                 }
                 unchecked {
@@ -96,7 +96,7 @@ abstract contract Authorization is RolesStorage {
                 }
             }
         } catch {
-            revert IRolesError.MalformedMultiEntrypoint();
+            revert MalformedMultiEntrypoint();
         }
     }
 
@@ -114,9 +114,9 @@ abstract contract Authorization is RolesStorage {
         bytes calldata data,
         Operation operation,
         Consumption[] memory consumptions
-    ) private view returns (AuthorizationResult memory) {
+    ) private view returns (Result memory) {
         if (data.length != 0 && data.length < 4) {
-            revert IRolesError.FunctionSignatureTooShort();
+            revert FunctionSignatureTooShort();
         }
 
         if (role.targets[to].clearance == Clearance.Function) {
@@ -124,8 +124,8 @@ abstract contract Authorization is RolesStorage {
             {
                 if (header == 0) {
                     return
-                        AuthorizationResult({
-                            status: AuthorizationStatus.FunctionNotAllowed,
+                        Result({
+                            status: Status.FunctionNotAllowed,
                             consumptions: consumptions,
                             info: bytes32(bytes4(data))
                         });
@@ -134,14 +134,10 @@ abstract contract Authorization is RolesStorage {
                 (bool isWildcarded, ExecutionOptions options, ) = ScopeConfig
                     .unpack(header);
 
-                AuthorizationStatus status = _executionOptions(
-                    value,
-                    operation,
-                    options
-                );
-                if (status != AuthorizationStatus.Ok) {
+                Status status = _executionOptions(value, operation, options);
+                if (status != Status.Ok) {
                     return
-                        AuthorizationResult({
+                        Result({
                             status: status,
                             consumptions: consumptions,
                             info: 0
@@ -150,33 +146,29 @@ abstract contract Authorization is RolesStorage {
 
                 if (isWildcarded) {
                     return
-                        AuthorizationResult({
-                            status: AuthorizationStatus.Ok,
+                        Result({
+                            status: Status.Ok,
                             consumptions: consumptions,
                             info: 0
                         });
                 }
             }
 
-            AuthorizationContextCall
-                memory callParams = AuthorizationContextCall({
-                    to: to,
-                    value: value,
-                    operation: operation
-                });
+            ContextCall memory callParams = ContextCall({
+                to: to,
+                value: value,
+                operation: operation
+            });
 
             return
                 _scopedFunction(
                     header,
                     data,
-                    AuthorizationContext({
-                        call: callParams,
-                        consumptions: consumptions
-                    })
+                    Context({call: callParams, consumptions: consumptions})
                 );
         } else if (role.targets[to].clearance == Clearance.Target) {
             return
-                AuthorizationResult({
+                Result({
                     status: _executionOptions(
                         value,
                         operation,
@@ -187,30 +179,28 @@ abstract contract Authorization is RolesStorage {
                 });
         } else {
             return
-                AuthorizationResult({
-                    status: AuthorizationStatus.TargetAddressNotAllowed,
+                Result({
+                    status: Status.TargetAddressNotAllowed,
                     consumptions: consumptions,
                     info: 0
                 });
         }
     }
 
-    /// @dev Examines the ether value and operation for a given role target.
-    /// @param value Ether value of module transaction.
-    /// @param operation Operation type of module transaction: 0 == call, 1 == delegate call.
-    /// @param options Determines if a transaction can send ether and/or delegatecall to target.
+    /// @dev Validates that the execution mode (value transfer and/or
+    ///      delegatecall) is permitted by the current configuration
     function _executionOptions(
         uint256 value,
         Operation operation,
         ExecutionOptions options
-    ) private pure returns (AuthorizationStatus) {
+    ) private pure returns (Status) {
         // isSend && !canSend
         if (
             value > 0 &&
             options != ExecutionOptions.Send &&
             options != ExecutionOptions.Both
         ) {
-            return AuthorizationStatus.SendNotAllowed;
+            return Status.SendNotAllowed;
         }
 
         // isDelegateCall && !canDelegateCall
@@ -219,17 +209,17 @@ abstract contract Authorization is RolesStorage {
             options != ExecutionOptions.DelegateCall &&
             options != ExecutionOptions.Both
         ) {
-            return AuthorizationStatus.DelegateCallNotAllowed;
+            return Status.DelegateCallNotAllowed;
         }
 
-        return AuthorizationStatus.Ok;
+        return Status.Ok;
     }
 
     function _scopedFunction(
         bytes32 scopeConfig,
         bytes calldata data,
-        AuthorizationContext memory context
-    ) private view returns (AuthorizationResult memory) {
+        Context memory context
+    ) private view returns (Result memory) {
         (, , address pointer) = ScopeConfig.unpack(scopeConfig);
 
         bytes memory buffer = ImmutableStorage.load(pointer);
