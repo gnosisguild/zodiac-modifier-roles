@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0
 pragma solidity >=0.8.21 <0.9.0;
 
-import "../types/All.sol";
+import {Encoding, Layout, Payload} from "../types/Condition.sol";
 
 /**
  * @title AbiDecoder - Inspects calldata and determines parameter locations

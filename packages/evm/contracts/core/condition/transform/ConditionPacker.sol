@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "../../types/All.sol";
+import "../../../types/Types.sol";
 
 /**
  * ScopedFunction Layout in Contract Storage
@@ -51,7 +51,7 @@ import "../../types/All.sol";
  * - Children are implicitly sequential in BFS order (no childrenStart needed)
  */
 
-library ConditionPack {
+library ConditionPacker {
     // ═══════════════════════════════════════════════════════════════════════════
     // Constants
     // ═══════════════════════════════════════════════════════════════════════════
