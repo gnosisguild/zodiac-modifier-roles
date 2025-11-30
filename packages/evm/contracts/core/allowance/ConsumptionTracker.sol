@@ -15,12 +15,6 @@ import {Consumption} from "../../types/Allowance.sol";
  * @author gnosisguild
  */
 abstract contract ConsumptionTracker is RolesStorage {
-    event ConsumeAllowance(
-        bytes32 allowanceKey,
-        uint128 consumed,
-        uint128 newBalance
-    );
-
     /**
      * @dev Writes new balances to storage before execution. Not final.
      * @param consumptions Allowance consumption records to persist.

@@ -2,7 +2,7 @@
 pragma solidity >=0.8.17 <0.9.0;
 
 import "../../common/AbiDecoder.sol";
-import "../../core/condition/transform/TypeTree.sol";
+import "../../core/serialize/TypeTree.sol";
 
 contract MockDecoder {
     function inspect(
