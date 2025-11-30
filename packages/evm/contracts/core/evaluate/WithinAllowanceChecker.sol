@@ -31,7 +31,10 @@ library WithinAllowanceChecker {
         uint128 amount = _convert(value, compValue);
 
         uint256 index;
-        (result, index) = _prepareConsumptions(consumptions, bytes32(compValue));
+        (result, index) = _prepareConsumptions(
+            consumptions,
+            bytes32(compValue)
+        );
 
         success = result[index].consumed + amount <= result[index].balance;
         if (success) result[index].consumed += amount;
