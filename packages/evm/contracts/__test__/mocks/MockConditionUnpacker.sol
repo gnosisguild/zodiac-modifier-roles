@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "../../core/condition/transform/ConditionUnpacker.sol";
+import "../../core/serialize/ConditionUnpacker.sol";
 
 import "../../types/Types.sol";
 

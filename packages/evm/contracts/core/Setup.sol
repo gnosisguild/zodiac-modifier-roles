@@ -4,11 +4,10 @@ pragma solidity >=0.8.17 <0.9.0;
 import "../common/ImmutableStorage.sol";
 import "../common/ScopeConfig.sol";
 
-import "./condition/transform/ConditionsTransform.sol";
+import "./serialize/ConditionsTransform.sol";
+import "./Storage.sol";
 
 import {TargetAddress, Clearance} from "../types/Permission.sol";
-
-import "./Storage.sol";
 
 /*
  * Permission Model
@@ -42,44 +41,73 @@ import "./Storage.sol";
  *
  * Allowances (separate storage, referenced by conditions)
  */
+
+/**
+ * @title Setup - Configuration and setup functions for Zodiac Roles Mod.
+ *
+ * @author gnosisguild
+ */
 abstract contract Setup is RolesStorage {
-    event AllowTarget(
-        bytes32 roleKey,
-        address targetAddress,
-        ExecutionOptions options
-    );
-    event RevokeTarget(bytes32 roleKey, address targetAddress);
-    event ScopeTarget(bytes32 roleKey, address targetAddress);
+    /*//////////////////////////////////////////////////////////////
+                            INITIALIZATION
+    //////////////////////////////////////////////////////////////*/
 
-    event AllowFunction(
-        bytes32 roleKey,
-        address targetAddress,
-        bytes4 selector,
-        ExecutionOptions options
-    );
-    event RevokeFunction(
-        bytes32 roleKey,
-        address targetAddress,
-        bytes4 selector
-    );
-    event ScopeFunction(
-        bytes32 roleKey,
-        address targetAddress,
-        bytes4 selector,
-        ConditionFlat[] conditions,
-        ExecutionOptions options
-    );
+    function setUp(
+        bytes memory initParams
+    ) public virtual override initializer {
+        (address _owner, address _avatar, address _target) = abi.decode(
+            initParams,
+            (address, address, address)
+        );
+        _transferOwnership(_owner);
+        avatar = _avatar;
+        target = _target;
 
-    event SetAllowance(
-        bytes32 allowanceKey,
-        uint128 balance,
-        uint128 maxRefill,
-        uint128 refill,
-        uint64 period,
-        uint64 timestamp
-    );
+        setupModules();
 
-    event SetUnwrapAdapter(address to, bytes4 selector, address adapter);
+        emit RolesModSetup(msg.sender, _owner, _avatar, _target);
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                           ROLE MEMBERSHIP
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev Assigns and revokes roles to a given module.
+    /// @param module Module on which to assign/revoke roles.
+    /// @param roleKeys Roles to assign/revoke.
+    /// @param memberOf Assign (true) or revoke (false) corresponding roleKeys.
+    function assignRoles(
+        address module,
+        bytes32[] calldata roleKeys,
+        bool[] calldata memberOf
+    ) external onlyOwner {
+        if (roleKeys.length != memberOf.length) {
+            revert ArraysDifferentLength();
+        }
+        for (uint16 i; i < roleKeys.length; ++i) {
+            roles[roleKeys[i]].members[module] = memberOf[i];
+        }
+        if (!isModuleEnabled(module)) {
+            enableModule(module);
+        }
+        emit AssignRoles(module, roleKeys, memberOf);
+    }
+
+    /// @dev Sets the default role used for a module if it calls
+    ///      execTransactionFromModule() or execTransactionFromModuleReturnData().
+    /// @param module Address of the module on which to set default role.
+    /// @param roleKey Role to be set as default.
+    function setDefaultRole(
+        address module,
+        bytes32 roleKey
+    ) external onlyOwner {
+        defaultRoles[module] = roleKey;
+        emit SetDefaultRole(module, roleKey);
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                         TARGET PERMISSIONS
+    //////////////////////////////////////////////////////////////*/
 
     /// @dev Allows transactions to a target address.
     /// @param roleKey identifier of the role to be modified.
@@ -124,6 +152,10 @@ abstract contract Setup is RolesStorage {
         });
         emit ScopeTarget(roleKey, targetAddress);
     }
+
+    /*//////////////////////////////////////////////////////////////
+                        FUNCTION PERMISSIONS
+    //////////////////////////////////////////////////////////////*/
 
     /// @dev Specifies the functions that can be called.
     /// @param roleKey identifier of the role to be modified.
@@ -183,6 +215,10 @@ abstract contract Setup is RolesStorage {
         );
     }
 
+    /*//////////////////////////////////////////////////////////////
+                             ALLOWANCES
+    //////////////////////////////////////////////////////////////*/
+
     function setAllowance(
         bytes32 key,
         uint128 balance,
@@ -203,6 +239,10 @@ abstract contract Setup is RolesStorage {
         });
         emit SetAllowance(key, balance, maxRefill, refill, period, timestamp);
     }
+
+    /*//////////////////////////////////////////////////////////////
+                              ADAPTERS
+    //////////////////////////////////////////////////////////////*/
 
     function setTransactionUnwrapper(
         address to,
