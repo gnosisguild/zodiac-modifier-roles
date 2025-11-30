@@ -82,7 +82,7 @@ abstract contract ConsumptionTracker is RolesStorage {
         uint64 timestamp_,
         uint128 balance_
     ) private {
-        /**
+        /*
          * Storage Layout (2 words, 64 bytes, 512 bits):
          * ┌────────────────────────────────┬────────────────────────────────┐
          * │           maxRefill            │             refill             │

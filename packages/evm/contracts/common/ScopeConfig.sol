@@ -6,13 +6,10 @@ import {ExecutionOptions} from "../types/Permission.sol";
 library ScopeConfig {
     /**
      * Bit-packed configuration (bytes32):
-     * ┌───────────────────┬────────────┬─────────┬──────────────────────────┐
-     * │      (unused)     │ wildcarded │ options │        pointer           │
-     * │      87 bits      │   1 bit    │ 8 bits  │        160 bits          │
-     * ├───────────────────┼────────────┼─────────┼──────────────────────────┤
-     * │  bits 255 ← 169   │    168     │ 167←160 │      bits 159 ← 0        │
-     * └───────────────────┴────────────┴─────────┴──────────────────────────┘
-     *
+     * ┌───────────────────┬────────────┬─────────┬───────────────────────┐
+     * │      (unused)     │ wildcarded │ options │        pointer        │
+     * │      87 bits      │   1 bit    │ 8 bits  │        160 bits       │
+     * └───────────────────┴────────────┴─────────┴───────────────────────┘
      */
     function pack(
         ExecutionOptions options,

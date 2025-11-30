@@ -27,78 +27,90 @@ library WithinAllowanceChecker {
         Consumption[] memory consumptions,
         uint256 value,
         bytes memory compValue
-    ) internal view returns (bool success, Consumption[] memory) {
-        bytes32 allowanceKey = bytes32(compValue);
-        uint128 convertedValue = _convert(value, compValue);
+    ) internal view returns (bool success, Consumption[] memory result) {
+        uint128 amount = _convert(value, compValue);
 
-        (Consumption[] memory result, uint256 index) = _cloneAndEnsureEntry(
-            consumptions,
-            allowanceKey
-        );
+        uint256 index;
+        (result, index) = _prepareConsumptions(consumptions, bytes32(compValue));
 
-        success =
-            result[index].consumed + convertedValue <= result[index].balance;
-        if (success) {
-            result[index].consumed += convertedValue;
-        }
-        return (success, result);
+        success = result[index].consumed + amount <= result[index].balance;
+        if (success) result[index].consumed += amount;
     }
 
+    /// @dev Converts value to base denomination via price adapter, if configured.
     function _convert(
         uint256 value,
         bytes memory compValue
     ) private view returns (uint128) {
+        /**
+         * CompValue Layout (32 or 54 bytes):
+         * ┌─────────────────────────┬─────────────────────┬──────────┬──────────┐
+         * │      allowanceKey       │       adapter       │  accrue  │  param   │
+         * │        (bytes32)        │      (address)      │ decimals │ decimals │
+         * ├─────────────────────────┼─────────────────────┼──────────┼──────────┤
+         * │         0 - 31          │       32 - 51       │    52    │    53    │
+         * └─────────────────────────┴─────────────────────┴──────────┴──────────┘
+         *                           └─────────────── optional ─────────────────┘
+         */
         if (compValue.length > 32) {
-            CompValue memory config = _unpack(compValue);
+            address adapter;
+            assembly {
+                adapter := shr(96, mload(add(compValue, 0x40)))
+            }
+            uint8 accrueDecimals = uint8(compValue[52]);
+            uint8 paramDecimals = uint8(compValue[53]);
 
-            uint256 price = IPriceAdapter(config.adapter).getPrice();
+            uint256 price = IPriceAdapter(adapter).getPrice();
 
             /*
              *             value × price     10^accrueDecimals
              *   result = ─────────────── × ───────────────────
              *                 10^18          10^paramDecimals
-             *
-             * (Do all multiplications before division to preserve precision)
-             *
              */
             value =
-                (value * price * (10 ** config.accrueDecimals)) /
-                (10 ** (18 + config.paramDecimals));
+                (value * price * (10 ** accrueDecimals)) /
+                (10 ** (18 + paramDecimals));
         }
 
         return uint128(value);
     }
 
-    function _cloneAndEnsureEntry(
+    /// @dev Clones the array and returns a mutable entry for the given key.
+    function _prepareConsumptions(
         Consumption[] memory consumptions,
         bytes32 allowanceKey
     ) private view returns (Consumption[] memory result, uint256 index) {
-        for (; index < consumptions.length; ++index) {
+        Consumption memory entry;
+        (entry, index) = _loadEntry(consumptions, allowanceKey);
+        result = _shallowClone(consumptions, consumptions.length == index);
+        result[index] = entry;
+    }
+
+    /// @dev Finds existing entry or creates new one from storage.
+    function _loadEntry(
+        Consumption[] memory consumptions,
+        bytes32 allowanceKey
+    ) private view returns (Consumption memory entry, uint256 index) {
+        uint256 length = consumptions.length;
+
+        for (; index < length; ++index) {
             if (consumptions[index].allowanceKey == allowanceKey) break;
         }
 
-        bool found = index < consumptions.length;
-
-        result = _shallowClone(consumptions, !found);
-
-        if (!found) {
+        if (index < length) {
+            Consumption memory c = consumptions[index];
+            entry = Consumption(
+                c.allowanceKey,
+                c.balance,
+                c.consumed,
+                c.timestamp
+            );
+        } else {
             (uint128 balance, uint64 timestamp) = AllowanceLoader.accrue(
                 allowanceKey,
                 uint64(block.timestamp)
             );
-            result[index] = Consumption({
-                allowanceKey: allowanceKey,
-                balance: balance,
-                consumed: 0,
-                timestamp: timestamp
-            });
-        } else {
-            result[index] = Consumption({
-                allowanceKey: allowanceKey,
-                balance: result[index].balance,
-                consumed: result[index].consumed,
-                timestamp: result[index].timestamp
-            });
+            entry = Consumption(allowanceKey, balance, 0, timestamp);
         }
     }
 
@@ -125,36 +137,5 @@ library WithinAllowanceChecker {
             let size := mul(prevLength, 0x20)
             mcopy(dst, src, size)
         }
-    }
-
-    /**
-     * @dev Unpacks compValue bytes into CompValue struct.
-     *
-     * CompValue Layout (32 or 54 bytes):
-     * ┌─────────────────────────┬─────────────────────┬──────────┬──────────┐
-     * │      allowanceKey       │       adapter       │  accrue  │  param   │
-     * │        (bytes32)        │      (address)      │ decimals │ decimals │
-     * ├─────────────────────────┼─────────────────────┼──────────┼──────────┤
-     * │         0 - 31          │       32 - 51       │    52    │    53    │
-     * └─────────────────────────┴─────────────────────┴──────────┴──────────┘
-     *                           └─────────────── optional ─────────────────┘
-     */
-    function _unpack(
-        bytes memory compValue
-    ) private pure returns (CompValue memory config) {
-        // Extract adapter address from bytes 32-51
-        assembly {
-            // compValue pointer + 0x20 (length) + 0x20 (allowanceKey) = 0x40
-            mstore(config, shr(96, mload(add(compValue, 0x40))))
-        }
-        // Extract decimals from bytes 52-53
-        config.accrueDecimals = uint8(compValue[52]);
-        config.paramDecimals = uint8(compValue[53]);
-    }
-
-    struct CompValue {
-        address adapter;
-        uint8 accrueDecimals;
-        uint8 paramDecimals;
     }
 }
