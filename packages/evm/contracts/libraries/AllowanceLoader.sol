@@ -5,7 +5,7 @@ import "../types/All.sol";
 
 /**
  * @title AllowanceLoader
- * @notice Library for loading and storing Allowance structs from storage
+ * @notice Library for loading Allowance structs from storage and calculating accrued balances
  * @dev Uses assembly for direct slot access
  *
  * Storage bit layout for Allowance (high bits ← low bits):
@@ -15,14 +15,24 @@ import "../types/All.sol";
  * @author gnosisguild
  */
 library AllowanceLoader {
-    uint256 constant ALLOWANCES_SLOT = 106;
-
     function accrue(
         bytes32 allowanceKey,
         uint64 blockTimestamp
     ) internal view returns (uint128 balance, uint64 timestamp) {
-        Allowance memory allowance = load(allowanceKey);
+        return _accrue(_load(allowanceKey), blockTimestamp);
+    }
 
+    function accrue(
+        Allowance memory allowance,
+        uint64 blockTimestamp
+    ) internal pure returns (uint128 balance, uint64 timestamp) {
+        return _accrue(allowance, blockTimestamp);
+    }
+
+    function _accrue(
+        Allowance memory allowance,
+        uint64 blockTimestamp
+    ) private pure returns (uint128 balance, uint64 timestamp) {
         if (
             allowance.period == 0 ||
             blockTimestamp < (allowance.timestamp + allowance.period)
@@ -45,9 +55,22 @@ library AllowanceLoader {
         timestamp = allowance.timestamp + elapsedIntervals * allowance.period;
     }
 
-    function load(
+    /**
+     *
+     * Storage Layout (2 words, 64 bytes, 512 bits):
+     * ┌────────────────────────────────┬────────────────────────────────┐
+     * │           maxRefill            │             refill             │
+     * │            128 bits            │            128 bits            │
+     * ├────────────────┬───────────────┴───────────────┬────────────────┤
+     * │   timestamp    │            balance            │     period     │
+     * │    64 bits     │           128 bits            │    64 bits     │
+     * └────────────────┴───────────────────────────────┴────────────────┘
+     *
+     */
+    uint256 constant ALLOWANCES_SLOT = 106;
+    function _load(
         bytes32 allowanceKey
-    ) internal view returns (Allowance memory) {
+    ) private view returns (Allowance memory) {
         uint256 word1;
         uint256 word2;
         assembly {
@@ -66,46 +89,5 @@ library AllowanceLoader {
                 balance: uint128(word2 >> 64),
                 timestamp: uint64(word2 >> 192)
             });
-    }
-
-    function store(bytes32 allowanceKey, uint128 newBalance) internal {
-        uint256 word2;
-        assembly {
-            mstore(0x00, allowanceKey)
-            mstore(0x20, ALLOWANCES_SLOT)
-            word2 := sload(add(keccak256(0x00, 0x40), 1))
-        }
-        _store(allowanceKey, uint64(word2 >> 192), newBalance, uint64(word2));
-    }
-
-    function store(
-        bytes32 allowanceKey,
-        uint64 newTimestamp,
-        uint128 newBalance
-    ) internal {
-        uint256 word2;
-        assembly {
-            mstore(0x00, allowanceKey)
-            mstore(0x20, ALLOWANCES_SLOT)
-            word2 := sload(add(keccak256(0x00, 0x40), 1))
-        }
-        _store(allowanceKey, newTimestamp, newBalance, uint64(word2));
-    }
-
-    function _store(
-        bytes32 allowanceKey,
-        uint256 timestamp_,
-        uint256 balance_,
-        uint256 period
-    ) private {
-        assembly {
-            mstore(0x00, allowanceKey)
-            mstore(0x20, ALLOWANCES_SLOT)
-            let slot := add(keccak256(0x00, 0x40), 1)
-
-            // Pack:  timestamp (64) | balance (128) | period (64)
-            let word2 := or(shl(192, timestamp_), or(shl(64, balance_), period))
-            sstore(slot, word2)
-        }
     }
 }

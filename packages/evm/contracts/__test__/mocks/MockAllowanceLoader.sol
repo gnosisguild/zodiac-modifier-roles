@@ -2,7 +2,7 @@
 pragma solidity >=0.8.17 <0.9.0;
 
 import "../../Roles.sol";
-import "../../core/AllowanceLoader.sol";
+import "../../libraries/AllowanceLoader.sol";
 
 /**
  * @title MockAllowanceLoader
@@ -15,12 +15,6 @@ contract MockAllowanceLoader is Roles {
         address _avatar,
         address _target
     ) Roles(_owner, _avatar, _target) {}
-
-    function load(
-        bytes32 allowanceKey
-    ) external view returns (Allowance memory) {
-        return AllowanceLoader.load(allowanceKey);
-    }
 
     function accrue(
         bytes32 allowanceKey,

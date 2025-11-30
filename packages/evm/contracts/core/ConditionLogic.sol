@@ -1,20 +1,19 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "../../libraries/AbiDecoder.sol";
+import "../libraries/AbiDecoder.sol";
 
-import "./WithinAllowanceChecker.sol";
-import "./WithinRatioChecker.sol";
+import "./checkers/WithinAllowanceChecker.sol";
+import "./checkers/WithinRatioChecker.sol";
 
-import "../../periphery/interfaces/ICustomCondition.sol";
+import "../periphery/interfaces/ICustomCondition.sol";
 
 /**
- * @title ConditionEval - a library for Zodiac Roles Mod responsible
- * for evaluating condition trees on scoped function calls.
- *
+ * @title ConditionLogic
+ * @notice Evaluates condition trees on scoped function calls.
  * @author gnosisguild
  */
-library ConditionEval {
+library ConditionLogic {
     function evaluate(
         bytes calldata data,
         Condition memory condition,
@@ -80,12 +79,30 @@ library ConditionEval {
             } else if (operator == Operator.WithinRatio) {
                 return _withinRatio(data, condition, payload, context);
             } else if (operator == Operator.WithinAllowance) {
-                return _withinAllowance(data, condition, payload, context);
+                return
+                    __allowance(
+                        uint256(AbiDecoder.word(data, payload.location)),
+                        condition.compValue,
+                        AuthorizationStatus.AllowanceExceeded,
+                        context
+                    );
             } else if (operator == Operator.EtherWithinAllowance) {
-                return _etherWithinAllowance(condition, context);
+                return
+                    __allowance(
+                        context.call.value,
+                        condition.compValue,
+                        AuthorizationStatus.EtherAllowanceExceeded,
+                        context
+                    );
             } else {
                 assert(operator == Operator.CallWithinAllowance);
-                return _callWithinAllowance(condition, context);
+                return
+                    __allowance(
+                        1,
+                        condition.compValue,
+                        AuthorizationStatus.CallAllowanceExceeded,
+                        context
+                    );
             }
         }
     }
@@ -414,75 +431,6 @@ library ConditionEval {
             });
     }
 
-    function _withinAllowance(
-        bytes calldata data,
-        Condition memory condition,
-        Payload memory payload,
-        AuthorizationContext memory context
-    ) private view returns (AuthorizationResult memory) {
-        uint256 value = uint256(AbiDecoder.word(data, payload.location));
-        (
-            bool success,
-            Consumption[] memory consumptions
-        ) = WithinAllowanceChecker.check(
-                value,
-                condition.compValue,
-                context.consumptions
-            );
-
-        return
-            AuthorizationResult({
-                status: success
-                    ? AuthorizationStatus.Ok
-                    : AuthorizationStatus.AllowanceExceeded,
-                consumptions: consumptions,
-                info: success ? bytes32(0) : bytes32(condition.compValue)
-            });
-    }
-
-    function _etherWithinAllowance(
-        Condition memory condition,
-        AuthorizationContext memory context
-    ) private view returns (AuthorizationResult memory) {
-        (
-            bool success,
-            Consumption[] memory consumptions
-        ) = WithinAllowanceChecker.check(
-                context.call.value,
-                condition.compValue,
-                context.consumptions
-            );
-
-        return
-            AuthorizationResult({
-                status: success
-                    ? AuthorizationStatus.Ok
-                    : AuthorizationStatus.EtherAllowanceExceeded,
-                consumptions: consumptions,
-                info: success ? bytes32(0) : bytes32(condition.compValue)
-            });
-    }
-
-    function _callWithinAllowance(
-        Condition memory condition,
-        AuthorizationContext memory context
-    ) private view returns (AuthorizationResult memory) {
-        bytes32 allowanceKey = bytes32(condition.compValue);
-        (
-            bool success,
-            Consumption[] memory consumptions
-        ) = WithinAllowanceChecker.check(1, allowanceKey, context.consumptions);
-
-        return
-            AuthorizationResult({
-                status: success
-                    ? AuthorizationStatus.Ok
-                    : AuthorizationStatus.CallAllowanceExceeded,
-                consumptions: consumptions,
-                info: success ? bytes32(0) : allowanceKey
-            });
-    }
-
     function _withinRatio(
         bytes calldata data,
         Condition memory condition,
@@ -500,6 +448,31 @@ library ConditionEval {
                 status: status,
                 consumptions: context.consumptions,
                 info: 0
+            });
+    }
+
+    function __allowance(
+        uint256 value,
+        bytes memory compValue,
+        AuthorizationStatus failureStatus,
+        AuthorizationContext memory context
+    ) private view returns (AuthorizationResult memory) {
+        bytes32 allowanceKey = bytes32(compValue);
+
+        (
+            bool success,
+            Consumption[] memory consumptions
+        ) = WithinAllowanceChecker.check(
+                context.consumptions,
+                value,
+                compValue
+            );
+
+        return
+            AuthorizationResult({
+                status: success ? AuthorizationStatus.Ok : failureStatus,
+                consumptions: consumptions,
+                info: success ? bytes32(0) : allowanceKey
             });
     }
 }

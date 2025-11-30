@@ -6,7 +6,7 @@ import "../libraries/ImmutableStorage.sol";
 import "../libraries/ScopeConfig.sol";
 
 import "./_Core.sol";
-import "./evaluate/ConditionEval.sol";
+import "./ConditionLogic.sol";
 import "./transform/ConditionUnpacker.sol";
 
 import "../periphery/interfaces/ITransactionUnwrapper.sol";
@@ -238,7 +238,7 @@ abstract contract Authorization is Core {
             .unpack(buffer);
 
         return
-            ConditionEval.evaluate(
+            ConditionLogic.evaluate(
                 data,
                 condition,
                 AbiDecoder.inspect(data, layout),
