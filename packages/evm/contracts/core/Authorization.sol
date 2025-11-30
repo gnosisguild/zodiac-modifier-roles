@@ -38,9 +38,8 @@ abstract contract Authorization is RolesStorage {
             revert IRolesError.NoMembership();
         }
 
-        address adapter = _getTransactionUnwrapper(to, bytes4(data));
-
         AuthorizationResult memory result;
+        address adapter = unwrappers[_key(to, bytes4(data))];
         if (adapter == address(0)) {
             result = _transaction(
                 role,
@@ -246,12 +245,5 @@ abstract contract Authorization is RolesStorage {
                 AbiDecoder.inspect(data, layout),
                 context
             );
-    }
-
-    function _getTransactionUnwrapper(
-        address to,
-        bytes4 selector
-    ) internal view returns (address) {
-        return unwrappers[bytes32(bytes20(to)) | (bytes32(selector) >> 160)];
     }
 }
