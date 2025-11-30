@@ -5,8 +5,7 @@ import "../../common/AbiDecoder.sol";
 
 import "../../periphery/interfaces/IPriceAdapter.sol";
 
-import {Payload} from "../../types/Condition.sol";
-import {AuthorizationStatus} from "../../types/Authorization.sol";
+import "../../types/Types.sol";
 
 /**
  * @title WithinRatioChecker

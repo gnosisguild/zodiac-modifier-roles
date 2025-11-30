@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import {ConditionFlat, Layout, Encoding} from "../../../types/Condition.sol";
-import {Operator} from "../../../types/Operator.sol";
+import "../../../types/Types.sol";
 
 /**
  * ScopedFunction Layout in Contract Storage

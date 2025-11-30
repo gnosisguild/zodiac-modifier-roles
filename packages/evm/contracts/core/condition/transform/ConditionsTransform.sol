@@ -5,8 +5,7 @@ import "./ConditionPacker.sol";
 import "./Integrity.sol";
 import "./TypeTree.sol";
 
-import {ConditionFlat, Layout, Encoding} from "../../../types/Condition.sol";
-import {Operator} from "../../../types/Operator.sol";
+import "../../../types/Types.sol";
 
 library ConditionsTransform {
     function pack(

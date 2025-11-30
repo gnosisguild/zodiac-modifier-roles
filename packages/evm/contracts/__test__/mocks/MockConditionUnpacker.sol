@@ -3,8 +3,7 @@ pragma solidity >=0.8.17 <0.9.0;
 
 import "../../core/condition/transform/ConditionUnpacker.sol";
 
-import {Condition, ConditionFlat, Encoding} from "../../types/Condition.sol";
-import {Operator} from "../../types/Operator.sol";
+import "../../types/Types.sol";
 
 contract MockConditionUnpacker {
     function unpack(
