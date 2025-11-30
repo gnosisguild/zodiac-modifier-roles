@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "./core/ConsumptionTracker.sol";
+import "./core/allowance/ConsumptionTracker.sol";
 import "./core/Setup.sol";
 import "./core/Authorization.sol";
 

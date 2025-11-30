@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "./_Core.sol";
+import "../Storage.sol";
 
 /**
  * @title ConsumptionTracker
@@ -12,7 +12,7 @@ import "./_Core.sol";
  *
  * @author gnosisguild
  */
-abstract contract ConsumptionTracker is Core {
+abstract contract ConsumptionTracker is RolesStorage {
     event ConsumeAllowance(
         bytes32 allowanceKey,
         uint128 consumed,

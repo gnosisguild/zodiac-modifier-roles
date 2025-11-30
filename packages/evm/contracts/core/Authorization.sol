@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "../libraries/AbiDecoder.sol";
-import "../libraries/ImmutableStorage.sol";
-import "../libraries/ScopeConfig.sol";
+import "../common/AbiDecoder.sol";
+import "../common/ImmutableStorage.sol";
+import "../common/ScopeConfig.sol";
 
-import "./_Core.sol";
-import "./ConditionLogic.sol";
-import "./transform/ConditionUnpacker.sol";
+import "./Storage.sol";
+import "./condition/ConditionLogic.sol";
+import "./condition/transform/ConditionUnpacker.sol";
 
 import "../periphery/interfaces/ITransactionUnwrapper.sol";
 
@@ -17,7 +17,7 @@ import "../periphery/interfaces/ITransactionUnwrapper.sol";
  *
  * @author gnosisguild
  */
-abstract contract Authorization is Core {
+abstract contract Authorization is RolesStorage {
     function _authorize(
         bytes32 roleKey,
         address to,

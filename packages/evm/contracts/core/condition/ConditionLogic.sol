@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "../libraries/AbiDecoder.sol";
+import "./WithinAllowanceChecker.sol";
+import "./WithinRatioChecker.sol";
 
-import "./checkers/WithinAllowanceChecker.sol";
-import "./checkers/WithinRatioChecker.sol";
-
-import "../periphery/interfaces/ICustomCondition.sol";
+import "../../common/AbiDecoder.sol";
+import "../../periphery/interfaces/ICustomCondition.sol";
 
 /**
  * @title ConditionLogic

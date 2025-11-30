@@ -5,7 +5,7 @@ import "./ConditionPacker.sol";
 import "./Integrity.sol";
 import "./TypeTree.sol";
 
-import "../../types/All.sol";
+import "../../../types/All.sol";
 
 library ConditionsTransform {
     function pack(

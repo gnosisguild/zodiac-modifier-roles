@@ -6,15 +6,14 @@ import {ExecutionOptions} from "../types/ExecutionOptions.sol";
 library ScopeConfig {
     /**
      * Bit-packed configuration (bytes32):
+     * ┌───────────────────┬────────────┬─────────┬──────────────────────────┐
+     * │      (unused)     │ wildcarded │ options │        pointer           │
+     * │      87 bits      │   1 bit    │ 8 bits  │        160 bits          │
+     * ├───────────────────┼────────────┼─────────┼──────────────────────────┤
+     * │  bits 255 ← 169   │    168     │ 167←160 │      bits 159 ← 0        │
+     * └───────────────────┴────────────┴─────────┴──────────────────────────┘
      *
-     * Bits         | Field         | Description
-     * -------------|---------------|------------------------------------------
-     * [255..169]   | (unused)      | 87 bits
-     * [168]        | isWildcarded  | 1 = wildcard, 0 = scoped
-     * [167..160]   | options       | ExecutionOptions (Send/DelegateCall)
-     * [159..0]     | pointer       | Address of serialized condition data
      */
-
     function pack(
         ExecutionOptions options,
         address pointer

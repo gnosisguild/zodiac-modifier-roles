@@ -3,7 +3,7 @@ pragma solidity >=0.8.17 <0.9.0;
 
 import "./Topology.sol";
 
-import "../../types/All.sol";
+import "../../../types/All.sol";
 
 /**
  * @title  TypeTree

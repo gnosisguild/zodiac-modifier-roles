@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "./_Core.sol";
+import "../common/ImmutableStorage.sol";
+import "../common/ScopeConfig.sol";
 
-import "./transform/ConditionsTransform.sol";
+import "./condition/transform/ConditionsTransform.sol";
 
-import "../libraries/ImmutableStorage.sol";
-import "../libraries/ScopeConfig.sol";
+import "./Storage.sol";
 
 /*
  * Permission Model
@@ -40,7 +40,7 @@ import "../libraries/ScopeConfig.sol";
  *
  * Allowances (separate storage, referenced by conditions)
  */
-abstract contract Setup is Core {
+abstract contract Setup is RolesStorage {
     event AllowTarget(
         bytes32 roleKey,
         address targetAddress,

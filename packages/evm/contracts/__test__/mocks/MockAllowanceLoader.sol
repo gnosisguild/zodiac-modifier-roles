@@ -2,7 +2,7 @@
 pragma solidity >=0.8.17 <0.9.0;
 
 import "../../Roles.sol";
-import "../../libraries/AllowanceLoader.sol";
+import "../../core/allowance/AllowanceLoader.sol";
 
 /**
  * @title MockAllowanceLoader

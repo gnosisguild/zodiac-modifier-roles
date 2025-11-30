@@ -1,16 +1,11 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "../types/All.sol";
+import {Allowance} from "../../types/Allowance.sol";
 
 /**
  * @title AllowanceLoader
- * @notice Library for loading Allowance structs from storage and calculating accrued balances
- * @dev Uses assembly for direct slot access
- *
- * Storage bit layout for Allowance (high bits ← low bits):
- *   word1 (slot):   | maxRefill (128) | refill (128) |
- *   word2 (slot+1): | timestamp (64)  | balance (128) | period (64) |
+ * @notice Loads allowances from storage and calculates accrued balances
  *
  * @author gnosisguild
  */
