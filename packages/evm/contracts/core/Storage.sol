@@ -12,7 +12,7 @@ import "../types/Types.sol";
  * @author gnosisguild
  *
  */
-abstract contract RolesStorage is Modifier {
+abstract contract RolesStorage is Modifier, IRolesEvent, IRolesError {
     mapping(bytes32 => Role) internal roles;
     mapping(bytes32 => Allowance) public allowances;
     mapping(bytes32 => address) public unwrappers;

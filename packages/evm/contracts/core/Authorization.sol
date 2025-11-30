@@ -30,12 +30,12 @@ abstract contract Authorization is RolesStorage {
         // We never authorize the zero role, as it could clash with the
         // unassigned default role
         if (roleKey == 0) {
-            revert NoMembership();
+            revert IRolesError.NoMembership();
         }
 
         Role storage role = roles[roleKey];
         if (!role.members[sentOrSignedByModule()]) {
-            revert NoMembership();
+            revert IRolesError.NoMembership();
         }
 
         address adapter = _getTransactionUnwrapper(to, bytes4(data));
@@ -61,7 +61,7 @@ abstract contract Authorization is RolesStorage {
             );
         }
         if (result.status != AuthorizationStatus.Ok) {
-            revert ConditionViolation(result.status, result.info);
+            revert IRolesError.ConditionViolation(result.status, result.info);
         }
 
         return result.consumptions;
@@ -98,7 +98,7 @@ abstract contract Authorization is RolesStorage {
                 }
             }
         } catch {
-            revert MalformedMultiEntrypoint();
+            revert IRolesError.MalformedMultiEntrypoint();
         }
     }
 
@@ -118,7 +118,7 @@ abstract contract Authorization is RolesStorage {
         Consumption[] memory consumptions
     ) private view returns (AuthorizationResult memory) {
         if (data.length != 0 && data.length < 4) {
-            revert FunctionSignatureTooShort();
+            revert IRolesError.FunctionSignatureTooShort();
         }
 
         if (role.targets[to].clearance == Clearance.Function) {
@@ -254,15 +254,4 @@ abstract contract Authorization is RolesStorage {
     ) internal view returns (address) {
         return unwrappers[bytes32(bytes20(to)) | (bytes32(selector) >> 160)];
     }
-
-    /// Sender is not a member of the role
-    error NoMembership();
-
-    /// Function signature too short
-    error FunctionSignatureTooShort();
-
-    /// Calldata unwrapping failed
-    error MalformedMultiEntrypoint();
-
-    error ConditionViolation(AuthorizationStatus status, bytes32 info);
 }

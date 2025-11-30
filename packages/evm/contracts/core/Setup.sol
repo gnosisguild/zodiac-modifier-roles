@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
+import "./Storage.sol";
+
 import "../common/ImmutableStorage.sol";
 import "../common/ScopeConfig.sol";
 
 import "./condition/transform/ConditionsTransform.sol";
 
 import {TargetAddress, Clearance} from "../types/Permission.sol";
-
-import "./Storage.sol";
 
 /*
  * Permission Model
@@ -43,44 +43,6 @@ import "./Storage.sol";
  * Allowances (separate storage, referenced by conditions)
  */
 abstract contract Setup is RolesStorage {
-    event AllowTarget(
-        bytes32 roleKey,
-        address targetAddress,
-        ExecutionOptions options
-    );
-    event RevokeTarget(bytes32 roleKey, address targetAddress);
-    event ScopeTarget(bytes32 roleKey, address targetAddress);
-
-    event AllowFunction(
-        bytes32 roleKey,
-        address targetAddress,
-        bytes4 selector,
-        ExecutionOptions options
-    );
-    event RevokeFunction(
-        bytes32 roleKey,
-        address targetAddress,
-        bytes4 selector
-    );
-    event ScopeFunction(
-        bytes32 roleKey,
-        address targetAddress,
-        bytes4 selector,
-        ConditionFlat[] conditions,
-        ExecutionOptions options
-    );
-
-    event SetAllowance(
-        bytes32 allowanceKey,
-        uint128 balance,
-        uint128 maxRefill,
-        uint128 refill,
-        uint64 period,
-        uint64 timestamp
-    );
-
-    event SetUnwrapAdapter(address to, bytes4 selector, address adapter);
-
     /// @dev Allows transactions to a target address.
     /// @param roleKey identifier of the role to be modified.
     /// @param targetAddress Destination address of transaction.

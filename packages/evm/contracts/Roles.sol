@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "./core/allowance/ConsumptionTracker.sol";
 import "./core/Setup.sol";
 import "./core/Authorization.sol";
+import "./core/allowance/ConsumptionTracker.sol";
 
 /**
  * @title Zodiac Roles Mod - granular, role-based, access control for your
@@ -12,22 +12,8 @@ import "./core/Authorization.sol";
  * @author gnosisguild
  *
  */
-contract Roles is Modifier, ConsumptionTracker, Setup, Authorization {
+contract Roles is RolesStorage, Setup, Authorization, ConsumptionTracker {
     mapping(address => bytes32) public defaultRoles;
-
-    event AssignRoles(address module, bytes32[] roleKeys, bool[] memberOf);
-    event RolesModSetup(
-        address indexed initiator,
-        address indexed owner,
-        address indexed avatar,
-        address target
-    );
-    event SetDefaultRole(address module, bytes32 defaultRoleKey);
-
-    error ArraysDifferentLength();
-
-    /// Sender is allowed to make this call, but the internal transaction failed
-    error ModuleTransactionFailed();
 
     /// @param _owner Address of the owner
     /// @param _avatar Address of the avatar (e.g. a Gnosis Safe)
