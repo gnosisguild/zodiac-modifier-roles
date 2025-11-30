@@ -4,12 +4,11 @@ pragma solidity >=0.8.17 <0.9.0;
 import "../common/AbiDecoder.sol";
 import "../common/ImmutableStorage.sol";
 import "../common/ScopeConfig.sol";
+import "../periphery/interfaces/ITransactionUnwrapper.sol";
 
 import "./Storage.sol";
-import "./condition/ConditionLogic.sol";
-import "./condition/transform/ConditionUnpacker.sol";
-
-import "../periphery/interfaces/ITransactionUnwrapper.sol";
+import "./evaluate/ConditionLogic.sol";
+import "./serialize/ConditionUnpacker.sol";
 
 import "../types/Types.sol";
 
@@ -30,17 +29,16 @@ abstract contract Authorization is RolesStorage {
         // We never authorize the zero role, as it could clash with the
         // unassigned default role
         if (roleKey == 0) {
-            revert NoMembership();
+            revert IRolesError.NoMembership();
         }
 
         Role storage role = roles[roleKey];
         if (!role.members[sentOrSignedByModule()]) {
-            revert NoMembership();
+            revert IRolesError.NoMembership();
         }
 
-        address adapter = _getTransactionUnwrapper(to, bytes4(data));
-
         AuthorizationResult memory result;
+        address adapter = unwrappers[_key(to, bytes4(data))];
         if (adapter == address(0)) {
             result = _transaction(
                 role,
@@ -61,7 +59,7 @@ abstract contract Authorization is RolesStorage {
             );
         }
         if (result.status != AuthorizationStatus.Ok) {
-            revert ConditionViolation(result.status, result.info);
+            revert IRolesError.ConditionViolation(result.status, result.info);
         }
 
         return result.consumptions;
@@ -98,7 +96,7 @@ abstract contract Authorization is RolesStorage {
                 }
             }
         } catch {
-            revert MalformedMultiEntrypoint();
+            revert IRolesError.MalformedMultiEntrypoint();
         }
     }
 
@@ -118,7 +116,7 @@ abstract contract Authorization is RolesStorage {
         Consumption[] memory consumptions
     ) private view returns (AuthorizationResult memory) {
         if (data.length != 0 && data.length < 4) {
-            revert FunctionSignatureTooShort();
+            revert IRolesError.FunctionSignatureTooShort();
         }
 
         if (role.targets[to].clearance == Clearance.Function) {
@@ -247,22 +245,4 @@ abstract contract Authorization is RolesStorage {
                 context
             );
     }
-
-    function _getTransactionUnwrapper(
-        address to,
-        bytes4 selector
-    ) internal view returns (address) {
-        return unwrappers[bytes32(bytes20(to)) | (bytes32(selector) >> 160)];
-    }
-
-    /// Sender is not a member of the role
-    error NoMembership();
-
-    /// Function signature too short
-    error FunctionSignatureTooShort();
-
-    /// Calldata unwrapping failed
-    error MalformedMultiEntrypoint();
-
-    error ConditionViolation(AuthorizationStatus status, bytes32 info);
 }

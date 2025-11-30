@@ -4,6 +4,8 @@ pragma solidity >=0.8.17 <0.9.0;
 import "./Topology.sol";
 import "./TypeTree.sol";
 
+import {IRolesError} from "../../types/RolesError.sol";
+
 /**
  * @title Integrity, A library that validates condition integrity, and
  * adherence to the expected input structure and rules.
@@ -21,30 +23,6 @@ import "./TypeTree.sol";
  */
 
 library Integrity {
-    error UnsuitableRootNode();
-
-    error NotBFS();
-
-    error UnsuitableParameterType(uint256 index);
-
-    error UnsuitableCompValue(uint256 index);
-
-    error UnsupportedOperator(uint256 index);
-
-    error UnsuitableParent(uint256 index);
-
-    error UnsuitableChildCount(uint256 index);
-
-    error UnsuitableChildTypeTree(uint256 index);
-
-    error NonStructuralChildrenMustComeLast(uint256 index);
-
-    error WithinRatioIndexOutOfBounds(uint256 index);
-
-    error WithinRatioTargetNotStatic(uint256 index);
-
-    error WithinRatioNoRatioProvided(uint256 index);
-
     function enforce(ConditionFlat[] memory conditions) internal pure {
         _root(conditions);
         _bfs(conditions);
@@ -57,7 +35,7 @@ library Integrity {
         _typeTree(conditions);
 
         if (TypeTree.inspect(conditions, 0).encoding != Encoding.Calldata) {
-            revert UnsuitableRootNode();
+            revert IRolesError.UnsuitableRootNode();
         }
     }
 
@@ -68,7 +46,7 @@ library Integrity {
             if (conditions[i].parent == i) ++count;
         }
         if (count != 1 || conditions[0].parent != 0) {
-            revert UnsuitableRootNode();
+            revert IRolesError.UnsuitableRootNode();
         }
     }
 
@@ -77,11 +55,11 @@ library Integrity {
         // check BFS
         for (uint256 i = 1; i < length; ++i) {
             if (conditions[i - 1].parent > conditions[i].parent) {
-                revert NotBFS();
+                revert IRolesError.NotBFS();
             }
 
             if (conditions[i].parent > i) {
-                revert NotBFS();
+                revert IRolesError.NotBFS();
             }
         }
     }
@@ -92,14 +70,14 @@ library Integrity {
         bytes memory compValue = condition.compValue;
         if (operator == Operator.Pass) {
             if (condition.compValue.length != 0) {
-                revert UnsuitableCompValue(index);
+                revert IRolesError.UnsuitableCompValue(index);
             }
         } else if (operator == Operator.And || operator == Operator.Or) {
             if (encoding != Encoding.None) {
-                revert UnsuitableParameterType(index);
+                revert IRolesError.UnsuitableParameterType(index);
             }
             if (condition.compValue.length != 0) {
-                revert UnsuitableCompValue(index);
+                revert IRolesError.UnsuitableCompValue(index);
             }
         } else if (operator == Operator.Matches) {
             if (
@@ -108,33 +86,33 @@ library Integrity {
                 encoding != Encoding.Calldata &&
                 encoding != Encoding.AbiEncoded
             ) {
-                revert UnsuitableParameterType(index);
+                revert IRolesError.UnsuitableParameterType(index);
             }
             if (compValue.length != 0) {
-                revert UnsuitableCompValue(index);
+                revert IRolesError.UnsuitableCompValue(index);
             }
         } else if (
             operator == Operator.ArraySome || operator == Operator.ArrayEvery
         ) {
             if (encoding != Encoding.Array) {
-                revert UnsuitableParameterType(index);
+                revert IRolesError.UnsuitableParameterType(index);
             }
             if (compValue.length != 0) {
-                revert UnsuitableCompValue(index);
+                revert IRolesError.UnsuitableCompValue(index);
             }
         } else if (operator == Operator.ArrayTailMatches) {
             if (encoding != Encoding.Array) {
-                revert UnsuitableParameterType(index);
+                revert IRolesError.UnsuitableParameterType(index);
             }
             if (compValue.length != 0) {
-                revert UnsuitableCompValue(index);
+                revert IRolesError.UnsuitableCompValue(index);
             }
         } else if (operator == Operator.EqualToAvatar) {
             if (encoding != Encoding.Static) {
-                revert UnsuitableParameterType(index);
+                revert IRolesError.UnsuitableParameterType(index);
             }
             if (compValue.length != 0) {
-                revert UnsuitableCompValue(index);
+                revert IRolesError.UnsuitableCompValue(index);
             }
         } else if (operator == Operator.EqualTo) {
             if (
@@ -143,10 +121,10 @@ library Integrity {
                 encoding != Encoding.Tuple &&
                 encoding != Encoding.Array
             ) {
-                revert UnsuitableParameterType(index);
+                revert IRolesError.UnsuitableParameterType(index);
             }
             if (compValue.length == 0 || compValue.length % 32 != 0) {
-                revert UnsuitableCompValue(index);
+                revert IRolesError.UnsuitableCompValue(index);
             }
         } else if (
             operator == Operator.GreaterThan ||
@@ -155,57 +133,57 @@ library Integrity {
             operator == Operator.SignedIntLessThan
         ) {
             if (encoding != Encoding.Static) {
-                revert UnsuitableParameterType(index);
+                revert IRolesError.UnsuitableParameterType(index);
             }
             if (compValue.length != 32) {
-                revert UnsuitableCompValue(index);
+                revert IRolesError.UnsuitableCompValue(index);
             }
         } else if (operator == Operator.Bitmask) {
             if (encoding != Encoding.Static && encoding != Encoding.Dynamic) {
-                revert UnsuitableParameterType(index);
+                revert IRolesError.UnsuitableParameterType(index);
             }
             if (compValue.length != 32) {
-                revert UnsuitableCompValue(index);
+                revert IRolesError.UnsuitableCompValue(index);
             }
         } else if (operator == Operator.Custom) {
             if (compValue.length != 32) {
-                revert UnsuitableCompValue(index);
+                revert IRolesError.UnsuitableCompValue(index);
             }
         } else if (operator == Operator.WithinAllowance) {
             if (encoding != Encoding.Static) {
-                revert UnsuitableParameterType(index);
+                revert IRolesError.UnsuitableParameterType(index);
             }
             // 32 bytes: allowanceKey only (legacy)
             // 54 bytes: allowanceKey + adapter + accrueDecimals + paramDecimals
             if (compValue.length != 32 && compValue.length != 54) {
-                revert UnsuitableCompValue(index);
+                revert IRolesError.UnsuitableCompValue(index);
             }
         } else if (operator == Operator.EtherWithinAllowance) {
             if (encoding != Encoding.None) {
-                revert UnsuitableParameterType(index);
+                revert IRolesError.UnsuitableParameterType(index);
             }
             // 32 bytes: allowanceKey only (legacy)
             // 54 bytes: allowanceKey + adapter + accrueDecimals + paramDecimals
             if (compValue.length != 32 && compValue.length != 54) {
-                revert UnsuitableCompValue(index);
+                revert IRolesError.UnsuitableCompValue(index);
             }
         } else if (operator == Operator.CallWithinAllowance) {
             if (encoding != Encoding.None) {
-                revert UnsuitableParameterType(index);
+                revert IRolesError.UnsuitableParameterType(index);
             }
             // CallWithinAllowance always uses value=1, price adapter doesn't make sense
             if (compValue.length != 32) {
-                revert UnsuitableCompValue(index);
+                revert IRolesError.UnsuitableCompValue(index);
             }
         } else if (operator == Operator.WithinRatio) {
             if (encoding != Encoding.None) {
-                revert UnsuitableParameterType(index);
+                revert IRolesError.UnsuitableParameterType(index);
             }
             if (compValue.length < 32 || compValue.length > 52) {
-                revert UnsuitableCompValue(index);
+                revert IRolesError.UnsuitableCompValue(index);
             }
         } else {
-            revert UnsupportedOperator(index);
+            revert IRolesError.UnsupportedOperator(index);
         }
     }
 
@@ -224,12 +202,12 @@ library Integrity {
                 ) = _countParentNodes(conditions, i);
 
                 if (countCalldataNodes != 1 || countOtherNodes > 0) {
-                    revert UnsuitableParent(i);
+                    revert IRolesError.UnsuitableParent(i);
                 }
             } else if (conditions[i].operator == Operator.WithinRatio) {
                 // WithinRatio can be anywhere except as the root node
                 if (conditions[i].parent == i) {
-                    revert UnsuitableParent(i);
+                    revert IRolesError.UnsuitableParent(i);
                 }
             }
         }
@@ -250,14 +228,14 @@ library Integrity {
                         condition.operator == Operator.WithinRatio) &&
                     childCount != 0
                 ) {
-                    revert UnsuitableChildCount(i);
+                    revert IRolesError.UnsuitableChildCount(i);
                 }
                 if (
                     condition.operator == Operator.And ||
                     condition.operator == Operator.Or
                 ) {
                     if (childCount == 0) {
-                        revert UnsuitableChildCount(i);
+                        revert IRolesError.UnsuitableChildCount(i);
                     }
                 }
             } else if (
@@ -265,24 +243,24 @@ library Integrity {
                 condition.paramType == Encoding.Dynamic
             ) {
                 if (childCount != 0) {
-                    revert UnsuitableChildCount(i);
+                    revert IRolesError.UnsuitableChildCount(i);
                 }
             } else if (condition.paramType == Encoding.Tuple) {
                 if (sChildCount == 0) {
-                    revert UnsuitableChildCount(i);
+                    revert IRolesError.UnsuitableChildCount(i);
                 }
             } else if (
                 condition.paramType == Encoding.Calldata ||
                 condition.paramType == Encoding.AbiEncoded
             ) {
                 if (childCount == 0) {
-                    revert UnsuitableChildCount(i);
+                    revert IRolesError.UnsuitableChildCount(i);
                 }
             } else {
                 assert(condition.paramType == Encoding.Array);
 
                 if (sChildCount == 0) {
-                    revert UnsuitableChildCount(i);
+                    revert IRolesError.UnsuitableChildCount(i);
                 }
 
                 if (
@@ -290,7 +268,7 @@ library Integrity {
                         condition.operator == Operator.ArrayEvery) &&
                     childCount != 1
                 ) {
-                    revert UnsuitableChildCount(i);
+                    revert IRolesError.UnsuitableChildCount(i);
                 }
 
                 // Enforce only structural children for array iteration operators
@@ -300,7 +278,7 @@ library Integrity {
                         condition.operator == Operator.ArrayTailMatches) &&
                     childCount != sChildCount
                 ) {
-                    revert UnsuitableChildCount(i);
+                    revert IRolesError.UnsuitableChildCount(i);
                 }
             }
         }
@@ -328,7 +306,7 @@ library Integrity {
 
                 if (seenNonStructural && isStructural) {
                     // Structural child found after non-structural child
-                    revert NonStructuralChildrenMustComeLast(i);
+                    revert IRolesError.NonStructuralChildrenMustComeLast(i);
                 }
 
                 if (!isStructural) {
@@ -350,7 +328,7 @@ library Integrity {
                     !_isTypeMatch(conditions, i) &&
                     !_isTypeEquivalence(conditions, i)
                 ) {
-                    revert UnsuitableChildTypeTree(i);
+                    revert IRolesError.UnsuitableChildTypeTree(i);
                 }
             }
 
@@ -464,7 +442,7 @@ library Integrity {
         uint32 maxRatio = uint32(bytes4(compValue32 << 64));
         // Validate that at least one ratio is provided
         if (minRatio == 0 && maxRatio == 0) {
-            revert WithinRatioNoRatioProvided(i);
+            revert IRolesError.WithinRatioNoRatioProvided(i);
         }
 
         // Find nearest structural parent (should be Calldata/Tuple/Array)
@@ -486,7 +464,7 @@ library Integrity {
                 childStart + referenceIndex
             );
             if (layout.encoding != Encoding.Static) {
-                revert WithinRatioTargetNotStatic(i);
+                revert IRolesError.WithinRatioTargetNotStatic(i);
             }
         }
 
@@ -497,7 +475,7 @@ library Integrity {
                 childStart + relativeIndex
             );
             if (layout.encoding != Encoding.Static) {
-                revert WithinRatioTargetNotStatic(i);
+                revert IRolesError.WithinRatioTargetNotStatic(i);
             }
         }
     }
