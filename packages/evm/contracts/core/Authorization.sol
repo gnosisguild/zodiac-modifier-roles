@@ -4,12 +4,11 @@ pragma solidity >=0.8.17 <0.9.0;
 import "../common/AbiDecoder.sol";
 import "../common/ImmutableStorage.sol";
 import "../common/ScopeConfig.sol";
+import "../periphery/interfaces/ITransactionUnwrapper.sol";
 
 import "./Storage.sol";
-import "./condition/ConditionLogic.sol";
-import "./condition/transform/ConditionUnpacker.sol";
-
-import "../periphery/interfaces/ITransactionUnwrapper.sol";
+import "./evaluate/ConditionLogic.sol";
+import "./serialize/ConditionUnpacker.sol";
 
 import "../types/Types.sol";
 

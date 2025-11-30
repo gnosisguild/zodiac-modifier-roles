@@ -4,7 +4,7 @@ pragma solidity >=0.8.17 <0.9.0;
 import "./Topology.sol";
 import "./TypeTree.sol";
 
-import {IRolesError} from "../../../types/RolesError.sol";
+import {IRolesError} from "../../types/RolesError.sol";
 
 /**
  * @title Integrity, A library that validates condition integrity, and

@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "./Storage.sol";
-
 import "../common/ImmutableStorage.sol";
 import "../common/ScopeConfig.sol";
 
-import "./condition/transform/ConditionsTransform.sol";
+import "./serialize/ConditionsTransform.sol";
+import "./Storage.sol";
 
 import {TargetAddress, Clearance} from "../types/Permission.sol";
 
