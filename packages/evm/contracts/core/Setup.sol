@@ -240,6 +240,32 @@ abstract contract Setup is RolesStorage {
         emit SetAllowance(key, balance, maxRefill, refill, period, timestamp);
     }
 
+    /// @dev Updates only the refill parameters of an existing allowance, preserving balance and timestamp.
+    /// @param key The allowance key.
+    /// @param maxRefill Cap at which refilling stops. Pass 0 to set to max uint128.
+    /// @param refill Amount added to balance each period.
+    /// @param period Refill interval in seconds.
+    function updateAllowance(
+        bytes32 key,
+        uint128 maxRefill,
+        uint128 refill,
+        uint64 period
+    ) external onlyOwner {
+        maxRefill = maxRefill != 0 ? maxRefill : type(uint128).max;
+        uint64 timestamp = allowances[key].timestamp;
+        uint128 balance = allowances[key].balance;
+
+        allowances[key] = Allowance({
+            refill: refill,
+            maxRefill: maxRefill,
+            period: period,
+            timestamp: timestamp,
+            balance: balance
+        });
+
+        emit SetAllowance(key, balance, maxRefill, refill, period, timestamp);
+    }
+
     /*//////////////////////////////////////////////////////////////
                               ADAPTERS
     //////////////////////////////////////////////////////////////*/
