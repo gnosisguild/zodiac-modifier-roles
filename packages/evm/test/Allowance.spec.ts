@@ -1372,7 +1372,7 @@ describe("Allowance", async () => {
       expect(updatedAllowance.period).to.equal(7200);
     });
 
-    it("emits UpdateAllowance event", async () => {
+    it("emits SetAllowance event with preserved balance and timestamp", async () => {
       const { roles, owner } = await loadFixture(setupTwoParamsStatic);
 
       const allowanceKey =
@@ -1382,11 +1382,20 @@ describe("Allowance", async () => {
         .connect(owner)
         .setAllowance(allowanceKey, 500, 1000, 100, 3600, 0);
 
+      const initialAllowance = await roles.allowances(allowanceKey);
+
       await expect(
         roles.connect(owner).updateAllowance(allowanceKey, 2000, 200, 7200),
       )
-        .to.emit(roles, "UpdateAllowance")
-        .withArgs(allowanceKey, 2000, 200, 7200);
+        .to.emit(roles, "SetAllowance")
+        .withArgs(
+          allowanceKey,
+          500, // balance preserved
+          2000,
+          200,
+          7200,
+          initialAllowance.timestamp, // timestamp preserved
+        );
     });
 
     it("sets maxRefill to max uint128 when 0 is passed", async () => {
