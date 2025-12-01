@@ -1340,4 +1340,71 @@ describe("Allowance", async () => {
       );
     });
   });
+
+  describe("updateAllowance", () => {
+    it("updates refill parameters while preserving balance and timestamp", async () => {
+      const { roles, owner } = await loadFixture(setupTwoParamsStatic);
+
+      const allowanceKey =
+        "0x000000000000000000000000000000000000000000000000000000000000000f";
+
+      // Set initial allowance
+      await roles
+        .connect(owner)
+        .setAllowance(allowanceKey, 500, 1000, 100, 3600, 0);
+
+      const initialAllowance = await roles.allowances(allowanceKey);
+      expect(initialAllowance.balance).to.equal(500);
+      expect(initialAllowance.maxRefill).to.equal(1000);
+      expect(initialAllowance.refill).to.equal(100);
+      expect(initialAllowance.period).to.equal(3600);
+
+      // Update only static fields
+      await roles.connect(owner).updateAllowance(allowanceKey, 2000, 200, 7200);
+
+      const updatedAllowance = await roles.allowances(allowanceKey);
+      // Balance and timestamp should be preserved
+      expect(updatedAllowance.balance).to.equal(500);
+      expect(updatedAllowance.timestamp).to.equal(initialAllowance.timestamp);
+      // Static fields should be updated
+      expect(updatedAllowance.maxRefill).to.equal(2000);
+      expect(updatedAllowance.refill).to.equal(200);
+      expect(updatedAllowance.period).to.equal(7200);
+    });
+
+    it("emits UpdateAllowance event", async () => {
+      const { roles, owner } = await loadFixture(setupTwoParamsStatic);
+
+      const allowanceKey =
+        "0x000000000000000000000000000000000000000000000000000000000000000f";
+
+      await roles
+        .connect(owner)
+        .setAllowance(allowanceKey, 500, 1000, 100, 3600, 0);
+
+      await expect(
+        roles.connect(owner).updateAllowance(allowanceKey, 2000, 200, 7200),
+      )
+        .to.emit(roles, "UpdateAllowance")
+        .withArgs(allowanceKey, 2000, 200, 7200);
+    });
+
+    it("sets maxRefill to max uint128 when 0 is passed", async () => {
+      const { roles, owner } = await loadFixture(setupTwoParamsStatic);
+
+      const allowanceKey =
+        "0x000000000000000000000000000000000000000000000000000000000000000f";
+
+      await roles
+        .connect(owner)
+        .setAllowance(allowanceKey, 500, 1000, 100, 3600, 0);
+
+      await roles.connect(owner).updateAllowance(allowanceKey, 0, 200, 7200);
+
+      const updatedAllowance = await roles.allowances(allowanceKey);
+      expect(updatedAllowance.maxRefill).to.equal(
+        BigInt("0xffffffffffffffffffffffffffffffff"),
+      );
+    });
+  });
 });
