@@ -640,4 +640,30 @@ describe("ExecutionOptions", async () => {
         .withArgs(PermissionCheckerStatus.DelegateCallNotAllowed, BYTES32_ZERO);
     });
   });
+
+  describe("empty calldata", () => {
+    it("selector 0x00000000 allows empty calldata", async () => {
+      const { modifier, testContract, owner, invoker } =
+        await loadFixture(setup);
+      const testContractAddress = await testContract.getAddress();
+
+      await modifier.connect(owner).scopeTarget(ROLE_KEY, testContractAddress);
+
+      await modifier
+        .connect(owner)
+        .allowFunction(
+          ROLE_KEY,
+          testContractAddress,
+          "0x00000000",
+          ExecutionOptions.Send,
+        );
+
+      // Empty calldata (0x) should be allowed - it maps to selector 0x00000000
+      await expect(
+        modifier
+          .connect(invoker)
+          .execTransactionFromModule(testContractAddress, 0, "0x", 0),
+      ).to.not.be.reverted;
+    });
+  });
 });
