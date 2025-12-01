@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import {AuthorizationStatus} from "./Authorization.sol";
+import {Status} from "./Authorization.sol";
 
 /**
  * @title IRolesError - All custom errors emitted by the Roles Mod
@@ -33,7 +33,7 @@ interface IRolesError {
     error MalformedMultiEntrypoint();
 
     /// Authorization check failed with specified status and info
-    error ConditionViolation(AuthorizationStatus status, bytes32 info);
+    error ConditionViolation(Status status, bytes32 info);
 
     /*//////////////////////////////////////////////////////////////
                             DECODING ERRORS
