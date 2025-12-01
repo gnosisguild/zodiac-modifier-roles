@@ -19,13 +19,13 @@ library ConditionLogic {
         bytes calldata data,
         Condition memory condition,
         Payload memory payload,
-        AuthorizationContext memory context
-    ) internal view returns (AuthorizationResult memory) {
+        Context memory context
+    ) internal view returns (Result memory) {
         Operator operator = condition.operator;
         if (payload.overflown) {
             return
-                AuthorizationResult({
-                    status: AuthorizationStatus.CalldataOverflow,
+                Result({
+                    status: Status.CalldataOverflow,
                     consumptions: context.consumptions,
                     info: bytes32(payload.location)
                 });
@@ -34,8 +34,8 @@ library ConditionLogic {
         if (operator < Operator.EqualTo) {
             if (operator == Operator.Pass) {
                 return
-                    AuthorizationResult({
-                        status: AuthorizationStatus.Ok,
+                    Result({
+                        status: Status.Ok,
                         consumptions: context.consumptions,
                         info: 0
                     });
@@ -56,21 +56,21 @@ library ConditionLogic {
         } else {
             if (operator <= Operator.LessThan) {
                 return
-                    AuthorizationResult({
+                    Result({
                         status: _compare(data, condition, payload),
                         consumptions: context.consumptions,
                         info: 0
                     });
             } else if (operator <= Operator.SignedIntLessThan) {
                 return
-                    AuthorizationResult({
+                    Result({
                         status: _compareSignedInt(data, condition, payload),
                         consumptions: context.consumptions,
                         info: 0
                     });
             } else if (operator == Operator.Bitmask) {
                 return
-                    AuthorizationResult({
+                    Result({
                         status: _bitmask(data, condition, payload),
                         consumptions: context.consumptions,
                         info: 0
@@ -84,7 +84,7 @@ library ConditionLogic {
                     __allowance(
                         uint256(AbiDecoder.word(data, payload.location)),
                         condition.compValue,
-                        AuthorizationStatus.AllowanceExceeded,
+                        Status.AllowanceExceeded,
                         context
                     );
             } else if (operator == Operator.EtherWithinAllowance) {
@@ -92,7 +92,7 @@ library ConditionLogic {
                     __allowance(
                         context.call.value,
                         condition.compValue,
-                        AuthorizationStatus.EtherAllowanceExceeded,
+                        Status.EtherAllowanceExceeded,
                         context
                     );
             } else {
@@ -101,7 +101,7 @@ library ConditionLogic {
                     __allowance(
                         1,
                         condition.compValue,
-                        AuthorizationStatus.CallAllowanceExceeded,
+                        Status.CallAllowanceExceeded,
                         context
                     );
             }
@@ -112,13 +112,13 @@ library ConditionLogic {
         bytes calldata data,
         Condition memory condition,
         Payload memory payload,
-        AuthorizationContext memory context
-    ) private view returns (AuthorizationResult memory result) {
+        Context memory context
+    ) private view returns (Result memory result) {
         result.consumptions = context.consumptions;
 
         uint256 sChildCount = condition.sChildCount;
         if (sChildCount != payload.children.length) {
-            result.status = AuthorizationStatus.ParameterNotAMatch;
+            result.status = Status.ParameterNotAMatch;
             return result;
         }
 
@@ -127,12 +127,9 @@ library ConditionLogic {
                 data,
                 condition.children[i],
                 i < sChildCount ? payload.children[i] : payload,
-                AuthorizationContext({
-                    call: context.call,
-                    consumptions: result.consumptions
-                })
+                Context({call: context.call, consumptions: result.consumptions})
             );
-            if (result.status != AuthorizationStatus.Ok) {
+            if (result.status != Status.Ok) {
                 result.consumptions = context.consumptions;
                 return result;
             }
@@ -141,7 +138,7 @@ library ConditionLogic {
             }
         }
 
-        result.status = AuthorizationStatus.Ok;
+        result.status = Status.Ok;
         return result;
     }
 
@@ -149,8 +146,8 @@ library ConditionLogic {
         bytes calldata data,
         Condition memory condition,
         Payload memory payload,
-        AuthorizationContext memory context
-    ) private view returns (AuthorizationResult memory result) {
+        Context memory context
+    ) private view returns (Result memory result) {
         result.consumptions = context.consumptions;
 
         for (uint256 i; i < condition.children.length; ) {
@@ -158,12 +155,9 @@ library ConditionLogic {
                 data,
                 condition.children[i],
                 payload.variant ? payload.children[i] : payload,
-                AuthorizationContext({
-                    call: context.call,
-                    consumptions: result.consumptions
-                })
+                Context({call: context.call, consumptions: result.consumptions})
             );
-            if (result.status != AuthorizationStatus.Ok) {
+            if (result.status != Status.Ok) {
                 result.consumptions = context.consumptions;
                 return result;
             }
@@ -172,7 +166,7 @@ library ConditionLogic {
             }
         }
 
-        result.status = AuthorizationStatus.Ok;
+        result.status = Status.Ok;
         return result;
     }
 
@@ -180,8 +174,8 @@ library ConditionLogic {
         bytes calldata data,
         Condition memory condition,
         Payload memory payload,
-        AuthorizationContext memory context
-    ) private view returns (AuthorizationResult memory result) {
+        Context memory context
+    ) private view returns (Result memory result) {
         result.consumptions = context.consumptions;
 
         for (uint256 i; i < condition.children.length; ) {
@@ -189,12 +183,9 @@ library ConditionLogic {
                 data,
                 condition.children[i],
                 payload.variant ? payload.children[i] : payload,
-                AuthorizationContext({
-                    call: context.call,
-                    consumptions: result.consumptions
-                })
+                Context({call: context.call, consumptions: result.consumptions})
             );
-            if (result.status == AuthorizationStatus.Ok) {
+            if (result.status == Status.Ok) {
                 return result;
             }
             unchecked {
@@ -203,8 +194,8 @@ library ConditionLogic {
         }
 
         return
-            AuthorizationResult({
-                status: AuthorizationStatus.OrViolation,
+            Result({
+                status: Status.OrViolation,
                 consumptions: context.consumptions,
                 info: 0
             });
@@ -214,8 +205,8 @@ library ConditionLogic {
         bytes calldata data,
         Condition memory condition,
         Payload memory payload,
-        AuthorizationContext memory context
-    ) private view returns (AuthorizationResult memory result) {
+        Context memory context
+    ) private view returns (Result memory result) {
         result.consumptions = context.consumptions;
 
         uint256 length = payload.children.length;
@@ -224,12 +215,9 @@ library ConditionLogic {
                 data,
                 condition.children[0],
                 payload.children[i],
-                AuthorizationContext({
-                    call: context.call,
-                    consumptions: result.consumptions
-                })
+                Context({call: context.call, consumptions: result.consumptions})
             );
-            if (result.status == AuthorizationStatus.Ok) {
+            if (result.status == Status.Ok) {
                 return result;
             }
             unchecked {
@@ -237,8 +225,8 @@ library ConditionLogic {
             }
         }
         return
-            AuthorizationResult({
-                status: AuthorizationStatus.NoArrayElementPasses,
+            Result({
+                status: Status.NoArrayElementPasses,
                 consumptions: context.consumptions,
                 info: 0
             });
@@ -248,8 +236,8 @@ library ConditionLogic {
         bytes calldata data,
         Condition memory condition,
         Payload memory payload,
-        AuthorizationContext memory context
-    ) private view returns (AuthorizationResult memory result) {
+        Context memory context
+    ) private view returns (Result memory result) {
         result.consumptions = context.consumptions;
 
         for (uint256 i; i < payload.children.length; ) {
@@ -257,15 +245,12 @@ library ConditionLogic {
                 data,
                 condition.children[0],
                 payload.children[i],
-                AuthorizationContext({
-                    call: context.call,
-                    consumptions: result.consumptions
-                })
+                Context({call: context.call, consumptions: result.consumptions})
             );
-            if (result.status != AuthorizationStatus.Ok) {
+            if (result.status != Status.Ok) {
                 return
-                    AuthorizationResult({
-                        status: AuthorizationStatus.NotEveryArrayElementPasses,
+                    Result({
+                        status: Status.NotEveryArrayElementPasses,
                         consumptions: context.consumptions,
                         info: 0
                     });
@@ -274,7 +259,7 @@ library ConditionLogic {
                 ++i;
             }
         }
-        result.status = AuthorizationStatus.Ok;
+        result.status = Status.Ok;
         return result;
     }
 
@@ -282,15 +267,15 @@ library ConditionLogic {
         bytes calldata data,
         Condition memory condition,
         Payload memory payload,
-        AuthorizationContext memory context
-    ) private view returns (AuthorizationResult memory result) {
+        Context memory context
+    ) private view returns (Result memory result) {
         result.consumptions = context.consumptions;
 
         uint256 conditionCount = condition.children.length;
         uint256 childCount = payload.children.length;
 
         if (childCount < conditionCount) {
-            result.status = AuthorizationStatus.ParameterNotAMatch;
+            result.status = Status.ParameterNotAMatch;
             return result;
         }
 
@@ -301,12 +286,9 @@ library ConditionLogic {
                 data,
                 condition.children[i],
                 payload.children[tailOffset + i],
-                AuthorizationContext({
-                    call: context.call,
-                    consumptions: result.consumptions
-                })
+                Context({call: context.call, consumptions: result.consumptions})
             );
-            if (result.status != AuthorizationStatus.Ok) {
+            if (result.status != Status.Ok) {
                 result.consumptions = context.consumptions;
                 return result;
             }
@@ -315,7 +297,7 @@ library ConditionLogic {
             }
         }
 
-        result.status = AuthorizationStatus.Ok;
+        result.status = Status.Ok;
         return result;
     }
 
@@ -323,7 +305,7 @@ library ConditionLogic {
         bytes calldata data,
         Condition memory condition,
         Payload memory payload
-    ) private pure returns (AuthorizationStatus) {
+    ) private pure returns (Status) {
         Operator operator = condition.operator;
         bytes32 compValue = bytes32(condition.compValue);
         bytes32 value = operator == Operator.EqualTo
@@ -331,13 +313,13 @@ library ConditionLogic {
             : AbiDecoder.word(data, payload.location);
 
         if (operator == Operator.EqualTo && value != compValue) {
-            return AuthorizationStatus.ParameterNotAllowed;
+            return Status.ParameterNotAllowed;
         } else if (operator == Operator.GreaterThan && value <= compValue) {
-            return AuthorizationStatus.ParameterLessThanAllowed;
+            return Status.ParameterLessThanAllowed;
         } else if (operator == Operator.LessThan && value >= compValue) {
-            return AuthorizationStatus.ParameterGreaterThanAllowed;
+            return Status.ParameterGreaterThanAllowed;
         } else {
-            return AuthorizationStatus.Ok;
+            return Status.Ok;
         }
     }
 
@@ -345,19 +327,19 @@ library ConditionLogic {
         bytes calldata data,
         Condition memory condition,
         Payload memory payload
-    ) private pure returns (AuthorizationStatus) {
+    ) private pure returns (Status) {
         Operator operator = condition.operator;
         int256 compValue = int256(uint256(bytes32(condition.compValue)));
         int256 value = int256(uint256(AbiDecoder.word(data, payload.location)));
 
         if (operator == Operator.SignedIntGreaterThan && value <= compValue) {
-            return AuthorizationStatus.ParameterLessThanAllowed;
+            return Status.ParameterLessThanAllowed;
         } else if (
             operator == Operator.SignedIntLessThan && value >= compValue
         ) {
-            return AuthorizationStatus.ParameterGreaterThanAllowed;
+            return Status.ParameterGreaterThanAllowed;
         } else {
-            return AuthorizationStatus.Ok;
+            return Status.Ok;
         }
     }
 
@@ -372,7 +354,7 @@ library ConditionLogic {
         bytes calldata data,
         Condition memory condition,
         Payload memory payload
-    ) private pure returns (AuthorizationStatus) {
+    ) private pure returns (Status) {
         bytes32 compValue = bytes32(condition.compValue);
         bool isInline = payload.size == 32;
         bytes calldata value = AbiDecoder.pluck(
@@ -383,7 +365,7 @@ library ConditionLogic {
 
         uint256 shift = uint16(bytes2(compValue));
         if (shift >= value.length) {
-            return AuthorizationStatus.BitmaskOverflow;
+            return Status.BitmaskOverflow;
         }
 
         bytes32 rinse = bytes15(0xffffffffffffffffffffffffffffff);
@@ -395,17 +377,15 @@ library ConditionLogic {
         bytes32 slice = bytes32(value[shift:]);
 
         return
-            (slice & mask) == expected
-                ? AuthorizationStatus.Ok
-                : AuthorizationStatus.BitmaskNotAllowed;
+            (slice & mask) == expected ? Status.Ok : Status.BitmaskNotAllowed;
     }
 
     function _custom(
         bytes calldata data,
         Condition memory condition,
         Payload memory payload,
-        AuthorizationContext memory context
-    ) private view returns (AuthorizationResult memory) {
+        Context memory context
+    ) private view returns (Result memory) {
         // 20 bytes on the left
         ICustomCondition adapter = ICustomCondition(
             address(bytes20(bytes32(condition.compValue)))
@@ -423,10 +403,8 @@ library ConditionLogic {
             extra
         );
         return
-            AuthorizationResult({
-                status: success
-                    ? AuthorizationStatus.Ok
-                    : AuthorizationStatus.CustomConditionViolation,
+            Result({
+                status: success ? Status.Ok : Status.CustomConditionViolation,
                 consumptions: context.consumptions,
                 info: info
             });
@@ -436,16 +414,16 @@ library ConditionLogic {
         bytes calldata data,
         Condition memory condition,
         Payload memory payload,
-        AuthorizationContext memory context
-    ) private view returns (AuthorizationResult memory) {
-        AuthorizationStatus status = WithinRatioChecker.check(
+        Context memory context
+    ) private view returns (Result memory) {
+        Status status = WithinRatioChecker.check(
             data,
             condition.compValue,
             payload
         );
 
         return
-            AuthorizationResult({
+            Result({
                 status: status,
                 consumptions: context.consumptions,
                 info: 0
@@ -455,9 +433,9 @@ library ConditionLogic {
     function __allowance(
         uint256 value,
         bytes memory compValue,
-        AuthorizationStatus failureStatus,
-        AuthorizationContext memory context
-    ) private view returns (AuthorizationResult memory) {
+        Status failureStatus,
+        Context memory context
+    ) private view returns (Result memory) {
         bytes32 allowanceKey = bytes32(compValue);
 
         (
@@ -470,8 +448,8 @@ library ConditionLogic {
             );
 
         return
-            AuthorizationResult({
-                status: success ? AuthorizationStatus.Ok : failureStatus,
+            Result({
+                status: success ? Status.Ok : failureStatus,
                 consumptions: consumptions,
                 info: success ? bytes32(0) : allowanceKey
             });
