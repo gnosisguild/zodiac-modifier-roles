@@ -5,7 +5,7 @@ import "@gnosis-guild/zodiac-core/contracts/core/Operation.sol";
 
 import {Consumption} from "./Allowance.sol";
 
-enum AuthorizationStatus {
+enum Status {
     Ok,
     /// Role not allowed to delegate call to target address
     DelegateCallNotAllowed,
@@ -46,19 +46,19 @@ enum AuthorizationStatus {
     RatioAboveMax
 }
 
-struct AuthorizationContext {
-    AuthorizationContextCall call;
+struct Context {
+    ContextCall call;
     Consumption[] consumptions;
 }
 
-struct AuthorizationContextCall {
+struct ContextCall {
     address to;
     uint256 value;
     Operation operation;
 }
 
-struct AuthorizationResult {
-    AuthorizationStatus status;
+struct Result {
+    Status status;
     Consumption[] consumptions;
     bytes32 info;
 }
