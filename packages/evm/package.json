@@ -44,7 +44,7 @@
     "chai": "^5.2.1",
     "eth-provider": "^0.13.7",
     "ethers": "^6.15.0",
-    "hardhat": "^2.27.0",
+    "hardhat": "^2.27.1",
     "hardhat-contract-sizer": "2.10.0",
     "hardhat-gas-reporter": "^2.2.2",
     "prettier": "^3.6.2",
