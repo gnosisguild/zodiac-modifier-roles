@@ -100,13 +100,7 @@ abstract contract Authorization is RolesStorage {
         }
     }
 
-    /// @dev Inspects an individual transaction and performs checks based on permission scoping.
-    /// Wildcarded indicates whether params need to be inspected or not. When true, only ExecutionOptions are checked.
-    /// @param role Role to check for.
-    /// @param to Destination address of transaction.
-    /// @param value Ether value of module transaction.
-    /// @param data Data payload of module transaction.
-    /// @param operation Operation type of module transaction: 0 == call, 1 == delegate call.
+    /// @dev Inspects a transaction and authorizes based on role permissions.
     function _transaction(
         Role storage role,
         address to,
@@ -119,111 +113,71 @@ abstract contract Authorization is RolesStorage {
             revert FunctionSignatureTooShort();
         }
 
-        if (role.targets[to].clearance == Clearance.Function) {
-            bytes32 header = role.scopeConfig[_key(to, bytes4(data))];
-            {
-                if (header == 0) {
-                    return
-                        Result({
-                            status: Status.FunctionNotAllowed,
-                            consumptions: consumptions,
-                            info: bytes32(bytes4(data))
-                        });
-                }
+        Clearance clearance = role.targets[to].clearance;
 
-                (bool isWildcarded, ExecutionOptions options, ) = ScopeConfig
-                    .unpack(header);
+        if (clearance == Clearance.Function) {
+            Context memory context = Context(
+                ContextCall(to, value, operation),
+                consumptions
+            );
+            return _clearanceFunction(role, to, data, context);
+        }
 
-                Status status = _executionOptions(value, operation, options);
-                if (status != Status.Ok) {
-                    return
-                        Result({
-                            status: status,
-                            consumptions: consumptions,
-                            info: 0
-                        });
-                }
-
-                if (isWildcarded) {
-                    return
-                        Result({
-                            status: Status.Ok,
-                            consumptions: consumptions,
-                            info: 0
-                        });
-                }
-            }
-
-            ContextCall memory callParams = ContextCall({
-                to: to,
-                value: value,
-                operation: operation
-            });
-
+        if (clearance == Clearance.Target) {
             return
-                _scopedFunction(
-                    header,
-                    data,
-                    Context({call: callParams, consumptions: consumptions})
-                );
-        } else if (role.targets[to].clearance == Clearance.Target) {
-            return
-                Result({
-                    status: _executionOptions(
+                Result(
+                    _executionOptions(
                         value,
                         operation,
                         role.targets[to].options
                     ),
-                    consumptions: consumptions,
-                    info: 0
-                });
-        } else {
-            return
-                Result({
-                    status: Status.TargetAddressNotAllowed,
-                    consumptions: consumptions,
-                    info: 0
-                });
+                    consumptions,
+                    0
+                );
         }
+
+        return Result(Status.TargetAddressNotAllowed, consumptions, 0);
     }
 
-    /// @dev Validates that the execution mode (value transfer and/or
-    ///      delegatecall) is permitted by the current configuration
-    function _executionOptions(
-        uint256 value,
-        Operation operation,
-        ExecutionOptions options
-    ) private pure returns (Status) {
-        // isSend && !canSend
-        if (
-            value > 0 &&
-            options != ExecutionOptions.Send &&
-            options != ExecutionOptions.Both
-        ) {
-            return Status.SendNotAllowed;
-        }
-
-        // isDelegateCall && !canDelegateCall
-        if (
-            operation == Operation.DelegateCall &&
-            options != ExecutionOptions.DelegateCall &&
-            options != ExecutionOptions.Both
-        ) {
-            return Status.DelegateCallNotAllowed;
-        }
-
-        return Status.Ok;
-    }
-
-    function _scopedFunction(
-        bytes32 scopeConfig,
+    /// @dev Authorizes a function-level scoped transaction.
+    function _clearanceFunction(
+        Role storage role,
+        address to,
         bytes calldata data,
         Context memory context
     ) private view returns (Result memory) {
-        (, , address pointer) = ScopeConfig.unpack(scopeConfig);
+        bytes32 scopeConfig = role.scopeConfig[_key(to, bytes4(data))];
+        if (scopeConfig == 0) {
+            return
+                Result(
+                    Status.FunctionNotAllowed,
+                    context.consumptions,
+                    bytes32(bytes4(data))
+                );
+        }
+
+        (
+            bool isWildcarded,
+            ExecutionOptions options,
+            address pointer
+        ) = ScopeConfig.unpack(scopeConfig);
+
+        {
+            Status status = _executionOptions(
+                context.call.value,
+                context.call.operation,
+                options
+            );
+            if (status != Status.Ok) {
+                return Result(status, context.consumptions, 0);
+            }
+
+            if (isWildcarded) {
+                return Result(Status.Ok, context.consumptions, 0);
+            }
+        }
 
         bytes memory buffer = ImmutableStorage.load(pointer);
-
         (Condition memory condition, Layout memory layout) = ConditionUnpacker
             .unpack(buffer);
 
@@ -234,5 +188,31 @@ abstract contract Authorization is RolesStorage {
                 AbiDecoder.inspect(data, layout),
                 context
             );
+    }
+
+    /// @dev Validates that the execution mode (value transfer and/or
+    ///      delegatecall) is permitted by the current configuration.
+    function _executionOptions(
+        uint256 value,
+        Operation operation,
+        ExecutionOptions options
+    ) private pure returns (Status) {
+        if (
+            value > 0 &&
+            options != ExecutionOptions.Send &&
+            options != ExecutionOptions.Both
+        ) {
+            return Status.SendNotAllowed;
+        }
+
+        if (
+            operation == Operation.DelegateCall &&
+            options != ExecutionOptions.DelegateCall &&
+            options != ExecutionOptions.Both
+        ) {
+            return Status.DelegateCallNotAllowed;
+        }
+
+        return Status.Ok;
     }
 }
