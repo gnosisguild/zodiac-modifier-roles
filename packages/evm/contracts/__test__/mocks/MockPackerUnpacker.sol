@@ -14,11 +14,6 @@ contract MockPackerUnpacker {
         bytes compValue;
     }
 
-    struct LayoutFlatOut {
-        uint256 parent;
-        Encoding encoding;
-    }
-
     function pack(
         ConditionFlat[] calldata conditions
     ) external pure returns (bytes memory buffer) {
@@ -33,7 +28,7 @@ contract MockPackerUnpacker {
         view
         returns (
             ConditionFlatOut[] memory conditionsOut,
-            LayoutFlatOut[] memory layoutOut
+            LayoutFlat[] memory layoutOut
         )
     {
         (Condition memory condition, Layout memory layout) = ConditionUnpacker
@@ -108,8 +103,8 @@ contract MockPackerUnpacker {
 
     function _flattenLayout(
         Layout memory root
-    ) private pure returns (LayoutFlatOut[] memory result) {
-        result = new LayoutFlatOut[](_countLayoutNodes(root));
+    ) private pure returns (LayoutFlat[] memory result) {
+        result = new LayoutFlat[](_countLayoutNodes(root));
 
         Layout[] memory queue = new Layout[](result.length);
         uint256[] memory parents = new uint256[](result.length);
@@ -126,9 +121,9 @@ contract MockPackerUnpacker {
             uint256 parent = parents[head];
             head++;
 
-            result[current] = LayoutFlatOut({
-                encoding: node.encoding,
-                parent: parent
+            result[current] = LayoutFlat({
+                parent: parent,
+                encoding: node.encoding
             });
 
             for (uint256 i = 0; i < node.children.length; ++i) {

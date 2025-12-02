@@ -38,8 +38,8 @@ struct Layout {
 }
 
 struct LayoutFlat {
+    uint256 parent;
     Encoding encoding;
-    uint256[] fields;
 }
 
 struct Payload {
