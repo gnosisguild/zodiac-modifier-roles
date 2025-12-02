@@ -9,7 +9,7 @@ library ConditionUnpacker {
     // ═══════════════════════════════════════════════════════════════════════════
 
     uint256 private constant CONDITION_NODE_BYTES = 5;
-    uint256 private constant LAYOUT_NODE_BYTES = 2;
+    uint256 private constant LAYOUT_NODE_BYTES = 3;
 
     // ═══════════════════════════════════════════════════════════════════════════
     // Main Unpacking Function
@@ -135,22 +135,23 @@ library ConditionUnpacker {
         uint256 nextChildBFS = 1;
 
         for (uint256 i = 0; i < nodeCount; ) {
-            uint16 packed;
+            uint256 packed;
             assembly {
-                packed := shr(240, mload(offset)) // Load 2 bytes (16 bits)
+                packed := shr(232, mload(offset)) // Load 3 bytes (24 bits)
             }
             /*
              * ┌──────────────────────────────────────────────────────────┐
-             * │Each node (11 bits, padded to 2 bytes):                   │
-             * │  • encoding              3 bits  (Encoding 0-7)          │
-             * │  • childCount            8 bits  (0-255)                 │
-             * │  • unused                5 bits                          │
+             * │Each node (24 bits = 3 bytes):                            │
+             * │  • encoding              3 bits  (bits 23-21)            │
+             * │  • childCount            8 bits  (bits 20-13)            │
+             * │  • leadingBytes         13 bits  (bits 12-0)             │
              * └──────────────────────────────────────────────────────────┘
              */
 
             Layout memory node = nodes[i];
-            node.encoding = Encoding((packed >> 13));
-            uint256 childCount = (packed >> 5) & 0xFF;
+            node.encoding = Encoding((packed >> 21) & 0x07);
+            uint256 childCount = (packed >> 13) & 0xFF;
+            node.leadingBytes = packed & 0x1FFF;
 
             if (childCount > 0) {
                 node.children = new Layout[](childCount);

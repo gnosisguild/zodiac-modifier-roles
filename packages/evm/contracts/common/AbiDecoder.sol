@@ -34,10 +34,7 @@ library AbiDecoder {
         bytes calldata data,
         Layout memory layout
     ) internal pure returns (Payload memory payload) {
-        assert(
-            layout.encoding == Encoding.Calldata ||
-                layout.encoding == Encoding.AbiEncoded
-        );
+        assert(layout.encoding == Encoding.AbiEncoded);
         /*
          * The parameter encoding area consists of a head region, divided into
          * 32-byte chunks. Each parameter occupies one chunk in the head:
@@ -50,7 +47,7 @@ library AbiDecoder {
          */
         __block__(
             data,
-            layout.encoding == Encoding.Calldata ? 4 : 0,
+            layout.leadingBytes,
             layout.children.length,
             layout,
             payload
@@ -97,12 +94,11 @@ library AbiDecoder {
                 payload
             );
             payload.size += 32;
-        } else if (
-            encoding == Encoding.Calldata || encoding == Encoding.AbiEncoded
-        ) {
+        } else {
+            assert(encoding == Encoding.AbiEncoded);
             __block__(
                 data,
-                location + 32 + (encoding == Encoding.Calldata ? 4 : 0),
+                location + 32 + layout.leadingBytes,
                 layout.children.length,
                 layout,
                 payload
@@ -275,18 +271,13 @@ library AbiDecoder {
      *         Non-inline types (require pointer):
      *         - Dynamic: variable length data
      *         - Array: length prefix + elements
-     *         - Calldata/AbiEncoded: embedded structures
+     *         - AbiEncoded: embedded structures
      */
     function _isInline(Layout memory layout) private pure returns (bool) {
         Encoding encoding = layout.encoding;
         if (encoding == Encoding.Static) {
             return true;
-        } else if (
-            encoding == Encoding.Dynamic ||
-            encoding == Encoding.Array ||
-            encoding == Encoding.Calldata ||
-            encoding == Encoding.AbiEncoded
-        ) {
+        } else if (encoding == Encoding.Dynamic || encoding >= Encoding.Array) {
             return false;
         } else {
             uint256 length = layout.children.length;

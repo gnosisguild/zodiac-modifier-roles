@@ -71,7 +71,7 @@ describe("TypeTree", () => {
       });
     });
 
-    it("returns Calldata with children", async () => {
+    it("returns Calldata normalized to AbiEncoded", async () => {
       const { typeTree } = await loadFixture(setup);
       const input = flattenCondition({
         paramType: Encoding.Calldata,
@@ -80,7 +80,7 @@ describe("TypeTree", () => {
       });
       const output = bfsToTree(await typeTree.inspect(input));
       expect(output).to.deep.equal({
-        encoding: Encoding.Calldata,
+        encoding: Encoding.AbiEncoded,
         children: [{ encoding: Encoding.Static, children: [] }],
       });
     });
@@ -205,7 +205,7 @@ describe("TypeTree", () => {
         children: [
           { encoding: Encoding.Dynamic, children: [] },
           {
-            encoding: Encoding.Calldata,
+            encoding: Encoding.AbiEncoded,
             children: [{ encoding: Encoding.Static, children: [] }],
           },
         ],
@@ -313,7 +313,7 @@ describe("TypeTree", () => {
       });
       const out = await typeTree.inspect(input);
       const tree = bfsToTree(out);
-      expect(tree.encoding).to.equal(Encoding.Calldata);
+      expect(tree.encoding).to.equal(Encoding.AbiEncoded);
       expect(tree.children[0].encoding).to.equal(Encoding.Tuple);
       expect(tree.children[0].children[0].encoding).to.equal(Encoding.Tuple);
       expect(tree.children[0].children[0].children[0].encoding).to.equal(
@@ -344,7 +344,7 @@ describe("TypeTree", () => {
       });
       const out = await typeTree.inspect(input);
       const tree = bfsToTree(out);
-      expect(tree.encoding).to.equal(Encoding.Calldata);
+      expect(tree.encoding).to.equal(Encoding.AbiEncoded);
       expect(tree.children[0].encoding).to.equal(Encoding.Array);
       expect(tree.children[0].children[0].encoding).to.equal(Encoding.Array);
       expect(tree.children[0].children[0].children[0].encoding).to.equal(
@@ -409,7 +409,7 @@ describe("TypeTree", () => {
       });
       const out = await typeTree.inspect(input);
       const tree = bfsToTree(out);
-      expect(tree.encoding).to.equal(Encoding.Calldata);
+      expect(tree.encoding).to.equal(Encoding.AbiEncoded);
       expect(tree.children[0].encoding).to.equal(Encoding.Tuple);
       expect(tree.children[0].children[0].encoding).to.equal(Encoding.Array);
       expect(tree.children[0].children[0].children[0].encoding).to.equal(
@@ -434,7 +434,7 @@ describe("TypeTree", () => {
       });
       const output = bfsToTree(await typeTree.inspect(input));
       expect(output).to.deep.equal({
-        encoding: Encoding.Calldata,
+        encoding: Encoding.AbiEncoded,
         children: [
           { encoding: Encoding.Static, children: [] },
           { encoding: Encoding.Dynamic, children: [] },
@@ -454,7 +454,7 @@ describe("TypeTree", () => {
       });
       const output = bfsToTree(await typeTree.inspect(input));
       expect(output).to.deep.equal({
-        encoding: Encoding.Calldata,
+        encoding: Encoding.AbiEncoded,
         children: [],
       });
     });
@@ -495,7 +495,7 @@ describe("TypeTree", () => {
       });
       const output = bfsToTree(await typeTree.inspect(input));
       expect(output).to.deep.equal({
-        encoding: Encoding.Calldata,
+        encoding: Encoding.AbiEncoded,
         children: [
           { encoding: Encoding.Static, children: [] },
           { encoding: Encoding.Dynamic, children: [] },
@@ -543,13 +543,13 @@ describe("TypeTree", () => {
       });
       const output = bfsToTree(await typeTree.inspect(input));
       expect(output).to.deep.equal({
-        encoding: Encoding.Calldata,
+        encoding: Encoding.AbiEncoded,
         children: [
           {
             encoding: Encoding.Dynamic,
             children: [
               {
-                encoding: Encoding.Calldata,
+                encoding: Encoding.AbiEncoded,
                 children: [
                   {
                     encoding: Encoding.Dynamic,
