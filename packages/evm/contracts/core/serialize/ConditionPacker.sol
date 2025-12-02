@@ -38,11 +38,11 @@ import "../../types/Types.sol";
  * │ Header (2 bytes):                                                   │
  * │   • nodeCount              16 bits (0-65535)                        │
  * ├─────────────────────────────────────────────────────────────────────┤
- * │ Nodes (nodeCount × 2 bytes each):                                   │
- * │   Each node (11 bits, padded to 2 bytes):                           │
- * │     • encoding              3 bits  (0-7)                           │
- * │     • childCount            8 bits  (0-255)                         │
- * │     • unused                5 bits                                  │
+ * │ Nodes (nodeCount × 3 bytes each):                                   │
+ * │   Each node (24 bits = 3 bytes):                                    │
+ * │     • encoding              3 bits                                  │
+ * │     • childCount            8 bits                                  │
+ * │     • leadingBytes         13 bits                                  │
  * └─────────────────────────────────────────────────────────────────────┘
  *
  * NOTES:
@@ -57,7 +57,7 @@ library ConditionPacker {
     // ═══════════════════════════════════════════════════════════════════════════
 
     uint256 private constant CONDITION_NODE_BYTES = 5;
-    uint256 private constant LAYOUT_NODE_BYTES = 2;
+    uint256 private constant LAYOUT_NODE_BYTES = 3;
 
     // ═══════════════════════════════════════════════════════════════════════════
     // Main Packing Function
@@ -225,7 +225,7 @@ library ConditionPacker {
     function _layoutPackedSize(
         Layout memory node
     ) internal pure returns (uint256 result) {
-        // Header (2 bytes) + all nodes (2 bytes each)
+        // Header (2 bytes) + all nodes (3 bytes each)
         result = 2 + _countNodes(node) * LAYOUT_NODE_BYTES;
     }
 
@@ -238,11 +238,13 @@ library ConditionPacker {
 
         offset += _packUInt16(nodes.length, buffer, offset);
 
-        // Pack all nodes (2 bytes each)
+        // Pack all nodes (3 bytes each)
         for (uint256 i; i < nodes.length; ++i) {
-            uint16 packed = (uint16(nodes[i].encoding) << 13) |
-                (uint16(nodes[i].childCount) << 5);
+            uint24 packed = (uint24(nodes[i].encoding) << 21) |
+                (uint24(nodes[i].childCount) << 13) |
+                uint24(uint16(nodes[i].leadingBytes));
 
+            buffer[offset++] = bytes1(uint8(packed >> 16));
             buffer[offset++] = bytes1(uint8(packed >> 8));
             buffer[offset++] = bytes1(uint8(packed));
         }
@@ -275,7 +277,8 @@ library ConditionPacker {
             result[current] = LayoutNodeFlat({
                 encoding: node.encoding,
                 parent: parent,
-                childCount: node.children.length
+                childCount: node.children.length,
+                leadingBytes: uint16(node.leadingBytes)
             });
 
             // Enqueue children
@@ -304,6 +307,7 @@ library ConditionPacker {
         uint256 parent;
         Encoding encoding;
         uint256 childCount;
+        uint16 leadingBytes;
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
