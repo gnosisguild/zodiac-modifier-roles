@@ -141,11 +141,23 @@ library EIP712Encoder {
     ) private pure returns (Layout memory layout) {
         layout.encoding = flatLayout[index].encoding;
         layout.index = index;
-        if (flatLayout[index].fields.length > 0) {
-            uint256[] memory fields = flatLayout[index].fields;
-            layout.children = new Layout[](fields.length);
-            for (uint256 i = 0; i < fields.length; i++) {
-                layout.children[i] = _toTree(flatLayout, fields[i]);
+
+        // Count children (nodes where parent == index)
+        uint256 childCount = 0;
+        uint256 len = flatLayout.length;
+        for (uint256 i = index + 1; i < len; ++i) {
+            if (flatLayout[i].parent == index) {
+                ++childCount;
+            }
+        }
+
+        if (childCount > 0) {
+            layout.children = new Layout[](childCount);
+            uint256 childIndex = 0;
+            for (uint256 i = index + 1; childIndex < childCount; ++i) {
+                if (flatLayout[i].parent == index) {
+                    layout.children[childIndex++] = _toTree(flatLayout, i);
+                }
             }
         }
     }

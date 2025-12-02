@@ -34,7 +34,11 @@ library Integrity {
         _nonStructuralOrdering(conditions);
         _typeTree(conditions);
 
-        if (TypeTree.inspect(conditions, 0).encoding != Encoding.Calldata) {
+        Layout memory rootLayout = TypeTree.inspect(conditions, 0);
+        if (
+            rootLayout.encoding != Encoding.Calldata &&
+            rootLayout.encoding != Encoding.AbiEncoded
+        ) {
             revert IRolesError.UnsuitableRootNode();
         }
     }
@@ -88,7 +92,13 @@ library Integrity {
             ) {
                 revert IRolesError.UnsuitableParameterType(index);
             }
-            if (compValue.length != 0) {
+            // For AbiEncoded, compValue must be empty (leadingBytes=0) or exactly 2 bytes
+            // For Calldata/Tuple/Array, compValue must be empty
+            if (encoding == Encoding.AbiEncoded) {
+                if (compValue.length != 0 && compValue.length != 2) {
+                    revert IRolesError.UnsuitableCompValue(index);
+                }
+            } else if (compValue.length != 0) {
                 revert IRolesError.UnsuitableCompValue(index);
             }
         } else if (
@@ -196,12 +206,14 @@ library Integrity {
                 conditions[i].operator == Operator.CallWithinAllowance
             ) {
                 (
-                    uint256 countCalldataNodes,
+                    uint256 countCalldataOrAbiEncodedNodes,
                     ,
                     uint256 countOtherNodes
                 ) = _countParentNodes(conditions, i);
 
-                if (countCalldataNodes != 1 || countOtherNodes > 0) {
+                if (
+                    countCalldataOrAbiEncodedNodes != 1 || countOtherNodes > 0
+                ) {
                     revert IRolesError.UnsuitableParent(i);
                 }
             } else if (conditions[i].operator == Operator.WithinRatio) {
@@ -387,25 +399,27 @@ library Integrity {
         private
         pure
         returns (
-            uint256 countCalldata,
+            uint256 countCalldataOrAbiEncoded,
             uint256 countLogical,
             uint256 countOther
         )
     {
         for (uint256 j = conditions[i].parent; ; ) {
-            bool isCalldata = conditions[j].paramType == Encoding.Calldata;
+            bool isCalldataOrAbiEncoded = conditions[j].paramType ==
+                Encoding.Calldata ||
+                conditions[j].paramType == Encoding.AbiEncoded;
             bool isLogical = (conditions[j].operator == Operator.And ||
                 conditions[j].operator == Operator.Or);
 
-            if (isCalldata) {
-                ++countCalldata;
+            if (isCalldataOrAbiEncoded) {
+                ++countCalldataOrAbiEncoded;
             }
 
             if (isLogical) {
                 ++countLogical;
             }
 
-            if (!isCalldata && !isLogical) {
+            if (!isCalldataOrAbiEncoded && !isLogical) {
                 ++countOther;
             }
 
@@ -445,7 +459,7 @@ library Integrity {
             revert IRolesError.WithinRatioNoRatioProvided(i);
         }
 
-        // Find nearest structural parent (should be Calldata/Tuple/Array)
+        // Find nearest structural parent (should be Calldata/AbiEncoded/Tuple/Array)
         uint256 parentIndex = conditions[i].parent;
         while (conditions[parentIndex].paramType == Encoding.None) {
             parentIndex = conditions[parentIndex].parent;

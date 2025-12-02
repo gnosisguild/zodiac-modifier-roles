@@ -10,11 +10,11 @@ import {
 
 const iface = Interface.from([
   "function hashSafeMessage(bytes message) view returns (bytes32)",
-  "function hashTypedDomain(bytes data, ((uint8 encoding, uint256[] fields)[] layout, bytes32[] typeHashes) types) pure returns (bytes32)",
-  "function hashTypedMessage(bytes domain, bytes message, ((uint8 encoding, uint256[] fields)[] layout, bytes32[] typeHashes) types) pure returns (bytes32 result)",
-  "function hashTypedSafeMessage(bytes domain, bytes message, ((uint8 encoding, uint256[] fields)[] layout, bytes32[] typeHashes) types) view returns (bytes32)",
+  "function hashTypedDomain(bytes data, ((uint256 parent, uint8 encoding)[] layout, bytes32[] typeHashes) types) pure returns (bytes32)",
+  "function hashTypedMessage(bytes domain, bytes message, ((uint256 parent, uint8 encoding)[] layout, bytes32[] typeHashes) types) pure returns (bytes32 result)",
+  "function hashTypedSafeMessage(bytes domain, bytes message, ((uint256 parent, uint8 encoding)[] layout, bytes32[] typeHashes) types) view returns (bytes32)",
   "function signMessage(bytes message)",
-  "function signTypedMessage(bytes domain, bytes message, ((uint8 encoding, uint256[] fields)[] layout, bytes32[] typeHashes) types)",
+  "function signTypedMessage(bytes domain, bytes message, ((uint256 parent, uint8 encoding)[] layout, bytes32[] typeHashes) types)",
 ])
 
 export function encodeSignTypedMessage({
