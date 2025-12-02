@@ -41,10 +41,10 @@ library TypeTree {
         }
 
         /*
-         * Logical nodes that are variant use Dynamic as a container to
+         * Nodes that are Logical and Variant use Dynamic as a container to
          * indicate the variant. All other nodes use their declared paramType
          */
-        node.encoding = isLogical
+        node.encoding = (isLogical && isVariant)
             ? Encoding.Dynamic
             : conditions[index].paramType;
 
@@ -58,6 +58,17 @@ library TypeTree {
 
         for (uint256 i = 0; i < node.children.length; ++i) {
             node.children[i] = inspect(conditions, childStart + i);
+        }
+
+        /*
+         * Normalize Calldata   → AbiEncoded with leadingBytes=4.
+         * Normalize AbiEncoded → extract leadingBytes from compValue (must be 0 or 2 bytes).
+         */
+        if (node.encoding == Encoding.Calldata) {
+            node.encoding = Encoding.AbiEncoded;
+            node.leadingBytes = 4;
+        } else if (node.encoding == Encoding.AbiEncoded) {
+            node.leadingBytes = uint16(bytes2(conditions[index].compValue));
         }
     }
 
