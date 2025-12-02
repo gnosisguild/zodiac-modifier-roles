@@ -34,6 +34,7 @@ struct Layout {
     Encoding encoding;
     Layout[] children;
     uint256 index;
+    uint256 leadingBytes;
 }
 
 struct LayoutFlat {
