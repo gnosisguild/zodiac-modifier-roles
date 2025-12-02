@@ -1,14 +1,14 @@
 import { TypedData, TypedDataDomain } from "abitype"
 import { ZeroHash } from "ethers"
 
-import {
-  allTypes,
-  findRootTypes,
-  hashType,
-  parseType,
-  typesForDomain,
-} from "../types"
+import { findRootTypes, hashType, parseType, typesForDomain } from "../types"
 import { Encoding } from "zodiac-roles-deployments"
+
+interface LayoutNode {
+  parent: number
+  encoding: Encoding
+  typeHash: `0x${string}`
+}
 
 export function toAbiTypes({
   domain,
@@ -25,62 +25,79 @@ export function toAbiTypes({
   }
 
   const rootTypes = findRootTypes({ types })
+  const result: LayoutNode[] = []
 
-  const abiTypes = [
-    ...rootTypes.map((_, index) => ({
+  // BFS queue: { type, parentIndex }
+  const queue: { type: string; parentIndex: number }[] = []
+
+  // Add root wrappers (AbiEncoded nodes)
+  for (const rootType of rootTypes) {
+    const rootIndex = result.length
+    result.push({
+      parent: rootIndex, // root points to self
       encoding: Encoding.AbiEncoded,
       typeHash: ZeroHash as `0x${string}`,
-      typeSignature: "",
-      fields: [index],
-    })),
-    ...allTypes(types, rootTypes).map((type, _, allTypes) => {
-      const {
-        type: baseType,
-        isAtomic,
-        isStruct,
-        isArray,
-        fixedLength,
-      } = parseType(type)
+    })
+    queue.push({ type: rootType, parentIndex: rootIndex })
+  }
 
-      if (isStruct) {
-        const { typeSignature, typeHash } = hashType({ types, type })
-        return {
-          encoding: Encoding.Tuple,
-          typeHash,
-          typeSignature,
-          fields: types[type].map((field) => allTypes.indexOf(field.type)),
-        }
+  // BFS expansion
+  while (queue.length > 0) {
+    const { type, parentIndex } = queue.shift()!
+    const currentIndex = result.length
+
+    const {
+      type: baseType,
+      isAtomic,
+      isStruct,
+      isArray,
+      fixedLength,
+    } = parseType(type)
+
+    if (isStruct) {
+      const { typeHash } = hashType({ types, type })
+      result.push({
+        parent: parentIndex,
+        encoding: Encoding.Tuple,
+        typeHash,
+      })
+      // Add all fields to queue
+      for (const field of types[type]) {
+        queue.push({ type: field.type, parentIndex: currentIndex })
       }
-
-      if (isArray && fixedLength) {
-        return {
-          encoding: Encoding.Tuple,
-          typeHash: ZeroHash as `0x${string}`,
-          typeSignature: "",
-          fields: new Array(fixedLength).fill(allTypes.indexOf(baseType)),
-        }
+    } else if (isArray && fixedLength) {
+      // Fixed-length array treated as Tuple
+      result.push({
+        parent: parentIndex,
+        encoding: Encoding.Tuple,
+        typeHash: ZeroHash as `0x${string}`,
+      })
+      // Add each element to queue
+      for (let i = 0; i < fixedLength; i++) {
+        queue.push({ type: baseType, parentIndex: currentIndex })
       }
-
-      if (isArray && !fixedLength) {
-        return {
-          encoding: Encoding.Array,
-          typeHash: ZeroHash as `0x${string}`,
-          typeSignature: "",
-          fields: [allTypes.indexOf(baseType)],
-        }
-      }
-
-      return {
+    } else if (isArray && !fixedLength) {
+      // Dynamic array
+      result.push({
+        parent: parentIndex,
+        encoding: Encoding.Array,
+        typeHash: ZeroHash as `0x${string}`,
+      })
+      // Add element type to queue
+      queue.push({ type: baseType, parentIndex: currentIndex })
+    } else {
+      // Atomic or dynamic primitive
+      result.push({
+        parent: parentIndex,
         encoding: isAtomic ? Encoding.Static : Encoding.Dynamic,
         typeHash: ZeroHash as `0x${string}`,
-        typeSignature: "",
-        fields: [],
-      }
-    }),
-  ].map((a) => ({ ...a, fields: a.fields.map((f) => f + rootTypes.length) }))
+      })
+      // No children for primitives
+    }
+  }
 
   return {
-    layout: abiTypes.map(({ encoding, fields }) => ({ encoding, fields })),
-    typeHashes: abiTypes.map(({ typeHash }) => typeHash),
+    layout: result.map(({ parent, encoding }) => ({ parent, encoding })),
+    typeHashes: result.map(({ typeHash }) => typeHash),
   }
 }
