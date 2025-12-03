@@ -1,23 +1,34 @@
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
+import { Encoding, Operator, PermissionCheckerStatus } from "../utils";
 import {
-  Encoding,
-  BYTES32_ZERO,
-  Operator,
-  PermissionCheckerStatus,
-} from "../utils";
-import { setupOneParamBytes, setupOneParamStatic } from "../setup";
+  setupOneParamBytes,
+  setupOneParamStatic,
+  setupTwoParamsStatic,
+} from "../setup";
+import { ZeroHash } from "ethers";
 
-describe("Operator - Bitmask", async () => {
-  it("evaluates operator Bitmask - Static, left aligned", async () => {
+// Helper: compValue = [shift (2 bytes)][mask (N bytes)][expected (N bytes)]
+function bitmaskCompValue(
+  shift: number,
+  mask: string,
+  expected: string,
+): string {
+  if (mask.length !== expected.length) {
+    throw new Error("mask and expected must have same length");
+  }
+  const shiftHex = shift.toString(16).padStart(4, "0");
+  return `0x${shiftHex}${mask}${expected}`;
+}
+
+describe("Operator - Bitmask", () => {
+  it("overflows on static param by going over calldata limit", async () => {
     const { roles, scopeFunction, invoke } =
       await loadFixture(setupOneParamStatic);
 
-    const shift = "0000";
-    const mask = "ff".padEnd(30, "0");
-    const expected = "46".padEnd(30, "0");
-    const compValue = `0x${shift}${mask}${expected}`;
+    // shift 30 + 4 byte mask = 34 bytes needed, but only 32 bytes in calldata
+    const compValue = bitmaskCompValue(30, "ffffffff", "00000000");
 
     await scopeFunction([
       {
@@ -34,171 +45,18 @@ describe("Operator - Bitmask", async () => {
       },
     ]);
 
-    await expect(
-      invoke(
-        BigInt(
-          "0x4600000000000000000000000000000000000000000000000000000000000000",
-        ),
-      ),
-    ).to.not.be.reverted;
-
-    await expect(
-      invoke(
-        BigInt(
-          "0x4600ff0000000000000000000000000000000110000000000000000334400000",
-        ),
-      ),
-    ).to.not.be.reverted;
-
-    await expect(
-      invoke(
-        BigInt(
-          "0x4500000000000000000000000000000000000000000000000000000000000000",
-        ),
-      ),
-    )
+    await expect(invoke(BigInt(0)))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.BitmaskNotAllowed, BYTES32_ZERO);
+      .withArgs(PermissionCheckerStatus.BitmaskOverflow, ZeroHash);
   });
-  it("evaluates operator Bitmask - Static, middle aligned", async () => {
-    const { roles, scopeFunction, invoke } =
-      await loadFixture(setupOneParamStatic);
 
-    const shift = "000a";
-    const mask = "f0f0f0".padEnd(30, "0");
-    const expected = "103020".padEnd(30, "0");
-    const compValue = `0x${shift}${mask}${expected}`;
-
-    await scopeFunction([
-      {
-        parent: 0,
-        paramType: Encoding.Calldata,
-        operator: Operator.Matches,
-        compValue: "0x",
-      },
-      {
-        parent: 0,
-        paramType: Encoding.Static,
-        operator: Operator.Bitmask,
-        compValue,
-      },
-    ]);
-
-    await expect(
-      invoke(
-        BigInt(
-          "0x0000000000000000000010302000000000000000000000000000000000000000",
-        ),
-      ),
-    ).to.not.be.reverted;
-    await expect(
-      invoke(
-        BigInt(
-          "0x000000000000000000001030200000000000000000000000000000ffffffffff",
-        ),
-      ),
-    ).to.not.be.reverted;
-
-    await expect(
-      invoke(
-        BigInt(
-          "0x000000000000000000001030400000000000000000000000000000ffffffffff",
-        ),
-      ),
-    )
-      .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.BitmaskNotAllowed, BYTES32_ZERO);
-  });
-  it("evaluates operator Bitmask - Static, right aligned", async () => {
-    const { roles, scopeFunction, invoke } =
-      await loadFixture(setupOneParamStatic);
-
-    const shift = "001e";
-    const mask = "ffff".padEnd(30, "0");
-    const expected = "abcd".padEnd(30, "0");
-    const compValue = `0x${shift}${mask}${expected}`;
-    await scopeFunction([
-      {
-        parent: 0,
-        paramType: Encoding.Calldata,
-        operator: Operator.Matches,
-        compValue: "0x",
-      },
-      {
-        parent: 0,
-        paramType: Encoding.Static,
-        operator: Operator.Bitmask,
-        compValue,
-      },
-    ]);
-
-    await expect(
-      invoke(
-        BigInt(
-          "0x00000000000000000000000000000000000000000000000000000000000abcd",
-        ),
-      ),
-    ).to.not.be.reverted;
-    await expect(
-      invoke(
-        BigInt(
-          "0x00000000ffffffff000000000000000000000000000000000000000000fabcd",
-        ),
-      ),
-    ).to.not.be.reverted;
-
-    await expect(
-      invoke(
-        BigInt(
-          "0x00000000ffffffff0000000000000000000000000000000000000000000bbcd",
-        ),
-      ),
-    )
-      .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.BitmaskNotAllowed, BYTES32_ZERO);
-  });
-  it("evaluates operator Bitmask - Static, overflow", async () => {
-    const { roles, scopeFunction, invoke } =
-      await loadFixture(setupOneParamStatic);
-
-    // 30
-    const shift = "0020";
-    const mask = "ffffff".padEnd(30, "0");
-    const expected = "abcd11".padEnd(30, "0");
-    const compValue = `0x${shift}${mask}${expected}`;
-    await scopeFunction([
-      {
-        parent: 0,
-        paramType: Encoding.Calldata,
-        operator: Operator.Matches,
-        compValue: "0x",
-      },
-      {
-        parent: 0,
-        paramType: Encoding.Static,
-        operator: Operator.Bitmask,
-        compValue,
-      },
-    ]);
-
-    await expect(
-      invoke(
-        BigInt(
-          "0x000000000000000000000000000000000000000000000000000000000000000",
-        ),
-      ),
-    )
-      .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.BitmaskOverflow, BYTES32_ZERO);
-  });
-  it("evaluates operator Bitmask - Dynamic, left aligned", async () => {
+  it("overflows on dynamic param by going over param size", async () => {
     const { roles, scopeFunction, invoke } =
       await loadFixture(setupOneParamBytes);
 
-    const shift = "0000";
-    const mask = "ff".padEnd(30, "0");
-    const expected = "46".padEnd(30, "0");
-    const compValue = `0x${shift}${mask}${expected}`;
+    // 64-byte mask but value is only 5 bytes (padded to 32)
+    const compValue = bitmaskCompValue(0, "ff".repeat(64), "00".repeat(64));
+
     await scopeFunction([
       {
         parent: 0,
@@ -214,54 +72,17 @@ describe("Operator - Bitmask", async () => {
       },
     ]);
 
-    await expect(invoke("0x46")).to.not.be.reverted;
-    await expect(invoke("0x4600ff000000000000000000000000")).to.not.be.reverted;
-
-    await expect(invoke("0x45"))
+    await expect(invoke("0x" + "aa".repeat(5)))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.BitmaskNotAllowed, BYTES32_ZERO);
-    await expect(invoke("0x45ff0077"))
-      .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.BitmaskNotAllowed, BYTES32_ZERO);
+      .withArgs(PermissionCheckerStatus.BitmaskOverflow, ZeroHash);
   });
-  it("evaluates operator Bitmask - Dynamic, right aligned", async () => {
-    const { scopeFunction, invoke } = await loadFixture(setupOneParamBytes);
 
-    const shift = "000a";
-    const mask = "0000000f".padEnd(30, "0");
-    const expected = "00000003".padEnd(30, "0");
-    const compValue = `0x${shift}${mask}${expected}`;
-    await scopeFunction([
-      {
-        parent: 0,
-        paramType: Encoding.Calldata,
-        operator: Operator.Matches,
-        compValue: "0x",
-      },
-      {
-        parent: 0,
-        paramType: Encoding.Dynamic,
-        operator: Operator.Bitmask,
-        compValue,
-      },
-    ]);
-
-    await expect(invoke("0x0000000000000000000000000003")).to.not.be.reverted;
-
-    await expect(invoke("0x000f200000120000aa00000000f3")).to.not.be.reverted;
-
-    await expect(invoke("0x0000000000000000000000000003ffff")).to.not.be
-      .reverted;
-  });
-  it("evaluates operator Bitmask - Dynamic, overflow", async () => {
+  it("works on dynamic", async () => {
     const { roles, scopeFunction, invoke } =
       await loadFixture(setupOneParamBytes);
 
-    // 30
-    const shift = "0050";
-    const mask = "ffffff".padEnd(30, "0");
-    const expected = "aaaaaa".padEnd(30, "0");
-    const compValue = `0x${shift}${mask}${expected}`;
+    const compValue = bitmaskCompValue(0, "ffff", "aabb");
+
     await scopeFunction([
       {
         parent: 0,
@@ -277,63 +98,275 @@ describe("Operator - Bitmask", async () => {
       },
     ]);
 
-    await expect(invoke("0x0000000000"))
+    await expect(invoke("0xaabb")).to.not.be.reverted;
+
+    await expect(invoke("0xaacc"))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.BitmaskOverflow, BYTES32_ZERO);
+      .withArgs(PermissionCheckerStatus.BitmaskNotAllowed, ZeroHash);
   });
 
-  it("cannot set up a Bitmap operator for other than Static/Dynamic", async () => {
-    const { scopeFunction } = await loadFixture(setupOneParamBytes);
+  it("works on static", async () => {
+    const { roles, scopeFunction, invoke } =
+      await loadFixture(setupOneParamStatic);
 
-    const shift = "0050";
-    const mask = "ffffff".padEnd(30, "0");
-    const expected = "aaaaaa".padEnd(30, "0");
-    const compValue = `0x${shift}${mask}${expected}`;
+    const compValue = bitmaskCompValue(0, "ffff", "aabb");
 
-    await expect(
-      scopeFunction([
-        {
-          parent: 0,
-          paramType: Encoding.Calldata,
-          operator: Operator.Matches,
-          compValue: "0x",
-        },
-        {
-          parent: 0,
-          paramType: Encoding.Tuple,
-          operator: Operator.Bitmask,
-          compValue,
-        },
-        {
-          parent: 1,
-          paramType: Encoding.Static,
-          operator: Operator.Pass,
-          compValue: "0x",
-        },
-      ]),
-    ).to.be.reverted;
+    await scopeFunction([
+      {
+        parent: 0,
+        paramType: Encoding.Calldata,
+        operator: Operator.Matches,
+        compValue: "0x",
+      },
+      {
+        parent: 0,
+        paramType: Encoding.Static,
+        operator: Operator.Bitmask,
+        compValue,
+      },
+    ]);
 
     await expect(
-      scopeFunction([
-        {
-          parent: 0,
-          paramType: Encoding.Calldata,
-          operator: Operator.Matches,
-          compValue: "0x",
-        },
-        {
-          parent: 0,
-          paramType: Encoding.Array,
-          operator: Operator.Bitmask,
-          compValue,
-        },
-        {
-          parent: 1,
-          paramType: Encoding.Static,
-          operator: Operator.Pass,
-          compValue: "0x",
-        },
-      ]),
-    ).to.be.reverted;
+      invoke(
+        BigInt(
+          "0xaabb000000000000000000000000000000000000000000000000000000000000",
+        ),
+      ),
+    ).to.not.be.reverted;
+
+    await expect(
+      invoke(
+        BigInt(
+          "0xaacc000000000000000000000000000000000000000000000000000000000000",
+        ),
+      ),
+    )
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.BitmaskNotAllowed, ZeroHash);
+  });
+
+  it("shift works on dynamic", async () => {
+    const { roles, scopeFunction, invoke } =
+      await loadFixture(setupOneParamBytes);
+
+    // shift 5, check 1 byte
+    const compValue = bitmaskCompValue(5, "ff", "cd");
+
+    await scopeFunction([
+      {
+        parent: 0,
+        paramType: Encoding.Calldata,
+        operator: Operator.Matches,
+        compValue: "0x",
+      },
+      {
+        parent: 0,
+        paramType: Encoding.Dynamic,
+        operator: Operator.Bitmask,
+        compValue,
+      },
+    ]);
+
+    await expect(invoke("0x0000000000cd")).to.not.be.reverted;
+
+    await expect(invoke("0x0000000000ab"))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.BitmaskNotAllowed, ZeroHash);
+  });
+
+  it("shift works on static", async () => {
+    const { roles, scopeFunction, invoke } =
+      await loadFixture(setupOneParamStatic);
+
+    // shift 15, check 1 byte
+    const compValue = bitmaskCompValue(15, "ff", "ab");
+
+    await scopeFunction([
+      {
+        parent: 0,
+        paramType: Encoding.Calldata,
+        operator: Operator.Matches,
+        compValue: "0x",
+      },
+      {
+        parent: 0,
+        paramType: Encoding.Static,
+        operator: Operator.Bitmask,
+        compValue,
+      },
+    ]);
+
+    // byte at position 15 is 0xab
+    await expect(
+      invoke(
+        BigInt(
+          "0x000000000000000000000000000000ab00000000000000000000000000000000",
+        ),
+      ),
+    ).to.not.be.reverted;
+
+    await expect(
+      invoke(
+        BigInt(
+          "0x000000000000000000000000000000cd00000000000000000000000000000000",
+        ),
+      ),
+    )
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.BitmaskNotAllowed, ZeroHash);
+  });
+
+  it("multiword works on dynamic", async () => {
+    const { roles, scopeFunction, invoke } =
+      await loadFixture(setupOneParamBytes);
+
+    // 64-byte mask spanning 2 words
+    const compValue = bitmaskCompValue(0, "ff".repeat(64), "ab".repeat(64));
+
+    await scopeFunction([
+      {
+        parent: 0,
+        paramType: Encoding.Calldata,
+        operator: Operator.Matches,
+        compValue: "0x",
+      },
+      {
+        parent: 0,
+        paramType: Encoding.Dynamic,
+        operator: Operator.Bitmask,
+        compValue,
+      },
+    ]);
+
+    await expect(invoke("0x" + "ab".repeat(64))).to.not.be.reverted;
+
+    // last byte differs
+    await expect(invoke("0x" + "ab".repeat(63) + "cd"))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.BitmaskNotAllowed, ZeroHash);
+  });
+
+  it("multiword works on static (crosses into next param)", async () => {
+    const { roles, scopeFunction, invoke } =
+      await loadFixture(setupTwoParamsStatic);
+
+    // 64-byte mask reads both params entirely
+    const compValue = bitmaskCompValue(0, "ff".repeat(64), "00".repeat(64));
+
+    await scopeFunction([
+      {
+        parent: 0,
+        paramType: Encoding.Calldata,
+        operator: Operator.Matches,
+        compValue: "0x",
+      },
+      {
+        parent: 0,
+        paramType: Encoding.Static,
+        operator: Operator.Bitmask,
+        compValue,
+      },
+    ]);
+
+    // both params zero - passes
+    await expect(invoke(BigInt(0), BigInt(0))).to.not.be.reverted;
+
+    // second param non-zero - fails
+    await expect(invoke(BigInt(0), BigInt(1)))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.BitmaskNotAllowed, ZeroHash);
+  });
+
+  it("elaborate mask patterns work - only activated bits are considered", async () => {
+    const { roles, scopeFunction, invoke } =
+      await loadFixture(setupOneParamStatic);
+
+    // mask 0xf0 checks only high nibble, expected 0xa0
+    const compValue = bitmaskCompValue(0, "f0", "a0");
+
+    await scopeFunction([
+      {
+        parent: 0,
+        paramType: Encoding.Calldata,
+        operator: Operator.Matches,
+        compValue: "0x",
+      },
+      {
+        parent: 0,
+        paramType: Encoding.Static,
+        operator: Operator.Bitmask,
+        compValue,
+      },
+    ]);
+
+    // 0xab & 0xf0 = 0xa0 - passes (low nibble 0xb ignored)
+    await expect(
+      invoke(
+        BigInt(
+          "0xab00000000000000000000000000000000000000000000000000000000000000",
+        ),
+      ),
+    ).to.not.be.reverted;
+
+    // 0xaf & 0xf0 = 0xa0 - passes (low nibble 0xf ignored)
+    await expect(
+      invoke(
+        BigInt(
+          "0xaf00000000000000000000000000000000000000000000000000000000000000",
+        ),
+      ),
+    ).to.not.be.reverted;
+
+    // 0xbb & 0xf0 = 0xb0 != 0xa0 - fails
+    await expect(
+      invoke(
+        BigInt(
+          "0xbb00000000000000000000000000000000000000000000000000000000000000",
+        ),
+      ),
+    )
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.BitmaskNotAllowed, ZeroHash);
+  });
+
+  it("works on static crossing parameter boundary", async () => {
+    const { roles, scopeFunction, invoke } =
+      await loadFixture(setupTwoParamsStatic);
+
+    // shift 26, mask 10 bytes = reads 6 bytes from param1, 4 bytes from param2
+    const compValue = bitmaskCompValue(26, "ff".repeat(10), "aa".repeat(10));
+
+    await scopeFunction([
+      {
+        parent: 0,
+        paramType: Encoding.Calldata,
+        operator: Operator.Matches,
+        compValue: "0x",
+      },
+      {
+        parent: 0,
+        paramType: Encoding.Static,
+        operator: Operator.Bitmask,
+        compValue,
+      },
+    ]);
+
+    // param1 ends with 6 bytes of 0xaa, param2 starts with 4 bytes of 0xaa
+    const param1 = BigInt(
+      "0x000000000000000000000000000000000000000000000000000000aaaaaaaaaaaaa",
+    );
+    const param2 = BigInt(
+      "0xaaaaaaaa00000000000000000000000000000000000000000000000000000000",
+    );
+
+    await expect(invoke(param1, param2)).to.not.be.reverted;
+
+    // param2 first byte wrong
+    const param2Wrong = BigInt(
+      "0xbbaaaaaaaa000000000000000000000000000000000000000000000000000000",
+    );
+    await expect(invoke(param1, param2Wrong))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.BitmaskNotAllowed, ZeroHash);
   });
 });
