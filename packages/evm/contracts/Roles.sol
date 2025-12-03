@@ -1,18 +1,25 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "./core/Setup.sol";
 import "./core/Authorization.sol";
+import "./core/Membership.sol";
+import "./core/Setup.sol";
 import "./core/allowance/ConsumptionTracker.sol";
 
 /**
- * @title Zodiac Roles Mod - granular, role-based, access control for your
- * on-chain avatar accounts.
+ * @title Zodiac Roles Mod - granular, role-based access control and policy
+ *        engine for onchain accounts
  *
  * @author gnosisguild
  *
  */
-contract Roles is RolesStorage, Setup, Authorization, ConsumptionTracker {
+contract Roles is
+    RolesStorage,
+    Setup,
+    Membership,
+    Authorization,
+    ConsumptionTracker
+{
     /// @param _owner Address of the owner
     /// @param _avatar Address of the avatar (e.g. a Gnosis Safe)
     /// @param _target Address of the contract that will call exec function
@@ -33,8 +40,14 @@ contract Roles is RolesStorage, Setup, Authorization, ConsumptionTracker {
         bytes calldata data,
         Operation operation
     ) public override returns (bool success) {
+        (
+            address sender,
+            bytes32 roleKey,
+            uint192 nextMembership
+        ) = _authenticate(0);
+
         Consumption[] memory consumptions = _authorize(
-            defaultRoles[msg.sender],
+            roleKey,
             to,
             value,
             data,
@@ -43,6 +56,9 @@ contract Roles is RolesStorage, Setup, Authorization, ConsumptionTracker {
         _flushPrepare(consumptions);
         success = exec(to, value, data, operation);
         _flushCommit(consumptions, success);
+        if (success && nextMembership != type(uint192).max) {
+            _storeMembership(sender, roleKey, nextMembership);
+        }
     }
 
     /// @dev Passes a transaction to the modifier, expects return data.
@@ -57,8 +73,13 @@ contract Roles is RolesStorage, Setup, Authorization, ConsumptionTracker {
         bytes calldata data,
         Operation operation
     ) public override returns (bool success, bytes memory returnData) {
+        (
+            address sender,
+            bytes32 roleKey,
+            uint192 nextMembership
+        ) = _authenticate(0);
         Consumption[] memory consumptions = _authorize(
-            defaultRoles[msg.sender],
+            roleKey,
             to,
             value,
             data,
@@ -67,6 +88,9 @@ contract Roles is RolesStorage, Setup, Authorization, ConsumptionTracker {
         _flushPrepare(consumptions);
         (success, returnData) = execAndReturnData(to, value, data, operation);
         _flushCommit(consumptions, success);
+        if (success && nextMembership != type(uint192).max) {
+            _storeMembership(sender, roleKey, nextMembership);
+        }
     }
 
     /// @dev Passes a transaction to the modifier assuming the specified role.
@@ -85,6 +109,7 @@ contract Roles is RolesStorage, Setup, Authorization, ConsumptionTracker {
         bytes32 roleKey,
         bool shouldRevert
     ) public returns (bool success) {
+        (address sender, , uint192 nextMembership) = _authenticate(roleKey);
         Consumption[] memory consumptions = _authorize(
             roleKey,
             to,
@@ -98,6 +123,9 @@ contract Roles is RolesStorage, Setup, Authorization, ConsumptionTracker {
             revert ModuleTransactionFailed();
         }
         _flushCommit(consumptions, success);
+        if (success && nextMembership != type(uint192).max) {
+            _storeMembership(sender, roleKey, nextMembership);
+        }
     }
 
     /// @dev Passes a transaction to the modifier assuming the specified role. Expects return data.
@@ -116,6 +144,7 @@ contract Roles is RolesStorage, Setup, Authorization, ConsumptionTracker {
         bytes32 roleKey,
         bool shouldRevert
     ) public returns (bool success, bytes memory returnData) {
+        (address sender, , uint192 nextMembership) = _authenticate(roleKey);
         Consumption[] memory consumptions = _authorize(
             roleKey,
             to,
@@ -129,5 +158,8 @@ contract Roles is RolesStorage, Setup, Authorization, ConsumptionTracker {
             revert ModuleTransactionFailed();
         }
         _flushCommit(consumptions, success);
+        if (success && nextMembership != type(uint192).max) {
+            _storeMembership(sender, roleKey, nextMembership);
+        }
     }
 }

@@ -235,14 +235,15 @@ describe("Roles", async () => {
           .assignRoles(alice.address, [ROLE_KEY1, ROLE_KEY2], [true, true]),
       ).to.not.be.reverted;
     });
-    it("emits the AssignRoles event", async () => {
+    it("emits the GrantRole event", async () => {
       const { owner, alice, roles } = await loadFixture(setup);
+      const MAX_UINT64 = BigInt("0xFFFFFFFFFFFFFFFF");
 
       await expect(
         roles.connect(owner).assignRoles(alice.address, [ROLE_KEY1], [true]),
       )
-        .to.emit(roles, "AssignRoles")
-        .withArgs(alice.address, [ROLE_KEY1], [true]);
+        .to.emit(roles, "GrantRole")
+        .withArgs(ROLE_KEY1, alice.address, 0, MAX_UINT64, MAX_UINT64);
     });
   });
 

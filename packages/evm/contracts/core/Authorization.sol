@@ -13,8 +13,8 @@ import "./serialize/ConditionUnpacker.sol";
 import "../types/Types.sol";
 
 /**
- * @title Authorization - a component of Zodiac Roles Mod responsible
- * for authorizing actions performed on behalf of a role.
+ * @title Authorization - Authorizes transactions based on target clearance
+ *        and function scope rules.
  *
  * @author gnosisguild
  */
@@ -25,17 +25,8 @@ abstract contract Authorization is RolesStorage {
         uint256 value,
         bytes calldata data,
         Operation operation
-    ) internal moduleOnly returns (Consumption[] memory) {
-        // We never authorize the zero role, as it could clash with the
-        // unassigned default role
-        if (roleKey == 0) {
-            revert NoMembership();
-        }
-
+    ) internal view returns (Consumption[] memory) {
         Role storage role = roles[roleKey];
-        if (!role.members[sentOrSignedByModule()]) {
-            revert NoMembership();
-        }
 
         Result memory result;
         address adapter = unwrappers[_key(to, bytes4(data))];

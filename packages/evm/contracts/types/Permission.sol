@@ -19,8 +19,14 @@ struct TargetAddress {
     ExecutionOptions options;
 }
 
+struct RoleMembership {
+    uint64 start;
+    uint64 end;
+    uint64 usesLeft;
+}
+
 struct Role {
-    mapping(address => bool) members;
+    mapping(address => RoleMembership) members;
     mapping(address => TargetAddress) targets;
     mapping(bytes32 => bytes32) scopeConfig;
 }
