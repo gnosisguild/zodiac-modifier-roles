@@ -20,6 +20,7 @@ import {IRolesError} from "../../types/RolesError.sol";
  * Validated variants accross different Array entries as well
  * Validate compValue for allowance to be either: 32 bytes, 52 bytes or 54 bytes
  * Validate allowance decimals are equal or smaller than 18
+ * Validate compValue for Bitmask
  */
 
 library Integrity {
@@ -151,9 +152,6 @@ library Integrity {
         } else if (operator == Operator.Bitmask) {
             if (encoding != Encoding.Static && encoding != Encoding.Dynamic) {
                 revert IRolesError.UnsuitableParameterType(index);
-            }
-            if (compValue.length != 32) {
-                revert IRolesError.UnsuitableCompValue(index);
             }
         } else if (operator == Operator.Custom) {
             if (compValue.length != 32) {
