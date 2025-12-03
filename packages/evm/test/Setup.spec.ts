@@ -32,7 +32,9 @@ describe("Setup", () => {
     it("sets defaults when zero", async () => {
       const { roles, owner, member } = await loadFixture(setup);
 
-      await expect(roles.connect(owner).grantRole(member.address, ROLE_KEY, 0, 0, 0))
+      await expect(
+        roles.connect(owner).grantRole(member.address, ROLE_KEY, 0, 0, 0),
+      )
         .to.emit(roles, "GrantRole")
         .withArgs(ROLE_KEY, member.address, 0, MAX_UINT64, MAX_UINT64);
     });

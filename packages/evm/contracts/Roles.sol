@@ -55,10 +55,7 @@ contract Roles is
         );
         _flushPrepare(consumptions);
         success = exec(to, value, data, operation);
-        _flushCommit(consumptions, success);
-        if (success && nextMembership != type(uint192).max) {
-            _storeMembership(sender, roleKey, nextMembership);
-        }
+        _flushCommit(sender, roleKey, nextMembership, consumptions, success);
     }
 
     /// @dev Passes a transaction to the modifier, expects return data.
@@ -87,10 +84,7 @@ contract Roles is
         );
         _flushPrepare(consumptions);
         (success, returnData) = execAndReturnData(to, value, data, operation);
-        _flushCommit(consumptions, success);
-        if (success && nextMembership != type(uint192).max) {
-            _storeMembership(sender, roleKey, nextMembership);
-        }
+        _flushCommit(sender, roleKey, nextMembership, consumptions, success);
     }
 
     /// @dev Passes a transaction to the modifier assuming the specified role.
@@ -122,10 +116,7 @@ contract Roles is
         if (shouldRevert && !success) {
             revert ModuleTransactionFailed();
         }
-        _flushCommit(consumptions, success);
-        if (success && nextMembership != type(uint192).max) {
-            _storeMembership(sender, roleKey, nextMembership);
-        }
+        _flushCommit(sender, roleKey, nextMembership, consumptions, success);
     }
 
     /// @dev Passes a transaction to the modifier assuming the specified role. Expects return data.
@@ -157,9 +148,6 @@ contract Roles is
         if (shouldRevert && !success) {
             revert ModuleTransactionFailed();
         }
-        _flushCommit(consumptions, success);
-        if (success && nextMembership != type(uint192).max) {
-            _storeMembership(sender, roleKey, nextMembership);
-        }
+        _flushCommit(sender, roleKey, nextMembership, consumptions, success);
     }
 }

@@ -119,6 +119,32 @@ describe("Membership", () => {
       ).to.be.revertedWithCustomError(roles, "NoMembership");
     });
 
+    it("preserves end timestamp after decrement", async () => {
+      const { roles, owner, member, testContract } = await loadFixture(setup);
+      const limitedRole = hre.ethers.id("LIMITED_ROLE");
+      const target = await testContract.getAddress();
+      const end = (await time.latest()) + 1000;
+
+      await roles
+        .connect(owner)
+        .grantRole(member.address, limitedRole, 0, end, 3);
+      await roles.connect(owner).setDefaultRole(member.address, limitedRole);
+      await roles.connect(owner).allowTarget(limitedRole, target, 0);
+
+      // First call (usesLeft: 3 -> 2)
+      await roles.connect(member).execTransactionFromModule(target, 0, "0x", 0);
+
+      // Second call exactly at end (usesLeft: 2 -> 1)
+      await time.setNextBlockTimestamp(end);
+      await roles.connect(member).execTransactionFromModule(target, 0, "0x", 0);
+
+      // Third call past end - should fail
+      await time.setNextBlockTimestamp(end + 1);
+      await expect(
+        roles.connect(member).execTransactionFromModule(target, 0, "0x", 0),
+      ).to.be.revertedWithCustomError(roles, "MembershipExpired");
+    });
+
     it("does not decrement on failed inner exec", async () => {
       const { roles, owner, member, testContract } = await loadFixture(setup);
       const limitedRole = hre.ethers.id("LIMITED_ROLE");

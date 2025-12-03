@@ -2,18 +2,19 @@
 pragma solidity >=0.8.17 <0.9.0;
 
 import "./Storage.sol";
-import {RoleMembership} from "../types/Permission.sol";
 
 /**
- * @title Membership - Validates role membership including validity windows
+ * @title Membership - Validates role membership, including validity windows
  *        and usage limits.
+ *
+ * @notice Accepts calls sent directly by a module or signed by an enabled
+ *         module and relayed by another account.
  *
  * @author gnosisguild
  */
 abstract contract Membership is RolesStorage {
-    uint192 constant NO_UPDATE = type(uint192).max;
-    uint192 constant DELETE = 0;
-    uint64 constant UNLIMITED = type(uint64).max;
+    uint192 private constant _NO_UPDATE = type(uint192).max;
+    uint192 private constant _REVOKE = 0;
 
     function _authenticate(
         bytes32 roleKey
@@ -56,57 +57,24 @@ abstract contract Membership is RolesStorage {
         }
 
         // Handle uses limit
-        if (usesLeft == UNLIMITED) {
-            return (sender, roleKey, NO_UPDATE);
+        if (usesLeft == type(uint64).max) {
+            return (sender, roleKey, _NO_UPDATE);
         }
 
         // Decrement uses
-        usesLeft = usesLeft - 1;
+        unchecked {
+            usesLeft = usesLeft - 1;
+        }
 
+        // Delete if exhausted, otherwise pack: start | (end << 64) | (usesLeft << 128)
         return (
             sender,
             roleKey,
-            usesLeft == 0 ? DELETE : _pack(start, end, usesLeft)
+            usesLeft == 0
+                ? _REVOKE
+                : uint192(start) |
+                    (uint192(end) << 64) |
+                    (uint192(usesLeft) << 128)
         );
-    }
-
-    function _storeMembership(
-        address sender,
-        bytes32 roleKey,
-        uint192 nextMembership
-    ) internal {
-        assert(nextMembership != NO_UPDATE);
-
-        if (nextMembership == DELETE) {
-            delete roles[roleKey].members[sender];
-        } else {
-            (uint64 start, uint64 end, uint64 usesLeft) = _unpack(
-                nextMembership
-            );
-            roles[roleKey].members[sender] = RoleMembership({
-                start: start,
-                end: end,
-                usesLeft: usesLeft
-            });
-        }
-    }
-
-    /// @dev Packs membership config into uint192
-    function _pack(
-        uint64 start,
-        uint64 end,
-        uint64 usesLeft
-    ) private pure returns (uint192) {
-        return
-            uint192(start) | (uint192(end) << 64) | (uint192(usesLeft) << 128);
-    }
-
-    /// @dev Unpacks uint192 into membership config fields
-    function _unpack(
-        uint192 packed
-    ) private pure returns (uint64 start, uint64 end, uint64 usesLeft) {
-        start = uint64(packed);
-        end = uint64(packed >> 64);
-        usesLeft = uint64(packed >> 128);
     }
 }

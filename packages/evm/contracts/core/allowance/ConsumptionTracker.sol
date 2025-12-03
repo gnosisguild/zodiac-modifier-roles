@@ -6,11 +6,12 @@ import "../Storage.sol";
 import {Consumption} from "../../types/Allowance.sol";
 
 /**
- * @title ConsumptionTracker
- * @notice Persists allowance consumptions to storage using a two-phase commit.
+ * @title ConsumptionTracker - Persists allowance and membership updates to
+ *        storage.
  *
- * @dev Balances are written before execution to prevent reentrancy attacks.
- * On failure, original balances are restored.
+ * @dev Allowance balances are written before execution to prevent reentrancy.
+ *      On failure, original balances are restored. Membership is written only
+ *      on success.
  *
  * @author gnosisguild
  */
@@ -27,7 +28,7 @@ abstract contract ConsumptionTracker is RolesStorage {
 
             assert(consumption.consumed <= consumption.balance);
 
-            _store(
+            _storeAllowance(
                 consumption.allowanceKey,
                 consumption.timestamp,
                 consumption.balance - consumption.consumed
@@ -40,11 +41,15 @@ abstract contract ConsumptionTracker is RolesStorage {
     }
 
     /**
-     * @dev Emits events on success, restores balances on failure.
-     * @param consumptions Allowance consumption records.
-     * @param success Whether execution succeeded.
+     * @dev Commits all pending storage updates.
+     *
+     * Allowances: emits events on success, restores balances on failure.
+     * Membership: writes on success only.
      */
     function _flushCommit(
+        address sender,
+        bytes32 roleKey,
+        uint192 nextMembership,
         Consumption[] memory consumptions,
         bool success
     ) internal {
@@ -58,7 +63,7 @@ abstract contract ConsumptionTracker is RolesStorage {
                     consumption.balance - consumption.consumed
                 );
             } else {
-                _store(
+                _storeAllowance(
                     consumption.allowanceKey,
                     consumption.timestamp,
                     consumption.balance
@@ -68,10 +73,14 @@ abstract contract ConsumptionTracker is RolesStorage {
                 ++i;
             }
         }
+
+        if (success && nextMembership != type(uint192).max) {
+            _storeMembership(roleKey, sender, nextMembership);
+        }
     }
 
     /// @dev Stores allowance. Writes only word2, preserving period.
-    function _store(
+    function _storeAllowance(
         bytes32 allowanceKey,
         uint64 timestamp_,
         uint128 balance_
@@ -100,6 +109,26 @@ abstract contract ConsumptionTracker is RolesStorage {
                     and(sload(slot), 0xffffffffffffffff) // mask period (lower 64 bits)
                 )
             )
+        }
+    }
+
+    /// @dev Stores membership. Writes packed value directly via assembly.
+    function _storeMembership(
+        bytes32 roleKey,
+        address sender,
+        uint192 packed
+    ) private {
+        assembly {
+            // roles[roleKey].members[sender]
+            mstore(0x00, roleKey)
+            mstore(0x20, roles.slot)
+            let roleSlot := keccak256(0x00, 0x40)
+
+            mstore(0x00, sender)
+            mstore(0x20, roleSlot)
+            let slot := keccak256(0x00, 0x40)
+
+            sstore(slot, packed)
         }
     }
 }
