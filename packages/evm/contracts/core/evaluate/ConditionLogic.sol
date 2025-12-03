@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
+import "./BitmaskChecker.sol";
 import "./WithinAllowanceChecker.sol";
 import "./WithinRatioChecker.sol";
 
@@ -71,7 +72,11 @@ library ConditionLogic {
             } else if (operator == Operator.Bitmask) {
                 return
                     Result({
-                        status: _bitmask(data, condition, payload),
+                        status: BitmaskChecker.check(
+                            data,
+                            condition.compValue,
+                            payload
+                        ),
                         consumptions: context.consumptions,
                         info: 0
                     });
@@ -341,43 +346,6 @@ library ConditionLogic {
         } else {
             return Status.Ok;
         }
-    }
-
-    /**
-     * Applies a shift and bitmask on the payload bytes and compares the
-     * result to the expected value. The shift offset, bitmask, and expected
-     * value are specified in the compValue parameter, which is tightly
-     * packed as follows:
-     * <2 bytes shift offset><15 bytes bitmask><15 bytes expected value>
-     */
-    function _bitmask(
-        bytes calldata data,
-        Condition memory condition,
-        Payload memory payload
-    ) private pure returns (Status) {
-        bytes32 compValue = bytes32(condition.compValue);
-        bool isInline = payload.size == 32;
-        bytes calldata value = AbiDecoder.pluck(
-            data,
-            payload.location + (isInline ? 0 : 32),
-            payload.size - (isInline ? 0 : 32)
-        );
-
-        uint256 shift = uint16(bytes2(compValue));
-        if (shift >= value.length) {
-            return Status.BitmaskOverflow;
-        }
-
-        bytes32 rinse = bytes15(0xffffffffffffffffffffffffffffff);
-        bytes32 mask = (compValue << 16) & rinse;
-        // while its necessary to apply the rinse to the mask its not strictly
-        // necessary to do so for the expected value, since we get remaining
-        // 15 bytes anyway (shifting the word by 17 bytes)
-        bytes32 expected = (compValue << (16 + 15 * 8)) & rinse;
-        bytes32 slice = bytes32(value[shift:]);
-
-        return
-            (slice & mask) == expected ? Status.Ok : Status.BitmaskNotAllowed;
     }
 
     function _custom(
