@@ -54,7 +54,12 @@ contract Roles is
             operation
         );
         _flushPrepare(consumptions);
-        success = exec(to, value, data, operation);
+        success = IAvatar(target).execTransactionFromModule(
+            to,
+            value,
+            data,
+            operation
+        );
         _flushCommit(sender, roleKey, nextMembership, consumptions, success);
     }
 
@@ -83,7 +88,8 @@ contract Roles is
             operation
         );
         _flushPrepare(consumptions);
-        (success, returnData) = execAndReturnData(to, value, data, operation);
+        (success, returnData) = IAvatar(target)
+            .execTransactionFromModuleReturnData(to, value, data, operation);
         _flushCommit(sender, roleKey, nextMembership, consumptions, success);
     }
 
@@ -112,7 +118,12 @@ contract Roles is
             operation
         );
         _flushPrepare(consumptions);
-        success = exec(to, value, data, operation);
+        success = IAvatar(target).execTransactionFromModule(
+            to,
+            value,
+            data,
+            operation
+        );
         if (shouldRevert && !success) {
             revert ModuleTransactionFailed();
         }
@@ -144,7 +155,8 @@ contract Roles is
             operation
         );
         _flushPrepare(consumptions);
-        (success, returnData) = execAndReturnData(to, value, data, operation);
+        (success, returnData) = IAvatar(target)
+            .execTransactionFromModuleReturnData(to, value, data, operation);
         if (shouldRevert && !success) {
             revert ModuleTransactionFailed();
         }
