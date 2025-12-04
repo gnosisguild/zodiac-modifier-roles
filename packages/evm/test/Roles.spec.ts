@@ -238,12 +238,13 @@ describe("Roles", async () => {
     it("emits the GrantRole event", async () => {
       const { owner, alice, roles } = await loadFixture(setup);
       const MAX_UINT64 = BigInt("0xFFFFFFFFFFFFFFFF");
+      const MAX_UINT128 = (1n << 128n) - 1n;
 
       await expect(
         roles.connect(owner).assignRoles(alice.address, [ROLE_KEY1], [true]),
       )
         .to.emit(roles, "GrantRole")
-        .withArgs(ROLE_KEY1, alice.address, 0, MAX_UINT64, MAX_UINT64);
+        .withArgs(ROLE_KEY1, alice.address, 0, MAX_UINT64, MAX_UINT128);
     });
   });
 

@@ -28,7 +28,7 @@ interface IRolesEvent {
         address module,
         uint64 start,
         uint64 end,
-        uint64 usesLeft
+        uint128 usesLeft
     );
 
     /// Emitted when a role is revoked from a module

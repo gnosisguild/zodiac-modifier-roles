@@ -7,7 +7,7 @@ import "../common/ScopeConfig.sol";
 import "./serialize/ConditionsTransform.sol";
 import "./Storage.sol";
 
-import {TargetAddress, Clearance, RoleMembership} from "../types/Permission.sol";
+import {TargetAddress, Clearance} from "../types/Permission.sol";
 
 /*
  * Permission Model
@@ -86,14 +86,13 @@ abstract contract Setup is RolesStorage {
         }
         for (uint16 i = 0; i < roleKeys.length; i++) {
             if (memberOf[i]) {
-                uint64 max = type(uint64).max;
                 // Grant with unlimited uses and no expiry (backwards compatible behavior)
-                roles[roleKeys[i]].members[module] = RoleMembership({
-                    start: 0,
-                    end: max,
-                    usesLeft: max
-                });
-                emit GrantRole(roleKeys[i], module, 0, max, max);
+                uint64 max64 = type(uint64).max;
+                uint128 max128 = type(uint128).max;
+                roles[roleKeys[i]].members[module] =
+                    (uint256(max64) << 128) |
+                    uint256(max128);
+                emit GrantRole(roleKeys[i], module, 0, max64, max128);
             } else {
                 delete roles[roleKeys[i]].members[module];
                 emit RevokeRole(roleKeys[i], module);
@@ -115,15 +114,14 @@ abstract contract Setup is RolesStorage {
         bytes32 roleKey,
         uint64 start,
         uint64 end,
-        uint64 usesLeft
+        uint128 usesLeft
     ) external onlyOwner {
         end = end != 0 ? end : type(uint64).max;
-        usesLeft = usesLeft != 0 ? usesLeft : type(uint64).max;
-        roles[roleKey].members[module] = RoleMembership({
-            start: start,
-            end: end,
-            usesLeft: usesLeft
-        });
+        usesLeft = usesLeft != 0 ? usesLeft : type(uint128).max;
+        roles[roleKey].members[module] =
+            (uint256(start) << 192) |
+            (uint256(end) << 128) |
+            uint256(usesLeft);
         if (!isModuleEnabled(module)) {
             enableModule(module);
         }

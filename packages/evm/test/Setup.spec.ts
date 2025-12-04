@@ -6,6 +6,7 @@ import { deployRolesMod } from "./setup";
 
 const ROLE_KEY = hre.ethers.id("TEST_ROLE");
 const MAX_UINT64 = (1n << 64n) - 1n;
+const MAX_UINT128 = (1n << 128n) - 1n;
 
 describe("Setup", () => {
   async function setup() {
@@ -36,7 +37,7 @@ describe("Setup", () => {
         roles.connect(owner).grantRole(member.address, ROLE_KEY, 0, 0, 0),
       )
         .to.emit(roles, "GrantRole")
-        .withArgs(ROLE_KEY, member.address, 0, MAX_UINT64, MAX_UINT64);
+        .withArgs(ROLE_KEY, member.address, 0, MAX_UINT64, MAX_UINT128);
     });
   });
 

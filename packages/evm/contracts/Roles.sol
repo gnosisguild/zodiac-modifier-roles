@@ -43,7 +43,7 @@ contract Roles is
         (
             address sender,
             bytes32 roleKey,
-            uint192 nextMembership
+            uint256 nextMembership
         ) = _authenticate(0);
 
         Consumption[] memory consumptions = _authorize(
@@ -73,7 +73,7 @@ contract Roles is
         (
             address sender,
             bytes32 roleKey,
-            uint192 nextMembership
+            uint256 nextMembership
         ) = _authenticate(0);
         Consumption[] memory consumptions = _authorize(
             roleKey,
@@ -103,7 +103,7 @@ contract Roles is
         bytes32 roleKey,
         bool shouldRevert
     ) public returns (bool success) {
-        (address sender, , uint192 nextMembership) = _authenticate(roleKey);
+        (address sender, , uint256 nextMembership) = _authenticate(roleKey);
         Consumption[] memory consumptions = _authorize(
             roleKey,
             to,
@@ -135,7 +135,7 @@ contract Roles is
         bytes32 roleKey,
         bool shouldRevert
     ) public returns (bool success, bytes memory returnData) {
-        (address sender, , uint192 nextMembership) = _authenticate(roleKey);
+        (address sender, , uint256 nextMembership) = _authenticate(roleKey);
         Consumption[] memory consumptions = _authorize(
             roleKey,
             to,

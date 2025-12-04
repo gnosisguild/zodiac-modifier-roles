@@ -13,8 +13,8 @@ import "./Storage.sol";
  * @author gnosisguild
  */
 abstract contract Membership is RolesStorage {
-    uint192 private constant _NO_UPDATE = type(uint192).max;
-    uint192 private constant _REVOKE = 0;
+    uint256 private constant _MEMBERSHIP_NOOP = type(uint256).max;
+    uint256 private constant _MEMBERSHIP_REVOKE = 0;
 
     function _authenticate(
         bytes32 roleKey
@@ -24,7 +24,7 @@ abstract contract Membership is RolesStorage {
         returns (
             address sender,
             bytes32 resolvedRoleKey,
-            uint192 nextMembership
+            uint256 nextMembership
         )
     {
         sender = sentOrSignedByModule();
@@ -38,17 +38,15 @@ abstract contract Membership is RolesStorage {
             revert NoMembership();
         }
 
-        RoleMembership storage membership = roles[roleKey].members[sender];
-
-        uint64 start = membership.start;
-        uint64 end = membership.end;
-        uint64 usesLeft = membership.usesLeft;
-
-        if (start == 0 && end == 0 && usesLeft == 0) {
+        uint256 packed = roles[roleKey].members[sender];
+        if (packed == 0) {
             revert NoMembership();
         }
 
-        // Validate timestamps
+        uint64 start = uint64(packed >> 192);
+        uint64 end = uint64(packed >> 128);
+        uint128 usesLeft = uint128(packed);
+
         if (block.timestamp < start) {
             revert MembershipNotYetValid();
         }
@@ -56,9 +54,8 @@ abstract contract Membership is RolesStorage {
             revert MembershipExpired();
         }
 
-        // Handle uses limit
-        if (usesLeft == type(uint64).max) {
-            return (sender, roleKey, _NO_UPDATE);
+        if (usesLeft == type(uint128).max) {
+            return (sender, roleKey, _MEMBERSHIP_NOOP);
         }
 
         // Decrement uses
@@ -66,15 +63,14 @@ abstract contract Membership is RolesStorage {
             usesLeft = usesLeft - 1;
         }
 
-        // Delete if exhausted, otherwise pack: start | (end << 64) | (usesLeft << 128)
         return (
             sender,
             roleKey,
             usesLeft == 0
-                ? _REVOKE
-                : uint192(start) |
-                    (uint192(end) << 64) |
-                    (uint192(usesLeft) << 128)
+                ? _MEMBERSHIP_REVOKE
+                : (uint256(start) << 192) |
+                    (uint256(end) << 128) |
+                    uint256(usesLeft)
         );
     }
 }

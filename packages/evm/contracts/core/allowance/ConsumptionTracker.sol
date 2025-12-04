@@ -28,7 +28,7 @@ abstract contract ConsumptionTracker is RolesStorage {
 
             assert(consumption.consumed <= consumption.balance);
 
-            _storeAllowance(
+            _store(
                 consumption.allowanceKey,
                 consumption.timestamp,
                 consumption.balance - consumption.consumed
@@ -49,7 +49,7 @@ abstract contract ConsumptionTracker is RolesStorage {
     function _flushCommit(
         address sender,
         bytes32 roleKey,
-        uint192 nextMembership,
+        uint256 nextMembership,
         Consumption[] memory consumptions,
         bool success
     ) internal {
@@ -63,7 +63,7 @@ abstract contract ConsumptionTracker is RolesStorage {
                     consumption.balance - consumption.consumed
                 );
             } else {
-                _storeAllowance(
+                _store(
                     consumption.allowanceKey,
                     consumption.timestamp,
                     consumption.balance
@@ -74,13 +74,13 @@ abstract contract ConsumptionTracker is RolesStorage {
             }
         }
 
-        if (success && nextMembership != type(uint192).max) {
-            _storeMembership(roleKey, sender, nextMembership);
+        if (success && nextMembership != type(uint256).max) {
+            roles[roleKey].members[sender] = nextMembership;
         }
     }
 
     /// @dev Stores allowance. Writes only word2, preserving period.
-    function _storeAllowance(
+    function _store(
         bytes32 allowanceKey,
         uint64 timestamp_,
         uint128 balance_
@@ -109,26 +109,6 @@ abstract contract ConsumptionTracker is RolesStorage {
                     and(sload(slot), 0xffffffffffffffff) // mask period (lower 64 bits)
                 )
             )
-        }
-    }
-
-    /// @dev Stores membership. Writes packed value directly via assembly.
-    function _storeMembership(
-        bytes32 roleKey,
-        address sender,
-        uint192 packed
-    ) private {
-        assembly {
-            // roles[roleKey].members[sender]
-            mstore(0x00, roleKey)
-            mstore(0x20, roles.slot)
-            let roleSlot := keccak256(0x00, 0x40)
-
-            mstore(0x00, sender)
-            mstore(0x20, roleSlot)
-            let slot := keccak256(0x00, 0x40)
-
-            sstore(slot, packed)
         }
     }
 }
