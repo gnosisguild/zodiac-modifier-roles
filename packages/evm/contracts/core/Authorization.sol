@@ -111,7 +111,12 @@ abstract contract Authorization is RolesStorage {
                 ContextCall(to, value, operation),
                 consumptions
             );
-            return _clearanceFunction(role, to, data, context);
+            return
+                _clearanceFunction(
+                    role.scopeConfig[_key(to, bytes4(data))],
+                    data,
+                    context
+                );
         }
 
         if (clearance == Clearance.Target) {
@@ -132,12 +137,10 @@ abstract contract Authorization is RolesStorage {
 
     /// @dev Authorizes a function-level scoped transaction.
     function _clearanceFunction(
-        Role storage role,
-        address to,
+        bytes32 scopeConfig,
         bytes calldata data,
         Context memory context
     ) private view returns (Result memory) {
-        bytes32 scopeConfig = role.scopeConfig[_key(to, bytes4(data))];
         if (scopeConfig == 0) {
             return
                 Result(
@@ -153,19 +156,17 @@ abstract contract Authorization is RolesStorage {
             address pointer
         ) = ScopeConfig.unpack(scopeConfig);
 
-        {
-            Status status = _executionOptions(
-                context.call.value,
-                context.call.operation,
-                options
-            );
-            if (status != Status.Ok) {
-                return Result(status, context.consumptions, 0);
-            }
+        Status status = _executionOptions(
+            context.call.value,
+            context.call.operation,
+            options
+        );
+        if (status != Status.Ok) {
+            return Result(status, context.consumptions, 0);
+        }
 
-            if (isWildcarded) {
-                return Result(Status.Ok, context.consumptions, 0);
-            }
+        if (isWildcarded) {
+            return Result(Status.Ok, context.consumptions, 0);
         }
 
         bytes memory buffer = ImmutableStorage.load(pointer);
