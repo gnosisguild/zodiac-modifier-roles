@@ -109,7 +109,7 @@ library WithinAllowanceChecker {
         }
     }
 
-    /// @dev Clones array (shallow copy) and writes entry at index.
+    /// @dev Shallow copies array, and writes entry at index.
     function _put(
         Consumption[] memory consumptions,
         uint256 index,
