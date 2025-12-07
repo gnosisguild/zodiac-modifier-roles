@@ -28,7 +28,7 @@ contract Roles is
         setUp(initParams);
     }
 
-    /// @dev Passes a transaction to the modifier.
+    /// @dev Passes a transaction to the modifier using the caller's default role.
     /// @param to Destination address of module transaction
     /// @param value Ether value of module transaction
     /// @param data Data payload of module transaction
@@ -40,30 +40,18 @@ contract Roles is
         bytes calldata data,
         Operation operation
     ) public override returns (bool success) {
-        (
-            address sender,
-            bytes32 roleKey,
-            uint256 nextMembership
-        ) = _authenticate(0);
-
-        Consumption[] memory consumptions = _authorize(
-            roleKey,
-            to,
-            value,
-            data,
-            operation
-        );
-        _flushPrepare(consumptions);
-        success = IAvatar(target).execTransactionFromModule(
-            to,
-            value,
-            data,
-            operation
-        );
-        _flushCommit(sender, roleKey, nextMembership, consumptions, success);
+        return
+            execTransactionWithRole(
+                to,
+                value,
+                data,
+                operation,
+                defaultRoles[sentOrSignedByModule()],
+                false
+            );
     }
 
-    /// @dev Passes a transaction to the modifier, expects return data.
+    /// @dev Passes a transaction to the modifier using the caller's default role. Expects return data.
     /// @param to Destination address of module transaction
     /// @param value Ether value of module transaction
     /// @param data Data payload of module transaction
@@ -75,22 +63,15 @@ contract Roles is
         bytes calldata data,
         Operation operation
     ) public override returns (bool success, bytes memory returnData) {
-        (
-            address sender,
-            bytes32 roleKey,
-            uint256 nextMembership
-        ) = _authenticate(0);
-        Consumption[] memory consumptions = _authorize(
-            roleKey,
-            to,
-            value,
-            data,
-            operation
-        );
-        _flushPrepare(consumptions);
-        (success, returnData) = IAvatar(target)
-            .execTransactionFromModuleReturnData(to, value, data, operation);
-        _flushCommit(sender, roleKey, nextMembership, consumptions, success);
+        return
+            execTransactionWithRoleReturnData(
+                to,
+                value,
+                data,
+                operation,
+                defaultRoles[sentOrSignedByModule()],
+                false
+            );
     }
 
     /// @dev Passes a transaction to the modifier assuming the specified role.
@@ -109,7 +90,7 @@ contract Roles is
         bytes32 roleKey,
         bool shouldRevert
     ) public returns (bool success) {
-        (address sender, , uint256 nextMembership) = _authenticate(roleKey);
+        (address module, uint256 nextMembership) = _authenticate(roleKey);
         Consumption[] memory consumptions = _authorize(
             roleKey,
             to,
@@ -127,7 +108,7 @@ contract Roles is
         if (shouldRevert && !success) {
             revert ModuleTransactionFailed();
         }
-        _flushCommit(sender, roleKey, nextMembership, consumptions, success);
+        _flushCommit(module, roleKey, nextMembership, consumptions, success);
     }
 
     /// @dev Passes a transaction to the modifier assuming the specified role. Expects return data.
@@ -146,7 +127,7 @@ contract Roles is
         bytes32 roleKey,
         bool shouldRevert
     ) public returns (bool success, bytes memory returnData) {
-        (address sender, , uint256 nextMembership) = _authenticate(roleKey);
+        (address module, uint256 nextMembership) = _authenticate(roleKey);
         Consumption[] memory consumptions = _authorize(
             roleKey,
             to,
@@ -160,6 +141,6 @@ contract Roles is
         if (shouldRevert && !success) {
             revert ModuleTransactionFailed();
         }
-        _flushCommit(sender, roleKey, nextMembership, consumptions, success);
+        _flushCommit(module, roleKey, nextMembership, consumptions, success);
     }
 }

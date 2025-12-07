@@ -21,20 +21,8 @@ abstract contract Membership is RolesStorage {
 
     function _authenticate(
         bytes32 roleKey
-    )
-        internal
-        moduleOnly
-        returns (
-            address module, // member
-            bytes32 resolvedRoleKey, // resolvedRoleKey
-            uint256 nextMembership // nextMembership
-        )
-    {
+    ) internal moduleOnly returns (address module, uint256 nextMembership) {
         module = sentOrSignedByModule();
-
-        if (roleKey == 0) {
-            roleKey = defaultRoles[module];
-        }
 
         // Never authorize the zero role
         if (roleKey == 0) {
@@ -66,14 +54,13 @@ abstract contract Membership is RolesStorage {
         }
         if (~membership << 128 == 0) {
             // unlimited uses
-            return (module, roleKey, _MEMBERSHIP_NOOP);
+            return (module, _MEMBERSHIP_NOOP);
         }
 
         uint256 usesLeft = (membership << 128) >> 128;
 
         return (
             module,
-            roleKey,
             usesLeft <= 1
                 ? _MEMBERSHIP_REVOKE
                 : ((membership >> 128) << 128) | (usesLeft - 1)
