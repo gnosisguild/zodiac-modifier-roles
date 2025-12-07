@@ -22,12 +22,12 @@ abstract contract Membership is RolesStorage {
     function _authenticate(
         bytes32 roleKey
     ) internal moduleOnly returns (address module, uint256 nextMembership) {
-        module = sentOrSignedByModule();
-
         // Never authorize the zero role
         if (roleKey == 0) {
             revert NoMembership();
         }
+
+        module = sentOrSignedByModule();
 
         uint256 membership = roles[roleKey].members[module];
         if (membership == 0) {
