@@ -27,20 +27,23 @@ library WithinAllowanceChecker {
         Consumption[] memory consumptions,
         uint256 value,
         bytes memory compValue
-    ) internal view returns (bool success, Consumption[] memory result) {
-        uint128 amount = _convert(value, compValue);
-
-        uint256 index;
-        (result, index) = _prepareConsumptions(
+    ) internal view returns (bool success, Consumption[] memory) {
+        (Consumption memory entry, uint256 index) = _lookup(
             consumptions,
             bytes32(compValue)
         );
 
-        success = result[index].consumed + amount <= result[index].balance;
-        if (success) result[index].consumed += amount;
+        entry.consumed += _convert(value, compValue);
+
+        if (entry.consumed <= entry.balance) {
+            return (true, _put(consumptions, index, entry));
+        } else {
+            return (false, consumptions);
+        }
     }
 
-    /// @dev Converts value to base denomination via price adapter, if configured.
+    /// @dev Converts value to base denomination via price adapter encoded in
+    ///      compValue. Returns value unchanged if no adapter configured.
     function _convert(
         uint256 value,
         bytes memory compValue
@@ -78,22 +81,12 @@ library WithinAllowanceChecker {
         return uint128(value);
     }
 
-    /// @dev Clones the array and returns a mutable entry for the given key.
-    function _prepareConsumptions(
+    /// @dev Finds consumption in array by key, or loads from storage if not
+    ///      present. Returns a copy
+    function _lookup(
         Consumption[] memory consumptions,
         bytes32 allowanceKey
-    ) private view returns (Consumption[] memory result, uint256 index) {
-        Consumption memory entry;
-        (entry, index) = _loadEntry(consumptions, allowanceKey);
-        result = _shallowClone(consumptions, consumptions.length == index);
-        result[index] = entry;
-    }
-
-    /// @dev Finds existing entry or creates new one from storage.
-    function _loadEntry(
-        Consumption[] memory consumptions,
-        bytes32 allowanceKey
-    ) private view returns (Consumption memory entry, uint256 index) {
+    ) private view returns (Consumption memory consumption, uint256 index) {
         uint256 length = consumptions.length;
 
         for (; index < length; ++index) {
@@ -101,28 +94,29 @@ library WithinAllowanceChecker {
         }
 
         if (index < length) {
-            Consumption memory c = consumptions[index];
-            entry = Consumption(
-                c.allowanceKey,
-                c.balance,
-                c.consumed,
-                c.timestamp
+            consumption = Consumption(
+                allowanceKey,
+                consumptions[index].balance,
+                consumptions[index].consumed,
+                consumptions[index].timestamp
             );
         } else {
             (uint128 balance, uint64 timestamp) = AllowanceLoader.accrue(
                 allowanceKey,
                 uint64(block.timestamp)
             );
-            entry = Consumption(allowanceKey, balance, 0, timestamp);
+            consumption = Consumption(allowanceKey, balance, 0, timestamp);
         }
     }
 
-    function _shallowClone(
+    /// @dev Shallow copies array, and writes entry at index.
+    function _put(
         Consumption[] memory consumptions,
-        bool extend
+        uint256 index,
+        Consumption memory entry
     ) private pure returns (Consumption[] memory result) {
         uint256 prevLength = consumptions.length;
-        uint256 length = prevLength + (extend ? 1 : 0);
+        uint256 length = prevLength + (index == prevLength ? 1 : 0);
 
         assembly {
             // Load the free memory pointer
@@ -140,5 +134,7 @@ library WithinAllowanceChecker {
             let size := mul(prevLength, 0x20)
             mcopy(dst, src, size)
         }
+
+        result[index] = entry;
     }
 }

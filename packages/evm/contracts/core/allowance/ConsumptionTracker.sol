@@ -6,11 +6,12 @@ import "../Storage.sol";
 import {Consumption} from "../../types/Allowance.sol";
 
 /**
- * @title ConsumptionTracker
- * @notice Persists allowance consumptions to storage using a two-phase commit.
+ * @title ConsumptionTracker - Persists allowance and membership updates to
+ *        storage.
  *
- * @dev Balances are written before execution to prevent reentrancy attacks.
- * On failure, original balances are restored.
+ * @dev Allowance balances are written before execution to prevent reentrancy.
+ *      On failure, original balances are restored. Membership is written only
+ *      on success.
  *
  * @author gnosisguild
  */
@@ -40,11 +41,15 @@ abstract contract ConsumptionTracker is RolesStorage {
     }
 
     /**
-     * @dev Emits events on success, restores balances on failure.
-     * @param consumptions Allowance consumption records.
-     * @param success Whether execution succeeded.
+     * @dev Commits all pending storage updates.
+     *
+     * Allowances: emits events on success, restores balances on failure.
+     * Membership: writes on success only.
      */
     function _flushCommit(
+        address sender,
+        bytes32 roleKey,
+        uint256 nextMembership,
         Consumption[] memory consumptions,
         bool success
     ) internal {
@@ -67,6 +72,10 @@ abstract contract ConsumptionTracker is RolesStorage {
             unchecked {
                 ++i;
             }
+        }
+
+        if (success && nextMembership != type(uint256).max) {
+            roles[roleKey].members[sender] = nextMembership;
         }
     }
 
