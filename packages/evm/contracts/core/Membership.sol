@@ -4,14 +4,17 @@ pragma solidity >=0.8.17 <0.9.0;
 import "./Storage.sol";
 
 /**
- * @title Membership - Validates role membership, including validity windows
- *        and usage limits.
+ * @title   Membership
  *
- * @notice Accepts calls sent directly by a module or signed by an enabled
- *         module and relayed by another account.
+ * @notice  Validates that a module holds an active role membership before
+ *          authorizing transactions. Memberships can be time-bound and usage-limited.
  *
- * @author gnosisguild
+ * @dev     moduleOnly reverts if the call is not sent or signed by an enabled module.
+ *          Membership packs timestamps and uses into a single uint256. See layout below.
+ *
+ * @author  gnosisguild
  */
+
 abstract contract Membership is RolesStorage {
     uint256 private constant _MEMBERSHIP_NOOP = type(uint256).max;
     uint256 private constant _MEMBERSHIP_REVOKE = 0;
@@ -22,55 +25,58 @@ abstract contract Membership is RolesStorage {
         internal
         moduleOnly
         returns (
-            address sender,
-            bytes32 resolvedRoleKey,
-            uint256 nextMembership
+            address module, // member
+            bytes32 resolvedRoleKey, // resolvedRoleKey
+            uint256 nextMembership // nextMembership
         )
     {
-        sender = sentOrSignedByModule();
-        assert(sender != address(0));
+        module = sentOrSignedByModule();
 
-        // if zero, means we gotta load default role
-        roleKey = roleKey == 0 ? defaultRoles[sender] : roleKey;
+        if (roleKey == 0) {
+            roleKey = defaultRoles[module];
+        }
 
         // Never authorize the zero role
         if (roleKey == 0) {
             revert NoMembership();
         }
 
-        uint256 packed = roles[roleKey].members[sender];
-        if (packed == 0) {
+        uint256 membership = roles[roleKey].members[module];
+        if (membership == 0) {
             revert NoMembership();
         }
 
-        uint64 start = uint64(packed >> 192);
-        uint64 end = uint64(packed >> 128);
-        uint128 usesLeft = uint128(packed);
+        /*
+         * Membership Layout (256 bits)
+         * ┌────────────────┬────────────────┬─────────────────────────────────┐
+         * │ startTimestamp │  endTimestamp  │            usesLeft             │
+         * │    64 bits     │    64 bits     │            128 bits             │
+         * └────────────────┴────────────────┴─────────────────────────────────┘
+         *
+         * - startTimestamp: Unix timestamp when membership becomes valid
+         * - endTimestamp:   Unix timestamp when membership expires
+         * - usesLeft:       Remaining uses (type(uint128).max = unlimited)
+         */
 
-        if (block.timestamp < start) {
+        if (block.timestamp < uint64(membership >> 192)) {
             revert MembershipNotYetValid();
         }
-        if (block.timestamp > end) {
+        if (block.timestamp > uint64(membership >> 128)) {
             revert MembershipExpired();
         }
-
-        if (usesLeft == type(uint128).max) {
-            return (sender, roleKey, _MEMBERSHIP_NOOP);
+        if (~membership << 128 == 0) {
+            // unlimited uses
+            return (module, roleKey, _MEMBERSHIP_NOOP);
         }
 
-        // Decrement uses
-        unchecked {
-            usesLeft = usesLeft - 1;
-        }
+        uint256 usesLeft = (membership << 128) >> 128;
 
         return (
-            sender,
+            module,
             roleKey,
-            usesLeft == 0
+            usesLeft <= 1
                 ? _MEMBERSHIP_REVOKE
-                : (uint256(start) << 192) |
-                    (uint256(end) << 128) |
-                    uint256(usesLeft)
+                : ((membership >> 128) << 128) | (usesLeft - 1)
         );
     }
 }
