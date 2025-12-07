@@ -22,8 +22,17 @@ interface IRolesEvent {
         address target
     );
 
-    /// Emitted when roles are assigned or revoked for a module
-    event AssignRoles(address module, bytes32[] roleKeys, bool[] memberOf);
+    /// Emitted when a role is granted to a module
+    event GrantRole(
+        bytes32 roleKey,
+        address module,
+        uint64 start,
+        uint64 end,
+        uint128 usesLeft
+    );
+
+    /// Emitted when a role is revoked from a module
+    event RevokeRole(bytes32 roleKey, address module);
 
     /// Emitted when the default role is set for a module
     event SetDefaultRole(address module, bytes32 defaultRoleKey);

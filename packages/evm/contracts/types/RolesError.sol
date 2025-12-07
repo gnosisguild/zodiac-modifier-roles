@@ -26,6 +26,12 @@ interface IRolesError {
     /// Sender is not a member of the role
     error NoMembership();
 
+    /// Membership is not yet valid (before start timestamp)
+    error MembershipNotYetValid();
+
+    /// Membership has expired (after end timestamp)
+    error MembershipExpired();
+
     /// Function signature too short
     error FunctionSignatureTooShort();
 

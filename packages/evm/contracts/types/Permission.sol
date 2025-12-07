@@ -20,7 +20,7 @@ struct TargetAddress {
 }
 
 struct Role {
-    mapping(address => bool) members;
+    mapping(address => uint256) members;
     mapping(address => TargetAddress) targets;
     mapping(bytes32 => bytes32) scopeConfig;
 }
