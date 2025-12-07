@@ -88,7 +88,7 @@ library ConditionPacker {
 
     function _conditionPackedSize(
         ConditionFlat[] memory conditions
-    ) internal pure returns (uint256 result) {
+    ) private pure returns (uint256 result) {
         uint256 count = conditions.length;
 
         // Header (2 bytes) + nodes
@@ -110,7 +110,7 @@ library ConditionPacker {
         ConditionFlat[] memory conditions,
         bytes memory buffer,
         uint256 offset
-    ) internal pure returns (uint256) {
+    ) private pure returns (uint256) {
         uint256 startOffset = offset;
 
         offset += _packUInt16(conditions.length, buffer, offset);
@@ -224,7 +224,7 @@ library ConditionPacker {
 
     function _layoutPackedSize(
         Layout memory node
-    ) internal pure returns (uint256 result) {
+    ) private pure returns (uint256 result) {
         // Header (2 bytes) + all nodes (3 bytes each)
         result = 2 + _countNodes(node) * LAYOUT_NODE_BYTES;
     }
@@ -233,7 +233,7 @@ library ConditionPacker {
         Layout memory tree,
         bytes memory buffer,
         uint256 offset
-    ) internal pure returns (uint256) {
+    ) private pure returns (uint256) {
         LayoutNodeFlat[] memory nodes = _flattenLayout(tree);
 
         offset += _packUInt16(nodes.length, buffer, offset);
