@@ -13,8 +13,8 @@ import "./serialize/ConditionUnpacker.sol";
 import "../types/Types.sol";
 
 /**
- * @title Authorization - a component of Zodiac Roles Mod responsible
- * for authorizing actions performed on behalf of a role.
+ * @title Authorization - Authorizes transactions based on target clearance
+ *        and function scope rules.
  *
  * @author gnosisguild
  */
@@ -25,17 +25,8 @@ abstract contract Authorization is RolesStorage {
         uint256 value,
         bytes calldata data,
         Operation operation
-    ) internal moduleOnly returns (Consumption[] memory) {
-        // We never authorize the zero role, as it could clash with the
-        // unassigned default role
-        if (roleKey == 0) {
-            revert NoMembership();
-        }
-
+    ) internal view returns (Consumption[] memory) {
         Role storage role = roles[roleKey];
-        if (!role.members[sentOrSignedByModule()]) {
-            revert NoMembership();
-        }
 
         Result memory result;
         address adapter = unwrappers[_key(to, bytes4(data))];
@@ -120,7 +111,12 @@ abstract contract Authorization is RolesStorage {
                 ContextCall(to, value, operation),
                 consumptions
             );
-            return _clearanceFunction(role, to, data, context);
+            return
+                _clearanceFunction(
+                    role.scopeConfig[_key(to, bytes4(data))],
+                    data,
+                    context
+                );
         }
 
         if (clearance == Clearance.Target) {
@@ -141,12 +137,10 @@ abstract contract Authorization is RolesStorage {
 
     /// @dev Authorizes a function-level scoped transaction.
     function _clearanceFunction(
-        Role storage role,
-        address to,
+        bytes32 scopeConfig,
         bytes calldata data,
         Context memory context
     ) private view returns (Result memory) {
-        bytes32 scopeConfig = role.scopeConfig[_key(to, bytes4(data))];
         if (scopeConfig == 0) {
             return
                 Result(
@@ -162,19 +156,17 @@ abstract contract Authorization is RolesStorage {
             address pointer
         ) = ScopeConfig.unpack(scopeConfig);
 
-        {
-            Status status = _executionOptions(
-                context.call.value,
-                context.call.operation,
-                options
-            );
-            if (status != Status.Ok) {
-                return Result(status, context.consumptions, 0);
-            }
+        Status status = _executionOptions(
+            context.call.value,
+            context.call.operation,
+            options
+        );
+        if (status != Status.Ok) {
+            return Result(status, context.consumptions, 0);
+        }
 
-            if (isWildcarded) {
-                return Result(Status.Ok, context.consumptions, 0);
-            }
+        if (isWildcarded) {
+            return Result(Status.Ok, context.consumptions, 0);
         }
 
         bytes memory buffer = ImmutableStorage.load(pointer);

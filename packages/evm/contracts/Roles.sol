@@ -1,18 +1,25 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "./core/Setup.sol";
 import "./core/Authorization.sol";
+import "./core/Membership.sol";
+import "./core/Setup.sol";
 import "./core/allowance/ConsumptionTracker.sol";
 
 /**
- * @title Zodiac Roles Mod - granular, role-based, access control for your
- * on-chain avatar accounts.
+ * @title Zodiac Roles Mod - granular, role-based access control and policy
+ *        engine for onchain accounts
  *
  * @author gnosisguild
  *
  */
-contract Roles is RolesStorage, Setup, Authorization, ConsumptionTracker {
+contract Roles is
+    RolesStorage,
+    Setup,
+    Membership,
+    Authorization,
+    ConsumptionTracker
+{
     /// @param _owner Address of the owner
     /// @param _avatar Address of the avatar (e.g. a Gnosis Safe)
     /// @param _target Address of the contract that will call exec function
@@ -21,7 +28,7 @@ contract Roles is RolesStorage, Setup, Authorization, ConsumptionTracker {
         setUp(initParams);
     }
 
-    /// @dev Passes a transaction to the modifier.
+    /// @dev Passes a transaction to the modifier using the caller's default role.
     /// @param to Destination address of module transaction
     /// @param value Ether value of module transaction
     /// @param data Data payload of module transaction
@@ -33,19 +40,18 @@ contract Roles is RolesStorage, Setup, Authorization, ConsumptionTracker {
         bytes calldata data,
         Operation operation
     ) public override returns (bool success) {
-        Consumption[] memory consumptions = _authorize(
-            defaultRoles[msg.sender],
-            to,
-            value,
-            data,
-            operation
-        );
-        _flushPrepare(consumptions);
-        success = exec(to, value, data, operation);
-        _flushCommit(consumptions, success);
+        return
+            execTransactionWithRole(
+                to,
+                value,
+                data,
+                operation,
+                defaultRoles[sentOrSignedByModule()],
+                false
+            );
     }
 
-    /// @dev Passes a transaction to the modifier, expects return data.
+    /// @dev Passes a transaction to the modifier using the caller's default role. Expects return data.
     /// @param to Destination address of module transaction
     /// @param value Ether value of module transaction
     /// @param data Data payload of module transaction
@@ -57,16 +63,15 @@ contract Roles is RolesStorage, Setup, Authorization, ConsumptionTracker {
         bytes calldata data,
         Operation operation
     ) public override returns (bool success, bytes memory returnData) {
-        Consumption[] memory consumptions = _authorize(
-            defaultRoles[msg.sender],
-            to,
-            value,
-            data,
-            operation
-        );
-        _flushPrepare(consumptions);
-        (success, returnData) = execAndReturnData(to, value, data, operation);
-        _flushCommit(consumptions, success);
+        return
+            execTransactionWithRoleReturnData(
+                to,
+                value,
+                data,
+                operation,
+                defaultRoles[sentOrSignedByModule()],
+                false
+            );
     }
 
     /// @dev Passes a transaction to the modifier assuming the specified role.
@@ -85,6 +90,7 @@ contract Roles is RolesStorage, Setup, Authorization, ConsumptionTracker {
         bytes32 roleKey,
         bool shouldRevert
     ) public returns (bool success) {
+        (address module, uint256 nextMembership) = _authenticate(roleKey);
         Consumption[] memory consumptions = _authorize(
             roleKey,
             to,
@@ -93,11 +99,16 @@ contract Roles is RolesStorage, Setup, Authorization, ConsumptionTracker {
             operation
         );
         _flushPrepare(consumptions);
-        success = exec(to, value, data, operation);
+        success = IAvatar(target).execTransactionFromModule(
+            to,
+            value,
+            data,
+            operation
+        );
         if (shouldRevert && !success) {
             revert ModuleTransactionFailed();
         }
-        _flushCommit(consumptions, success);
+        _flushCommit(module, roleKey, nextMembership, consumptions, success);
     }
 
     /// @dev Passes a transaction to the modifier assuming the specified role. Expects return data.
@@ -116,6 +127,7 @@ contract Roles is RolesStorage, Setup, Authorization, ConsumptionTracker {
         bytes32 roleKey,
         bool shouldRevert
     ) public returns (bool success, bytes memory returnData) {
+        (address module, uint256 nextMembership) = _authenticate(roleKey);
         Consumption[] memory consumptions = _authorize(
             roleKey,
             to,
@@ -124,10 +136,11 @@ contract Roles is RolesStorage, Setup, Authorization, ConsumptionTracker {
             operation
         );
         _flushPrepare(consumptions);
-        (success, returnData) = execAndReturnData(to, value, data, operation);
+        (success, returnData) = IAvatar(target)
+            .execTransactionFromModuleReturnData(to, value, data, operation);
         if (shouldRevert && !success) {
             revert ModuleTransactionFailed();
         }
-        _flushCommit(consumptions, success);
+        _flushCommit(module, roleKey, nextMembership, consumptions, success);
     }
 }
