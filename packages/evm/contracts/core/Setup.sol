@@ -72,10 +72,10 @@ abstract contract Setup is RolesStorage {
                            ROLE MEMBERSHIP
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Assigns and revokes roles to a given module.
-    /// @param module Module on which to assign/revoke roles.
-    /// @param roleKeys Roles to assign/revoke.
-    /// @param memberOf Assign (true) or revoke (false) corresponding roleKeys.
+    /// @dev Legacy function for backwards compatibility. Assigns roles to a module.
+    /// @param module Module to assign roles to.
+    /// @param roleKeys Roles to assign.
+    /// @param memberOf true to grant, false to revoke.
     function assignRoles(
         address module,
         bytes32[] calldata roleKeys,
@@ -84,13 +84,56 @@ abstract contract Setup is RolesStorage {
         if (roleKeys.length != memberOf.length) {
             revert ArraysDifferentLength();
         }
-        for (uint16 i; i < roleKeys.length; ++i) {
-            roles[roleKeys[i]].members[module] = memberOf[i];
+        for (uint16 i = 0; i < roleKeys.length; i++) {
+            if (memberOf[i]) {
+                // Grant with unlimited uses and no expiry (backwards compatible behavior)
+                uint64 max64 = type(uint64).max;
+                uint128 max128 = type(uint128).max;
+                roles[roleKeys[i]].members[module] =
+                    (uint256(max64) << 128) |
+                    uint256(max128);
+                emit GrantRole(roleKeys[i], module, 0, max64, max128);
+            } else {
+                delete roles[roleKeys[i]].members[module];
+                emit RevokeRole(roleKeys[i], module);
+            }
         }
         if (!isModuleEnabled(module)) {
             enableModule(module);
         }
-        emit AssignRoles(module, roleKeys, memberOf);
+    }
+
+    /// @dev Grants a role to a module with optional session parameters.
+    /// @param module Module to grant the role to.
+    /// @param roleKey Role to grant.
+    /// @param start Start timestamp (0 = immediately valid).
+    /// @param end End timestamp (0 = never expires).
+    /// @param usesLeft Number of uses (0 = unlimited).
+    function grantRole(
+        address module,
+        bytes32 roleKey,
+        uint64 start,
+        uint64 end,
+        uint128 usesLeft
+    ) external onlyOwner {
+        end = end != 0 ? end : type(uint64).max;
+        usesLeft = usesLeft != 0 ? usesLeft : type(uint128).max;
+        roles[roleKey].members[module] =
+            (uint256(start) << 192) |
+            (uint256(end) << 128) |
+            uint256(usesLeft);
+        if (!isModuleEnabled(module)) {
+            enableModule(module);
+        }
+        emit GrantRole(roleKey, module, start, end, usesLeft);
+    }
+
+    /// @dev Revokes a role from a module.
+    /// @param module Module to revoke the role from.
+    /// @param roleKey Role to revoke.
+    function revokeRole(address module, bytes32 roleKey) external onlyOwner {
+        delete roles[roleKey].members[module];
+        emit RevokeRole(roleKey, module);
     }
 
     /// @dev Sets the default role used for a module if it calls
