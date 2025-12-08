@@ -32,9 +32,7 @@ async function setup() {
 
   await modifier.enableModule(invoker.address);
 
-  await modifier
-    .connect(owner)
-    .assignRoles(invoker.address, [ROLE_KEY], [true]);
+  await modifier.connect(owner).grantRole(invoker.address, ROLE_KEY, 0, 0, 0);
 
   await modifier.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
 

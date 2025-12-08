@@ -206,7 +206,7 @@ describe("OldTests", async () => {
         setupRolesWithOwnerAndInvoker,
       );
 
-      await modifier.assignRoles(invoker.address, [ROLE_KEY], [true]);
+      await modifier.grantRole(invoker.address, ROLE_KEY, 0, 0, 0);
       await modifier.setDefaultRole(invoker.address, ROLE_KEY);
       const testContractAddress = await testContract.getAddress();
       await expect(
@@ -248,12 +248,14 @@ describe("OldTests", async () => {
       const { avatar, modifier, testContract } = await loadFixture(txSetup);
       const [user1] = await hre.ethers.getSigners();
       const testContractAddress = await testContract.getAddress();
-      const assign = await modifier.assignRoles.populateTransaction(
+      const grant = await modifier.grantRole.populateTransaction(
         user1.address,
-        [ROLE_KEY1],
-        [true],
+        ROLE_KEY1,
+        0,
+        0,
+        0,
       );
-      await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
+      await avatar.exec(await modifier.getAddress(), 0, grant.data || "", 0);
 
       const allowTargetAddress = await modifier.allowTarget.populateTransaction(
         ROLE_KEY1,
@@ -303,12 +305,14 @@ describe("OldTests", async () => {
     it("executes a call to an allowed target", async () => {
       const { avatar, modifier, testContract } = await loadFixture(txSetup);
       const [user1] = await hre.ethers.getSigners();
-      const assign = await modifier.assignRoles.populateTransaction(
+      const grant = await modifier.grantRole.populateTransaction(
         user1.address,
-        [ROLE_KEY1],
-        [true],
+        ROLE_KEY1,
+        0,
+        0,
+        0,
       );
-      await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
+      await avatar.exec(await modifier.getAddress(), 0, grant.data || "", 0);
 
       const allowTargetAddress = await modifier.allowTarget.populateTransaction(
         ROLE_KEY1,
@@ -354,12 +358,14 @@ describe("OldTests", async () => {
       const { avatar, modifier, testContract, encodedParam_1, encodedParam_2 } =
         await loadFixture(txSetup);
       const [user1] = await hre.ethers.getSigners();
-      const assign = await modifier.assignRoles.populateTransaction(
+      const grant = await modifier.grantRole.populateTransaction(
         user1.address,
-        [ROLE_KEY1],
-        [true],
+        ROLE_KEY1,
+        0,
+        0,
+        0,
       );
-      await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
+      await avatar.exec(await modifier.getAddress(), 0, grant.data || "", 0);
 
       const defaultRole = await modifier.setDefaultRole.populateTransaction(
         user1.address,
@@ -438,12 +444,14 @@ describe("OldTests", async () => {
 
       const { avatar, modifier, testContract, encodedParam_1, encodedParam_2 } =
         await loadFixture(txSetup);
-      const assign = await modifier.assignRoles.populateTransaction(
+      const grant = await modifier.grantRole.populateTransaction(
         user1.address,
-        [ROLE_KEY1],
-        [true],
+        ROLE_KEY1,
+        0,
+        0,
+        0,
       );
-      await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
+      await avatar.exec(await modifier.getAddress(), 0, grant.data || "", 0);
 
       const defaultRole = await modifier.setDefaultRole.populateTransaction(
         user1.address,
@@ -519,13 +527,15 @@ describe("OldTests", async () => {
       const { avatar, modifier, testContract, conditionTree } =
         await loadFixture(txSetup);
       const [user1] = await hre.ethers.getSigners();
-      const assign = await modifier.assignRoles.populateTransaction(
+      const grant = await modifier.grantRole.populateTransaction(
         user1.address,
-        [ROLE_KEY1],
-        [true],
+        ROLE_KEY1,
+        0,
+        0,
+        0,
       );
 
-      await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
+      await avatar.exec(await modifier.getAddress(), 0, grant.data || "", 0);
 
       const defaultRole = await modifier.setDefaultRole.populateTransaction(
         user1.address,
@@ -589,13 +599,15 @@ describe("OldTests", async () => {
       const { avatar, modifier, testContract, conditionTree } =
         await loadFixture(txSetup);
       const [user1] = await hre.ethers.getSigners();
-      const assign = await modifier.assignRoles.populateTransaction(
+      const grant = await modifier.grantRole.populateTransaction(
         user1.address,
-        [ROLE_KEY1],
-        [true],
+        ROLE_KEY1,
+        0,
+        0,
+        0,
       );
 
-      await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
+      await avatar.exec(await modifier.getAddress(), 0, grant.data || "", 0);
 
       const defaultRole = await modifier.setDefaultRole.populateTransaction(
         user1.address,
@@ -668,12 +680,14 @@ describe("OldTests", async () => {
       } = await loadFixture(txSetup);
       const [user1] = await hre.ethers.getSigners();
 
-      const assign = await modifier.assignRoles.populateTransaction(
+      const grant = await modifier.grantRole.populateTransaction(
         user1.address,
-        [ROLE_KEY1],
-        [true],
+        ROLE_KEY1,
+        0,
+        0,
+        0,
       );
-      await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
+      await avatar.exec(await modifier.getAddress(), 0, grant.data || "", 0);
 
       const defaultRole = await modifier.setDefaultRole.populateTransaction(
         user1.address,
@@ -780,12 +794,14 @@ describe("OldTests", async () => {
       } = await loadFixture(txSetup);
       const [user1] = await hre.ethers.getSigners();
 
-      const assign = await modifier.assignRoles.populateTransaction(
+      const grant = await modifier.grantRole.populateTransaction(
         user1.address,
-        [ROLE_KEY1],
-        [true],
+        ROLE_KEY1,
+        0,
+        0,
+        0,
       );
-      await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
+      await avatar.exec(await modifier.getAddress(), 0, grant.data || "", 0);
 
       const defaultRole = await modifier.setDefaultRole.populateTransaction(
         user1.address,
@@ -877,12 +893,14 @@ describe("OldTests", async () => {
       } = await loadFixture(txSetup);
       const [user1] = await hre.ethers.getSigners();
 
-      const assign = await modifier.assignRoles.populateTransaction(
+      const grant = await modifier.grantRole.populateTransaction(
         user1.address,
-        [ROLE_KEY1],
-        [true],
+        ROLE_KEY1,
+        0,
+        0,
+        0,
       );
-      await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
+      await avatar.exec(await modifier.getAddress(), 0, grant.data || "", 0);
 
       const defaultRole = await modifier.setDefaultRole.populateTransaction(
         user1.address,
@@ -1007,12 +1025,14 @@ describe("OldTests", async () => {
     it("reverts if the call is not an allowed target", async () => {
       const { avatar, modifier, testContract } = await loadFixture(txSetup);
       const [user1] = await hre.ethers.getSigners();
-      const assign = await modifier.assignRoles.populateTransaction(
+      const grant = await modifier.grantRole.populateTransaction(
         user1.address,
-        [ROLE_KEY1],
-        [true],
+        ROLE_KEY1,
+        0,
+        0,
+        0,
       );
-      await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
+      await avatar.exec(await modifier.getAddress(), 0, grant.data || "", 0);
 
       const allowTargetAddress = await modifier.allowTarget.populateTransaction(
         ROLE_KEY1,
@@ -1062,12 +1082,14 @@ describe("OldTests", async () => {
     it("executes a call to an allowed target", async () => {
       const { avatar, modifier, testContract } = await loadFixture(txSetup);
       const [user1] = await hre.ethers.getSigners();
-      const assign = await modifier.assignRoles.populateTransaction(
+      const grant = await modifier.grantRole.populateTransaction(
         user1.address,
-        [ROLE_KEY1],
-        [true],
+        ROLE_KEY1,
+        0,
+        0,
+        0,
       );
-      await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
+      await avatar.exec(await modifier.getAddress(), 0, grant.data || "", 0);
 
       const allowTargetAddress = await modifier.allowTarget.populateTransaction(
         ROLE_KEY1,
@@ -1122,7 +1144,7 @@ describe("OldTests", async () => {
 
       await modifier
         .connect(owner)
-        .assignRoles(invoker.address, [ROLE_KEY], [true]);
+        .grantRole(invoker.address, ROLE_KEY, 0, 0, 0);
 
       await modifier
         .connect(owner)
@@ -1157,7 +1179,7 @@ describe("OldTests", async () => {
 
       await modifier
         .connect(owner)
-        .assignRoles(invoker.address, [ROLE_KEY], [true]);
+        .grantRole(invoker.address, ROLE_KEY, 0, 0, 0);
 
       await modifier
         .connect(owner)
@@ -1222,7 +1244,7 @@ describe("OldTests", async () => {
 
       await modifier
         .connect(owner)
-        .assignRoles(invoker.address, [ROLE_KEY], [true]);
+        .grantRole(invoker.address, ROLE_KEY, 0, 0, 0);
 
       await modifier
         .connect(owner)
@@ -1258,7 +1280,7 @@ describe("OldTests", async () => {
 
       await modifier
         .connect(owner)
-        .assignRoles(invoker.address, [ROLE_KEY], [true]);
+        .grantRole(invoker.address, ROLE_KEY, 0, 0, 0);
 
       await modifier
         .connect(owner)
@@ -1299,12 +1321,14 @@ describe("OldTests", async () => {
 
       const SHOULD_REVERT = true;
 
-      const assign = await modifier.assignRoles.populateTransaction(
+      const grant = await modifier.grantRole.populateTransaction(
         user1.address,
-        [ROLE_KEY],
-        [true],
+        ROLE_KEY,
+        0,
+        0,
+        0,
       );
-      await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
+      await avatar.exec(await modifier.getAddress(), 0, grant.data || "", 0);
 
       const scopeTarget = await modifier.scopeTarget.populateTransaction(
         ROLE_KEY,

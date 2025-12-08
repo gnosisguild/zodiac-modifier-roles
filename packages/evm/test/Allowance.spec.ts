@@ -647,7 +647,7 @@ describe("Allowance", async () => {
 
       await roles
         .connect(owner)
-        .assignRoles(invoker.address, [ROLE_KEY], [true]);
+        .grantRole(invoker.address, ROLE_KEY, 0, 0, 0);
       await roles.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
       await roles.connect(owner).scopeTarget(ROLE_KEY, testContractAddress);
       await roles.connect(owner).scopeTarget(ROLE_KEY, testEncoderAddress);

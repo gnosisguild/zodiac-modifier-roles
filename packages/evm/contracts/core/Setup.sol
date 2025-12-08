@@ -73,36 +73,36 @@ abstract contract Setup is RolesStorage {
                            ROLE MEMBERSHIP
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Legacy function for backwards compatibility. Assigns roles to a module.
-    /// @param module Module to assign roles to.
-    /// @param roleKeys Roles to assign.
-    /// @param memberOf true to grant, false to revoke.
-    function assignRoles(
-        address module,
-        bytes32[] calldata roleKeys,
-        bool[] calldata memberOf
-    ) external onlyOwner {
-        if (roleKeys.length != memberOf.length) {
-            revert ArraysDifferentLength();
-        }
-        for (uint16 i = 0; i < roleKeys.length; i++) {
-            if (memberOf[i]) {
-                // Grant with unlimited uses and no expiry (backwards compatible behavior)
-                uint64 max64 = type(uint64).max;
-                uint128 max128 = type(uint128).max;
-                roles[roleKeys[i]].members[module] =
-                    (uint256(max64) << 128) |
-                    uint256(max128);
-                emit GrantRole(roleKeys[i], module, 0, max64, max128);
-            } else {
-                delete roles[roleKeys[i]].members[module];
-                emit RevokeRole(roleKeys[i], module);
-            }
-        }
-        if (!isModuleEnabled(module)) {
-            enableModule(module);
-        }
-    }
+    // /// @dev Legacy function for backwards compatibility. Assigns roles to a module.
+    // /// @param module Module to assign roles to.
+    // /// @param roleKeys Roles to assign.
+    // /// @param memberOf true to grant, false to revoke.
+    // function assignRoles(
+    //     address module,
+    //     bytes32[] calldata roleKeys,
+    //     bool[] calldata memberOf
+    // ) external onlyOwner {
+    //     if (roleKeys.length != memberOf.length) {
+    //         revert ArraysDifferentLength();
+    //     }
+    //     for (uint16 i = 0; i < roleKeys.length; i++) {
+    //         if (memberOf[i]) {
+    //             // Grant with unlimited uses and no expiry (backwards compatible behavior)
+    //             uint64 max64 = type(uint64).max;
+    //             uint128 max128 = type(uint128).max;
+    //             roles[roleKeys[i]].members[module] =
+    //                 (uint256(max64) << 128) |
+    //                 uint256(max128);
+    //             emit GrantRole(roleKeys[i], module, 0, max64, max128);
+    //         } else {
+    //             delete roles[roleKeys[i]].members[module];
+    //             emit RevokeRole(roleKeys[i], module);
+    //         }
+    //     }
+    //     if (!isModuleEnabled(module)) {
+    //         enableModule(module);
+    //     }
+    // }
 
     /// @dev Grants a role to a module with optional session parameters.
     /// @param module Module to grant the role to.
@@ -135,6 +135,13 @@ abstract contract Setup is RolesStorage {
     function revokeRole(address module, bytes32 roleKey) external onlyOwner {
         delete roles[roleKey].members[module];
         emit RevokeRole(roleKey, module);
+    }
+
+    /// @dev Allows a module to renounce its own role.
+    /// @param roleKey Role to renounce.
+    function renounceRole(bytes32 roleKey) external {
+        delete roles[roleKey].members[msg.sender];
+        emit RevokeRole(roleKey, msg.sender);
     }
 
     /// @dev Sets the default role used for a module if it calls
@@ -246,8 +253,9 @@ abstract contract Setup is RolesStorage {
         ConditionFlat[] memory conditions,
         ExecutionOptions options
     ) external onlyOwner {
-        bytes memory buffer = ConditionsTransform.pack(conditions);
-        address pointer = ImmutableStorage.store(buffer);
+        address pointer = ImmutableStorage.store(
+            ConditionsTransform.pack(conditions)
+        );
 
         roles[roleKey].scopeConfig[_key(targetAddress, selector)] = ScopeConfig
             .pack(options, pointer);
@@ -301,13 +309,9 @@ abstract contract Setup is RolesStorage {
         uint64 timestamp = allowances[key].timestamp;
         uint128 balance = allowances[key].balance;
 
-        allowances[key] = Allowance({
-            refill: refill,
-            maxRefill: maxRefill,
-            period: period,
-            timestamp: timestamp,
-            balance: balance
-        });
+        allowances[key].refill = refill;
+        allowances[key].maxRefill = maxRefill;
+        allowances[key].period = period;
 
         emit SetAllowance(key, balance, maxRefill, refill, period, timestamp);
     }

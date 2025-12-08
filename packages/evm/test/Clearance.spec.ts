@@ -37,7 +37,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .assignRoles(invoker.address, [ROLE_KEY], [true]);
+      .grantRole(invoker.address, ROLE_KEY, 0, 0, 0);
     await modifier.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
 
     return {
@@ -89,7 +89,7 @@ describe("Clearance", async () => {
     const testContractAddress = await testContract.getAddress();
     await modifier
       .connect(owner)
-      .assignRoles(invoker.address, [ROLE_KEY], [true]);
+      .grantRole(invoker.address, ROLE_KEY, 0, 0, 0);
 
     await modifier
       .connect(owner)

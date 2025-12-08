@@ -62,7 +62,7 @@ describe("Operator - EtherWithinAllowance", async () => {
         .setAllowance(key, balance, maxRefill || 0, refill, period, timestamp);
     }
 
-    await roles.connect(owner).assignRoles(invoker.address, [ROLE_KEY], [true]);
+    await roles.connect(owner).grantRole(invoker.address, ROLE_KEY, 0, 0, 0);
     await roles.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
     await roles.connect(owner).scopeTarget(ROLE_KEY, testAddress);
 
@@ -376,7 +376,7 @@ describe("Operator - EtherWithinAllowance", async () => {
       await roles.enableModule(invoker.address);
       await roles
         .connect(owner)
-        .assignRoles(invoker.address, [ROLE_KEY], [true]);
+        .grantRole(invoker.address, ROLE_KEY, 0, 0, 0);
       await roles.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
       await roles.connect(owner).scopeTarget(ROLE_KEY, testAddress);
 

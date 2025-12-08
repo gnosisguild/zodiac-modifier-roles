@@ -56,7 +56,7 @@ describe("Operator - CallWithinAllowance", async () => {
         .setAllowance(key, balance, maxRefill || 0, refill, period, timestamp);
     }
     const testContractAddress = await testContract.getAddress();
-    await roles.connect(owner).assignRoles(invoker.address, [ROLE_KEY], [true]);
+    await roles.connect(owner).grantRole(invoker.address, ROLE_KEY, 0, 0, 0);
     await roles.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
     await roles.connect(owner).scopeTarget(ROLE_KEY, testContractAddress);
 

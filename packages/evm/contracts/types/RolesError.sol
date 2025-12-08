@@ -13,9 +13,6 @@ interface IRolesError {
                             EXECUTION ERRORS
     //////////////////////////////////////////////////////////////*/
 
-    /// Arrays provided have different lengths
-    error ArraysDifferentLength();
-
     /// Sender is allowed to make this call, but the internal transaction failed
     error ModuleTransactionFailed();
 

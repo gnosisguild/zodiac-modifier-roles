@@ -40,7 +40,7 @@ describe("Operator", async () => {
 
     await modifier
       .connect(owner)
-      .assignRoles(invoker.address, [ROLE_KEY], [true]);
+      .grantRole(invoker.address, ROLE_KEY, 0, 0, 0);
 
     await modifier.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
 
@@ -983,7 +983,7 @@ describe("Operator", async () => {
 
       await modifier
         .connect(owner)
-        .assignRoles(invoker.address, [ROLE_KEY], [true]);
+        .grantRole(invoker.address, ROLE_KEY, 0, 0, 0);
 
       // set it to true
       await modifier
