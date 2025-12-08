@@ -294,21 +294,6 @@ library AbiDecoder {
     }
 
     /**
-     * @dev Plucks a slice of bytes from calldata.
-     * @param data The calldata to pluck the slice from.
-     * @param location The starting location of the slice.
-     * @param size The size of the slice.
-     * @return A slice of bytes from calldata.
-     */
-    function pluck(
-        bytes calldata data,
-        uint256 location,
-        uint256 size
-    ) internal pure returns (bytes calldata) {
-        return data[location:location + size];
-    }
-
-    /**
      * @dev Loads a word from calldata.
      * @param data The calldata to load the word from.
      * @param location The starting location of the slice.
@@ -318,9 +303,6 @@ library AbiDecoder {
         bytes calldata data,
         uint256 location
     ) internal pure returns (bytes32 result) {
-        if (location + 32 > data.length) {
-            revert IRolesError.CalldataOutOfBounds();
-        }
         assembly {
             result := calldataload(add(data.offset, location))
         }

@@ -66,7 +66,7 @@ abstract contract Setup is RolesStorage {
 
         setupModules();
 
-        emit RolesModSetup(msg.sender, _owner, _avatar, _target);
+        emit RolesModSetup(msg.sender, _owner, _avatar, _target, VERSION);
     }
 
     /*//////////////////////////////////////////////////////////////

@@ -35,9 +35,7 @@ describe("Clearance", async () => {
 
     await modifier.enableModule(invoker.address);
 
-    await modifier
-      .connect(owner)
-      .grantRole(invoker.address, ROLE_KEY, 0, 0, 0);
+    await modifier.connect(owner).grantRole(invoker.address, ROLE_KEY, 0, 0, 0);
     await modifier.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
 
     return {
@@ -87,9 +85,7 @@ describe("Clearance", async () => {
     const { modifier, testContract, testContractClone, owner, invoker } =
       await loadFixture(setup);
     const testContractAddress = await testContract.getAddress();
-    await modifier
-      .connect(owner)
-      .grantRole(invoker.address, ROLE_KEY, 0, 0, 0);
+    await modifier.connect(owner).grantRole(invoker.address, ROLE_KEY, 0, 0, 0);
 
     await modifier
       .connect(owner)

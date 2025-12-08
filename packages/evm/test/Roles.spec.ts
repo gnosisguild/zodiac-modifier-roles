@@ -115,7 +115,13 @@ describe("Roles", async () => {
       await roles.waitForDeployment();
       await expect(roles.deploymentTransaction())
         .to.emit(roles, "RolesModSetup")
-        .withArgs(user1.address, user1.address, user1.address, user1.address);
+        .withArgs(
+          user1.address,
+          user1.address,
+          user1.address,
+          user1.address,
+          "3.0.0",
+        );
     });
   });
 

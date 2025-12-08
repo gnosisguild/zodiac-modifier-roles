@@ -374,9 +374,7 @@ describe("Operator - EtherWithinAllowance", async () => {
         avatarAddress,
       );
       await roles.enableModule(invoker.address);
-      await roles
-        .connect(owner)
-        .grantRole(invoker.address, ROLE_KEY, 0, 0, 0);
+      await roles.connect(owner).grantRole(invoker.address, ROLE_KEY, 0, 0, 0);
       await roles.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
       await roles.connect(owner).scopeTarget(ROLE_KEY, testAddress);
 

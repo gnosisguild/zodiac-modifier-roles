@@ -314,7 +314,7 @@ library ConditionLogic {
         Operator operator = condition.operator;
         bytes32 compValue = bytes32(condition.compValue);
         bytes32 value = operator == Operator.EqualTo
-            ? keccak256(AbiDecoder.pluck(data, payload.location, payload.size))
+            ? keccak256(data[payload.location:payload.location + payload.size])
             : AbiDecoder.word(data, payload.location);
 
         if (operator == Operator.EqualTo && value != compValue) {
