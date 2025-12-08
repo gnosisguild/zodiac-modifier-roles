@@ -410,7 +410,7 @@ library ConditionLogic {
             Result({
                 status: success ? Status.Ok : failureStatus,
                 consumptions: nextConsumptions,
-                info: success ? bytes32(0) : bytes32(compValue)
+                info: bytes32(compValue)
             });
     }
 }

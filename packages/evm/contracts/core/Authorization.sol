@@ -112,9 +112,7 @@ abstract contract Authorization is RolesStorage {
                         ? Status.TargetAddressNotAllowed
                         : Status.FunctionNotAllowed,
                     consumptions,
-                    clearance == Clearance.Target
-                        ? bytes32(0)
-                        : bytes32(bytes4(data))
+                    bytes4(data)
                 );
         }
 
