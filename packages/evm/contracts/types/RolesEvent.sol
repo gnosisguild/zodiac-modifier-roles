@@ -45,6 +45,7 @@ interface IRolesEvent {
     event AllowTarget(
         bytes32 roleKey,
         address targetAddress,
+        ConditionFlat[] conditions,
         ExecutionOptions options
     );
 

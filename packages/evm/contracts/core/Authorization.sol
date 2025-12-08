@@ -104,52 +104,43 @@ abstract contract Authorization is RolesStorage {
             revert FunctionSignatureTooShort();
         }
 
-        Clearance clearance = role.targets[to].clearance;
-
-        if (clearance == Clearance.Function) {
-            Context memory context = Context(
-                ContextCall(to, value, operation),
-                consumptions
-            );
-            return
-                _clearanceFunction(
-                    role.scopeConfig[_key(to, bytes4(data))],
-                    data,
-                    context
-                );
+        Clearance clearance = role.clearance[to];
+        if (clearance == Clearance.None) {
+            return Result(Status.TargetAddressNotAllowed, consumptions, 0);
         }
 
-        if (clearance == Clearance.Target) {
+        bytes32 key = clearance == Clearance.Target
+            ? bytes32(bytes20(to)) | (~bytes32(0) >> 160)
+            : bytes32(bytes20(to)) | (bytes32(bytes4(data)) >> 160);
+
+        bytes32 scopeConfig = role.scopeConfig[key];
+        if (scopeConfig == 0) {
             return
                 Result(
-                    _executionOptions(
-                        value,
-                        operation,
-                        role.targets[to].options
-                    ),
+                    clearance == Clearance.Target
+                        ? Status.TargetAddressNotAllowed
+                        : Status.FunctionNotAllowed,
                     consumptions,
-                    0
+                    clearance == Clearance.Target
+                        ? bytes32(0)
+                        : bytes32(bytes4(data))
                 );
         }
 
-        return Result(Status.TargetAddressNotAllowed, consumptions, 0);
+        Context memory context = Context(
+            ContextCall(to, value, operation),
+            consumptions
+        );
+
+        return _function(scopeConfig, data, context);
     }
 
-    /// @dev Authorizes a function-level scoped transaction.
-    function _clearanceFunction(
+    /// @dev Checks function permission and evaluates conditions if present.
+    function _function(
         bytes32 scopeConfig,
         bytes calldata data,
         Context memory context
     ) private view returns (Result memory) {
-        if (scopeConfig == 0) {
-            return
-                Result(
-                    Status.FunctionNotAllowed,
-                    context.consumptions,
-                    bytes32(bytes4(data))
-                );
-        }
-
         (
             bool isWildcarded,
             ExecutionOptions options,

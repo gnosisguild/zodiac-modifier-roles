@@ -225,7 +225,7 @@ describe("OldTests", async () => {
       const testContractAddress = await testContract.getAddress();
       await modifier
         .connect(owner)
-        .allowTarget(ROLE_KEY, testContractAddress, ExecutionOptions.None);
+        .allowTarget(ROLE_KEY, testContractAddress, [], ExecutionOptions.None);
 
       const mint = await testContract.mint.populateTransaction(
         user1.address,
@@ -258,6 +258,7 @@ describe("OldTests", async () => {
       const allowTargetAddress = await modifier.allowTarget.populateTransaction(
         ROLE_KEY1,
         testContractAddress,
+        [],
         ExecutionOptions.None,
       );
       await avatar.exec(
@@ -312,6 +313,7 @@ describe("OldTests", async () => {
       const allowTargetAddress = await modifier.allowTarget.populateTransaction(
         ROLE_KEY1,
         await testContract.getAddress(),
+        [],
         ExecutionOptions.None,
       );
       await avatar.exec(
@@ -975,6 +977,7 @@ describe("OldTests", async () => {
       const allowTargetAddress = await modifier.allowTarget.populateTransaction(
         ROLE_KEY1,
         await testContract.getAddress(),
+        [],
         ExecutionOptions.None,
       );
       await avatar.exec(
@@ -1014,6 +1017,7 @@ describe("OldTests", async () => {
       const allowTargetAddress = await modifier.allowTarget.populateTransaction(
         ROLE_KEY1,
         await testContract.getAddress(),
+        [],
         ExecutionOptions.None,
       );
       await avatar.exec(
@@ -1068,6 +1072,7 @@ describe("OldTests", async () => {
       const allowTargetAddress = await modifier.allowTarget.populateTransaction(
         ROLE_KEY1,
         await testContract.getAddress(),
+        [],
         ExecutionOptions.None,
       );
       await avatar.exec(
@@ -1124,6 +1129,7 @@ describe("OldTests", async () => {
         .allowTarget(
           ROLE_KEY,
           await testContract.getAddress(),
+          [],
           ExecutionOptions.None,
         );
 
@@ -1158,6 +1164,7 @@ describe("OldTests", async () => {
         .allowTarget(
           ROLE_KEY,
           await testContract.getAddress(),
+          [],
           ExecutionOptions.None,
         );
 
@@ -1222,6 +1229,7 @@ describe("OldTests", async () => {
         .allowTarget(
           ROLE_KEY,
           await testContract.getAddress(),
+          [],
           ExecutionOptions.None,
         );
 
@@ -1257,6 +1265,7 @@ describe("OldTests", async () => {
         .allowTarget(
           ROLE_KEY,
           await testContract.getAddress(),
+          [],
           ExecutionOptions.None,
         );
 

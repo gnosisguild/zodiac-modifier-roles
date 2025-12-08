@@ -2,13 +2,9 @@ import { expect } from "chai";
 import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import { parseEther } from "ethers";
+import { parseEther, ZeroHash } from "ethers";
 
-import {
-  BYTES32_ZERO,
-  ExecutionOptions,
-  PermissionCheckerStatus,
-} from "./utils";
+import { ExecutionOptions, PermissionCheckerStatus } from "./utils";
 
 import { deployRolesMod } from "./setup";
 
@@ -72,7 +68,12 @@ describe("ExecutionOptions", async () => {
 
         await modifier
           .connect(owner)
-          .allowTarget(ROLE_KEY, testContractAddress, ExecutionOptions.None);
+          .allowTarget(
+            ROLE_KEY,
+            testContractAddress,
+            [],
+            ExecutionOptions.None,
+          );
 
         await expect(
           modifier
@@ -85,7 +86,7 @@ describe("ExecutionOptions", async () => {
             ),
         )
           .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-          .withArgs(PermissionCheckerStatus.SendNotAllowed, BYTES32_ZERO);
+          .withArgs(PermissionCheckerStatus.SendNotAllowed, ZeroHash);
       });
       it("ExecutionOptions.None - Fails sending eth to fallback", async () => {
         const { modifier, testContract, owner, invoker } =
@@ -95,7 +96,12 @@ describe("ExecutionOptions", async () => {
 
         await modifier
           .connect(owner)
-          .allowTarget(ROLE_KEY, testContractAddress, ExecutionOptions.None);
+          .allowTarget(
+            ROLE_KEY,
+            testContractAddress,
+            [],
+            ExecutionOptions.None,
+          );
 
         await expect(
           modifier
@@ -103,7 +109,7 @@ describe("ExecutionOptions", async () => {
             .execTransactionFromModule(testContractAddress, value, "0x", 0),
         )
           .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-          .withArgs(PermissionCheckerStatus.SendNotAllowed, BYTES32_ZERO);
+          .withArgs(PermissionCheckerStatus.SendNotAllowed, ZeroHash);
       });
       it("ExecutionOptions.Send - OK sending eth to payable function", async () => {
         const { modifier, testContract, owner, invoker } =
@@ -116,7 +122,12 @@ describe("ExecutionOptions", async () => {
 
         await modifier
           .connect(owner)
-          .allowTarget(ROLE_KEY, testContractAddress, ExecutionOptions.Send);
+          .allowTarget(
+            ROLE_KEY,
+            testContractAddress,
+            [],
+            ExecutionOptions.Send,
+          );
 
         await expect(
           modifier
@@ -139,7 +150,12 @@ describe("ExecutionOptions", async () => {
 
         await modifier
           .connect(owner)
-          .allowTarget(ROLE_KEY, testContractAddress, ExecutionOptions.Send);
+          .allowTarget(
+            ROLE_KEY,
+            testContractAddress,
+            [],
+            ExecutionOptions.Send,
+          );
 
         await expect(
           modifier
@@ -163,6 +179,7 @@ describe("ExecutionOptions", async () => {
           .allowTarget(
             ROLE_KEY,
             testContractAddress,
+            [],
             ExecutionOptions.DelegateCall,
           );
 
@@ -177,7 +194,7 @@ describe("ExecutionOptions", async () => {
             ),
         )
           .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-          .withArgs(PermissionCheckerStatus.SendNotAllowed, BYTES32_ZERO);
+          .withArgs(PermissionCheckerStatus.SendNotAllowed, ZeroHash);
       });
       it("ExecutionOptions.DelegateCall - Fails sending ETH to fallback", async () => {
         const { modifier, testContract, owner, invoker } =
@@ -190,6 +207,7 @@ describe("ExecutionOptions", async () => {
           .allowTarget(
             ROLE_KEY,
             testContractAddress,
+            [],
             ExecutionOptions.DelegateCall,
           );
 
@@ -204,7 +222,7 @@ describe("ExecutionOptions", async () => {
             ),
         )
           .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-          .withArgs(PermissionCheckerStatus.SendNotAllowed, BYTES32_ZERO);
+          .withArgs(PermissionCheckerStatus.SendNotAllowed, ZeroHash);
       });
       it("ExecutionOptions.Both - OK sending ETH to payable function", async () => {
         const { modifier, testContract, owner, invoker } =
@@ -217,7 +235,12 @@ describe("ExecutionOptions", async () => {
 
         await modifier
           .connect(owner)
-          .allowTarget(ROLE_KEY, testContractAddress, ExecutionOptions.Both);
+          .allowTarget(
+            ROLE_KEY,
+            testContractAddress,
+            [],
+            ExecutionOptions.Both,
+          );
 
         await expect(
           modifier
@@ -243,7 +266,12 @@ describe("ExecutionOptions", async () => {
 
         await modifier
           .connect(owner)
-          .allowTarget(ROLE_KEY, testContractAddress, ExecutionOptions.Both);
+          .allowTarget(
+            ROLE_KEY,
+            testContractAddress,
+            [],
+            ExecutionOptions.Both,
+          );
 
         await expect(
           modifier
@@ -298,7 +326,7 @@ describe("ExecutionOptions", async () => {
             ),
         )
           .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-          .withArgs(PermissionCheckerStatus.SendNotAllowed, BYTES32_ZERO);
+          .withArgs(PermissionCheckerStatus.SendNotAllowed, ZeroHash);
       });
       it("ExecutionOptions.None - Fails sending eth to fallback", async () => {
         const { modifier, testContract, owner, invoker } =
@@ -325,7 +353,7 @@ describe("ExecutionOptions", async () => {
             .execTransactionFromModule(testContractAddress, value, "0x", 0),
         )
           .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-          .withArgs(PermissionCheckerStatus.SendNotAllowed, BYTES32_ZERO);
+          .withArgs(PermissionCheckerStatus.SendNotAllowed, ZeroHash);
       });
       it("ExecutionOptions.Send - OK sending eth to payable function", async () => {
         const { modifier, testContract, owner, invoker } =
@@ -429,7 +457,7 @@ describe("ExecutionOptions", async () => {
             ),
         )
           .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-          .withArgs(PermissionCheckerStatus.SendNotAllowed, BYTES32_ZERO);
+          .withArgs(PermissionCheckerStatus.SendNotAllowed, ZeroHash);
       });
       it("ExecutionOptions.DelegateCall - Fails sending ETH to fallback", async () => {
         const { modifier, testContract, owner, invoker } =
@@ -456,7 +484,7 @@ describe("ExecutionOptions", async () => {
             .execTransactionFromModule(testContractAddress, value, "0x", 0),
         )
           .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-          .withArgs(PermissionCheckerStatus.SendNotAllowed, BYTES32_ZERO);
+          .withArgs(PermissionCheckerStatus.SendNotAllowed, ZeroHash);
       });
       it("ExecutionOptions.Both - OK sending eth to payable function", async () => {
         const { modifier, testContract, owner, invoker } =
@@ -538,6 +566,7 @@ describe("ExecutionOptions", async () => {
         .allowTarget(
           ROLE_KEY,
           testContractAddress,
+          [],
           ExecutionOptions.DelegateCall,
         );
 
@@ -560,7 +589,7 @@ describe("ExecutionOptions", async () => {
 
       await modifier
         .connect(owner)
-        .allowTarget(ROLE_KEY, testContractAddress, ExecutionOptions.None);
+        .allowTarget(ROLE_KEY, testContractAddress, [], ExecutionOptions.None);
 
       await expect(
         modifier
@@ -573,7 +602,7 @@ describe("ExecutionOptions", async () => {
           ),
       )
         .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.DelegateCallNotAllowed, BYTES32_ZERO);
+        .withArgs(PermissionCheckerStatus.DelegateCallNotAllowed, ZeroHash);
     });
     it("Target Scoped - can delegatecall", async () => {
       const { modifier, testContract, owner, invoker } =
@@ -637,7 +666,7 @@ describe("ExecutionOptions", async () => {
           ),
       )
         .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.DelegateCallNotAllowed, BYTES32_ZERO);
+        .withArgs(PermissionCheckerStatus.DelegateCallNotAllowed, ZeroHash);
     });
   });
 

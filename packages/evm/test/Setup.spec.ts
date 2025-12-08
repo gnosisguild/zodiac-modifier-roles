@@ -48,7 +48,7 @@ describe("Setup", () => {
 
       await roles.connect(owner).grantRole(member.address, ROLE_KEY, 0, 0, 0);
       await roles.connect(owner).setDefaultRole(member.address, ROLE_KEY);
-      await roles.connect(owner).allowTarget(ROLE_KEY, target, 0);
+      await roles.connect(owner).allowTarget(ROLE_KEY, target, [], 0);
 
       await expect(roles.connect(owner).revokeRole(member.address, ROLE_KEY))
         .to.emit(roles, "RevokeRole")

@@ -1,11 +1,10 @@
 import { expect } from "chai";
 import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { AbiCoder, BytesLike } from "ethers";
+import { AbiCoder, BytesLike, ZeroHash } from "ethers";
 
 import {
   Encoding,
-  BYTES32_ZERO,
   ExecutionOptions,
   Operator,
   PermissionCheckerStatus,
@@ -143,6 +142,7 @@ describe("Roles", async () => {
         .allowTarget(
           ROLE_KEY,
           await testContract.getAddress(),
+          [],
           ExecutionOptions.None,
         );
 
@@ -182,6 +182,7 @@ describe("Roles", async () => {
         .allowTarget(
           ROLE_KEY,
           await testContract.getAddress(),
+          [],
           ExecutionOptions.None,
         );
 
@@ -272,6 +273,7 @@ describe("Roles", async () => {
         .allowTarget(
           ROLE_KEY1,
           await testContract.getAddress(),
+          [],
           ExecutionOptions.None,
         );
 
@@ -784,11 +786,11 @@ describe("Roles", async () => {
 
       await expect(invoke(123457, "0xaabbccdd4500d1"))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
+        .withArgs(PermissionCheckerStatus.ParameterNotAllowed, ZeroHash);
 
       await expect(invoke(123456, "0xaabb"))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
+        .withArgs(PermissionCheckerStatus.ParameterNotAllowed, ZeroHash);
 
       await expect(invoke(123456, "0xaabbccdd4500d1")).to.not.be.reverted;
 

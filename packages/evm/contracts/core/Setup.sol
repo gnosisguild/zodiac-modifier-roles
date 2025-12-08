@@ -7,7 +7,7 @@ import "../common/ScopeConfig.sol";
 import "./serialize/ConditionsTransform.sol";
 import "./Storage.sol";
 
-import {TargetAddress, Clearance} from "../types/Permission.sol";
+import {Clearance} from "../types/Permission.sol";
 
 /*
  * Permission Model
@@ -28,7 +28,8 @@ import {TargetAddress, Clearance} from "../types/Permission.sol";
  *  │
  *  └─ scopeConfig (target + selector → ScopeConfig)
  *      │
- *      │   Used when Clearance.Function
+ *      │   Used when Clearance.Function (selector != 0)
+ *      │   or Clearance.Target with conditions
  *      │
  *      ├─ not set ───────────────────► function blocked
  *      │
@@ -152,34 +153,28 @@ abstract contract Setup is RolesStorage {
                          TARGET PERMISSIONS
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Allows transactions to a target address.
+    /// @dev Allows transactions to a target address, optionally with conditions.
     /// @param roleKey identifier of the role to be modified.
     /// @param targetAddress Destination address of transaction.
+    /// @param conditions The conditions to enforce on all calls (empty for wildcarded).
     /// @param options designates if a transaction can send ether and/or delegatecall to target.
     function allowTarget(
         bytes32 roleKey,
         address targetAddress,
+        ConditionFlat[] calldata conditions,
         ExecutionOptions options
     ) external onlyOwner {
-        roles[roleKey].targets[targetAddress] = TargetAddress({
-            clearance: Clearance.Target,
-            options: options
-        });
-        emit AllowTarget(roleKey, targetAddress, options);
-    }
+        bytes32 key = bytes32(bytes20(targetAddress)) | (~bytes32(0) >> 160);
 
-    /// @dev Removes transactions to a target address.
-    /// @param roleKey identifier of the role to be modified.
-    /// @param targetAddress Destination address of transaction.
-    function revokeTarget(
-        bytes32 roleKey,
-        address targetAddress
-    ) external onlyOwner {
-        roles[roleKey].targets[targetAddress] = TargetAddress({
-            clearance: Clearance.None,
-            options: ExecutionOptions.None
-        });
-        emit RevokeTarget(roleKey, targetAddress);
+        roles[roleKey].clearance[targetAddress] = Clearance.Target;
+        roles[roleKey].scopeConfig[key] = conditions.length == 0
+            ? ScopeConfig.packAsWildcarded(options)
+            : ScopeConfig.pack(
+                options,
+                ImmutableStorage.store(ConditionsTransform.pack(conditions))
+            );
+
+        emit AllowTarget(roleKey, targetAddress, conditions, options);
     }
 
     /// @dev Designates only specific functions can be called.
@@ -189,11 +184,19 @@ abstract contract Setup is RolesStorage {
         bytes32 roleKey,
         address targetAddress
     ) external onlyOwner {
-        roles[roleKey].targets[targetAddress] = TargetAddress({
-            clearance: Clearance.Function,
-            options: ExecutionOptions.None
-        });
+        roles[roleKey].clearance[targetAddress] = Clearance.Function;
         emit ScopeTarget(roleKey, targetAddress);
+    }
+
+    /// @dev Removes transactions to a target address.
+    /// @param roleKey identifier of the role to be modified.
+    /// @param targetAddress Destination address of transaction.
+    function revokeTarget(
+        bytes32 roleKey,
+        address targetAddress
+    ) external onlyOwner {
+        delete roles[roleKey].clearance[targetAddress];
+        emit RevokeTarget(roleKey, targetAddress);
     }
 
     /*//////////////////////////////////////////////////////////////
