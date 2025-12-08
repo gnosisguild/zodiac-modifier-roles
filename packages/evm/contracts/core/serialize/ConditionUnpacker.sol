@@ -35,7 +35,7 @@ library ConditionUnpacker {
     function _unpackCondition(
         bytes memory buffer,
         uint256 offset
-    ) internal view returns (Condition memory) {
+    ) private view returns (Condition memory) {
         // Load the node count from header (16 bits)
         uint256 nodeCount;
         assembly {
@@ -122,7 +122,7 @@ library ConditionUnpacker {
     function _unpackLayout(
         bytes memory buffer,
         uint256 offset
-    ) internal pure returns (Layout memory) {
+    ) private pure returns (Layout memory) {
         // Load the node count from header (16 bits)
         uint256 nodeCount;
         assembly {

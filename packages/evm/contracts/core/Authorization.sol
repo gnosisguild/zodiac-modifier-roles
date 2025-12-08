@@ -26,28 +26,14 @@ abstract contract Authorization is RolesStorage {
         bytes calldata data,
         Operation operation
     ) internal view returns (Consumption[] memory) {
-        Role storage role = roles[roleKey];
-
         Result memory result;
+        Context memory context = Context(to, value, operation);
+
         address adapter = unwrappers[_key(to, bytes4(data))];
         if (adapter == address(0)) {
-            result = _transaction(
-                role,
-                to,
-                value,
-                data,
-                operation,
-                result.consumptions
-            );
+            result = _transaction(roleKey, data, result.consumptions, context);
         } else {
-            result = _transactionBundle(
-                ITransactionUnwrapper(adapter),
-                role,
-                to,
-                value,
-                data,
-                operation
-            );
+            result = _transactionBundle(adapter, roleKey, data, context);
         }
         if (result.status != Status.Ok) {
             revert ConditionViolation(result.status, result.info);
@@ -57,27 +43,32 @@ abstract contract Authorization is RolesStorage {
     }
 
     function _transactionBundle(
-        ITransactionUnwrapper adapter,
-        Role storage role,
-        address to,
-        uint256 value,
+        address adapter,
+        bytes32 roleKey,
         bytes calldata data,
-        Operation operation
+        Context memory context
     ) private view returns (Result memory result) {
-        try adapter.unwrap(to, value, data, operation) returns (
-            UnwrappedTransaction[] memory transactions
-        ) {
+        try
+            ITransactionUnwrapper(adapter).unwrap(
+                context.to,
+                context.value,
+                data,
+                context.operation
+            )
+        returns (UnwrappedTransaction[] memory transactions) {
             for (uint256 i; i < transactions.length; ) {
                 UnwrappedTransaction memory transaction = transactions[i];
                 uint256 left = transaction.dataLocation;
                 uint256 right = left + transaction.dataSize;
                 result = _transaction(
-                    role,
-                    transaction.to,
-                    transaction.value,
+                    roleKey,
                     data[left:right],
-                    transaction.operation,
-                    result.consumptions
+                    result.consumptions,
+                    Context(
+                        transaction.to,
+                        transaction.value,
+                        transaction.operation
+                    )
                 );
                 if (result.status != Status.Ok) {
                     return result;
@@ -93,25 +84,25 @@ abstract contract Authorization is RolesStorage {
 
     /// @dev Inspects a transaction and authorizes based on role permissions.
     function _transaction(
-        Role storage role,
-        address to,
-        uint256 value,
+        bytes32 roleKey,
         bytes calldata data,
-        Operation operation,
-        Consumption[] memory consumptions
+        Consumption[] memory consumptions,
+        Context memory context
     ) private view returns (Result memory) {
+        Role storage role = roles[roleKey];
+
         if (data.length != 0 && data.length < 4) {
             revert FunctionSignatureTooShort();
         }
 
-        Clearance clearance = role.clearance[to];
+        Clearance clearance = role.clearance[context.to];
         if (clearance == Clearance.None) {
             return Result(Status.TargetAddressNotAllowed, consumptions, 0);
         }
 
         bytes32 key = clearance == Clearance.Target
-            ? bytes32(bytes20(to)) | (~bytes32(0) >> 160)
-            : bytes32(bytes20(to)) | (bytes32(bytes4(data)) >> 160);
+            ? bytes32(bytes20(context.to)) | (~bytes32(0) >> 160)
+            : bytes32(bytes20(context.to)) | (bytes32(bytes4(data)) >> 160);
 
         bytes32 scopeConfig = role.scopeConfig[key];
         if (scopeConfig == 0) {
@@ -127,18 +118,14 @@ abstract contract Authorization is RolesStorage {
                 );
         }
 
-        Context memory context = Context(
-            ContextCall(to, value, operation),
-            consumptions
-        );
-
-        return _function(scopeConfig, data, context);
+        return _function(scopeConfig, data, consumptions, context);
     }
 
     /// @dev Checks function permission and evaluates conditions if present.
     function _function(
         bytes32 scopeConfig,
         bytes calldata data,
+        Consumption[] memory consumptions,
         Context memory context
     ) private view returns (Result memory) {
         (
@@ -148,27 +135,27 @@ abstract contract Authorization is RolesStorage {
         ) = ScopeConfig.unpack(scopeConfig);
 
         Status status = _executionOptions(
-            context.call.value,
-            context.call.operation,
+            context.value,
+            context.operation,
             options
         );
         if (status != Status.Ok) {
-            return Result(status, context.consumptions, 0);
+            return Result(status, consumptions, 0);
         }
 
         if (isWildcarded) {
-            return Result(Status.Ok, context.consumptions, 0);
+            return Result(Status.Ok, consumptions, 0);
         }
 
-        bytes memory buffer = ImmutableStorage.load(pointer);
         (Condition memory condition, Layout memory layout) = ConditionUnpacker
-            .unpack(buffer);
+            .unpack(ImmutableStorage.load(pointer));
 
         return
             ConditionLogic.evaluate(
                 data,
                 condition,
                 AbiDecoder.inspect(data, layout),
+                consumptions,
                 context
             );
     }

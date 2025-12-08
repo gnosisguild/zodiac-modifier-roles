@@ -20,6 +20,7 @@ library ConditionLogic {
         bytes calldata data,
         Condition memory condition,
         Payload memory payload,
+        Consumption[] memory consumptions,
         Context memory context
     ) internal view returns (Result memory) {
         Operator operator = condition.operator;
@@ -27,7 +28,7 @@ library ConditionLogic {
             return
                 Result({
                     status: Status.CalldataOverflow,
-                    consumptions: context.consumptions,
+                    consumptions: consumptions,
                     info: bytes32(payload.location)
                 });
         }
@@ -37,36 +38,52 @@ library ConditionLogic {
                 return
                     Result({
                         status: Status.Ok,
-                        consumptions: context.consumptions,
+                        consumptions: consumptions,
                         info: 0
                     });
             } else if (operator == Operator.Matches) {
-                return _matches(data, condition, payload, context);
+                return
+                    _matches(data, condition, payload, consumptions, context);
             } else if (operator == Operator.And) {
-                return _and(data, condition, payload, context);
+                return _and(data, condition, payload, consumptions, context);
             } else if (operator == Operator.Or) {
-                return _or(data, condition, payload, context);
+                return _or(data, condition, payload, consumptions, context);
             } else if (operator == Operator.ArraySome) {
-                return _arraySome(data, condition, payload, context);
+                return
+                    _arraySome(data, condition, payload, consumptions, context);
             } else if (operator == Operator.ArrayEvery) {
-                return _arrayEvery(data, condition, payload, context);
+                return
+                    _arrayEvery(
+                        data,
+                        condition,
+                        payload,
+                        consumptions,
+                        context
+                    );
             } else {
                 assert(operator == Operator.ArrayTailMatches);
-                return _arrayTailMatches(data, condition, payload, context);
+                return
+                    _arrayTailMatches(
+                        data,
+                        condition,
+                        payload,
+                        consumptions,
+                        context
+                    );
             }
         } else {
             if (operator <= Operator.LessThan) {
                 return
                     Result({
                         status: _compare(data, condition, payload),
-                        consumptions: context.consumptions,
+                        consumptions: consumptions,
                         info: 0
                     });
             } else if (operator <= Operator.SignedIntLessThan) {
                 return
                     Result({
                         status: _compareSignedInt(data, condition, payload),
-                        consumptions: context.consumptions,
+                        consumptions: consumptions,
                         info: 0
                     });
             } else if (operator == Operator.Bitmask) {
@@ -77,28 +94,37 @@ library ConditionLogic {
                             condition.compValue,
                             payload
                         ),
-                        consumptions: context.consumptions,
+                        consumptions: consumptions,
                         info: 0
                     });
             } else if (operator == Operator.Custom) {
-                return _custom(data, condition, payload, context);
+                return _custom(data, condition, payload, consumptions, context);
             } else if (operator == Operator.WithinRatio) {
-                return _withinRatio(data, condition, payload, context);
+                return
+                    Result({
+                        status: WithinRatioChecker.check(
+                            data,
+                            condition.compValue,
+                            payload
+                        ),
+                        consumptions: consumptions,
+                        info: 0
+                    });
             } else if (operator == Operator.WithinAllowance) {
                 return
                     __allowance(
                         uint256(AbiDecoder.word(data, payload.location)),
                         condition.compValue,
                         Status.AllowanceExceeded,
-                        context
+                        consumptions
                     );
             } else if (operator == Operator.EtherWithinAllowance) {
                 return
                     __allowance(
-                        context.call.value,
+                        context.value,
                         condition.compValue,
                         Status.EtherAllowanceExceeded,
-                        context
+                        consumptions
                     );
             } else {
                 assert(operator == Operator.CallWithinAllowance);
@@ -107,7 +133,7 @@ library ConditionLogic {
                         1,
                         condition.compValue,
                         Status.CallAllowanceExceeded,
-                        context
+                        consumptions
                     );
             }
         }
@@ -117,33 +143,31 @@ library ConditionLogic {
         bytes calldata data,
         Condition memory condition,
         Payload memory payload,
+        Consumption[] memory consumptions,
         Context memory context
     ) private view returns (Result memory result) {
-        result.consumptions = context.consumptions;
-
         uint256 sChildCount = condition.sChildCount;
         if (sChildCount != payload.children.length) {
             result.status = Status.ParameterNotAMatch;
             return result;
         }
 
+        result.consumptions = consumptions;
         for (uint256 i; i < condition.children.length; ) {
             result = evaluate(
                 data,
                 condition.children[i],
                 i < sChildCount ? payload.children[i] : payload,
-                Context({call: context.call, consumptions: result.consumptions})
+                result.consumptions,
+                context
             );
             if (result.status != Status.Ok) {
-                result.consumptions = context.consumptions;
                 return result;
             }
             unchecked {
                 ++i;
             }
         }
-
-        result.status = Status.Ok;
         return result;
     }
 
@@ -151,27 +175,25 @@ library ConditionLogic {
         bytes calldata data,
         Condition memory condition,
         Payload memory payload,
+        Consumption[] memory consumptions,
         Context memory context
     ) private view returns (Result memory result) {
-        result.consumptions = context.consumptions;
-
+        result.consumptions = consumptions;
         for (uint256 i; i < condition.children.length; ) {
             result = evaluate(
                 data,
                 condition.children[i],
                 payload.variant ? payload.children[i] : payload,
-                Context({call: context.call, consumptions: result.consumptions})
+                result.consumptions,
+                context
             );
             if (result.status != Status.Ok) {
-                result.consumptions = context.consumptions;
                 return result;
             }
             unchecked {
                 ++i;
             }
         }
-
-        result.status = Status.Ok;
         return result;
     }
 
@@ -179,16 +201,16 @@ library ConditionLogic {
         bytes calldata data,
         Condition memory condition,
         Payload memory payload,
+        Consumption[] memory consumptions,
         Context memory context
     ) private view returns (Result memory result) {
-        result.consumptions = context.consumptions;
-
         for (uint256 i; i < condition.children.length; ) {
             result = evaluate(
                 data,
                 condition.children[i],
                 payload.variant ? payload.children[i] : payload,
-                Context({call: context.call, consumptions: result.consumptions})
+                consumptions,
+                context
             );
             if (result.status == Status.Ok) {
                 return result;
@@ -201,7 +223,7 @@ library ConditionLogic {
         return
             Result({
                 status: Status.OrViolation,
-                consumptions: context.consumptions,
+                consumptions: consumptions,
                 info: 0
             });
     }
@@ -210,17 +232,17 @@ library ConditionLogic {
         bytes calldata data,
         Condition memory condition,
         Payload memory payload,
+        Consumption[] memory consumptions,
         Context memory context
     ) private view returns (Result memory result) {
-        result.consumptions = context.consumptions;
-
         uint256 length = payload.children.length;
         for (uint256 i; i < length; ) {
             result = evaluate(
                 data,
                 condition.children[0],
                 payload.children[i],
-                Context({call: context.call, consumptions: result.consumptions})
+                consumptions,
+                context
             );
             if (result.status == Status.Ok) {
                 return result;
@@ -232,7 +254,7 @@ library ConditionLogic {
         return
             Result({
                 status: Status.NoArrayElementPasses,
-                consumptions: context.consumptions,
+                consumptions: consumptions,
                 info: 0
             });
     }
@@ -241,30 +263,26 @@ library ConditionLogic {
         bytes calldata data,
         Condition memory condition,
         Payload memory payload,
+        Consumption[] memory consumptions,
         Context memory context
     ) private view returns (Result memory result) {
-        result.consumptions = context.consumptions;
-
+        result.consumptions = consumptions;
         for (uint256 i; i < payload.children.length; ) {
             result = evaluate(
                 data,
                 condition.children[0],
                 payload.children[i],
-                Context({call: context.call, consumptions: result.consumptions})
+                result.consumptions,
+                context
             );
             if (result.status != Status.Ok) {
-                return
-                    Result({
-                        status: Status.NotEveryArrayElementPasses,
-                        consumptions: context.consumptions,
-                        info: 0
-                    });
+                result.status = Status.NotEveryArrayElementPasses;
+                return result;
             }
             unchecked {
                 ++i;
             }
         }
-        result.status = Status.Ok;
         return result;
     }
 
@@ -272,10 +290,9 @@ library ConditionLogic {
         bytes calldata data,
         Condition memory condition,
         Payload memory payload,
+        Consumption[] memory consumptions,
         Context memory context
     ) private view returns (Result memory result) {
-        result.consumptions = context.consumptions;
-
         uint256 conditionCount = condition.children.length;
         uint256 childCount = payload.children.length;
 
@@ -284,6 +301,7 @@ library ConditionLogic {
             return result;
         }
 
+        result.consumptions = consumptions;
         uint256 tailOffset = childCount - conditionCount;
 
         for (uint256 i; i < conditionCount; ) {
@@ -291,18 +309,16 @@ library ConditionLogic {
                 data,
                 condition.children[i],
                 payload.children[tailOffset + i],
-                Context({call: context.call, consumptions: result.consumptions})
+                result.consumptions,
+                context
             );
             if (result.status != Status.Ok) {
-                result.consumptions = context.consumptions;
                 return result;
             }
             unchecked {
                 ++i;
             }
         }
-
-        result.status = Status.Ok;
         return result;
     }
 
@@ -352,6 +368,7 @@ library ConditionLogic {
         bytes calldata data,
         Condition memory condition,
         Payload memory payload,
+        Consumption[] memory consumptions,
         Context memory context
     ) private view returns (Result memory) {
         // 20 bytes on the left
@@ -362,10 +379,10 @@ library ConditionLogic {
         bytes12 extra = bytes12(uint96(uint256(bytes32(condition.compValue))));
 
         (bool success, bytes32 info) = adapter.check(
-            context.call.to,
-            context.call.value,
+            context.to,
+            context.value,
             data,
-            context.call.operation,
+            context.operation,
             payload.location,
             payload.size,
             extra
@@ -373,28 +390,8 @@ library ConditionLogic {
         return
             Result({
                 status: success ? Status.Ok : Status.CustomConditionViolation,
-                consumptions: context.consumptions,
+                consumptions: consumptions,
                 info: info
-            });
-    }
-
-    function _withinRatio(
-        bytes calldata data,
-        Condition memory condition,
-        Payload memory payload,
-        Context memory context
-    ) private view returns (Result memory) {
-        Status status = WithinRatioChecker.check(
-            data,
-            condition.compValue,
-            payload
-        );
-
-        return
-            Result({
-                status: status,
-                consumptions: context.consumptions,
-                info: 0
             });
     }
 
@@ -402,24 +399,18 @@ library ConditionLogic {
         uint256 value,
         bytes memory compValue,
         Status failureStatus,
-        Context memory context
+        Consumption[] memory consumptions
     ) private view returns (Result memory) {
-        bytes32 allowanceKey = bytes32(compValue);
-
         (
             bool success,
-            Consumption[] memory consumptions
-        ) = WithinAllowanceChecker.check(
-                context.consumptions,
-                value,
-                compValue
-            );
+            Consumption[] memory nextConsumptions
+        ) = WithinAllowanceChecker.check(consumptions, value, compValue);
 
         return
             Result({
                 status: success ? Status.Ok : failureStatus,
-                consumptions: consumptions,
-                info: success ? bytes32(0) : allowanceKey
+                consumptions: nextConsumptions,
+                info: success ? bytes32(0) : bytes32(compValue)
             });
     }
 }
