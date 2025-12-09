@@ -206,15 +206,17 @@ library Integrity {
                 conditions[i].operator == Operator.EtherWithinAllowance ||
                 conditions[i].operator == Operator.CallWithinAllowance
             ) {
-                (
-                    uint256 countCalldataOrAbiEncodedNodes,
-                    ,
-                    uint256 countOtherNodes
-                ) = _countParentNodes(conditions, i);
+                // EtherWithinAllowance and CallWithinAllowance can appear:
+                // - At top-level (direct child of Calldata/AbiEncoded)
+                // - Inside any logical condition (And/Or)
+                // - Inside nested Calldata/AbiEncoded (for variant branches)
+                // But NOT inside structural nodes like Tuple/Array
+                (, , uint256 countOtherNodes) = _countParentNodes(
+                    conditions,
+                    i
+                );
 
-                if (
-                    countCalldataOrAbiEncodedNodes != 1 || countOtherNodes > 0
-                ) {
+                if (countOtherNodes > 0) {
                     revert IRolesError.UnsuitableParent(i);
                 }
             } else if (conditions[i].operator == Operator.WithinRatio) {

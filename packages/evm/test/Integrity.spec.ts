@@ -676,7 +676,7 @@ describe("Integrity", () => {
           .withArgs(1);
       });
 
-      it("should revert if not nested under a top-level Calldata node (e.g., inside a Tuple)", async () => {
+      it("should revert if nested inside a structural node (e.g., Tuple)", async () => {
         const { mock, enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
           paramType: Encoding.Calldata,
@@ -699,6 +699,30 @@ describe("Integrity", () => {
           .withArgs(2);
       });
 
+      it("should revert if nested inside an Array", async () => {
+        const { mock, enforce } = await loadFixture(setup);
+        const conditions = flattenCondition({
+          paramType: Encoding.Calldata,
+          children: [
+            {
+              paramType: Encoding.Array,
+              operator: Operator.Matches,
+              children: [
+                { paramType: Encoding.Static, operator: Operator.Pass },
+                {
+                  paramType: Encoding.None,
+                  operator: Operator.CallWithinAllowance,
+                  compValue: ZeroHash,
+                },
+              ],
+            },
+          ],
+        });
+        await expect(enforce(conditions))
+          .to.be.revertedWithCustomError(mock, "UnsuitableParent")
+          .withArgs(3);
+      });
+
       it("should pass when correctly nested under a Calldata node", async () => {
         const { enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
@@ -710,6 +734,170 @@ describe("Integrity", () => {
             {
               paramType: Encoding.None,
               operator: Operator.EtherWithinAllowance,
+              compValue: ZeroHash,
+            },
+          ],
+        });
+        await expect(enforce(conditions)).to.not.be.reverted;
+      });
+
+      it("should pass when nested inside a logical operator (And/Or)", async () => {
+        const { enforce } = await loadFixture(setup);
+        const conditions = flattenCondition({
+          paramType: Encoding.Calldata,
+          children: [
+            {
+              paramType: Encoding.None,
+              operator: Operator.And,
+              children: [
+                { paramType: Encoding.Static, operator: Operator.Pass },
+                {
+                  paramType: Encoding.None,
+                  operator: Operator.EtherWithinAllowance,
+                  compValue: ZeroHash,
+                },
+              ],
+            },
+          ],
+        });
+        await expect(enforce(conditions)).to.not.be.reverted;
+      });
+
+      it("should pass when nested inside a deeply nested logical structure", async () => {
+        const { enforce } = await loadFixture(setup);
+        const conditions = flattenCondition({
+          paramType: Encoding.Calldata,
+          children: [
+            {
+              paramType: Encoding.None,
+              operator: Operator.Or,
+              children: [
+                {
+                  paramType: Encoding.None,
+                  operator: Operator.And,
+                  children: [
+                    { paramType: Encoding.Static, operator: Operator.Pass },
+                    {
+                      paramType: Encoding.None,
+                      operator: Operator.EtherWithinAllowance,
+                      compValue: ZeroHash,
+                    },
+                  ],
+                },
+                {
+                  paramType: Encoding.None,
+                  operator: Operator.And,
+                  children: [
+                    { paramType: Encoding.Static, operator: Operator.Pass },
+                    {
+                      paramType: Encoding.None,
+                      operator: Operator.CallWithinAllowance,
+                      compValue: ZeroHash,
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+        await expect(enforce(conditions)).to.not.be.reverted;
+      });
+
+      it("should pass when nested inside a Calldata variant (Or with Calldata branches)", async () => {
+        const { enforce } = await loadFixture(setup);
+        // This tests the scenario: Calldata -> Or -> Calldata -> EtherWithinAllowance
+        // where we have calldata variants and allowance inside one variant
+        const conditions = flattenCondition({
+          paramType: Encoding.Calldata,
+          children: [
+            {
+              paramType: Encoding.None,
+              operator: Operator.Or,
+              children: [
+                {
+                  paramType: Encoding.Calldata,
+                  children: [
+                    { paramType: Encoding.Static, operator: Operator.Pass },
+                    {
+                      paramType: Encoding.None,
+                      operator: Operator.EtherWithinAllowance,
+                      compValue: ZeroHash,
+                    },
+                  ],
+                },
+                {
+                  paramType: Encoding.AbiEncoded,
+                  children: [
+                    { paramType: Encoding.Dynamic, operator: Operator.Pass },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+        await expect(enforce(conditions)).to.not.be.reverted;
+      });
+
+      it("should pass with a central allowance at Calldata level alongside Or variants", async () => {
+        const { enforce } = await loadFixture(setup);
+        // This tests the scenario where we define a single allowance condition
+        // at the Calldata level that applies to all Or branches
+        const conditions = flattenCondition({
+          paramType: Encoding.Calldata,
+          children: [
+            {
+              paramType: Encoding.None,
+              operator: Operator.Or,
+              children: [
+                { paramType: Encoding.Dynamic, operator: Operator.Pass },
+                {
+                  paramType: Encoding.Calldata,
+                  children: [
+                    { paramType: Encoding.Static, operator: Operator.Pass },
+                  ],
+                },
+              ],
+            },
+            // Central allowance that applies to all branches
+            {
+              paramType: Encoding.None,
+              operator: Operator.EtherWithinAllowance,
+              compValue: ZeroHash,
+            },
+          ],
+        });
+        await expect(enforce(conditions)).to.not.be.reverted;
+      });
+
+      it("should pass with allowance as the only condition (no calldata restrictions)", async () => {
+        const { enforce } = await loadFixture(setup);
+        // Scoping a function without any calldata arguments, only restricting ether value
+        const conditions = flattenCondition({
+          paramType: Encoding.Calldata,
+          children: [
+            {
+              paramType: Encoding.None,
+              operator: Operator.EtherWithinAllowance,
+              compValue: ZeroHash,
+            },
+          ],
+        });
+        await expect(enforce(conditions)).to.not.be.reverted;
+      });
+
+      it("should pass with both Ether and Call allowances as the only conditions", async () => {
+        const { enforce } = await loadFixture(setup);
+        const conditions = flattenCondition({
+          paramType: Encoding.Calldata,
+          children: [
+            {
+              paramType: Encoding.None,
+              operator: Operator.EtherWithinAllowance,
+              compValue: ZeroHash,
+            },
+            {
+              paramType: Encoding.None,
+              operator: Operator.CallWithinAllowance,
               compValue: ZeroHash,
             },
           ],
