@@ -78,7 +78,7 @@ export async function setupAvatarAndRoles(roleKey = DEFAULT_ROLE_KEY) {
     avatarAddress,
   );
   await roles.connect(owner).enableModule(member.address);
-  await roles.connect(owner).assignRoles(member.address, [roleKey], [true]);
+  await roles.connect(owner).grantRole(member.address, roleKey, 0, 0, 0);
   await roles.connect(owner).setDefaultRole(member.address, roleKey);
 
   await roles
@@ -147,7 +147,7 @@ export async function setupRoles(roleKey = DEFAULT_ROLE_KEY) {
     avatarAddress,
   );
   await roles.connect(owner).enableModule(member.address);
-  await roles.connect(owner).assignRoles(member.address, [roleKey], [true]);
+  await roles.connect(owner).grantRole(member.address, roleKey, 0, 0, 0);
   await roles.connect(owner).setDefaultRole(member.address, roleKey);
 
   await roles

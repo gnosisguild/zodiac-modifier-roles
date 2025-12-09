@@ -35,11 +35,12 @@ describe("OnlyOwner", async () => {
     const { modifier, owner, johnDoe } = await loadFixture(setup);
 
     await expect(
-      modifier.connect(johnDoe).allowTarget(ROLE_KEY, SomeAddress, 0),
+      modifier.connect(johnDoe).allowTarget(ROLE_KEY, SomeAddress, [], 0),
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
-    await expect(modifier.connect(owner).allowTarget(ROLE_KEY, SomeAddress, 0))
-      .to.not.be.reverted;
+    await expect(
+      modifier.connect(owner).allowTarget(ROLE_KEY, SomeAddress, [], 0),
+    ).to.not.be.reverted;
   });
   it("onlyOwner for scopeTarget, simple invoker fails", async () => {
     const { modifier, owner, johnDoe } = await loadFixture(setup);

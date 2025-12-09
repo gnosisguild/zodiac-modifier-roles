@@ -18,6 +18,8 @@ abstract contract RolesStorage is Modifier, IRolesEvent, IRolesError {
     mapping(bytes32 => address) public unwrappers;
     mapping(address => bytes32) public defaultRoles;
 
+    string public constant VERSION = "3.0.0";
+
     function _key(
         address targetAddress,
         bytes4 selector
