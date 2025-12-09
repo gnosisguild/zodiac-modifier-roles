@@ -14,13 +14,8 @@ enum ExecutionOptions {
     Both
 }
 
-struct TargetAddress {
-    Clearance clearance;
-    ExecutionOptions options;
-}
-
 struct Role {
     mapping(address => uint256) members;
-    mapping(address => TargetAddress) targets;
+    mapping(address => Clearance) clearance;
     mapping(bytes32 => bytes32) scopeConfig;
 }
