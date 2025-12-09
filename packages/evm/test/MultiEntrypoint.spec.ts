@@ -55,7 +55,7 @@ async function setup() {
 
   await roles.enableModule(invoker.address);
 
-  await roles.connect(owner).assignRoles(invoker.address, [ROLE_KEY], [true]);
+  await roles.connect(owner).grantRole(invoker.address, ROLE_KEY, 0, 0, 0);
   await roles.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
 
   const testContractAddress = await testContract.getAddress();

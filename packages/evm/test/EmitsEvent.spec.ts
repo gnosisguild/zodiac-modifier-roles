@@ -31,10 +31,10 @@ describe("EmitsEvent", async () => {
     await expect(
       modifier
         .connect(owner)
-        .allowTarget(ROLE_KEY, AddressOne, ExecutionOptions.Send),
+        .allowTarget(ROLE_KEY, AddressOne, [], ExecutionOptions.Send),
     )
       .to.emit(modifier, "AllowTarget")
-      .withArgs(ROLE_KEY, AddressOne, ExecutionOptions.Send);
+      .withArgs(ROLE_KEY, AddressOne, [], ExecutionOptions.Send);
   });
   it("ScopeTarget", async () => {
     const { owner, modifier } = await loadFixture(setup);

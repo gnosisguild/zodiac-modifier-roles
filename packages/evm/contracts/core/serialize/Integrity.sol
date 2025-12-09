@@ -12,17 +12,6 @@ import {IRolesError} from "../../types/RolesError.sol";
  *
  * @author gnosisguild
  */
-
-/*
- * TODO test following aspects:
- * Enforce Tuples and Arrays to have children
- * Enforce in general nodes to have at least one structural children, for nodes that require children
- * Validated variants accross different Array entries as well
- * Validate compValue for allowance to be either: 32 bytes, 52 bytes or 54 bytes
- * Validate allowance decimals are equal or smaller than 18
- * Validate compValue for Bitmask
- */
-
 library Integrity {
     function enforce(ConditionFlat[] memory conditions) internal pure {
         _root(conditions);
@@ -153,6 +142,10 @@ library Integrity {
             if (encoding != Encoding.Static && encoding != Encoding.Dynamic) {
                 revert IRolesError.UnsuitableParameterType(index);
             }
+            // compValue layout: | 2 bytes: shift | N bytes: mask | N bytes: expected |
+            if (compValue.length < 4 || (compValue.length - 2) % 2 != 0) {
+                revert IRolesError.UnsuitableCompValue(index);
+            }
         } else if (operator == Operator.Custom) {
             if (compValue.length != 32) {
                 revert IRolesError.UnsuitableCompValue(index);
@@ -166,6 +159,11 @@ library Integrity {
             if (compValue.length != 32 && compValue.length != 54) {
                 revert IRolesError.UnsuitableCompValue(index);
             }
+            if (compValue.length == 54) {
+                if (uint8(compValue[52]) > 18 || uint8(compValue[53]) > 18) {
+                    revert IRolesError.AllowanceDecimalsExceedMax(index);
+                }
+            }
         } else if (operator == Operator.EtherWithinAllowance) {
             if (encoding != Encoding.None) {
                 revert IRolesError.UnsuitableParameterType(index);
@@ -174,6 +172,11 @@ library Integrity {
             // 54 bytes: allowanceKey + adapter + accrueDecimals + paramDecimals
             if (compValue.length != 32 && compValue.length != 54) {
                 revert IRolesError.UnsuitableCompValue(index);
+            }
+            if (compValue.length == 54) {
+                if (uint8(compValue[52]) > 18 || uint8(compValue[53]) > 18) {
+                    revert IRolesError.AllowanceDecimalsExceedMax(index);
+                }
             }
         } else if (operator == Operator.CallWithinAllowance) {
             if (encoding != Encoding.None) {
@@ -203,15 +206,17 @@ library Integrity {
                 conditions[i].operator == Operator.EtherWithinAllowance ||
                 conditions[i].operator == Operator.CallWithinAllowance
             ) {
-                (
-                    uint256 countCalldataOrAbiEncodedNodes,
-                    ,
-                    uint256 countOtherNodes
-                ) = _countParentNodes(conditions, i);
+                // EtherWithinAllowance and CallWithinAllowance can appear:
+                // - At top-level (direct child of Calldata/AbiEncoded)
+                // - Inside any logical condition (And/Or)
+                // - Inside nested Calldata/AbiEncoded (for variant branches)
+                // But NOT inside structural nodes like Tuple/Array
+                (, , uint256 countOtherNodes) = _countParentNodes(
+                    conditions,
+                    i
+                );
 
-                if (
-                    countCalldataOrAbiEncodedNodes != 1 || countOtherNodes > 0
-                ) {
+                if (countOtherNodes > 0) {
                     revert IRolesError.UnsuitableParent(i);
                 }
             } else if (conditions[i].operator == Operator.WithinRatio) {

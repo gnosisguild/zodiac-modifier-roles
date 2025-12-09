@@ -71,7 +71,10 @@ library AbiDecoder {
         Layout memory layout,
         Payload memory payload
     ) private pure {
-        assert(location + 32 <= data.length);
+        if (location + 32 > data.length) {
+            payload.overflown = true;
+            return;
+        }
 
         payload.typeIndex = layout.index;
 
@@ -294,21 +297,6 @@ library AbiDecoder {
     }
 
     /**
-     * @dev Plucks a slice of bytes from calldata.
-     * @param data The calldata to pluck the slice from.
-     * @param location The starting location of the slice.
-     * @param size The size of the slice.
-     * @return A slice of bytes from calldata.
-     */
-    function pluck(
-        bytes calldata data,
-        uint256 location,
-        uint256 size
-    ) internal pure returns (bytes calldata) {
-        return data[location:location + size];
-    }
-
-    /**
      * @dev Loads a word from calldata.
      * @param data The calldata to load the word from.
      * @param location The starting location of the slice.
@@ -318,9 +306,6 @@ library AbiDecoder {
         bytes calldata data,
         uint256 location
     ) internal pure returns (bytes32 result) {
-        if (location + 32 > data.length) {
-            revert IRolesError.CalldataOutOfBounds();
-        }
         assembly {
             result := calldataload(add(data.offset, location))
         }
@@ -331,6 +316,7 @@ library AbiDecoder {
      */
     function _ceil32(uint256 size) private pure returns (uint256) {
         // pad size. Source: http://www.cs.nott.ac.uk/~psarb2/G51MPC/slides/NumberLogic.pdf
-        return ((size + 32 - 1) / 32) * 32;
+        //return ((size + 32 - 1) / 32) * 32;
+        return (size + 31) & ~uint256(31);
     }
 }

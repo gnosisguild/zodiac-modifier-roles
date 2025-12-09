@@ -34,7 +34,7 @@ describe("AvatarIsOwnerOfERC721", async () => {
     );
     await roles.enableModule(invoker.address);
 
-    await roles.connect(owner).assignRoles(invoker.address, [ROLE_KEY], [true]);
+    await roles.connect(owner).grantRole(invoker.address, ROLE_KEY, 0, 0, 0);
     await roles.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
 
     const MockERC721 = await hre.ethers.getContractFactory("MockERC721");
