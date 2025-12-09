@@ -12,16 +12,6 @@ import {IRolesError} from "../../types/RolesError.sol";
  *
  * @author gnosisguild
  */
-
-/*
- * TODO test following aspects:
- * Enforce Tuples and Arrays to have children
- * Enforce in general nodes to have at least one structural children, for nodes that require children
- * Validated variants accross different Array entries as well
- * Validate compValue for allowance to be either: 32 bytes, 52 bytes or 54 bytes
- * Validate allowance decimals are equal or smaller than 18
- */
-
 library Integrity {
     function enforce(ConditionFlat[] memory conditions) internal pure {
         _root(conditions);
@@ -169,6 +159,11 @@ library Integrity {
             if (compValue.length != 32 && compValue.length != 54) {
                 revert IRolesError.UnsuitableCompValue(index);
             }
+            if (compValue.length == 54) {
+                if (uint8(compValue[52]) > 18 || uint8(compValue[53]) > 18) {
+                    revert IRolesError.AllowanceDecimalsExceedMax(index);
+                }
+            }
         } else if (operator == Operator.EtherWithinAllowance) {
             if (encoding != Encoding.None) {
                 revert IRolesError.UnsuitableParameterType(index);
@@ -177,6 +172,11 @@ library Integrity {
             // 54 bytes: allowanceKey + adapter + accrueDecimals + paramDecimals
             if (compValue.length != 32 && compValue.length != 54) {
                 revert IRolesError.UnsuitableCompValue(index);
+            }
+            if (compValue.length == 54) {
+                if (uint8(compValue[52]) > 18 || uint8(compValue[53]) > 18) {
+                    revert IRolesError.AllowanceDecimalsExceedMax(index);
+                }
             }
         } else if (operator == Operator.CallWithinAllowance) {
             if (encoding != Encoding.None) {

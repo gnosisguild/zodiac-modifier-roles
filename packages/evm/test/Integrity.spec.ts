@@ -704,10 +704,154 @@ describe("Integrity", () => {
         const conditions = flattenCondition({
           paramType: Encoding.Calldata,
           children: [
+            // Structural child required
+            { paramType: Encoding.Static, operator: Operator.Pass },
+            // EtherWithinAllowance is non-structural
             {
               paramType: Encoding.None,
               operator: Operator.EtherWithinAllowance,
               compValue: ZeroHash,
+            },
+          ],
+        });
+        await expect(enforce(conditions)).to.not.be.reverted;
+      });
+
+      it("should revert if WithinAllowance compValue has invalid length (not 32 or 54)", async () => {
+        const { mock, enforce } = await loadFixture(setup);
+        // 33 bytes - invalid (between 32 and 54)
+        const conditions = flattenCondition({
+          paramType: Encoding.Calldata,
+          children: [
+            {
+              paramType: Encoding.Static,
+              operator: Operator.WithinAllowance,
+              compValue: "0x" + "00".repeat(33),
+            },
+          ],
+        });
+        await expect(enforce(conditions))
+          .to.be.revertedWithCustomError(mock, "UnsuitableCompValue")
+          .withArgs(1);
+      });
+
+      it("should revert if EtherWithinAllowance compValue has invalid length", async () => {
+        const { mock, enforce } = await loadFixture(setup);
+        // 53 bytes - invalid (not 32 or 54)
+        const conditions = flattenCondition({
+          paramType: Encoding.Calldata,
+          children: [
+            // Structural child required
+            { paramType: Encoding.Static, operator: Operator.Pass },
+            {
+              paramType: Encoding.None,
+              operator: Operator.EtherWithinAllowance,
+              compValue: "0x" + "00".repeat(53),
+            },
+          ],
+        });
+        await expect(enforce(conditions))
+          .to.be.revertedWithCustomError(mock, "UnsuitableCompValue")
+          .withArgs(2);
+      });
+
+      it("should pass with valid 54-byte compValue (allowanceKey + adapter + decimals)", async () => {
+        const { enforce } = await loadFixture(setup);
+        const conditions = flattenCondition({
+          paramType: Encoding.Calldata,
+          children: [
+            {
+              paramType: Encoding.Static,
+              operator: Operator.WithinAllowance,
+              compValue: "0x" + "00".repeat(54),
+            },
+          ],
+        });
+        await expect(enforce(conditions)).to.not.be.reverted;
+      });
+
+      it("should revert if compValue is too long (55 bytes)", async () => {
+        const { mock, enforce } = await loadFixture(setup);
+        const conditions = flattenCondition({
+          paramType: Encoding.Calldata,
+          children: [
+            {
+              paramType: Encoding.Static,
+              operator: Operator.WithinAllowance,
+              compValue: "0x" + "00".repeat(55),
+            },
+          ],
+        });
+        await expect(enforce(conditions))
+          .to.be.revertedWithCustomError(mock, "UnsuitableCompValue")
+          .withArgs(1);
+      });
+
+      it("should revert if WithinAllowance accrueDecimals exceeds 18", async () => {
+        const { mock, enforce } = await loadFixture(setup);
+        // 54 bytes: 32 (key) + 20 (adapter) + 1 (accrueDecimals=19) + 1 (paramDecimals=0)
+        const conditions = flattenCondition({
+          paramType: Encoding.Calldata,
+          children: [
+            {
+              paramType: Encoding.Static,
+              operator: Operator.WithinAllowance,
+              compValue: "0x" + "00".repeat(52) + "13" + "00", // 0x13 = 19
+            },
+          ],
+        });
+        await expect(enforce(conditions))
+          .to.be.revertedWithCustomError(mock, "AllowanceDecimalsExceedMax")
+          .withArgs(1);
+      });
+
+      it("should revert if WithinAllowance paramDecimals exceeds 18", async () => {
+        const { mock, enforce } = await loadFixture(setup);
+        // 54 bytes: 32 (key) + 20 (adapter) + 1 (accrueDecimals=0) + 1 (paramDecimals=19)
+        const conditions = flattenCondition({
+          paramType: Encoding.Calldata,
+          children: [
+            {
+              paramType: Encoding.Static,
+              operator: Operator.WithinAllowance,
+              compValue: "0x" + "00".repeat(52) + "00" + "13", // 0x13 = 19
+            },
+          ],
+        });
+        await expect(enforce(conditions))
+          .to.be.revertedWithCustomError(mock, "AllowanceDecimalsExceedMax")
+          .withArgs(1);
+      });
+
+      it("should revert if EtherWithinAllowance decimals exceed 18", async () => {
+        const { mock, enforce } = await loadFixture(setup);
+        // 54 bytes with invalid decimals
+        const conditions = flattenCondition({
+          paramType: Encoding.Calldata,
+          children: [
+            { paramType: Encoding.Static, operator: Operator.Pass },
+            {
+              paramType: Encoding.None,
+              operator: Operator.EtherWithinAllowance,
+              compValue: "0x" + "00".repeat(52) + "ff" + "00", // 0xff = 255
+            },
+          ],
+        });
+        await expect(enforce(conditions))
+          .to.be.revertedWithCustomError(mock, "AllowanceDecimalsExceedMax")
+          .withArgs(2);
+      });
+
+      it("should pass with valid decimals (both = 18)", async () => {
+        const { enforce } = await loadFixture(setup);
+        // 54 bytes: 32 (key) + 20 (adapter) + 1 (accrueDecimals=18) + 1 (paramDecimals=18)
+        const conditions = flattenCondition({
+          paramType: Encoding.Calldata,
+          children: [
+            {
+              paramType: Encoding.Static,
+              operator: Operator.WithinAllowance,
+              compValue: "0x" + "00".repeat(52) + "12" + "12", // 0x12 = 18
             },
           ],
         });

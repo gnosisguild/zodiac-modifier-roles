@@ -81,4 +81,7 @@ interface IRolesError {
 
     /// WithinRatio requires at least one ratio (min or max) to be provided
     error WithinRatioNoRatioProvided(uint256 index);
+
+    /// Allowance decimals exceed maximum of 18
+    error AllowanceDecimalsExceedMax(uint256 index);
 }
