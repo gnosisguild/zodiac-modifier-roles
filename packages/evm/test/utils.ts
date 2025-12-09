@@ -38,7 +38,6 @@ export enum Encoding {
   Dynamic,
   Tuple,
   Array,
-  Calldata,
   AbiEncoded,
 }
 
