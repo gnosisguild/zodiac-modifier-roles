@@ -4,7 +4,7 @@ import { AbiCoder, ZeroHash, solidityPacked } from "ethers";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 import { Encoding, flattenCondition, Operator } from "./utils";
-import { ConditionFlatStruct } from "../typechain-types/contracts/PermissionBuilder";
+import { ConditionFlatStruct } from "../typechain-types/contracts/Roles";
 
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
@@ -441,6 +441,87 @@ describe("Integrity", () => {
         )
           .to.be.revertedWithCustomError(mock, "UnsuitableCompValue")
           .withArgs(1);
+      });
+    });
+
+    describe("Bitmask Operator", () => {
+      it("should revert if compValue is too short (less than 4 bytes)", async () => {
+        const { mock, enforce } = await loadFixture(setup);
+        // Only 2 bytes (just shift, no mask/expected)
+        await expect(
+          enforce(
+            flattenCondition({
+              paramType: Encoding.Calldata,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.Bitmask,
+                  compValue: "0x0000", // Only shift, no mask/expected
+                },
+              ],
+            }),
+          ),
+        )
+          .to.be.revertedWithCustomError(mock, "UnsuitableCompValue")
+          .withArgs(1);
+      });
+
+      it("should revert if compValue has odd length after shift (mask != expected length)", async () => {
+        const { mock, enforce } = await loadFixture(setup);
+        // 5 bytes: 2 shift + 3 remaining (odd, can't split evenly)
+        await expect(
+          enforce(
+            flattenCondition({
+              paramType: Encoding.Calldata,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.Bitmask,
+                  compValue: "0x0000112233", // 2 + 3 bytes (invalid)
+                },
+              ],
+            }),
+          ),
+        )
+          .to.be.revertedWithCustomError(mock, "UnsuitableCompValue")
+          .withArgs(1);
+      });
+
+      it("should pass with valid compValue (4 bytes: shift + 1 mask + 1 expected)", async () => {
+        const { enforce } = await loadFixture(setup);
+        await expect(
+          enforce(
+            flattenCondition({
+              paramType: Encoding.Calldata,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.Bitmask,
+                  compValue: "0x0000ff00", // 2 shift + 1 mask + 1 expected
+                },
+              ],
+            }),
+          ),
+        ).to.not.be.reverted;
+      });
+
+      it("should pass with valid compValue (larger mask/expected)", async () => {
+        const { enforce } = await loadFixture(setup);
+        await expect(
+          enforce(
+            flattenCondition({
+              paramType: Encoding.Calldata,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.Bitmask,
+                  // 2 shift + 4 mask + 4 expected = 10 bytes
+                  compValue: "0x0000ffffffff00000000",
+                },
+              ],
+            }),
+          ),
+        ).to.not.be.reverted;
       });
     });
 
