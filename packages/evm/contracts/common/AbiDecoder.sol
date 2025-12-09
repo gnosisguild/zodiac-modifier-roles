@@ -71,7 +71,10 @@ library AbiDecoder {
         Layout memory layout,
         Payload memory payload
     ) private pure {
-        assert(location + 32 <= data.length);
+        if (location + 32 > data.length) {
+            payload.overflown = true;
+            return;
+        }
 
         payload.typeIndex = layout.index;
 
