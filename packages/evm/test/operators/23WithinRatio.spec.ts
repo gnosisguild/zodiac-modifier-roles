@@ -687,7 +687,7 @@ describe("WithinRatio Operator", () => {
 
       const roleKey =
         "0x0000000000000000000000000000000000000000000000000000000000000001";
-      await roles.connect(owner).assignRoles(member.address, [roleKey], [true]);
+      await roles.connect(owner).grantRole(member.address, roleKey, 0, 0, 0);
       await roles.connect(owner).setDefaultRole(member.address, roleKey);
       await roles.connect(owner).scopeTarget(roleKey, testContractAddress);
 

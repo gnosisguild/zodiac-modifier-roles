@@ -27,8 +27,8 @@ contract MockDecoder {
         bytes calldata data,
         uint256 offset,
         uint256 size
-    ) public pure returns (bytes memory result) {
-        return AbiDecoder.pluck(data, offset, size);
+    ) public pure returns (bytes calldata) {
+        return data[offset:offset + size];
     }
 
     struct FlatPayload {

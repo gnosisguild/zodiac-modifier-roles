@@ -47,11 +47,6 @@ enum Status {
 }
 
 struct Context {
-    ContextCall call;
-    Consumption[] consumptions;
-}
-
-struct ContextCall {
     address to;
     uint256 value;
     Operation operation;

@@ -4,7 +4,7 @@ import { AbiCoder, ZeroHash, solidityPacked } from "ethers";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 import { Encoding, flattenCondition, Operator } from "./utils";
-import { ConditionFlatStruct } from "../typechain-types/contracts/PermissionBuilder";
+import { ConditionFlatStruct } from "../typechain-types/contracts/Roles";
 
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
@@ -444,6 +444,87 @@ describe("Integrity", () => {
       });
     });
 
+    describe("Bitmask Operator", () => {
+      it("should revert if compValue is too short (less than 4 bytes)", async () => {
+        const { mock, enforce } = await loadFixture(setup);
+        // Only 2 bytes (just shift, no mask/expected)
+        await expect(
+          enforce(
+            flattenCondition({
+              paramType: Encoding.Calldata,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.Bitmask,
+                  compValue: "0x0000", // Only shift, no mask/expected
+                },
+              ],
+            }),
+          ),
+        )
+          .to.be.revertedWithCustomError(mock, "UnsuitableCompValue")
+          .withArgs(1);
+      });
+
+      it("should revert if compValue has odd length after shift (mask != expected length)", async () => {
+        const { mock, enforce } = await loadFixture(setup);
+        // 5 bytes: 2 shift + 3 remaining (odd, can't split evenly)
+        await expect(
+          enforce(
+            flattenCondition({
+              paramType: Encoding.Calldata,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.Bitmask,
+                  compValue: "0x0000112233", // 2 + 3 bytes (invalid)
+                },
+              ],
+            }),
+          ),
+        )
+          .to.be.revertedWithCustomError(mock, "UnsuitableCompValue")
+          .withArgs(1);
+      });
+
+      it("should pass with valid compValue (4 bytes: shift + 1 mask + 1 expected)", async () => {
+        const { enforce } = await loadFixture(setup);
+        await expect(
+          enforce(
+            flattenCondition({
+              paramType: Encoding.Calldata,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.Bitmask,
+                  compValue: "0x0000ff00", // 2 shift + 1 mask + 1 expected
+                },
+              ],
+            }),
+          ),
+        ).to.not.be.reverted;
+      });
+
+      it("should pass with valid compValue (larger mask/expected)", async () => {
+        const { enforce } = await loadFixture(setup);
+        await expect(
+          enforce(
+            flattenCondition({
+              paramType: Encoding.Calldata,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.Bitmask,
+                  // 2 shift + 4 mask + 4 expected = 10 bytes
+                  compValue: "0x0000ffffffff00000000",
+                },
+              ],
+            }),
+          ),
+        ).to.not.be.reverted;
+      });
+    });
+
     describe("Array Operators (ArraySome, ArrayEvery)", () => {
       it("should revert if ArraySome is not used on an Array type", async () => {
         const { mock, enforce } = await loadFixture(setup);
@@ -595,7 +676,7 @@ describe("Integrity", () => {
           .withArgs(1);
       });
 
-      it("should revert if not nested under a top-level Calldata node (e.g., inside a Tuple)", async () => {
+      it("should revert if nested inside a structural node (e.g., Tuple)", async () => {
         const { mock, enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
           paramType: Encoding.Calldata,
@@ -618,7 +699,193 @@ describe("Integrity", () => {
           .withArgs(2);
       });
 
+      it("should revert if nested inside an Array", async () => {
+        const { mock, enforce } = await loadFixture(setup);
+        const conditions = flattenCondition({
+          paramType: Encoding.Calldata,
+          children: [
+            {
+              paramType: Encoding.Array,
+              operator: Operator.Matches,
+              children: [
+                { paramType: Encoding.Static, operator: Operator.Pass },
+                {
+                  paramType: Encoding.None,
+                  operator: Operator.CallWithinAllowance,
+                  compValue: ZeroHash,
+                },
+              ],
+            },
+          ],
+        });
+        await expect(enforce(conditions))
+          .to.be.revertedWithCustomError(mock, "UnsuitableParent")
+          .withArgs(3);
+      });
+
       it("should pass when correctly nested under a Calldata node", async () => {
+        const { enforce } = await loadFixture(setup);
+        const conditions = flattenCondition({
+          paramType: Encoding.Calldata,
+          children: [
+            // Structural child required
+            { paramType: Encoding.Static, operator: Operator.Pass },
+            // EtherWithinAllowance is non-structural
+            {
+              paramType: Encoding.None,
+              operator: Operator.EtherWithinAllowance,
+              compValue: ZeroHash,
+            },
+          ],
+        });
+        await expect(enforce(conditions)).to.not.be.reverted;
+      });
+
+      it("should pass when nested inside a logical operator (And/Or)", async () => {
+        const { enforce } = await loadFixture(setup);
+        const conditions = flattenCondition({
+          paramType: Encoding.Calldata,
+          children: [
+            {
+              paramType: Encoding.None,
+              operator: Operator.And,
+              children: [
+                { paramType: Encoding.Static, operator: Operator.Pass },
+                {
+                  paramType: Encoding.None,
+                  operator: Operator.EtherWithinAllowance,
+                  compValue: ZeroHash,
+                },
+              ],
+            },
+          ],
+        });
+        await expect(enforce(conditions)).to.not.be.reverted;
+      });
+
+      it("should pass when nested inside a deeply nested logical structure", async () => {
+        const { enforce } = await loadFixture(setup);
+        const conditions = flattenCondition({
+          paramType: Encoding.Calldata,
+          children: [
+            {
+              paramType: Encoding.None,
+              operator: Operator.Or,
+              children: [
+                {
+                  paramType: Encoding.None,
+                  operator: Operator.And,
+                  children: [
+                    { paramType: Encoding.Static, operator: Operator.Pass },
+                    {
+                      paramType: Encoding.None,
+                      operator: Operator.EtherWithinAllowance,
+                      compValue: ZeroHash,
+                    },
+                  ],
+                },
+                {
+                  paramType: Encoding.None,
+                  operator: Operator.And,
+                  children: [
+                    { paramType: Encoding.Static, operator: Operator.Pass },
+                    {
+                      paramType: Encoding.None,
+                      operator: Operator.CallWithinAllowance,
+                      compValue: ZeroHash,
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+        await expect(enforce(conditions)).to.not.be.reverted;
+      });
+
+      it("should pass when nested inside a Calldata variant (Or with Calldata branches)", async () => {
+        const { enforce } = await loadFixture(setup);
+        // This tests the scenario: Calldata -> Or -> Calldata -> EtherWithinAllowance
+        // where we have calldata variants and allowance inside one variant
+        const conditions = flattenCondition({
+          paramType: Encoding.Calldata,
+          children: [
+            {
+              paramType: Encoding.None,
+              operator: Operator.Or,
+              children: [
+                {
+                  paramType: Encoding.Calldata,
+                  children: [
+                    { paramType: Encoding.Static, operator: Operator.Pass },
+                    {
+                      paramType: Encoding.None,
+                      operator: Operator.EtherWithinAllowance,
+                      compValue: ZeroHash,
+                    },
+                  ],
+                },
+                {
+                  paramType: Encoding.AbiEncoded,
+                  children: [
+                    { paramType: Encoding.Dynamic, operator: Operator.Pass },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+        await expect(enforce(conditions)).to.not.be.reverted;
+      });
+
+      it("should pass with a central allowance at Calldata level alongside Or variants", async () => {
+        const { enforce } = await loadFixture(setup);
+        // This tests the scenario where we define a single allowance condition
+        // at the Calldata level that applies to all Or branches
+        const conditions = flattenCondition({
+          paramType: Encoding.Calldata,
+          children: [
+            {
+              paramType: Encoding.None,
+              operator: Operator.Or,
+              children: [
+                { paramType: Encoding.Dynamic, operator: Operator.Pass },
+                {
+                  paramType: Encoding.Calldata,
+                  children: [
+                    { paramType: Encoding.Static, operator: Operator.Pass },
+                  ],
+                },
+              ],
+            },
+            // Central allowance that applies to all branches
+            {
+              paramType: Encoding.None,
+              operator: Operator.EtherWithinAllowance,
+              compValue: ZeroHash,
+            },
+          ],
+        });
+        await expect(enforce(conditions)).to.not.be.reverted;
+      });
+
+      it("should pass with allowance as the only condition (no calldata restrictions)", async () => {
+        const { enforce } = await loadFixture(setup);
+        // Scoping a function without any calldata arguments, only restricting ether value
+        const conditions = flattenCondition({
+          paramType: Encoding.Calldata,
+          children: [
+            {
+              paramType: Encoding.None,
+              operator: Operator.EtherWithinAllowance,
+              compValue: ZeroHash,
+            },
+          ],
+        });
+        await expect(enforce(conditions)).to.not.be.reverted;
+      });
+
+      it("should pass with both Ether and Call allowances as the only conditions", async () => {
         const { enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
           paramType: Encoding.Calldata,
@@ -627,6 +894,152 @@ describe("Integrity", () => {
               paramType: Encoding.None,
               operator: Operator.EtherWithinAllowance,
               compValue: ZeroHash,
+            },
+            {
+              paramType: Encoding.None,
+              operator: Operator.CallWithinAllowance,
+              compValue: ZeroHash,
+            },
+          ],
+        });
+        await expect(enforce(conditions)).to.not.be.reverted;
+      });
+
+      it("should revert if WithinAllowance compValue has invalid length (not 32 or 54)", async () => {
+        const { mock, enforce } = await loadFixture(setup);
+        // 33 bytes - invalid (between 32 and 54)
+        const conditions = flattenCondition({
+          paramType: Encoding.Calldata,
+          children: [
+            {
+              paramType: Encoding.Static,
+              operator: Operator.WithinAllowance,
+              compValue: "0x" + "00".repeat(33),
+            },
+          ],
+        });
+        await expect(enforce(conditions))
+          .to.be.revertedWithCustomError(mock, "UnsuitableCompValue")
+          .withArgs(1);
+      });
+
+      it("should revert if EtherWithinAllowance compValue has invalid length", async () => {
+        const { mock, enforce } = await loadFixture(setup);
+        // 53 bytes - invalid (not 32 or 54)
+        const conditions = flattenCondition({
+          paramType: Encoding.Calldata,
+          children: [
+            // Structural child required
+            { paramType: Encoding.Static, operator: Operator.Pass },
+            {
+              paramType: Encoding.None,
+              operator: Operator.EtherWithinAllowance,
+              compValue: "0x" + "00".repeat(53),
+            },
+          ],
+        });
+        await expect(enforce(conditions))
+          .to.be.revertedWithCustomError(mock, "UnsuitableCompValue")
+          .withArgs(2);
+      });
+
+      it("should pass with valid 54-byte compValue (allowanceKey + adapter + decimals)", async () => {
+        const { enforce } = await loadFixture(setup);
+        const conditions = flattenCondition({
+          paramType: Encoding.Calldata,
+          children: [
+            {
+              paramType: Encoding.Static,
+              operator: Operator.WithinAllowance,
+              compValue: "0x" + "00".repeat(54),
+            },
+          ],
+        });
+        await expect(enforce(conditions)).to.not.be.reverted;
+      });
+
+      it("should revert if compValue is too long (55 bytes)", async () => {
+        const { mock, enforce } = await loadFixture(setup);
+        const conditions = flattenCondition({
+          paramType: Encoding.Calldata,
+          children: [
+            {
+              paramType: Encoding.Static,
+              operator: Operator.WithinAllowance,
+              compValue: "0x" + "00".repeat(55),
+            },
+          ],
+        });
+        await expect(enforce(conditions))
+          .to.be.revertedWithCustomError(mock, "UnsuitableCompValue")
+          .withArgs(1);
+      });
+
+      it("should revert if WithinAllowance accrueDecimals exceeds 18", async () => {
+        const { mock, enforce } = await loadFixture(setup);
+        // 54 bytes: 32 (key) + 20 (adapter) + 1 (accrueDecimals=19) + 1 (paramDecimals=0)
+        const conditions = flattenCondition({
+          paramType: Encoding.Calldata,
+          children: [
+            {
+              paramType: Encoding.Static,
+              operator: Operator.WithinAllowance,
+              compValue: "0x" + "00".repeat(52) + "13" + "00", // 0x13 = 19
+            },
+          ],
+        });
+        await expect(enforce(conditions))
+          .to.be.revertedWithCustomError(mock, "AllowanceDecimalsExceedMax")
+          .withArgs(1);
+      });
+
+      it("should revert if WithinAllowance paramDecimals exceeds 18", async () => {
+        const { mock, enforce } = await loadFixture(setup);
+        // 54 bytes: 32 (key) + 20 (adapter) + 1 (accrueDecimals=0) + 1 (paramDecimals=19)
+        const conditions = flattenCondition({
+          paramType: Encoding.Calldata,
+          children: [
+            {
+              paramType: Encoding.Static,
+              operator: Operator.WithinAllowance,
+              compValue: "0x" + "00".repeat(52) + "00" + "13", // 0x13 = 19
+            },
+          ],
+        });
+        await expect(enforce(conditions))
+          .to.be.revertedWithCustomError(mock, "AllowanceDecimalsExceedMax")
+          .withArgs(1);
+      });
+
+      it("should revert if EtherWithinAllowance decimals exceed 18", async () => {
+        const { mock, enforce } = await loadFixture(setup);
+        // 54 bytes with invalid decimals
+        const conditions = flattenCondition({
+          paramType: Encoding.Calldata,
+          children: [
+            { paramType: Encoding.Static, operator: Operator.Pass },
+            {
+              paramType: Encoding.None,
+              operator: Operator.EtherWithinAllowance,
+              compValue: "0x" + "00".repeat(52) + "ff" + "00", // 0xff = 255
+            },
+          ],
+        });
+        await expect(enforce(conditions))
+          .to.be.revertedWithCustomError(mock, "AllowanceDecimalsExceedMax")
+          .withArgs(2);
+      });
+
+      it("should pass with valid decimals (both = 18)", async () => {
+        const { enforce } = await loadFixture(setup);
+        // 54 bytes: 32 (key) + 20 (adapter) + 1 (accrueDecimals=18) + 1 (paramDecimals=18)
+        const conditions = flattenCondition({
+          paramType: Encoding.Calldata,
+          children: [
+            {
+              paramType: Encoding.Static,
+              operator: Operator.WithinAllowance,
+              compValue: "0x" + "00".repeat(52) + "12" + "12", // 0x12 = 18
             },
           ],
         });

@@ -13,9 +13,6 @@ interface IRolesError {
                             EXECUTION ERRORS
     //////////////////////////////////////////////////////////////*/
 
-    /// Arrays provided have different lengths
-    error ArraysDifferentLength();
-
     /// Sender is allowed to make this call, but the internal transaction failed
     error ModuleTransactionFailed();
 
@@ -84,4 +81,7 @@ interface IRolesError {
 
     /// WithinRatio requires at least one ratio (min or max) to be provided
     error WithinRatioNoRatioProvided(uint256 index);
+
+    /// Allowance decimals exceed maximum of 18
+    error AllowanceDecimalsExceedMax(uint256 index);
 }

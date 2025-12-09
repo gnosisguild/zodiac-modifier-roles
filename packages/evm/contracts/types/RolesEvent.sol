@@ -19,7 +19,8 @@ interface IRolesEvent {
         address indexed initiator,
         address indexed owner,
         address indexed avatar,
-        address target
+        address target,
+        string version
     );
 
     /// Emitted when a role is granted to a module
@@ -45,6 +46,7 @@ interface IRolesEvent {
     event AllowTarget(
         bytes32 roleKey,
         address targetAddress,
+        ConditionFlat[] conditions,
         ExecutionOptions options
     );
 

@@ -1,11 +1,10 @@
 import { expect } from "chai";
 import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { AbiCoder, BytesLike } from "ethers";
+import { AbiCoder, BytesLike, ZeroHash } from "ethers";
 
 import {
   Encoding,
-  BYTES32_ZERO,
   ExecutionOptions,
   Operator,
   PermissionCheckerStatus,
@@ -53,7 +52,7 @@ describe("Roles", async () => {
   async function setupWitSpendAndRevert() {
     const { roles, testContract, owner, invoker } = await setup();
 
-    await roles.connect(owner).assignRoles(invoker.address, [ROLE_KEY], [true]);
+    await roles.connect(owner).grantRole(invoker.address, ROLE_KEY, 0, 0, 0);
     await roles.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
 
     const allowanceKey =
@@ -116,26 +115,24 @@ describe("Roles", async () => {
       await roles.waitForDeployment();
       await expect(roles.deploymentTransaction())
         .to.emit(roles, "RolesModSetup")
-        .withArgs(user1.address, user1.address, user1.address, user1.address);
+        .withArgs(
+          user1.address,
+          user1.address,
+          user1.address,
+          user1.address,
+          "3.0.0",
+        );
     });
   });
 
-  describe("assignRoles()", async () => {
-    it("should throw on length mismatch", async () => {
-      const { roles, owner, alice } = await loadFixture(setup);
-      await expect(
-        roles
-          .connect(owner)
-          .assignRoles(alice.address, [ROLE_KEY1, ROLE_KEY2], [true]),
-      ).to.be.revertedWithCustomError(roles, "ArraysDifferentLength");
-    });
+  describe("grantRole()", async () => {
     it("reverts if not authorized", async () => {
       const { roles, alice, bob } = await loadFixture(setup);
       await expect(
-        roles.connect(alice).assignRoles(bob.address, [ROLE_KEY1], [true]),
+        roles.connect(alice).grantRole(bob.address, ROLE_KEY1, 0, 0, 0),
       ).to.be.revertedWith("Ownable: caller is not the owner");
     });
-    it("assigns roles to a module", async () => {
+    it("grants a role to a module", async () => {
       const { roles, testContract, owner, invoker } = await loadFixture(setup);
 
       await roles
@@ -143,6 +140,7 @@ describe("Roles", async () => {
         .allowTarget(
           ROLE_KEY,
           await testContract.getAddress(),
+          [],
           ExecutionOptions.None,
         );
 
@@ -157,9 +155,7 @@ describe("Roles", async () => {
           ),
       ).to.be.revertedWithCustomError(roles, "NoMembership");
 
-      await roles
-        .connect(owner)
-        .assignRoles(invoker.address, [ROLE_KEY], [true]);
+      await roles.connect(owner).grantRole(invoker.address, ROLE_KEY, 0, 0, 0);
 
       await roles.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
 
@@ -174,7 +170,38 @@ describe("Roles", async () => {
           ),
       ).to.emit(testContract, "DoNothing");
     });
-    it("revokes roles to a module", async () => {
+    it("enables the module if necessary", async () => {
+      const { roles, owner, alice } = await loadFixture(setup);
+
+      await roles.connect(owner).grantRole(alice.address, ROLE_KEY1, 0, 0, 0);
+
+      await expect(await roles.isModuleEnabled(alice.address)).to.equal(true);
+
+      await expect(
+        roles.connect(owner).grantRole(alice.address, ROLE_KEY2, 0, 0, 0),
+      ).to.not.be.reverted;
+    });
+    it("emits the GrantRole event", async () => {
+      const { owner, alice, roles } = await loadFixture(setup);
+      const MAX_UINT64 = BigInt("0xFFFFFFFFFFFFFFFF");
+      const MAX_UINT128 = (1n << 128n) - 1n;
+
+      await expect(
+        roles.connect(owner).grantRole(alice.address, ROLE_KEY1, 0, 0, 0),
+      )
+        .to.emit(roles, "GrantRole")
+        .withArgs(ROLE_KEY1, alice.address, 0, MAX_UINT64, MAX_UINT128);
+    });
+  });
+
+  describe("revokeRole()", async () => {
+    it("reverts if not authorized", async () => {
+      const { roles, alice, bob } = await loadFixture(setup);
+      await expect(
+        roles.connect(alice).revokeRole(bob.address, ROLE_KEY1),
+      ).to.be.revertedWith("Ownable: caller is not the owner");
+    });
+    it("revokes a role from a module", async () => {
       const { roles, testContract, owner, invoker } = await loadFixture(setup);
 
       await roles
@@ -182,16 +209,15 @@ describe("Roles", async () => {
         .allowTarget(
           ROLE_KEY,
           await testContract.getAddress(),
+          [],
           ExecutionOptions.None,
         );
 
       //authorize
-      await roles
-        .connect(owner)
-        .assignRoles(invoker.address, [ROLE_KEY], [true]);
+      await roles.connect(owner).grantRole(invoker.address, ROLE_KEY, 0, 0, 0);
       await roles.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
 
-      // expect it to succeed, after assigning role
+      // expect it to succeed, after granting role
       await expect(
         roles
           .connect(invoker)
@@ -204,9 +230,7 @@ describe("Roles", async () => {
       ).to.emit(testContract, "DoNothing");
 
       //revoke
-      await roles
-        .connect(owner)
-        .assignRoles(invoker.address, [ROLE_KEY], [false]);
+      await roles.connect(owner).revokeRole(invoker.address, ROLE_KEY);
 
       // expect it to fail, after revoking
       await expect(
@@ -220,31 +244,14 @@ describe("Roles", async () => {
           ),
       ).to.be.revertedWithCustomError(roles, "NoMembership");
     });
-    it("it enables the module if necessary", async () => {
-      const { roles, owner, alice } = await loadFixture(setup);
-
-      await roles
-        .connect(owner)
-        .assignRoles(alice.address, [ROLE_KEY1], [true]);
-
-      await expect(await roles.isModuleEnabled(alice.address)).to.equal(true);
-
-      await expect(
-        roles
-          .connect(owner)
-          .assignRoles(alice.address, [ROLE_KEY1, ROLE_KEY2], [true, true]),
-      ).to.not.be.reverted;
-    });
-    it("emits the GrantRole event", async () => {
+    it("emits the RevokeRole event", async () => {
       const { owner, alice, roles } = await loadFixture(setup);
-      const MAX_UINT64 = BigInt("0xFFFFFFFFFFFFFFFF");
-      const MAX_UINT128 = (1n << 128n) - 1n;
 
-      await expect(
-        roles.connect(owner).assignRoles(alice.address, [ROLE_KEY1], [true]),
-      )
-        .to.emit(roles, "GrantRole")
-        .withArgs(ROLE_KEY1, alice.address, 0, MAX_UINT64, MAX_UINT128);
+      await roles.connect(owner).grantRole(alice.address, ROLE_KEY1, 0, 0, 0);
+
+      await expect(roles.connect(owner).revokeRole(alice.address, ROLE_KEY1))
+        .to.emit(roles, "RevokeRole")
+        .withArgs(ROLE_KEY1, alice.address);
     });
   });
 
@@ -259,9 +266,8 @@ describe("Roles", async () => {
       const { roles, testContract, owner, invoker } = await loadFixture(setup);
 
       // grant roles 1 and 2 to invoker
-      await roles
-        .connect(owner)
-        .assignRoles(invoker.address, [ROLE_KEY1, ROLE_KEY2], [true, true]);
+      await roles.connect(owner).grantRole(invoker.address, ROLE_KEY1, 0, 0, 0);
+      await roles.connect(owner).grantRole(invoker.address, ROLE_KEY2, 0, 0, 0);
 
       // make ROLE2 the default for invoker
       await roles.connect(owner).setDefaultRole(invoker.address, ROLE_KEY2);
@@ -272,6 +278,7 @@ describe("Roles", async () => {
         .allowTarget(
           ROLE_KEY1,
           await testContract.getAddress(),
+          [],
           ExecutionOptions.None,
         );
 
@@ -637,9 +644,7 @@ describe("Roles", async () => {
       const TestContract = await hre.ethers.getContractFactory("TestContract");
       const testContract2 = await TestContract.deploy();
 
-      await roles
-        .connect(owner)
-        .assignRoles(invoker.address, [ROLE_KEY1], [true]);
+      await roles.connect(owner).grantRole(invoker.address, ROLE_KEY1, 0, 0, 0);
       await roles.connect(owner).setDefaultRole(invoker.address, ROLE_KEY1);
       await roles
         .connect(owner)
@@ -715,9 +720,7 @@ describe("Roles", async () => {
     it("a permission with fields insided a nested Calldata", async () => {
       const { roles, testContract, owner, invoker } = await loadFixture(setup);
 
-      await roles
-        .connect(owner)
-        .assignRoles(invoker.address, [ROLE_KEY1], [true]);
+      await roles.connect(owner).grantRole(invoker.address, ROLE_KEY1, 0, 0, 0);
       await roles.connect(owner).setDefaultRole(invoker.address, ROLE_KEY1);
       await roles
         .connect(owner)
@@ -784,11 +787,11 @@ describe("Roles", async () => {
 
       await expect(invoke(123457, "0xaabbccdd4500d1"))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
+        .withArgs(PermissionCheckerStatus.ParameterNotAllowed, ZeroHash);
 
       await expect(invoke(123456, "0xaabb"))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
+        .withArgs(PermissionCheckerStatus.ParameterNotAllowed, ZeroHash);
 
       await expect(invoke(123456, "0xaabbccdd4500d1")).to.not.be.reverted;
 
