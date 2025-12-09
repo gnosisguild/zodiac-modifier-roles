@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "../common/ImmutableStorage.sol";
 import "../common/ScopeConfig.sol";
 
 import "./serialize/ConditionsTransform.sol";
 import "./Storage.sol";
 
-import {TargetAddress, Clearance} from "../types/Permission.sol";
+import {Clearance} from "../types/Permission.sol";
 
 /*
  * Permission Model
@@ -28,7 +27,8 @@ import {TargetAddress, Clearance} from "../types/Permission.sol";
  *  │
  *  └─ scopeConfig (target + selector → ScopeConfig)
  *      │
- *      │   Used when Clearance.Function
+ *      │   Used when Clearance.Function (selector != 0)
+ *      │   or Clearance.Target with conditions
  *      │
  *      ├─ not set ───────────────────► function blocked
  *      │
@@ -65,14 +65,14 @@ abstract contract Setup is RolesStorage {
 
         setupModules();
 
-        emit RolesModSetup(msg.sender, _owner, _avatar, _target);
+        emit RolesModSetup(msg.sender, _owner, _avatar, _target, VERSION);
     }
 
     /*//////////////////////////////////////////////////////////////
                            ROLE MEMBERSHIP
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Legacy function for backwards compatibility. Assigns roles to a module.
+    /// @dev Assigns roles to a module (legacy function for backwards compatibility).
     /// @param module Module to assign roles to.
     /// @param roleKeys Roles to assign.
     /// @param memberOf true to grant, false to revoke.
@@ -81,25 +81,16 @@ abstract contract Setup is RolesStorage {
         bytes32[] calldata roleKeys,
         bool[] calldata memberOf
     ) external onlyOwner {
-        if (roleKeys.length != memberOf.length) {
-            revert ArraysDifferentLength();
-        }
-        for (uint16 i = 0; i < roleKeys.length; i++) {
+        for (uint256 i; i < roleKeys.length; ) {
+            bytes32 key = roleKeys[i];
             if (memberOf[i]) {
-                // Grant with unlimited uses and no expiry (backwards compatible behavior)
-                uint64 max64 = type(uint64).max;
-                uint128 max128 = type(uint128).max;
-                roles[roleKeys[i]].members[module] =
-                    (uint256(max64) << 128) |
-                    uint256(max128);
-                emit GrantRole(roleKeys[i], module, 0, max64, max128);
+                grantRole(module, key, 0, 0, 0);
             } else {
-                delete roles[roleKeys[i]].members[module];
-                emit RevokeRole(roleKeys[i], module);
+                revokeRole(module, key);
             }
-        }
-        if (!isModuleEnabled(module)) {
-            enableModule(module);
+            unchecked {
+                ++i;
+            }
         }
     }
 
@@ -115,7 +106,7 @@ abstract contract Setup is RolesStorage {
         uint64 start,
         uint64 end,
         uint128 usesLeft
-    ) external onlyOwner {
+    ) public onlyOwner {
         end = end != 0 ? end : type(uint64).max;
         usesLeft = usesLeft != 0 ? usesLeft : type(uint128).max;
         roles[roleKey].members[module] =
@@ -131,9 +122,16 @@ abstract contract Setup is RolesStorage {
     /// @dev Revokes a role from a module.
     /// @param module Module to revoke the role from.
     /// @param roleKey Role to revoke.
-    function revokeRole(address module, bytes32 roleKey) external onlyOwner {
+    function revokeRole(address module, bytes32 roleKey) public onlyOwner {
         delete roles[roleKey].members[module];
         emit RevokeRole(roleKey, module);
+    }
+
+    /// @dev Allows a module to renounce its own role.
+    /// @param roleKey Role to renounce.
+    function renounceRole(bytes32 roleKey) external {
+        delete roles[roleKey].members[msg.sender];
+        emit RevokeRole(roleKey, msg.sender);
     }
 
     /// @dev Sets the default role used for a module if it calls
@@ -152,34 +150,28 @@ abstract contract Setup is RolesStorage {
                          TARGET PERMISSIONS
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Allows transactions to a target address.
+    /// @dev Allows transactions to a target address, optionally with conditions.
     /// @param roleKey identifier of the role to be modified.
     /// @param targetAddress Destination address of transaction.
+    /// @param conditions The conditions to enforce on all calls (empty for wildcarded).
     /// @param options designates if a transaction can send ether and/or delegatecall to target.
     function allowTarget(
         bytes32 roleKey,
         address targetAddress,
+        ConditionFlat[] calldata conditions,
         ExecutionOptions options
     ) external onlyOwner {
-        roles[roleKey].targets[targetAddress] = TargetAddress({
-            clearance: Clearance.Target,
-            options: options
-        });
-        emit AllowTarget(roleKey, targetAddress, options);
-    }
+        bytes32 key = bytes32(bytes20(targetAddress)) | (~bytes32(0) >> 160);
 
-    /// @dev Removes transactions to a target address.
-    /// @param roleKey identifier of the role to be modified.
-    /// @param targetAddress Destination address of transaction.
-    function revokeTarget(
-        bytes32 roleKey,
-        address targetAddress
-    ) external onlyOwner {
-        roles[roleKey].targets[targetAddress] = TargetAddress({
-            clearance: Clearance.None,
-            options: ExecutionOptions.None
-        });
-        emit RevokeTarget(roleKey, targetAddress);
+        roles[roleKey].clearance[targetAddress] = Clearance.Target;
+        roles[roleKey].scopeConfig[key] = conditions.length == 0
+            ? ScopeConfig.packAsWildcarded(options)
+            : ScopeConfig.pack(
+                options,
+                ConditionsTransform.packAndStore(conditions)
+            );
+
+        emit AllowTarget(roleKey, targetAddress, conditions, options);
     }
 
     /// @dev Designates only specific functions can be called.
@@ -189,11 +181,19 @@ abstract contract Setup is RolesStorage {
         bytes32 roleKey,
         address targetAddress
     ) external onlyOwner {
-        roles[roleKey].targets[targetAddress] = TargetAddress({
-            clearance: Clearance.Function,
-            options: ExecutionOptions.None
-        });
+        roles[roleKey].clearance[targetAddress] = Clearance.Function;
         emit ScopeTarget(roleKey, targetAddress);
+    }
+
+    /// @dev Removes transactions to a target address.
+    /// @param roleKey identifier of the role to be modified.
+    /// @param targetAddress Destination address of transaction.
+    function revokeTarget(
+        bytes32 roleKey,
+        address targetAddress
+    ) external onlyOwner {
+        delete roles[roleKey].clearance[targetAddress];
+        emit RevokeTarget(roleKey, targetAddress);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -243,8 +243,7 @@ abstract contract Setup is RolesStorage {
         ConditionFlat[] memory conditions,
         ExecutionOptions options
     ) external onlyOwner {
-        bytes memory buffer = ConditionsTransform.pack(conditions);
-        address pointer = ImmutableStorage.store(buffer);
+        address pointer = ConditionsTransform.packAndStore(conditions);
 
         roles[roleKey].scopeConfig[_key(targetAddress, selector)] = ScopeConfig
             .pack(options, pointer);
@@ -298,13 +297,9 @@ abstract contract Setup is RolesStorage {
         uint64 timestamp = allowances[key].timestamp;
         uint128 balance = allowances[key].balance;
 
-        allowances[key] = Allowance({
-            refill: refill,
-            maxRefill: maxRefill,
-            period: period,
-            timestamp: timestamp,
-            balance: balance
-        });
+        allowances[key].refill = refill;
+        allowances[key].maxRefill = maxRefill;
+        allowances[key].period = period;
 
         emit SetAllowance(key, balance, maxRefill, refill, period, timestamp);
     }

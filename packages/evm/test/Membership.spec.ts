@@ -28,7 +28,7 @@ describe("Membership", () => {
     await roles.connect(owner).setDefaultRole(member.address, ROLE_KEY);
     await roles
       .connect(owner)
-      .allowTarget(ROLE_KEY, await testContract.getAddress(), 0);
+      .allowTarget(ROLE_KEY, await testContract.getAddress(), [], 0);
 
     return { roles, owner, member, testContract };
   }
@@ -90,7 +90,7 @@ describe("Membership", () => {
         .connect(owner)
         .grantRole(member.address, limitedRole, 0, 0, 2);
       await roles.connect(owner).setDefaultRole(member.address, limitedRole);
-      await roles.connect(owner).allowTarget(limitedRole, target, 0);
+      await roles.connect(owner).allowTarget(limitedRole, target, [], 0);
 
       await roles.connect(member).execTransactionFromModule(target, 0, "0x", 0);
 
@@ -109,7 +109,7 @@ describe("Membership", () => {
         .connect(owner)
         .grantRole(member.address, limitedRole, 0, 0, 2);
       await roles.connect(owner).setDefaultRole(member.address, limitedRole);
-      await roles.connect(owner).allowTarget(limitedRole, target, 0);
+      await roles.connect(owner).allowTarget(limitedRole, target, [], 0);
 
       await roles.connect(member).execTransactionFromModule(target, 0, "0x", 0);
       await roles.connect(member).execTransactionFromModule(target, 0, "0x", 0);
@@ -129,7 +129,7 @@ describe("Membership", () => {
         .connect(owner)
         .grantRole(member.address, limitedRole, 0, end, 3);
       await roles.connect(owner).setDefaultRole(member.address, limitedRole);
-      await roles.connect(owner).allowTarget(limitedRole, target, 0);
+      await roles.connect(owner).allowTarget(limitedRole, target, [], 0);
 
       // First call (usesLeft: 3 -> 2)
       await roles.connect(member).execTransactionFromModule(target, 0, "0x", 0);
@@ -154,7 +154,7 @@ describe("Membership", () => {
         .connect(owner)
         .grantRole(member.address, limitedRole, 0, 0, 2);
       await roles.connect(owner).setDefaultRole(member.address, limitedRole);
-      await roles.connect(owner).allowTarget(limitedRole, target, 0);
+      await roles.connect(owner).allowTarget(limitedRole, target, [], 0);
 
       const failingData =
         testContract.interface.encodeFunctionData("fnThatReverts");
