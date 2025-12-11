@@ -16,7 +16,7 @@ describe("Topology Library", () => {
       const { topology } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         children: [
           {
@@ -42,7 +42,7 @@ describe("Topology Library", () => {
       const { topology } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         children: [
           {
@@ -79,7 +79,7 @@ describe("Topology Library", () => {
       const { topology } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         children: [
           {
@@ -116,7 +116,7 @@ describe("Topology Library", () => {
       const { topology } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         children: [
           {
@@ -163,7 +163,7 @@ describe("Topology Library", () => {
       const { topology } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         children: [
           {
@@ -200,7 +200,7 @@ describe("Topology Library", () => {
       const { topology } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         children: [
           {
@@ -227,7 +227,7 @@ describe("Topology Library", () => {
         ],
       });
 
-      // Check the root Calldata node at index 0
+      // Check the root AbiEncoded node at index 0
       const [childStart, childCount, sChildCount] = await topology.childBounds(
         conditions,
         0,
@@ -242,7 +242,7 @@ describe("Topology Library", () => {
       const { topology } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         children: [
           {
@@ -307,7 +307,7 @@ describe("Topology Library", () => {
       const { topology } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         children: [
           {
@@ -318,7 +318,7 @@ describe("Topology Library", () => {
         ],
       });
 
-      expect(await topology.isStructural(conditions, 0)).to.be.true; // Calldata
+      expect(await topology.isStructural(conditions, 0)).to.be.true; // AbiEncoded
       expect(await topology.isStructural(conditions, 1)).to.be.true; // Static
     });
 
@@ -326,7 +326,7 @@ describe("Topology Library", () => {
       const { topology } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         children: [
           {
@@ -365,7 +365,7 @@ describe("Topology Library", () => {
       const { topology } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         children: [
           {
@@ -394,7 +394,7 @@ describe("Topology Library", () => {
       const { topology } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         children: [
           {
@@ -425,7 +425,7 @@ describe("Topology Library", () => {
       const { topology } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         children: [
           {
@@ -449,7 +449,7 @@ describe("Topology Library", () => {
       const { topology } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         children: [
           {

@@ -11,7 +11,7 @@ describe("calldataMatches", () => {
     })()
 
     expect(result).toEqual({
-      paramType: Encoding.Calldata,
+      paramType: Encoding.AbiEncoded,
       operator: Operator.Matches,
       children: [
         {

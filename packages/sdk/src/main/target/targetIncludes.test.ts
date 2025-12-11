@@ -521,7 +521,7 @@ describe("targetIncludes()", () => {
     it("conditions are normalized before comparison", () => {
       // Test that equivalent but differently structured conditions are considered equal
       const condition1: Condition = {
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         compValue: "0x",
         children: [
@@ -536,7 +536,7 @@ describe("targetIncludes()", () => {
       }
 
       const condition2: Condition = {
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         children: [COMP(2), COMP(1)],
       }

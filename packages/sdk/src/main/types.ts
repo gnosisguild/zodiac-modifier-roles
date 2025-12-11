@@ -20,9 +20,8 @@ export enum Encoding {
   Static = 1,
   Dynamic = 2,
   Tuple = 3,
-  Array = 4,
-  Calldata = 5,
-  AbiEncoded = 6,
+  Array = 4,  
+  AbiEncoded = 5,
 }
 
 export enum Operator {
@@ -40,7 +39,7 @@ export enum Operator {
   Or = 2,
   // ------------------------------------------------------------
   // 05-14: COMPLEX EXPRESSIONS
-  //          paramType: Calldata / AbiEncoded / Tuple / Array,
+  //          paramType: AbiEncoded / Tuple / Array,
   //          ✅ children
   //          🚫 compValue
   Matches = 5,
