@@ -70,7 +70,7 @@ describe("Roles", async () => {
       [
         {
           parent: 0,
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           compValue: "0x",
         },
@@ -663,7 +663,7 @@ describe("Roles", async () => {
         [
           {
             parent: 0,
-            paramType: Encoding.Calldata,
+            paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -684,7 +684,7 @@ describe("Roles", async () => {
         [
           {
             parent: 0,
-            paramType: Encoding.Calldata,
+            paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -717,7 +717,7 @@ describe("Roles", async () => {
       await expect(invoke(await testContract2.getAddress(), 0)).to.be.reverted;
     });
 
-    it("a permission with fields insided a nested Calldata", async () => {
+    it("a permission with fields inside a nested AbiEncoded", async () => {
       const { roles, testContract, owner, invoker } = await loadFixture(setup);
 
       await roles.connect(owner).grantRole(invoker.address, ROLE_KEY1, 0, 0, 0);
@@ -731,12 +731,12 @@ describe("Roles", async () => {
         await testContract.getAddress(),
         testContract.interface.getFunction("dynamic").selector,
         flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           compValue: "0x",
           children: [
             {
-              paramType: Encoding.Calldata,
+              paramType: Encoding.AbiEncoded,
               operator: Operator.Matches,
               compValue: "0x",
               children: [
@@ -800,7 +800,7 @@ describe("Roles", async () => {
         await testContract.getAddress(),
         testContract.interface.getFunction("dynamic").selector,
         flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           compValue: "0x",
           children: [
@@ -811,7 +811,7 @@ describe("Roles", async () => {
                 "0x0000000000000000000000000000000000000000000000000000000000000011",
               children: [
                 {
-                  paramType: Encoding.Calldata,
+                  paramType: Encoding.AbiEncoded,
                   operator: Operator.Pass,
                   compValue: "0x",
                   children: [
@@ -839,7 +839,7 @@ describe("Roles", async () => {
         await testContract.getAddress(),
         testContract.interface.getFunction("dynamic").selector,
         flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           compValue: "0x",
           children: [
@@ -850,7 +850,7 @@ describe("Roles", async () => {
                 "0x0000000000000000000000000000000000000000000000000000000000000011",
               children: [
                 {
-                  paramType: Encoding.Calldata,
+                  paramType: Encoding.AbiEncoded,
                   operator: Operator.Pass,
                   compValue: "0x",
                   children: [

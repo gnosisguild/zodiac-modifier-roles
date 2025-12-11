@@ -68,7 +68,7 @@ describe("Integrity", () => {
         enforce([
           {
             parent: 0,
-            paramType: Encoding.Calldata,
+            paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -90,9 +90,9 @@ describe("Integrity", () => {
   });
 
   describe("Root Node Validation", () => {
-    it("should revert if the final resolved root type is not Calldata", async () => {
+    it("should revert if the final resolved root type is not AbiEncoded", async () => {
       const { mock, enforce } = await loadFixture(setup);
-      // This tree resolves to Static, not Calldata
+      // This tree resolves to Static, not AbiEncoded
       const conditions = flattenCondition({
         paramType: Encoding.Static,
         operator: Operator.Pass,
@@ -103,10 +103,10 @@ describe("Integrity", () => {
       );
     });
 
-    it("should pass for a simple, valid Calldata root", async () => {
+    it("should pass for a simple, valid AbiEncoded root", async () => {
       const { enforce } = await loadFixture(setup);
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
       });
@@ -123,7 +123,7 @@ describe("Integrity", () => {
         enforce([
           {
             parent: 0,
-            paramType: Encoding.Calldata,
+            paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -145,11 +145,11 @@ describe("Integrity", () => {
   });
 
   describe("Node-Specific Validation", () => {
-    describe("Container Nodes (Tuple, Array, Calldata, AbiEncoded)", () => {
+    describe("Container Nodes (Tuple, Array, AbiEncoded, AbiEncoded)", () => {
       it("should revert if a Tuple node has no children", async () => {
         const { mock, enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           children: [
             {
               paramType: Encoding.Tuple,
@@ -175,7 +175,7 @@ describe("Integrity", () => {
         });
 
         const conditions = flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           children: [
             {
               paramType: Encoding.Tuple,
@@ -195,10 +195,10 @@ describe("Integrity", () => {
           .withArgs(1);
       });
 
-      it("should revert if a Calldata node has no children", async () => {
+      it("should revert if a AbiEncoded node has no children", async () => {
         const { mock, enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
         });
         await expect(enforce(conditions))
@@ -209,7 +209,7 @@ describe("Integrity", () => {
       it("should revert if an Array node has no children", async () => {
         const { mock, enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           children: [{ paramType: Encoding.Array, operator: Operator.Matches }],
         });
         await expect(enforce(conditions))
@@ -230,7 +230,7 @@ describe("Integrity", () => {
         });
 
         const conditions = flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           children: [
             {
               paramType: Encoding.Array,
@@ -253,7 +253,7 @@ describe("Integrity", () => {
       it("should pass with valid children", async () => {
         const { enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           children: [
             {
               paramType: Encoding.Tuple,
@@ -272,7 +272,7 @@ describe("Integrity", () => {
       it("should revert if a Static node has children", async () => {
         const { mock, enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           children: [
             {
               paramType: Encoding.Static,
@@ -288,7 +288,7 @@ describe("Integrity", () => {
       it("should revert if a Dynamic node has children", async () => {
         const { mock, enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           children: [
             {
               paramType: Encoding.Dynamic,
@@ -306,7 +306,7 @@ describe("Integrity", () => {
       it("should revert if a logical node's paramType is not None", async () => {
         const { mock, enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           children: [
             {
               paramType: Encoding.Static, // Should be None
@@ -323,7 +323,7 @@ describe("Integrity", () => {
       it("should revert if a logical node has a non-empty compValue", async () => {
         const { mock, enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           children: [
             {
               paramType: Encoding.None,
@@ -343,7 +343,7 @@ describe("Integrity", () => {
       it("should revert if a logical node has no children", async () => {
         const { mock, enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           children: [{ paramType: Encoding.None, operator: Operator.And }],
         });
         await expect(enforce(conditions))
@@ -358,7 +358,7 @@ describe("Integrity", () => {
       it("should revert if GreaterThan is used with a non-Static type", async () => {
         const { mock, enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           children: [
             {
               paramType: Encoding.Dynamic, // Invalid
@@ -375,7 +375,7 @@ describe("Integrity", () => {
       it("should revert if EqualTo is used with an invalid type like None", async () => {
         const { mock, enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           children: [
             {
               paramType: Encoding.None, // Invalid
@@ -392,7 +392,7 @@ describe("Integrity", () => {
       it("should revert if GreaterThan has a compValue that is not 32 bytes", async () => {
         const { mock, enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           children: [
             {
               paramType: Encoding.Static,
@@ -411,7 +411,7 @@ describe("Integrity", () => {
         await expect(
           enforce(
             flattenCondition({
-              paramType: Encoding.Calldata,
+              paramType: Encoding.AbiEncoded,
               children: [
                 {
                   paramType: Encoding.Static,
@@ -428,7 +428,7 @@ describe("Integrity", () => {
         await expect(
           enforce(
             flattenCondition({
-              paramType: Encoding.Calldata,
+              paramType: Encoding.AbiEncoded,
               children: [
                 {
                   paramType: Encoding.Static,
@@ -451,7 +451,7 @@ describe("Integrity", () => {
         await expect(
           enforce(
             flattenCondition({
-              paramType: Encoding.Calldata,
+              paramType: Encoding.AbiEncoded,
               children: [
                 {
                   paramType: Encoding.Static,
@@ -472,7 +472,7 @@ describe("Integrity", () => {
         await expect(
           enforce(
             flattenCondition({
-              paramType: Encoding.Calldata,
+              paramType: Encoding.AbiEncoded,
               children: [
                 {
                   paramType: Encoding.Static,
@@ -492,7 +492,7 @@ describe("Integrity", () => {
         await expect(
           enforce(
             flattenCondition({
-              paramType: Encoding.Calldata,
+              paramType: Encoding.AbiEncoded,
               children: [
                 {
                   paramType: Encoding.Static,
@@ -510,7 +510,7 @@ describe("Integrity", () => {
         await expect(
           enforce(
             flattenCondition({
-              paramType: Encoding.Calldata,
+              paramType: Encoding.AbiEncoded,
               children: [
                 {
                   paramType: Encoding.Static,
@@ -529,7 +529,7 @@ describe("Integrity", () => {
       it("should revert if ArraySome is not used on an Array type", async () => {
         const { mock, enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           children: [
             {
               paramType: Encoding.Tuple, // Invalid
@@ -551,7 +551,7 @@ describe("Integrity", () => {
         await expect(
           enforce(
             flattenCondition({
-              paramType: Encoding.Calldata,
+              paramType: Encoding.AbiEncoded,
               children: [
                 { paramType: Encoding.Array, operator: Operator.ArraySome },
               ],
@@ -565,7 +565,7 @@ describe("Integrity", () => {
         await expect(
           enforce(
             flattenCondition({
-              paramType: Encoding.Calldata,
+              paramType: Encoding.AbiEncoded,
               children: [
                 {
                   paramType: Encoding.Array,
@@ -586,7 +586,7 @@ describe("Integrity", () => {
       it("should revert if ArrayTailMatches is not used on an Array type", async () => {
         const { mock, enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           children: [
             {
               paramType: Encoding.Tuple,
@@ -615,7 +615,7 @@ describe("Integrity", () => {
         });
 
         const conditions = flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           children: [
             {
               paramType: Encoding.Array,
@@ -642,7 +642,7 @@ describe("Integrity", () => {
       it("should revert if they have children", async () => {
         const { mock, enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           children: [
             {
               paramType: Encoding.None,
@@ -662,7 +662,7 @@ describe("Integrity", () => {
       it("should revert if their paramType is not None", async () => {
         const { mock, enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           children: [
             {
               paramType: Encoding.Static, // Invalid
@@ -679,7 +679,7 @@ describe("Integrity", () => {
       it("should revert if nested inside a structural node (e.g., Tuple)", async () => {
         const { mock, enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           children: [
             {
               paramType: Encoding.Tuple,
@@ -702,7 +702,7 @@ describe("Integrity", () => {
       it("should revert if nested inside an Array", async () => {
         const { mock, enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           children: [
             {
               paramType: Encoding.Array,
@@ -723,10 +723,10 @@ describe("Integrity", () => {
           .withArgs(3);
       });
 
-      it("should pass when correctly nested under a Calldata node", async () => {
+      it("should pass when correctly nested under a AbiEncoded node", async () => {
         const { enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           children: [
             // Structural child required
             { paramType: Encoding.Static, operator: Operator.Pass },
@@ -744,7 +744,7 @@ describe("Integrity", () => {
       it("should pass when nested inside a logical operator (And/Or)", async () => {
         const { enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           children: [
             {
               paramType: Encoding.None,
@@ -766,7 +766,7 @@ describe("Integrity", () => {
       it("should pass when nested inside a deeply nested logical structure", async () => {
         const { enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           children: [
             {
               paramType: Encoding.None,
@@ -803,19 +803,19 @@ describe("Integrity", () => {
         await expect(enforce(conditions)).to.not.be.reverted;
       });
 
-      it("should pass when nested inside a Calldata variant (Or with Calldata branches)", async () => {
+      it("should pass when nested inside a AbiEncoded variant (Or with AbiEncoded branches)", async () => {
         const { enforce } = await loadFixture(setup);
-        // This tests the scenario: Calldata -> Or -> Calldata -> EtherWithinAllowance
+        // This tests the scenario: AbiEncoded -> Or -> AbiEncoded -> EtherWithinAllowance
         // where we have calldata variants and allowance inside one variant
         const conditions = flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           children: [
             {
               paramType: Encoding.None,
               operator: Operator.Or,
               children: [
                 {
-                  paramType: Encoding.Calldata,
+                  paramType: Encoding.AbiEncoded,
                   children: [
                     { paramType: Encoding.Static, operator: Operator.Pass },
                     {
@@ -838,12 +838,12 @@ describe("Integrity", () => {
         await expect(enforce(conditions)).to.not.be.reverted;
       });
 
-      it("should pass with a central allowance at Calldata level alongside Or variants", async () => {
+      it("should pass with a central allowance at AbiEncoded level alongside Or variants", async () => {
         const { enforce } = await loadFixture(setup);
         // This tests the scenario where we define a single allowance condition
-        // at the Calldata level that applies to all Or branches
+        // at the AbiEncoded level that applies to all Or branches
         const conditions = flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           children: [
             {
               paramType: Encoding.None,
@@ -851,7 +851,7 @@ describe("Integrity", () => {
               children: [
                 { paramType: Encoding.Dynamic, operator: Operator.Pass },
                 {
-                  paramType: Encoding.Calldata,
+                  paramType: Encoding.AbiEncoded,
                   children: [
                     { paramType: Encoding.Static, operator: Operator.Pass },
                   ],
@@ -873,7 +873,7 @@ describe("Integrity", () => {
         const { enforce } = await loadFixture(setup);
         // Scoping a function without any calldata arguments, only restricting ether value
         const conditions = flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           children: [
             {
               paramType: Encoding.None,
@@ -888,7 +888,7 @@ describe("Integrity", () => {
       it("should pass with both Ether and Call allowances as the only conditions", async () => {
         const { enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           children: [
             {
               paramType: Encoding.None,
@@ -909,7 +909,7 @@ describe("Integrity", () => {
         const { mock, enforce } = await loadFixture(setup);
         // 33 bytes - invalid (between 32 and 54)
         const conditions = flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           children: [
             {
               paramType: Encoding.Static,
@@ -927,7 +927,7 @@ describe("Integrity", () => {
         const { mock, enforce } = await loadFixture(setup);
         // 53 bytes - invalid (not 32 or 54)
         const conditions = flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           children: [
             // Structural child required
             { paramType: Encoding.Static, operator: Operator.Pass },
@@ -946,7 +946,7 @@ describe("Integrity", () => {
       it("should pass with valid 54-byte compValue (allowanceKey + adapter + decimals)", async () => {
         const { enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           children: [
             {
               paramType: Encoding.Static,
@@ -961,7 +961,7 @@ describe("Integrity", () => {
       it("should revert if compValue is too long (55 bytes)", async () => {
         const { mock, enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           children: [
             {
               paramType: Encoding.Static,
@@ -979,7 +979,7 @@ describe("Integrity", () => {
         const { mock, enforce } = await loadFixture(setup);
         // 54 bytes: 32 (key) + 20 (adapter) + 1 (accrueDecimals=19) + 1 (paramDecimals=0)
         const conditions = flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           children: [
             {
               paramType: Encoding.Static,
@@ -997,7 +997,7 @@ describe("Integrity", () => {
         const { mock, enforce } = await loadFixture(setup);
         // 54 bytes: 32 (key) + 20 (adapter) + 1 (accrueDecimals=0) + 1 (paramDecimals=19)
         const conditions = flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           children: [
             {
               paramType: Encoding.Static,
@@ -1015,7 +1015,7 @@ describe("Integrity", () => {
         const { mock, enforce } = await loadFixture(setup);
         // 54 bytes with invalid decimals
         const conditions = flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           children: [
             { paramType: Encoding.Static, operator: Operator.Pass },
             {
@@ -1034,7 +1034,7 @@ describe("Integrity", () => {
         const { enforce } = await loadFixture(setup);
         // 54 bytes: 32 (key) + 20 (adapter) + 1 (accrueDecimals=18) + 1 (paramDecimals=18)
         const conditions = flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           children: [
             {
               paramType: Encoding.Static,
@@ -1050,7 +1050,7 @@ describe("Integrity", () => {
     it("should revert for any unsupported or placeholder operator", async () => {
       const { mock, enforce } = await loadFixture(setup);
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           {
             paramType: Encoding.Static,
@@ -1069,7 +1069,7 @@ describe("Integrity", () => {
       const { mock, enforce } = await loadFixture(setup);
       {
         const conditions = flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           children: [
             {
               paramType: Encoding.None,
@@ -1092,7 +1092,7 @@ describe("Integrity", () => {
 
       {
         const conditions = flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           children: [
             {
               paramType: Encoding.None,
@@ -1112,7 +1112,7 @@ describe("Integrity", () => {
 
       {
         const conditions = flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           children: [
             {
               paramType: Encoding.None,
@@ -1120,7 +1120,7 @@ describe("Integrity", () => {
               children: [
                 { paramType: Encoding.Dynamic },
                 {
-                  paramType: Encoding.Calldata,
+                  paramType: Encoding.AbiEncoded,
                   children: [{ paramType: Encoding.Static }],
                 },
                 {
@@ -1143,7 +1143,7 @@ describe("Integrity", () => {
       const { mock, enforce } = await loadFixture(setup);
       // Or with a single child that is itself an Or containing variants
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           {
             paramType: Encoding.None,
@@ -1170,7 +1170,7 @@ describe("Integrity", () => {
     it("should pass if children of a logical operator have identical type trees", async () => {
       const { enforce } = await loadFixture(setup);
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           {
             paramType: Encoding.None,
@@ -1185,10 +1185,10 @@ describe("Integrity", () => {
       await expect(enforce(conditions)).to.not.be.reverted;
     });
 
-    it("should pass if children of a logical operator have compatible variant types (Dynamic, Calldata, AbiEncoded)", async () => {
+    it("should pass if children of a logical operator have compatible variant types (Dynamic, AbiEncoded, AbiEncoded)", async () => {
       const { enforce } = await loadFixture(setup);
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           {
             paramType: Encoding.None,
@@ -1196,7 +1196,7 @@ describe("Integrity", () => {
             children: [
               { paramType: Encoding.Dynamic },
               {
-                paramType: Encoding.Calldata,
+                paramType: Encoding.AbiEncoded,
                 children: [{ paramType: Encoding.Static }],
               },
               {
@@ -1213,7 +1213,7 @@ describe("Integrity", () => {
     it("should revert if children of an Array have different type trees", async () => {
       const { mock, enforce } = await loadFixture(setup);
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           {
             paramType: Encoding.Array,
@@ -1235,7 +1235,7 @@ describe("Integrity", () => {
       const { enforce } = await loadFixture(setup);
       {
         const conditions = flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           children: [
             {
               paramType: Encoding.Array,
@@ -1251,7 +1251,7 @@ describe("Integrity", () => {
       }
       {
         const conditions = flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           children: [
             {
               paramType: Encoding.Array,
@@ -1259,7 +1259,7 @@ describe("Integrity", () => {
               children: [
                 { paramType: Encoding.Dynamic },
                 {
-                  paramType: Encoding.Calldata,
+                  paramType: Encoding.AbiEncoded,
                   children: [{ paramType: Encoding.Static }],
                 },
                 {
@@ -1278,7 +1278,7 @@ describe("Integrity", () => {
       it("should pass when Array.Matches children are simple homogeneous types (e.g., all Static)", async () => {
         const { enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           children: [
             {
@@ -1306,7 +1306,7 @@ describe("Integrity", () => {
       it("should pass when Array.Matches children are complex homogeneous types (e.g., all Tuple with same structure)", async () => {
         const { enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           children: [
             {
@@ -1340,10 +1340,10 @@ describe("Integrity", () => {
         await expect(enforce(conditions)).to.not.be.reverted;
       });
 
-      it("should pass when Array.Matches children are type equivalent variants (Dynamic/Calldata/AbiEncoded)", async () => {
+      it("should pass when Array.Matches children are type equivalent variants (Dynamic/AbiEncoded/AbiEncoded)", async () => {
         const { enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           children: [
             {
@@ -1352,7 +1352,7 @@ describe("Integrity", () => {
               children: [
                 { paramType: Encoding.Dynamic },
                 {
-                  paramType: Encoding.Calldata,
+                  paramType: Encoding.AbiEncoded,
                   operator: Operator.Matches,
                   children: [{ paramType: Encoding.Static }],
                 },
@@ -1381,7 +1381,7 @@ describe("Integrity", () => {
         const { mock, enforce } = await loadFixture(setup);
         {
           const conditions = flattenCondition({
-            paramType: Encoding.Calldata,
+            paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             children: [
               {
@@ -1406,7 +1406,7 @@ describe("Integrity", () => {
     it("should pass when non-structural children come last", async () => {
       const { enforce } = await loadFixture(setup);
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           // Structural child first
           { paramType: Encoding.Static, operator: Operator.Pass },
@@ -1429,7 +1429,7 @@ describe("Integrity", () => {
     it("should pass when all children are structural", async () => {
       const { enforce } = await loadFixture(setup);
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           { paramType: Encoding.Static, operator: Operator.Pass },
           { paramType: Encoding.Dynamic, operator: Operator.Pass },
@@ -1442,7 +1442,7 @@ describe("Integrity", () => {
     it("should pass when all children are non-structural", async () => {
       const { enforce } = await loadFixture(setup);
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           {
             paramType: Encoding.None,
@@ -1462,7 +1462,7 @@ describe("Integrity", () => {
     it("should revert when a structural child comes after a non-structural child", async () => {
       const { mock, enforce } = await loadFixture(setup);
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           // Non-structural child first (incorrect)
           {
@@ -1485,7 +1485,7 @@ describe("Integrity", () => {
     it("should revert when structural children are interleaved with non-structural", async () => {
       const { mock, enforce } = await loadFixture(setup);
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           { paramType: Encoding.Static, operator: Operator.Pass },
           {
@@ -1516,7 +1516,7 @@ describe("Integrity", () => {
     it("should pass for a complex, deeply nested valid structure", async () => {
       const { enforce } = await loadFixture(setup);
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           {
             paramType: Encoding.Tuple,
@@ -1554,7 +1554,7 @@ describe("Integrity", () => {
     it("should pass for a valid structure using variants and logical operators", async () => {
       const { enforce } = await loadFixture(setup);
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           {
             paramType: Encoding.None,
@@ -1562,7 +1562,7 @@ describe("Integrity", () => {
             children: [
               { paramType: Encoding.Dynamic, operator: Operator.Pass },
               {
-                paramType: Encoding.Calldata,
+                paramType: Encoding.AbiEncoded,
                 children: [
                   { paramType: Encoding.Static, operator: Operator.Pass },
                 ],
@@ -1582,7 +1582,7 @@ describe("Integrity", () => {
       const conditions = [
         {
           parent: 0,
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Pass,
           compValue: "0x",
         },
@@ -1620,7 +1620,7 @@ describe("Integrity", () => {
         enforce([
           {
             parent: 0,
-            paramType: Encoding.Calldata,
+            paramType: Encoding.AbiEncoded,
             operator: Operator.Pass,
             compValue: "0x",
           },
@@ -1657,7 +1657,7 @@ describe("Integrity", () => {
       const conditions = [
         {
           parent: 0,
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Pass,
           compValue: "0x",
         },
@@ -1713,7 +1713,7 @@ describe("Integrity", () => {
         enforce([
           {
             parent: 0,
-            paramType: Encoding.Calldata,
+            paramType: Encoding.AbiEncoded,
             operator: Operator.Pass,
             compValue: "0x",
           },
@@ -1768,7 +1768,7 @@ describe("Integrity", () => {
       const conditions = [
         {
           parent: 0,
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Pass,
           compValue: "0x",
         },
@@ -1817,7 +1817,7 @@ describe("Integrity", () => {
       const { mock, enforce } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Pass,
         compValue: "0x",
         children: [
@@ -1880,7 +1880,7 @@ describe("Integrity", () => {
       const conditions = [
         {
           parent: 0,
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Pass,
           compValue: "0x",
         },
@@ -1947,7 +1947,7 @@ describe("Integrity", () => {
       const conditions = [
         {
           parent: 0,
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Pass,
           compValue: "0x",
         },
@@ -2009,7 +2009,7 @@ describe("Integrity", () => {
       const conditions = [
         {
           parent: 0,
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Pass,
           compValue: "0x",
         },
@@ -2055,117 +2055,13 @@ describe("Integrity", () => {
     });
 
     it("type variants:", async () => {
-      it("allows Dynamic and Calldata siblings", async () => {
-        const { enforce } = await loadFixture(setup);
-
-        await expect(
-          enforce(
-            flattenCondition({
-              paramType: Encoding.Calldata,
-              children: [
-                {
-                  paramType: Encoding.None,
-                  operator: Operator.And,
-                  children: [
-                    {
-                      paramType: Encoding.Dynamic,
-                      operator: Operator.Pass,
-                    },
-                    {
-                      paramType: Encoding.Calldata,
-                      children: [
-                        {
-                          paramType: Encoding.Static,
-                          operator: Operator.Pass,
-                        },
-                      ],
-                    },
-                  ],
-                },
-              ],
-            }),
-          ),
-        ).to.not.be.reverted;
-      });
-
-      // Test 2: Dynamic + AbiEncoded are equivalent
       it("allows Dynamic and AbiEncoded siblings", async () => {
         const { enforce } = await loadFixture(setup);
-        await expect(
-          enforce(
-            flattenCondition({
-              paramType: Encoding.Calldata,
-              children: [
-                {
-                  paramType: Encoding.None,
-                  operator: Operator.Or,
-                  children: [
-                    {
-                      paramType: Encoding.Dynamic,
-                      operator: Operator.Pass,
-                    },
-                    {
-                      paramType: Encoding.AbiEncoded,
-                      children: [
-                        {
-                          paramType: Encoding.Static,
-                          operator: Operator.Pass,
-                        },
-                      ],
-                    },
-                  ],
-                },
-              ],
-            }),
-          ),
-        ).to.not.be.reverted;
-      });
 
-      // Test 3: Calldata + AbiEncoded are equivalent
-      it("allows Calldata and AbiEncoded siblings", async () => {
-        const { enforce } = await loadFixture(setup);
         await expect(
           enforce(
             flattenCondition({
-              paramType: Encoding.Calldata,
-              children: [
-                {
-                  paramType: Encoding.None,
-                  operator: Operator.Or,
-                  children: [
-                    {
-                      paramType: Encoding.Calldata,
-                      children: [
-                        {
-                          paramType: Encoding.Static,
-                          operator: Operator.Pass,
-                        },
-                      ],
-                    },
-                    {
-                      paramType: Encoding.AbiEncoded,
-                      children: [
-                        {
-                          paramType: Encoding.Dynamic,
-                          operator: Operator.Pass,
-                        },
-                      ],
-                    },
-                  ],
-                },
-              ],
-            }),
-          ),
-        ).to.not.be.reverted;
-      });
-
-      // Test 4: All three types together (Dynamic + Calldata + AbiEncoded)
-      it("allows all three equivalent types as siblings", async () => {
-        const { enforce } = await loadFixture(setup);
-        await expect(
-          enforce(
-            flattenCondition({
-              paramType: Encoding.Calldata,
+              paramType: Encoding.AbiEncoded,
               children: [
                 {
                   paramType: Encoding.None,
@@ -2176,7 +2072,73 @@ describe("Integrity", () => {
                       operator: Operator.Pass,
                     },
                     {
-                      paramType: Encoding.Calldata,
+                      paramType: Encoding.AbiEncoded,
+                      children: [
+                        {
+                          paramType: Encoding.Static,
+                          operator: Operator.Pass,
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            }),
+          ),
+        ).to.not.be.reverted;
+      });
+
+      // Test 2: Dynamic + AbiEncoded are equivalent (under Or)
+      it("allows Dynamic and AbiEncoded siblings under Or", async () => {
+        const { enforce } = await loadFixture(setup);
+        await expect(
+          enforce(
+            flattenCondition({
+              paramType: Encoding.AbiEncoded,
+              children: [
+                {
+                  paramType: Encoding.None,
+                  operator: Operator.Or,
+                  children: [
+                    {
+                      paramType: Encoding.Dynamic,
+                      operator: Operator.Pass,
+                    },
+                    {
+                      paramType: Encoding.AbiEncoded,
+                      children: [
+                        {
+                          paramType: Encoding.Static,
+                          operator: Operator.Pass,
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            }),
+          ),
+        ).to.not.be.reverted;
+      });
+
+      // Test 3: Dynamic + multiple AbiEncoded siblings
+      it("allows Dynamic and multiple AbiEncoded siblings", async () => {
+        const { enforce } = await loadFixture(setup);
+        await expect(
+          enforce(
+            flattenCondition({
+              paramType: Encoding.AbiEncoded,
+              children: [
+                {
+                  paramType: Encoding.None,
+                  operator: Operator.And,
+                  children: [
+                    {
+                      paramType: Encoding.Dynamic,
+                      operator: Operator.Pass,
+                    },
+                    {
+                      paramType: Encoding.AbiEncoded,
                       children: [
                         {
                           paramType: Encoding.Static,
@@ -2206,13 +2168,13 @@ describe("Integrity", () => {
         ).to.not.be.reverted;
       });
 
-      // Test 5: Type equivalence in nested arrays
+      // Test 4: Type equivalence in nested arrays
       it("allows type equivalence within array contexts", async () => {
         const { enforce } = await loadFixture(setup);
         await expect(
           enforce(
             flattenCondition({
-              paramType: Encoding.Calldata,
+              paramType: Encoding.AbiEncoded,
               children: [
                 {
                   paramType: Encoding.Array,
@@ -2227,7 +2189,7 @@ describe("Integrity", () => {
                           operator: Operator.Pass,
                         },
                         {
-                          paramType: Encoding.Calldata,
+                          paramType: Encoding.AbiEncoded,
                           children: [
                             {
                               paramType: Encoding.Static,
@@ -2254,7 +2216,7 @@ describe("Integrity", () => {
         await expect(
           enforce(
             flattenCondition({
-              paramType: Encoding.Calldata,
+              paramType: Encoding.AbiEncoded,
               children: [
                 {
                   paramType: Encoding.None,
@@ -2265,7 +2227,7 @@ describe("Integrity", () => {
                       operator: Operator.Pass,
                     },
                     {
-                      paramType: Encoding.Calldata,
+                      paramType: Encoding.AbiEncoded,
                       children: [
                         {
                           paramType: Encoding.Static,
@@ -2292,7 +2254,7 @@ describe("Integrity", () => {
         await expect(
           enforce(
             flattenCondition({
-              paramType: Encoding.Calldata,
+              paramType: Encoding.AbiEncoded,
               children: [
                 {
                   paramType: Encoding.None,
@@ -2338,7 +2300,7 @@ describe("Integrity", () => {
 
       // All structural children (Static) match, non-structural WithinRatio should be ignored
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         children: [
           {
@@ -2373,7 +2335,7 @@ describe("Integrity", () => {
       });
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         children: [
           {
@@ -2408,7 +2370,7 @@ describe("Integrity", () => {
       });
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         children: [
           {
@@ -2444,7 +2406,7 @@ describe("Integrity", () => {
       });
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         children: [
           {
@@ -2472,7 +2434,7 @@ describe("Integrity", () => {
 
       // Type-equivalent structural children, non-structural should be ignored
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         children: [
           {
@@ -2507,7 +2469,7 @@ describe("Integrity", () => {
 
       // Mixing Static and Dynamic structural children should still fail
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         children: [
           {
@@ -2543,7 +2505,7 @@ describe("Integrity", () => {
       });
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         children: [
           {

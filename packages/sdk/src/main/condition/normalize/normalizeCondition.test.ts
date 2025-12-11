@@ -167,10 +167,10 @@ suite("normalizeCondition()", () => {
     )
   })
 
-  it("prunes trailing Static Pass nodes on Calldata", () => {
+  it("prunes trailing Static Pass nodes on AbiEncoded", () => {
     expect(
       normalizeCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         children: [
           DUMMY_COMP(0),
@@ -179,7 +179,7 @@ suite("normalizeCondition()", () => {
         ],
       })
     ).to.deep.equal({
-      paramType: Encoding.Calldata,
+      paramType: Encoding.AbiEncoded,
       operator: Operator.Matches,
       children: [DUMMY_COMP(0)],
     })
@@ -232,7 +232,7 @@ suite("normalizeCondition()", () => {
   it("prunes trailing static Tuple Pass nodes", () => {
     expect(
       normalizeCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         children: [
           DUMMY_COMP(0),
@@ -249,7 +249,7 @@ suite("normalizeCondition()", () => {
         ],
       })
     ).to.deep.equal({
-      paramType: Encoding.Calldata,
+      paramType: Encoding.AbiEncoded,
       operator: Operator.Matches,
       children: [DUMMY_COMP(0)],
     })
@@ -258,7 +258,7 @@ suite("normalizeCondition()", () => {
   it("does not prune trailing Static Pass nodes on static tuples", () => {
     expect(
       normalizeCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         children: [
           {
@@ -274,7 +274,7 @@ suite("normalizeCondition()", () => {
         ],
       })
     ).to.deep.equal({
-      paramType: Encoding.Calldata,
+      paramType: Encoding.AbiEncoded,
       operator: Operator.Matches,
       children: [
         {
@@ -294,7 +294,7 @@ suite("normalizeCondition()", () => {
   it("prunes even dynamic trailing Pass nodes on the toplevel Matches", () => {
     expect(
       normalizeCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         children: [
           {
@@ -306,7 +306,7 @@ suite("normalizeCondition()", () => {
         ],
       })
     ).to.deep.equal({
-      paramType: Encoding.Calldata,
+      paramType: Encoding.AbiEncoded,
       operator: Operator.Matches,
       children: [
         {
@@ -317,10 +317,10 @@ suite("normalizeCondition()", () => {
     })
   })
 
-  it("keeps EtherWithinAllowance (moving it to the end) while pruning trailing Pass nodes on Calldata.Matches", () => {
+  it("keeps EtherWithinAllowance (moving it to the end) while pruning trailing Pass nodes on AbiEncoded.Matches", () => {
     expect(
       normalizeCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         children: [
           {
@@ -339,7 +339,7 @@ suite("normalizeCondition()", () => {
         ],
       })
     ).to.deep.equal({
-      paramType: Encoding.Calldata,
+      paramType: Encoding.AbiEncoded,
       operator: Operator.Matches,
       children: [
         {
@@ -358,7 +358,7 @@ suite("normalizeCondition()", () => {
 
   it("does not change the position of children other than EtherWithinAllowance and CallWithinAllowance", async () => {
     const condition = {
-      paramType: Encoding.Calldata,
+      paramType: Encoding.AbiEncoded,
       operator: Operator.Matches,
       children: [
         {
@@ -379,12 +379,12 @@ suite("normalizeCondition()", () => {
         operator: Operator.Or,
         children: [
           {
-            paramType: Encoding.Calldata,
+            paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             children: [DUMMY_COMP(3)],
           },
           {
-            paramType: Encoding.Calldata,
+            paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             children: [DUMMY_COMP(0), DUMMY_COMP(1)],
           },
@@ -395,7 +395,7 @@ suite("normalizeCondition()", () => {
       operator: Operator.Or,
       children: [
         {
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           children: [
             DUMMY_COMP(3),
@@ -403,7 +403,7 @@ suite("normalizeCondition()", () => {
           ],
         },
         {
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           children: [DUMMY_COMP(0), DUMMY_COMP(1)],
         },
@@ -425,7 +425,7 @@ suite("normalizeCondition()", () => {
     const { condition } = functionVariants as FunctionPermissionCoerced
 
     expect(normalizeCondition(condition!)).to.deep.equal({
-      paramType: Encoding.Calldata,
+      paramType: Encoding.AbiEncoded,
       operator: Operator.Matches,
       children: [
         {
@@ -470,7 +470,7 @@ suite("normalizeCondition()", () => {
       operator: Operator.Or,
       children: [
         {
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           children: [
             {
@@ -488,7 +488,7 @@ suite("normalizeCondition()", () => {
           ],
         },
         {
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           children: [
             {
@@ -638,12 +638,12 @@ suite("normalizeConditionDeprecated() - MISC new tests", () => {
       operator: Operator.And,
       children: [
         {
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           children: [C1],
         },
         {
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           children: [C2],
         },
@@ -674,7 +674,7 @@ suite("normalizeConditionDeprecated() - MISC new tests", () => {
     }
 
     const condition: Condition = {
-      paramType: Encoding.Calldata,
+      paramType: Encoding.AbiEncoded,
       operator: Operator.Matches,
       children: [
         {

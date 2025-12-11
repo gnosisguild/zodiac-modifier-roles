@@ -26,7 +26,7 @@ describe("Operator - LessThan", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         compValue: "0x",
       },
@@ -60,7 +60,7 @@ describe("Operator - LessThan", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         compValue: "0x",
       },
@@ -103,7 +103,7 @@ describe("Operator - LessThan", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         compValue: "0x",
       },

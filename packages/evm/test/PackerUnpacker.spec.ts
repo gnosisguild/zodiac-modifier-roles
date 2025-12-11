@@ -117,7 +117,7 @@ describe("Packer and Unpacker", () => {
       const { mock } = await loadFixture(setup);
 
       const flatInput = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         children: [
           {
@@ -267,7 +267,7 @@ describe("Packer and Unpacker", () => {
       const { mock } = await loadFixture(setup);
 
       const flatInput = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         children: [
           {
@@ -375,11 +375,11 @@ describe("Packer and Unpacker", () => {
       ]);
     });
 
-    it("should handle Calldata normalized to AbiEncoded", async () => {
+    it("should handle AbiEncoded with default leadingBytes", async () => {
       const { mock } = await loadFixture(setup);
 
       const flatInput = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         children: [
           { paramType: Encoding.Static, operator: Operator.Pass },
@@ -399,7 +399,7 @@ describe("Packer and Unpacker", () => {
       const { mock } = await loadFixture(setup);
 
       const flatInput = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         children: [
           {
@@ -426,7 +426,7 @@ describe("Packer and Unpacker", () => {
       const { mock } = await loadFixture(setup);
 
       const flatInput = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         children: [
           {
@@ -453,7 +453,7 @@ describe("Packer and Unpacker", () => {
       const { mock } = await loadFixture(setup);
 
       const flatInput = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         children: [
           {
@@ -485,7 +485,7 @@ describe("Packer and Unpacker", () => {
       const { mock } = await loadFixture(setup);
 
       const flatInput = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         children: [
           {
