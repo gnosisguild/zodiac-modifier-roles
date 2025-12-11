@@ -44,13 +44,13 @@ describe("pushDownOr", () => {
     })
 
     it("throws on single branch OR", () => {
-      const input = OR(MATCHES(Encoding.Calldata, COMP(1)))
+      const input = OR(MATCHES(Encoding.AbiEncoded, COMP(1)))
       expect(() => pushDownOr(input)).toThrow("Invariant")
     })
 
     it("returns unchanged with mixed operators", () => {
       const input = OR(
-        MATCHES(Encoding.Calldata, COMP(1)),
+        MATCHES(Encoding.AbiEncoded, COMP(1)),
         AND(COMP(2), COMP(3))
       )
       const result = pushDownOr(input)
@@ -60,7 +60,7 @@ describe("pushDownOr", () => {
     it("rejects mixed AND and MATCHES operators", () => {
       const input = OR(
         AND(COMP(1), COMP(2)),
-        MATCHES(Encoding.Calldata, COMP(3), COMP(4))
+        MATCHES(Encoding.AbiEncoded, COMP(3), COMP(4))
       )
       const result = pushDownOr(input)
       expect(result).toBe(input) // unchanged
@@ -81,42 +81,42 @@ describe("pushDownOr", () => {
     describe("basic cases", () => {
       it("pushes OR down to single differing position", () => {
         const input = OR(
-          MATCHES(Encoding.Calldata, COMP(1), COMP(2)),
-          MATCHES(Encoding.Calldata, COMP(1), COMP(3))
+          MATCHES(Encoding.AbiEncoded, COMP(1), COMP(2)),
+          MATCHES(Encoding.AbiEncoded, COMP(1), COMP(3))
         )
 
         const result = pushDownOr(input)
 
         expect(result).toEqual(
-          MATCHES(Encoding.Calldata, COMP(1), OR(COMP(2), COMP(3)))
+          MATCHES(Encoding.AbiEncoded, COMP(1), OR(COMP(2), COMP(3)))
         )
       })
 
       it("finds hinge at first position", () => {
         const input = OR(
-          MATCHES(Encoding.Calldata, COMP(1), COMP(10), COMP(20)),
-          MATCHES(Encoding.Calldata, COMP(2), COMP(10), COMP(20))
+          MATCHES(Encoding.AbiEncoded, COMP(1), COMP(10), COMP(20)),
+          MATCHES(Encoding.AbiEncoded, COMP(2), COMP(10), COMP(20))
         )
 
         const result = pushDownOr(input)
 
         expect(result).toEqual(
-          MATCHES(Encoding.Calldata, OR(COMP(1), COMP(2)), COMP(10), COMP(20))
+          MATCHES(Encoding.AbiEncoded, OR(COMP(1), COMP(2)), COMP(10), COMP(20))
         )
       })
 
       it("finds hinge at middle position", () => {
         const input = OR(
-          MATCHES(Encoding.Calldata, COMP(1), COMP(2), COMP(5)),
-          MATCHES(Encoding.Calldata, COMP(1), COMP(3), COMP(5)),
-          MATCHES(Encoding.Calldata, COMP(1), COMP(4), COMP(5))
+          MATCHES(Encoding.AbiEncoded, COMP(1), COMP(2), COMP(5)),
+          MATCHES(Encoding.AbiEncoded, COMP(1), COMP(3), COMP(5)),
+          MATCHES(Encoding.AbiEncoded, COMP(1), COMP(4), COMP(5))
         )
 
         const result = pushDownOr(input)
 
         expect(result).toEqual(
           MATCHES(
-            Encoding.Calldata,
+            Encoding.AbiEncoded,
             COMP(1),
             OR(COMP(2), COMP(3), COMP(4)),
             COMP(5)
@@ -126,14 +126,14 @@ describe("pushDownOr", () => {
 
       it("finds hinge at last position", () => {
         const input = OR(
-          MATCHES(Encoding.Calldata, COMP(10), COMP(20), COMP(1)),
-          MATCHES(Encoding.Calldata, COMP(10), COMP(20), COMP(2))
+          MATCHES(Encoding.AbiEncoded, COMP(10), COMP(20), COMP(1)),
+          MATCHES(Encoding.AbiEncoded, COMP(10), COMP(20), COMP(2))
         )
 
         const result = pushDownOr(input)
 
         expect(result).toEqual(
-          MATCHES(Encoding.Calldata, COMP(10), COMP(20), OR(COMP(1), COMP(2)))
+          MATCHES(Encoding.AbiEncoded, COMP(10), COMP(20), OR(COMP(1), COMP(2)))
         )
       })
     })
@@ -141,8 +141,8 @@ describe("pushDownOr", () => {
     describe("noop cases", () => {
       it("noop when differences in multiple positions", () => {
         const input = OR(
-          MATCHES(Encoding.Calldata, COMP(1), COMP(2)),
-          MATCHES(Encoding.Calldata, COMP(3), COMP(4)) // Both positions differ
+          MATCHES(Encoding.AbiEncoded, COMP(1), COMP(2)),
+          MATCHES(Encoding.AbiEncoded, COMP(3), COMP(4)) // Both positions differ
         )
 
         const result = pushDownOr(input)
@@ -151,8 +151,8 @@ describe("pushDownOr", () => {
 
       it("throws on empty children", () => {
         const input = OR(
-          MATCHES(Encoding.Calldata),
-          MATCHES(Encoding.Calldata, COMP(1))
+          MATCHES(Encoding.AbiEncoded),
+          MATCHES(Encoding.AbiEncoded, COMP(1))
         )
 
         expect(() => pushDownOr(input)).toThrow("Invariant")
@@ -162,8 +162,8 @@ describe("pushDownOr", () => {
     describe("order matters", () => {
       it("fails with reordered elements even if logically equivalent", () => {
         const input = OR(
-          MATCHES(Encoding.Calldata, COMP(1), COMP(2), COMP(3)),
-          MATCHES(Encoding.Calldata, COMP(3), COMP(10), COMP(1)) // Same elements, wrong positions
+          MATCHES(Encoding.AbiEncoded, COMP(1), COMP(2), COMP(3)),
+          MATCHES(Encoding.AbiEncoded, COMP(3), COMP(10), COMP(1)) // Same elements, wrong positions
         )
 
         const result = pushDownOr(input)
@@ -172,8 +172,8 @@ describe("pushDownOr", () => {
 
       it("fails with scrambled positions", () => {
         const input = OR(
-          MATCHES(Encoding.Calldata, COMP(5), COMP(10), COMP(15)),
-          MATCHES(Encoding.Calldata, COMP(15), COMP(5), COMP(10)) // All positions different
+          MATCHES(Encoding.AbiEncoded, COMP(5), COMP(10), COMP(15)),
+          MATCHES(Encoding.AbiEncoded, COMP(15), COMP(5), COMP(10)) // All positions different
         )
 
         const result = pushDownOr(input)
@@ -182,8 +182,8 @@ describe("pushDownOr", () => {
 
       it("requires exact positional matching", () => {
         const input = OR(
-          MATCHES(Encoding.Calldata, COMP(1), COMP(2)),
-          MATCHES(Encoding.Calldata, COMP(2), COMP(1)) // Simple swap
+          MATCHES(Encoding.AbiEncoded, COMP(1), COMP(2)),
+          MATCHES(Encoding.AbiEncoded, COMP(2), COMP(1)) // Simple swap
         )
 
         const result = pushDownOr(input)
@@ -436,8 +436,8 @@ describe("pushDownOr", () => {
 
       it("preserves MATCHES conditions at hinge", () => {
         const input = OR(
-          AND(COMP(1), MATCHES(Encoding.Calldata, COMP(2), COMP(3))),
-          AND(COMP(1), MATCHES(Encoding.Calldata, COMP(4), COMP(5)))
+          AND(COMP(1), MATCHES(Encoding.AbiEncoded, COMP(2), COMP(3))),
+          AND(COMP(1), MATCHES(Encoding.AbiEncoded, COMP(4), COMP(5)))
         )
 
         const result = pushDownOr(input)
@@ -446,8 +446,8 @@ describe("pushDownOr", () => {
           AND(
             COMP(1),
             OR(
-              MATCHES(Encoding.Calldata, COMP(2), COMP(3)),
-              MATCHES(Encoding.Calldata, COMP(4), COMP(5))
+              MATCHES(Encoding.AbiEncoded, COMP(2), COMP(3)),
+              MATCHES(Encoding.AbiEncoded, COMP(4), COMP(5))
             )
           )
         )
@@ -464,8 +464,8 @@ describe("pushDownOr", () => {
       )
 
       const matchesInput = OR(
-        MATCHES(Encoding.Calldata, COMP(1), COMP(2), COMP(3)),
-        MATCHES(Encoding.Calldata, COMP(3), COMP(10), COMP(1)) // Same reordering
+        MATCHES(Encoding.AbiEncoded, COMP(1), COMP(2), COMP(3)),
+        MATCHES(Encoding.AbiEncoded, COMP(3), COMP(10), COMP(1)) // Same reordering
       )
 
       const andResult = pushDownOr(andInput)
@@ -485,8 +485,8 @@ describe("pushDownOr", () => {
       )
 
       const matchesInput = OR(
-        MATCHES(Encoding.Calldata, COMP(1), COMP(2), COMP(3)),
-        MATCHES(Encoding.Calldata, COMP(1), COMP(10), COMP(3)) // Same positions, only middle differs
+        MATCHES(Encoding.AbiEncoded, COMP(1), COMP(2), COMP(3)),
+        MATCHES(Encoding.AbiEncoded, COMP(1), COMP(10), COMP(3)) // Same positions, only middle differs
       )
 
       const andResult = pushDownOr(andInput)
@@ -495,7 +495,7 @@ describe("pushDownOr", () => {
       // Both should transform successfully
       expect(andResult).toEqual(AND(COMP(1), OR(COMP(2), COMP(10)), COMP(3)))
       expect(matchesResult).toEqual(
-        MATCHES(Encoding.Calldata, COMP(1), OR(COMP(2), COMP(10)), COMP(3))
+        MATCHES(Encoding.AbiEncoded, COMP(1), OR(COMP(2), COMP(10)), COMP(3))
       )
     })
 
@@ -506,8 +506,8 @@ describe("pushDownOr", () => {
       )
 
       const matchesInput = OR(
-        MATCHES(Encoding.Calldata, COMP(1), COMP(2)),
-        MATCHES(Encoding.Calldata, COMP(3), COMP(4)) // Multiple differences
+        MATCHES(Encoding.AbiEncoded, COMP(1), COMP(2)),
+        MATCHES(Encoding.AbiEncoded, COMP(3), COMP(4)) // Multiple differences
       )
 
       expect(pushDownOr(andInput)).toBe(andInput)
@@ -521,8 +521,8 @@ describe("pushDownOr", () => {
 
       const andCase = OR(AND(...sameElements), AND(...differentOrder))
       const matchesCase = OR(
-        MATCHES(Encoding.Calldata, ...sameElements),
-        MATCHES(Encoding.Calldata, ...differentOrder)
+        MATCHES(Encoding.AbiEncoded, ...sameElements),
+        MATCHES(Encoding.AbiEncoded, ...differentOrder)
       )
 
       // AND should handle the reordering
@@ -538,14 +538,14 @@ describe("pushDownOr", () => {
   describe("calls normalizeCondition callback on chnages", () => {
     it("recursively normalizes MATCHES after push down", () => {
       const input = OR(
-        MATCHES(Encoding.Calldata, COMP(1), OR(COMP(2))),
-        MATCHES(Encoding.Calldata, COMP(1), OR(COMP(3)))
+        MATCHES(Encoding.AbiEncoded, COMP(1), OR(COMP(2))),
+        MATCHES(Encoding.AbiEncoded, COMP(1), OR(COMP(3)))
       )
 
       const result = pushDownOr(input, normalizeCondition)
 
       expect(result).toEqual(
-        MATCHES(Encoding.Calldata, COMP(1), OR(COMP(2), COMP(3)))
+        MATCHES(Encoding.AbiEncoded, COMP(1), OR(COMP(2), COMP(3)))
       )
     })
 
@@ -559,15 +559,15 @@ describe("pushDownOr", () => {
 
     it("handles deep normalization with nested structures", () => {
       const input = OR(
-        MATCHES(Encoding.Calldata, COMP(1), OR(OR(COMP(2), COMP(3)))),
-        MATCHES(Encoding.Calldata, COMP(1), OR(COMP(4)))
+        MATCHES(Encoding.AbiEncoded, COMP(1), OR(OR(COMP(2), COMP(3)))),
+        MATCHES(Encoding.AbiEncoded, COMP(1), OR(COMP(4)))
       )
 
       const result = pushDownOr(input, normalizeCondition)
 
       // Should flatten and unwrap nested ORs
       expect(result).toEqual(
-        MATCHES(Encoding.Calldata, COMP(1), OR(COMP(2), COMP(3), COMP(4)))
+        MATCHES(Encoding.AbiEncoded, COMP(1), OR(COMP(2), COMP(3), COMP(4)))
       )
     })
 
@@ -576,14 +576,14 @@ describe("pushDownOr", () => {
       const nested2 = MATCHES(Encoding.Tuple, COMP(3), COMP(4))
 
       const input = OR(
-        MATCHES(Encoding.Calldata, COMP(10), nested1),
-        MATCHES(Encoding.Calldata, COMP(10), nested2)
+        MATCHES(Encoding.AbiEncoded, COMP(10), nested1),
+        MATCHES(Encoding.AbiEncoded, COMP(10), nested2)
       )
 
       const result = pushDownOr(input)
 
       expect(result).toEqual(
-        MATCHES(Encoding.Calldata, COMP(10), OR(nested1, nested2))
+        MATCHES(Encoding.AbiEncoded, COMP(10), OR(nested1, nested2))
       )
     })
 
@@ -610,8 +610,8 @@ describe("pushDownOr", () => {
       )
 
       const matchesInput = OR(
-        MATCHES(Encoding.Calldata, COMP(1), COMP(2), COMP(3)),
-        MATCHES(Encoding.Calldata, COMP(1), COMP(10), COMP(3))
+        MATCHES(Encoding.AbiEncoded, COMP(1), COMP(2), COMP(3)),
+        MATCHES(Encoding.AbiEncoded, COMP(1), COMP(10), COMP(3))
       )
 
       const andResult = pushDownOr(andInput)
@@ -620,7 +620,7 @@ describe("pushDownOr", () => {
       // Both should produce identical structure (just different operators)
       expect(andResult).toEqual(AND(COMP(1), OR(COMP(2), COMP(10)), COMP(3)))
       expect(matchesResult).toEqual(
-        MATCHES(Encoding.Calldata, COMP(1), OR(COMP(2), COMP(10)), COMP(3))
+        MATCHES(Encoding.AbiEncoded, COMP(1), OR(COMP(2), COMP(10)), COMP(3))
       )
     })
 
@@ -631,15 +631,15 @@ describe("pushDownOr", () => {
         AND(COMP(1), COMP(3), COMP(10))
       )
       const matchesSingle = OR(
-        MATCHES(Encoding.Calldata, COMP(1), COMP(2), COMP(10)),
-        MATCHES(Encoding.Calldata, COMP(1), COMP(3), COMP(10))
+        MATCHES(Encoding.AbiEncoded, COMP(1), COMP(2), COMP(10)),
+        MATCHES(Encoding.AbiEncoded, COMP(1), COMP(3), COMP(10))
       )
 
       expect(pushDownOr(andSingle)).toEqual(
         AND(COMP(1), OR(COMP(2), COMP(3)), COMP(10))
       )
       expect(pushDownOr(matchesSingle)).toEqual(
-        MATCHES(Encoding.Calldata, COMP(1), OR(COMP(2), COMP(3)), COMP(10))
+        MATCHES(Encoding.AbiEncoded, COMP(1), OR(COMP(2), COMP(3)), COMP(10))
       )
 
       // Multiple hinges - should fail for both
@@ -648,8 +648,8 @@ describe("pushDownOr", () => {
         AND(COMP(1), COMP(3), COMP(20)) // Different at positions 1 and 2
       )
       const matchesMultiple = OR(
-        MATCHES(Encoding.Calldata, COMP(1), COMP(2), COMP(10)),
-        MATCHES(Encoding.Calldata, COMP(1), COMP(3), COMP(20)) // Different at positions 1 and 2
+        MATCHES(Encoding.AbiEncoded, COMP(1), COMP(2), COMP(10)),
+        MATCHES(Encoding.AbiEncoded, COMP(1), COMP(3), COMP(20)) // Different at positions 1 and 2
       )
 
       expect(pushDownOr(andMultiple)).toBe(andMultiple) // unchanged
@@ -657,14 +657,14 @@ describe("pushDownOr", () => {
     })
 
     it("throws errors", () => {
-      const singleBranch = OR(MATCHES(Encoding.Calldata, COMP(1)))
+      const singleBranch = OR(MATCHES(Encoding.AbiEncoded, COMP(1)))
 
       // Check for exact error message
       expect(() => pushDownOr(singleBranch)).toThrow("Invariant")
 
       const emptyChildren = OR(
-        MATCHES(Encoding.Calldata),
-        MATCHES(Encoding.Calldata, COMP(1))
+        MATCHES(Encoding.AbiEncoded),
+        MATCHES(Encoding.AbiEncoded, COMP(1))
       )
 
       expect(() => pushDownOr(emptyChildren)).toThrow("Invariant")
@@ -672,28 +672,28 @@ describe("pushDownOr", () => {
 
     it("handles Pass nodes correctly", () => {
       const input = OR(
-        MATCHES(Encoding.Calldata, PASS(), COMP(1)),
-        MATCHES(Encoding.Calldata, PASS(), COMP(2))
+        MATCHES(Encoding.AbiEncoded, PASS(), COMP(1)),
+        MATCHES(Encoding.AbiEncoded, PASS(), COMP(2))
       )
 
       const result = pushDownOr(input)
 
       expect(result).toEqual(
-        MATCHES(Encoding.Calldata, PASS(), OR(COMP(1), COMP(2)))
+        MATCHES(Encoding.AbiEncoded, PASS(), OR(COMP(1), COMP(2)))
       )
     })
 
     it("preserves logical conditions at hinge", () => {
       const input = OR(
-        MATCHES(Encoding.Calldata, COMP(1), AND(COMP(2), COMP(3))),
-        MATCHES(Encoding.Calldata, COMP(1), AND(COMP(4), COMP(5)))
+        MATCHES(Encoding.AbiEncoded, COMP(1), AND(COMP(2), COMP(3))),
+        MATCHES(Encoding.AbiEncoded, COMP(1), AND(COMP(4), COMP(5)))
       )
 
       const result = pushDownOr(input)
 
       expect(result).toEqual(
         MATCHES(
-          Encoding.Calldata,
+          Encoding.AbiEncoded,
           COMP(1),
           OR(AND(COMP(2), COMP(3)), AND(COMP(4), COMP(5)))
         )

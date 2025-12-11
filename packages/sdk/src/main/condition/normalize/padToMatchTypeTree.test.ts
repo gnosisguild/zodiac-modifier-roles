@@ -43,10 +43,10 @@ const MATCHES = (paramType: Encoding, ...children: Condition[]): Condition => ({
 
 describe("padToMatchTypeTree", () => {
   describe("Basic padding scenarios", () => {
-    it("pads shorter Calldata branch to match longer one", () => {
+    it("pads shorter AbiEncoded branch to match longer one", () => {
       const input = OR(
-        MATCHES(Encoding.Calldata, COMP(1)), // 1 child
-        MATCHES(Encoding.Calldata, COMP(2), COMP(3)) // 2 children
+        MATCHES(Encoding.AbiEncoded, COMP(1)), // 1 child
+        MATCHES(Encoding.AbiEncoded, COMP(2), COMP(3)) // 2 children
       )
 
       const result = normalizeCondition(input)
@@ -54,39 +54,39 @@ describe("padToMatchTypeTree", () => {
       // Should return OR with both branches having 2 children
       expect(result).toEqual(
         OR(
-          MATCHES(Encoding.Calldata, COMP(1), PASS()), // 1 child
-          MATCHES(Encoding.Calldata, COMP(2), COMP(3)) // 2 children
+          MATCHES(Encoding.AbiEncoded, COMP(1), PASS()), // 1 child
+          MATCHES(Encoding.AbiEncoded, COMP(2), COMP(3)) // 2 children
         )
       )
     })
 
     it("pads multiple shorter branches to match the longest", () => {
       const input = OR(
-        MATCHES(Encoding.Calldata, COMP(4), COMP(5), COMP(6)),
-        MATCHES(Encoding.Calldata, COMP(1)),
-        MATCHES(Encoding.Calldata, COMP(2), COMP(3))
+        MATCHES(Encoding.AbiEncoded, COMP(4), COMP(5), COMP(6)),
+        MATCHES(Encoding.AbiEncoded, COMP(1)),
+        MATCHES(Encoding.AbiEncoded, COMP(2), COMP(3))
       )
 
       const result = normalizeCondition(input)
 
       expect(result).toEqual(
         OR(
-          MATCHES(Encoding.Calldata, COMP(1), PASS(), PASS()),
-          MATCHES(Encoding.Calldata, COMP(2), COMP(3), PASS()),
-          MATCHES(Encoding.Calldata, COMP(4), COMP(5), COMP(6))
+          MATCHES(Encoding.AbiEncoded, COMP(1), PASS(), PASS()),
+          MATCHES(Encoding.AbiEncoded, COMP(2), COMP(3), PASS()),
+          MATCHES(Encoding.AbiEncoded, COMP(4), COMP(5), COMP(6))
         )
       )
     })
 
     it("does not pad when all branches have same length", () => {
       const input = OR(
-        MATCHES(Encoding.Calldata, COMP(1), COMP(2)),
-        MATCHES(Encoding.Calldata, COMP(3), COMP(4))
+        MATCHES(Encoding.AbiEncoded, COMP(1), COMP(2)),
+        MATCHES(Encoding.AbiEncoded, COMP(3), COMP(4))
       )
 
       const expected = OR(
-        MATCHES(Encoding.Calldata, COMP(1), COMP(2)),
-        MATCHES(Encoding.Calldata, COMP(3), COMP(4))
+        MATCHES(Encoding.AbiEncoded, COMP(1), COMP(2)),
+        MATCHES(Encoding.AbiEncoded, COMP(3), COMP(4))
       )
 
       expect(padToMatchTypeTree(input)).toEqual(expected)
@@ -101,13 +101,13 @@ describe("padToMatchTypeTree", () => {
       }
 
       const input = OR(
-        MATCHES(Encoding.Calldata, COMP(1)),
-        MATCHES(Encoding.Calldata, COMP(2), dynamic)
+        MATCHES(Encoding.AbiEncoded, COMP(1)),
+        MATCHES(Encoding.AbiEncoded, COMP(2), dynamic)
       )
 
       const expected = OR(
-        MATCHES(Encoding.Calldata, COMP(1), PASS(Encoding.Dynamic)),
-        MATCHES(Encoding.Calldata, COMP(2), dynamic)
+        MATCHES(Encoding.AbiEncoded, COMP(1), PASS(Encoding.Dynamic)),
+        MATCHES(Encoding.AbiEncoded, COMP(2), dynamic)
       )
 
       expect(padToMatchTypeTree(input)).toEqual(expected)
@@ -156,15 +156,15 @@ describe("padToMatchTypeTree", () => {
       }
 
       const input = OR(
-        MATCHES(Encoding.Calldata, COMP(1)),
+        MATCHES(Encoding.AbiEncoded, COMP(1)),
         dynamic,
-        MATCHES(Encoding.Calldata, COMP(4), COMP(5))
+        MATCHES(Encoding.AbiEncoded, COMP(4), COMP(5))
       )
 
       const expected = OR(
-        MATCHES(Encoding.Calldata, COMP(1), PASS()),
+        MATCHES(Encoding.AbiEncoded, COMP(1), PASS()),
         dynamic,
-        MATCHES(Encoding.Calldata, COMP(4), COMP(5))
+        MATCHES(Encoding.AbiEncoded, COMP(4), COMP(5))
       )
 
       expect(padToMatchTypeTree(input)).toEqual(expected)
@@ -175,23 +175,23 @@ describe("padToMatchTypeTree", () => {
     it("finds complex branches inside nested logical operators", () => {
       const input = AND(
         OR(
-          MATCHES(Encoding.Calldata, COMP(1)),
-          MATCHES(Encoding.Calldata, COMP(3), COMP(4))
+          MATCHES(Encoding.AbiEncoded, COMP(1)),
+          MATCHES(Encoding.AbiEncoded, COMP(3), COMP(4))
         ),
         OR(
-          MATCHES(Encoding.Calldata, COMP(8)),
-          MATCHES(Encoding.Calldata, COMP(5), COMP(6), COMP(7))
+          MATCHES(Encoding.AbiEncoded, COMP(8)),
+          MATCHES(Encoding.AbiEncoded, COMP(5), COMP(6), COMP(7))
         )
       )
 
       const expected = AND(
         OR(
-          MATCHES(Encoding.Calldata, COMP(1), PASS(), PASS()),
-          MATCHES(Encoding.Calldata, COMP(3), COMP(4), PASS())
+          MATCHES(Encoding.AbiEncoded, COMP(1), PASS(), PASS()),
+          MATCHES(Encoding.AbiEncoded, COMP(3), COMP(4), PASS())
         ),
         OR(
-          MATCHES(Encoding.Calldata, COMP(8), PASS(), PASS()),
-          MATCHES(Encoding.Calldata, COMP(5), COMP(6), COMP(7))
+          MATCHES(Encoding.AbiEncoded, COMP(8), PASS(), PASS()),
+          MATCHES(Encoding.AbiEncoded, COMP(5), COMP(6), COMP(7))
         )
       )
 
@@ -200,17 +200,17 @@ describe("padToMatchTypeTree", () => {
 
     it("handles complex branches inside Arrays", () => {
       const input = OR(
-        MATCHES(Encoding.Array, MATCHES(Encoding.Calldata, COMP(1)), PASS()),
-        MATCHES(Encoding.Array, MATCHES(Encoding.Calldata, COMP(2), COMP(3)))
+        MATCHES(Encoding.Array, MATCHES(Encoding.AbiEncoded, COMP(1)), PASS()),
+        MATCHES(Encoding.Array, MATCHES(Encoding.AbiEncoded, COMP(2), COMP(3)))
       )
 
       const expected = OR(
         MATCHES(
           Encoding.Array,
-          MATCHES(Encoding.Calldata, COMP(1), PASS()),
+          MATCHES(Encoding.AbiEncoded, COMP(1), PASS()),
           PASS()
         ),
-        MATCHES(Encoding.Array, MATCHES(Encoding.Calldata, COMP(2), COMP(3)))
+        MATCHES(Encoding.Array, MATCHES(Encoding.AbiEncoded, COMP(2), COMP(3)))
       )
 
       expect(padToMatchTypeTree(input)).toEqual(expected)
@@ -219,9 +219,9 @@ describe("padToMatchTypeTree", () => {
 
     it("two branches which should mutually pad eachother", () => {
       const input = OR(
-        MATCHES(Encoding.Calldata, MATCHES(Encoding.Tuple, PASS(), COMP(1))),
+        MATCHES(Encoding.AbiEncoded, MATCHES(Encoding.Tuple, PASS(), COMP(1))),
         MATCHES(
-          Encoding.Calldata,
+          Encoding.AbiEncoded,
           MATCHES(Encoding.Tuple, COMP(2)),
           MATCHES(
             Encoding.Tuple,
@@ -235,13 +235,13 @@ describe("padToMatchTypeTree", () => {
       const expected = OR(
         // Simple call
         MATCHES(
-          Encoding.Calldata,
+          Encoding.AbiEncoded,
           MATCHES(Encoding.Tuple, PASS(), COMP(1)),
           PASS_(Encoding.Tuple, PASS(), PASS(), PASS_(Encoding.Array, PASS()))
         ),
         // Complex call with nested tuple
         MATCHES(
-          Encoding.Calldata,
+          Encoding.AbiEncoded,
           MATCHES(Encoding.Tuple, COMP(2), PASS()),
           MATCHES(
             Encoding.Tuple,
@@ -258,10 +258,10 @@ describe("padToMatchTypeTree", () => {
     it("copies complex structure when padding", () => {
       const input = OR(
         // Simple call
-        MATCHES(Encoding.Calldata, COMP(2)),
+        MATCHES(Encoding.AbiEncoded, COMP(2)),
         // Complex call with nested tuple
         MATCHES(
-          Encoding.Calldata,
+          Encoding.AbiEncoded,
           COMP(1),
           MATCHES(
             Encoding.Tuple,
@@ -287,9 +287,9 @@ describe("padToMatchTypeTree", () => {
       }
 
       const expected = OR(
-        MATCHES(Encoding.Calldata, COMP(2), insertedSubTree),
+        MATCHES(Encoding.AbiEncoded, COMP(2), insertedSubTree),
         MATCHES(
-          Encoding.Calldata,
+          Encoding.AbiEncoded,
           COMP(1),
           MATCHES(
             Encoding.Tuple,

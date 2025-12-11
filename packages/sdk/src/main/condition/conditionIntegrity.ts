@@ -2,9 +2,9 @@ import { Condition, Operator, Encoding } from "zodiac-roles-deployments"
 
 export const checkRootConditionIntegrity = (condition: Condition): void => {
   const rootType = checkConsistentChildrenTypes(condition)
-  if (rootType !== Encoding.Calldata) {
+  if (rootType !== Encoding.AbiEncoded) {
     throw new Error(
-      `Root param type must be \`Calldata\`, got \`${Encoding[rootType]}\``
+      `Root param type must be \`AbiEncoded\`, got \`${Encoding[rootType]}\``
     )
   }
   checkConditionIntegrityRecursive(condition)
@@ -45,17 +45,11 @@ export const checkParameterTypeCompatibility = (
 
   if (right === left) return
 
-  if (
-    right === Encoding.Dynamic &&
-    (left === Encoding.Calldata || left === Encoding.AbiEncoded)
-  ) {
+  if (right === Encoding.Dynamic && left === Encoding.AbiEncoded) {
     return
   }
 
-  if (
-    (right === Encoding.Calldata || right === Encoding.AbiEncoded) &&
-    left === Encoding.Dynamic
-  ) {
+  if (right === Encoding.AbiEncoded && left === Encoding.Dynamic) {
     throw new Error(
       `Mixed children types: \`${Encoding[right]}\` must appear before \`${Encoding[left]}\``
     )
@@ -81,7 +75,6 @@ const checkParamTypeIntegrity = (condition: Condition): void => {
       Encoding.Dynamic,
       Encoding.Tuple,
       Encoding.Array,
-      Encoding.Calldata,
       Encoding.AbiEncoded,
     ],
 
@@ -89,12 +82,7 @@ const checkParamTypeIntegrity = (condition: Condition): void => {
     [Operator.Or]: [Encoding.None],
     [Operator.Nor]: [Encoding.None],
 
-    [Operator.Matches]: [
-      Encoding.Calldata,
-      Encoding.AbiEncoded,
-      Encoding.Tuple,
-      Encoding.Array,
-    ],
+    [Operator.Matches]: [Encoding.AbiEncoded, Encoding.Tuple, Encoding.Array],
 
     [Operator.ArraySome]: [Encoding.Array],
     [Operator.ArrayEvery]: [Encoding.Array],
@@ -197,7 +185,6 @@ const checkChildrenIntegrity = (condition: Condition): void => {
   if (
     condition.operator >= Operator.EqualToAvatar &&
     condition.operator !== Operator.Custom && // TODO Does this make sense? Can Custom have children?
-    condition.paramType !== Encoding.Calldata &&
     condition.paramType !== Encoding.AbiEncoded &&
     condition.paramType !== Encoding.Tuple &&
     condition.paramType !== Encoding.Array

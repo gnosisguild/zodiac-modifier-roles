@@ -61,12 +61,9 @@ export function isLogical({ operator }: { operator: Operator }) {
 }
 
 export function isComplex({ paramType }: { paramType: Encoding }) {
-  return [
-    Encoding.AbiEncoded,
-    Encoding.Calldata,
-    Encoding.Array,
-    Encoding.Tuple,
-  ].includes(paramType)
+  return [Encoding.AbiEncoded, Encoding.Array, Encoding.Tuple].includes(
+    paramType
+  )
 }
 
 export function isSimple({ paramType }: { paramType: Encoding }) {
