@@ -38,7 +38,7 @@ describe("Operator - Misc", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         compValue: "0x",
       },
@@ -50,7 +50,7 @@ describe("Operator - Misc", async () => {
       },
       {
         parent: 1,
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         compValue: "0x",
       },
@@ -96,7 +96,7 @@ describe("Operator - Misc", async () => {
       .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
   });
 
-  it("It is possible to setup sibling TypeEquivalence when the first element is Dynamic, and others are Dynamic or AbiEncoded or Calldata", async () => {
+  it("It is possible to setup sibling TypeEquivalence when the first element is Dynamic, and others are Dynamic or AbiEncoded", async () => {
     const { scopeFunction } = await loadFixture(setupOneParamBytes);
 
     const maskCompValue = (selector: string) => {
@@ -119,7 +119,7 @@ describe("Operator - Misc", async () => {
       scopeFunction([
         {
           parent: 0,
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           compValue: "0x",
         },
@@ -137,7 +137,7 @@ describe("Operator - Misc", async () => {
         },
         {
           parent: 1,
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           compValue: "0x",
         },
@@ -169,7 +169,7 @@ describe("Operator - Misc", async () => {
     );
 
     const conditions = flattenCondition({
-      paramType: Encoding.Calldata,
+      paramType: Encoding.AbiEncoded,
       operator: Operator.Matches,
       children: [
         {
@@ -184,6 +184,7 @@ describe("Operator - Misc", async () => {
                 {
                   paramType: Encoding.AbiEncoded,
                   operator: Operator.Matches,
+                  compValue: "0x0000", // leadingBytes = 0 (no selector)
                   children: [
                     {
                       paramType: Encoding.Static,
@@ -196,6 +197,7 @@ describe("Operator - Misc", async () => {
                 {
                   paramType: Encoding.AbiEncoded,
                   operator: Operator.Matches,
+                  compValue: "0x0000", // leadingBytes = 0 (no selector)
                   children: [
                     {
                       paramType: Encoding.Tuple,

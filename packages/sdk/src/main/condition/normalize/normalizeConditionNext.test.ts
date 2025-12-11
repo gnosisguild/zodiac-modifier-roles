@@ -62,18 +62,6 @@ const CALL_ALLOWANCE = (): Condition => ({
 describe("normalizeCondition", () => {
   describe("Core normalization steps", () => {
     describe("pruneTrailingPass", () => {
-      it("prunes trailing Pass nodes from Calldata MATCHES", () => {
-        const input = MATCHES(Encoding.Calldata, COMP(1), PASS(), PASS())
-
-        const result = normalizeCondition(input)
-
-        expect(result).toEqual({
-          paramType: Encoding.Calldata,
-          operator: Operator.Matches,
-          children: [COMP(1)],
-        })
-      })
-
       it("prunes trailing Pass nodes from AbiEncoded MATCHES", () => {
         const input = MATCHES(Encoding.AbiEncoded, COMP(1), PASS(), PASS())
 
@@ -117,7 +105,7 @@ describe("normalizeCondition", () => {
 
       it("keeps allowance conditions while pruning Pass nodes", () => {
         const input = MATCHES(
-          Encoding.Calldata,
+          Encoding.AbiEncoded,
           ETHER_ALLOWANCE(),
           PASS(),
           PASS()
@@ -126,19 +114,19 @@ describe("normalizeCondition", () => {
         const result = normalizeCondition(input)
 
         expect(result).toEqual({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           children: [PASS(), ETHER_ALLOWANCE()],
         })
       })
 
       it("preserves first child even if it's Pass", () => {
-        const input = MATCHES(Encoding.Calldata, PASS(), PASS(), PASS())
+        const input = MATCHES(Encoding.AbiEncoded, PASS(), PASS(), PASS())
 
         const result = normalizeCondition(input)
 
         expect(result).toEqual({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           children: [PASS()],
         })
@@ -309,15 +297,17 @@ describe("normalizeCondition", () => {
         expect(result).toEqual(AND(COMP(1), COMP(2), COMP(3)))
       })
 
-      it("moves Calldata/AbiEncoded children to front regardless of ID order", () => {
-        const calldataChild = MATCHES(Encoding.Calldata, COMP(1))
+      it("moves AbiEncoded children to front regardless of ID order", () => {
+        const abiEncodedChild1 = MATCHES(Encoding.AbiEncoded, COMP(1))
         const staticChild = COMP(2)
-        const abiEncodedChild = MATCHES(Encoding.AbiEncoded, COMP(3))
+        const abiEncodedChild2 = MATCHES(Encoding.AbiEncoded, COMP(3))
 
-        const input = OR(staticChild, calldataChild, abiEncodedChild)
+        const input = OR(staticChild, abiEncodedChild1, abiEncodedChild2)
 
         const result = normalizeCondition(input)
-        expect(result).toEqual(OR(calldataChild, abiEncodedChild, staticChild))
+        expect(result).toEqual(
+          OR(abiEncodedChild1, abiEncodedChild2, staticChild)
+        )
       })
     })
 
@@ -369,13 +359,17 @@ describe("normalizeCondition", () => {
       const input = OR(
         AND(COMP(1), COMP(1)), // Duplicate -> single child -> unwrap
         AND(COMP(2), COMP(3)), // Normal case
-        MATCHES(Encoding.Calldata, COMP(4), PASS(), PASS()) // Prune trailing Pass
+        MATCHES(Encoding.AbiEncoded, COMP(4), PASS(), PASS()) // Prune trailing Pass
       )
 
       const result = normalizeCondition(input)
 
       expect(result).toEqual(
-        OR(MATCHES(Encoding.Calldata, COMP(4)), COMP(1), AND(COMP(2), COMP(3)))
+        OR(
+          MATCHES(Encoding.AbiEncoded, COMP(4)),
+          COMP(1),
+          AND(COMP(2), COMP(3))
+        )
       )
     })
 
@@ -411,14 +405,14 @@ describe("normalizeCondition", () => {
     })
     it("push down + pad", () => {
       const input = OR(
-        MATCHES(Encoding.Calldata, COMP(1), COMP(2)),
-        MATCHES(Encoding.Calldata, COMP(1))
+        MATCHES(Encoding.AbiEncoded, COMP(1), COMP(2)),
+        MATCHES(Encoding.AbiEncoded, COMP(1))
       )
 
       const result = normalizeCondition(input)
 
       expect(result).toEqual(
-        MATCHES(Encoding.Calldata, COMP(1), OR(PASS(), COMP(2)))
+        MATCHES(Encoding.AbiEncoded, COMP(1), OR(PASS(), COMP(2)))
       )
     })
   })
@@ -434,7 +428,7 @@ describe("normalizeCondition", () => {
 
     it("handles conditions with allowance operators", () => {
       const input = MATCHES(
-        Encoding.Calldata,
+        Encoding.AbiEncoded,
         ETHER_ALLOWANCE(),
         CALL_ALLOWANCE(),
         PASS()
@@ -443,7 +437,7 @@ describe("normalizeCondition", () => {
       const result = normalizeCondition(input)
 
       expect(result).toEqual({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         children: [PASS(), ETHER_ALLOWANCE(), CALL_ALLOWANCE()],
       })
@@ -451,7 +445,7 @@ describe("normalizeCondition", () => {
 
     it("handles differences in children and compValue", () => {
       const input1: Condition = {
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         compValue: "0x",
         children: [
@@ -465,7 +459,7 @@ describe("normalizeCondition", () => {
       }
 
       const input2: Condition = {
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         compValue: "0x",
         children: [
@@ -537,7 +531,7 @@ describe("normalizeCondition", () => {
     it("is idempotent - normalize(normalize(x)) === normalize(x)", () => {
       const input = OR(
         AND(COMP(1), COMP(1)),
-        MATCHES(Encoding.Calldata, COMP(2), PASS()),
+        MATCHES(Encoding.AbiEncoded, COMP(2), PASS()),
         NOR(COMP(3))
       )
 

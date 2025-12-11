@@ -11,7 +11,7 @@ import {
   PermissionCheckerStatus,
 } from "../utils";
 import { deployRolesMod } from "../setup";
-import { ConditionFlatStruct } from "../../typechain-types/contracts/PermissionBuilder";
+import { ConditionFlatStruct } from "../../typechain-types/contracts/Roles";
 
 const AddressOne = "0x0000000000000000000000000000000000000001";
 
@@ -97,7 +97,7 @@ describe("AvatarIsOwnerOfERC721", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         compValue: "0x",
       },

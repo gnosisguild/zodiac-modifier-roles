@@ -144,7 +144,7 @@ const balancerSwapInputs = [
 ];
 
 const balancerSwapCondition: Condition = {
-  paramType: Encoding.Calldata,
+  paramType: Encoding.AbiEncoded,
   operator: Operator.Matches,
   children: [
     {

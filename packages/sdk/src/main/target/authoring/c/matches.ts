@@ -134,7 +134,7 @@ const calldataMatchesScopings =
     assertCompatibleParamTypes(conditions, paramTypes)
 
     const matchesCondition = {
-      paramType: ParameterType.Calldata,
+      paramType: ParameterType.AbiEncoded,
       operator: Operator.Matches,
       children: conditions.map(
         (condition, index) => condition || describeStructure(paramTypes[index])
@@ -186,10 +186,10 @@ const calldataMatchesFunctionPermission =
     if (condition) {
       if (
         condition.operator !== Operator.Matches ||
-        condition.paramType !== ParameterType.Calldata
+        condition.paramType !== ParameterType.AbiEncoded
       ) {
         throw new Error(
-          `calldataMatches expects a function permission with an \`Operator.matches\`, \`ParamType.Calldata\` condition, got: \`Operator.${
+          `calldataMatches expects a function permission with an \`Operator.matches\`, \`ParamType.AbiEncoded\` condition, got: \`Operator.${
             Operator[condition.operator]
           }\`, \`ParamType.${ParameterType[condition.paramType]}\``
         )
@@ -410,11 +410,10 @@ const assertCompatibleParamTypes = (
 
     if (scopedType === expectedType) return
 
-    // allow dynamic type values to be interpreted as calldata or abi encoded
+    // allow dynamic type values to be interpreted as abi encoded
     if (
       expectedType === ParameterType.Dynamic &&
-      (scopedType === ParameterType.Calldata ||
-        scopedType === ParameterType.AbiEncoded)
+      scopedType === ParameterType.AbiEncoded
     ) {
       return
     }
