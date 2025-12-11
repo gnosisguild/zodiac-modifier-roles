@@ -24,7 +24,7 @@ describe("AbiDecoder - Plucking", () => {
       ]).encodeFunctionData("entrypoint", ["0xeeff3344"]);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [{ paramType: Encoding.Static }],
       });
 
@@ -42,7 +42,7 @@ describe("AbiDecoder - Plucking", () => {
       ]).encodeFunctionData("dynamic", ["0xaabbccdd"]);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [{ paramType: Encoding.Dynamic }],
       });
 
@@ -60,7 +60,7 @@ describe("AbiDecoder - Plucking", () => {
       ]).encodeFunctionData("staticDynamic", [956, "0xaabbccddeeff"]);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           { paramType: Encoding.Static },
           { paramType: Encoding.Dynamic },
@@ -90,7 +90,7 @@ describe("AbiDecoder - Plucking", () => {
       ]).encodeFunctionData("staticTuple", [{ a: 1999, b: AddressOne }, 2000]);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           {
             paramType: Encoding.Tuple,
@@ -121,7 +121,7 @@ describe("AbiDecoder - Plucking", () => {
       ]);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           {
             paramType: Encoding.Tuple,
@@ -151,7 +151,7 @@ describe("AbiDecoder - Plucking", () => {
       ]);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           {
             paramType: Encoding.Tuple,
@@ -214,7 +214,7 @@ describe("AbiDecoder - Plucking", () => {
       ]);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           {
             paramType: Encoding.Tuple,
@@ -305,7 +305,7 @@ describe("AbiDecoder - Plucking", () => {
       ]).encodeFunctionData("entrypoint", [AddressOne, "0xabcd", [10, 32, 55]]);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           { paramType: Encoding.Static },
           { paramType: Encoding.Dynamic },
@@ -332,7 +332,7 @@ describe("AbiDecoder - Plucking", () => {
       ]).encodeFunctionData("entrypoint", [["0xaabbcc", "0x004466ff00"]]);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           {
             paramType: Encoding.Array,
@@ -363,7 +363,7 @@ describe("AbiDecoder - Plucking", () => {
       ]);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           {
             paramType: Encoding.Array,
@@ -407,7 +407,7 @@ describe("AbiDecoder - Plucking", () => {
       ]);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           {
             paramType: Encoding.Array,
@@ -481,7 +481,7 @@ describe("AbiDecoder - Plucking", () => {
       ]);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           {
             paramType: Encoding.Tuple,
@@ -537,7 +537,7 @@ describe("AbiDecoder - Plucking", () => {
       const conditions = [
         {
           parent: 0,
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Pass,
           compValue: "0x",
         }, // 0 (root, self-parent)
@@ -549,7 +549,7 @@ describe("AbiDecoder - Plucking", () => {
         }, // 1
         {
           parent: 1,
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Pass,
           compValue: "0x",
         }, // 2
@@ -594,7 +594,7 @@ describe("AbiDecoder - Plucking", () => {
       ]).encodeFunctionData("test", [[10, 20, 30]]);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           {
             paramType: Encoding.Array,
@@ -619,7 +619,7 @@ describe("AbiDecoder - Plucking", () => {
       ]).encodeFunctionData("test", [[42, 100, 256]]);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           {
             paramType: Encoding.Array,
@@ -649,7 +649,7 @@ describe("AbiDecoder - Plucking", () => {
       ).to.equal(encode(["uint256[]"], [[42, 100, 256]], true));
     });
 
-    it("plucks Array.Matches with type equivalent variants (Dynamic/Calldata/AbiEncoded)", async () => {
+    it("plucks Array.Matches with type equivalent variants (Dynamic/AbiEncoded)", async () => {
       const { decoder } = await loadFixture(setup);
 
       const embedded1 = Interface.from([
@@ -666,7 +666,7 @@ describe("AbiDecoder - Plucking", () => {
       ]).encodeFunctionData("test", [["0xaabbccdd", embedded1, embedded2]]);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           {
             paramType: Encoding.Array,
@@ -674,11 +674,12 @@ describe("AbiDecoder - Plucking", () => {
             children: [
               { paramType: Encoding.Dynamic },
               {
-                paramType: Encoding.Calldata,
+                paramType: Encoding.AbiEncoded,
                 children: [{ paramType: Encoding.Static }],
               },
               {
                 paramType: Encoding.AbiEncoded,
+                compValue: "0x0000", // leadingBytes = 0 (no selector)
                 children: [
                   {
                     paramType: Encoding.Tuple,
@@ -700,13 +701,14 @@ describe("AbiDecoder - Plucking", () => {
       const [array] = root.children;
       expect(array.children.length).to.equal(3);
 
-      const [_dynamic, calldata, abiEncoded] = array.children;
+      const [_dynamic, abiEncodedWithSelector, abiEncodedNoSelector] =
+        array.children;
       expect(_dynamic.children.length).to.equal(0);
-      expect(calldata.children.length).to.equal(1);
-      expect(abiEncoded.children.length).to.equal(1);
+      expect(abiEncodedWithSelector.children.length).to.equal(1);
+      expect(abiEncodedNoSelector.children.length).to.equal(1);
 
-      const [_static] = calldata.children;
-      const [tuple] = abiEncoded.children;
+      const [_static] = abiEncodedWithSelector.children;
+      const [tuple] = abiEncodedNoSelector.children;
 
       // // Pluck the entire array
       expect(await decoder.pluck(data, array.location, array.size)).to.equal(
@@ -735,7 +737,7 @@ describe("AbiDecoder - Plucking", () => {
       ]);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           {
             paramType: Encoding.Array,
@@ -794,7 +796,7 @@ describe("AbiDecoder - Plucking", () => {
   });
 
   describe("Embedded Encoded Data", () => {
-    it("decodes embedded Calldata", async () => {
+    it("decodes embedded AbiEncoded with selector", async () => {
       const { decoder } = await loadFixture(setup);
 
       const embedded = Interface.from([
@@ -806,10 +808,10 @@ describe("AbiDecoder - Plucking", () => {
       ]).encodeFunctionData("dynamic", [embedded]);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           {
-            paramType: Encoding.Calldata,
+            paramType: Encoding.AbiEncoded,
             children: [
               {
                 paramType: Encoding.Tuple,
@@ -832,7 +834,7 @@ describe("AbiDecoder - Plucking", () => {
       ).to.equal(encode(["uint256"], [12345]));
     });
 
-    it("decodes embedded AbiEncoded data", async () => {
+    it("decodes embedded AbiEncoded without selector", async () => {
       const { decoder } = await loadFixture(setup);
 
       const embedded = defaultAbiCoder.encode(
@@ -845,10 +847,11 @@ describe("AbiDecoder - Plucking", () => {
       ]).encodeFunctionData("dynamic", [embedded]);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           {
             paramType: Encoding.AbiEncoded,
+            compValue: "0x0000", // leadingBytes = 0 (no selector)
             children: [
               {
                 paramType: Encoding.Tuple,
@@ -865,49 +868,6 @@ describe("AbiDecoder - Plucking", () => {
       const result = await decoder.inspect(data, conditions);
       const embeddedTuple = result.children[0].children[0];
       const dynamicField = embeddedTuple.children[1];
-
-      expect(
-        await decoder.pluck(data, dynamicField.location, dynamicField.size),
-      ).to.equal(encode(["string"], ["Johnny Doe"], true));
-    });
-
-    it("decodes dynamic tuple from embedded calldata", async () => {
-      const { decoder } = await loadFixture(setup);
-
-      const embedded = hre.ethers.Interface.from([
-        "function embedded((uint256, string))",
-      ]).encodeFunctionData("embedded", [[12345, "Johnny Doe"]]);
-
-      const data = Interface.from([
-        "function dynamic(bytes)",
-      ]).encodeFunctionData("dynamic", [embedded]);
-
-      const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
-        children: [
-          {
-            paramType: Encoding.Calldata,
-            children: [
-              {
-                paramType: Encoding.Tuple,
-                children: [
-                  { paramType: Encoding.Static },
-                  { paramType: Encoding.Dynamic },
-                ],
-              },
-            ],
-          },
-        ],
-      });
-
-      const result = await decoder.inspect(data, conditions);
-      const embeddedTuple = result.children[0].children[0];
-      const staticField = embeddedTuple.children[0];
-      const dynamicField = embeddedTuple.children[1];
-
-      expect(
-        await decoder.pluck(data, staticField.location, staticField.size),
-      ).to.equal(encode(["uint256"], [12345]));
 
       expect(
         await decoder.pluck(data, dynamicField.location, dynamicField.size),
@@ -927,10 +887,11 @@ describe("AbiDecoder - Plucking", () => {
       ]).encodeFunctionData("dynamic", [embedded]);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           {
             paramType: Encoding.AbiEncoded,
+            compValue: "0x0000", // leadingBytes = 0 (no selector)
             children: [
               {
                 paramType: Encoding.Tuple,
@@ -958,7 +919,7 @@ describe("AbiDecoder - Plucking", () => {
       ).to.equal(encode(["address"], [AddressOne]));
     });
 
-    it("decodes nested Calldata within tuples", async () => {
+    it("decodes nested AbiEncoded within tuples", async () => {
       const { decoder } = await loadFixture(setup);
 
       const nestedData = Interface.from([
@@ -982,13 +943,13 @@ describe("AbiDecoder - Plucking", () => {
       ]);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           {
             paramType: Encoding.Tuple,
             children: [
               {
-                paramType: Encoding.Calldata,
+                paramType: Encoding.AbiEncoded,
                 children: [
                   {
                     paramType: Encoding.Tuple,
@@ -1026,7 +987,7 @@ describe("AbiDecoder - Plucking", () => {
       ).to.equal(encode(["bytes"], ["0x00"], true));
     });
 
-    it("decodes nested Calldata within arrays", async () => {
+    it("decodes nested AbiEncoded within arrays", async () => {
       const { decoder } = await loadFixture(setup);
 
       const nestedData1 = Interface.from([
@@ -1049,13 +1010,13 @@ describe("AbiDecoder - Plucking", () => {
       ]).encodeFunctionData("dynamicArray", [[nestedData1, nestedData2]]);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           {
             paramType: Encoding.Array,
             children: [
               {
-                paramType: Encoding.Calldata,
+                paramType: Encoding.AbiEncoded,
                 children: [
                   { paramType: Encoding.Dynamic },
                   { paramType: Encoding.Static },
@@ -1096,10 +1057,11 @@ describe("AbiDecoder - Plucking", () => {
       ]).encodeFunctionData("dynamic", [embedded]);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           {
             paramType: Encoding.AbiEncoded,
+            compValue: "0x0000", // leadingBytes = 0 (no selector)
             children: [
               { paramType: Encoding.Dynamic },
               { paramType: Encoding.Static },
@@ -1131,7 +1093,7 @@ describe("AbiDecoder - Plucking", () => {
       const { decoder } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           {
             paramType: Encoding.None,
@@ -1140,6 +1102,7 @@ describe("AbiDecoder - Plucking", () => {
               { paramType: Encoding.Dynamic },
               {
                 paramType: Encoding.AbiEncoded,
+                compValue: "0x0000", // leadingBytes = 0 (no selector)
                 children: [
                   {
                     paramType: Encoding.Tuple,
@@ -1203,7 +1166,7 @@ describe("AbiDecoder - Plucking", () => {
       const { decoder } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           {
             paramType: Encoding.None,
@@ -1211,6 +1174,7 @@ describe("AbiDecoder - Plucking", () => {
             children: [
               {
                 paramType: Encoding.AbiEncoded,
+                compValue: "0x0000", // leadingBytes = 0 (no selector)
                 children: [
                   {
                     paramType: Encoding.Tuple,
@@ -1220,6 +1184,7 @@ describe("AbiDecoder - Plucking", () => {
               },
               {
                 paramType: Encoding.AbiEncoded,
+                compValue: "0x0000", // leadingBytes = 0 (no selector)
                 children: [{ paramType: Encoding.Static }],
               },
             ],
@@ -1288,7 +1253,7 @@ describe("AbiDecoder - Plucking", () => {
       );
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           {
             paramType: Encoding.None,
@@ -1296,6 +1261,7 @@ describe("AbiDecoder - Plucking", () => {
             children: [
               {
                 paramType: Encoding.AbiEncoded, // This should work
+                compValue: "0x0000", // leadingBytes = 0 (no selector)
                 children: [
                   { paramType: Encoding.Static },
                   { paramType: Encoding.Static },
@@ -1304,6 +1270,7 @@ describe("AbiDecoder - Plucking", () => {
               },
               {
                 paramType: Encoding.AbiEncoded, // This should overflow
+                compValue: "0x0000", // leadingBytes = 0 (no selector)
                 children: [
                   { paramType: Encoding.Static },
                   { paramType: Encoding.Static },
@@ -1361,7 +1328,7 @@ describe("AbiDecoder - Plucking", () => {
       );
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           {
             paramType: Encoding.None,
@@ -1370,10 +1337,12 @@ describe("AbiDecoder - Plucking", () => {
               { paramType: Encoding.Dynamic }, // Valid: raw bytes
               {
                 paramType: Encoding.AbiEncoded, // Valid: abi-encoded uint256
+                compValue: "0x0000", // leadingBytes = 0 (no selector)
                 children: [{ paramType: Encoding.Static }],
               },
               {
-                paramType: Encoding.Calldata, // Valid: calldata with selector
+                paramType: Encoding.AbiEncoded, // Valid: abi-encoded uint256 (duplicate)
+                compValue: "0x0000", // leadingBytes = 0 (no selector)
                 children: [{ paramType: Encoding.Static }],
               },
             ],
@@ -1405,7 +1374,7 @@ describe("AbiDecoder - Plucking", () => {
       ]).encodeFunctionData("dynamic", ["0x"]);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [{ paramType: Encoding.Dynamic }],
       });
 
@@ -1429,7 +1398,7 @@ describe("AbiDecoder - Plucking", () => {
       ]);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           { paramType: Encoding.Static },
           { paramType: Encoding.Dynamic },
@@ -1478,7 +1447,7 @@ describe("AbiDecoder - Plucking", () => {
       ]);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           { paramType: Encoding.Dynamic },
           { paramType: Encoding.Static },
@@ -1530,7 +1499,7 @@ describe("AbiDecoder - Plucking", () => {
       ]);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           {
             paramType: Encoding.Tuple,
@@ -1583,7 +1552,7 @@ describe("AbiDecoder - Plucking", () => {
       );
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           {
             paramType: Encoding.None,
@@ -1591,6 +1560,7 @@ describe("AbiDecoder - Plucking", () => {
             children: [
               {
                 paramType: Encoding.AbiEncoded,
+                compValue: "0x0000", // leadingBytes = 0 (no selector)
                 children: [
                   {
                     paramType: Encoding.Tuple,
@@ -1603,6 +1573,7 @@ describe("AbiDecoder - Plucking", () => {
               },
               {
                 paramType: Encoding.AbiEncoded,
+                compValue: "0x0000", // leadingBytes = 0 (no selector)
                 children: [
                   {
                     paramType: Encoding.Tuple,
@@ -1668,12 +1639,3 @@ function toTree(
   // Root node should be the one whose parent == its own index
   return nodes[0];
 }
-
-// function showCalldat(str: string) {
-//   if (str.length <= 10) return str;
-
-//   const head = str.slice(0, 10);
-//   const tail = str.slice(10).replace(/(.{64})/g, "$1\n");
-
-//   return head + "\n" + tail;
-// }

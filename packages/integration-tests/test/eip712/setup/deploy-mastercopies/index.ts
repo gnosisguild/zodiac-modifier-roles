@@ -7,14 +7,14 @@ import { deployRolesMastercopy } from "./rolesMastercopy"
 import { deploySafeMastercopy } from "./safeMastercopy"
 import {
   deploySafeProxyFactory,
-  address as rolesMastercopyAddress,
+  address as safeProxyFactory,
 } from "./safeProxyFactory"
 import { deployFactory } from "./singletonFactory"
 
 export default async function deployMastercopies() {
   const [, , , , , , deployer] = await hre.ethers.getSigners()
 
-  if ((await deployer.provider.getCode(rolesMastercopyAddress)) != "0x") {
+  if ((await deployer.provider.getCode(safeProxyFactory)) != "0x") {
     return
   }
 

@@ -580,7 +580,7 @@ suite("diffTarget - Misc", () => {
             executionOptions: 0,
             wildcarded: false,
             condition: {
-              paramType: Encoding.Calldata,
+              paramType: Encoding.AbiEncoded,
               operator: Operator.Matches,
               children: [
                 {
@@ -607,7 +607,7 @@ suite("diffTarget - Misc", () => {
         selector: "0x095ea7b3",
         executionOptions: 0,
         condition: {
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           children: [
             {

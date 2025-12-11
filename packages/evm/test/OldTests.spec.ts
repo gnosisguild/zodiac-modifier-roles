@@ -132,7 +132,7 @@ describe("OldTests", async () => {
     const conditionTree = [
       {
         parent: 0,
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         compValue: "0x",
       },
@@ -396,7 +396,7 @@ describe("OldTests", async () => {
         [
           {
             parent: 0,
-            paramType: Encoding.Calldata,
+            paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -482,7 +482,7 @@ describe("OldTests", async () => {
         [
           {
             parent: 0,
-            paramType: Encoding.Calldata,
+            paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -718,7 +718,7 @@ describe("OldTests", async () => {
         [
           {
             parent: 0,
-            paramType: Encoding.Calldata,
+            paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -832,7 +832,7 @@ describe("OldTests", async () => {
         [
           {
             parent: 0,
-            paramType: Encoding.Calldata,
+            paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -931,7 +931,7 @@ describe("OldTests", async () => {
         [
           {
             parent: 0,
-            paramType: Encoding.Calldata,
+            paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -1348,7 +1348,7 @@ describe("OldTests", async () => {
         [
           {
             parent: 0,
-            paramType: Encoding.Calldata,
+            paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             compValue: "0x",
           },
