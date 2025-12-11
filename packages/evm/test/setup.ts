@@ -623,7 +623,7 @@ export async function setupOneParamUintWord() {
     execTransactionFromModule,
   } = await setupAvatarAndRoles();
 
-  async function invoke(a: number) {
+  async function invoke(a: BigNumberish) {
     return execTransactionFromModule({
       data: (await testContract.oneParamUintWord.populateTransaction(a)).data,
     });
@@ -739,7 +739,7 @@ export async function setupOneParamBytesWord() {
     execTransactionFromModule,
   } = await setupAvatarAndRoles();
 
-  async function invoke(a: number) {
+  async function invoke(a: BigNumberish) {
     return execTransactionFromModule({
       data: (await testContract.oneParamUintWord.populateTransaction(a)).data,
     });

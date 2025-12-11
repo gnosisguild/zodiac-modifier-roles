@@ -51,41 +51,43 @@ suite("checkConditionIntegrity()", () => {
     ).to.throw("Inconsistent children types (`Static` and `Dynamic`)")
   })
 
-  it("should not throw for And with Calldata and Dynamic children", () => {
+  it("should not throw for And with AbiEncoded and Dynamic children", () => {
     expect(() =>
       checkConditionIntegrity({
         paramType: Encoding.None,
         operator: Operator.And,
         children: [
-          { paramType: Encoding.Calldata, operator: Operator.Pass },
+          { paramType: Encoding.AbiEncoded, operator: Operator.Pass },
           { paramType: Encoding.Dynamic, operator: Operator.Pass },
         ],
       })
     ).to.not.throw()
   })
 
-  it("should throw for And with Calldata and Dynamic children if Calldata does not come first", () => {
+  it("should throw for And with AbiEncoded and Dynamic children if AbiEncoded does not come first", () => {
     expect(() =>
       checkConditionIntegrity({
         paramType: Encoding.None,
         operator: Operator.And,
         children: [
           { paramType: Encoding.Dynamic, operator: Operator.Pass },
-          { paramType: Encoding.Calldata, operator: Operator.Pass },
+          { paramType: Encoding.AbiEncoded, operator: Operator.Pass },
         ],
       })
-    ).to.throw("Mixed children types: `Calldata` must appear before `Dynamic`")
+    ).to.throw(
+      "Mixed children types: `AbiEncoded` must appear before `Dynamic`"
+    )
   })
 })
 
 suite("checkRootConditionIntegrity()", () => {
-  it("should throw if the root param type is not Calldata", () => {
+  it("should throw if the root param type is not AbiEncoded", () => {
     expect(() =>
       checkRootConditionIntegrity({
         paramType: Encoding.None,
         operator: Operator.And,
         children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
       })
-    ).to.throw("Root param type must be `Calldata`, got `Static`")
+    ).to.throw("Root param type must be `AbiEncoded`, got `Static`")
   })
 })

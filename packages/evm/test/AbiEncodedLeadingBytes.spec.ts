@@ -173,14 +173,14 @@ describe("AbiEncoded LeadingBytes", async () => {
 
       const selector = testContract.interface.getFunction("dynamic").selector;
 
-      // Condition: Calldata -> AbiEncoded (bytes param with custom leadingBytes)
+      // Condition: AbiEncoded -> AbiEncoded (bytes param with custom leadingBytes)
       // AbiEncoded handles the dynamic length prefix internally, then skips 10 bytes
       await roles.connect(owner).scopeFunction(
         ROLE_KEY,
         testContractAddress,
         selector,
         flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           children: [
             {
@@ -248,7 +248,7 @@ describe("AbiEncoded LeadingBytes", async () => {
         testContractAddress,
         selector,
         flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           children: [
             {
@@ -314,7 +314,7 @@ describe("AbiEncoded LeadingBytes", async () => {
         testContractAddress,
         selector,
         flattenCondition({
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           children: [
             {

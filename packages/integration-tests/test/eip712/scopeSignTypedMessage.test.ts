@@ -111,6 +111,7 @@ describe("scopeSignTypedMessage()", () => {
     const conditionDomain: Condition = {
       paramType: Encoding.AbiEncoded,
       operator: Operator.Matches,
+      compValue: "0x0000", // leadingBytes = 0
       children: [
         {
           paramType: Encoding.Tuple,
@@ -119,12 +120,10 @@ describe("scopeSignTypedMessage()", () => {
             {
               paramType: Encoding.Dynamic,
               operator: Operator.Pass,
-              compValue: "0x",
             },
             {
               paramType: Encoding.Dynamic,
               operator: Operator.Pass,
-              compValue: "0x",
             },
             {
               paramType: Encoding.Static,
@@ -150,6 +149,7 @@ describe("scopeSignTypedMessage()", () => {
     const conditionMessage: Condition = {
       paramType: Encoding.AbiEncoded,
       operator: Operator.Matches,
+      compValue: "0x0000", // leadingBytes = 0
       children: [
         {
           paramType: Encoding.Tuple,
@@ -174,17 +174,14 @@ describe("scopeSignTypedMessage()", () => {
             {
               paramType: Encoding.Array,
               operator: Operator.Pass,
-              compValue: "0x",
               children: [
                 {
                   paramType: Encoding.Tuple,
                   operator: Operator.Pass,
-                  compValue: "0x",
                   children: [
                     {
                       paramType: Encoding.Dynamic,
                       operator: Operator.Pass,
-                      compValue: "0x",
                     },
                   ],
                 },

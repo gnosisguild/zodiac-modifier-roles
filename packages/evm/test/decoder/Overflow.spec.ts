@@ -18,7 +18,7 @@ describe("AbiDecoder - Overflow", () => {
       const { decoder } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           { paramType: Encoding.Static }, // expecting uint256
         ],
@@ -48,7 +48,7 @@ describe("AbiDecoder - Overflow", () => {
       const { decoder } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           { paramType: Encoding.Static }, // expecting a uint256
           { paramType: Encoding.Dynamic }, // expecting bytes
@@ -94,7 +94,7 @@ describe("AbiDecoder - Overflow", () => {
       );
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           { paramType: Encoding.Static }, // uint256
         ],
@@ -118,7 +118,7 @@ describe("AbiDecoder - Overflow", () => {
       const { decoder } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [{ paramType: Encoding.Static }],
       });
 
@@ -160,7 +160,7 @@ describe("AbiDecoder - Overflow", () => {
       const { decoder } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [{ paramType: Encoding.Dynamic }],
       });
 
@@ -192,7 +192,7 @@ describe("AbiDecoder - Overflow", () => {
       const { decoder } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           { paramType: Encoding.Static }, // uint256
           { paramType: Encoding.Dynamic }, // bytes
@@ -233,7 +233,7 @@ describe("AbiDecoder - Overflow", () => {
       const { decoder } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [{ paramType: Encoding.Dynamic }],
       });
 
@@ -270,7 +270,7 @@ describe("AbiDecoder - Overflow", () => {
       const { decoder } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [{ paramType: Encoding.Dynamic }],
       });
 
@@ -307,7 +307,7 @@ describe("AbiDecoder - Overflow", () => {
       const { decoder } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [{ paramType: Encoding.Dynamic }],
       });
 
@@ -363,7 +363,7 @@ describe("AbiDecoder - Overflow", () => {
       const { decoder } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           {
             paramType: Encoding.Tuple,
@@ -432,7 +432,7 @@ describe("AbiDecoder - Overflow", () => {
       ]).encodeFunctionData("staticTuple", [{ a: 1999, b: true }]);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           {
             paramType: Encoding.Tuple,
@@ -463,7 +463,7 @@ describe("AbiDecoder - Overflow", () => {
       const { decoder } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           {
             paramType: Encoding.Tuple,
@@ -523,7 +523,7 @@ describe("AbiDecoder - Overflow", () => {
       ]).encodeFunctionData("staticTuple", [{ a: 1999, b: true }]);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           {
             paramType: Encoding.Tuple,
@@ -554,7 +554,7 @@ describe("AbiDecoder - Overflow", () => {
       const { decoder } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           {
             paramType: Encoding.Tuple,
@@ -604,7 +604,7 @@ describe("AbiDecoder - Overflow", () => {
       const { decoder } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           {
             paramType: Encoding.Tuple,
@@ -654,7 +654,7 @@ describe("AbiDecoder - Overflow", () => {
       const { decoder } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           {
             paramType: Encoding.Tuple,
@@ -724,7 +724,7 @@ describe("AbiDecoder - Overflow", () => {
       const { decoder } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           {
             paramType: Encoding.Array,
@@ -769,7 +769,7 @@ describe("AbiDecoder - Overflow", () => {
       const { decoder } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           {
             paramType: Encoding.Array,
@@ -815,7 +815,7 @@ describe("AbiDecoder - Overflow", () => {
       const { decoder } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           {
             paramType: Encoding.None,
@@ -823,6 +823,7 @@ describe("AbiDecoder - Overflow", () => {
             children: [
               {
                 paramType: Encoding.AbiEncoded,
+                compValue: "0x0000", // leadingBytes = 0 (no selector)
                 children: [
                   { paramType: Encoding.Static }, // uint256
                   { paramType: Encoding.Static }, // address
@@ -830,6 +831,7 @@ describe("AbiDecoder - Overflow", () => {
               },
               {
                 paramType: Encoding.AbiEncoded,
+                compValue: "0x0000", // leadingBytes = 0 (no selector)
                 children: [
                   { paramType: Encoding.Static }, // uint256
                 ],
@@ -908,7 +910,7 @@ describe("AbiDecoder - Overflow", () => {
       const { decoder } = await loadFixture(setup);
 
       const conditions = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         children: [
           {
             paramType: Encoding.None,
@@ -916,6 +918,7 @@ describe("AbiDecoder - Overflow", () => {
             children: [
               {
                 paramType: Encoding.AbiEncoded,
+                compValue: "0x0000", // leadingBytes = 0 (no selector)
                 children: [
                   { paramType: Encoding.Static }, // uint256
                   { paramType: Encoding.Static }, // address
@@ -924,6 +927,7 @@ describe("AbiDecoder - Overflow", () => {
               },
               {
                 paramType: Encoding.AbiEncoded,
+                compValue: "0x0000", // leadingBytes = 0 (no selector)
                 children: [
                   { paramType: Encoding.Static }, // uint256
                   { paramType: Encoding.Static }, // uint256

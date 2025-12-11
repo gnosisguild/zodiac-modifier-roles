@@ -13,7 +13,7 @@ import {
   setupOneParamStaticTuple,
   setupTwoParamsStaticDynamic,
 } from "../setup";
-import { ConditionFlatStruct } from "../../typechain-types/contracts/PermissionBuilder";
+import { ConditionFlatStruct } from "../../typechain-types/contracts/Roles";
 
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
@@ -25,7 +25,7 @@ describe("Operator - Or", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         compValue: "0x",
       },
@@ -57,7 +57,7 @@ describe("Operator - Or", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         compValue: "0x",
       },
@@ -104,7 +104,7 @@ describe("Operator - Or", async () => {
     );
 
     const conditions = flattenCondition({
-      paramType: Encoding.Calldata,
+      paramType: Encoding.AbiEncoded,
       operator: Operator.Matches,
       children: [
         {
@@ -170,7 +170,7 @@ describe("Operator - Or", async () => {
     } = await loadFixture(setupTwoParamsStaticDynamic);
 
     const conditions = flattenCondition({
-      paramType: Encoding.Calldata,
+      paramType: Encoding.AbiEncoded,
       operator: Operator.Matches,
       children: [
         {
@@ -185,6 +185,7 @@ describe("Operator - Or", async () => {
             {
               paramType: Encoding.AbiEncoded,
               operator: Operator.Matches,
+              compValue: "0x0000", // leadingBytes = 0 (no selector)
               children: [
                 {
                   paramType: Encoding.Dynamic,
@@ -197,7 +198,7 @@ describe("Operator - Or", async () => {
               ],
             },
             {
-              paramType: Encoding.Calldata,
+              paramType: Encoding.AbiEncoded,
               operator: Operator.Matches,
               children: [
                 {

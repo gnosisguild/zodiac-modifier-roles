@@ -8,7 +8,7 @@ suite("conditionAddress", () => {
   it("calculates the create2 storage address of the condition", () => {
     const normalizedCondition = normalizeCondition({
       operator: Operator.Matches,
-      paramType: Encoding.Calldata,
+      paramType: Encoding.AbiEncoded,
       children: [
         {
           operator: Operator.Matches,
@@ -57,7 +57,7 @@ suite("conditionAddress", () => {
       ],
     })
     expect(conditionAddress(normalizedCondition)).to.equal(
-      "0xa835a51f2a581493b7416daed729cc78e0f68224" // see: https://arbiscan.io/address/0xa835a51f2a581493b7416daed729cc78e0f68224#code
+      "0xa835a51f2a581493b7416daed729cc78e0f68224"
     )
   })
 })

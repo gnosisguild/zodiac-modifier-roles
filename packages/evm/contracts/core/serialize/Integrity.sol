@@ -25,10 +25,7 @@ library Integrity {
         _typeTree(conditions);
 
         Layout memory rootLayout = TypeTree.inspect(conditions, 0);
-        if (
-            rootLayout.encoding != Encoding.Calldata &&
-            rootLayout.encoding != Encoding.AbiEncoded
-        ) {
+        if (rootLayout.encoding != Encoding.AbiEncoded) {
             revert IRolesError.UnsuitableRootNode();
         }
     }
@@ -77,13 +74,12 @@ library Integrity {
             if (
                 encoding != Encoding.Tuple &&
                 encoding != Encoding.Array &&
-                encoding != Encoding.Calldata &&
                 encoding != Encoding.AbiEncoded
             ) {
                 revert IRolesError.UnsuitableParameterType(index);
             }
-            // For AbiEncoded, compValue must be empty (leadingBytes=0) or exactly 2 bytes
-            // For Calldata/Tuple/Array, compValue must be empty
+            // For AbiEncoded, compValue must be empty (leadingBytes defaults to 4) or exactly 2 bytes
+            // For Tuple/Array, compValue must be empty
             if (encoding == Encoding.AbiEncoded) {
                 if (compValue.length != 0 && compValue.length != 2) {
                     revert IRolesError.UnsuitableCompValue(index);
@@ -264,10 +260,7 @@ library Integrity {
                 if (sChildCount == 0) {
                     revert IRolesError.UnsuitableChildCount(i);
                 }
-            } else if (
-                condition.paramType == Encoding.Calldata ||
-                condition.paramType == Encoding.AbiEncoded
-            ) {
+            } else if (condition.paramType == Encoding.AbiEncoded) {
                 if (childCount == 0) {
                     revert IRolesError.UnsuitableChildCount(i);
                 }
@@ -385,9 +378,7 @@ library Integrity {
                 .inspect(conditions, childStart + i)
                 .encoding;
             if (
-                encoding != Encoding.Dynamic &&
-                encoding != Encoding.Calldata &&
-                encoding != Encoding.AbiEncoded
+                encoding != Encoding.Dynamic && encoding != Encoding.AbiEncoded
             ) {
                 return false;
             }
@@ -402,27 +393,25 @@ library Integrity {
         private
         pure
         returns (
-            uint256 countCalldataOrAbiEncoded,
+            uint256 countAbiEncoded,
             uint256 countLogical,
             uint256 countOther
         )
     {
         for (uint256 j = conditions[i].parent; ; ) {
-            bool isCalldataOrAbiEncoded = conditions[j].paramType ==
-                Encoding.Calldata ||
-                conditions[j].paramType == Encoding.AbiEncoded;
+            bool isAbiEncoded = conditions[j].paramType == Encoding.AbiEncoded;
             bool isLogical = (conditions[j].operator == Operator.And ||
                 conditions[j].operator == Operator.Or);
 
-            if (isCalldataOrAbiEncoded) {
-                ++countCalldataOrAbiEncoded;
+            if (isAbiEncoded) {
+                ++countAbiEncoded;
             }
 
             if (isLogical) {
                 ++countLogical;
             }
 
-            if (!isCalldataOrAbiEncoded && !isLogical) {
+            if (!isAbiEncoded && !isLogical) {
                 ++countOther;
             }
 

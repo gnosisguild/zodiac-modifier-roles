@@ -127,7 +127,7 @@ const makeAllowFunction = <
 }
 
 const emptyCalldataMatches = {
-  paramType: Encoding.Calldata,
+  paramType: Encoding.AbiEncoded,
   operator: Operator.Matches,
   children: [],
 }
@@ -141,7 +141,7 @@ const applyGlobalAllowance = (
   allowanceCondition: Condition
 ) => {
   if (
-    condition.paramType !== Encoding.Calldata ||
+    condition.paramType !== Encoding.AbiEncoded ||
     condition.operator !== Operator.Matches
   ) {
     throw new Error(

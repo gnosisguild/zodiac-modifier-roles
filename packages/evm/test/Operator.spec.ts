@@ -81,7 +81,7 @@ describe("Operator", async () => {
       [
         {
           parent: 0,
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           compValue: "0x",
         },
@@ -114,7 +114,7 @@ describe("Operator", async () => {
       .withArgs(PermissionCheckerStatus.OrViolation, BYTES32_ZERO);
   });
 
-  it("checks operator And over Calldata", async () => {
+  it("checks operator And over AbiEncoded", async () => {
     const { modifier, testContract, owner, invoker } = await loadFixture(setup);
 
     const SELECTOR =
@@ -148,13 +148,13 @@ describe("Operator", async () => {
         },
         {
           parent: 0,
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           compValue: "0x",
         },
@@ -216,7 +216,7 @@ describe("Operator", async () => {
       [
         {
           parent: 0,
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           compValue: "0x",
         },
@@ -285,7 +285,7 @@ describe("Operator", async () => {
       [
         {
           parent: 0,
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           compValue: "0x",
         },
@@ -365,7 +365,7 @@ describe("Operator", async () => {
       [
         {
           parent: 0,
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           compValue: "0x",
         },
@@ -463,7 +463,7 @@ describe("Operator", async () => {
       [
         {
           parent: 0,
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           compValue: "0x",
         },
@@ -611,7 +611,7 @@ describe("Operator", async () => {
       [
         {
           parent: 0,
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           compValue: "0x",
         },
@@ -708,7 +708,7 @@ describe("Operator", async () => {
       [
         {
           parent: 0,
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           compValue: "0x",
         },
@@ -768,7 +768,7 @@ describe("Operator", async () => {
       [
         {
           parent: 0,
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           compValue: "0x",
         },
@@ -858,7 +858,7 @@ describe("Operator", async () => {
       [
         {
           parent: 0,
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           compValue: "0x",
         },
@@ -1001,21 +1001,21 @@ describe("Operator", async () => {
           // 1
           {
             parent: 0,
-            paramType: Encoding.Calldata,
+            paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             compValue: "0x",
           },
           // 2
           {
             parent: 0,
-            paramType: Encoding.Calldata,
+            paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             compValue: "0x",
           },
           // 3
           {
             parent: 0,
-            paramType: Encoding.Calldata,
+            paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             compValue: "0x",
           },

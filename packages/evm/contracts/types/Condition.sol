@@ -9,7 +9,6 @@ enum Encoding {
     Dynamic,
     Tuple,
     Array,
-    Calldata, // AKA AbiEncodedWithSelector,
     AbiEncoded
 }
 
