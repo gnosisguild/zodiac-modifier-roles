@@ -1,4 +1,4 @@
-import { TypedDataDomain, TypedDataParameter } from "abitype";
+import { TypedDataDomain, TypedDataParameter } from "abitype"
 
 export function typesForDomain(domain: TypedDataDomain): TypedDataParameter[] {
   return [
@@ -13,5 +13,5 @@ export function typesForDomain(domain: TypedDataDomain): TypedDataParameter[] {
       type: "address",
     },
     domain?.salt && { name: "salt", type: "bytes32" },
-  ].filter(Boolean) as TypedDataParameter[];
+  ].filter(Boolean) as TypedDataParameter[]
 }

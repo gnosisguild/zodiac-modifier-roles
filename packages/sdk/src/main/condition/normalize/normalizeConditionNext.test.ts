@@ -305,7 +305,9 @@ describe("normalizeCondition", () => {
         const input = OR(staticChild, abiEncodedChild1, abiEncodedChild2)
 
         const result = normalizeCondition(input)
-        expect(result).toEqual(OR(abiEncodedChild1, abiEncodedChild2, staticChild))
+        expect(result).toEqual(
+          OR(abiEncodedChild1, abiEncodedChild2, staticChild)
+        )
       })
     })
 
@@ -363,7 +365,11 @@ describe("normalizeCondition", () => {
       const result = normalizeCondition(input)
 
       expect(result).toEqual(
-        OR(MATCHES(Encoding.AbiEncoded, COMP(4)), COMP(1), AND(COMP(2), COMP(3)))
+        OR(
+          MATCHES(Encoding.AbiEncoded, COMP(4)),
+          COMP(1),
+          AND(COMP(2), COMP(3))
+        )
       )
     })
 

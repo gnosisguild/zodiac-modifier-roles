@@ -43,8 +43,7 @@ const prunePassNodes = (condition: Condition): Condition => {
     condition.paramType === Encoding.Tuple && isDynamicParamType(condition)
 
   // We must not apply this to static tuples since removing Static Pass nodes would cause word shifts in the encoding.
-  const canPrune =
-    condition.paramType === Encoding.AbiEncoded || isDynamicTuple
+  const canPrune = condition.paramType === Encoding.AbiEncoded || isDynamicTuple
 
   if (!canPrune) return condition
 

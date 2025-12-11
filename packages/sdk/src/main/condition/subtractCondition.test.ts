@@ -465,7 +465,11 @@ describe("subtractCondition", () => {
     })
 
     it("single position OR subtraction", () => {
-      const condition = MATCHES(Encoding.AbiEncoded, OR(COMP(1), COMP(2)), COMP(3))
+      const condition = MATCHES(
+        Encoding.AbiEncoded,
+        OR(COMP(1), COMP(2)),
+        COMP(3)
+      )
       const fragment = MATCHES(Encoding.AbiEncoded, COMP(1), COMP(3))
       const result = subtractCondition(condition, fragment)
       expect(result).toEqual(MATCHES(Encoding.AbiEncoded, COMP(2), COMP(3)))
@@ -761,7 +765,9 @@ describe("subtractCondition", () => {
 
       // Can remove the AND completely
       const result1 = subtractCondition(condition, AND(COMP(2), COMP(3)))
-      expect(result1).toEqual(OR(COMP(1), MATCHES(Encoding.AbiEncoded, COMP(4))))
+      expect(result1).toEqual(
+        OR(COMP(1), MATCHES(Encoding.AbiEncoded, COMP(4)))
+      )
 
       // Cannot remove part of the AND
       const result2 = subtractCondition(condition, COMP(2))
@@ -803,7 +809,11 @@ describe("subtractCondition", () => {
     })
 
     it("cannot subtract from MATCHES positions", () => {
-      const condition = MATCHES(Encoding.AbiEncoded, COMP(1), OR(COMP(2), COMP(3)))
+      const condition = MATCHES(
+        Encoding.AbiEncoded,
+        COMP(1),
+        OR(COMP(2), COMP(3))
+      )
       const fragment = COMP(2)
 
       const result = subtractCondition(condition, fragment)
