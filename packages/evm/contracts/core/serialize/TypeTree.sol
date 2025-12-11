@@ -61,14 +61,14 @@ library TypeTree {
         }
 
         /*
-         * Normalize Calldata   → AbiEncoded with leadingBytes=4.
-         * Normalize AbiEncoded → extract leadingBytes from compValue (must be 0 or 2 bytes).
+         * For AbiEncoded: extract leadingBytes from compValue (2 bytes).
+         * If compValue is empty, default to 4 (function selector size).
          */
-        if (node.encoding == Encoding.Calldata) {
-            node.encoding = Encoding.AbiEncoded;
-            node.leadingBytes = 4;
-        } else if (node.encoding == Encoding.AbiEncoded) {
-            node.leadingBytes = uint16(bytes2(conditions[index].compValue));
+        if (node.encoding == Encoding.AbiEncoded) {
+            bytes memory compValue = conditions[index].compValue;
+            node.leadingBytes = compValue.length == 0
+                ? 4
+                : uint16(bytes2(compValue));
         }
     }
 

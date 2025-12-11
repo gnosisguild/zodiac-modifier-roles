@@ -27,7 +27,7 @@ task(
     contractVersion: packageJson.version,
     contractName: "MultiSendUnwrapper",
     compilerInput: await hre.run("verify:etherscan-get-minimal-input", {
-      sourceName: "contracts/periphery/MultiSendUnwrapper.sol",
+      sourceName: "contracts/periphery/unwrappers/MultiSendUnwrapper.sol",
     }),
     constructorArgs: {
       types: [],
@@ -39,7 +39,7 @@ task(
     contractVersion: packageJson.version,
     contractName: "MorphoBundler3Unwrapper",
     compilerInput: await hre.run("verify:etherscan-get-minimal-input", {
-      sourceName: "contracts/periphery/MorphoBundler3Unwrapper.sol",
+      sourceName: "contracts/periphery/unwrappers/MorphoBundler3Unwrapper.sol",
     }),
     constructorArgs: {
       types: [],
@@ -49,22 +49,9 @@ task(
   });
   writeMastercopyFromBuild({
     contractVersion: packageJson.version,
-    contractName: "Packer",
+    contractName: "ConditionsTransform",
     compilerInput: await hre.run("verify:etherscan-get-minimal-input", {
-      sourceName: "contracts/packers/Packer.sol",
-    }),
-    constructorArgs: {
-      types: [],
-      values: [],
-    },
-    salt: "0x0000000000000000000000000000000000000000000000000000000000000000",
-  });
-
-  writeMastercopyFromBuild({
-    contractVersion: packageJson.version,
-    contractName: "Integrity",
-    compilerInput: await hre.run("verify:etherscan-get-minimal-input", {
-      sourceName: "contracts/Integrity.sol",
+      sourceName: "contracts/core/serialize/ConditionsTransform.sol",
     }),
     constructorArgs: {
       types: [],

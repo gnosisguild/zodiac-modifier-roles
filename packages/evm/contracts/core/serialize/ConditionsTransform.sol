@@ -85,7 +85,6 @@ library ConditionsTransform {
         } else if (
             paramType == Encoding.Dynamic ||
             paramType == Encoding.Array ||
-            paramType == Encoding.Calldata ||
             paramType == Encoding.AbiEncoded
         ) {
             return false;

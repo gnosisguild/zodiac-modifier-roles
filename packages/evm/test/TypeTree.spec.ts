@@ -71,20 +71,6 @@ describe("TypeTree", () => {
       });
     });
 
-    it("returns Calldata normalized to AbiEncoded", async () => {
-      const { typeTree } = await loadFixture(setup);
-      const input = flattenCondition({
-        paramType: Encoding.Calldata,
-        operator: Operator.Matches,
-        children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
-      });
-      const output = bfsToTree(await typeTree.inspect(input));
-      expect(output).to.deep.equal({
-        encoding: Encoding.AbiEncoded,
-        children: [{ encoding: Encoding.Static, children: [] }],
-      });
-    });
-
     it("returns AbiEncoded with children", async () => {
       const { typeTree } = await loadFixture(setup);
       const input = flattenCondition({
@@ -193,7 +179,7 @@ describe("TypeTree", () => {
         children: [
           { paramType: Encoding.Dynamic, operator: Operator.Pass },
           {
-            paramType: Encoding.Calldata,
+            paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             children: [{ paramType: Encoding.Static }],
           },
@@ -293,7 +279,7 @@ describe("TypeTree", () => {
     it("handles nested tuples", async () => {
       const { typeTree } = await loadFixture(setup);
       const input = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         children: [
           {
@@ -324,7 +310,7 @@ describe("TypeTree", () => {
     it("handles nested arrays", async () => {
       const { typeTree } = await loadFixture(setup);
       const input = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         children: [
           {
@@ -355,7 +341,7 @@ describe("TypeTree", () => {
     it("handles logical within array", async () => {
       const { typeTree } = await loadFixture(setup);
       const input = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         children: [
           {
@@ -383,7 +369,7 @@ describe("TypeTree", () => {
     it("handles deep nesting with mixed types", async () => {
       const { typeTree } = await loadFixture(setup);
       const input = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         children: [
           {
@@ -422,7 +408,7 @@ describe("TypeTree", () => {
     it("excludes non-structural None/WithinRatio/Ether/Call nodes", async () => {
       const { typeTree } = await loadFixture(setup);
       const input = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         children: [
           { paramType: Encoding.Static, operator: Operator.Pass },
@@ -445,7 +431,7 @@ describe("TypeTree", () => {
     it("returns empty children when only non-structural nodes present", async () => {
       const { typeTree } = await loadFixture(setup);
       const input = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         children: [
           { paramType: Encoding.None, operator: Operator.EtherWithinAllowance },
@@ -468,7 +454,7 @@ describe("TypeTree", () => {
         operator: Operator.Or,
         children: [
           {
-            paramType: Encoding.Calldata,
+            paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             children: [
               { paramType: Encoding.Static, operator: Operator.Pass },
@@ -476,7 +462,7 @@ describe("TypeTree", () => {
             ],
           },
           {
-            paramType: Encoding.Calldata,
+            paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             children: [
               { paramType: Encoding.Static, operator: Operator.Pass },
@@ -484,7 +470,7 @@ describe("TypeTree", () => {
             ],
           },
           {
-            paramType: Encoding.Calldata,
+            paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             children: [
               { paramType: Encoding.Static, operator: Operator.Pass },
@@ -506,7 +492,7 @@ describe("TypeTree", () => {
     it("handles nested variants (variant within variant)", async () => {
       const { typeTree } = await loadFixture(setup);
       const input = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         children: [
           {
@@ -514,7 +500,7 @@ describe("TypeTree", () => {
             operator: Operator.Or,
             children: [
               {
-                paramType: Encoding.Calldata,
+                paramType: Encoding.AbiEncoded,
                 operator: Operator.Matches,
                 children: [
                   {
@@ -675,7 +661,7 @@ describe("TypeTree", () => {
     it("non-variant logical nodes have same id as child", async () => {
       const { typeTree } = await loadFixture(setup);
       const withAnd = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         children: [
           {
@@ -689,7 +675,7 @@ describe("TypeTree", () => {
         ],
       });
       const withoutAnd = flattenCondition({
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
       });

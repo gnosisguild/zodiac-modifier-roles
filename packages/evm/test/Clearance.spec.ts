@@ -422,7 +422,7 @@ describe("Clearance", async () => {
         [
           {
             parent: 0,
-            paramType: Encoding.Calldata,
+            paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -480,7 +480,7 @@ describe("Clearance", async () => {
         [
           {
             parent: 0,
-            paramType: Encoding.Calldata,
+            paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             compValue: "0x",
           },
@@ -530,7 +530,7 @@ describe("Clearance", async () => {
       const conditions = [
         {
           parent: 0,
-          paramType: Encoding.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           compValue: "0x",
         },

@@ -21,7 +21,7 @@ export interface Props {
 }
 
 const ConditionView: React.FC<Props> = ({ condition, paramIndex, abi }) => {
-  if (condition.paramType === Encoding.Calldata) {
+  if (condition.paramType === Encoding.AbiEncoded && paramIndex === undefined) {
     return (
       <CalldataConditionView
         condition={condition}
@@ -180,7 +180,8 @@ export const ChildConditions: React.FC<
 > = ({ condition, paramIndex, abi, separator }) => {
   const { children, operator } = condition
   const childrenLength = children?.length || 0
-  const isCalldataCondition = condition.paramType === Encoding.Calldata
+  const isRootAbiEncodedCondition =
+    condition.paramType === Encoding.AbiEncoded && paramIndex === undefined
   const isLogicalCondition =
     operator >= Operator.And && operator <= Operator.Nor
 
@@ -188,10 +189,10 @@ export const ChildConditions: React.FC<
     <div
       className={classNames(
         classes.conditionBody,
-        isCalldataCondition && classes.topLevelCondition
+        isRootAbiEncodedCondition && classes.topLevelCondition
       )}
     >
-      {!isLogicalCondition && !isCalldataCondition && (
+      {!isLogicalCondition && !isRootAbiEncodedCondition && (
         <div className={classes.verticalGuide} />
       )}
       <Flex direction="column" gap={2}>

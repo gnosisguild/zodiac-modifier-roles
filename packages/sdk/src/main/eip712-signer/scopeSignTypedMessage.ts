@@ -29,7 +29,7 @@ export const scopeSignTypedMessage = ({
   return {
     selector: selector as `0x${string}`,
     condition: {
-      paramType: Encoding.Calldata,
+      paramType: Encoding.AbiEncoded,
       operator: Operator.Matches,
       children: [domain, message, typesCondition(types)],
     },
@@ -46,7 +46,6 @@ function typesCondition(types: TypedData): Condition {
   const left: Condition = {
     paramType: Encoding.Array,
     operator: Operator.Pass,
-    compValue: "0x",
     children: [
       {
         paramType: Encoding.Tuple,
@@ -68,12 +67,10 @@ function typesCondition(types: TypedData): Condition {
   const right: Condition = {
     paramType: Encoding.Array,
     operator: Operator.Pass,
-    compValue: "0x",
     children: [
       {
         paramType: Encoding.Static,
         operator: Operator.Pass,
-        compValue: "0x",
       },
     ],
   }

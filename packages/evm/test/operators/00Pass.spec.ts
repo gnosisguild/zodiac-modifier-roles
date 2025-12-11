@@ -13,7 +13,7 @@ describe("Operator - Pass", async () => {
     const conditions = [
       {
         parent: 0,
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         compValue: "0x",
       },

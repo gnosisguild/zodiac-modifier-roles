@@ -9,7 +9,7 @@ import {
   PermissionCheckerStatus,
 } from "../utils";
 import { setupOneParamStatic, setupTwoParamsStaticDynamic } from "../setup";
-import { ConditionFlatStruct } from "../../typechain-types/contracts/PermissionBuilder";
+import { ConditionFlatStruct } from "../../typechain-types/contracts/Roles";
 
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
@@ -21,7 +21,7 @@ describe("Operator - And", async () => {
     const conditions = [
       {
         parent: 0,
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         compValue: "0x",
       },
@@ -52,7 +52,7 @@ describe("Operator - And", async () => {
     const conditions = [
       {
         parent: 0,
-        paramType: Encoding.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         compValue: "0x",
       },
@@ -103,7 +103,7 @@ describe("Operator - And", async () => {
     } = await loadFixture(setupTwoParamsStaticDynamic);
 
     const conditions = flattenCondition({
-      paramType: Encoding.Calldata,
+      paramType: Encoding.AbiEncoded,
       operator: Operator.Matches,
       children: [
         {
@@ -118,6 +118,7 @@ describe("Operator - And", async () => {
             {
               paramType: Encoding.AbiEncoded,
               operator: Operator.Matches,
+              compValue: "0x0000", // leadingBytes = 0 (no selector)
               children: [
                 {
                   paramType: Encoding.Static,
@@ -129,6 +130,7 @@ describe("Operator - And", async () => {
             {
               paramType: Encoding.AbiEncoded,
               operator: Operator.Matches,
+              compValue: "0x0000", // leadingBytes = 0 (no selector)
               children: [
                 {
                   paramType: Encoding.Static,
@@ -167,7 +169,7 @@ describe("Operator - And", async () => {
     } = await loadFixture(setupTwoParamsStaticDynamic);
 
     const conditions = flattenCondition({
-      paramType: Encoding.Calldata,
+      paramType: Encoding.AbiEncoded,
       operator: Operator.Matches,
       children: [
         {
@@ -182,6 +184,7 @@ describe("Operator - And", async () => {
             {
               paramType: Encoding.AbiEncoded,
               operator: Operator.Matches,
+              compValue: "0x0000", // leadingBytes = 0 (no selector)
               children: [
                 {
                   paramType: Encoding.Static,
@@ -198,6 +201,7 @@ describe("Operator - And", async () => {
             {
               paramType: Encoding.AbiEncoded,
               operator: Operator.Matches,
+              compValue: "0x0000", // leadingBytes = 0 (no selector)
               children: [
                 {
                   paramType: Encoding.Static,

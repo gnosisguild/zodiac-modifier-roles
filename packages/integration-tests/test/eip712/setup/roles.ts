@@ -5,7 +5,7 @@ import { Condition, ExecutionOptions } from "zodiac-roles-sdk"
 import { moduleProxyFactory } from "./deploy-mastercopies/moduleProxyFactory"
 import { rolesModMastercopy } from "./deploy-mastercopies/rolesMastercopy"
 import { enableModuleInSafe } from "./safe"
-import { ConditionFlatStruct } from "../../../../evm/typechain-types/contracts/test/MockTopology"
+import { ConditionFlatStruct } from "../../../../evm/typechain-types/contracts/Roles"
 
 export async function deployRoles(
   {
@@ -185,12 +185,6 @@ const flattenCondition = (root: any): ConditionFlatStruct[] => {
         queue.push({ condition: child, parent: index })
       }
     }
-  }
-
-  if (result.length > 256) {
-    console.warn(
-      "Condition tree has more than 256 nodes. It will not be possible to apply this permission to the Roles mod."
-    )
   }
 
   return result
