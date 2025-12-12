@@ -152,6 +152,8 @@ export enum PermissionCheckerStatus {
   RatioAboveMax,
   // Calldata is not empty when it should be
   CalldataNotEmpty,
+  // Leading bytes do not match expected value
+  LeadingBytesNotAMatch,
 }
 
 export function removeTrailingOffset(data: string) {

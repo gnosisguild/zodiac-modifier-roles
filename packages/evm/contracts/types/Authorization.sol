@@ -45,7 +45,9 @@ enum Status {
     RatioBelowMin,
     RatioAboveMax,
     /// Calldata is not empty when it should be
-    CalldataNotEmpty
+    CalldataNotEmpty,
+    /// Leading bytes do not match expected value
+    LeadingBytesNotAMatch
 }
 
 struct Context {
