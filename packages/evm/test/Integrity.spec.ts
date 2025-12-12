@@ -2392,6 +2392,171 @@ describe("Integrity", () => {
     });
   });
 
+  describe("AbiEncoded compValue validation", () => {
+    it("allows empty compValue (default leadingBytes=4)", async () => {
+      const { enforce } = await loadFixture(setup);
+      const conditions = flattenCondition({
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        compValue: "0x", // empty
+        children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+      });
+      await expect(enforce(conditions)).to.not.be.reverted;
+    });
+
+    it("allows 2-byte compValue (custom leadingBytes)", async () => {
+      const { enforce } = await loadFixture(setup);
+      const conditions = flattenCondition({
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        compValue: "0x0014", // leadingBytes = 20
+        children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+      });
+      await expect(enforce(conditions)).to.not.be.reverted;
+    });
+
+    it("allows 2+N byte compValue (leadingBytes + match data)", async () => {
+      const { enforce } = await loadFixture(setup);
+      // compValue: 0x0004 (N=4) + deadbeef (4 bytes of match data)
+      const conditions = flattenCondition({
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        compValue: "0x0004deadbeef",
+        children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+      });
+      await expect(enforce(conditions)).to.not.be.reverted;
+    });
+
+    it("allows 2+N byte compValue with larger N", async () => {
+      const { enforce } = await loadFixture(setup);
+      // compValue: 0x0010 (N=16) + 16 bytes of match data
+      const conditions = flattenCondition({
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        compValue: "0x0010" + "aa".repeat(16),
+        children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+      });
+      await expect(enforce(conditions)).to.not.be.reverted;
+    });
+
+    it("reverts when match bytes exceed 32", async () => {
+      const { mock, enforce } = await loadFixture(setup);
+      // compValue: 0x0021 (N=33) + 33 bytes of match data - exceeds limit
+      const conditions = flattenCondition({
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        compValue: "0x0021" + "aa".repeat(33),
+        children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+      });
+      await expect(enforce(conditions))
+        .to.be.revertedWithCustomError(mock, "UnsuitableCompValue")
+        .withArgs(0);
+    });
+
+    it("allows greater than 32 when no match bytes provided", async () => {
+      const { enforce } = await loadFixture(setup);
+      // compValue: 0x0100 (N=256) - any offset allowed without match bytes
+      const conditions = flattenCondition({
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        compValue: "0x0100",
+        children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+      });
+      await expect(enforce(conditions)).to.not.be.reverted;
+    });
+
+    it("allows match bytes of exactly 32", async () => {
+      const { enforce } = await loadFixture(setup);
+      // compValue: 0x0020 (N=32) + 32 bytes of match data - at the limit
+      const conditions = flattenCondition({
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        compValue: "0x0020" + "aa".repeat(32),
+        children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+      });
+      await expect(enforce(conditions)).to.not.be.reverted;
+    });
+
+    it("reverts on 1-byte compValue", async () => {
+      const { mock, enforce } = await loadFixture(setup);
+      const conditions = flattenCondition({
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        compValue: "0x00", // only 1 byte - invalid
+        children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+      });
+      await expect(enforce(conditions))
+        .to.be.revertedWithCustomError(mock, "UnsuitableCompValue")
+        .withArgs(0);
+    });
+
+    it("reverts when length doesn't match N (too few bytes)", async () => {
+      const { mock, enforce } = await loadFixture(setup);
+      // compValue: 0x0004 (N=4) + only 2 bytes of data (should be 4)
+      const conditions = flattenCondition({
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        compValue: "0x0004dead", // says N=4 but only 2 bytes follow
+        children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+      });
+      await expect(enforce(conditions))
+        .to.be.revertedWithCustomError(mock, "UnsuitableCompValue")
+        .withArgs(0);
+    });
+
+    it("reverts when length doesn't match N (too many bytes)", async () => {
+      const { mock, enforce } = await loadFixture(setup);
+      // compValue: 0x0002 (N=2) + 4 bytes of data (should be 2)
+      const conditions = flattenCondition({
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        compValue: "0x0002deadbeef", // says N=2 but 4 bytes follow
+        children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+      });
+      await expect(enforce(conditions))
+        .to.be.revertedWithCustomError(mock, "UnsuitableCompValue")
+        .withArgs(0);
+    });
+
+    it("still rejects compValue on Tuple + Matches", async () => {
+      const { mock, enforce } = await loadFixture(setup);
+      const conditions = flattenCondition({
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        children: [
+          {
+            paramType: Encoding.Tuple,
+            operator: Operator.Matches,
+            compValue: "0x0004deadbeef", // Tuple doesn't support compValue
+            children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+          },
+        ],
+      });
+      await expect(enforce(conditions))
+        .to.be.revertedWithCustomError(mock, "UnsuitableCompValue")
+        .withArgs(1);
+    });
+
+    it("still rejects compValue on Array + Matches", async () => {
+      const { mock, enforce } = await loadFixture(setup);
+      const conditions = flattenCondition({
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        children: [
+          {
+            paramType: Encoding.Array,
+            operator: Operator.Matches,
+            compValue: "0x0004deadbeef", // Array doesn't support compValue
+            children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+          },
+        ],
+      });
+      await expect(enforce(conditions))
+        .to.be.revertedWithCustomError(mock, "UnsuitableCompValue")
+        .withArgs(1);
+    });
+  });
+
   describe("Type matching with non-structural children", () => {
     it("allows Array with matching Static children and non-structural WithinRatio", async () => {
       const { enforce } = await loadFixture(setup);

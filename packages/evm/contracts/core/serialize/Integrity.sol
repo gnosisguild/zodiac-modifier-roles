@@ -80,10 +80,21 @@ library Integrity {
             ) {
                 revert IRolesError.UnsuitableParameterType(index);
             }
-            // For AbiEncoded, compValue must be empty (leadingBytes defaults to 4) or exactly 2 bytes
-            // For Tuple/Array, compValue must be empty
+            // For AbiEncoded, compValue must be:
+            //    - empty (leadingBytes defaults to 4)
+            //    - 2 bytes (leadingBytes, any offset)
+            //    - 2 + N bytes (leadingBytes + N match bytes, N <= 32)
+            // For Tuple/Array: compValue must be empty
             if (encoding == Encoding.AbiEncoded) {
-                if (compValue.length != 0 && compValue.length != 2) {
+                uint16 leadingBytes = compValue.length >= 2
+                    ? uint16(bytes2(compValue))
+                    : 0;
+                bool valid = compValue.length == 0 ||
+                    compValue.length == 2 ||
+                    (compValue.length == 2 + leadingBytes &&
+                        leadingBytes <= 32);
+
+                if (!valid) {
                     revert IRolesError.UnsuitableCompValue(index);
                 }
             } else if (compValue.length != 0) {
