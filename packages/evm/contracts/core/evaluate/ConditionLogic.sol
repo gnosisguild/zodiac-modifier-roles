@@ -48,6 +48,15 @@ library ConditionLogic {
                 return _and(data, condition, payload, consumptions, context);
             } else if (operator == Operator.Or) {
                 return _or(data, condition, payload, consumptions, context);
+            } else if (operator == Operator.Empty) {
+                return
+                    Result({
+                        status: data.length == 0
+                            ? Status.Ok
+                            : Status.CalldataNotEmpty,
+                        consumptions: consumptions,
+                        info: 0
+                    });
             } else if (operator == Operator.ArraySome) {
                 return
                     _arraySome(data, condition, payload, consumptions, context);

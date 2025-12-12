@@ -55,7 +55,7 @@ export enum Operator {
   /* 01: */ And,
   /* 02: */ Or,
   /* 03: */ _Placeholder03,
-  /* 04: */ _Placeholder04,
+  /* 04: */ Empty,
   // ------------------------------------------------------------
   // 05-14: COMPLEX EXPRESSIONS
   //          paramType: AbiEncoded / Tuple / Array,
@@ -150,6 +150,8 @@ export enum PermissionCheckerStatus {
   CalldataOverflow,
   RatioBelowMin,
   RatioAboveMax,
+  // Calldata is not empty when it should be
+  CalldataNotEmpty,
 }
 
 export function removeTrailingOffset(data: string) {

@@ -43,7 +43,9 @@ enum Status {
     EtherAllowanceExceeded,
     CalldataOverflow,
     RatioBelowMin,
-    RatioAboveMax
+    RatioAboveMax,
+    /// Calldata is not empty when it should be
+    CalldataNotEmpty
 }
 
 struct Context {

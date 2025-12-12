@@ -523,4 +523,77 @@ describe("Operator - CallWithinAllowance", async () => {
         .withArgs(PermissionCheckerStatus.CallAllowanceExceeded, allowanceKey);
     });
   });
+
+  describe("CallWithinAllowance - Standalone Root", () => {
+    it("works as standalone root condition with allowTarget", async () => {
+      const { owner, invoker, roles, testContract } = await loadFixture(setup);
+
+      const testContractAddress = await testContract.getAddress();
+      const allowanceKey =
+        "0x0000000000000000000000000000000000000000000000000000000000000002";
+
+      // Allowance of 2 calls
+      await roles.connect(owner).setAllowance(allowanceKey, 2, 0, 0, 0, 0);
+
+      await roles.connect(owner).allowTarget(
+        ROLE_KEY,
+        testContractAddress,
+        flattenCondition({
+          paramType: Encoding.None,
+          operator: Operator.CallWithinAllowance,
+          compValue: allowanceKey,
+        }),
+        ExecutionOptions.Both,
+      );
+
+      const doNothingData =
+        testContract.interface.encodeFunctionData("doNothing");
+      const doEvenLessData =
+        testContract.interface.encodeFunctionData("doEvenLess");
+
+      // First call passes (allowance: 2 -> 1)
+      await expect(
+        roles
+          .connect(invoker)
+          .execTransactionWithRole(
+            testContractAddress,
+            0,
+            doNothingData,
+            0,
+            ROLE_KEY,
+            true,
+          ),
+      ).to.not.be.reverted;
+
+      // Second call passes (allowance: 1 -> 0)
+      await expect(
+        roles
+          .connect(invoker)
+          .execTransactionWithRole(
+            testContractAddress,
+            0,
+            doEvenLessData,
+            0,
+            ROLE_KEY,
+            true,
+          ),
+      ).to.not.be.reverted;
+
+      // Third call fails (allowance exhausted)
+      await expect(
+        roles
+          .connect(invoker)
+          .execTransactionWithRole(
+            testContractAddress,
+            0,
+            doNothingData,
+            0,
+            ROLE_KEY,
+            true,
+          ),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.CallAllowanceExceeded, allowanceKey);
+    });
+  });
 });

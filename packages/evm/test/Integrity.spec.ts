@@ -90,19 +90,6 @@ describe("Integrity", () => {
   });
 
   describe("Root Node Validation", () => {
-    it("should revert if the final resolved root type is not AbiEncoded", async () => {
-      const { mock, enforce } = await loadFixture(setup);
-      // This tree resolves to Static, not AbiEncoded
-      const conditions = flattenCondition({
-        paramType: Encoding.Static,
-        operator: Operator.Pass,
-      });
-      await expect(enforce(conditions)).to.be.revertedWithCustomError(
-        mock,
-        "UnsuitableRootNode",
-      );
-    });
-
     it("should pass for a simple, valid AbiEncoded root", async () => {
       const { enforce } = await loadFixture(setup);
       const conditions = flattenCondition({
@@ -1044,6 +1031,126 @@ describe("Integrity", () => {
           ],
         });
         await expect(enforce(conditions)).to.not.be.reverted;
+      });
+    });
+
+    describe("Empty Operator", () => {
+      it("should revert if Empty has non-None paramType", async () => {
+        const { mock, enforce } = await loadFixture(setup);
+        const conditions = flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          children: [
+            {
+              paramType: Encoding.Static, // Invalid - should be None
+              operator: Operator.Empty,
+            },
+          ],
+        });
+        await expect(enforce(conditions))
+          .to.be.revertedWithCustomError(mock, "UnsuitableParameterType")
+          .withArgs(1);
+      });
+
+      it("should revert if Empty has non-empty compValue", async () => {
+        const { mock, enforce } = await loadFixture(setup);
+        const conditions = flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          children: [
+            {
+              paramType: Encoding.None,
+              operator: Operator.Empty,
+              compValue: "0x01", // Invalid - should be empty
+            },
+          ],
+        });
+        await expect(enforce(conditions))
+          .to.be.revertedWithCustomError(mock, "UnsuitableCompValue")
+          .withArgs(1);
+      });
+
+      it("should revert if Empty has children", async () => {
+        const { mock, enforce } = await loadFixture(setup);
+        const conditions = flattenCondition({
+          paramType: Encoding.None,
+          operator: Operator.Empty,
+          children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+        });
+        await expect(enforce(conditions))
+          .to.be.revertedWithCustomError(mock, "UnsuitableChildCount")
+          .withArgs(0);
+      });
+
+      it("should pass with valid Empty configuration (standalone)", async () => {
+        const { enforce } = await loadFixture(setup);
+        const conditions = flattenCondition({
+          paramType: Encoding.None,
+          operator: Operator.Empty,
+        });
+        await expect(enforce(conditions)).to.not.be.reverted;
+      });
+
+      it("should pass if Empty is nested inside Or", async () => {
+        const { enforce } = await loadFixture(setup);
+        const conditions = flattenCondition({
+          paramType: Encoding.None,
+          operator: Operator.Or,
+          children: [
+            {
+              paramType: Encoding.None,
+              operator: Operator.Empty,
+            },
+            {
+              paramType: Encoding.None,
+              operator: Operator.CallWithinAllowance,
+              compValue:
+                "0x0000000000000000000000000000000000000000000000000000000000000001",
+            },
+          ],
+        });
+        await expect(enforce(conditions)).to.not.be.reverted;
+      });
+
+      it("should pass if Empty is nested inside And", async () => {
+        const { enforce } = await loadFixture(setup);
+        const conditions = flattenCondition({
+          paramType: Encoding.None,
+          operator: Operator.And,
+          children: [
+            {
+              paramType: Encoding.None,
+              operator: Operator.Empty,
+            },
+            {
+              paramType: Encoding.None,
+              operator: Operator.CallWithinAllowance,
+              compValue:
+                "0x0000000000000000000000000000000000000000000000000000000000000001",
+            },
+          ],
+        });
+        await expect(enforce(conditions)).to.not.be.reverted;
+      });
+
+      it("should revert if Empty is nested inside a structural node (Tuple)", async () => {
+        const { mock, enforce } = await loadFixture(setup);
+        const conditions = flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          children: [
+            {
+              paramType: Encoding.Tuple,
+              operator: Operator.Matches,
+              children: [
+                {
+                  paramType: Encoding.None,
+                  operator: Operator.Empty,
+                },
+              ],
+            },
+          ],
+        });
+        await expect(enforce(conditions))
+          .to.be.revertedWithCustomError(mock, "UnsuitableParent")
+          .withArgs(2); // Index of Empty node
       });
     });
 
