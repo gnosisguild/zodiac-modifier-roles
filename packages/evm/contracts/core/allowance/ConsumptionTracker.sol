@@ -75,7 +75,19 @@ abstract contract ConsumptionTracker is RolesStorage {
         }
 
         if (success && nextMembership != type(uint256).max) {
+            // uint256.max == noop
             roles[roleKey].members[sender] = nextMembership;
+            if (nextMembership != 0) {
+                emit UpdateRole(
+                    roleKey,
+                    sender,
+                    uint64(nextMembership >> 192),
+                    uint64(nextMembership >> 128),
+                    uint128(nextMembership)
+                );
+            } else {
+                emit RevokeRole(roleKey, sender);
+            }
         }
     }
 
