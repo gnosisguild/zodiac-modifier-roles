@@ -24,10 +24,8 @@ library BitmaskChecker {
         uint256 length = (compValue.length - 2) / 2;
 
         // Dynamic params: skip 32-byte length prefix.
-        // Dynamic params: restrict to that param's payload size
-        bool isInline = payload.size == 32;
-        uint256 start = payload.location + (isInline ? 0 : 32);
-        uint256 end = isInline ? data.length : payload.location + payload.size;
+        uint256 start = payload.location + (payload.size == 32 ? 0 : 32);
+        uint256 end = data.length;
 
         if (shift + length > end - start) {
             return Status.BitmaskOverflow;
@@ -35,13 +33,11 @@ library BitmaskChecker {
 
         bytes calldata value = data[start:];
 
+        /*
+         * Load actual, expected, and mask in 32-byte chunks. Final chunk
+         * gets rinsed if less than 32 bytes remain.
+         */
         for (uint256 i; i < length; i += 32) {
-            /*
-             * Load actual, expected, and mask in 32-byte chunks. Final chunk
-             * gets rinsed if less than 32 bytes remain.
-             */
-            bytes32 rinse = _rinseMask(length - i);
-
             /*
              * compValue memory layout:
              * | 32: length | 2: shift | N: mask | N: expected |
@@ -62,7 +58,9 @@ library BitmaskChecker {
                 actual := calldataload(add(value.offset, add(shift, i)))
             }
 
-            if (expected & rinse != actual & mask & rinse) {
+            bytes32 rinseMask = _rinseMask(length - i);
+
+            if (expected & rinseMask != actual & mask & rinseMask) {
                 return Status.BitmaskNotAllowed;
             }
         }
@@ -71,8 +69,8 @@ library BitmaskChecker {
     }
 
     /// @dev Returns a mask with leading 1s for byteCount bytes, rest 0s.
-    function _rinseMask(uint256 byteCount) private pure returns (bytes32) {
-        uint256 bytesToRinse = byteCount > 32 ? 0 : 32 - byteCount;
-        return bytes32(type(uint256).max << (bytesToRinse * 8));
+    function _rinseMask(uint256 bytesLeft) private pure returns (bytes32) {
+        uint256 bitsToRinse = (bytesLeft > 31 ? 0 : 32 - bytesLeft) * 8;
+        return bytes32(type(uint256).max << bitsToRinse);
     }
 }
