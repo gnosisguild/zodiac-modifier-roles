@@ -15,7 +15,12 @@ enum Operator {
     /* 01: */ And,
     /* 02: */ Or,
     /* 03: */ _Placeholder03,
-    /* 04: */ _Placeholder04,
+    // ------------------------------------------------------------
+    // 04:    EMPTY CHECK (passes if data.length == 0)
+    //          paramType: None
+    //          🚫 children
+    //          🚫 compValue
+    /* 04: */ Empty,
     // ------------------------------------------------------------
     // 05-14: COMPLEX EXPRESSIONS
     //          paramType: AbiEncoded / Tuple / Array,

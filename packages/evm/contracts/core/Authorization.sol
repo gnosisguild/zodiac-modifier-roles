@@ -148,11 +148,17 @@ abstract contract Authorization is RolesStorage {
         (Condition memory condition, Layout memory layout) = ConditionUnpacker
             .unpack(ImmutableStorage.load(pointer));
 
+        // Its possible that we have a fully nonStructural tree
+        Payload memory payload;
+        if (layout.encoding != Encoding.None) {
+            payload = AbiDecoder.inspect(data, layout);
+        }
+
         return
             ConditionLogic.evaluate(
                 data,
                 condition,
-                AbiDecoder.inspect(data, layout),
+                payload,
                 consumptions,
                 context
             );

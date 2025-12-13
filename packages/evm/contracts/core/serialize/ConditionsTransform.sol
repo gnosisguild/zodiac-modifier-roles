@@ -30,7 +30,12 @@ library ConditionsTransform {
 
         _removeExtraneousOffsets(conditions);
 
-        Layout memory layout = TypeTree.inspect(conditions, 0);
+        Layout memory layout;
+        // For non-structural trees skip TypeTree creation
+        if (Topology.isStructural(conditions, 0)) {
+            layout = TypeTree.inspect(conditions, 0);
+        }
+
         bytes memory buffer = ConditionPacker.pack(conditions, layout);
         address pointer = ImmutableStorage.store(buffer);
 
