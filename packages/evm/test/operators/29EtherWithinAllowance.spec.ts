@@ -691,4 +691,53 @@ describe("Operator - EtherWithinAllowance", async () => {
         .withArgs(PermissionCheckerStatus.EtherAllowanceExceeded, allowanceKey);
     });
   });
+
+  describe("EtherWithinAllowance - Standalone Root", () => {
+    it("works as standalone root condition with allowTarget", async () => {
+      const { owner, invoker, roles, testContract } = await loadFixture(setup);
+
+      const testContractAddress = await testContract.getAddress();
+      const allowanceKey =
+        "0x0000000000000000000000000000000000000000000000000000000000000002";
+
+      await roles
+        .connect(owner)
+        .setAllowance(allowanceKey, parseEther("2"), 0, 0, 0, 0);
+
+      await roles.connect(owner).allowTarget(
+        ROLE_KEY,
+        testContractAddress,
+        flattenCondition({
+          paramType: Encoding.None,
+          operator: Operator.EtherWithinAllowance,
+          compValue: allowanceKey,
+        }),
+        ExecutionOptions.Send,
+      );
+
+      // Passes with value within allowance
+      await roles
+        .connect(invoker)
+        .execTransactionFromModule(
+          testContractAddress,
+          parseEther("1"),
+          "0x",
+          0,
+        );
+
+      // Fails when exceeding remaining allowance
+      await expect(
+        roles
+          .connect(invoker)
+          .execTransactionFromModule(
+            testContractAddress,
+            parseEther("2"),
+            "0x",
+            0,
+          ),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.EtherAllowanceExceeded, allowanceKey);
+    });
+  });
 });

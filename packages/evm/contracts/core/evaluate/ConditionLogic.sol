@@ -48,6 +48,15 @@ library ConditionLogic {
                 return _and(data, condition, payload, consumptions, context);
             } else if (operator == Operator.Or) {
                 return _or(data, condition, payload, consumptions, context);
+            } else if (operator == Operator.Empty) {
+                return
+                    Result({
+                        status: data.length == 0
+                            ? Status.Ok
+                            : Status.CalldataNotEmpty,
+                        consumptions: consumptions,
+                        info: 0
+                    });
             } else if (operator == Operator.ArraySome) {
                 return
                     _arraySome(data, condition, payload, consumptions, context);
@@ -146,6 +155,33 @@ library ConditionLogic {
         Consumption[] memory consumptions,
         Context memory context
     ) private view returns (Result memory result) {
+        uint256 shift = 32 - condition.compValue.length;
+        if (shift < 32) {
+            /*
+             * Leading Bytes Validation
+             *
+             * For AbiEncoded + Matches, compValue might contain N bytes that must
+             * match the first N bytes of calldata at payload.location.
+             *
+             * Integrity.sol validates N <= 32, so shift underflow is impossible.
+             *
+             * Comparison uses right-alignment in bytes32:
+             *   shift = 32 - N
+             *   expected: bytes32(compValue)  >> shift  (N bytes, right-aligned)
+             *   actual:   bytes32(data[loc:]) >> shift  (N bytes, right-aligned)
+             *
+             * If compValue is empty (shift == 32), validation is skipped.
+             */
+
+            bytes32 expected = bytes32(condition.compValue) >> shift;
+            bytes32 actual = bytes32(data[payload.location:]) >> shift;
+
+            if (expected != actual) {
+                result.status = Status.LeadingBytesNotAMatch;
+                return result;
+            }
+        }
+
         uint256 sChildCount = condition.sChildCount;
         if (sChildCount != payload.children.length) {
             result.status = Status.ParameterNotAMatch;
