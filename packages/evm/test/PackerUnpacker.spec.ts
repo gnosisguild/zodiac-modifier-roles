@@ -358,6 +358,69 @@ describe("Packer and Unpacker", () => {
         hashEqualToCompValues(flatInput),
       );
     });
+
+    it("should handle AbiEncoded with match bytes (N trailing bytes)", async () => {
+      const { mock } = await loadFixture(setup);
+
+      // compValue: 0x0004 (N=4, leadingBytes) + deadbeef (4 bytes of match data)
+      const flatInput = flattenCondition({
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        compValue: "0x0004deadbeef",
+        children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+      });
+
+      const [conditions] = await mock.unpack(await mock.pack(flatInput));
+
+      // After unpacking, compValue should be just the N bytes (without first 2 bytes)
+      expect(conditionFieldsOnly(conditions)).to.deep.equal([
+        { parent: 0, operator: Operator.Matches, compValue: "0xdeadbeef" },
+        { parent: 0, operator: Operator.Pass, compValue: "0x" },
+      ]);
+    });
+
+    it("should handle AbiEncoded with larger match bytes", async () => {
+      const { mock } = await loadFixture(setup);
+
+      // compValue: 0x0010 (N=16, leadingBytes) + 16 bytes of match data
+      const flatInput = flattenCondition({
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        compValue: "0x0010" + "aa".repeat(16),
+        children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+      });
+
+      const [conditions] = await mock.unpack(await mock.pack(flatInput));
+
+      expect(conditionFieldsOnly(conditions)).to.deep.equal([
+        {
+          parent: 0,
+          operator: Operator.Matches,
+          compValue: "0x" + "aa".repeat(16),
+        },
+        { parent: 0, operator: Operator.Pass, compValue: "0x" },
+      ]);
+    });
+
+    it("should handle AbiEncoded without match bytes (just leadingBytes)", async () => {
+      const { mock } = await loadFixture(setup);
+
+      // compValue: 0x0014 (N=20, just leadingBytes, no trailing match data)
+      const flatInput = flattenCondition({
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        compValue: "0x0014",
+        children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+      });
+
+      const [conditions] = await mock.unpack(await mock.pack(flatInput));
+
+      // When there's no trailing match data, compValue should be empty after round-trip
+      expect(conditionFieldsOnly(conditions)).to.deep.equal([
+        { parent: 0, operator: Operator.Matches, compValue: "0x" },
+        { parent: 0, operator: Operator.Pass, compValue: "0x" },
+      ]);
+    });
   });
 
   describe("Layout round-trip", () => {

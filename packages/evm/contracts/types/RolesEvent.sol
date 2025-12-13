@@ -35,6 +35,15 @@ interface IRolesEvent {
     /// Emitted when a role is revoked from a module
     event RevokeRole(bytes32 roleKey, address module);
 
+    /// Emitted when role membership is updated (e.g., uses consumed)
+    event UpdateRole(
+        bytes32 roleKey,
+        address module,
+        uint64 start,
+        uint64 end,
+        uint128 usesLeft
+    );
+
     /// Emitted when the default role is set for a module
     event SetDefaultRole(address module, bytes32 defaultRoleKey);
 

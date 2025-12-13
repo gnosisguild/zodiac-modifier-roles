@@ -43,7 +43,11 @@ enum Status {
     EtherAllowanceExceeded,
     CalldataOverflow,
     RatioBelowMin,
-    RatioAboveMax
+    RatioAboveMax,
+    /// Calldata is not empty when it should be
+    CalldataNotEmpty,
+    /// Leading bytes do not match expected value
+    LeadingBytesNotAMatch
 }
 
 struct Context {

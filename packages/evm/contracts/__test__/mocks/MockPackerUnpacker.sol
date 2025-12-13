@@ -63,7 +63,7 @@ contract MockPackerUnpacker {
             queueHead++;
 
             bytes memory compValue;
-            if (node.operator >= Operator.EqualTo) {
+            if (node.compValue.length > 0) {
                 compValue = bytes.concat(node.compValue);
             } else {
                 compValue = "";

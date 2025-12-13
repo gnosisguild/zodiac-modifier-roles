@@ -77,6 +77,7 @@ library AbiDecoder {
         }
 
         payload.typeIndex = layout.index;
+        payload.location = location;
 
         Encoding encoding = layout.encoding;
         if (encoding == Encoding.Static) {
@@ -106,13 +107,13 @@ library AbiDecoder {
                 layout,
                 payload
             );
+            payload.location = location + 32;
             payload.size = 32 + _ceil32(uint256(word(data, location)));
         }
 
         if (location + payload.size > data.length) {
             payload.overflown = true;
         }
-        payload.location = location;
     }
 
     /**
@@ -280,9 +281,9 @@ library AbiDecoder {
         Encoding encoding = layout.encoding;
         if (encoding == Encoding.Static) {
             return true;
-        } else if (encoding == Encoding.Dynamic || encoding >= Encoding.Array) {
-            return false;
-        } else {
+        }
+
+        if (encoding == Encoding.Tuple) {
             uint256 length = layout.children.length;
             for (uint256 i; i < length; ) {
                 if (!_isInline(layout.children[i])) {
@@ -294,6 +295,9 @@ library AbiDecoder {
             }
             return true;
         }
+
+        // Dynamic, Array
+        return false;
     }
 
     /**

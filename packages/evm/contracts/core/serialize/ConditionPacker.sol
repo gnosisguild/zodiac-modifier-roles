@@ -95,6 +95,7 @@ library ConditionPacker {
         result = 2 + count * CONDITION_NODE_BYTES;
 
         // Add space for compValues (variable length for operators >= EqualTo)
+        // Also handle AbiEncoded + Matches with trailing match bytes
         for (uint256 i; i < count; ++i) {
             if (conditions[i].operator >= Operator.EqualTo) {
                 // 2 bytes for length field
@@ -102,6 +103,14 @@ library ConditionPacker {
                 result += conditions[i].operator == Operator.EqualTo
                     ? 32 // keccak256 hash is always 32 bytes
                     : conditions[i].compValue.length;
+            } else if (
+                conditions[i].paramType == Encoding.AbiEncoded &&
+                conditions[i].compValue.length > 2
+            ) {
+                // AbiEncoded + Matches with N trailing bytes to store
+                // 2 bytes for length field + (compValue.length - 2) for data
+                result += 2;
+                result += conditions[i].compValue.length - 2;
             }
         }
     }
@@ -124,6 +133,10 @@ library ConditionPacker {
                 i
             );
 
+            bool hasCompValue = conditions[i].operator >= Operator.EqualTo ||
+                (conditions[i].paramType == Encoding.AbiEncoded &&
+                    conditions[i].compValue.length > 2);
+
             // Pack Node
             {
                 // byte 1: operator (5 bits) shifted left, 3 trailing unused bits
@@ -132,35 +145,53 @@ library ConditionPacker {
                 buffer[offset++] = bytes1(uint8(childCount));
                 // byte 3
                 buffer[offset++] = bytes1(uint8(sChildCount));
+
+                // bytes 4-5: compValueOffset (0 if no compValue)
+                buffer[offset++] = hasCompValue
+                    ? bytes1(uint8(tailOffset >> 8))
+                    : bytes1(0);
+                buffer[offset++] = hasCompValue
+                    ? bytes1(uint8(tailOffset))
+                    : bytes1(0);
+
                 // todo encode a test with a high number of compValues, make sure both bytes on the tailOffset are considered
-                // byte 4
-                buffer[offset++] = bytes1(uint8(tailOffset >> 8));
-                // byte 5
-                buffer[offset++] = bytes1(uint8(tailOffset));
             }
 
-            if (conditions[i].operator < Operator.EqualTo) {
-                continue;
+            if (!hasCompValue) continue;
+
+            // Pack CompValue - three cases:
+            // 1. AbiEncoded match bytes: store N bytes (skip first 2 bytes of compValue)
+            // 2. EqualTo: store keccak256 hash (32 bytes)
+            // 3. Other comparisons: store compValue as-is
+            bytes memory compValue;
+            uint256 length;
+            uint256 srcOffset;
+
+            if (conditions[i].paramType == Encoding.AbiEncoded) {
+                compValue = conditions[i].compValue;
+                length = compValue.length - 2;
+                srcOffset = 2; // skip leadingBytes
+            } else if (conditions[i].operator == Operator.EqualTo) {
+                compValue = abi.encodePacked(
+                    keccak256(conditions[i].compValue)
+                );
+                length = 32;
+                srcOffset = 0;
+            } else {
+                compValue = conditions[i].compValue;
+                length = compValue.length;
+                srcOffset = 0;
             }
 
-            // Pack CompValue
-            {
-                bytes memory compValue = conditions[i].operator ==
-                    Operator.EqualTo
-                    ? abi.encodePacked(keccak256(conditions[i].compValue))
-                    : conditions[i].compValue;
+            buffer[tailOffset++] = bytes1(uint8(length >> 8));
+            buffer[tailOffset++] = bytes1(uint8(length));
 
-                uint256 length = compValue.length;
-                buffer[tailOffset++] = bytes1(uint8(length >> 8));
-                buffer[tailOffset++] = bytes1(uint8(length));
-
-                assembly {
-                    let src := add(0x20, compValue)
-                    let dst := add(add(0x20, buffer), tailOffset)
-                    mcopy(dst, src, length)
-                }
-                tailOffset += length;
+            assembly {
+                let src := add(add(0x20, compValue), srcOffset)
+                let dst := add(add(0x20, buffer), tailOffset)
+                mcopy(dst, src, length)
             }
+            tailOffset += length;
         }
         return tailOffset - startOffset;
     }
