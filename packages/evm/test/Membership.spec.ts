@@ -119,6 +119,57 @@ describe("Membership", () => {
       ).to.be.revertedWithCustomError(roles, "NoMembership");
     });
 
+    it("emits the UpdateRole event", async () => {
+      const { roles, owner, member, testContract } = await loadFixture(setup);
+      const limitedRole = hre.ethers.id("LIMITED_ROLE");
+      const target = await testContract.getAddress();
+      const MAX_UINT64 = BigInt("0xFFFFFFFFFFFFFFFF");
+
+      await roles
+        .connect(owner)
+        .grantRole(member.address, limitedRole, 0, 0, 3);
+      await roles.connect(owner).setDefaultRole(member.address, limitedRole);
+      await roles.connect(owner).allowTarget(limitedRole, target, [], 0);
+
+      // First call: 3 -> 2 uses
+      await expect(
+        roles.connect(member).execTransactionFromModule(target, 0, "0x", 0),
+      )
+        .to.emit(roles, "UpdateRole")
+        .withArgs(limitedRole, member.address, 0, MAX_UINT64, 2);
+    });
+
+    it("emits the RevokeRole event", async () => {
+      const { roles, owner, member, testContract } = await loadFixture(setup);
+      const limitedRole = hre.ethers.id("LIMITED_ROLE");
+      const target = await testContract.getAddress();
+
+      await roles
+        .connect(owner)
+        .grantRole(member.address, limitedRole, 0, 0, 1);
+      await roles.connect(owner).setDefaultRole(member.address, limitedRole);
+      await roles.connect(owner).allowTarget(limitedRole, target, [], 0);
+
+      // Last use: 1 -> 0 (revoked)
+      await expect(
+        roles.connect(member).execTransactionFromModule(target, 0, "0x", 0),
+      )
+        .to.emit(roles, "RevokeRole")
+        .withArgs(limitedRole, member.address);
+    });
+
+    it("does not emit UpdateRole or RevokeRole for unlimited uses", async () => {
+      const { roles, member, testContract } = await loadFixture(setup);
+      const target = await testContract.getAddress();
+
+      // Fixture already grants with usesLeft=0 → unlimited
+      await expect(
+        roles.connect(member).execTransactionFromModule(target, 0, "0x", 0),
+      )
+        .to.not.emit(roles, "UpdateRole")
+        .and.to.not.emit(roles, "RevokeRole");
+    });
+
     it("preserves end timestamp after decrement", async () => {
       const { roles, owner, member, testContract } = await loadFixture(setup);
       const limitedRole = hre.ethers.id("LIMITED_ROLE");

@@ -23,11 +23,6 @@ library Integrity {
         _children(conditions);
         _nonStructuralOrdering(conditions);
         _typeTree(conditions);
-
-        Layout memory rootLayout = TypeTree.inspect(conditions, 0);
-        if (rootLayout.encoding != Encoding.AbiEncoded) {
-            revert IRolesError.UnsuitableRootNode();
-        }
     }
 
     function _root(ConditionFlat[] memory conditions) private pure {
@@ -70,6 +65,13 @@ library Integrity {
             if (condition.compValue.length != 0) {
                 revert IRolesError.UnsuitableCompValue(index);
             }
+        } else if (operator == Operator.Empty) {
+            if (encoding != Encoding.None) {
+                revert IRolesError.UnsuitableParameterType(index);
+            }
+            if (compValue.length != 0) {
+                revert IRolesError.UnsuitableCompValue(index);
+            }
         } else if (operator == Operator.Matches) {
             if (
                 encoding != Encoding.Tuple &&
@@ -78,10 +80,21 @@ library Integrity {
             ) {
                 revert IRolesError.UnsuitableParameterType(index);
             }
-            // For AbiEncoded, compValue must be empty (leadingBytes defaults to 4) or exactly 2 bytes
-            // For Tuple/Array, compValue must be empty
+            // For AbiEncoded, compValue must be:
+            //    - empty (leadingBytes defaults to 4)
+            //    - 2 bytes (leadingBytes, any offset)
+            //    - 2 + N bytes (leadingBytes + N match bytes, N <= 32)
+            // For Tuple/Array: compValue must be empty
             if (encoding == Encoding.AbiEncoded) {
-                if (compValue.length != 0 && compValue.length != 2) {
+                uint16 leadingBytes = compValue.length >= 2
+                    ? uint16(bytes2(compValue))
+                    : 0;
+                bool valid = compValue.length == 0 ||
+                    compValue.length == 2 ||
+                    (compValue.length == 2 + leadingBytes &&
+                        leadingBytes <= 32);
+
+                if (!valid) {
                     revert IRolesError.UnsuitableCompValue(index);
                 }
             } else if (compValue.length != 0) {
@@ -202,18 +215,27 @@ library Integrity {
                 conditions[i].operator == Operator.EtherWithinAllowance ||
                 conditions[i].operator == Operator.CallWithinAllowance
             ) {
-                // EtherWithinAllowance and CallWithinAllowance can appear:
-                // - At top-level (direct child of Calldata/AbiEncoded)
-                // - Inside any logical condition (And/Or)
-                // - Inside nested Calldata/AbiEncoded (for variant branches)
-                // But NOT inside structural nodes like Tuple/Array
-                (, , uint256 countOtherNodes) = _countParentNodes(
-                    conditions,
-                    i
-                );
+                if (conditions[i].parent != i) {
+                    (, , uint256 countOtherNodes) = _countParentNodes(
+                        conditions,
+                        i
+                    );
 
-                if (countOtherNodes > 0) {
-                    revert IRolesError.UnsuitableParent(i);
+                    if (countOtherNodes > 0) {
+                        revert IRolesError.UnsuitableParent(i);
+                    }
+                }
+            } else if (conditions[i].operator == Operator.Empty) {
+                if (conditions[i].parent != i) {
+                    (
+                        uint256 countAbiEncoded,
+                        ,
+                        uint256 countOtherNodes
+                    ) = _countParentNodes(conditions, i);
+
+                    if (countAbiEncoded > 0 || countOtherNodes > 0) {
+                        revert IRolesError.UnsuitableParent(i);
+                    }
                 }
             } else if (conditions[i].operator == Operator.WithinRatio) {
                 // WithinRatio can be anywhere except as the root node
@@ -236,8 +258,8 @@ library Integrity {
                 if (
                     (condition.operator == Operator.EtherWithinAllowance ||
                         condition.operator == Operator.CallWithinAllowance ||
-                        condition.operator == Operator.WithinRatio) &&
-                    childCount != 0
+                        condition.operator == Operator.WithinRatio ||
+                        condition.operator == Operator.Empty) && childCount != 0
                 ) {
                     revert IRolesError.UnsuitableChildCount(i);
                 }
