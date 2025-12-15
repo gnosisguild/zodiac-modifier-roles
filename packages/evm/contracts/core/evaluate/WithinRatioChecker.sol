@@ -77,6 +77,14 @@ import "../../types/Types.sol";
  * - Output slippage:  minRatio = 9950 (≥ 99.5%)
  * - Input slippage:   maxRatio = 10050 (≤ 100.5%)
  */
+
+/**
+ * @title WithinRatioChecker
+ *
+ * @notice Validates that the ratio between two calldata amounts falls within configured bounds, with optional price conversion for cross-asset comparisons.
+ *
+ */
+
 library WithinRatioChecker {
     /// @dev 100% = 10000 bps
     uint256 private constant BPS = 10000;
