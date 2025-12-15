@@ -1,34 +1,32 @@
-// SPDX-License-Identifier: LGPL-3.0
-pragma solidity >=0.8.21 <0.9.0;
+// SPDX-License-Identifier: LGPL-3.0-only
+pragma solidity >=0.8.17 <0.9.0;
 
 import {Encoding, Layout, Payload} from "../types/Condition.sol";
-import {IRolesError} from "../types/RolesError.sol";
 
 /**
- * @title AbiDecoder - Inspects calldata and determines parameter locations
+ * @title AbiDecoder - Locates parameters within ABI-encoded calldata
  *
  * @author gnosisguild
  *
- * @notice This library inspects ABI-encoded calldata according to type Layout
- *         definition, producing Payload mappings that describe where each
- *         parameter resides in calldata and how large it is.
+ * @notice Given ABI-encoded calldata and a type tree (Layout) describing its
+ *         structure, this library produces a Payload tree that maps each
+ *         parameter to its location and size (how many bytes it spans).
  *
- *         The decoder performs strict bounds validation but does NOT extract
- *         or interpret actual parameter values. It only identifies WHERE each
- *         parameter is located, not WHAT it contains.
+ *         The decoder validates bounds but does NOT extract or interpret
+ *         values. It only identifies WHERE parameters are, not WHAT they
+ *         contain.
  *
- *         This mapping is subsequently consumed by the PermissionChecker,
- *         which leverages it for cheap calldata slicing.
+ *         The resulting Payload is used by ConditionLogic for efficient
+ *         calldata slicing during condition evaluation.
  */
 library AbiDecoder {
     /**
-     * @dev Maps the location and size of a parameter in calldata according to
-     *      a Layout.
+     * @dev Entry point. Locates all parameters in calldata according to Layout.
      *
-     * @param data      The encoded transaction data to be inspected.
-     * @param layout    The Layout defining the type structure.
-     * @return payload  The mapped location and size of parameters in the encoded
-     *                  transaction data.
+     * @param data     The calldata to inspect.
+     * @param layout   The type tree describing the encoding structure.
+     * @return payload A tree matching the encoding structure, with location
+     *                 and size for each parameter.
      */
     function inspect(
         bytes calldata data,
@@ -56,14 +54,12 @@ library AbiDecoder {
     }
 
     /**
-     * @dev Walks through a parameter encoding tree and maps their location
-     *      and size within calldata.
+     * @dev Traverses a type tree, produces Payload with position and size.
      *
-     * @param data     The encoded transaction data.
-     * @param location The current absolute position within calldata.
-     * @param layout   The layout node
-     * @param payload  The output payload containing the parameter's location
-     *                 and size in calldata.
+     * @param data     The calldata being inspected.
+     * @param location Absolute byte position of this parameter.
+     * @param layout   The type tree node to process.
+     * @param payload  Output: populated with location, size, and children.
      */
     function _walk(
         bytes calldata data,
@@ -117,20 +113,20 @@ library AbiDecoder {
     }
 
     /**
-     * @dev Decodes a block of parameters from calldata, handling both Arrays
-     *      and Tuples which use the HEAD+TAIL encoding scheme.
+     * @dev Processes a sequence of elements using HEAD+TAIL encoding.
+     *      Tuple, Array and AbiEncoded use this encoding type.
      *
-     * @param data      The encoded transaction data
-     * @param location  Starting byte position of the block in calldata
-     * @param length    Number of elements to decode in this block
-     * @param layout  Type definition tree for this block
-     * @param payload   Output payload to populate with decoded data
+     * @param data     The calldata being inspected.
+     * @param location Byte position where the block's HEAD region starts.
+     * @param length   Number of elements in the block.
+     * @param layout   Type tree node for the block (Array or Tuple).
+     * @param payload  Output: populated with child Payloads.
      *
-     * @notice Key differences:
-     *        - Arrays: All elements share the same type (layout.children[0])
-     *        - Tuples: Each element has its own type (layout.children[i])
-     *        - Inline elements are stored directly in HEAD region
-     *        - Non-inline elements store a pointer in HEAD, data in TAIL
+     * @notice Arrays use layout.children[0] as a template for all elements.
+     *         Variant arrays use layout.children[i] for each element.
+     *         Tuples use layout.children[i] for each element.
+     *         Static elements are encoded inline in HEAD.
+     *         Dynamic elements have a pointer in HEAD, data in TAIL.
      */
     function __block__(
         bytes calldata data,
@@ -144,12 +140,12 @@ library AbiDecoder {
         bool isArray = layout.encoding == Encoding.Array;
         uint256 offset;
         for (uint256 i; i < length; ++i) {
-            Payload memory child = children[i];
-            Layout memory typeChild = layout.children[
+            Layout memory childLayout = layout.children[
                 isArray && i >= layout.children.length ? 0 : i
             ];
+            Payload memory childPayload = children[i];
 
-            bool isInline = _isInline(typeChild);
+            bool isInline = _isInline(childLayout);
 
             uint256 childLocation = _locationInBlock(
                 data,
@@ -163,34 +159,33 @@ library AbiDecoder {
                 return;
             }
 
-            _walk(data, childLocation, typeChild, child);
+            _walk(data, childLocation, childLayout, childPayload);
 
-            if (child.overflown) {
+            if (childPayload.overflown) {
                 payload.overflown = true;
                 return;
             }
 
             // Update the offset in the block for the next element
-            offset += isInline ? child.size : 32;
+            offset += isInline ? childPayload.size : 32;
 
             // For non-inline elements, we need to account for the 32-byte pointer
-            payload.size += child.size + (isInline ? 0 : 32);
+            payload.size += childPayload.size + (isInline ? 0 : 32);
         }
         payload.children = children;
     }
 
     /**
-     * @dev Handles variant nodes where multiple type interpretations are possible
-     *      for the same data location. Used by Dynamic nodes with variant children.
+     * @dev Tries multiple type interpretations for the same bytes location.
+     *      Handles cases where a dynamic parameter's content has multiple valid
+     *      decodings.
      *
-     * @param data      The encoded transaction data
-     * @param location  Starting byte position in calldata
-     * @param layout    Type node containing variant interpretations as children
-     * @param payload   Output payload marked as variant with child payloads
+     * @param data     The calldata being inspected.
+     * @param location Byte position to interpret.
+     * @param layout   Type tree node with variant children.
+     * @param payload  Output: marked as variant, with one child per interpretation.
      *
-     * @notice The payload is marked as overflown=true by default. It's only set
-     *         to false if at least one variant interpretation succeeds (doesn't
-     *         overflow).
+     * @notice Sets overflown=false if at least one interpretation succeeds.
      */
     function _variant(
         bytes calldata data,
@@ -215,22 +210,18 @@ library AbiDecoder {
     }
 
     /**
-     * @dev Resolves the absolute position of a block element in calldata based
-     *      on HEAD+TAIL encoding. Part of __block__ processing for Arrays/Tuples.
+     * @dev Computes the absolute calldata position of an element within a block.
      *
-     * @param data       The encoded calldata
-     * @param location   Start of this block's HEAD region
-     * @param headOffset Offset of current element within block's HEAD
-     * @param isInline   True if element stored inline in HEAD, false if in TAIL
-     * @return           Absolute position in calldata, or type(uint256).max if
-     *                   bounds are violated (overflow detected)
+     * @param data       The calldata being inspected.
+     * @param location   Start of the block's HEAD region.
+     * @param headOffset Current offset within HEAD.
+     * @param isInline   Whether element is stored directly in HEAD.
+     * @return           Absolute position, or type(uint256).max on overflow.
      *
-     * @notice Block encoding rules:
-     *         - Inline elements: stored directly at location + headOffset
-     *         - Dynamic elements: HEAD contains pointer, data in TAIL region
-     *         - TAIL offsets are relative to block start, not calldata start
+     * @notice Inline elements live at location + headOffset.
+     *         Non-inline elements read a pointer from HEAD that points into TAIL.
+     *         TAIL offsets are relative to block start.
      */
-
     function _locationInBlock(
         bytes calldata data,
         uint256 location,
@@ -262,20 +253,13 @@ library AbiDecoder {
     }
 
     /**
-     * @dev Determines if a parameter is stored inline (in HEAD region) versus
-     *      offset pointing to TAIL region.
+     * @dev Checks if a type is encoded inline in HEAD or via pointer to TAIL.
      *
-     * @param layout The layout node to check
-     * @return       `true` if inline, `false` if requires pointer
+     * @param layout The type tree node to check.
+     * @return true if inline, false if pointer-based.
      *
-     * @notice Inline types:
-     *         - Static: always inline (32 bytes)
-     *         - Tuple: inline if ALL fields are inline
-     *
-     *         Non-inline types (require pointer):
-     *         - Dynamic: variable length data
-     *         - Array: length prefix + elements
-     *         - AbiEncoded: embedded structures
+     * @notice Inline: Static (always), Tuple (if all fields are inline).
+     *         Pointer: AbiEncoded, Dynamic, Array.
      */
     function _isInline(Layout memory layout) private pure returns (bool) {
         Encoding encoding = layout.encoding;
@@ -296,15 +280,16 @@ library AbiDecoder {
             return true;
         }
 
-        // Dynamic, Array
+        // Dynamic, Array, AbiEncoded
         return false;
     }
 
     /**
-     * @dev Loads a word from calldata.
-     * @param data The calldata to load the word from.
-     * @param location The starting location of the slice.
-     * @return result 32 byte word from calldata.
+     * @dev Loads a 32-byte word from calldata.
+     *
+     * @param data     The calldata being inspected.
+     * @param location The byte offset to read from.
+     * @return result  The 32-byte word at location.
      */
     function word(
         bytes calldata data,
