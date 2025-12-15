@@ -3,8 +3,8 @@ pragma solidity >=0.8.17 <0.9.0;
 
 import "./core/Authorization.sol";
 import "./core/Membership.sol";
+import "./core/Settlement.sol";
 import "./core/Setup.sol";
-import "./core/allowance/ConsumptionTracker.sol";
 
 /**
  * @title Zodiac Roles Mod - granular, role-based access control and policy
@@ -13,13 +13,7 @@ import "./core/allowance/ConsumptionTracker.sol";
  * @author gnosisguild
  *
  */
-contract Roles is
-    RolesStorage,
-    Setup,
-    Membership,
-    Authorization,
-    ConsumptionTracker
-{
+contract Roles is RolesStorage, Setup, Membership, Authorization, Settlement {
     /// @param _owner Address of the owner
     /// @param _avatar Address of the avatar (e.g. a Gnosis Safe)
     /// @param _target Address of the contract that will call exec function
