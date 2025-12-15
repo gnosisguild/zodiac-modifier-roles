@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "../Storage.sol";
+import "./Storage.sol";
 
-import {Consumption} from "../../types/Allowance.sol";
+import {Consumption} from "../types/Allowance.sol";
 
 /**
- * @title ConsumptionTracker - Persists allowance and membership updates to
- *        storage.
+ * @title Settlement - Persists allowance and membership consumptions to storage.
  *
  * @dev Allowance balances are written before execution to prevent reentrancy.
  *      On failure, original balances are restored. Membership is written only
@@ -15,7 +14,7 @@ import {Consumption} from "../../types/Allowance.sol";
  *
  * @author gnosisguild
  */
-abstract contract ConsumptionTracker is RolesStorage {
+abstract contract Settlement is RolesStorage {
     /**
      * @dev Writes new balances to storage before execution. Not final.
      * @param consumptions Allowance consumption records to persist.
@@ -45,6 +44,9 @@ abstract contract ConsumptionTracker is RolesStorage {
      *
      * Allowances: emits events on success, restores balances on failure.
      * Membership: writes on success only.
+     *
+     * @param nextMembership Packed membership data: [start:64][end:64][usesLeft:128].
+     *        Use uint256.max for no-op (skip membership update).
      */
     function _flushCommit(
         address sender,

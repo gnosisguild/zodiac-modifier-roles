@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "../allowance/AllowanceLoader.sol";
+import "../../common/AllowanceLoader.sol";
 import "../../periphery/interfaces/IPriceAdapter.sol";
 
 import {Consumption} from "../../types/Allowance.sol";

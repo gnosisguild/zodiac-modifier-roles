@@ -15,6 +15,8 @@ enum Encoding {
 struct Condition {
     Operator operator;
     bytes compValue;
+    /// @dev Number of children that describe type structure (Tuple/Array fields).
+    ///      Structural children come first; non-structural (And/Or/None logic) follow.
     uint256 sChildCount;
     Condition[] children;
 }
@@ -33,6 +35,7 @@ struct Layout {
     Encoding encoding;
     Layout[] children;
     uint256 index;
+    /// @dev Bytes to skip before ABI-encoded data begins (e.g., 4 for selector).
     uint256 leadingBytes;
 }
 
