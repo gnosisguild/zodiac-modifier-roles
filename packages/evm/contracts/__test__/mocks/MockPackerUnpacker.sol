@@ -75,13 +75,10 @@ contract MockPackerUnpacker {
                 compValue: compValue
             });
 
-            for (uint256 i = 0; i < node.children.length; ) {
+            for (uint256 i = 0; i < node.children.length; ++i) {
                 queue[queueTail] = node.children[i];
                 parents[queueTail] = bfsIndex;
                 queueTail++;
-                unchecked {
-                    ++i;
-                }
             }
 
             bfsIndex++;

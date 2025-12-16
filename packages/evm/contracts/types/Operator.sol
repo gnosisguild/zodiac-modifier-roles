@@ -8,7 +8,7 @@ enum Operator {
     //          🚫 compValue
     /* 00: */ Pass,
     // ------------------------------------------------------------
-    // 01-04: LOGICAL EXPRESSIONS
+    // 01-03: LOGICAL EXPRESSIONS
     //          paramType: None
     //          ✅ children
     //          🚫 compValue
@@ -25,7 +25,7 @@ enum Operator {
     // 05-14: COMPLEX EXPRESSIONS
     //          paramType: AbiEncoded / Tuple / Array,
     //          ✅ children
-    //          🚫 compValue
+    //          🚫 compValue (exception AbiEncoded.Matches uses compValue to define leading bytes)
     /* 05: */ Matches,
     /* 06: */ ArraySome,
     /* 07: */ ArrayEvery,
