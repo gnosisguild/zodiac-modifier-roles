@@ -72,25 +72,6 @@ abstract contract Setup is RolesStorage {
                            ROLE MEMBERSHIP
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Assigns roles to a module (legacy function for backwards compatibility).
-    /// @param module Module to assign roles to.
-    /// @param roleKeys Roles to assign.
-    /// @param memberOf true to grant, false to revoke.
-    function assignRoles(
-        address module,
-        bytes32[] calldata roleKeys,
-        bool[] calldata memberOf
-    ) external onlyOwner {
-        for (uint256 i; i < roleKeys.length; ++i) {
-            bytes32 key = roleKeys[i];
-            if (memberOf[i]) {
-                grantRole(module, key, 0, 0, 0);
-            } else {
-                revokeRole(module, key);
-            }
-        }
-    }
-
     /// @dev Grants a role to a module with optional session parameters.
     /// @param module Module to grant the role to.
     /// @param roleKey Role to grant.
@@ -129,6 +110,25 @@ abstract contract Setup is RolesStorage {
     function renounceRole(bytes32 roleKey) external {
         delete roles[roleKey].members[msg.sender];
         emit RevokeRole(roleKey, msg.sender);
+    }
+
+    /// @dev Batch assigns roles to a module.
+    /// @param module Module to assign roles to.
+    /// @param roleKeys Roles to assign.
+    /// @param memberOf true to grant, false to revoke.
+    function assignRoles(
+        address module,
+        bytes32[] calldata roleKeys,
+        bool[] calldata memberOf
+    ) external onlyOwner {
+        for (uint256 i; i < roleKeys.length; ++i) {
+            bytes32 key = roleKeys[i];
+            if (memberOf[i]) {
+                grantRole(module, key, 0, 0, 0);
+            } else {
+                revokeRole(module, key);
+            }
+        }
     }
 
     /// @dev Sets the default role used for a module if it calls
