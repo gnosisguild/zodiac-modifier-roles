@@ -9,9 +9,9 @@ import { Encoding, Operator, PermissionCheckerStatus } from "../utils";
 import { setupOneParamBytes, setupOneParamDynamicTuple } from "../setup";
 import { Roles } from "../../typechain-types";
 
-// Helper to encode Slice compValue: 2 bytes start + 1 byte size
-const encodeSliceCompValue = (start: number, size: number) =>
-  solidityPacked(["uint16", "uint8"], [start, size]);
+// Helper to encode Slice compValue: 2 bytes shift + 1 byte size
+const encodeSliceCompValue = (shift: number, size: number) =>
+  solidityPacked(["uint16", "uint8"], [shift, size]);
 
 describe("Operator - Slice", async () => {
   describe("GreaterThan", () => {
@@ -62,7 +62,7 @@ describe("Operator - Slice", async () => {
       const { roles, scopeFunction, invoke } =
         await loadFixture(setupOneParamBytes);
 
-      // Slice 10 bytes starting at offset 0 and compare
+      // Slice 10 bytes at shift 0 and compare
       // When right-aligned, 10 bytes becomes a uint80
       await scopeFunction([
         {
@@ -395,12 +395,12 @@ describe("Operator - Slice", async () => {
     });
   });
 
-  describe("Slice with offset", () => {
+  describe("Slice with shift", () => {
     it("extracts slice from middle of bytes", async () => {
       const { roles, scopeFunction, invoke } =
         await loadFixture(setupOneParamBytes);
 
-      // Slice 4 bytes starting at offset 4 (skip first 4 bytes)
+      // Slice 4 bytes at shift 4 (skip first 4 bytes)
       await scopeFunction([
         {
           parent: 0,
@@ -423,12 +423,12 @@ describe("Operator - Slice", async () => {
       ]);
 
       // 12 bytes: first 4 zeros, then 4 bytes = 0x00000100 (256), then 4 zeros
-      // Slice at offset 4, size 4 = 0x00000100 = 256, greater than 255
+      // Slice at shift 4, size 4 = 0x00000100 = 256, greater than 255
       const bytesPass = "0x0000000000000100" + "00000000";
       await expect(invoke(bytesPass)).to.not.be.reverted;
 
       // 12 bytes: first 4 zeros, then 4 bytes = 0x000000ff (255), then 4 zeros
-      // Slice at offset 4, size 4 = 0x000000ff = 255, not greater than 255
+      // Slice at shift 4, size 4 = 0x000000ff = 255, not greater than 255
       const bytesFail = "0x00000000000000ff" + "00000000";
       await expect(invoke(bytesFail))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
@@ -441,7 +441,7 @@ describe("Operator - Slice", async () => {
       const { roles, scopeFunction, invoke } =
         await loadFixture(setupOneParamBytes);
 
-      // Slice 12 bytes at offset 6 with And: value > 100 AND value < 200
+      // Slice 12 bytes at shift 6 with And: value > 100 AND value < 200
       await scopeFunction([
         {
           parent: 0,
@@ -503,7 +503,7 @@ describe("Operator - Slice", async () => {
   });
 
   describe("WithinAllowance", () => {
-    it("15 bytes slice at offset 200 - tracks spending against allowance", async () => {
+    it("15 bytes slice at shift 200 - tracks spending against allowance", async () => {
       const { owner, roles, scopeFunction, invoke } =
         await loadFixture(setupOneParamBytes);
 
@@ -512,7 +512,7 @@ describe("Operator - Slice", async () => {
 
       await roles.connect(owner).setAllowance(allowanceKey, 1000, 0, 0, 0, 0);
 
-      // Slice 15 bytes at offset 200
+      // Slice 15 bytes at shift 200
       await scopeFunction([
         {
           parent: 0,
@@ -557,13 +557,13 @@ describe("Operator - Slice", async () => {
   });
 
   describe("EqualTo", () => {
-    it("32 bytes slice at offset 50 - checks exact equality", async () => {
+    it("32 bytes slice at shift 50 - checks exact equality", async () => {
       const { roles, scopeFunction, invoke } =
         await loadFixture(setupOneParamBytes);
 
       const targetValue = defaultAbiCoder.encode(["uint256"], [123456789]);
 
-      // Slice 32 bytes at offset 50
+      // Slice 32 bytes at shift 50
       await scopeFunction([
         {
           parent: 0,
@@ -710,12 +710,12 @@ describe("Operator - Slice", async () => {
         .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed, ZeroHash);
     });
 
-    it("slices bytes from inside tuple with offset and comparison", async () => {
+    it("slices bytes from inside tuple with shift and comparison", async () => {
       const { roles, scopeFunction, invoke } = await loadFixture(
         setupOneParamDynamicTuple,
       );
 
-      // Slice 8 bytes at offset 4 from the bytes field
+      // Slice 8 bytes at shift 4 from the bytes field
       await scopeFunction([
         {
           parent: 0,

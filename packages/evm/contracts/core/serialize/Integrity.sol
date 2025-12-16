@@ -121,7 +121,7 @@ library Integrity {
             if (encoding != Encoding.Dynamic) {
                 revert IRolesError.UnsuitableParameterType(index);
             }
-            // compValue must be 3 bytes: 2 bytes start offset + 1 byte size (1-32)
+            // compValue must be 3 bytes: 2 bytes shift + 1 byte size (1-32)
             if (compValue.length != 3) {
                 revert IRolesError.UnsuitableCompValue(index);
             }

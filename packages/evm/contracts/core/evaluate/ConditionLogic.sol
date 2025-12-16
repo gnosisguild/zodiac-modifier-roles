@@ -260,7 +260,6 @@ library ConditionLogic {
     /*
      * Slice extracts a portion from dynamic calldata and presents it
      * as a static-like payload for downstream comparisons.
-     *
      */
     function _slice(
         bytes calldata data,

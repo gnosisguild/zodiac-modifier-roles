@@ -34,7 +34,7 @@ enum Operator {
     // 09:    SLICE EXPRESSION
     //          paramType: Dynamic
     //          ❓ children (at most one child, must resolve to Static)
-    //          ✅ compValue (3 bytes: 2 bytes start offset + 1 byte size, 1-32)
+    //          ✅ compValue (3 bytes: 2 bytes shift + 1 byte size, 1-32)
     /* 09: */ Slice,
     /* 10: */ _Placeholder10,
     /* 11: */ _Placeholder11,
