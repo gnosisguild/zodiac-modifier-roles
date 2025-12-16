@@ -189,7 +189,7 @@ library ConditionLogic {
         }
 
         result.consumptions = consumptions;
-        for (uint256 i; i < condition.children.length; ) {
+        for (uint256 i; i < condition.children.length; ++i) {
             result = evaluate(
                 data,
                 condition.children[i],
@@ -199,9 +199,6 @@ library ConditionLogic {
             );
             if (result.status != Status.Ok) {
                 return result;
-            }
-            unchecked {
-                ++i;
             }
         }
         return result;
@@ -215,7 +212,7 @@ library ConditionLogic {
         Context memory context
     ) private view returns (Result memory result) {
         result.consumptions = consumptions;
-        for (uint256 i; i < condition.children.length; ) {
+        for (uint256 i; i < condition.children.length; ++i) {
             result = evaluate(
                 data,
                 condition.children[i],
@@ -225,9 +222,6 @@ library ConditionLogic {
             );
             if (result.status != Status.Ok) {
                 return result;
-            }
-            unchecked {
-                ++i;
             }
         }
         return result;
@@ -240,7 +234,7 @@ library ConditionLogic {
         Consumption[] memory consumptions,
         Context memory context
     ) private view returns (Result memory result) {
-        for (uint256 i; i < condition.children.length; ) {
+        for (uint256 i; i < condition.children.length; ++i) {
             result = evaluate(
                 data,
                 condition.children[i],
@@ -250,9 +244,6 @@ library ConditionLogic {
             );
             if (result.status == Status.Ok) {
                 return result;
-            }
-            unchecked {
-                ++i;
             }
         }
 
@@ -272,7 +263,7 @@ library ConditionLogic {
         Context memory context
     ) private view returns (Result memory result) {
         uint256 length = payload.children.length;
-        for (uint256 i; i < length; ) {
+        for (uint256 i; i < length; ++i) {
             result = evaluate(
                 data,
                 condition.children[0],
@@ -282,9 +273,6 @@ library ConditionLogic {
             );
             if (result.status == Status.Ok) {
                 return result;
-            }
-            unchecked {
-                ++i;
             }
         }
         return
@@ -303,7 +291,7 @@ library ConditionLogic {
         Context memory context
     ) private view returns (Result memory result) {
         result.consumptions = consumptions;
-        for (uint256 i; i < payload.children.length; ) {
+        for (uint256 i; i < payload.children.length; ++i) {
             result = evaluate(
                 data,
                 condition.children[0],
@@ -314,9 +302,6 @@ library ConditionLogic {
             if (result.status != Status.Ok) {
                 result.status = Status.NotEveryArrayElementPasses;
                 return result;
-            }
-            unchecked {
-                ++i;
             }
         }
         return result;
@@ -340,7 +325,7 @@ library ConditionLogic {
         result.consumptions = consumptions;
         uint256 tailOffset = childCount - conditionCount;
 
-        for (uint256 i; i < conditionCount; ) {
+        for (uint256 i; i < conditionCount; ++i) {
             result = evaluate(
                 data,
                 condition.children[i],
@@ -350,9 +335,6 @@ library ConditionLogic {
             );
             if (result.status != Status.Ok) {
                 return result;
-            }
-            unchecked {
-                ++i;
             }
         }
         return result;
