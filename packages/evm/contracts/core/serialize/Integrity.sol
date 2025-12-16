@@ -116,6 +116,19 @@ library Integrity {
             if (compValue.length != 0) {
                 revert IRolesError.UnsuitableCompValue(index);
             }
+        } else if (operator == Operator.Slice) {
+            // Slice can only be applied to a dynamic parameter
+            if (encoding != Encoding.Dynamic) {
+                revert IRolesError.UnsuitableParameterType(index);
+            }
+            // compValue must be 3 bytes: 2 bytes start offset + 1 byte size (1-32)
+            if (compValue.length != 3) {
+                revert IRolesError.UnsuitableCompValue(index);
+            }
+            uint8 size = uint8(compValue[2]);
+            if (size == 0 || size > 32) {
+                revert IRolesError.UnsuitableCompValue(index);
+            }
         } else if (operator == Operator.EqualToAvatar) {
             if (encoding != Encoding.Static) {
                 revert IRolesError.UnsuitableParameterType(index);
@@ -271,12 +284,20 @@ library Integrity {
                         revert IRolesError.UnsuitableChildCount(i);
                     }
                 }
-            } else if (
-                condition.paramType == Encoding.Static ||
-                condition.paramType == Encoding.Dynamic
-            ) {
+            } else if (condition.paramType == Encoding.Static) {
                 if (childCount != 0) {
                     revert IRolesError.UnsuitableChildCount(i);
+                }
+            } else if (condition.paramType == Encoding.Dynamic) {
+                // Slice can have at most one child; other Dynamic operators have no children
+                if (condition.operator == Operator.Slice) {
+                    if (childCount > 1) {
+                        revert IRolesError.UnsuitableChildCount(i);
+                    }
+                } else {
+                    if (childCount != 0) {
+                        revert IRolesError.UnsuitableChildCount(i);
+                    }
                 }
             } else if (condition.paramType == Encoding.Tuple) {
                 if (sChildCount == 0) {
@@ -362,6 +383,7 @@ library Integrity {
                 }
             }
 
+            _slice(conditions, i);
             _withinRatio(conditions, i);
         }
     }
@@ -442,6 +464,27 @@ library Integrity {
             }
 
             j = conditions[j].parent;
+        }
+    }
+
+    function _slice(ConditionFlat[] memory conditions, uint256 i) private pure {
+        if (conditions[i].operator != Operator.Slice) {
+            return;
+        }
+
+        (uint256 childStart, , uint256 sChildCount) = Topology.childBounds(
+            conditions,
+            i
+        );
+
+        // Slice must have exactly one child that resolves to Static
+        if (sChildCount == 0) {
+            revert IRolesError.SliceChildNotStatic(i);
+        }
+
+        Layout memory layout = TypeTree.inspect(conditions, childStart);
+        if (layout.encoding != Encoding.Static) {
+            revert IRolesError.SliceChildNotStatic(i);
         }
     }
 

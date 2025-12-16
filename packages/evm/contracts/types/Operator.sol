@@ -30,7 +30,12 @@ enum Operator {
     /* 06: */ ArraySome,
     /* 07: */ ArrayEvery,
     /* 08: */ ArrayTailMatches,
-    /* 09: */ _Placeholder09,
+    // ------------------------------------------------------------
+    // 09:    SLICE EXPRESSION
+    //          paramType: Dynamic
+    //          ❓ children (at most one child, must resolve to Static)
+    //          ✅ compValue (3 bytes: 2 bytes start offset + 1 byte size, 1-32)
+    /* 09: */ Slice,
     /* 10: */ _Placeholder10,
     /* 11: */ _Placeholder11,
     /* 12: */ _Placeholder12,

@@ -65,7 +65,7 @@ export enum Operator {
   /* 06: */ ArraySome,
   /* 07: */ ArrayEvery,
   /* 08: */ ArrayTailMatches,
-  /* 09: */ _Placeholder09,
+  /* 09: */ Slice,
   /* 10: */ _Placeholder10,
   /* 11: */ _Placeholder11,
   /* 12: */ _Placeholder12,
