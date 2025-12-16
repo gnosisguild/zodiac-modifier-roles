@@ -48,6 +48,8 @@ library ConditionLogic {
                 return _and(data, condition, payload, consumptions, context);
             } else if (operator == Operator.Or) {
                 return _or(data, condition, payload, consumptions, context);
+            } else if (operator == Operator.Slice) {
+                return _slice(data, condition, payload, consumptions, context);
             } else if (operator == Operator.Empty) {
                 return
                     Result({
@@ -95,34 +97,10 @@ library ConditionLogic {
                         consumptions: consumptions,
                         info: 0
                     });
-            } else if (operator == Operator.Bitmask) {
-                return
-                    Result({
-                        status: BitmaskChecker.check(
-                            data,
-                            condition.compValue,
-                            payload
-                        ),
-                        consumptions: consumptions,
-                        info: 0
-                    });
-            } else if (operator == Operator.Custom) {
-                return _custom(data, condition, payload, consumptions, context);
-            } else if (operator == Operator.WithinRatio) {
-                return
-                    Result({
-                        status: WithinRatioChecker.check(
-                            data,
-                            condition.compValue,
-                            payload
-                        ),
-                        consumptions: consumptions,
-                        info: 0
-                    });
             } else if (operator == Operator.WithinAllowance) {
                 return
                     __allowance(
-                        uint256(AbiDecoder.word(data, payload.location)),
+                        uint256(__word(data, payload)),
                         condition.compValue,
                         Status.AllowanceExceeded,
                         consumptions
@@ -135,8 +113,7 @@ library ConditionLogic {
                         Status.EtherAllowanceExceeded,
                         consumptions
                     );
-            } else {
-                assert(operator == Operator.CallWithinAllowance);
+            } else if (operator == Operator.CallWithinAllowance) {
                 return
                     __allowance(
                         1,
@@ -144,6 +121,31 @@ library ConditionLogic {
                         Status.CallAllowanceExceeded,
                         consumptions
                     );
+            } else if (operator == Operator.Bitmask) {
+                return
+                    Result({
+                        status: BitmaskChecker.check(
+                            data,
+                            condition.compValue,
+                            payload
+                        ),
+                        consumptions: consumptions,
+                        info: 0
+                    });
+            } else if (operator == Operator.WithinRatio) {
+                return
+                    Result({
+                        status: WithinRatioChecker.check(
+                            data,
+                            condition.compValue,
+                            payload
+                        ),
+                        consumptions: consumptions,
+                        info: 0
+                    });
+            } else {
+                assert(operator == Operator.Custom);
+                return _custom(data, condition, payload, consumptions, context);
             }
         }
     }
@@ -255,6 +257,37 @@ library ConditionLogic {
             });
     }
 
+    /*
+     * Slice extracts a portion from dynamic calldata and presents it
+     * as a static-like payload for downstream comparisons.
+     *
+     */
+    function _slice(
+        bytes calldata data,
+        Condition memory condition,
+        Payload memory payload,
+        Consumption[] memory consumptions,
+        Context memory context
+    ) private view returns (Result memory) {
+        // compValue layout: | 2 bytes: shift | 1 byte: size (1-32)
+        uint16 shift = uint16(bytes2(condition.compValue));
+        uint8 size = uint8(condition.compValue[2]);
+
+        // Create sliced payload pointing to the slice range
+        Payload memory slicedPayload;
+        slicedPayload.location = payload.location + 32 + shift;
+        slicedPayload.size = size;
+
+        return
+            evaluate(
+                data,
+                condition.children[0],
+                slicedPayload,
+                consumptions,
+                context
+            );
+    }
+
     function _arraySome(
         bytes calldata data,
         Condition memory condition,
@@ -349,7 +382,7 @@ library ConditionLogic {
         bytes32 compValue = bytes32(condition.compValue);
         bytes32 value = operator == Operator.EqualTo
             ? keccak256(data[payload.location:payload.location + payload.size])
-            : AbiDecoder.word(data, payload.location);
+            : __word(data, payload);
 
         if (operator == Operator.EqualTo && value != compValue) {
             return Status.ParameterNotAllowed;
@@ -369,7 +402,7 @@ library ConditionLogic {
     ) private pure returns (Status) {
         Operator operator = condition.operator;
         int256 compValue = int256(uint256(bytes32(condition.compValue)));
-        int256 value = int256(uint256(AbiDecoder.word(data, payload.location)));
+        int256 value = int256(uint256(__word(data, payload)));
 
         if (operator == Operator.SignedIntGreaterThan && value <= compValue) {
             return Status.ParameterLessThanAllowed;
@@ -430,5 +463,32 @@ library ConditionLogic {
                 consumptions: nextConsumptions,
                 info: bytes32(compValue)
             });
+    }
+
+    /**
+     * @dev Reads a static value from calldata, right-aligning when payload.size < 32.
+     *      For standard 32-byte payloads, reads the full word.
+     *      For sliced payloads (< 32 bytes), reads the slice and right-aligns it.
+     *
+     * @param data    The calldata to read from.
+     * @param payload The payload specifying location and size.
+     * @return result The value as bytes32, right-aligned if size < 32.
+     */
+    function __word(
+        bytes calldata data,
+        Payload memory payload
+    ) private pure returns (bytes32 result) {
+        assembly {
+            // bytes32(data[payload.location:])
+            result := calldataload(add(data.offset, mload(payload)))
+        }
+
+        if (payload.size < 32) {
+            uint256 size = payload.size;
+            assembly {
+                // result >> ((32 - size) * 8);
+                result := shr(mul(sub(32, size), 8), result)
+            }
+        }
     }
 }
