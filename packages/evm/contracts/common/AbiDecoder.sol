@@ -269,12 +269,9 @@ library AbiDecoder {
 
         if (encoding == Encoding.Tuple) {
             uint256 length = layout.children.length;
-            for (uint256 i; i < length; ) {
+            for (uint256 i; i < length; ++i) {
                 if (!_isInline(layout.children[i])) {
                     return false;
-                }
-                unchecked {
-                    ++i;
                 }
             }
             return true;

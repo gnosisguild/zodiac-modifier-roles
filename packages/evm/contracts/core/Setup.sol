@@ -81,15 +81,12 @@ abstract contract Setup is RolesStorage {
         bytes32[] calldata roleKeys,
         bool[] calldata memberOf
     ) external onlyOwner {
-        for (uint256 i; i < roleKeys.length; ) {
+        for (uint256 i; i < roleKeys.length; ++i) {
             bytes32 key = roleKeys[i];
             if (memberOf[i]) {
                 grantRole(module, key, 0, 0, 0);
             } else {
                 revokeRole(module, key);
-            }
-            unchecked {
-                ++i;
             }
         }
     }

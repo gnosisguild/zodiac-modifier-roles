@@ -56,7 +56,7 @@ abstract contract Authorization is RolesStorage {
                 context.operation
             )
         returns (UnwrappedTransaction[] memory transactions) {
-            for (uint256 i; i < transactions.length; ) {
+            for (uint256 i; i < transactions.length; ++i) {
                 UnwrappedTransaction memory transaction = transactions[i];
                 uint256 left = transaction.dataLocation;
                 uint256 right = left + transaction.dataSize;
@@ -72,9 +72,6 @@ abstract contract Authorization is RolesStorage {
                 );
                 if (result.status != Status.Ok) {
                     return result;
-                }
-                unchecked {
-                    ++i;
                 }
             }
         } catch {
