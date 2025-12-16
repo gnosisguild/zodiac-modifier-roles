@@ -22,7 +22,7 @@ abstract contract Settlement is RolesStorage {
     function _flushPrepare(Consumption[] memory consumptions) internal {
         uint256 count = consumptions.length;
 
-        for (uint256 i; i < count; ) {
+        for (uint256 i; i < count; ++i) {
             Consumption memory consumption = consumptions[i];
 
             assert(consumption.consumed <= consumption.balance);
@@ -32,10 +32,6 @@ abstract contract Settlement is RolesStorage {
                 consumption.timestamp,
                 consumption.balance - consumption.consumed
             );
-
-            unchecked {
-                ++i;
-            }
         }
     }
 
@@ -56,7 +52,7 @@ abstract contract Settlement is RolesStorage {
         bool success
     ) internal {
         uint256 count = consumptions.length;
-        for (uint256 i; i < count; ) {
+        for (uint256 i; i < count; ++i) {
             Consumption memory consumption = consumptions[i];
             if (success) {
                 emit ConsumeAllowance(
@@ -70,9 +66,6 @@ abstract contract Settlement is RolesStorage {
                     consumption.timestamp,
                     consumption.balance
                 );
-            }
-            unchecked {
-                ++i;
             }
         }
 
