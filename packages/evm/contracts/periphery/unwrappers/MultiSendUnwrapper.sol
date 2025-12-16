@@ -89,7 +89,7 @@ contract MultiSendUnwrapper is ITransactionUnwrapper {
         result = new UnwrappedTransaction[](count);
 
         uint256 offset = OFFSET_START;
-        for (uint256 i; i < count; ) {
+        for (uint256 i; i < count; ++i) {
             result[i].operation = Operation(uint8(bytes1(data[offset:])));
             offset += 1;
 
@@ -105,10 +105,6 @@ contract MultiSendUnwrapper is ITransactionUnwrapper {
             result[i].dataLocation = offset;
             result[i].dataSize = size;
             offset += size;
-
-            unchecked {
-                ++i;
-            }
         }
     }
 
