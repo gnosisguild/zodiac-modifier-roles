@@ -47,7 +47,7 @@ library ConditionUnpacker {
         Condition[] memory nodes = new Condition[](nodeCount);
         uint256 nextChildBFS = 1;
 
-        for (uint256 i = 0; i < nodeCount; ) {
+        for (uint256 i = 0; i < nodeCount; ++i) {
             uint256 packed;
             assembly {
                 packed := shr(216, mload(offset)) // Load 5 bytes, 40 bits
@@ -91,11 +91,10 @@ library ConditionUnpacker {
 
             if (childCount > 0) {
                 node.children = new Condition[](childCount);
-                for (uint256 j = 0; j < childCount; ) {
+                for (uint256 j = 0; j < childCount; ++j) {
                     node.children[j] = nodes[nextChildBFS];
                     unchecked {
                         ++nextChildBFS;
-                        ++j;
                     }
                 }
             } else if (node.operator == Operator.EqualToAvatar) {
@@ -107,7 +106,6 @@ library ConditionUnpacker {
 
             unchecked {
                 offset += CONDITION_NODE_BYTES;
-                ++i;
             }
         }
 
@@ -134,7 +132,7 @@ library ConditionUnpacker {
         Layout[] memory nodes = new Layout[](nodeCount);
         uint256 nextChildBFS = 1;
 
-        for (uint256 i = 0; i < nodeCount; ) {
+        for (uint256 i = 0; i < nodeCount; ++i) {
             uint256 packed;
             assembly {
                 packed := shr(232, mload(offset)) // Load 3 bytes (24 bits)
@@ -156,18 +154,16 @@ library ConditionUnpacker {
             if (childCount > 0) {
                 node.children = new Layout[](childCount);
 
-                for (uint256 j = 0; j < childCount; ) {
+                for (uint256 j = 0; j < childCount; ++j) {
                     node.children[j] = nodes[nextChildBFS];
                     unchecked {
                         ++nextChildBFS;
-                        ++j;
                     }
                 }
             }
 
             unchecked {
                 offset += LAYOUT_NODE_BYTES;
-                ++i;
             }
         }
 

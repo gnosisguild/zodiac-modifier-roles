@@ -28,21 +28,20 @@ library Topology {
         returns (uint256 childStart, uint256 childCount, uint256 sChildCount)
     {
         uint256 len = conditions.length;
-        unchecked {
-            for (uint256 i = index + 1; i < len; ++i) {
-                uint256 parent = conditions[i].parent;
 
-                if (parent == index) {
-                    if (childCount == 0) childStart = i;
-                    ++childCount;
+        for (uint256 i = index + 1; i < len; ++i) {
+            uint256 parent = conditions[i].parent;
 
-                    // Count structural children
-                    if (isStructural(conditions, i)) {
-                        ++sChildCount;
-                    }
-                } else if (parent > index) {
-                    break;
+            if (parent == index) {
+                if (childCount == 0) childStart = i;
+                ++childCount;
+
+                // Count structural children
+                if (isStructural(conditions, i)) {
+                    ++sChildCount;
                 }
+            } else if (parent > index) {
+                break;
             }
         }
     }

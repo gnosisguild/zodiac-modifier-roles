@@ -31,7 +31,7 @@ export enum Operator {
   //          🚫 compValue
   Pass = 0,
   // ------------------------------------------------------------
-  // 01-04: LOGICAL EXPRESSIONS
+  // 01-03: LOGICAL EXPRESSIONS
   //          paramType: None
   //          ✅ children
   //          🚫 compValue
