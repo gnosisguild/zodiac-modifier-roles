@@ -872,3 +872,32 @@ export async function setupOneParamAddress() {
     invoke,
   };
 }
+export async function setupOneParamBytes32() {
+  const {
+    owner,
+    member,
+    roles,
+    testContract,
+    scopeFunction,
+    execTransactionFromModule,
+  } = await setupAvatarAndRoles();
+
+  async function invoke(a: string) {
+    return execTransactionFromModule({
+      data: (await testContract.oneParamBytesWord.populateTransaction(a)).data,
+    });
+  }
+
+  const { selector } = testContract.interface.getFunction("oneParamBytesWord");
+
+  return {
+    roles,
+    owner,
+    member,
+    scopeFunction: (
+      conditions: ConditionFlatStruct[],
+      options?: ExecutionOptions,
+    ) => scopeFunction(selector, conditions, options),
+    invoke,
+  };
+}

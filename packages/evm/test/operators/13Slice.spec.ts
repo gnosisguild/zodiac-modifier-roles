@@ -6,7 +6,11 @@ import { AbiCoder, BigNumberish, solidityPacked, ZeroHash } from "ethers";
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
 import { Encoding, Operator, PermissionCheckerStatus } from "../utils";
-import { setupOneParamBytes, setupOneParamDynamicTuple } from "../setup";
+import {
+  setupOneParamBytes,
+  setupOneParamBytes32,
+  setupOneParamDynamicTuple,
+} from "../setup";
 import { Roles } from "../../typechain-types";
 
 // Helper to encode Slice compValue: 2 bytes shift + 1 byte size
@@ -760,6 +764,131 @@ describe("Operator - Slice", async () => {
       // Should fail (not greater than 1000)
       const bytesFail = "0x00000000" + "00000000000003e8" + "00000000";
       await expect(invoke({ a: 42, b: bytesFail }))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed, ZeroHash);
+    });
+  });
+
+  describe("Static Slice", () => {
+    it("slices 8 bytes from beginning of bytes32 (Static)", async () => {
+      const { roles, scopeFunction, invoke } =
+        await loadFixture(setupOneParamBytes32);
+
+      // Slice first 8 bytes from bytes32 (Static)
+      // For Static encoding, there's no length prefix (payload.inlined = true)
+      await scopeFunction([
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.Slice,
+          compValue: encodeSliceCompValue(0, 8),
+        },
+        {
+          parent: 1,
+          paramType: Encoding.Static,
+          operator: Operator.GreaterThan,
+          compValue: defaultAbiCoder.encode(["uint256"], [0xff]),
+        },
+      ]);
+
+      // bytes32 with first 8 bytes = 0x0000000000000100 (256) - should pass (256 > 255)
+      const bytes32Pass =
+        "0x0000000000000100" +
+        "000000000000000000000000000000000000000000000000";
+      await expect(invoke(bytes32Pass)).to.not.be.reverted;
+
+      // bytes32 with first 8 bytes = 0x00000000000000ff (255) - should fail (not > 255)
+      const bytes32Fail =
+        "0x00000000000000ff" +
+        "000000000000000000000000000000000000000000000000";
+      await expect(invoke(bytes32Fail))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed, ZeroHash);
+    });
+
+    it("slices 13 bytes from middle of bytes32 (Static)", async () => {
+      const { roles, scopeFunction, invoke } =
+        await loadFixture(setupOneParamBytes32);
+
+      // Slice 13 bytes starting at shift 10 from bytes32 (Static)
+      // bytes32 layout: [0-9: prefix (10 bytes)][10-22: slice (13 bytes)][23-31: suffix (9 bytes)]
+      await scopeFunction([
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.Slice,
+          compValue: encodeSliceCompValue(10, 13),
+        },
+        {
+          parent: 1,
+          paramType: Encoding.Static,
+          operator: Operator.GreaterThan,
+          compValue: defaultAbiCoder.encode(["uint256"], [1000]),
+        },
+      ]);
+
+      // bytes32: 10-byte prefix + 13-byte value (1001) + 9-byte suffix
+      // 1001 = 0x3e9, right-padded to 13 bytes: 0x000000000000000000000003e9
+      const bytes32Pass =
+        "0x" + "00".repeat(10) + "000000000000000000000003e9" + "00".repeat(9);
+      await expect(invoke(bytes32Pass)).to.not.be.reverted;
+
+      // bytes32: 10-byte prefix + 13-byte value (1000) + 9-byte suffix
+      const bytes32Fail =
+        "0x" + "00".repeat(10) + "000000000000000000000003e8" + "00".repeat(9);
+      await expect(invoke(bytes32Fail))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed, ZeroHash);
+    });
+
+    it("slices 8 bytes from end of bytes32 (Static)", async () => {
+      const { roles, scopeFunction, invoke } =
+        await loadFixture(setupOneParamBytes32);
+
+      // Slice last 8 bytes from bytes32 (Static)
+      // bytes32 is 32 bytes, so shift 24 to get last 8 bytes
+      await scopeFunction([
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.Slice,
+          compValue: encodeSliceCompValue(24, 8),
+        },
+        {
+          parent: 1,
+          paramType: Encoding.Static,
+          operator: Operator.GreaterThan,
+          compValue: defaultAbiCoder.encode(["uint256"], [500]),
+        },
+      ]);
+
+      // bytes32: 24-byte prefix + 8-byte value (501)
+      // 501 = 0x1f5, in 8 bytes: 0x00000000000001f5
+      const bytes32Pass = "0x" + "00".repeat(24) + "00000000000001f5";
+      await expect(invoke(bytes32Pass)).to.not.be.reverted;
+
+      // bytes32: 24-byte prefix + 8-byte value (500)
+      // 500 = 0x1f4, in 8 bytes: 0x00000000000001f4
+      const bytes32Fail = "0x" + "00".repeat(24) + "00000000000001f4";
+      await expect(invoke(bytes32Fail))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed, ZeroHash);
     });

@@ -117,8 +117,8 @@ library Integrity {
                 revert IRolesError.UnsuitableCompValue(index);
             }
         } else if (operator == Operator.Slice) {
-            // Slice can only be applied to a dynamic parameter
-            if (encoding != Encoding.Dynamic) {
+            // Slice can be applied to Static or Dynamic parameters
+            if (encoding != Encoding.Static && encoding != Encoding.Dynamic) {
                 revert IRolesError.UnsuitableParameterType(index);
             }
             // compValue must be 3 bytes: 2 bytes shift + 1 byte size (1-32)
@@ -285,8 +285,15 @@ library Integrity {
                     }
                 }
             } else if (condition.paramType == Encoding.Static) {
-                if (childCount != 0) {
-                    revert IRolesError.UnsuitableChildCount(i);
+                // Slice can have at most one child; other Static operators have no children
+                if (condition.operator == Operator.Slice) {
+                    if (childCount > 1) {
+                        revert IRolesError.UnsuitableChildCount(i);
+                    }
+                } else {
+                    if (childCount != 0) {
+                        revert IRolesError.UnsuitableChildCount(i);
+                    }
                 }
             } else if (condition.paramType == Encoding.Dynamic) {
                 // Slice can have at most one child; other Dynamic operators have no children

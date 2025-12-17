@@ -89,7 +89,7 @@ const checkParamTypeIntegrity = (condition: Condition): void => {
     [Operator.ArrayEvery]: [Encoding.Array],
     [Operator.ArrayTailMatches]: [Encoding.Array],
 
-    [Operator.Slice]: [Encoding.Dynamic],
+    [Operator.Slice]: [Encoding.Static, Encoding.Dynamic],
 
     [Operator.EqualToAvatar]: [Encoding.Static],
     [Operator.EqualTo]: [

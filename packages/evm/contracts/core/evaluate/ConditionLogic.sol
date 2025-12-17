@@ -257,7 +257,7 @@ library ConditionLogic {
     }
 
     /*
-     * Slice extracts a portion from dynamic calldata and presents it
+     * Slice extracts a portion from calldata and presents it
      * as a static-like payload for downstream comparisons.
      */
     function _slice(
@@ -273,7 +273,10 @@ library ConditionLogic {
 
         // Create sliced payload pointing to the slice range
         Payload memory slicedPayload;
-        slicedPayload.location = payload.location + 32 + shift;
+        slicedPayload.location =
+            payload.location +
+            (payload.inlined ? 0 : 32) +
+            shift;
         slicedPayload.size = size;
 
         return
