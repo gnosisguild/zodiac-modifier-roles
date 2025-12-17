@@ -5,7 +5,6 @@ import "./BitmaskChecker.sol";
 import "./WithinAllowanceChecker.sol";
 import "./WithinRatioChecker.sol";
 
-import "../../common/AbiDecoder.sol";
 import "../../periphery/interfaces/ICustomCondition.sol";
 
 import "../../types/Types.sol";
@@ -24,7 +23,7 @@ library ConditionLogic {
         Context memory context
     ) internal view returns (Result memory) {
         Operator operator = condition.operator;
-        if (payload.overflown) {
+        if (payload.overflow) {
             return
                 Result({
                     status: Status.CalldataOverflow,

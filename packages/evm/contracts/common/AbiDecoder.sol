@@ -68,7 +68,7 @@ library AbiDecoder {
         Payload memory payload
     ) private pure {
         if (location + 32 > data.length) {
-            payload.overflown = true;
+            payload.overflow = true;
             return;
         }
 
@@ -107,7 +107,7 @@ library AbiDecoder {
         }
 
         if (location + payload.size > data.length) {
-            payload.overflown = true;
+            payload.overflow = true;
         }
     }
 
@@ -154,15 +154,19 @@ library AbiDecoder {
             );
 
             if (childLocation == type(uint256).max) {
-                payload.overflown = true;
+                payload.overflow = true;
                 return;
             }
 
             _walk(data, childLocation, childLayout, childPayload);
 
-            if (childPayload.overflown) {
-                payload.overflown = true;
+            if (childPayload.overflow) {
+                payload.overflow = true;
                 return;
+            }
+
+            if (isInline) {
+                childPayload.inlined = true;
             }
 
             // Update the offset in the block for the next element
@@ -184,7 +188,7 @@ library AbiDecoder {
      * @param layout   Type tree node with variant children.
      * @param payload  Output: marked as variant, with one child per interpretation.
      *
-     * @notice Sets overflown=false if at least one interpretation succeeds.
+     * @notice Sets overflow=false if at least one interpretation succeeds.
      */
     function _variant(
         bytes calldata data,
@@ -195,15 +199,15 @@ library AbiDecoder {
         uint256 length = layout.children.length;
 
         payload.variant = true;
-        payload.overflown = true;
+        payload.overflow = true;
         payload.children = new Payload[](length);
 
         unchecked {
             for (uint256 i; i < length; ++i) {
                 _walk(data, location, layout.children[i], payload.children[i]);
-                payload.overflown =
-                    payload.overflown &&
-                    payload.children[i].overflown;
+                payload.overflow =
+                    payload.overflow &&
+                    payload.children[i].overflow;
             }
         }
     }

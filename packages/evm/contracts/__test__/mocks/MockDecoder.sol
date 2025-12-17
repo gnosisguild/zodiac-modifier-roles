@@ -35,9 +35,9 @@ contract MockDecoder {
         uint256 parent;
         uint256 location;
         uint256 size;
-        /* meta fields */
+        bool inlined;
         bool variant;
-        bool overflown;
+        bool overflow;
     }
 
     function flattenTree(
@@ -58,8 +58,9 @@ contract MockDecoder {
             parent: parent,
             location: node.location,
             size: node.size,
+            inlined: node.inlined,
             variant: node.variant,
-            overflown: node.overflown
+            overflow: node.overflow
         });
 
         next = index + 1;
@@ -82,8 +83,9 @@ contract MockDecoder {
     function copyOut(
         Payload memory output
     ) private pure returns (PP1 memory result) {
+        result.inlined = output.inlined;
         result.variant = output.variant;
-        result.overflown = output.overflown;
+        result.overflow = output.overflow;
         result.location = output.location;
         result.size = output.size;
         result.children = new PP2[](output.children.length);
@@ -95,8 +97,9 @@ contract MockDecoder {
     function copyOutTo2(
         Payload memory output
     ) private pure returns (PP2 memory result) {
+        result.inlined = output.inlined;
         result.variant = output.variant;
-        result.overflown = output.overflown;
+        result.overflow = output.overflow;
         result.location = output.location;
         result.size = output.size;
         result.children = new PP3[](output.children.length);
@@ -108,8 +111,9 @@ contract MockDecoder {
     function copyOutTo3(
         Payload memory output
     ) private pure returns (PP3 memory result) {
+        result.inlined = output.inlined;
         result.variant = output.variant;
-        result.overflown = output.overflown;
+        result.overflow = output.overflow;
         result.location = output.location;
         result.size = output.size;
         result.children = new PP4[](output.children.length);
@@ -121,8 +125,9 @@ contract MockDecoder {
     function copyOutTo4(
         Payload memory output
     ) private pure returns (PP4 memory result) {
+        result.inlined = output.inlined;
         result.variant = output.variant;
-        result.overflown = output.overflown;
+        result.overflow = output.overflow;
         result.location = output.location;
         result.size = output.size;
         result.children = new PP5[](output.children.length);
@@ -134,8 +139,9 @@ contract MockDecoder {
     function copyOutTo5(
         Payload memory output
     ) private pure returns (PP5 memory result) {
+        result.inlined = output.inlined;
         result.variant = output.variant;
-        result.overflown = output.overflown;
+        result.overflow = output.overflow;
         result.location = output.location;
         result.size = output.size;
         result.children = new PP6[](output.children.length);
@@ -147,8 +153,9 @@ contract MockDecoder {
     function copyOutTo6(
         Payload memory output
     ) private pure returns (PP6 memory result) {
+        result.inlined = output.inlined;
         result.variant = output.variant;
-        result.overflown = output.overflown;
+        result.overflow = output.overflow;
         result.location = output.location;
         result.size = output.size;
         if (output.children.length > 0) {
@@ -157,48 +164,54 @@ contract MockDecoder {
     }
 
     struct PP1 {
+        bool inlined;
         bool variant;
-        bool overflown;
+        bool overflow;
         uint256 location;
         uint256 size;
         PP2[] children;
     }
 
     struct PP2 {
+        bool inlined;
         bool variant;
-        bool overflown;
+        bool overflow;
         uint256 location;
         uint256 size;
         PP3[] children;
     }
 
     struct PP3 {
+        bool inlined;
         bool variant;
-        bool overflown;
+        bool overflow;
         uint256 location;
         uint256 size;
         PP4[] children;
     }
 
     struct PP4 {
+        bool inlined;
         bool variant;
-        bool overflown;
+        bool overflow;
         uint256 location;
         uint256 size;
         PP5[] children;
     }
 
     struct PP5 {
+        bool inlined;
         bool variant;
-        bool overflown;
+        bool overflow;
         uint256 location;
         uint256 size;
         PP6[] children;
     }
 
     struct PP6 {
+        bool inlined;
         bool variant;
-        bool overflown;
+        bool overflow;
         uint256 location;
         uint256 size;
     }

@@ -47,7 +47,8 @@ struct Payload {
     uint256 location;
     uint256 size;
     Payload[] children;
-    /* meta fields */
+    /* meta flags */
+    bool inlined;
     bool variant;
-    bool overflown;
+    bool overflow;
 }
