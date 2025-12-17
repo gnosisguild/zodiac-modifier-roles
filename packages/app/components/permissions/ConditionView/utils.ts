@@ -25,7 +25,7 @@ export const matchesAbi = (
 }
 
 export const isLogicalOperator = (operator: Operator) =>
-  operator >= Operator.And && operator <= Operator.Nor
+  operator >= Operator.And && operator <= Operator.Or
 
 export const isArrayOperator = (operator: Operator) =>
-  operator >= Operator.ArrayEvery && operator <= Operator.ArraySubset
+  operator >= Operator.ArrayEvery && operator <= Operator.ArrayTailMatches

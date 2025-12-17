@@ -79,14 +79,13 @@ const checkParamTypeIntegrity = (condition: Condition): void => {
     ],
 
     [Operator.And]: [Encoding.None],
-    [Operator.Or]: [Encoding.None],
-    [Operator.Nor]: [Encoding.None],
+    [Operator.Or]: [Encoding.None],    
 
     [Operator.Matches]: [Encoding.AbiEncoded, Encoding.Tuple, Encoding.Array],
 
     [Operator.ArraySome]: [Encoding.Array],
     [Operator.ArrayEvery]: [Encoding.Array],
-    [Operator.ArraySubset]: [Encoding.Array],
+    [Operator.ArrayTailMatches]: [Encoding.Array],
 
     [Operator.EqualToAvatar]: [Encoding.Static],
     [Operator.EqualTo]: [
@@ -173,7 +172,7 @@ const checkChildrenIntegrity = (condition: Condition): void => {
 
   if (
     condition.operator === Operator.Matches ||
-    condition.operator === Operator.ArraySubset
+    condition.operator === Operator.ArrayTailMatches
   ) {
     if (!condition.children || condition.children.length === 0) {
       throw new Error(
@@ -200,8 +199,7 @@ const checkChildrenIntegrity = (condition: Condition): void => {
 
   if (
     condition.operator === Operator.And ||
-    condition.operator === Operator.Or ||
-    condition.operator === Operator.Nor
+    condition.operator === Operator.Or
   ) {
     if (!condition.children || condition.children.length === 0) {
       throw new Error(

@@ -39,7 +39,7 @@ const ConditionHeader: React.FC<Props> = ({
     paramType >= Encoding.Tuple &&
     !(
       condition.operator >= Operator.Matches &&
-      condition.operator <= Operator.ArraySubset
+      condition.operator <= Operator.ArrayTailMatches
     )
 
   return (
@@ -106,8 +106,8 @@ const OperatorLabels: Record<number, ReactNode> = {
   [Operator.Matches]: "matches",
   [Operator.ArraySome]: "has at least one element that",
   [Operator.ArrayEvery]: "only has elements that",
-  [Operator.ArraySubset]:
-    "for each sub condition, has at least one element that meets it",
+  [Operator.ArrayTailMatches]:
+    "rmatches the end of the collection",
 
   [Operator.EqualToAvatar]: (
     <>
