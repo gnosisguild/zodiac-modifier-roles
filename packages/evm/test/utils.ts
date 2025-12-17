@@ -57,7 +57,7 @@ export enum Operator {
   /* 03: */ _Placeholder03,
   /* 04: */ Empty,
   // ------------------------------------------------------------
-  // 05-14: COMPLEX EXPRESSIONS
+  // 05-12: COMPLEX EXPRESSIONS
   //          paramType: AbiEncoded / Tuple / Array,
   //          ✅ children
   //          🚫 compValue
@@ -65,11 +65,16 @@ export enum Operator {
   /* 06: */ ArraySome,
   /* 07: */ ArrayEvery,
   /* 08: */ ArrayTailMatches,
-  /* 09: */ Slice,
+  /* 09: */ _Placeholder09,
   /* 10: */ _Placeholder10,
   /* 11: */ _Placeholder11,
   /* 12: */ _Placeholder12,
-  /* 13: */ _Placeholder13,
+  // ------------------------------------------------------------
+  // 13-14: EXTRACTION EXPRESSIONS
+  //          paramType: Dynamic
+  //          ❓ children (at most one child, must resolve to Static)
+  //          ✅ compValue (3 bytes: 2 bytes shift + 1 byte size, 1-32)
+  /* 13: */ Slice,
   /* 14: */ _Placeholder14,
   // ------------------------------------------------------------
   // 15:    SPECIAL COMPARISON (without compValue)

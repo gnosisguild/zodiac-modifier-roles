@@ -29,7 +29,7 @@
     "chai": "5.2.0",
     "chai-as-promised": "^7.1.2",
     "ethers": "^6.13.5",
-    "hardhat": "^2.22.19",
+    "hardhat": "^2.27.0",
     "hardhat-gas-reporter": "^1.0.8",
     "prettier": "^3.4.2",
     "solidity-coverage": "^0.8.1",
