@@ -72,7 +72,6 @@ library AbiDecoder {
             return;
         }
 
-        payload.typeIndex = layout.index;
         payload.location = location;
 
         Encoding encoding = layout.encoding;
