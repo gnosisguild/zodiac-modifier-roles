@@ -34,9 +34,10 @@ struct ConditionFlat {
 struct Layout {
     Encoding encoding;
     Layout[] children;
-    uint256 index;
     /// @dev Bytes to skip before ABI-encoded data begins (e.g., 4 for selector).
     uint256 leadingBytes;
+    /// @dev True if this type is encoded inline (includes children)
+    bool inlined;
 }
 
 struct LayoutFlat {
@@ -48,8 +49,8 @@ struct Payload {
     uint256 location;
     uint256 size;
     Payload[] children;
-    /* meta fields */
+    /* meta flags */
+    bool inlined;
     bool variant;
-    bool overflown;
-    uint256 typeIndex;
+    bool overflow;
 }

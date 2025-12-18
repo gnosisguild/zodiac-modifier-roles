@@ -84,4 +84,7 @@ interface IRolesError {
 
     /// Allowance decimals exceed maximum of 18
     error AllowanceDecimalsExceedMax(uint256 index);
+
+    /// Slice child must resolve to Static type
+    error SliceChildNotStatic(uint256 index);
 }

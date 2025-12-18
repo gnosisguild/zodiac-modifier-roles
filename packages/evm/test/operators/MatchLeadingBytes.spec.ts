@@ -358,7 +358,12 @@ describe("AbiEncoded Match Leading Bytes", () => {
       await expect(
         roles
           .connect(member)
-          .execTransactionFromModule(targetAddress, 0, badLeadingBytesCalldata, 0),
+          .execTransactionFromModule(
+            targetAddress,
+            0,
+            badLeadingBytesCalldata,
+            0,
+          ),
       )
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(PermissionCheckerStatus.LeadingBytesNotAMatch, ZeroHash);
@@ -446,7 +451,12 @@ describe("AbiEncoded Match Leading Bytes", () => {
       await expect(
         roles
           .connect(member)
-          .execTransactionFromModule(targetAddress, 0, badLeadingBytesCalldata, 0),
+          .execTransactionFromModule(
+            targetAddress,
+            0,
+            badLeadingBytesCalldata,
+            0,
+          ),
       )
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(PermissionCheckerStatus.LeadingBytesNotAMatch, ZeroHash);

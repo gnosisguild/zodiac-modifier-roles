@@ -141,15 +141,17 @@ library ConditionUnpacker {
              * ┌──────────────────────────────────────────────────────────┐
              * │Each node (24 bits = 3 bytes):                            │
              * │  • encoding              3 bits  (bits 23-21)            │
-             * │  • childCount            8 bits  (bits 20-13)            │
-             * │  • leadingBytes         13 bits  (bits 12-0)             │
+             * │  • inlined               1 bit   (bit 20)                │
+             * │  • childCount            8 bits  (bits 19-12)            │
+             * │  • leadingBytes         12 bits  (bits 11-0)             │
              * └──────────────────────────────────────────────────────────┘
              */
 
             Layout memory node = nodes[i];
             node.encoding = Encoding((packed >> 21) & 0x07);
-            uint256 childCount = (packed >> 13) & 0xFF;
-            node.leadingBytes = packed & 0x1FFF;
+            node.inlined = (packed >> 20) & 1 != 0;
+            uint256 childCount = (packed >> 12) & 0xFF;
+            node.leadingBytes = packed & 0xFFF;
 
             if (childCount > 0) {
                 node.children = new Layout[](childCount);
