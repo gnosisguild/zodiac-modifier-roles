@@ -17,13 +17,14 @@ library EIP712Encoder {
 
     /**
      * @dev Layout with index for typeHashes lookup. Memory-compatible with Layout
-     *      when cast, since index is the last field. This keeps the core Layout
+     *      when cast, since index is stored after inlined. This keeps the core Layout
      *      struct clean of EIP712-specific concerns.
      */
     struct LayoutWithIndex {
         Encoding encoding;
         LayoutWithIndex[] children;
         uint256 leadingBytes;
+        bool inlined;
         uint256 index;
     }
 
@@ -183,6 +184,41 @@ library EIP712Encoder {
                 }
             }
         }
+
+        // Compute inlined flag
+        layout.inlined = _isInlined(layout);
+    }
+
+    /**
+     * @dev Determines if a layout node should be inlined in ABI encoding.
+     *      Dynamic, Array, and AbiEncoded are never inlined.
+     *      Static is always inlined.
+     *      Tuple is inlined only if all children are inlined.
+     */
+    function _isInlined(
+        LayoutWithIndex memory layout
+    ) private pure returns (bool) {
+        Encoding encoding = layout.encoding;
+
+        if (
+            encoding == Encoding.Dynamic ||
+            encoding == Encoding.Array ||
+            encoding == Encoding.AbiEncoded
+        ) {
+            return false;
+        }
+
+        if (encoding == Encoding.Static) {
+            return true;
+        }
+
+        // Tuple: inlined only if all children are inlined
+        for (uint256 i = 0; i < layout.children.length; ++i) {
+            if (!layout.children[i].inlined) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
