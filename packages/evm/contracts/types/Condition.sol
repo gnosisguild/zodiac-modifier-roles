@@ -36,6 +36,8 @@ struct Layout {
     Layout[] children;
     /// @dev Bytes to skip before ABI-encoded data begins (e.g., 4 for selector).
     uint256 leadingBytes;
+    /// @dev True if this type is encoded inline (includes children)
+    bool inlined;
 }
 
 struct LayoutFlat {

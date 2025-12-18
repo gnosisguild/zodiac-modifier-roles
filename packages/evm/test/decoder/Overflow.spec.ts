@@ -33,8 +33,12 @@ describe("AbiDecoder - Overflow", () => {
       // Incorrect: completely empty calldata
       const incorrect = "0x";
 
-      const resultCorrect = await decoder.inspect(correct, conditions);
-      const resultIncorrect = await decoder.inspect(incorrect, conditions);
+      const resultCorrect = toTree(
+        await decoder.inspectFlat(correct, conditions),
+      );
+      const resultIncorrect = toTree(
+        await decoder.inspectFlat(incorrect, conditions),
+      );
 
       expect(resultCorrect.overflow).to.equal(false);
       expect(resultCorrect.variant).to.equal(false);
@@ -67,14 +71,14 @@ describe("AbiDecoder - Overflow", () => {
       const incorrect = "0x13d1aa2e";
 
       {
-        const result = await decoder.inspect(correct, conditions);
+        const result = toTree(await decoder.inspectFlat(correct, conditions));
         expect(result.overflow).to.equal(false);
         expect(result.variant).to.equal(false);
         expect(result.children.length).to.equal(2);
       }
 
       {
-        const result = await decoder.inspect(incorrect, conditions);
+        const result = toTree(await decoder.inspectFlat(incorrect, conditions));
         expect(result.overflow).to.equal(true);
         expect(result.variant).to.equal(false);
         expect(result.children.length).to.equal(0);
@@ -102,14 +106,16 @@ describe("AbiDecoder - Overflow", () => {
 
       {
         // OKAY
-        const result = await decoder.inspect(dataOk, conditions);
+        const result = toTree(await decoder.inspectFlat(dataOk, conditions));
         expect(result.overflow).to.equal(false);
         expect(result.children.length).to.equal(1);
       }
 
       {
         // OVERFLOW
-        const result = await decoder.inspect(dataOverflow, conditions);
+        const result = toTree(
+          await decoder.inspectFlat(dataOverflow, conditions),
+        );
         expect(result.overflow).to.equal(true);
         expect(result.children.length).to.equal(0);
       }
@@ -139,19 +145,23 @@ describe("AbiDecoder - Overflow", () => {
       const dataOverflow2 = ["0xb3de648b", "00"].join("");
 
       {
-        const result = await decoder.inspect(dataOk, conditions);
+        const result = toTree(await decoder.inspectFlat(dataOk, conditions));
         expect(result.overflow).to.equal(false);
         expect(result.children.length).to.be.greaterThan(0);
       }
 
       {
-        const result = await decoder.inspect(dataOverflow1, conditions);
+        const result = toTree(
+          await decoder.inspectFlat(dataOverflow1, conditions),
+        );
         expect(result.overflow).to.equal(true);
         expect(result.children.length).to.equal(0);
       }
 
       {
-        const result = await decoder.inspect(dataOverflow2, conditions);
+        const result = toTree(
+          await decoder.inspectFlat(dataOverflow2, conditions),
+        );
         expect(result.overflow).to.equal(true);
         expect(result.children.length).to.equal(0);
       }
@@ -175,14 +185,16 @@ describe("AbiDecoder - Overflow", () => {
       const incorrect1 = "0xd45754f8";
 
       {
-        const result = await decoder.inspect(correct, conditions);
+        const result = toTree(await decoder.inspectFlat(correct, conditions));
         expect(result.overflow).to.equal(false);
         expect(result.variant).to.equal(false);
         expect(result.children.length).to.equal(1);
       }
 
       {
-        const result = await decoder.inspect(incorrect1, conditions);
+        const result = toTree(
+          await decoder.inspectFlat(incorrect1, conditions),
+        );
         expect(result.overflow).to.equal(true);
         expect(result.variant).to.equal(false);
         expect(result.children.length).to.equal(0);
@@ -216,14 +228,14 @@ describe("AbiDecoder - Overflow", () => {
       ].join("");
 
       {
-        const result = await decoder.inspect(correct, conditions);
+        const result = toTree(await decoder.inspectFlat(correct, conditions));
         expect(result.overflow).to.equal(false);
         expect(result.variant).to.equal(false);
         expect(result.children.length).to.equal(2);
       }
 
       {
-        const result = await decoder.inspect(incorrect, conditions);
+        const result = toTree(await decoder.inspectFlat(incorrect, conditions));
         expect(result.overflow).to.equal(true);
         expect(result.variant).to.equal(false);
         expect(result.children.length).to.equal(0);
@@ -253,14 +265,14 @@ describe("AbiDecoder - Overflow", () => {
       ].join("");
 
       {
-        const result = await decoder.inspect(correct, conditions);
+        const result = toTree(await decoder.inspectFlat(correct, conditions));
         expect(result.overflow).to.equal(false);
         expect(result.variant).to.equal(false);
         expect(result.children.length).to.equal(1);
       }
 
       {
-        const result = await decoder.inspect(incorrect, conditions);
+        const result = toTree(await decoder.inspectFlat(incorrect, conditions));
         expect(result.overflow).to.equal(true);
         expect(result.variant).to.equal(false);
         expect(result.children.length).to.equal(0);
@@ -290,14 +302,14 @@ describe("AbiDecoder - Overflow", () => {
       ].join("");
 
       {
-        const result = await decoder.inspect(correct, conditions);
+        const result = toTree(await decoder.inspectFlat(correct, conditions));
         expect(result.overflow).to.equal(false);
         expect(result.variant).to.equal(false);
         expect(result.children.length).to.equal(1);
       }
 
       {
-        const result = await decoder.inspect(incorrect, conditions);
+        const result = toTree(await decoder.inspectFlat(incorrect, conditions));
         expect(result.overflow).to.equal(true);
         expect(result.variant).to.equal(false);
         expect(result.children.length).to.equal(0);
@@ -336,21 +348,25 @@ describe("AbiDecoder - Overflow", () => {
       ].join("");
 
       {
-        const result = await decoder.inspect(correct, conditions);
+        const result = toTree(await decoder.inspectFlat(correct, conditions));
         expect(result.overflow).to.equal(false);
         expect(result.variant).to.equal(false);
         expect(result.children.length).to.equal(1);
       }
 
       {
-        const result = await decoder.inspect(incorrect1, conditions);
+        const result = toTree(
+          await decoder.inspectFlat(incorrect1, conditions),
+        );
         expect(result.overflow).to.equal(true);
         expect(result.variant).to.equal(false);
         expect(result.children.length).to.equal(0);
       }
 
       {
-        const result = await decoder.inspect(incorrect2, conditions);
+        const result = toTree(
+          await decoder.inspectFlat(incorrect2, conditions),
+        );
         expect(result.overflow).to.equal(true);
         expect(result.variant).to.equal(false);
         expect(result.children.length).to.equal(0);
@@ -400,7 +416,7 @@ describe("AbiDecoder - Overflow", () => {
       ].join("");
 
       {
-        const result = await decoder.inspect(correct, conditions);
+        const result = toTree(await decoder.inspectFlat(correct, conditions));
         expect(result.overflow).to.equal(false);
         expect(result.variant).to.equal(false);
         expect(result.children.length).to.equal(1);
@@ -408,14 +424,18 @@ describe("AbiDecoder - Overflow", () => {
       }
 
       {
-        const result = await decoder.inspect(incorrect1, conditions);
+        const result = toTree(
+          await decoder.inspectFlat(incorrect1, conditions),
+        );
         expect(result.overflow).to.equal(true);
         expect(result.variant).to.equal(false);
         expect(result.children.length).to.equal(0);
       }
 
       {
-        const result = await decoder.inspect(incorrect2, conditions);
+        const result = toTree(
+          await decoder.inspectFlat(incorrect2, conditions),
+        );
         expect(result.overflow).to.equal(true);
         expect(result.variant).to.equal(false);
         expect(result.children.length).to.equal(0);
@@ -447,14 +467,16 @@ describe("AbiDecoder - Overflow", () => {
 
       {
         // OKAY
-        const result = await decoder.inspect(dataOk, conditions);
+        const result = toTree(await decoder.inspectFlat(dataOk, conditions));
         expect(result.overflow).to.equal(false);
         expect(result.children.length).to.be.greaterThan(0);
       }
 
       {
         // OVERFLOW
-        const result = await decoder.inspect(dataOverflow, conditions);
+        const result = toTree(
+          await decoder.inspectFlat(dataOverflow, conditions),
+        );
         expect(result.overflow).to.equal(true);
         expect(result.children.length).to.equal(0);
       }
@@ -495,7 +517,7 @@ describe("AbiDecoder - Overflow", () => {
       ].join("");
 
       {
-        const result = await decoder.inspect(correct, conditions);
+        const result = toTree(await decoder.inspectFlat(correct, conditions));
         expect(result.overflow).to.equal(false);
         expect(result.variant).to.equal(false);
         expect(result.children.length).to.equal(1);
@@ -503,7 +525,7 @@ describe("AbiDecoder - Overflow", () => {
       }
 
       {
-        const result = await decoder.inspect(incorrect, conditions);
+        const result = toTree(await decoder.inspectFlat(incorrect, conditions));
         expect(result.overflow).to.equal(true);
         expect(result.variant).to.equal(false);
         expect(result.children.length).to.equal(0);
@@ -538,14 +560,16 @@ describe("AbiDecoder - Overflow", () => {
 
       {
         // OKAY
-        const result = await decoder.inspect(dataOk, conditions);
+        const result = toTree(await decoder.inspectFlat(dataOk, conditions));
         expect(result.overflow).to.equal(false);
         expect(result.children.length).to.be.greaterThan(0);
       }
 
       {
         // OVERFLOW
-        const result = await decoder.inspect(dataOverflow, conditions);
+        const result = toTree(
+          await decoder.inspectFlat(dataOverflow, conditions),
+        );
         expect(result.overflow).to.equal(true);
         expect(result.children.length).to.equal(0);
       }
@@ -587,14 +611,14 @@ describe("AbiDecoder - Overflow", () => {
       ].join("");
 
       {
-        const result = await decoder.inspect(correct, conditions);
+        const result = toTree(await decoder.inspectFlat(correct, conditions));
         expect(result.overflow).to.equal(false);
         expect(result.variant).to.equal(false);
         expect(result.children.length).to.equal(1);
       }
 
       {
-        const result = await decoder.inspect(incorrect, conditions);
+        const result = toTree(await decoder.inspectFlat(incorrect, conditions));
         expect(result.overflow).to.equal(true);
         expect(result.variant).to.equal(false);
         expect(result.children.length).to.equal(0);
@@ -637,14 +661,14 @@ describe("AbiDecoder - Overflow", () => {
       ].join("");
 
       {
-        const result = await decoder.inspect(correct, conditions);
+        const result = toTree(await decoder.inspectFlat(correct, conditions));
         expect(result.overflow).to.equal(false);
         expect(result.variant).to.equal(false);
         expect(result.children.length).to.equal(1);
       }
 
       {
-        const result = await decoder.inspect(incorrect, conditions);
+        const result = toTree(await decoder.inspectFlat(incorrect, conditions));
         expect(result.overflow).to.equal(true);
         expect(result.variant).to.equal(false);
         expect(result.children.length).to.equal(0);
@@ -697,21 +721,25 @@ describe("AbiDecoder - Overflow", () => {
       ].join("");
 
       {
-        const result = await decoder.inspect(correct, conditions);
+        const result = toTree(await decoder.inspectFlat(correct, conditions));
         expect(result.overflow).to.equal(false);
         expect(result.variant).to.equal(false);
         expect(result.children.length).to.equal(1);
       }
 
       {
-        const result = await decoder.inspect(incorrect1, conditions);
+        const result = toTree(
+          await decoder.inspectFlat(incorrect1, conditions),
+        );
         expect(result.overflow).to.equal(true);
         expect(result.variant).to.equal(false);
         expect(result.children.length).to.equal(0);
       }
 
       {
-        const result = await decoder.inspect(incorrect2, conditions);
+        const result = toTree(
+          await decoder.inspectFlat(incorrect2, conditions),
+        );
         expect(result.overflow).to.equal(true);
         expect(result.variant).to.equal(false);
         expect(result.children.length).to.equal(0);
@@ -753,8 +781,12 @@ describe("AbiDecoder - Overflow", () => {
         // missing third element
       ].join("");
 
-      const resultCorrect = await decoder.inspect(correct, conditions);
-      const resultIncorrect = await decoder.inspect(incorrect, conditions);
+      const resultCorrect = toTree(
+        await decoder.inspectFlat(correct, conditions),
+      );
+      const resultIncorrect = toTree(
+        await decoder.inspectFlat(incorrect, conditions),
+      );
 
       expect(resultCorrect.overflow).to.equal(false);
       expect(resultCorrect.variant).to.equal(false);
@@ -796,8 +828,12 @@ describe("AbiDecoder - Overflow", () => {
         // no array elements at all
       ].join("");
 
-      const resultCorrect = await decoder.inspect(correct, conditions);
-      const resultIncorrect = await decoder.inspect(incorrect1, conditions);
+      const resultCorrect = toTree(
+        await decoder.inspectFlat(correct, conditions),
+      );
+      const resultIncorrect = toTree(
+        await decoder.inspectFlat(incorrect1, conditions),
+      );
 
       expect(resultCorrect.overflow).to.equal(false);
       expect(resultCorrect.variant).to.equal(false);
@@ -866,7 +902,7 @@ describe("AbiDecoder - Overflow", () => {
 
       // no branch overflows, variant does not overflow
       {
-        const result = await decoder.inspect(DATA_OK, conditions);
+        const result = toTree(await decoder.inspectFlat(DATA_OK, conditions));
 
         // All branches should overflow, so the OR variant should also overflow
         expect(result.overflow).to.equal(false);
@@ -887,7 +923,9 @@ describe("AbiDecoder - Overflow", () => {
 
       // only one of the branches overflows
       {
-        const result = await decoder.inspect(DATA_OVERFLOW, conditions);
+        const result = toTree(
+          await decoder.inspectFlat(DATA_OVERFLOW, conditions),
+        );
 
         expect(result.overflow).to.equal(false);
         expect(result.variant).to.equal(false);
@@ -963,7 +1001,7 @@ describe("AbiDecoder - Overflow", () => {
 
       // no branch overflows, variant does not overflow
       {
-        const result = await decoder.inspect(DATA_OK, conditions);
+        const result = toTree(await decoder.inspectFlat(DATA_OK, conditions));
 
         expect(result.overflow).to.equal(false);
         expect(result.variant).to.equal(false);
@@ -983,7 +1021,9 @@ describe("AbiDecoder - Overflow", () => {
 
       {
         // All branches should overflow, so the OR variant should also overflow
-        const result = await decoder.inspect(DATA_OVERFLOW, conditions);
+        const result = toTree(
+          await decoder.inspectFlat(DATA_OVERFLOW, conditions),
+        );
         expect(result.overflow).to.equal(true);
         expect(result.variant).to.equal(false);
         expect(result.children.length).to.equal(0);
@@ -991,3 +1031,41 @@ describe("AbiDecoder - Overflow", () => {
     });
   });
 });
+
+type Payload = {
+  location: number;
+  size: number;
+  children: Payload[];
+  inlined: boolean;
+  variant: boolean;
+  overflow: boolean;
+};
+
+function toTree(
+  bfsArray: {
+    location: bigint;
+    size: bigint;
+    parent: bigint;
+    inlined: boolean;
+    variant: boolean;
+    overflow: boolean;
+  }[],
+): Payload {
+  const nodes = bfsArray.map((item) => ({
+    location: Number(item.location),
+    size: Number(item.size),
+    children: [] as Payload[],
+    inlined: item.inlined,
+    variant: item.variant,
+    overflow: item.overflow,
+  }));
+
+  bfsArray.forEach((item, i) => {
+    const parentIndex = Number(item.parent);
+    if (parentIndex !== i) {
+      nodes[parentIndex].children.push(nodes[i]);
+    }
+  });
+
+  return nodes[0];
+}

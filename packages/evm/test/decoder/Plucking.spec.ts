@@ -28,7 +28,7 @@ describe("AbiDecoder - Plucking", () => {
         children: [{ paramType: Encoding.Static }],
       });
 
-      const result = await decoder.inspect(data, conditions);
+      const result = toTree(await decoder.inspectFlat(data, conditions));
       const param = result.children[0];
       expect(await decoder.pluck(data, param.location, param.size)).to.equal(
         encode(["bytes4"], ["0xeeff3344"]),
@@ -46,7 +46,7 @@ describe("AbiDecoder - Plucking", () => {
         children: [{ paramType: Encoding.Dynamic }],
       });
 
-      const result = await decoder.inspect(data, conditions);
+      const result = toTree(await decoder.inspectFlat(data, conditions));
       const param = result.children[0];
       expect(await decoder.pluck(data, param.location, param.size)).to.equal(
         encode(["bytes"], ["0xaabbccdd"], true),
@@ -67,7 +67,7 @@ describe("AbiDecoder - Plucking", () => {
         ],
       });
 
-      const result = await decoder.inspect(data, conditions);
+      const result = toTree(await decoder.inspectFlat(data, conditions));
 
       const firstParam = result.children[0];
       expect(
@@ -103,7 +103,7 @@ describe("AbiDecoder - Plucking", () => {
         ],
       });
 
-      const result = await decoder.inspect(data, conditions);
+      const result = toTree(await decoder.inspectFlat(data, conditions));
       const tupleField = result.children[0];
       expect(
         await decoder.pluck(data, tupleField.location, tupleField.size),
@@ -130,7 +130,7 @@ describe("AbiDecoder - Plucking", () => {
         ],
       });
 
-      const result = await decoder.inspect(data, conditions);
+      const result = toTree(await decoder.inspectFlat(data, conditions));
       const tupleField = result.children[0];
 
       expect(
@@ -170,7 +170,7 @@ describe("AbiDecoder - Plucking", () => {
         ],
       });
 
-      const result = await decoder.inspect(data, conditions);
+      const result = toTree(await decoder.inspectFlat(data, conditions));
 
       // First field: a (uint256) = 2023
       const field_a = result.children[0].children[0];
@@ -244,7 +244,7 @@ describe("AbiDecoder - Plucking", () => {
         ],
       });
 
-      const result = await decoder.inspect(data, conditions);
+      const result = toTree(await decoder.inspectFlat(data, conditions));
 
       // First field: a (bytes) = "0xbadfed"
       const field_a = result.children[0].children[0];
@@ -316,7 +316,7 @@ describe("AbiDecoder - Plucking", () => {
         ],
       });
 
-      const result = await decoder.inspect(data, conditions);
+      const result = toTree(await decoder.inspectFlat(data, conditions));
       const arrayField = result.children[2];
 
       expect(
@@ -341,7 +341,7 @@ describe("AbiDecoder - Plucking", () => {
         ],
       });
 
-      const result = await decoder.inspect(data, conditions);
+      const result = toTree(await decoder.inspectFlat(data, conditions));
       const arrayField = result.children[0];
 
       expect(
@@ -380,7 +380,7 @@ describe("AbiDecoder - Plucking", () => {
         ],
       });
 
-      const result = await decoder.inspect(data, conditions);
+      const result = toTree(await decoder.inspectFlat(data, conditions));
       const [, arrayEntry2] = result.children[0].children;
 
       expect(result.children[0].children).lengthOf(2);
@@ -428,7 +428,7 @@ describe("AbiDecoder - Plucking", () => {
         ],
       });
 
-      const result = await decoder.inspect(data, conditions);
+      const result = toTree(await decoder.inspectFlat(data, conditions));
 
       // First array item - tuple[0].dynamic (bytes) = "0xbadfed"
       const item0_dynamic = result.children[0].children[0].children[0];
@@ -505,7 +505,7 @@ describe("AbiDecoder - Plucking", () => {
         ],
       });
 
-      const result = await decoder.inspect(data, conditions);
+      const result = toTree(await decoder.inspectFlat(data, conditions));
       const arrayField = result.children[0].children[2];
 
       expect(
@@ -561,7 +561,7 @@ describe("AbiDecoder - Plucking", () => {
         }, // 3
       ];
 
-      const result = await decoder.inspect(data, conditions);
+      const result = toTree(await decoder.inspectFlat(data, conditions));
       const arrayField = result.children[0];
       const [entry1, entry2] = arrayField.children;
 
@@ -604,7 +604,7 @@ describe("AbiDecoder - Plucking", () => {
         ],
       });
 
-      const result = await decoder.inspect(data, conditions);
+      const result = toTree(await decoder.inspectFlat(data, conditions));
       const arrayField = result.children[0];
 
       expect(
@@ -641,7 +641,7 @@ describe("AbiDecoder - Plucking", () => {
         ],
       });
 
-      const result = await decoder.inspect(data, conditions);
+      const result = toTree(await decoder.inspectFlat(data, conditions));
       const arrayField = result.children[0];
 
       expect(
@@ -825,7 +825,7 @@ describe("AbiDecoder - Plucking", () => {
         ],
       });
 
-      const result = await decoder.inspect(data, conditions);
+      const result = toTree(await decoder.inspectFlat(data, conditions));
       const embeddedTuple = result.children[0].children[0];
       const staticField = embeddedTuple.children[0];
 
@@ -865,7 +865,7 @@ describe("AbiDecoder - Plucking", () => {
         ],
       });
 
-      const result = await decoder.inspect(data, conditions);
+      const result = toTree(await decoder.inspectFlat(data, conditions));
       const embeddedTuple = result.children[0].children[0];
       const dynamicField = embeddedTuple.children[1];
 
@@ -905,7 +905,7 @@ describe("AbiDecoder - Plucking", () => {
         ],
       });
 
-      const result = await decoder.inspect(data, conditions);
+      const result = toTree(await decoder.inspectFlat(data, conditions));
       const embeddedTuple = result.children[0].children[0];
       const staticField1 = embeddedTuple.children[0];
       const staticField2 = embeddedTuple.children[1];
@@ -974,7 +974,7 @@ describe("AbiDecoder - Plucking", () => {
         ],
       });
 
-      const result = await decoder.inspect(data, conditions);
+      const result = toTree(await decoder.inspectFlat(data, conditions));
       const nestedDynamicField =
         result.children[0].children[0].children[0].children[0];
 
@@ -1031,7 +1031,7 @@ describe("AbiDecoder - Plucking", () => {
         ],
       });
 
-      const result = await decoder.inspect(data, conditions);
+      const result = toTree(await decoder.inspectFlat(data, conditions));
       const arrayField1 = result.children[0].children[0].children[2];
       const staticField2 = result.children[0].children[1].children[1];
 
@@ -1074,7 +1074,7 @@ describe("AbiDecoder - Plucking", () => {
         ],
       });
 
-      const result = await decoder.inspect(data, conditions);
+      const result = toTree(await decoder.inspectFlat(data, conditions));
       const dynamicField = result.children[0].children[0];
       const arrayField = result.children[0].children[2];
 
@@ -1125,7 +1125,7 @@ describe("AbiDecoder - Plucking", () => {
         [tupleData],
       );
 
-      const result = await decoder.inspect(data, conditions);
+      const result = toTree(await decoder.inspectFlat(data, conditions));
 
       expect(result.variant).to.equal(false);
       expect(result.overflow).to.equal(false);
@@ -1199,7 +1199,7 @@ describe("AbiDecoder - Plucking", () => {
         [innerData],
       );
 
-      const root = await decoder.inspect(data, conditions);
+      const root = toTree(await decoder.inspectFlat(data, conditions));
 
       expect(root.variant).to.equal(false);
       expect(root.overflow).to.equal(false);
@@ -1283,7 +1283,7 @@ describe("AbiDecoder - Plucking", () => {
         ],
       });
 
-      const result = await decoder.inspect(data, conditions);
+      const result = toTree(await decoder.inspectFlat(data, conditions));
 
       const variant = result.children[0];
       const [first, second] = variant.children;
@@ -1350,7 +1350,7 @@ describe("AbiDecoder - Plucking", () => {
         ],
       });
 
-      const result = await decoder.inspect(data, conditions);
+      const result = toTree(await decoder.inspectFlat(data, conditions));
 
       // Should succeed with multiple valid variants
       expect(result.children[0].variant).to.equal(true);
@@ -1378,7 +1378,7 @@ describe("AbiDecoder - Plucking", () => {
         children: [{ paramType: Encoding.Dynamic }],
       });
 
-      const result = await decoder.inspect(data, conditions);
+      const result = toTree(await decoder.inspectFlat(data, conditions));
       const parameter = result.children[0];
 
       expect(parameter.location).to.equal(36);
@@ -1409,7 +1409,7 @@ describe("AbiDecoder - Plucking", () => {
         ],
       });
 
-      const result = await decoder.inspect(data, conditions);
+      const result = toTree(await decoder.inspectFlat(data, conditions));
 
       expect(
         await decoder.pluck(
@@ -1458,7 +1458,7 @@ describe("AbiDecoder - Plucking", () => {
         ],
       });
 
-      const result = await decoder.inspect(data, conditions);
+      const result = toTree(await decoder.inspectFlat(data, conditions));
 
       expect(
         await decoder.pluck(
@@ -1529,7 +1529,7 @@ describe("AbiDecoder - Plucking", () => {
         ],
       });
 
-      const result = await decoder.inspect(data, conditions);
+      const result = toTree(await decoder.inspectFlat(data, conditions));
       const field_0 = result.children[0].children[0];
       const field_3_0 = result.children[0].children[3].children[0];
 
@@ -1589,7 +1589,7 @@ describe("AbiDecoder - Plucking", () => {
         ],
       });
 
-      const result = await decoder.inspect(data, conditions);
+      const result = toTree(await decoder.inspectFlat(data, conditions));
       const variantParam = result.children[0];
 
       expect(variantParam.variant).to.equal(true);

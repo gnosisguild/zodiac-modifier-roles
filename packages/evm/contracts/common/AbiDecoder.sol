@@ -73,6 +73,7 @@ library AbiDecoder {
         }
 
         payload.location = location;
+        payload.inlined = layout.inlined;
 
         Encoding encoding = layout.encoding;
         if (encoding == Encoding.Static) {
@@ -144,7 +145,7 @@ library AbiDecoder {
             ];
             Payload memory childPayload = children[i];
 
-            bool isInline = _isInline(childLayout);
+            bool isInline = childLayout.inlined;
 
             uint256 childLocation = _locationInBlock(
                 data,
@@ -163,10 +164,6 @@ library AbiDecoder {
             if (childPayload.overflow) {
                 payload.overflow = true;
                 return;
-            }
-
-            if (isInline) {
-                childPayload.inlined = true;
             }
 
             // Update the offset in the block for the next element
@@ -253,35 +250,6 @@ library AbiDecoder {
         }
 
         return location + tailOffset;
-    }
-
-    /**
-     * @dev Checks if a type is encoded inline in HEAD or via pointer to TAIL.
-     *
-     * @param layout The type tree node to check.
-     * @return true if inline, false if pointer-based.
-     *
-     * @notice Inline: Static (always), Tuple (if all fields are inline).
-     *         Pointer: AbiEncoded, Dynamic, Array.
-     */
-    function _isInline(Layout memory layout) private pure returns (bool) {
-        Encoding encoding = layout.encoding;
-        if (encoding == Encoding.Static) {
-            return true;
-        }
-
-        if (encoding == Encoding.Tuple) {
-            uint256 length = layout.children.length;
-            for (uint256 i; i < length; ++i) {
-                if (!_isInline(layout.children[i])) {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        // Dynamic, Array, AbiEncoded
-        return false;
     }
 
     /**

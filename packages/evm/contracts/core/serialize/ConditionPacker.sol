@@ -41,8 +41,9 @@ import "../../types/Types.sol";
  * │ Nodes (nodeCount × 3 bytes each):                                   │
  * │   Each node (24 bits = 3 bytes):                                    │
  * │     • encoding              3 bits                                  │
+ * │     • inlined               1 bit                                   │
  * │     • childCount            8 bits                                  │
- * │     • leadingBytes         13 bits                                  │
+ * │     • leadingBytes         12 bits                                  │
  * └─────────────────────────────────────────────────────────────────────┘
  *
  * NOTES:
@@ -274,8 +275,9 @@ library ConditionPacker {
         // Pack all nodes (3 bytes each)
         for (uint256 i; i < nodes.length; ++i) {
             uint24 packed = (uint24(nodes[i].encoding) << 21) |
-                (uint24(nodes[i].childCount) << 13) |
-                uint24(uint16(nodes[i].leadingBytes));
+                (nodes[i].inlined ? uint24(1 << 20) : uint24(0)) |
+                (uint24(nodes[i].childCount) << 12) |
+                uint24(nodes[i].leadingBytes);
 
             buffer[offset++] = bytes1(uint8(packed >> 16));
             buffer[offset++] = bytes1(uint8(packed >> 8));
@@ -311,7 +313,8 @@ library ConditionPacker {
                 encoding: node.encoding,
                 parent: parent,
                 childCount: node.children.length,
-                leadingBytes: uint16(node.leadingBytes)
+                leadingBytes: uint16(node.leadingBytes),
+                inlined: node.inlined
             });
 
             // Enqueue children
@@ -341,6 +344,7 @@ library ConditionPacker {
         Encoding encoding;
         uint256 childCount;
         uint16 leadingBytes;
+        bool inlined;
     }
 
     // ═══════════════════════════════════════════════════════════════════════════

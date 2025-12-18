@@ -1,5 +1,6 @@
 import assert from "assert";
 import { BigNumberish, solidityPacked } from "ethers";
+import { ConditionFlatStruct } from "../typechain-types/contracts/Roles";
 
 export const logGas = async (
   message: string,
@@ -189,16 +190,9 @@ interface Condition {
   children?: Condition[];
 }
 
-interface ConditionFlat {
-  parent: number;
-  paramType: Encoding;
-  operator: Operator;
-  compValue: string;
-}
-
-export function flattenCondition(root: Condition): ConditionFlat[] {
+export function flattenCondition(root: Condition): ConditionFlatStruct[] {
   let queue = [{ node: root, parent: 0 }];
-  let result: ConditionFlat[] = [];
+  let result: ConditionFlatStruct[] = [];
 
   for (let bfsOrder = 0; queue.length > 0; bfsOrder++) {
     const entry = queue.shift();
