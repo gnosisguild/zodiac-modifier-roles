@@ -43,7 +43,7 @@ const ConditionView: React.FC<Props> = ({ condition, paramIndex, abi }) => {
 
   if (
     condition.operator >= Operator.And &&
-    condition.operator <= Operator.Nor
+    condition.operator <= Operator.Or
   ) {
     return (
       <LogicalConditionView
@@ -56,7 +56,7 @@ const ConditionView: React.FC<Props> = ({ condition, paramIndex, abi }) => {
 
   if (
     condition.operator >= Operator.Matches &&
-    condition.operator <= Operator.ArraySubset
+    condition.operator <= Operator.ArrayTailMatches
   ) {
     return (
       <ComplexConditionView
@@ -130,10 +130,7 @@ const LogicalConditionView: React.FC<Props> = ({
 }) => {
   const { operator, children } = condition
   const childrenLength = children?.length || 0
-  const operatorLabel =
-    operator === Operator.Nor && childrenLength === 1
-      ? "Not"
-      : Operator[operator]
+  const operatorLabel = Operator[operator]
 
   return (
     <div
@@ -189,7 +186,7 @@ export const ChildConditions: React.FC<
   const isRootAbiEncodedCondition =
     condition.paramType === Encoding.AbiEncoded && paramIndex === undefined
   const isLogicalCondition =
-    operator >= Operator.And && operator <= Operator.Nor
+    operator >= Operator.And && operator <= Operator.Or
 
   return (
     <div

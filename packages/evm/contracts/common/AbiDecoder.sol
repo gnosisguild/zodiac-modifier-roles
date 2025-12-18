@@ -68,12 +68,12 @@ library AbiDecoder {
         Payload memory payload
     ) private pure {
         if (location + 32 > data.length) {
-            payload.overflown = true;
+            payload.overflow = true;
             return;
         }
 
-        payload.typeIndex = layout.index;
         payload.location = location;
+        payload.inlined = layout.inlined;
 
         Encoding encoding = layout.encoding;
         if (encoding == Encoding.Static) {
@@ -108,7 +108,7 @@ library AbiDecoder {
         }
 
         if (location + payload.size > data.length) {
-            payload.overflown = true;
+            payload.overflow = true;
         }
     }
 
@@ -145,7 +145,7 @@ library AbiDecoder {
             ];
             Payload memory childPayload = children[i];
 
-            bool isInline = _isInline(childLayout);
+            bool isInline = childLayout.inlined;
 
             uint256 childLocation = _locationInBlock(
                 data,
@@ -155,14 +155,14 @@ library AbiDecoder {
             );
 
             if (childLocation == type(uint256).max) {
-                payload.overflown = true;
+                payload.overflow = true;
                 return;
             }
 
             _walk(data, childLocation, childLayout, childPayload);
 
-            if (childPayload.overflown) {
-                payload.overflown = true;
+            if (childPayload.overflow) {
+                payload.overflow = true;
                 return;
             }
 
@@ -185,7 +185,7 @@ library AbiDecoder {
      * @param layout   Type tree node with variant children.
      * @param payload  Output: marked as variant, with one child per interpretation.
      *
-     * @notice Sets overflown=false if at least one interpretation succeeds.
+     * @notice Sets overflow=false if at least one interpretation succeeds.
      */
     function _variant(
         bytes calldata data,
@@ -196,15 +196,15 @@ library AbiDecoder {
         uint256 length = layout.children.length;
 
         payload.variant = true;
-        payload.overflown = true;
+        payload.overflow = true;
         payload.children = new Payload[](length);
 
         unchecked {
             for (uint256 i; i < length; ++i) {
                 _walk(data, location, layout.children[i], payload.children[i]);
-                payload.overflown =
-                    payload.overflown &&
-                    payload.children[i].overflown;
+                payload.overflow =
+                    payload.overflow &&
+                    payload.children[i].overflow;
             }
         }
     }
@@ -250,35 +250,6 @@ library AbiDecoder {
         }
 
         return location + tailOffset;
-    }
-
-    /**
-     * @dev Checks if a type is encoded inline in HEAD or via pointer to TAIL.
-     *
-     * @param layout The type tree node to check.
-     * @return true if inline, false if pointer-based.
-     *
-     * @notice Inline: Static (always), Tuple (if all fields are inline).
-     *         Pointer: AbiEncoded, Dynamic, Array.
-     */
-    function _isInline(Layout memory layout) private pure returns (bool) {
-        Encoding encoding = layout.encoding;
-        if (encoding == Encoding.Static) {
-            return true;
-        }
-
-        if (encoding == Encoding.Tuple) {
-            uint256 length = layout.children.length;
-            for (uint256 i; i < length; ++i) {
-                if (!_isInline(layout.children[i])) {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        // Dynamic, Array, AbiEncoded
-        return false;
     }
 
     /**

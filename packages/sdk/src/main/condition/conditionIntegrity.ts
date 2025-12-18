@@ -69,7 +69,7 @@ const checkConditionIntegrityRecursive = (condition: Condition): void => {
 }
 
 const checkParamTypeIntegrity = (condition: Condition): void => {
-  const COMPATIBLE_TYPES = {
+  const COMPATIBLE_TYPES: Record<Operator, Encoding[]> = {
     [Operator.Pass]: [
       Encoding.Static,
       Encoding.Dynamic,
@@ -80,13 +80,16 @@ const checkParamTypeIntegrity = (condition: Condition): void => {
 
     [Operator.And]: [Encoding.None],
     [Operator.Or]: [Encoding.None],
-    [Operator.Nor]: [Encoding.None],
+
+    [Operator.Empty]: [Encoding.None],
 
     [Operator.Matches]: [Encoding.AbiEncoded, Encoding.Tuple, Encoding.Array],
 
     [Operator.ArraySome]: [Encoding.Array],
     [Operator.ArrayEvery]: [Encoding.Array],
-    [Operator.ArraySubset]: [Encoding.Array],
+    [Operator.ArrayTailMatches]: [Encoding.Array],
+
+    [Operator.Slice]: [Encoding.Static, Encoding.Dynamic],
 
     [Operator.EqualToAvatar]: [Encoding.Static],
     [Operator.EqualTo]: [
@@ -110,6 +113,8 @@ const checkParamTypeIntegrity = (condition: Condition): void => {
       Encoding.Array,
     ],
 
+    [Operator.WithinRatio]: [Encoding.None],
+
     [Operator.WithinAllowance]: [Encoding.Static],
 
     [Operator.EtherWithinAllowance]: [Encoding.None],
@@ -129,13 +134,17 @@ const checkParamTypeIntegrity = (condition: Condition): void => {
 }
 
 const checkCompValueIntegrity = (condition: Condition): void => {
-  if (condition.operator >= Operator.EqualTo && !condition.compValue) {
+  const requiresCompValue =
+    condition.operator >= Operator.EqualTo ||
+    condition.operator === Operator.Slice
+
+  if (requiresCompValue && !condition.compValue) {
     throw new Error(
       `\`${Operator[condition.operator]}\` condition must have a compValue`
     )
   }
 
-  if (condition.operator < Operator.EqualTo && condition.compValue) {
+  if (!requiresCompValue && condition.compValue) {
     throw new Error(
       `\`${Operator[condition.operator]}\` condition cannot have a compValue`
     )
@@ -173,7 +182,7 @@ const checkChildrenIntegrity = (condition: Condition): void => {
 
   if (
     condition.operator === Operator.Matches ||
-    condition.operator === Operator.ArraySubset
+    condition.operator === Operator.ArrayTailMatches
   ) {
     if (!condition.children || condition.children.length === 0) {
       throw new Error(
@@ -200,8 +209,7 @@ const checkChildrenIntegrity = (condition: Condition): void => {
 
   if (
     condition.operator === Operator.And ||
-    condition.operator === Operator.Or ||
-    condition.operator === Operator.Nor
+    condition.operator === Operator.Or
   ) {
     if (!condition.children || condition.children.length === 0) {
       throw new Error(

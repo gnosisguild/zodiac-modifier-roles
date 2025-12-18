@@ -23,12 +23,6 @@ const AND = (...children: Condition[]): Condition => ({
   children,
 })
 
-const NOR = (...children: Condition[]): Condition => ({
-  paramType: Encoding.None,
-  operator: Operator.Nor,
-  children,
-})
-
 const MATCHES = (paramType: Encoding, ...children: Condition[]): Condition => ({
   paramType,
   operator: Operator.Matches,
@@ -587,26 +581,6 @@ describe("subtractCondition", () => {
           { paramType: Encoding.Static, operator: Operator.Pass }
         )
       )
-    })
-  })
-
-  describe("NOR operator", () => {
-    it("NOR(A, B) - A = NOR(A, B) (can't subtract part)", () => {
-      const a = COMP(1)
-      const b = COMP(2)
-      const condition = NOR(a, b)
-
-      const result = subtractCondition(condition, a)
-
-      expect(result).toEqual(condition)
-    })
-
-    it("NOR(A, B) - NOR(A, B) = undefined", () => {
-      const condition = NOR(COMP(1), COMP(2))
-
-      const result = subtractCondition(condition, condition)
-
-      expect(result).toBeUndefined()
     })
   })
 
