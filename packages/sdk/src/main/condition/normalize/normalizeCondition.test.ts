@@ -120,20 +120,6 @@ suite("normalizeCondition()", () => {
     ).to.deep.equal(DUMMY_COMP(0))
   })
 
-  it("does not prune single-child NORs", () => {
-    expect(
-      normalizeCondition({
-        paramType: Encoding.None,
-        operator: Operator.Nor,
-        children: [DUMMY_COMP(0)],
-      })
-    ).to.deep.equal({
-      paramType: Encoding.None,
-      operator: Operator.Nor,
-      children: [DUMMY_COMP(0)],
-    })
-  })
-
   it("prunes ANDs that become single child due to equal branch pruning", () => {
     expect(
       normalizeCondition({

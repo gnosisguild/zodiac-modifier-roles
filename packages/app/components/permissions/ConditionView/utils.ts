@@ -28,4 +28,4 @@ export const isLogicalOperator = (operator: Operator) =>
   operator >= Operator.And && operator <= Operator.Or
 
 export const isArrayOperator = (operator: Operator) =>
-  operator == Operator.ArrayEvery
+  operator >= Operator.ArrayEvery && operator <= Operator.ArrayTailMatches

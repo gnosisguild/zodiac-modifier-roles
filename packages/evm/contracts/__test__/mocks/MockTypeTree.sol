@@ -4,10 +4,17 @@ pragma solidity >=0.8.17 <0.9.0;
 import "../../core/serialize/TypeTree.sol";
 
 contract MockTypeTree {
+    struct FlatLayoutForTest {
+        uint256 parent;
+        Encoding encoding;
+        uint256 leadingBytes;
+        bool inlined;
+    }
+
     function inspect(
         ConditionFlat[] memory conditions
-    ) public pure returns (FlatNode[] memory result) {
-        return flattenTree(TypeTree.inspect(conditions, 0));
+    ) public pure returns (FlatLayoutForTest[] memory) {
+        return _flattenLayout(TypeTree.inspect(conditions, 0));
     }
 
     function id(
@@ -23,71 +30,52 @@ contract MockTypeTree {
         return TypeTree.id(conditions, index);
     }
 
-    // Flat structure with parent reference
-    struct FlatNode {
-        uint256 parent;
-        Encoding encoding;
-    }
-
-    // Queue item for BFS
-    struct QueueItem {
-        uint256 parent;
-        Layout node;
-    }
-
-    function flattenTree(
+    function _flattenLayout(
         Layout memory root
-    ) internal pure returns (FlatNode[] memory result) {
-        // Count nodes first to allocate array
-        uint256 totalNodes = countNodes(root);
-        if (totalNodes == 0) {
-            return result;
-        }
+    ) internal pure returns (FlatLayoutForTest[] memory) {
+        uint256 total = _countNodes(root);
+        FlatLayoutForTest[] memory result = new FlatLayoutForTest[](total);
 
-        result = new FlatNode[](totalNodes);
+        Layout[] memory queue = new Layout[](total);
+        uint256[] memory parents = new uint256[](total);
 
-        // Manual queue implementation for BFS
-        QueueItem[] memory queue = new QueueItem[](totalNodes);
-        uint256 queueStart = 0;
-        uint256 queueEnd = 0;
-        uint256 resultIndex = 0;
+        queue[0] = root;
+        parents[0] = 0;
 
-        // Add root to queue
-        queue[queueEnd++] = QueueItem({parent: 0, node: root});
+        uint256 head = 0;
+        uint256 tail = 1;
+        uint256 current = 0;
 
-        // Process queue (BFS)
-        while (queueStart < queueEnd) {
-            QueueItem memory current = queue[queueStart++];
+        while (head < tail) {
+            Layout memory node = queue[head];
+            uint256 parent = parents[head];
+            head++;
 
-            // Add current node to result
-            result[resultIndex] = FlatNode({
-                encoding: current.node.encoding,
-                parent: current.parent
+            result[current] = FlatLayoutForTest({
+                parent: parent,
+                encoding: node.encoding,
+                leadingBytes: node.leadingBytes,
+                inlined: node.inlined
             });
 
-            // Add children to queue
-            uint256 currentNodeIndex = resultIndex;
-            for (uint256 i = 0; i < current.node.children.length; i++) {
-                queue[queueEnd++] = QueueItem({
-                    node: current.node.children[i],
-                    parent: currentNodeIndex
-                });
+            for (uint256 i = 0; i < node.children.length; ++i) {
+                queue[tail] = node.children[i];
+                parents[tail] = current;
+                tail++;
             }
 
-            resultIndex++;
+            current++;
         }
 
         return result;
     }
 
-    // Recursive helper to count nodes
-    function countNodes(Layout memory tree) private pure returns (uint256) {
-        uint256 count;
-
-        for (uint256 i = 0; i < tree.children.length; i++) {
-            count += countNodes(tree.children[i]);
+    function _countNodes(
+        Layout memory node
+    ) private pure returns (uint256 count) {
+        count = 1;
+        for (uint256 i = 0; i < node.children.length; ++i) {
+            count += _countNodes(node.children[i]);
         }
-
-        return count + 1;
     }
 }

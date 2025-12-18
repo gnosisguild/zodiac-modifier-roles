@@ -1161,13 +1161,687 @@ describe("Integrity", () => {
         children: [
           {
             paramType: Encoding.Static,
-            operator: Operator._Placeholder09, // Unsupported
+            operator: Operator._Placeholder10, // Unsupported
           },
         ],
       });
       await expect(enforce(conditions))
         .to.be.revertedWithCustomError(mock, "UnsupportedOperator")
         .withArgs(1);
+    });
+
+    describe("Slice Operator", () => {
+      // Helper to encode Slice compValue: 2 bytes start + 1 byte size
+      const encodeSliceCompValue = (start: number, size: number) =>
+        solidityPacked(["uint16", "uint8"], [start, size]);
+
+      it("should revert if Slice paramType is not Static or Dynamic", async () => {
+        const { mock, enforce } = await loadFixture(setup);
+
+        // Tuple paramType
+        await expect(
+          enforce(
+            flattenCondition({
+              paramType: Encoding.AbiEncoded,
+              children: [
+                {
+                  paramType: Encoding.Tuple, // Invalid - should be Static or Dynamic
+                  operator: Operator.Slice,
+                  compValue: encodeSliceCompValue(0, 4),
+                  children: [
+                    { paramType: Encoding.Static, operator: Operator.Pass },
+                  ],
+                },
+              ],
+            }),
+          ),
+        )
+          .to.be.revertedWithCustomError(mock, "UnsuitableParameterType")
+          .withArgs(1);
+
+        // Array paramType
+        await expect(
+          enforce(
+            flattenCondition({
+              paramType: Encoding.AbiEncoded,
+              children: [
+                {
+                  paramType: Encoding.Array, // Invalid - should be Static or Dynamic
+                  operator: Operator.Slice,
+                  compValue: encodeSliceCompValue(0, 4),
+                  children: [
+                    { paramType: Encoding.Static, operator: Operator.Pass },
+                  ],
+                },
+              ],
+            }),
+          ),
+        )
+          .to.be.revertedWithCustomError(mock, "UnsuitableParameterType")
+          .withArgs(1);
+
+        // None paramType
+        await expect(
+          enforce(
+            flattenCondition({
+              paramType: Encoding.AbiEncoded,
+              children: [
+                {
+                  paramType: Encoding.None, // Invalid - should be Static or Dynamic
+                  operator: Operator.Slice,
+                  compValue: encodeSliceCompValue(0, 4),
+                },
+              ],
+            }),
+          ),
+        )
+          .to.be.revertedWithCustomError(mock, "UnsuitableParameterType")
+          .withArgs(1);
+      });
+
+      it("should pass with Static paramType", async () => {
+        const { enforce } = await loadFixture(setup);
+
+        // 8 bytes from the beginning
+        await expect(
+          enforce(
+            flattenCondition({
+              paramType: Encoding.AbiEncoded,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.Slice,
+                  compValue: encodeSliceCompValue(0, 8),
+                  children: [
+                    {
+                      paramType: Encoding.Static,
+                      operator: Operator.GreaterThan,
+                      compValue: defaultAbiCoder.encode(["uint256"], [0]),
+                    },
+                  ],
+                },
+              ],
+            }),
+          ),
+        ).to.not.be.reverted;
+
+        // 13 bytes from the middle (offset 10)
+        await expect(
+          enforce(
+            flattenCondition({
+              paramType: Encoding.AbiEncoded,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.Slice,
+                  compValue: encodeSliceCompValue(10, 13),
+                  children: [
+                    {
+                      paramType: Encoding.Static,
+                      operator: Operator.GreaterThan,
+                      compValue: defaultAbiCoder.encode(["uint256"], [0]),
+                    },
+                  ],
+                },
+              ],
+            }),
+          ),
+        ).to.not.be.reverted;
+
+        // 9 bytes from the end (offset 23, size 9 = bytes 23-31)
+        await expect(
+          enforce(
+            flattenCondition({
+              paramType: Encoding.AbiEncoded,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.Slice,
+                  compValue: encodeSliceCompValue(23, 9),
+                  children: [
+                    {
+                      paramType: Encoding.Static,
+                      operator: Operator.GreaterThan,
+                      compValue: defaultAbiCoder.encode(["uint256"], [0]),
+                    },
+                  ],
+                },
+              ],
+            }),
+          ),
+        ).to.not.be.reverted;
+      });
+
+      it("should revert if Slice compValue is not 3 bytes", async () => {
+        const { mock, enforce } = await loadFixture(setup);
+
+        // Empty compValue
+        await expect(
+          enforce(
+            flattenCondition({
+              paramType: Encoding.AbiEncoded,
+              children: [
+                {
+                  paramType: Encoding.Dynamic,
+                  operator: Operator.Slice,
+                  compValue: "0x", // Invalid - should be 3 bytes
+                },
+              ],
+            }),
+          ),
+        )
+          .to.be.revertedWithCustomError(mock, "UnsuitableCompValue")
+          .withArgs(1);
+
+        // 2 bytes (missing size)
+        await expect(
+          enforce(
+            flattenCondition({
+              paramType: Encoding.AbiEncoded,
+              children: [
+                {
+                  paramType: Encoding.Dynamic,
+                  operator: Operator.Slice,
+                  compValue: "0x0000", // Invalid - only 2 bytes
+                },
+              ],
+            }),
+          ),
+        )
+          .to.be.revertedWithCustomError(mock, "UnsuitableCompValue")
+          .withArgs(1);
+
+        // 4 bytes (too many)
+        await expect(
+          enforce(
+            flattenCondition({
+              paramType: Encoding.AbiEncoded,
+              children: [
+                {
+                  paramType: Encoding.Dynamic,
+                  operator: Operator.Slice,
+                  compValue: "0x00000004", // Invalid - 4 bytes
+                },
+              ],
+            }),
+          ),
+        )
+          .to.be.revertedWithCustomError(mock, "UnsuitableCompValue")
+          .withArgs(1);
+      });
+
+      it("should revert if Slice size is 0", async () => {
+        const { mock, enforce } = await loadFixture(setup);
+        await expect(
+          enforce(
+            flattenCondition({
+              paramType: Encoding.AbiEncoded,
+              children: [
+                {
+                  paramType: Encoding.Dynamic,
+                  operator: Operator.Slice,
+                  compValue: encodeSliceCompValue(0, 0), // Invalid - size 0
+                },
+              ],
+            }),
+          ),
+        )
+          .to.be.revertedWithCustomError(mock, "UnsuitableCompValue")
+          .withArgs(1);
+      });
+
+      it("should revert if Slice size exceeds 32", async () => {
+        const { mock, enforce } = await loadFixture(setup);
+        await expect(
+          enforce(
+            flattenCondition({
+              paramType: Encoding.AbiEncoded,
+              children: [
+                {
+                  paramType: Encoding.Dynamic,
+                  operator: Operator.Slice,
+                  compValue: encodeSliceCompValue(0, 33), // Invalid - size > 32
+                },
+              ],
+            }),
+          ),
+        )
+          .to.be.revertedWithCustomError(mock, "UnsuitableCompValue")
+          .withArgs(1);
+      });
+
+      it("should revert if Slice has more than one child", async () => {
+        const { mock, enforce } = await loadFixture(setup);
+        await expect(
+          enforce(
+            flattenCondition({
+              paramType: Encoding.AbiEncoded,
+              children: [
+                {
+                  paramType: Encoding.Dynamic,
+                  operator: Operator.Slice,
+                  compValue: encodeSliceCompValue(0, 4),
+                  children: [
+                    {
+                      paramType: Encoding.Static,
+                      operator: Operator.GreaterThan,
+                      compValue: defaultAbiCoder.encode(["uint256"], [100]),
+                    },
+                    {
+                      paramType: Encoding.Static,
+                      operator: Operator.LessThan,
+                      compValue: defaultAbiCoder.encode(["uint256"], [200]),
+                    },
+                  ],
+                },
+              ],
+            }),
+          ),
+        )
+          .to.be.revertedWithCustomError(mock, "UnsuitableChildCount")
+          .withArgs(1);
+      });
+
+      it("should revert if Slice child does not resolve to Static", async () => {
+        const { mock, enforce } = await loadFixture(setup);
+
+        // Child is Dynamic
+        await expect(
+          enforce(
+            flattenCondition({
+              paramType: Encoding.AbiEncoded,
+              children: [
+                {
+                  paramType: Encoding.Dynamic,
+                  operator: Operator.Slice,
+                  compValue: encodeSliceCompValue(0, 4),
+                  children: [
+                    {
+                      paramType: Encoding.Dynamic,
+                      operator: Operator.Pass,
+                    },
+                  ],
+                },
+              ],
+            }),
+          ),
+        )
+          .to.be.revertedWithCustomError(mock, "SliceChildNotStatic")
+          .withArgs(1);
+
+        // Child is Tuple
+        await expect(
+          enforce(
+            flattenCondition({
+              paramType: Encoding.AbiEncoded,
+              children: [
+                {
+                  paramType: Encoding.Dynamic,
+                  operator: Operator.Slice,
+                  compValue: encodeSliceCompValue(0, 32),
+                  children: [
+                    {
+                      paramType: Encoding.Tuple,
+                      operator: Operator.Pass,
+                      children: [
+                        { paramType: Encoding.Static, operator: Operator.Pass },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            }),
+          ),
+        )
+          .to.be.revertedWithCustomError(mock, "SliceChildNotStatic")
+          .withArgs(1);
+      });
+
+      it("should revert if Slice has no children", async () => {
+        const { mock, enforce } = await loadFixture(setup);
+        await expect(
+          enforce(
+            flattenCondition({
+              paramType: Encoding.AbiEncoded,
+              children: [
+                {
+                  paramType: Encoding.Dynamic,
+                  operator: Operator.Slice,
+                  compValue: encodeSliceCompValue(0, 20),
+                },
+              ],
+            }),
+          ),
+        )
+          .to.be.revertedWithCustomError(mock, "SliceChildNotStatic")
+          .withArgs(1);
+      });
+
+      it("should pass with valid Slice configuration (child resolves to Static)", async () => {
+        const { enforce } = await loadFixture(setup);
+
+        // Direct comparison operator with Static paramType
+        await expect(
+          enforce(
+            flattenCondition({
+              paramType: Encoding.AbiEncoded,
+              children: [
+                {
+                  paramType: Encoding.Dynamic,
+                  operator: Operator.Slice,
+                  compValue: encodeSliceCompValue(0, 4),
+                  children: [
+                    {
+                      paramType: Encoding.Static,
+                      operator: Operator.GreaterThan,
+                      compValue: defaultAbiCoder.encode(["uint256"], [100]),
+                    },
+                  ],
+                },
+              ],
+            }),
+          ),
+        ).to.not.be.reverted;
+
+        // And with multiple Static children (resolves to Static)
+        await expect(
+          enforce(
+            flattenCondition({
+              paramType: Encoding.AbiEncoded,
+              children: [
+                {
+                  paramType: Encoding.Dynamic,
+                  operator: Operator.Slice,
+                  compValue: encodeSliceCompValue(0, 4),
+                  children: [
+                    {
+                      paramType: Encoding.None,
+                      operator: Operator.And,
+                      children: [
+                        {
+                          paramType: Encoding.Static,
+                          operator: Operator.GreaterThan,
+                          compValue: defaultAbiCoder.encode(["uint256"], [10]),
+                        },
+                        {
+                          paramType: Encoding.Static,
+                          operator: Operator.LessThan,
+                          compValue: defaultAbiCoder.encode(["uint256"], [100]),
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            }),
+          ),
+        ).to.not.be.reverted;
+      });
+
+      it("should pass with Slice size at boundaries (1 and 32)", async () => {
+        const { enforce } = await loadFixture(setup);
+
+        // Size 1
+        await expect(
+          enforce(
+            flattenCondition({
+              paramType: Encoding.AbiEncoded,
+              children: [
+                {
+                  paramType: Encoding.Dynamic,
+                  operator: Operator.Slice,
+                  compValue: encodeSliceCompValue(0, 1),
+                  children: [
+                    {
+                      paramType: Encoding.Static,
+                      operator: Operator.GreaterThan,
+                      compValue: defaultAbiCoder.encode(["uint256"], [0]),
+                    },
+                  ],
+                },
+              ],
+            }),
+          ),
+        ).to.not.be.reverted;
+
+        // Size 32
+        await expect(
+          enforce(
+            flattenCondition({
+              paramType: Encoding.AbiEncoded,
+              children: [
+                {
+                  paramType: Encoding.Dynamic,
+                  operator: Operator.Slice,
+                  compValue: encodeSliceCompValue(0, 32),
+                  children: [
+                    {
+                      paramType: Encoding.Static,
+                      operator: Operator.GreaterThan,
+                      compValue: defaultAbiCoder.encode(["uint256"], [0]),
+                    },
+                  ],
+                },
+              ],
+            }),
+          ),
+        ).to.not.be.reverted;
+      });
+
+      it("should pass with all comparison operators under Slice", async () => {
+        const { enforce } = await loadFixture(setup);
+
+        // GreaterThan
+        await expect(
+          enforce(
+            flattenCondition({
+              paramType: Encoding.AbiEncoded,
+              children: [
+                {
+                  paramType: Encoding.Dynamic,
+                  operator: Operator.Slice,
+                  compValue: encodeSliceCompValue(0, 8),
+                  children: [
+                    {
+                      paramType: Encoding.Static,
+                      operator: Operator.GreaterThan,
+                      compValue: defaultAbiCoder.encode(["uint256"], [0]),
+                    },
+                  ],
+                },
+              ],
+            }),
+          ),
+        ).to.not.be.reverted;
+
+        // LessThan
+        await expect(
+          enforce(
+            flattenCondition({
+              paramType: Encoding.AbiEncoded,
+              children: [
+                {
+                  paramType: Encoding.Dynamic,
+                  operator: Operator.Slice,
+                  compValue: encodeSliceCompValue(4, 4),
+                  children: [
+                    {
+                      paramType: Encoding.Static,
+                      operator: Operator.LessThan,
+                      compValue: defaultAbiCoder.encode(["uint256"], [1000]),
+                    },
+                  ],
+                },
+              ],
+            }),
+          ),
+        ).to.not.be.reverted;
+
+        // SignedIntGreaterThan
+        await expect(
+          enforce(
+            flattenCondition({
+              paramType: Encoding.AbiEncoded,
+              children: [
+                {
+                  paramType: Encoding.Dynamic,
+                  operator: Operator.Slice,
+                  compValue: encodeSliceCompValue(0, 32),
+                  children: [
+                    {
+                      paramType: Encoding.Static,
+                      operator: Operator.SignedIntGreaterThan,
+                      compValue: defaultAbiCoder.encode(["int256"], [-100]),
+                    },
+                  ],
+                },
+              ],
+            }),
+          ),
+        ).to.not.be.reverted;
+
+        // SignedIntLessThan
+        await expect(
+          enforce(
+            flattenCondition({
+              paramType: Encoding.AbiEncoded,
+              children: [
+                {
+                  paramType: Encoding.Dynamic,
+                  operator: Operator.Slice,
+                  compValue: encodeSliceCompValue(0, 16),
+                  children: [
+                    {
+                      paramType: Encoding.Static,
+                      operator: Operator.SignedIntLessThan,
+                      compValue: defaultAbiCoder.encode(["int256"], [100]),
+                    },
+                  ],
+                },
+              ],
+            }),
+          ),
+        ).to.not.be.reverted;
+      });
+
+      it("should pass with Slice child being And/Or with Static comparison operators", async () => {
+        const { enforce } = await loadFixture(setup);
+
+        // And with Static children
+        await expect(
+          enforce(
+            flattenCondition({
+              paramType: Encoding.AbiEncoded,
+              children: [
+                {
+                  paramType: Encoding.Dynamic,
+                  operator: Operator.Slice,
+                  compValue: encodeSliceCompValue(0, 4),
+                  children: [
+                    {
+                      paramType: Encoding.None,
+                      operator: Operator.And,
+                      children: [
+                        {
+                          paramType: Encoding.Static,
+                          operator: Operator.GreaterThan,
+                          compValue: defaultAbiCoder.encode(["uint256"], [10]),
+                        },
+                        {
+                          paramType: Encoding.Static,
+                          operator: Operator.LessThan,
+                          compValue: defaultAbiCoder.encode(["uint256"], [100]),
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            }),
+          ),
+        ).to.not.be.reverted;
+
+        // Or with Static children
+        await expect(
+          enforce(
+            flattenCondition({
+              paramType: Encoding.AbiEncoded,
+              children: [
+                {
+                  paramType: Encoding.Dynamic,
+                  operator: Operator.Slice,
+                  compValue: encodeSliceCompValue(0, 4),
+                  children: [
+                    {
+                      paramType: Encoding.None,
+                      operator: Operator.Or,
+                      children: [
+                        {
+                          paramType: Encoding.Static,
+                          operator: Operator.GreaterThan,
+                          compValue: defaultAbiCoder.encode(["uint256"], [100]),
+                        },
+                        {
+                          paramType: Encoding.Static,
+                          operator: Operator.LessThan,
+                          compValue: defaultAbiCoder.encode(["uint256"], [10]),
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            }),
+          ),
+        ).to.not.be.reverted;
+      });
+
+      it("should revert if comparison operator has None paramType", async () => {
+        const { mock, enforce } = await loadFixture(setup);
+
+        // GreaterThan with None - not allowed (must use Static)
+        await expect(
+          enforce(
+            flattenCondition({
+              paramType: Encoding.AbiEncoded,
+              children: [
+                {
+                  paramType: Encoding.None,
+                  operator: Operator.GreaterThan,
+                  compValue: defaultAbiCoder.encode(["uint256"], [100]),
+                },
+              ],
+            }),
+          ),
+        )
+          .to.be.revertedWithCustomError(mock, "UnsuitableParameterType")
+          .withArgs(1);
+
+        // LessThan with None - not allowed
+        await expect(
+          enforce(
+            flattenCondition({
+              paramType: Encoding.AbiEncoded,
+              children: [
+                {
+                  paramType: Encoding.None,
+                  operator: Operator.And,
+                  children: [
+                    { paramType: Encoding.Static, operator: Operator.Pass },
+                    {
+                      paramType: Encoding.None,
+                      operator: Operator.LessThan,
+                      compValue: defaultAbiCoder.encode(["uint256"], [100]),
+                    },
+                  ],
+                },
+              ],
+            }),
+          ),
+        )
+          .to.be.revertedWithCustomError(mock, "UnsuitableParameterType")
+          .withArgs(3);
+      });
     });
   });
 

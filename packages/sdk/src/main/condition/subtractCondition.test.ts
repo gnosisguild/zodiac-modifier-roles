@@ -23,12 +23,6 @@ const AND = (...children: Condition[]): Condition => ({
   children,
 })
 
-const NOR = (...children: Condition[]): Condition => ({
-  paramType: Encoding.None,
-  operator: Operator.Nor,
-  children,
-})
-
 const MATCHES = (paramType: Encoding, ...children: Condition[]): Condition => ({
   paramType,
   operator: Operator.Matches,

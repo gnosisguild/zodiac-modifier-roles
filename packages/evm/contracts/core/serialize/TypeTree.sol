@@ -70,6 +70,8 @@ library TypeTree {
                 ? 4
                 : uint16(bytes2(compValue));
         }
+
+        node.inlined = _isInlined(conditions, index);
     }
 
     /**
@@ -80,6 +82,15 @@ library TypeTree {
         uint256 index
     ) internal pure returns (bytes32) {
         return _hashTree(inspect(conditions, index));
+    }
+
+    function _isLogical(
+        ConditionFlat[] memory conditions,
+        uint256 index
+    ) private pure returns (bool) {
+        return
+            conditions[index].operator == Operator.And ||
+            conditions[index].operator == Operator.Or;
     }
 
     function _isVariant(
@@ -107,13 +118,25 @@ library TypeTree {
         return false;
     }
 
-    function _isLogical(
+    function _isInlined(
         ConditionFlat[] memory conditions,
         uint256 index
     ) private pure returns (bool) {
-        return
-            conditions[index].operator == Operator.And ||
-            conditions[index].operator == Operator.Or;
+        Encoding encoding = conditions[index].paramType;
+        if (
+            encoding == Encoding.Dynamic ||
+            encoding == Encoding.Array ||
+            encoding == Encoding.AbiEncoded
+        ) {
+            return false;
+        }
+
+        for (uint256 i = index + 1; i < conditions.length; ++i) {
+            if (conditions[i].parent == index && !_isInlined(conditions, i)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     function _hashTree(Layout memory tree) private pure returns (bytes32) {
