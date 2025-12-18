@@ -17,9 +17,10 @@ describe("TypeTree", () => {
         paramType: Encoding.Static,
         operator: Operator.Pass,
       });
-      const output = bfsToTree(await typeTree.inspect(input));
+      const output = toTree(await typeTree.inspect(input));
       expect(output).to.deep.equal({
         encoding: Encoding.Static,
+        inlined: true,
         children: [],
       });
     });
@@ -30,9 +31,10 @@ describe("TypeTree", () => {
         paramType: Encoding.Dynamic,
         operator: Operator.Pass,
       });
-      const output = bfsToTree(await typeTree.inspect(input));
+      const output = toTree(await typeTree.inspect(input));
       expect(output).to.deep.equal({
         encoding: Encoding.Dynamic,
+        inlined: false,
         children: [],
       });
     });
@@ -47,12 +49,13 @@ describe("TypeTree", () => {
           { paramType: Encoding.Dynamic, operator: Operator.Pass },
         ],
       });
-      const output = bfsToTree(await typeTree.inspect(input));
+      const output = toTree(await typeTree.inspect(input));
       expect(output).to.deep.equal({
         encoding: Encoding.Tuple,
+        inlined: false,
         children: [
-          { encoding: Encoding.Static, children: [] },
-          { encoding: Encoding.Dynamic, children: [] },
+          { encoding: Encoding.Static, inlined: true, children: [] },
+          { encoding: Encoding.Dynamic, inlined: false, children: [] },
         ],
       });
     });
@@ -64,10 +67,11 @@ describe("TypeTree", () => {
         operator: Operator.Pass,
         children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
       });
-      const output = bfsToTree(await typeTree.inspect(input));
+      const output = toTree(await typeTree.inspect(input));
       expect(output).to.deep.equal({
         encoding: Encoding.Array,
-        children: [{ encoding: Encoding.Static, children: [] }],
+        inlined: false,
+        children: [{ encoding: Encoding.Static, inlined: true, children: [] }],
       });
     });
 
@@ -78,10 +82,47 @@ describe("TypeTree", () => {
         operator: Operator.Matches,
         children: [{ paramType: Encoding.Dynamic, operator: Operator.Pass }],
       });
-      const output = bfsToTree(await typeTree.inspect(input));
+      const output = toTree(await typeTree.inspect(input));
       expect(output).to.deep.equal({
         encoding: Encoding.AbiEncoded,
-        children: [{ encoding: Encoding.Dynamic, children: [] }],
+        inlined: false,
+        children: [
+          { encoding: Encoding.Dynamic, inlined: false, children: [] },
+        ],
+      });
+    });
+  });
+
+  describe("inspect - Slice", () => {
+    it("Slice wraps Static", async () => {
+      const { typeTree } = await loadFixture(setup);
+      const input = flattenCondition({
+        paramType: Encoding.Static,
+        operator: Operator.Slice,
+        compValue: "0x000020", // shift=0, size=32
+        children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+      });
+      const output = toTree(await typeTree.inspect(input));
+      expect(output).to.deep.equal({
+        encoding: Encoding.Static,
+        inlined: true,
+        children: [{ encoding: Encoding.Static, inlined: true, children: [] }],
+      });
+    });
+
+    it("Slice wraps Dynamic", async () => {
+      const { typeTree } = await loadFixture(setup);
+      const input = flattenCondition({
+        paramType: Encoding.Dynamic,
+        operator: Operator.Slice,
+        compValue: "0x000020", // shift=0, size=32
+        children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+      });
+      const output = toTree(await typeTree.inspect(input));
+      expect(output).to.deep.equal({
+        encoding: Encoding.Dynamic,
+        inlined: false,
+        children: [{ encoding: Encoding.Static, inlined: true, children: [] }],
       });
     });
   });
@@ -97,9 +138,10 @@ describe("TypeTree", () => {
           { paramType: Encoding.Static, operator: Operator.Pass },
         ],
       });
-      const output = bfsToTree(await typeTree.inspect(input));
+      const output = toTree(await typeTree.inspect(input));
       expect(output).to.deep.equal({
         encoding: Encoding.Static,
+        inlined: true,
         children: [],
       });
     });
@@ -114,9 +156,10 @@ describe("TypeTree", () => {
           { paramType: Encoding.Dynamic, operator: Operator.Pass },
         ],
       });
-      const output = bfsToTree(await typeTree.inspect(input));
+      const output = toTree(await typeTree.inspect(input));
       expect(output).to.deep.equal({
         encoding: Encoding.Dynamic,
+        inlined: false,
         children: [],
       });
     });
@@ -128,9 +171,10 @@ describe("TypeTree", () => {
         operator: Operator.And,
         children: [{ paramType: Encoding.Dynamic, operator: Operator.Pass }],
       });
-      const output = bfsToTree(await typeTree.inspect(input));
+      const output = toTree(await typeTree.inspect(input));
       expect(output).to.deep.equal({
         encoding: Encoding.Dynamic,
+        inlined: false,
         children: [],
       });
     });
@@ -142,9 +186,10 @@ describe("TypeTree", () => {
         operator: Operator.Or,
         children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
       });
-      const output = bfsToTree(await typeTree.inspect(input));
+      const output = toTree(await typeTree.inspect(input));
       expect(output).to.deep.equal({
         encoding: Encoding.Static,
+        inlined: true,
         children: [],
       });
     });
@@ -161,12 +206,13 @@ describe("TypeTree", () => {
           { paramType: Encoding.Dynamic, operator: Operator.Pass },
         ],
       });
-      const output = bfsToTree(await typeTree.inspect(input));
+      const output = toTree(await typeTree.inspect(input));
       expect(output).to.deep.equal({
         encoding: Encoding.Dynamic,
+        inlined: false,
         children: [
-          { encoding: Encoding.Static, children: [] },
-          { encoding: Encoding.Dynamic, children: [] },
+          { encoding: Encoding.Static, inlined: true, children: [] },
+          { encoding: Encoding.Dynamic, inlined: false, children: [] },
         ],
       });
     });
@@ -185,14 +231,18 @@ describe("TypeTree", () => {
           },
         ],
       });
-      const output = bfsToTree(await typeTree.inspect(input));
+      const output = toTree(await typeTree.inspect(input));
       expect(output).to.deep.equal({
         encoding: Encoding.Dynamic,
+        inlined: false,
         children: [
-          { encoding: Encoding.Dynamic, children: [] },
+          { encoding: Encoding.Dynamic, inlined: false, children: [] },
           {
             encoding: Encoding.AbiEncoded,
-            children: [{ encoding: Encoding.Static, children: [] }],
+            inlined: false,
+            children: [
+              { encoding: Encoding.Static, inlined: true, children: [] },
+            ],
           },
         ],
       });
@@ -211,10 +261,11 @@ describe("TypeTree", () => {
           { paramType: Encoding.Static, operator: Operator.Pass },
         ],
       });
-      const output = bfsToTree(await typeTree.inspect(input));
+      const output = toTree(await typeTree.inspect(input));
       expect(output).to.deep.equal({
         encoding: Encoding.Array,
-        children: [{ encoding: Encoding.Static, children: [] }],
+        inlined: false,
+        children: [{ encoding: Encoding.Static, inlined: true, children: [] }],
       });
     });
 
@@ -228,12 +279,13 @@ describe("TypeTree", () => {
           { paramType: Encoding.Dynamic, operator: Operator.Pass },
         ],
       });
-      const output = bfsToTree(await typeTree.inspect(input));
+      const output = toTree(await typeTree.inspect(input));
       expect(output).to.deep.equal({
         encoding: Encoding.Array,
+        inlined: false,
         children: [
-          { encoding: Encoding.Static, children: [] },
-          { encoding: Encoding.Dynamic, children: [] },
+          { encoding: Encoding.Static, inlined: true, children: [] },
+          { encoding: Encoding.Dynamic, inlined: false, children: [] },
         ],
       });
     });
@@ -258,17 +310,24 @@ describe("TypeTree", () => {
           },
         ],
       });
-      const output = bfsToTree(await typeTree.inspect(input));
+      const output = toTree(await typeTree.inspect(input));
       expect(output).to.deep.equal({
         encoding: Encoding.Array,
+        inlined: false,
         children: [
           {
             encoding: Encoding.Tuple,
-            children: [{ encoding: Encoding.Static, children: [] }],
+            inlined: true,
+            children: [
+              { encoding: Encoding.Static, inlined: true, children: [] },
+            ],
           },
           {
             encoding: Encoding.Tuple,
-            children: [{ encoding: Encoding.Dynamic, children: [] }],
+            inlined: false,
+            children: [
+              { encoding: Encoding.Dynamic, inlined: false, children: [] },
+            ],
           },
         ],
       });
@@ -298,7 +357,7 @@ describe("TypeTree", () => {
         ],
       });
       const out = await typeTree.inspect(input);
-      const tree = bfsToTree(out);
+      const tree = toTree(out);
       expect(tree.encoding).to.equal(Encoding.AbiEncoded);
       expect(tree.children[0].encoding).to.equal(Encoding.Tuple);
       expect(tree.children[0].children[0].encoding).to.equal(Encoding.Tuple);
@@ -329,7 +388,7 @@ describe("TypeTree", () => {
         ],
       });
       const out = await typeTree.inspect(input);
-      const tree = bfsToTree(out);
+      const tree = toTree(out);
       expect(tree.encoding).to.equal(Encoding.AbiEncoded);
       expect(tree.children[0].encoding).to.equal(Encoding.Array);
       expect(tree.children[0].children[0].encoding).to.equal(Encoding.Array);
@@ -361,7 +420,7 @@ describe("TypeTree", () => {
         ],
       });
       const out = await typeTree.inspect(input);
-      const tree = bfsToTree(out);
+      const tree = toTree(out);
       expect(tree.children[0].encoding).to.equal(Encoding.Array);
       expect(tree.children[0].children[0].encoding).to.equal(Encoding.Static);
     });
@@ -394,7 +453,7 @@ describe("TypeTree", () => {
         ],
       });
       const out = await typeTree.inspect(input);
-      const tree = bfsToTree(out);
+      const tree = toTree(out);
       expect(tree.encoding).to.equal(Encoding.AbiEncoded);
       expect(tree.children[0].encoding).to.equal(Encoding.Tuple);
       expect(tree.children[0].children[0].encoding).to.equal(Encoding.Array);
@@ -418,12 +477,13 @@ describe("TypeTree", () => {
           { paramType: Encoding.None, operator: Operator.CallWithinAllowance },
         ],
       });
-      const output = bfsToTree(await typeTree.inspect(input));
+      const output = toTree(await typeTree.inspect(input));
       expect(output).to.deep.equal({
         encoding: Encoding.AbiEncoded,
+        inlined: false,
         children: [
-          { encoding: Encoding.Static, children: [] },
-          { encoding: Encoding.Dynamic, children: [] },
+          { encoding: Encoding.Static, inlined: true, children: [] },
+          { encoding: Encoding.Dynamic, inlined: false, children: [] },
         ],
       });
     });
@@ -438,9 +498,10 @@ describe("TypeTree", () => {
           { paramType: Encoding.None, operator: Operator.CallWithinAllowance },
         ],
       });
-      const output = bfsToTree(await typeTree.inspect(input));
+      const output = toTree(await typeTree.inspect(input));
       expect(output).to.deep.equal({
         encoding: Encoding.AbiEncoded,
+        inlined: false,
         children: [],
       });
     });
@@ -479,12 +540,13 @@ describe("TypeTree", () => {
           },
         ],
       });
-      const output = bfsToTree(await typeTree.inspect(input));
+      const output = toTree(await typeTree.inspect(input));
       expect(output).to.deep.equal({
         encoding: Encoding.AbiEncoded,
+        inlined: false,
         children: [
-          { encoding: Encoding.Static, children: [] },
-          { encoding: Encoding.Dynamic, children: [] },
+          { encoding: Encoding.Static, inlined: true, children: [] },
+          { encoding: Encoding.Dynamic, inlined: false, children: [] },
         ],
       });
     });
@@ -527,29 +589,44 @@ describe("TypeTree", () => {
           },
         ],
       });
-      const output = bfsToTree(await typeTree.inspect(input));
+      const output = toTree(await typeTree.inspect(input));
       expect(output).to.deep.equal({
         encoding: Encoding.AbiEncoded,
+        inlined: false,
         children: [
           {
             encoding: Encoding.Dynamic,
+            inlined: false,
             children: [
               {
                 encoding: Encoding.AbiEncoded,
+                inlined: false,
                 children: [
                   {
                     encoding: Encoding.Dynamic,
+                    inlined: false,
                     children: [
-                      { encoding: Encoding.Dynamic, children: [] },
+                      {
+                        encoding: Encoding.Dynamic,
+                        inlined: false,
+                        children: [],
+                      },
                       {
                         encoding: Encoding.AbiEncoded,
-                        children: [{ encoding: Encoding.Static, children: [] }],
+                        inlined: false,
+                        children: [
+                          {
+                            encoding: Encoding.Static,
+                            inlined: true,
+                            children: [],
+                          },
+                        ],
                       },
                     ],
                   },
                 ],
               },
-              { encoding: Encoding.Dynamic, children: [] },
+              { encoding: Encoding.Dynamic, inlined: false, children: [] },
             ],
           },
         ],
@@ -684,19 +761,450 @@ describe("TypeTree", () => {
       );
     });
   });
+
+  describe("inlined flag", () => {
+    describe("primitives", () => {
+      it("Static is inlined", async () => {
+        const { typeTree } = await loadFixture(setup);
+        const input = flattenCondition({
+          paramType: Encoding.Static,
+          operator: Operator.Pass,
+        });
+        const [root] = await typeTree.inspect(input);
+        expect({
+          parent: root.parent,
+          encoding: root.encoding,
+          leadingBytes: root.leadingBytes,
+          inlined: root.inlined,
+        }).to.deep.equal({
+          parent: 0,
+          encoding: Encoding.Static,
+          leadingBytes: 0n,
+          inlined: true,
+        });
+      });
+
+      it("Dynamic is not inlined", async () => {
+        const { typeTree } = await loadFixture(setup);
+        const input = flattenCondition({
+          paramType: Encoding.Dynamic,
+          operator: Operator.Pass,
+        });
+        const [root] = await typeTree.inspect(input);
+        expect({
+          parent: root.parent,
+          encoding: root.encoding,
+          leadingBytes: root.leadingBytes,
+          inlined: root.inlined,
+        }).to.deep.equal({
+          parent: 0,
+          encoding: Encoding.Dynamic,
+          leadingBytes: 0n,
+          inlined: false,
+        });
+      });
+
+      it("Array is not inlined", async () => {
+        const { typeTree } = await loadFixture(setup);
+        const input = flattenCondition({
+          paramType: Encoding.Array,
+          operator: Operator.Pass,
+          children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+        });
+        const [root] = await typeTree.inspect(input);
+        expect({
+          parent: root.parent,
+          encoding: root.encoding,
+          leadingBytes: root.leadingBytes,
+          inlined: root.inlined,
+        }).to.deep.equal({
+          parent: 0,
+          encoding: Encoding.Array,
+          leadingBytes: 0n,
+          inlined: false,
+        });
+      });
+
+      it("AbiEncoded is not inlined", async () => {
+        const { typeTree } = await loadFixture(setup);
+        const input = flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+        });
+        const [root] = await typeTree.inspect(input);
+        expect({
+          parent: root.parent,
+          encoding: root.encoding,
+          leadingBytes: root.leadingBytes,
+          inlined: root.inlined,
+        }).to.deep.equal({
+          parent: 0,
+          encoding: Encoding.AbiEncoded,
+          leadingBytes: 4n,
+          inlined: false,
+        });
+      });
+    });
+
+    describe("Tuple with direct children", () => {
+      it("Tuple(Static, Static) is inlined", async () => {
+        const { typeTree } = await loadFixture(setup);
+        const input = flattenCondition({
+          paramType: Encoding.Tuple,
+          operator: Operator.Matches,
+          children: [
+            { paramType: Encoding.Static, operator: Operator.Pass },
+            { paramType: Encoding.Static, operator: Operator.Pass },
+          ],
+        });
+        const [root] = await typeTree.inspect(input);
+        expect({
+          parent: root.parent,
+          encoding: root.encoding,
+          leadingBytes: root.leadingBytes,
+          inlined: root.inlined,
+        }).to.deep.equal({
+          parent: 0,
+          encoding: Encoding.Tuple,
+          leadingBytes: 0n,
+          inlined: true,
+        });
+      });
+
+      it("Tuple(Static, Dynamic) is not inlined", async () => {
+        const { typeTree } = await loadFixture(setup);
+        const input = flattenCondition({
+          paramType: Encoding.Tuple,
+          operator: Operator.Matches,
+          children: [
+            { paramType: Encoding.Static, operator: Operator.Pass },
+            { paramType: Encoding.Dynamic, operator: Operator.Pass },
+          ],
+        });
+        const [root] = await typeTree.inspect(input);
+        expect({
+          parent: root.parent,
+          encoding: root.encoding,
+          leadingBytes: root.leadingBytes,
+          inlined: root.inlined,
+        }).to.deep.equal({
+          parent: 0,
+          encoding: Encoding.Tuple,
+          leadingBytes: 0n,
+          inlined: false,
+        });
+      });
+
+      it("Tuple(Static, Array) is not inlined", async () => {
+        const { typeTree } = await loadFixture(setup);
+        const input = flattenCondition({
+          paramType: Encoding.Tuple,
+          operator: Operator.Matches,
+          children: [
+            { paramType: Encoding.Static, operator: Operator.Pass },
+            {
+              paramType: Encoding.Array,
+              operator: Operator.Pass,
+              children: [
+                { paramType: Encoding.Static, operator: Operator.Pass },
+              ],
+            },
+          ],
+        });
+        const [root] = await typeTree.inspect(input);
+        expect({
+          parent: root.parent,
+          encoding: root.encoding,
+          leadingBytes: root.leadingBytes,
+          inlined: root.inlined,
+        }).to.deep.equal({
+          parent: 0,
+          encoding: Encoding.Tuple,
+          leadingBytes: 0n,
+          inlined: false,
+        });
+      });
+    });
+
+    describe("nested Tuples", () => {
+      it("Tuple(Tuple(Static)) is inlined", async () => {
+        const { typeTree } = await loadFixture(setup);
+        const input = flattenCondition({
+          paramType: Encoding.Tuple,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Tuple,
+              operator: Operator.Matches,
+              children: [
+                { paramType: Encoding.Static, operator: Operator.Pass },
+              ],
+            },
+          ],
+        });
+        const [root] = await typeTree.inspect(input);
+        expect({
+          parent: root.parent,
+          encoding: root.encoding,
+          leadingBytes: root.leadingBytes,
+          inlined: root.inlined,
+        }).to.deep.equal({
+          parent: 0,
+          encoding: Encoding.Tuple,
+          leadingBytes: 0n,
+          inlined: true,
+        });
+      });
+
+      it("Tuple(Tuple(Dynamic)) is not inlined - THE BUG CASE", async () => {
+        const { typeTree } = await loadFixture(setup);
+        const input = flattenCondition({
+          paramType: Encoding.Tuple,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Tuple,
+              operator: Operator.Matches,
+              children: [
+                { paramType: Encoding.Dynamic, operator: Operator.Pass },
+              ],
+            },
+          ],
+        });
+        const [root] = await typeTree.inspect(input);
+        expect({
+          parent: root.parent,
+          encoding: root.encoding,
+          leadingBytes: root.leadingBytes,
+          inlined: root.inlined,
+        }).to.deep.equal({
+          parent: 0,
+          encoding: Encoding.Tuple,
+          leadingBytes: 0n,
+          inlined: false,
+        });
+      });
+
+      it("Tuple(Tuple(Tuple(Dynamic))) is not inlined - deep nesting", async () => {
+        const { typeTree } = await loadFixture(setup);
+        const input = flattenCondition({
+          paramType: Encoding.Tuple,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Tuple,
+              operator: Operator.Matches,
+              children: [
+                {
+                  paramType: Encoding.Tuple,
+                  operator: Operator.Matches,
+                  children: [
+                    { paramType: Encoding.Dynamic, operator: Operator.Pass },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+        const [root] = await typeTree.inspect(input);
+        expect({
+          parent: root.parent,
+          encoding: root.encoding,
+          leadingBytes: root.leadingBytes,
+          inlined: root.inlined,
+        }).to.deep.equal({
+          parent: 0,
+          encoding: Encoding.Tuple,
+          leadingBytes: 0n,
+          inlined: false,
+        });
+      });
+
+      it("Tuple(Tuple(Tuple(Static))) is inlined - deep nesting all static", async () => {
+        const { typeTree } = await loadFixture(setup);
+        const input = flattenCondition({
+          paramType: Encoding.Tuple,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Tuple,
+              operator: Operator.Matches,
+              children: [
+                {
+                  paramType: Encoding.Tuple,
+                  operator: Operator.Matches,
+                  children: [
+                    { paramType: Encoding.Static, operator: Operator.Pass },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+        const [root] = await typeTree.inspect(input);
+        expect({
+          parent: root.parent,
+          encoding: root.encoding,
+          leadingBytes: root.leadingBytes,
+          inlined: root.inlined,
+        }).to.deep.equal({
+          parent: 0,
+          encoding: Encoding.Tuple,
+          leadingBytes: 0n,
+          inlined: true,
+        });
+      });
+    });
+
+    describe("mixed structures", () => {
+      it("Tuple(Static, Tuple(Static)) is inlined", async () => {
+        const { typeTree } = await loadFixture(setup);
+        const input = flattenCondition({
+          paramType: Encoding.Tuple,
+          operator: Operator.Matches,
+          children: [
+            { paramType: Encoding.Static, operator: Operator.Pass },
+            {
+              paramType: Encoding.Tuple,
+              operator: Operator.Matches,
+              children: [
+                { paramType: Encoding.Static, operator: Operator.Pass },
+              ],
+            },
+          ],
+        });
+        const [root] = await typeTree.inspect(input);
+        expect({
+          parent: root.parent,
+          encoding: root.encoding,
+          leadingBytes: root.leadingBytes,
+          inlined: root.inlined,
+        }).to.deep.equal({
+          parent: 0,
+          encoding: Encoding.Tuple,
+          leadingBytes: 0n,
+          inlined: true,
+        });
+      });
+
+      it("Tuple(Static, Tuple(Dynamic)) is not inlined", async () => {
+        const { typeTree } = await loadFixture(setup);
+        const input = flattenCondition({
+          paramType: Encoding.Tuple,
+          operator: Operator.Matches,
+          children: [
+            { paramType: Encoding.Static, operator: Operator.Pass },
+            {
+              paramType: Encoding.Tuple,
+              operator: Operator.Matches,
+              children: [
+                { paramType: Encoding.Dynamic, operator: Operator.Pass },
+              ],
+            },
+          ],
+        });
+        const [root] = await typeTree.inspect(input);
+        expect({
+          parent: root.parent,
+          encoding: root.encoding,
+          leadingBytes: root.leadingBytes,
+          inlined: root.inlined,
+        }).to.deep.equal({
+          parent: 0,
+          encoding: Encoding.Tuple,
+          leadingBytes: 0n,
+          inlined: false,
+        });
+      });
+
+      it("Tuple(Tuple(Static), Tuple(Dynamic)) is not inlined", async () => {
+        const { typeTree } = await loadFixture(setup);
+        const input = flattenCondition({
+          paramType: Encoding.Tuple,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Tuple,
+              operator: Operator.Matches,
+              children: [
+                { paramType: Encoding.Static, operator: Operator.Pass },
+              ],
+            },
+            {
+              paramType: Encoding.Tuple,
+              operator: Operator.Matches,
+              children: [
+                { paramType: Encoding.Dynamic, operator: Operator.Pass },
+              ],
+            },
+          ],
+        });
+        const [root] = await typeTree.inspect(input);
+        expect({
+          parent: root.parent,
+          encoding: root.encoding,
+          leadingBytes: root.leadingBytes,
+          inlined: root.inlined,
+        }).to.deep.equal({
+          parent: 0,
+          encoding: Encoding.Tuple,
+          leadingBytes: 0n,
+          inlined: false,
+        });
+      });
+
+      it("Tuple(Tuple(Array)) is not inlined", async () => {
+        const { typeTree } = await loadFixture(setup);
+        const input = flattenCondition({
+          paramType: Encoding.Tuple,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Tuple,
+              operator: Operator.Matches,
+              children: [
+                {
+                  paramType: Encoding.Array,
+                  operator: Operator.Pass,
+                  children: [
+                    { paramType: Encoding.Static, operator: Operator.Pass },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+        const [root] = await typeTree.inspect(input);
+        expect({
+          parent: root.parent,
+          encoding: root.encoding,
+          leadingBytes: root.leadingBytes,
+          inlined: root.inlined,
+        }).to.deep.equal({
+          parent: 0,
+          encoding: Encoding.Tuple,
+          leadingBytes: 0n,
+          inlined: false,
+        });
+      });
+    });
+  });
 });
 
 // Helper to convert BFS flat array to tree structure for complex assertions
 interface TreeNode {
   encoding: number;
+  inlined: boolean;
   children: TreeNode[];
 }
 
-function bfsToTree(
-  bfsArray: { encoding: bigint; parent: number | bigint }[],
+function toTree(
+  bfsArray: { encoding: bigint; parent: number | bigint; inlined: boolean }[],
 ): TreeNode {
   const nodes = bfsArray.map((item) => ({
     encoding: Number(item.encoding),
+    inlined: item.inlined,
     children: [] as TreeNode[],
   }));
 

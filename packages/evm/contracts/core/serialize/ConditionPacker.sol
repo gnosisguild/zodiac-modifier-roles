@@ -41,8 +41,9 @@ import "../../types/Types.sol";
  * │ Nodes (nodeCount × 3 bytes each):                                   │
  * │   Each node (24 bits = 3 bytes):                                    │
  * │     • encoding              3 bits                                  │
+ * │     • inlined               1 bit                                   │
  * │     • childCount            8 bits                                  │
- * │     • leadingBytes         13 bits                                  │
+ * │     • leadingBytes         12 bits                                  │
  * └─────────────────────────────────────────────────────────────────────┘
  *
  * NOTES:
@@ -94,23 +95,19 @@ library ConditionPacker {
         // Header (2 bytes) + nodes
         result = 2 + count * CONDITION_NODE_BYTES;
 
-        // Add space for compValues (variable length for operators >= EqualTo)
-        // Also handle AbiEncoded + Matches with trailing match bytes
+        // Add space for compValues
         for (uint256 i; i < count; ++i) {
-            if (conditions[i].operator >= Operator.EqualTo) {
-                // 2 bytes for length field
-                result += 2;
-                result += conditions[i].operator == Operator.EqualTo
-                    ? 32 // keccak256 hash is always 32 bytes
-                    : conditions[i].compValue.length;
-            } else if (
-                conditions[i].paramType == Encoding.AbiEncoded &&
-                conditions[i].compValue.length > 2
-            ) {
-                // AbiEncoded + Matches with N trailing bytes to store
-                // 2 bytes for length field + (compValue.length - 2) for data
-                result += 2;
-                result += conditions[i].compValue.length - 2;
+            if (!_hasCompValue(conditions[i])) continue;
+
+            // 2 bytes for length field
+            result += 2;
+
+            if (conditions[i].operator == Operator.EqualTo) {
+                result += 32; // keccak256 hash is always 32 bytes
+            } else if (conditions[i].paramType == Encoding.AbiEncoded) {
+                result += conditions[i].compValue.length - 2; // skip leadingBytes
+            } else {
+                result += conditions[i].compValue.length;
             }
         }
     }
@@ -133,9 +130,8 @@ library ConditionPacker {
                 i
             );
 
-            bool hasCompValue = conditions[i].operator >= Operator.EqualTo ||
-                (conditions[i].paramType == Encoding.AbiEncoded &&
-                    conditions[i].compValue.length > 2);
+            ConditionFlat memory condition = conditions[i];
+            bool hasCompValue = _hasCompValue(condition);
 
             // Pack Node
             {
@@ -166,19 +162,16 @@ library ConditionPacker {
             bytes memory compValue;
             uint256 length;
             uint256 srcOffset;
-
-            if (conditions[i].paramType == Encoding.AbiEncoded) {
-                compValue = conditions[i].compValue;
-                length = compValue.length - 2;
-                srcOffset = 2; // skip leadingBytes
-            } else if (conditions[i].operator == Operator.EqualTo) {
-                compValue = abi.encodePacked(
-                    keccak256(conditions[i].compValue)
-                );
+            if (condition.operator == Operator.EqualTo) {
+                compValue = abi.encodePacked(keccak256(condition.compValue));
                 length = 32;
                 srcOffset = 0;
+            } else if (condition.paramType == Encoding.AbiEncoded) {
+                compValue = condition.compValue;
+                length = compValue.length - 2;
+                srcOffset = 2; // skip leadingBytes
             } else {
-                compValue = conditions[i].compValue;
+                compValue = condition.compValue;
                 length = compValue.length;
                 srcOffset = 0;
             }
@@ -194,6 +187,16 @@ library ConditionPacker {
             tailOffset += length;
         }
         return tailOffset - startOffset;
+    }
+
+    function _hasCompValue(
+        ConditionFlat memory condition
+    ) private pure returns (bool) {
+        return
+            condition.operator >= Operator.EqualTo ||
+            condition.operator == Operator.Slice ||
+            (condition.paramType == Encoding.AbiEncoded &&
+                condition.compValue.length > 2);
     }
 
     function _childBounds(
@@ -272,8 +275,9 @@ library ConditionPacker {
         // Pack all nodes (3 bytes each)
         for (uint256 i; i < nodes.length; ++i) {
             uint24 packed = (uint24(nodes[i].encoding) << 21) |
-                (uint24(nodes[i].childCount) << 13) |
-                uint24(uint16(nodes[i].leadingBytes));
+                (nodes[i].inlined ? uint24(1 << 20) : uint24(0)) |
+                (uint24(nodes[i].childCount) << 12) |
+                uint24(nodes[i].leadingBytes);
 
             buffer[offset++] = bytes1(uint8(packed >> 16));
             buffer[offset++] = bytes1(uint8(packed >> 8));
@@ -309,7 +313,8 @@ library ConditionPacker {
                 encoding: node.encoding,
                 parent: parent,
                 childCount: node.children.length,
-                leadingBytes: uint16(node.leadingBytes)
+                leadingBytes: uint16(node.leadingBytes),
+                inlined: node.inlined
             });
 
             // Enqueue children
@@ -339,6 +344,7 @@ library ConditionPacker {
         Encoding encoding;
         uint256 childCount;
         uint16 leadingBytes;
+        bool inlined;
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
