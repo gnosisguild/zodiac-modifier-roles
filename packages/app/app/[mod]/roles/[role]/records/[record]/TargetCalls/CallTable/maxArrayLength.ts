@@ -1,4 +1,4 @@
-import { arrayElementType } from "@/utils/abi"
+import { arrayElementType, tupleValues } from "@/utils/abi"
 import { invariant } from "@epic-web/invariant"
 import { AbiParameter } from "viem"
 
@@ -17,7 +17,10 @@ export const maxArrayLength = (
         typeof value === "object" && !Array.isArray(value) && value !== null,
         "Expected object for tuple"
       )
-      return maxArrayLength(Object.values(value), input.components)
+      return maxArrayLength(
+        tupleValues(value, input.components),
+        input.components
+      )
     }
 
     if (elementType) {

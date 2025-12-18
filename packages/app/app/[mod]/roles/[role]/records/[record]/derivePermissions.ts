@@ -15,6 +15,7 @@ import { invariant } from "@epic-web/invariant"
 import { fetchContractInfo } from "@/app/abi"
 import { ChainId } from "@/app/chains"
 import { Call, Operation, Record } from "@/app/api/records/types"
+import { tupleValues } from "@/utils/abi"
 
 type ConditionFunction = (abiType: ParamType, _?: any) => Condition
 
@@ -133,9 +134,9 @@ const deriveConditionFromWildcards = (
 
     if (component.type === "tuple") {
       invariant("components" in component, "tuple components not found")
-      invariant(Array.isArray(values[index]), "invalid tuple value")
+
       return deriveConditionFromWildcards(
-        values[index],
+        tupleValues(values[index], component.components),
         component.components,
         filteredWildcards,
         componentPath + "."
