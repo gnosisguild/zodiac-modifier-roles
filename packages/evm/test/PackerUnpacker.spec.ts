@@ -3,7 +3,6 @@ import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 import { Encoding, flattenCondition, Operator } from "./utils";
-import { ConditionFlatStruct } from "../typechain-types/contracts/Roles";
 
 describe("Packer and Unpacker", () => {
   async function setup() {
@@ -23,7 +22,7 @@ describe("Packer and Unpacker", () => {
         children: [],
       });
 
-      const [conditions] = await mock.unpack(await mock.pack(flatInput));
+      const [conditions] = await mock.roundtrip(flatInput);
       expect(conditionFieldsOnly(conditions)).to.deep.equal(
         conditionFieldsOnly(flatInput),
       );
@@ -44,7 +43,7 @@ describe("Packer and Unpacker", () => {
         ],
       });
 
-      const [conditions] = await mock.unpack(await mock.pack(flatInput));
+      const [conditions] = await mock.roundtrip(flatInput);
       expect(conditionFieldsOnly(conditions)).to.deep.equal(
         conditionFieldsOnly(flatInput),
       );
@@ -70,7 +69,7 @@ describe("Packer and Unpacker", () => {
         ],
       });
 
-      const [conditions] = await mock.unpack(await mock.pack(flatInput));
+      const [conditions] = await mock.roundtrip(flatInput);
       expect(conditionFieldsOnly(conditions)).to.deep.equal(
         conditionFieldsOnly(flatInput),
       );
@@ -107,7 +106,7 @@ describe("Packer and Unpacker", () => {
         ],
       });
 
-      const [conditions] = await mock.unpack(await mock.pack(flatInput));
+      const [conditions] = await mock.roundtrip(flatInput);
       expect(conditionFieldsOnly(conditions)).to.deep.equal(
         conditionFieldsOnly(flatInput),
       );
@@ -139,7 +138,7 @@ describe("Packer and Unpacker", () => {
         ],
       });
 
-      const [conditions] = await mock.unpack(await mock.pack(flatInput));
+      const [conditions] = await mock.roundtrip(flatInput);
       expect(conditionFieldsOnly(conditions)).to.deep.equal(
         conditionFieldsOnly(flatInput),
       );
@@ -156,7 +155,7 @@ describe("Packer and Unpacker", () => {
         children: [],
       });
 
-      const [conditions] = await mock.unpack(await mock.pack(flatInput));
+      const [conditions] = await mock.roundtrip(flatInput);
       expect(conditionFieldsOnly(conditions)).to.deep.equal(
         hashEqualToCompValues(flatInput),
       );
@@ -186,7 +185,7 @@ describe("Packer and Unpacker", () => {
         ],
       });
 
-      const [conditions] = await mock.unpack(await mock.pack(flatInput));
+      const [conditions] = await mock.roundtrip(flatInput);
       expect(conditionFieldsOnly(conditions)).to.deep.equal(
         hashEqualToCompValues(flatInput),
       );
@@ -214,7 +213,7 @@ describe("Packer and Unpacker", () => {
         ],
       });
 
-      const [conditions] = await mock.unpack(await mock.pack(flatInput));
+      const [conditions] = await mock.roundtrip(flatInput);
       expect(conditionFieldsOnly(conditions)).to.deep.equal(
         hashEqualToCompValues(flatInput),
       );
@@ -257,7 +256,7 @@ describe("Packer and Unpacker", () => {
         ],
       });
 
-      const [conditions] = await mock.unpack(await mock.pack(flatInput));
+      const [conditions] = await mock.roundtrip(flatInput);
       expect(conditionFieldsOnly(conditions)).to.deep.equal(
         hashEqualToCompValues(flatInput),
       );
@@ -291,7 +290,7 @@ describe("Packer and Unpacker", () => {
         ],
       });
 
-      const [conditions] = await mock.unpack(await mock.pack(flatInput));
+      const [conditions] = await mock.roundtrip(flatInput);
       expect(conditionFieldsOnly(conditions)).to.deep.equal(
         conditionFieldsOnly(flatInput),
       );
@@ -330,7 +329,7 @@ describe("Packer and Unpacker", () => {
         ],
       });
 
-      const [conditions] = await mock.unpack(await mock.pack(flatInput));
+      const [conditions] = await mock.roundtrip(flatInput);
       expect(conditionFieldsOnly(conditions)).to.deep.equal(
         conditionFieldsOnly(flatInput),
       );
@@ -353,7 +352,7 @@ describe("Packer and Unpacker", () => {
         ],
       });
 
-      const [conditions] = await mock.unpack(await mock.pack(flatInput));
+      const [conditions] = await mock.roundtrip(flatInput);
       expect(conditionFieldsOnly(conditions)).to.deep.equal(
         hashEqualToCompValues(flatInput),
       );
@@ -370,7 +369,7 @@ describe("Packer and Unpacker", () => {
         children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
       });
 
-      const [conditions] = await mock.unpack(await mock.pack(flatInput));
+      const [conditions] = await mock.roundtrip(flatInput);
 
       // After unpacking, compValue should be just the N bytes (without first 2 bytes)
       expect(conditionFieldsOnly(conditions)).to.deep.equal([
@@ -390,7 +389,7 @@ describe("Packer and Unpacker", () => {
         children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
       });
 
-      const [conditions] = await mock.unpack(await mock.pack(flatInput));
+      const [conditions] = await mock.roundtrip(flatInput);
 
       expect(conditionFieldsOnly(conditions)).to.deep.equal([
         {
@@ -413,7 +412,7 @@ describe("Packer and Unpacker", () => {
         children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
       });
 
-      const [conditions] = await mock.unpack(await mock.pack(flatInput));
+      const [conditions] = await mock.roundtrip(flatInput);
 
       // When there's no trailing match data, compValue should be empty after round-trip
       expect(conditionFieldsOnly(conditions)).to.deep.equal([
@@ -432,7 +431,7 @@ describe("Packer and Unpacker", () => {
         operator: Operator.Pass,
       });
 
-      const [, layout] = await mock.unpack(await mock.pack(flatInput));
+      const [, layout] = await mock.roundtrip(flatInput);
       expect(layoutFieldsOnly(layout)).to.deep.equal([
         { encoding: Encoding.Static, parent: 0 },
       ]);
@@ -450,7 +449,7 @@ describe("Packer and Unpacker", () => {
         ],
       });
 
-      const [, layout] = await mock.unpack(await mock.pack(flatInput));
+      const [, layout] = await mock.roundtrip(flatInput);
       expect(layoutFieldsOnly(layout)).to.deep.equal([
         { encoding: Encoding.AbiEncoded, parent: 0 },
         { encoding: Encoding.Static, parent: 0 },
@@ -476,7 +475,7 @@ describe("Packer and Unpacker", () => {
         ],
       });
 
-      const [, layout] = await mock.unpack(await mock.pack(flatInput));
+      const [, layout] = await mock.roundtrip(flatInput);
       expect(layoutFieldsOnly(layout)).to.deep.equal([
         { encoding: Encoding.AbiEncoded, parent: 0 },
         { encoding: Encoding.Tuple, parent: 0 },
@@ -503,7 +502,7 @@ describe("Packer and Unpacker", () => {
         ],
       });
 
-      const [, layout] = await mock.unpack(await mock.pack(flatInput));
+      const [, layout] = await mock.roundtrip(flatInput);
       // Non-variant array keeps only first child in layout
       expect(layoutFieldsOnly(layout)).to.deep.equal([
         { encoding: Encoding.AbiEncoded, parent: 0 },
@@ -535,7 +534,7 @@ describe("Packer and Unpacker", () => {
         ],
       });
 
-      const [, layout] = await mock.unpack(await mock.pack(flatInput));
+      const [, layout] = await mock.roundtrip(flatInput);
       expect(layoutFieldsOnly(layout)).to.deep.equal([
         { encoding: Encoding.AbiEncoded, parent: 0 },
         { encoding: Encoding.Tuple, parent: 0 },
@@ -567,7 +566,7 @@ describe("Packer and Unpacker", () => {
         ],
       });
 
-      const [, layout] = await mock.unpack(await mock.pack(flatInput));
+      const [, layout] = await mock.roundtrip(flatInput);
       // Logical Or with homogeneous Static children becomes Static
       expect(layoutFieldsOnly(layout)).to.deep.equal([
         { encoding: Encoding.AbiEncoded, parent: 0 },
