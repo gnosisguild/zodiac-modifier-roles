@@ -10,6 +10,14 @@ import {
   Operator,
   PermissionCheckerStatus,
 } from "../utils";
+
+function pluck(index: number) {
+  return {
+    paramType: Encoding.Static,
+    operator: Operator.Pluck,
+    compValue: "0x" + index.toString(16).padStart(2, "0"),
+  };
+}
 import { setupTwoParamsStatic, deployRolesMod } from "../setup";
 import { ConditionFlatStruct } from "../../typechain-types/contracts/Roles";
 
@@ -21,9 +29,9 @@ describe("WithinRatio Operator", () => {
           await loadFixture(setupTwoParamsStatic);
 
         const compValue = encodeWithinRatioCompValue({
-          referenceIndex: 0,
+          referenceIndex: 3,
           referenceDecimals: 0,
-          relativeIndex: 1,
+          relativeIndex: 7,
           relativeDecimals: 0,
           minRatio: 0, // no lower bound
           maxRatio: 9500, // 95% upper bound
@@ -34,8 +42,8 @@ describe("WithinRatio Operator", () => {
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             children: [
-              { paramType: Encoding.Static, operator: Operator.Pass },
-              { paramType: Encoding.Static, operator: Operator.Pass },
+              pluck(3),
+              pluck(7),
               {
                 paramType: Encoding.None,
                 operator: Operator.WithinRatio,
@@ -74,10 +82,11 @@ describe("WithinRatio Operator", () => {
         const { scopeFunction, invoke } =
           await loadFixture(setupTwoParamsStatic);
 
+        // Inverted: pluck second param first, reference uses index 1
         const compValue = encodeWithinRatioCompValue({
-          referenceIndex: 0,
+          referenceIndex: 1,
           referenceDecimals: 0,
-          relativeIndex: 1,
+          relativeIndex: 0,
           relativeDecimals: 0,
           minRatio: 12000,
           maxRatio: 0, // no upper bound
@@ -88,8 +97,8 @@ describe("WithinRatio Operator", () => {
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             children: [
-              { paramType: Encoding.Static, operator: Operator.Pass },
-              { paramType: Encoding.Static, operator: Operator.Pass },
+              pluck(1), // param 0 -> pluckedValues[1]
+              pluck(0), // param 1 -> pluckedValues[0]
               {
                 paramType: Encoding.None,
                 operator: Operator.WithinRatio,
@@ -117,9 +126,9 @@ describe("WithinRatio Operator", () => {
           await loadFixture(setupTwoParamsStatic);
 
         const compValue = encodeWithinRatioCompValue({
-          referenceIndex: 0,
+          referenceIndex: 5,
           referenceDecimals: 0,
-          relativeIndex: 1,
+          relativeIndex: 2,
           relativeDecimals: 0,
           minRatio: 9000, // 90% lower bound
           maxRatio: 0, // no upper bound
@@ -130,8 +139,8 @@ describe("WithinRatio Operator", () => {
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             children: [
-              { paramType: Encoding.Static, operator: Operator.Pass },
-              { paramType: Encoding.Static, operator: Operator.Pass },
+              pluck(5),
+              pluck(2),
               {
                 paramType: Encoding.None,
                 operator: Operator.WithinRatio,
@@ -173,7 +182,7 @@ describe("WithinRatio Operator", () => {
         const compValue = encodeWithinRatioCompValue({
           referenceIndex: 0,
           referenceDecimals: 0,
-          relativeIndex: 1,
+          relativeIndex: 4,
           relativeDecimals: 0,
           minRatio: 0, // no lower bound
           maxRatio: 10000,
@@ -184,8 +193,8 @@ describe("WithinRatio Operator", () => {
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             children: [
-              { paramType: Encoding.Static, operator: Operator.Pass },
-              { paramType: Encoding.Static, operator: Operator.Pass },
+              pluck(0),
+              pluck(4),
               {
                 paramType: Encoding.None,
                 operator: Operator.WithinRatio,
@@ -211,9 +220,9 @@ describe("WithinRatio Operator", () => {
           await loadFixture(setupTwoParamsStatic);
 
         const compValue = encodeWithinRatioCompValue({
-          referenceIndex: 0,
+          referenceIndex: 10,
           referenceDecimals: 18,
-          relativeIndex: 1,
+          relativeIndex: 20,
           relativeDecimals: 18,
           minRatio: 2500, // 25%
           maxRatio: 0, // no upper bound
@@ -224,8 +233,8 @@ describe("WithinRatio Operator", () => {
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             children: [
-              { paramType: Encoding.Static, operator: Operator.Pass },
-              { paramType: Encoding.Static, operator: Operator.Pass },
+              pluck(10),
+              pluck(20),
               {
                 paramType: Encoding.None,
                 operator: Operator.WithinRatio,
@@ -258,9 +267,9 @@ describe("WithinRatio Operator", () => {
           await loadFixture(setupTwoParamsStatic);
 
         const compValue = encodeWithinRatioCompValue({
-          referenceIndex: 0,
+          referenceIndex: 8,
           referenceDecimals: 18,
-          relativeIndex: 1,
+          relativeIndex: 15,
           relativeDecimals: 18,
           minRatio: 0, // no lower bound
           maxRatio: 50000, // 500%
@@ -271,8 +280,8 @@ describe("WithinRatio Operator", () => {
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             children: [
-              { paramType: Encoding.Static, operator: Operator.Pass },
-              { paramType: Encoding.Static, operator: Operator.Pass },
+              pluck(8),
+              pluck(15),
               {
                 paramType: Encoding.None,
                 operator: Operator.WithinRatio,
@@ -312,9 +321,9 @@ describe("WithinRatio Operator", () => {
         const compValue = encodeWithinRatioCompValue({
           referenceAdapter: await ethUsdAdapter.getAddress(),
           relativeAdapter: "0x0000000000000000000000000000000000000000",
-          referenceIndex: 0,
+          referenceIndex: 2,
           referenceDecimals: 18, // ETH
-          relativeIndex: 1,
+          relativeIndex: 3,
           relativeDecimals: 18, // USD stablecoin
           minRatio: 9950, // 99.5% (0.5% tolerance)
           maxRatio: 10050, // 100.5%
@@ -325,8 +334,8 @@ describe("WithinRatio Operator", () => {
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             children: [
-              { paramType: Encoding.Static, operator: Operator.Pass },
-              { paramType: Encoding.Static, operator: Operator.Pass },
+              pluck(2),
+              pluck(3),
               {
                 paramType: Encoding.None,
                 operator: Operator.WithinRatio,
@@ -371,7 +380,7 @@ describe("WithinRatio Operator", () => {
           relativeAdapter: await wbtcUsdAdapter.getAddress(),
           referenceIndex: 0,
           referenceDecimals: 18, // USD stablecoin
-          relativeIndex: 1,
+          relativeIndex: 5,
           relativeDecimals: 8, // WBTC uses 8 decimals
           minRatio: 9900, // 99%
           maxRatio: 10100, // 101% (1% slippage tolerance)
@@ -382,8 +391,8 @@ describe("WithinRatio Operator", () => {
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             children: [
-              { paramType: Encoding.Static, operator: Operator.Pass },
-              { paramType: Encoding.Static, operator: Operator.Pass },
+              pluck(0),
+              pluck(5),
               {
                 paramType: Encoding.None,
                 operator: Operator.WithinRatio,
@@ -434,7 +443,7 @@ describe("WithinRatio Operator", () => {
         const compValue = encodeWithinRatioCompValue({
           referenceAdapter: await ethUsdAdapter.getAddress(),
           relativeAdapter: await btcUsdAdapter.getAddress(),
-          referenceIndex: 0,
+          referenceIndex: 4,
           referenceDecimals: 18, // ETH
           relativeIndex: 1,
           relativeDecimals: 8, // BTC uses 8 decimals
@@ -447,8 +456,8 @@ describe("WithinRatio Operator", () => {
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             children: [
-              { paramType: Encoding.Static, operator: Operator.Pass },
-              { paramType: Encoding.Static, operator: Operator.Pass },
+              pluck(4), // param 0 -> pluckedValues[4] (reference)
+              pluck(1), // param 1 -> pluckedValues[1] (relative)
               {
                 paramType: Encoding.None,
                 operator: Operator.WithinRatio,
@@ -494,9 +503,9 @@ describe("WithinRatio Operator", () => {
         const compValue = encodeWithinRatioCompValue({
           referenceAdapter: "0x0000000000000000000000000000000000000000",
           relativeAdapter: await ethWbtcAdapter.getAddress(),
-          referenceIndex: 0,
+          referenceIndex: 6,
           referenceDecimals: 8, // WBTC uses 8 decimals
-          relativeIndex: 1,
+          relativeIndex: 9,
           relativeDecimals: 18, // ETH
           minRatio: 9800, // 98%
           maxRatio: 10200, // 102% (2% slippage tolerance)
@@ -507,8 +516,8 @@ describe("WithinRatio Operator", () => {
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             children: [
-              { paramType: Encoding.Static, operator: Operator.Pass },
-              { paramType: Encoding.Static, operator: Operator.Pass },
+              pluck(6),
+              pluck(9),
               {
                 paramType: Encoding.None,
                 operator: Operator.WithinRatio,
@@ -554,9 +563,9 @@ describe("WithinRatio Operator", () => {
         const compValue = encodeWithinRatioCompValue({
           referenceAdapter: "0x0000000000000000000000000000000000000000",
           relativeAdapter: await wbtcEthAdapter.getAddress(),
-          referenceIndex: 0,
+          referenceIndex: 11,
           referenceDecimals: 18, // ETH
-          relativeIndex: 1,
+          relativeIndex: 7,
           relativeDecimals: 8, // WBTC uses 8 decimals
           minRatio: 9500, // 95%
           maxRatio: 10500, // 105% (5% slippage tolerance)
@@ -567,8 +576,8 @@ describe("WithinRatio Operator", () => {
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             children: [
-              { paramType: Encoding.Static, operator: Operator.Pass },
-              { paramType: Encoding.Static, operator: Operator.Pass },
+              pluck(11), // param 0 -> pluckedValues[11] (reference)
+              pluck(7), // param 1 -> pluckedValues[7] (relative)
               {
                 paramType: Encoding.None,
                 operator: Operator.WithinRatio,
@@ -614,9 +623,9 @@ describe("WithinRatio Operator", () => {
         const compValue = encodeWithinRatioCompValue({
           referenceAdapter: "0x0000000000000000000000000000000000000000",
           relativeAdapter: await funkyUsdcAdapter.getAddress(),
-          referenceIndex: 0,
+          referenceIndex: 100,
           referenceDecimals: 6, // USDC uses 6 decimals
-          relativeIndex: 1,
+          relativeIndex: 200,
           relativeDecimals: 37, // FunkyToken uses 37 decimals (max safe precision)
           minRatio: 9975, // 99.75%
           maxRatio: 10025, // 100.25% (0.25% slippage tolerance)
@@ -627,8 +636,8 @@ describe("WithinRatio Operator", () => {
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             children: [
-              { paramType: Encoding.Static, operator: Operator.Pass },
-              { paramType: Encoding.Static, operator: Operator.Pass },
+              pluck(100),
+              pluck(200),
               {
                 paramType: Encoding.None,
                 operator: Operator.WithinRatio,
@@ -720,10 +729,11 @@ describe("WithinRatio Operator", () => {
         await loadFixture(setupWithEncoder);
 
       // Check ratio between first and third params, skipping dynamic middle param
+      // Pluck param 0 -> pluckedValues[2], Pluck param 2 -> pluckedValues[4]
       const compValue = encodeWithinRatioCompValue({
-        referenceIndex: 0,
+        referenceIndex: 2,
         referenceDecimals: 0,
-        relativeIndex: 2,
+        relativeIndex: 4,
         relativeDecimals: 0,
         minRatio: 0,
         maxRatio: 12000, // 120%
@@ -735,9 +745,9 @@ describe("WithinRatio Operator", () => {
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           children: [
-            { paramType: Encoding.Static, operator: Operator.Pass },
+            pluck(2), // param 0 -> pluckedValues[2]
             { paramType: Encoding.Dynamic, operator: Operator.Pass },
-            { paramType: Encoding.Static, operator: Operator.Pass },
+            pluck(4), // param 2 -> pluckedValues[4]
             {
               paramType: Encoding.None,
               operator: Operator.WithinRatio,
@@ -791,15 +801,16 @@ describe("WithinRatio Operator", () => {
       ).to.not.be.reverted;
     });
 
-    it("from AbiEncoded", async () => {
+    it("from nested AbiEncoded", async () => {
       const { roles, testContract, scopeFunction, execTransactionFromModule } =
         await loadFixture(setupWithEncoder);
 
       // Check ratio between first and third encoded values
+      // Pluck encoded[0] -> pluckedValues[1], Pluck encoded[2] -> pluckedValues[3]
       const compValue = encodeWithinRatioCompValue({
-        referenceIndex: 0,
+        referenceIndex: 1,
         referenceDecimals: 0,
-        relativeIndex: 2,
+        relativeIndex: 3,
         relativeDecimals: 0,
         minRatio: 0,
         maxRatio: 8000, // 80%
@@ -816,9 +827,9 @@ describe("WithinRatio Operator", () => {
               operator: Operator.Matches,
               compValue: "0x0000", // leadingBytes = 0 (no selector)
               children: [
+                pluck(1), // encoded[0] -> pluckedValues[1]
                 { paramType: Encoding.Static, operator: Operator.Pass },
-                { paramType: Encoding.Static, operator: Operator.Pass },
-                { paramType: Encoding.Static, operator: Operator.Pass },
+                pluck(3), // encoded[2] -> pluckedValues[3]
                 {
                   paramType: Encoding.None,
                   operator: Operator.WithinRatio,
@@ -865,10 +876,12 @@ describe("WithinRatio Operator", () => {
         await loadFixture(setupWithEncoder);
 
       // MixedTuple has: amount(0), second(1), limit(2), fourth(3)
+      // Pluck second(1) -> pluckedValues[5], Pluck fourth(3) -> pluckedValues[0]
+      // Note: inverted indices - relative (5) comes before reference (0) in array
       const compValue = encodeWithinRatioCompValue({
-        referenceIndex: 1,
+        referenceIndex: 5,
         referenceDecimals: 0,
-        relativeIndex: 3,
+        relativeIndex: 0,
         relativeDecimals: 0,
         minRatio: 0,
         maxRatio: 15000, // 150%
@@ -885,9 +898,9 @@ describe("WithinRatio Operator", () => {
               operator: Operator.Matches,
               children: [
                 { paramType: Encoding.Static, operator: Operator.Pass }, // amount
-                { paramType: Encoding.Static, operator: Operator.Pass }, // second
+                pluck(5), // second -> pluckedValues[5] (reference)
                 { paramType: Encoding.Static, operator: Operator.Pass }, // limit
-                { paramType: Encoding.Static, operator: Operator.Pass }, // fourth
+                pluck(0), // fourth -> pluckedValues[0] (relative)
                 {
                   paramType: Encoding.None,
                   operator: Operator.WithinRatio,
@@ -936,10 +949,12 @@ describe("WithinRatio Operator", () => {
       const { roles, testContract, scopeFunction, execTransactionFromModule } =
         await loadFixture(setupWithEncoder);
 
+      // Pluck array[0] -> pluckedValues[3], Pluck array[2] -> pluckedValues[1]
+      // Note: relative index (1) is smaller than reference index (3)
       const compValue = encodeWithinRatioCompValue({
-        referenceIndex: 0,
+        referenceIndex: 3,
         referenceDecimals: 0,
-        relativeIndex: 2,
+        relativeIndex: 1,
         relativeDecimals: 0,
         minRatio: 0,
         maxRatio: 12000, // 120%
@@ -955,9 +970,9 @@ describe("WithinRatio Operator", () => {
               paramType: Encoding.Array,
               operator: Operator.Matches,
               children: [
+                pluck(3), // array[0] -> pluckedValues[3] (reference)
                 { paramType: Encoding.Static, operator: Operator.Pass },
-                { paramType: Encoding.Static, operator: Operator.Pass },
-                { paramType: Encoding.Static, operator: Operator.Pass },
+                pluck(1), // array[2] -> pluckedValues[1] (relative)
                 {
                   paramType: Encoding.None,
                   operator: Operator.WithinRatio,

@@ -36,11 +36,11 @@ enum Operator {
     /* 12: */ _Placeholder12,
     // ------------------------------------------------------------
     // 13-14: EXTRACTION EXPRESSIONS
-    //          paramType: Dynamic
+    //          paramType: Static / Dynamic
     //          ❓ children (at most one child, must resolve to Static)
-    //          ✅ compValue (3 bytes: 2 bytes shift + 1 byte size, 1-32)
-    /* 13: */ Slice,
-    /* 14: */ _Placeholder14,
+    //          ✅ compValue
+    /* 13: */ Slice, // compValue: 3 bytes (2 bytes shift + 1 byte size, 1-32)
+    /* 14: */ Pluck, // compValue: 32 bytes (key identifying the plucked value)
     // ------------------------------------------------------------
     // 15:    SPECIAL COMPARISON (without compValue)
     //          paramType: Static

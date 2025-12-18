@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "../../common/AbiDecoder.sol";
-
 import "../../periphery/interfaces/IPriceAdapter.sol";
 
 import "../../types/Types.sol";
@@ -10,18 +8,18 @@ import "../../types/Types.sol";
 /**
  * @title WithinRatioChecker
  * @notice
- * Validates that a “relative” amount falls within a ratio range when compared
- * to a “reference” amount, optionally converting none/one/both through price
+ * Validates that a "relative" amount falls within a ratio range when compared
+ * to a "reference" amount, optionally converting none/one/both through price
  * adapters into a common base denomination.
  *
  * ---
  * # 1. How it Works
- * Extract two amounts from calldata (by index in the parent), normalize their
+ * Extract two amounts from plucked values (by index), normalize their
  * decimals, optionally convert via adapters, compute their ratio in basis
  * points, and check if it falls within [minRatio, maxRatio].
  *
  * Steps:
- *  1. Read amounts from calldata by index
+ *  1. Read amounts from plucked values by index
  *  2. Scale amounts to shared precision
  *  3. Apply optional price adapters
  *  4. Compute ratio = (relative × priceRel) / (reference × priceRef)
@@ -29,11 +27,9 @@ import "../../types/Types.sol";
  *
  * ---
  * # 2. Inputs
- * - **data**: Calldata being inspected
- * - **compValue**: 52-byte configuration (see bellow)
- * - **parentPayload**: Structural parent payload. WithinRatio is a
- *   non-structural operator, so it receives the nearest structural parent’s
- *   payload and indexes into its children.
+ * - **compValue**: 52-byte configuration (see below)
+ * - **pluckedValues**: Array of values extracted by Pluck operators earlier
+ *   in the evaluation. Reference and relative indices point into this array.
  *
  * ---
  * # 3. Ratio Formula
@@ -51,9 +47,9 @@ import "../../types/Types.sol";
  * ---
  * # 4. CompValue Layout (52 bytes)
  *
- *   0      : referenceIndex      (uint8)
+ *   0      : referenceIndex      (uint8) - index into pluckedValues
  *   1      : referenceDecimals   (uint8)
- *   2      : relativeIndex       (uint8)
+ *   2      : relativeIndex       (uint8) - index into pluckedValues
  *   3      : relativeDecimals    (uint8)
  *   4–7    : minRatio  (uint32, bps; 0 = no min)
  *   8–11   : maxRatio  (uint32, bps; 0 = no max)
@@ -81,7 +77,7 @@ import "../../types/Types.sol";
 /**
  * @title WithinRatioChecker
  *
- * @notice Validates that the ratio between two calldata amounts falls within configured bounds, with optional price conversion for cross-asset comparisons.
+ * @notice Validates that the ratio between two plucked amounts falls within configured bounds, with optional price conversion for cross-asset comparisons.
  *
  */
 
@@ -101,16 +97,14 @@ library WithinRatioChecker {
     }
 
     function check(
-        bytes calldata data,
         bytes memory compValue,
-        Payload memory parentPayload
+        bytes32[] memory pluckedValues
     ) internal view returns (Status) {
         CompValue memory config = _unpack(compValue);
 
         (uint256 referenceAmount, uint256 relativeAmount) = _scaleAndConvert(
-            data,
             config,
-            parentPayload
+            pluckedValues
         );
 
         uint256 ratio = (relativeAmount * BPS) / referenceAmount;
@@ -145,9 +139,8 @@ library WithinRatioChecker {
     }
 
     function _scaleAndConvert(
-        bytes calldata data,
         CompValue memory config,
-        Payload memory parentPayload
+        bytes32[] memory pluckedValues
     )
         private
         view
@@ -162,20 +155,13 @@ library WithinRatioChecker {
             : config.relativeDecimals;
         precision = precision > 18 ? precision : 18;
 
-        // Extract and scale amounts
+        // Extract and scale amounts from plucked values
         uint256 referenceAmount = uint256(
-            AbiDecoder.word(
-                data,
-                parentPayload.children[config.referenceIndex].location
-            )
+            pluckedValues[config.referenceIndex]
         ) * (10 ** (precision - config.referenceDecimals));
 
-        uint256 relativeAmount = uint256(
-            AbiDecoder.word(
-                data,
-                parentPayload.children[config.relativeIndex].location
-            )
-        ) * (10 ** (precision - config.relativeDecimals));
+        uint256 relativeAmount = uint256(pluckedValues[config.relativeIndex]) *
+            (10 ** (precision - config.relativeDecimals));
 
         // Get prices from adapters
         uint256 priceScale = 10 ** (precision - 18);

@@ -3245,6 +3245,7 @@ describe("Integrity", () => {
       });
 
       // All structural children (Static) match, non-structural WithinRatio should be ignored
+      // First two Static children are Pluck to populate indices for WithinRatio
       const conditions = flattenCondition({
         paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
@@ -3253,8 +3254,16 @@ describe("Integrity", () => {
             paramType: Encoding.Array,
             operator: Operator.Matches,
             children: [
-              { paramType: Encoding.Static, operator: Operator.Pass },
-              { paramType: Encoding.Static, operator: Operator.Pass },
+              {
+                paramType: Encoding.Static,
+                operator: Operator.Pluck,
+                compValue: "0x00",
+              },
+              {
+                paramType: Encoding.Static,
+                operator: Operator.Pluck,
+                compValue: "0x01",
+              },
               { paramType: Encoding.Static, operator: Operator.Pass },
               {
                 paramType: Encoding.None,
@@ -3280,6 +3289,7 @@ describe("Integrity", () => {
         maxRatio: 15000,
       });
 
+      // First two Static children are Pluck to populate indices for WithinRatio
       const conditions = flattenCondition({
         paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
@@ -3288,8 +3298,16 @@ describe("Integrity", () => {
             paramType: Encoding.Tuple,
             operator: Operator.Matches,
             children: [
-              { paramType: Encoding.Static, operator: Operator.Pass },
-              { paramType: Encoding.Static, operator: Operator.Pass },
+              {
+                paramType: Encoding.Static,
+                operator: Operator.Pluck,
+                compValue: "0x00",
+              },
+              {
+                paramType: Encoding.Static,
+                operator: Operator.Pluck,
+                compValue: "0x01",
+              },
               { paramType: Encoding.Static, operator: Operator.Pass },
               {
                 paramType: Encoding.None,
@@ -3315,6 +3333,7 @@ describe("Integrity", () => {
         maxRatio: 15000,
       });
 
+      // First two children of And are Pluck to populate indices for WithinRatio
       const conditions = flattenCondition({
         paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
@@ -3323,8 +3342,16 @@ describe("Integrity", () => {
             paramType: Encoding.None,
             operator: Operator.And,
             children: [
-              { paramType: Encoding.Static, operator: Operator.Pass },
-              { paramType: Encoding.Static, operator: Operator.Pass },
+              {
+                paramType: Encoding.Static,
+                operator: Operator.Pluck,
+                compValue: "0x00",
+              },
+              {
+                paramType: Encoding.Static,
+                operator: Operator.Pluck,
+                compValue: "0x01",
+              },
               {
                 paramType: Encoding.None,
                 operator: Operator.WithinRatio,
@@ -3351,6 +3378,7 @@ describe("Integrity", () => {
         maxRatio: 15000,
       });
 
+      // First two children of Or are Pluck to populate indices for WithinRatio
       const conditions = flattenCondition({
         paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
@@ -3359,8 +3387,16 @@ describe("Integrity", () => {
             paramType: Encoding.None,
             operator: Operator.Or,
             children: [
-              { paramType: Encoding.Static, operator: Operator.Pass },
-              { paramType: Encoding.Static, operator: Operator.Pass },
+              {
+                paramType: Encoding.Static,
+                operator: Operator.Pluck,
+                compValue: "0x00",
+              },
+              {
+                paramType: Encoding.Static,
+                operator: Operator.Pluck,
+                compValue: "0x01",
+              },
               {
                 paramType: Encoding.None,
                 operator: Operator.WithinRatio,
@@ -3472,6 +3508,145 @@ describe("Integrity", () => {
       await expect(enforce(conditions))
         .to.be.revertedWithCustomError(mock, "UnsuitableChildTypeTree")
         .withArgs(1);
+    });
+  });
+
+  describe("Pluck Order Validation", () => {
+    it("allows WithinRatio when Pluck indices are visited before in DFS order", async () => {
+      const { enforce } = await loadFixture(setup);
+
+      const compValue = encodeWithinRatioCompValue({
+        referenceIndex: 0,
+        referenceDecimals: 0,
+        relativeIndex: 1,
+        relativeDecimals: 0,
+        minRatio: 9000,
+        maxRatio: 11000,
+      });
+
+      // Structure: Matches with two Plucks followed by WithinRatio
+      // DFS order: Matches -> Pluck(0) -> Pluck(1) -> WithinRatio
+      const conditions = flattenCondition({
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        children: [
+          {
+            paramType: Encoding.Static,
+            operator: Operator.Pluck,
+            compValue: "0x00", // index 0
+          },
+          {
+            paramType: Encoding.Static,
+            operator: Operator.Pluck,
+            compValue: "0x01", // index 1
+          },
+          {
+            paramType: Encoding.None,
+            operator: Operator.WithinRatio,
+            compValue,
+          },
+        ],
+      });
+
+      await expect(enforce(conditions)).to.not.be.reverted;
+    });
+
+    it("reverts when WithinRatio references a Pluck index not yet visited in DFS order", async () => {
+      const { mock, enforce } = await loadFixture(setup);
+
+      const compValue = encodeWithinRatioCompValue({
+        referenceIndex: 0,
+        referenceDecimals: 0,
+        relativeIndex: 5, // index 5 is never plucked
+        relativeDecimals: 0,
+        minRatio: 9000,
+        maxRatio: 11000,
+      });
+
+      // Structure: Matches with one Pluck and WithinRatio referencing non-existent index
+      const conditions = flattenCondition({
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        children: [
+          {
+            paramType: Encoding.Static,
+            operator: Operator.Pluck,
+            compValue: "0x00", // index 0
+          },
+          {
+            paramType: Encoding.Static,
+            operator: Operator.Pass,
+          },
+          {
+            paramType: Encoding.None,
+            operator: Operator.WithinRatio,
+            compValue,
+          },
+        ],
+      });
+
+      await expect(enforce(conditions))
+        .to.be.revertedWithCustomError(mock, "PluckNotVisitedBeforeRef")
+        .withArgs(3, 5); // WithinRatio is at BFS index 3, missing pluck index 5
+    });
+
+    it("reverts when WithinRatio comes before Pluck in DFS order (nested structure)", async () => {
+      const { mock, enforce } = await loadFixture(setup);
+
+      const compValue = encodeWithinRatioCompValue({
+        referenceIndex: 0,
+        referenceDecimals: 0,
+        relativeIndex: 1,
+        relativeDecimals: 0,
+        minRatio: 9000,
+        maxRatio: 11000,
+      });
+
+      // Structure: And with WithinRatio in first branch, Plucks in second branch
+      // BFS: And -> Matches1 -> Matches2 -> WithinRatio -> Pluck(0) -> Pluck(1)
+      // DFS: And -> Matches1 -> WithinRatio -> Matches2 -> Pluck(0) -> Pluck(1)
+      // WithinRatio is visited before Plucks in DFS
+      const conditions = flattenCondition({
+        paramType: Encoding.None,
+        operator: Operator.And,
+        children: [
+          {
+            paramType: Encoding.AbiEncoded,
+            operator: Operator.Matches,
+            children: [
+              {
+                paramType: Encoding.Static,
+                operator: Operator.Pass,
+              },
+              {
+                paramType: Encoding.None,
+                operator: Operator.WithinRatio,
+                compValue,
+              },
+            ],
+          },
+          {
+            paramType: Encoding.AbiEncoded,
+            operator: Operator.Matches,
+            children: [
+              {
+                paramType: Encoding.Static,
+                operator: Operator.Pluck,
+                compValue: "0x00", // index 0
+              },
+              {
+                paramType: Encoding.Static,
+                operator: Operator.Pluck,
+                compValue: "0x01", // index 1
+              },
+            ],
+          },
+        ],
+      });
+
+      await expect(enforce(conditions))
+        .to.be.revertedWithCustomError(mock, "PluckNotVisitedBeforeRef")
+        .withArgs(4, 0); // WithinRatio at index 4, referenceIndex 0 not yet visited
     });
   });
 });

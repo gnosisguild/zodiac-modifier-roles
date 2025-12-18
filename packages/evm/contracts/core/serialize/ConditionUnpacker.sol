@@ -17,15 +17,23 @@ library ConditionUnpacker {
 
     function unpack(
         bytes memory buffer
-    ) internal view returns (Condition memory condition, Layout memory layout) {
-        // Read header offset (16 bits = 2 bytes)
-        uint256 layoutOffset = _mload16(buffer, 0);
-
-        // Unpack condition tree
-        condition = _unpackCondition(buffer, 2);
+    )
+        internal
+        view
+        returns (
+            Condition memory condition,
+            Layout memory layout,
+            uint256 maxPluckIndex
+        )
+    {
+        // Unpack condition tree (starts at offset 3)
+        condition = _unpackCondition(buffer, 3);
 
         // Unpack layout
-        layout = _unpackLayout(buffer, layoutOffset);
+        layout = _unpackLayout(buffer, uint16(bytes2(buffer)));
+
+        // Read maxPluckIndex from header
+        maxPluckIndex = uint8(buffer[2]);
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -173,17 +181,8 @@ library ConditionUnpacker {
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // Helper Functions
+    // Helper
     // ═══════════════════════════════════════════════════════════════════════════
-
-    function _mload16(
-        bytes memory buffer,
-        uint256 offset
-    ) private pure returns (uint256 value) {
-        assembly {
-            value := shr(240, mload(add(buffer, add(0x20, offset))))
-        }
-    }
 
     function _avatar() private view returns (address result) {
         assembly {

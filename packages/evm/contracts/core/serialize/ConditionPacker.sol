@@ -7,9 +7,10 @@ import "../../types/Types.sol";
  * ScopedFunction Layout in Contract Storage
  *
  * ┌─────────────────────────────────────────────────────────────────────┐
- * │ HEADER (2 bytes)                                                    │
+ * │ HEADER (3 bytes)                                                    │
  * ├─────────────────────────────────────────────────────────────────────┤
  * │ • layoutOffset             16 bits (0-65535)                        │
+ * │ • maxPluckIndex             8 bits (0-255)                          │
  * └─────────────────────────────────────────────────────────────────────┘
  *
  * ┌─────────────────────────────────────────────────────────────────────┐
@@ -66,21 +67,19 @@ library ConditionPacker {
 
     function pack(
         ConditionFlat[] memory conditions,
-        Layout memory typeNode
+        Layout memory layout
     ) internal pure returns (bytes memory buffer) {
-        uint256 size = 2 +
-            _conditionPackedSize(conditions) +
-            _layoutPackedSize(typeNode);
+        uint256 layoutOffset = 3 + _conditionPackedSize(conditions);
 
-        buffer = new bytes(size);
+        buffer = new bytes(layoutOffset + _layoutPackedSize(layout));
 
-        uint256 offset = 2;
+        _packConditions(conditions, buffer, 3);
+        _packLayout(layout, buffer, layoutOffset);
 
-        offset += _packConditions(conditions, buffer, offset);
-
-        // pack at position 0 -> layoutOffset
-        _packUInt16(offset, buffer, 0);
-        _packLayout(typeNode, buffer, offset);
+        // Header: layoutOffset (2 bytes) + maxPluckIndex (1 byte)
+        buffer[0] = bytes1(uint8(layoutOffset >> 8));
+        buffer[1] = bytes1(uint8(layoutOffset));
+        buffer[2] = bytes1(_maxPluckIndex(conditions));
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -116,9 +115,7 @@ library ConditionPacker {
         ConditionFlat[] memory conditions,
         bytes memory buffer,
         uint256 offset
-    ) private pure returns (uint256) {
-        uint256 startOffset = offset;
-
+    ) private pure {
         offset += _packUInt16(conditions.length, buffer, offset);
 
         uint256 tailOffset = offset +
@@ -156,8 +153,8 @@ library ConditionPacker {
             if (!hasCompValue) continue;
 
             // Pack CompValue - three cases:
-            // 1. AbiEncoded match bytes: store N bytes (skip first 2 bytes of compValue)
-            // 2. EqualTo: store keccak256 hash (32 bytes)
+            // 1. EqualTo: store keccak256 hash (32 bytes)
+            // 2. AbiEncoded match bytes: store N bytes (skip first 2 bytes of compValue)
             // 3. Other comparisons: store compValue as-is
             bytes memory compValue;
             uint256 length;
@@ -186,7 +183,6 @@ library ConditionPacker {
             }
             tailOffset += length;
         }
-        return tailOffset - startOffset;
     }
 
     function _hasCompValue(
@@ -195,8 +191,22 @@ library ConditionPacker {
         return
             condition.operator >= Operator.EqualTo ||
             condition.operator == Operator.Slice ||
+            condition.operator == Operator.Pluck ||
             (condition.paramType == Encoding.AbiEncoded &&
                 condition.compValue.length > 2);
+    }
+
+    function _maxPluckIndex(
+        ConditionFlat[] memory conditions
+    ) private pure returns (uint8 result) {
+        for (uint256 i = 0; i < conditions.length; ++i) {
+            if (conditions[i].operator != Operator.Pluck) continue;
+
+            uint8 index = uint8(conditions[i].compValue[0]);
+            if (index > result) {
+                result = index;
+            }
+        }
     }
 
     function _childBounds(

@@ -49,6 +49,17 @@ library ConditionLogic {
                 return _or(data, condition, payload, consumptions, context);
             } else if (operator == Operator.Slice) {
                 return _slice(data, condition, payload, consumptions, context);
+            } else if (operator == Operator.Pluck) {
+                context.pluckedValues[uint8(condition.compValue[0])] = __word(
+                    data,
+                    payload
+                );
+                return
+                    Result({
+                        status: Status.Ok,
+                        consumptions: consumptions,
+                        info: 0
+                    });
             } else if (operator == Operator.Empty) {
                 return
                     Result({
@@ -135,9 +146,8 @@ library ConditionLogic {
                 return
                     Result({
                         status: WithinRatioChecker.check(
-                            data,
                             condition.compValue,
-                            payload
+                            context.pluckedValues
                         ),
                         consumptions: consumptions,
                         info: 0

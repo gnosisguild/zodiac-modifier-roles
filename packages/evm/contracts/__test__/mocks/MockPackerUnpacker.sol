@@ -35,7 +35,7 @@ contract MockPackerUnpacker {
         bytes memory buffer = ConditionPacker.pack(conditions, typeTree);
 
         // Unpack
-        (Condition memory condition, Layout memory layout) = ConditionUnpacker
+        (Condition memory condition, Layout memory layout, ) = ConditionUnpacker
             .unpack(buffer);
 
         // Flatten both to BFS order

@@ -71,12 +71,17 @@ export enum Operator {
   /* 11: */ _Placeholder11,
   /* 12: */ _Placeholder12,
   // ------------------------------------------------------------
-  // 13-14: EXTRACTION EXPRESSIONS
-  //          paramType: Dynamic
+  // 13:    SLICE EXPRESSION
+  //          paramType: Static / Dynamic
   //          ❓ children (at most one child, must resolve to Static)
   //          ✅ compValue (3 bytes: 2 bytes shift + 1 byte size, 1-32)
   /* 13: */ Slice,
-  /* 14: */ _Placeholder14,
+  // ------------------------------------------------------------
+  // 14:    PLUCK EXPRESSION
+  //          paramType: Static
+  //          🚫 children
+  //          ✅ compValue (1 byte: index into pluckedValues array)
+  /* 14: */ Pluck,
   // ------------------------------------------------------------
   // 15:    SPECIAL COMPARISON (without compValue)
   //          paramType: Static
