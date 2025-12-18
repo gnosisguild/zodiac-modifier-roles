@@ -10,7 +10,7 @@ import {
 
 import { ExecutionOptions } from "./utils";
 
-import { ConditionFlatStruct } from "../typechain-types/contracts/Integrity";
+import { ConditionFlatStruct } from "../typechain-types/contracts/scoped-function/serialize/Integrity";
 import { TestContract } from "../typechain-types/contracts/test";
 
 const DEFAULT_ROLE_KEY =
@@ -42,16 +42,11 @@ export async function deployRolesMod(
   const provider = createEip1193(hre.network.provider, signer);
 
   await deployFactories({ provider });
-  const integrity = await hre.artifacts.readArtifact("Integrity");
-  const { address: integrityAddress } = await deployMastercopy({
-    bytecode: integrity.bytecode,
-    constructorArgs: { types: [], values: [] },
-    salt: ZeroHash,
-    provider,
-  });
-  const packer = await hre.artifacts.readArtifact("Packer");
-  const { address: packerAddress } = await deployMastercopy({
-    bytecode: packer.bytecode,
+  const conditionsTransform = await hre.artifacts.readArtifact(
+    "ConditionsTransform",
+  );
+  const { address: conditionsTransformAddress } = await deployMastercopy({
+    bytecode: conditionsTransform.bytecode,
     constructorArgs: { types: [], values: [] },
     salt: ZeroHash,
     provider,
@@ -59,8 +54,7 @@ export async function deployRolesMod(
 
   const Modifier = await hre.ethers.getContractFactory("Roles", {
     libraries: {
-      Integrity: integrityAddress,
-      Packer: packerAddress,
+      ConditionsTransform: conditionsTransformAddress,
     },
   });
   const modifier = await Modifier.deploy(owner, avatar, target);
@@ -84,7 +78,76 @@ export async function setupAvatarAndRoles(roleKey = DEFAULT_ROLE_KEY) {
     avatarAddress,
   );
   await roles.connect(owner).enableModule(member.address);
-  await roles.connect(owner).assignRoles(member.address, [roleKey], [true]);
+  await roles.connect(owner).grantRole(member.address, roleKey, 0, 0, 0);
+  await roles.connect(owner).setDefaultRole(member.address, roleKey);
+
+  await roles
+    .connect(owner)
+    .scopeTarget(roleKey, await testContract.getAddress());
+
+  const testContractAddress = await testContract.getAddress();
+
+  const scopeFunction = (
+    selector: string,
+    conditions: ConditionFlatStruct[],
+    options?: ExecutionOptions,
+  ) =>
+    roles
+      .connect(owner)
+      .scopeFunction(
+        roleKey,
+        testContractAddress,
+        selector,
+        conditions,
+        options || ExecutionOptions.Both,
+      );
+
+  const execTransactionFromModule = async ({
+    data,
+    operation,
+  }: {
+    data: string;
+    operation?: number;
+  }) =>
+    roles
+      .connect(member)
+      .execTransactionFromModule(
+        await testContract.getAddress(),
+        0,
+        data,
+        operation || 0,
+      );
+
+  return {
+    owner,
+    member,
+    relayer,
+    avatar,
+    roles,
+    roleKey,
+    testContract,
+    scopeFunction,
+    execTransactionFromModule,
+  };
+}
+
+export async function setupRoles(roleKey = DEFAULT_ROLE_KEY) {
+  const [owner, member, relayer] = await hre.ethers.getSigners();
+
+  const Avatar = await hre.ethers.getContractFactory("TestAvatar");
+  const avatar = await Avatar.deploy();
+
+  const TestContract = await hre.ethers.getContractFactory("TestContract");
+  const testContract = await TestContract.deploy();
+  const avatarAddress = await avatar.getAddress();
+  const roles = await deployRolesMod(
+    hre,
+    owner.address,
+    avatarAddress,
+    avatarAddress,
+  );
+  await roles.connect(owner).enableModule(member.address);
+  await roles.connect(owner).grantRole(member.address, roleKey, 0, 0, 0);
   await roles.connect(owner).setDefaultRole(member.address, roleKey);
 
   await roles
@@ -204,7 +267,7 @@ export async function setupTwoParamsStatic() {
     execTransactionFromModule,
   } = await setupAvatarAndRoles();
 
-  async function invoke(a: number, b: number) {
+  async function invoke(a: BigNumberish, b: BigNumberish) {
     return execTransactionFromModule({
       data: (await testContract.twoParamsStatic.populateTransaction(a, b)).data,
     });
@@ -288,6 +351,37 @@ export async function setupOneParamStaticNestedTuple() {
     invoke,
   };
 }
+
+export async function setupOneParamArrayOfBytes() {
+  const {
+    owner,
+    member,
+    roles,
+    testContract,
+    scopeFunction,
+    execTransactionFromModule,
+  } = await setupAvatarAndRoles();
+
+  const { selector } = testContract.interface.getFunction(
+    "oneParamArrayOfBytes",
+  );
+  return {
+    owner,
+    member,
+    roles,
+    scopeFunction: (
+      conditions: ConditionFlatStruct[],
+      options?: ExecutionOptions,
+    ) => scopeFunction(selector, conditions, options),
+    invoke: async (params: string[]) =>
+      execTransactionFromModule({
+        data: (
+          await testContract.oneParamArrayOfBytes.populateTransaction(params)
+        ).data,
+      }),
+  };
+}
+
 export async function setupTwoParamsStaticTupleStatic() {
   const {
     owner,
@@ -314,6 +408,41 @@ export async function setupTwoParamsStaticTupleStatic() {
     roles,
     owner,
     member,
+    scopeFunction: (
+      conditions: ConditionFlatStruct[],
+      options?: ExecutionOptions,
+    ) => scopeFunction(selector, conditions, options),
+    invoke,
+  };
+}
+
+export async function setupTwoParamsStaticDynamic() {
+  const {
+    owner,
+    member,
+    roles,
+    testContract,
+    scopeFunction,
+    execTransactionFromModule,
+  } = await setupAvatarAndRoles();
+
+  async function invoke(a: number, b: string) {
+    return execTransactionFromModule({
+      data: (
+        await testContract.twoParamsStaticDynamic.populateTransaction(a, b)
+      ).data,
+    });
+  }
+
+  const { selector } = testContract.interface.getFunction(
+    "twoParamsStaticDynamic",
+  );
+
+  return {
+    roles,
+    owner,
+    member,
+    testContract,
     scopeFunction: (
       conditions: ConditionFlatStruct[],
       options?: ExecutionOptions,
@@ -494,7 +623,7 @@ export async function setupOneParamUintWord() {
     execTransactionFromModule,
   } = await setupAvatarAndRoles();
 
-  async function invoke(a: number) {
+  async function invoke(a: BigNumberish) {
     return execTransactionFromModule({
       data: (await testContract.oneParamUintWord.populateTransaction(a)).data,
     });
@@ -610,7 +739,7 @@ export async function setupOneParamBytesWord() {
     execTransactionFromModule,
   } = await setupAvatarAndRoles();
 
-  async function invoke(a: number) {
+  async function invoke(a: BigNumberish) {
     return execTransactionFromModule({
       data: (await testContract.oneParamUintWord.populateTransaction(a)).data,
     });
@@ -736,6 +865,35 @@ export async function setupOneParamAddress() {
 
   return {
     roles,
+    scopeFunction: (
+      conditions: ConditionFlatStruct[],
+      options?: ExecutionOptions,
+    ) => scopeFunction(selector, conditions, options),
+    invoke,
+  };
+}
+export async function setupOneParamBytes32() {
+  const {
+    owner,
+    member,
+    roles,
+    testContract,
+    scopeFunction,
+    execTransactionFromModule,
+  } = await setupAvatarAndRoles();
+
+  async function invoke(a: string) {
+    return execTransactionFromModule({
+      data: (await testContract.oneParamBytesWord.populateTransaction(a)).data,
+    });
+  }
+
+  const { selector } = testContract.interface.getFunction("oneParamBytesWord");
+
+  return {
+    roles,
+    owner,
+    member,
     scopeFunction: (
       conditions: ConditionFlatStruct[],
       options?: ExecutionOptions,

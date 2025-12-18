@@ -1,13 +1,17 @@
 import { expect } from "chai";
 import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { AbiCoder, ZeroHash } from "ethers";
 
 import {
-  BYTES32_ZERO,
+  Encoding,
   ExecutionOptions,
+  Operator,
   PermissionCheckerStatus,
 } from "./utils";
 import { deployRolesMod } from "./setup";
+
+const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
 describe("Clearance", async () => {
   const ROLE_KEY =
@@ -31,9 +35,7 @@ describe("Clearance", async () => {
 
     await modifier.enableModule(invoker.address);
 
-    await modifier
-      .connect(owner)
-      .assignRoles(invoker.address, [ROLE_KEY], [true]);
+    await modifier.connect(owner).grantRole(invoker.address, ROLE_KEY, 0, 0, 0);
     await modifier.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
 
     return {
@@ -56,11 +58,11 @@ describe("Clearance", async () => {
         .execTransactionFromModule(testContractAddress, 0, data as string, 0),
     )
       .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.TargetAddressNotAllowed, BYTES32_ZERO);
+      .withArgs(PermissionCheckerStatus.TargetAddressNotAllowed, ZeroHash);
 
     await modifier
       .connect(owner)
-      .allowTarget(ROLE_KEY, testContractAddress, ExecutionOptions.None);
+      .allowTarget(ROLE_KEY, testContractAddress, [], ExecutionOptions.None);
 
     await expect(
       modifier
@@ -76,20 +78,18 @@ describe("Clearance", async () => {
         .execTransactionFromModule(testContractAddress, 0, data as string, 0),
     )
       .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.TargetAddressNotAllowed, BYTES32_ZERO);
+      .withArgs(PermissionCheckerStatus.TargetAddressNotAllowed, ZeroHash);
   });
 
   it("allowing a target does not allow other targets", async () => {
     const { modifier, testContract, testContractClone, owner, invoker } =
       await loadFixture(setup);
     const testContractAddress = await testContract.getAddress();
-    await modifier
-      .connect(owner)
-      .assignRoles(invoker.address, [ROLE_KEY], [true]);
+    await modifier.connect(owner).grantRole(invoker.address, ROLE_KEY, 0, 0, 0);
 
     await modifier
       .connect(owner)
-      .allowTarget(ROLE_KEY, testContractAddress, ExecutionOptions.None);
+      .allowTarget(ROLE_KEY, testContractAddress, [], ExecutionOptions.None);
 
     const { data } = await testContract.doNothing.populateTransaction();
 
@@ -110,7 +110,7 @@ describe("Clearance", async () => {
         ),
     )
       .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.TargetAddressNotAllowed, BYTES32_ZERO);
+      .withArgs(PermissionCheckerStatus.TargetAddressNotAllowed, ZeroHash);
   });
 
   it("allows and then disallows a function", async () => {
@@ -190,7 +190,7 @@ describe("Clearance", async () => {
         ),
     )
       .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.TargetAddressNotAllowed, BYTES32_ZERO);
+      .withArgs(PermissionCheckerStatus.TargetAddressNotAllowed, ZeroHash);
   });
   it("allowing a function tightens a previously allowed target", async () => {
     const { modifier, testContract, owner, invoker } = await loadFixture(setup);
@@ -202,7 +202,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowTarget(ROLE_KEY, testContractAddress, ExecutionOptions.None);
+      .allowTarget(ROLE_KEY, testContractAddress, [], ExecutionOptions.None);
 
     const { data: dataDoNothing } =
       await testContract.doNothing.populateTransaction();
@@ -311,7 +311,7 @@ describe("Clearance", async () => {
 
     await modifier
       .connect(owner)
-      .allowTarget(ROLE_KEY, testContractAddress, ExecutionOptions.None);
+      .allowTarget(ROLE_KEY, testContractAddress, [], ExecutionOptions.None);
 
     await expect(
       modifier
@@ -407,5 +407,151 @@ describe("Clearance", async () => {
         PermissionCheckerStatus.FunctionNotAllowed,
         selector2.padEnd(66, "0"),
       );
+  });
+
+  describe("Clearance.Target with conditions", () => {
+    it("allows target with conditions that pass", async () => {
+      const { modifier, testContract, invoker, owner } =
+        await loadFixture(setup);
+      const testContractAddress = await testContract.getAddress();
+
+      // Allow target with a condition: first param must equal 123
+      await modifier.connect(owner).allowTarget(
+        ROLE_KEY,
+        testContractAddress,
+        [
+          {
+            parent: 0,
+            paramType: Encoding.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: Encoding.Static,
+            operator: Operator.EqualTo,
+            compValue: defaultAbiCoder.encode(["uint256"], [123]),
+          },
+        ],
+        ExecutionOptions.None,
+      );
+
+      const { data: dataPass } =
+        await testContract.oneParamStatic.populateTransaction(123);
+      const { data: dataFail } =
+        await testContract.oneParamStatic.populateTransaction(456);
+
+      // Should pass with correct param
+      await expect(
+        modifier
+          .connect(invoker)
+          .execTransactionFromModule(
+            testContractAddress,
+            0,
+            dataPass as string,
+            0,
+          ),
+      ).to.not.be.reverted;
+
+      // Should fail with wrong param
+      await expect(
+        modifier
+          .connect(invoker)
+          .execTransactionFromModule(
+            testContractAddress,
+            0,
+            dataFail as string,
+            0,
+          ),
+      )
+        .to.be.revertedWithCustomError(modifier, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.ParameterNotAllowed, ZeroHash);
+    });
+
+    it("target conditions apply to all functions", async () => {
+      const { modifier, testContract, invoker, owner } =
+        await loadFixture(setup);
+      const testContractAddress = await testContract.getAddress();
+
+      // Allow target with a condition: first param must equal 123
+      await modifier.connect(owner).allowTarget(
+        ROLE_KEY,
+        testContractAddress,
+        [
+          {
+            parent: 0,
+            paramType: Encoding.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: Encoding.Static,
+            operator: Operator.EqualTo,
+            compValue: defaultAbiCoder.encode(["uint256"], [123]),
+          },
+        ],
+        ExecutionOptions.None,
+      );
+
+      // Both functions should work with param=123
+      const { data: dataOneParam } =
+        await testContract.oneParamStatic.populateTransaction(123);
+      const { data: dataTwoParams } =
+        await testContract.twoParamsStatic.populateTransaction(123, 999);
+
+      await expect(
+        modifier
+          .connect(invoker)
+          .execTransactionFromModule(
+            testContractAddress,
+            0,
+            dataOneParam as string,
+            0,
+          ),
+      ).to.not.be.reverted;
+
+      await expect(
+        modifier
+          .connect(invoker)
+          .execTransactionFromModule(
+            testContractAddress,
+            0,
+            dataTwoParams as string,
+            0,
+          ),
+      ).to.not.be.reverted;
+    });
+
+    it("emits AllowTarget event with conditions", async () => {
+      const { modifier, testContract, owner } = await loadFixture(setup);
+      const testContractAddress = await testContract.getAddress();
+
+      const conditions = [
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.EqualTo,
+          compValue: defaultAbiCoder.encode(["uint256"], [123]),
+        },
+      ];
+
+      await expect(
+        modifier
+          .connect(owner)
+          .allowTarget(
+            ROLE_KEY,
+            testContractAddress,
+            conditions,
+            ExecutionOptions.None,
+          ),
+      ).to.emit(modifier, "AllowTarget");
+    });
   });
 });

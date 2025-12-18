@@ -6,7 +6,7 @@ import { AbiCoder } from "ethers";
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
 import {
-  AbiType,
+  Encoding,
   BYTES32_ZERO,
   Operator,
   PermissionCheckerStatus,
@@ -26,13 +26,13 @@ describe("Operator - GreaterThan", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: AbiType.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.GreaterThan,
         compValue: defaultAbiCoder.encode(["uint256"], [1000]),
       },
@@ -54,13 +54,13 @@ describe("Operator - GreaterThan", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: AbiType.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.GreaterThan,
         compValue: defaultAbiCoder.encode(["uint8"], [50]),
       },
@@ -83,13 +83,13 @@ describe("Operator - GreaterThan", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: AbiType.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.GreaterThan,
         compValue: defaultAbiCoder.encode(["address"], [address]),
       },

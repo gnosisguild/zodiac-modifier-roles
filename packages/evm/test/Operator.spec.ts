@@ -7,7 +7,7 @@ import { AbiCoder } from "ethers";
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
 import {
-  AbiType,
+  Encoding,
   Operator,
   ExecutionOptions,
   PermissionCheckerStatus,
@@ -38,9 +38,7 @@ describe("Operator", async () => {
     );
     await modifier.enableModule(invoker.address);
 
-    await modifier
-      .connect(owner)
-      .assignRoles(invoker.address, [ROLE_KEY], [true]);
+    await modifier.connect(owner).grantRole(invoker.address, ROLE_KEY, 0, 0, 0);
 
     await modifier.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
 
@@ -83,25 +81,25 @@ describe("Operator", async () => {
       [
         {
           parent: 0,
-          paramType: AbiType.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: AbiType.None,
+          paramType: Encoding.None,
           operator: Operator.Or,
           compValue: "0x",
         },
         {
           parent: 1,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["uint256"], [11]),
         },
         {
           parent: 1,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["uint256"], [22]),
         },
@@ -116,7 +114,7 @@ describe("Operator", async () => {
       .withArgs(PermissionCheckerStatus.OrViolation, BYTES32_ZERO);
   });
 
-  it("checks operator And over Calldata", async () => {
+  it("checks operator And over AbiEncoded", async () => {
     const { modifier, testContract, owner, invoker } = await loadFixture(setup);
 
     const SELECTOR =
@@ -144,31 +142,31 @@ describe("Operator", async () => {
       [
         {
           parent: 0,
-          paramType: AbiType.None,
+          paramType: Encoding.None,
           operator: Operator.And,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: AbiType.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: AbiType.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 1,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.LessThan,
           compValue: defaultAbiCoder.encode(["uint256"], [50000]),
         },
         {
           parent: 2,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.GreaterThan,
           compValue: defaultAbiCoder.encode(["uint256"], [40000]),
         },
@@ -218,25 +216,25 @@ describe("Operator", async () => {
       [
         {
           parent: 0,
-          paramType: AbiType.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: AbiType.None,
+          paramType: Encoding.None,
           operator: Operator.And,
           compValue: "0x",
         },
         {
           parent: 1,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.LessThan,
           compValue: defaultAbiCoder.encode(["uint256"], [50000]),
         },
         {
           parent: 1,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.GreaterThan,
           compValue: defaultAbiCoder.encode(["uint256"], [40000]),
         },
@@ -287,37 +285,37 @@ describe("Operator", async () => {
       [
         {
           parent: 0,
-          paramType: AbiType.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.Pass,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: AbiType.None,
+          paramType: Encoding.None,
           operator: Operator.Or,
           compValue: "0x",
         },
         {
           parent: 2,
-          paramType: AbiType.Dynamic,
+          paramType: Encoding.Dynamic,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["string"], ["First String"]),
         },
         {
           parent: 2,
-          paramType: AbiType.Dynamic,
+          paramType: Encoding.Dynamic,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["string"], ["Good Morning!"]),
         },
         {
           parent: 2,
-          paramType: AbiType.Dynamic,
+          paramType: Encoding.Dynamic,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["string"], ["Third String"]),
         },
@@ -367,51 +365,51 @@ describe("Operator", async () => {
       [
         {
           parent: 0,
-          paramType: AbiType.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: AbiType.None,
+          paramType: Encoding.None,
           operator: Operator.Or,
           compValue: "0x",
         },
         {
           parent: 1,
-          paramType: AbiType.Tuple,
+          paramType: Encoding.Tuple,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 1,
-          paramType: AbiType.Tuple,
+          paramType: Encoding.Tuple,
           operator: Operator.Matches,
           compValue: "0x",
         },
         // first tuple variant
         {
           parent: 2,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["uint256"], [1111]),
         },
         {
           parent: 2,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["address"], [addressOne]),
         },
         // second tuple variant
         {
           parent: 3,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["uint256"], [22222]),
         },
         {
           parent: 3,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["address"], [addressTwo]),
         },
@@ -465,87 +463,87 @@ describe("Operator", async () => {
       [
         {
           parent: 0,
-          paramType: AbiType.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: AbiType.None,
+          paramType: Encoding.None,
           operator: Operator.Or,
           compValue: "0x",
         },
         // first Array 1
         {
           parent: 1,
-          paramType: AbiType.Array,
+          paramType: Encoding.Array,
           operator: Operator.Matches,
           compValue: "0x",
         },
         // second Array 2
         {
           parent: 1,
-          paramType: AbiType.Array,
+          paramType: Encoding.Array,
           operator: Operator.Matches,
           compValue: "0x",
         },
         // first array first element 3
         {
           parent: 2,
-          paramType: AbiType.Tuple,
+          paramType: Encoding.Tuple,
           operator: Operator.Matches,
           compValue: "0x",
         },
         // first array second element 4
         {
           parent: 2,
-          paramType: AbiType.Tuple,
+          paramType: Encoding.Tuple,
           operator: Operator.Matches,
           compValue: "0x",
         },
         // second array first element 5
         {
           parent: 3,
-          paramType: AbiType.Tuple,
+          paramType: Encoding.Tuple,
           operator: Operator.Matches,
           compValue: "0x",
         },
         // tuple first
         {
           parent: 4,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: 0,
           compValue: "0x",
         },
         {
           parent: 4,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["address"], [address1]),
         },
         // tuple second 8
         {
           parent: 5,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["uint256"], [334455]),
         },
         {
           parent: 5,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["address"], [address2]),
         },
         // tuple third 9
         {
           parent: 6,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: 0,
           compValue: "0x",
         },
         {
           parent: 6,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["address"], [address3]),
         },
@@ -613,51 +611,51 @@ describe("Operator", async () => {
       [
         {
           parent: 0,
-          paramType: AbiType.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: AbiType.None,
+          paramType: Encoding.None,
           operator: Operator.Or,
           compValue: "0x",
         },
         {
           parent: 1,
-          paramType: AbiType.Tuple,
+          paramType: Encoding.Tuple,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 1,
-          paramType: AbiType.Tuple,
+          paramType: Encoding.Tuple,
           operator: Operator.Matches,
           compValue: "0x",
         },
         // first tuple variant
         {
           parent: 2,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["uint256"], [1111]),
         },
         {
           parent: 2,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["address"], [addressOne]),
         },
         // second tuple variant
         {
           parent: 3,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["uint256"], [22222]),
         },
         {
           parent: 3,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["address"], [addressTwo]),
         },
@@ -710,25 +708,25 @@ describe("Operator", async () => {
       [
         {
           parent: 0,
-          paramType: AbiType.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: AbiType.Tuple,
+          paramType: Encoding.Tuple,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 1,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["uint256"], [345]),
         },
         {
           parent: 1,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["address"], [addressOk]),
         },
@@ -770,49 +768,49 @@ describe("Operator", async () => {
       [
         {
           parent: 0,
-          paramType: AbiType.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: AbiType.Tuple,
+          paramType: Encoding.Tuple,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 1,
-          paramType: AbiType.Dynamic,
+          paramType: Encoding.Dynamic,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["bytes"], ["0xabcdef"]),
         },
         {
           parent: 1,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["uint256"], [1998]),
         },
         {
           parent: 1,
-          paramType: AbiType.Array,
+          paramType: Encoding.Array,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 4,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["uint256"], [7]),
         },
         {
           parent: 4,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["uint256"], [88]),
         },
         {
           parent: 4,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["uint256"], [99]),
         },
@@ -860,70 +858,70 @@ describe("Operator", async () => {
       [
         {
           parent: 0,
-          paramType: AbiType.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: AbiType.Array,
+          paramType: Encoding.Array,
           operator: Operator.Matches,
           compValue: "0x",
         },
         // tuple first
         {
           parent: 1,
-          paramType: AbiType.Tuple,
+          paramType: Encoding.Tuple,
           operator: Operator.Matches,
           compValue: "0x",
         },
         // tuple second
         {
           parent: 1,
-          paramType: AbiType.Tuple,
+          paramType: Encoding.Tuple,
           operator: Operator.Matches,
           compValue: "0x",
         },
         // tuple third
         {
           parent: 1,
-          paramType: AbiType.Tuple,
+          paramType: Encoding.Tuple,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 2,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: 0,
           compValue: "0x",
         },
         {
           parent: 2,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["address"], [address1]),
         },
         {
           parent: 3,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: 0,
           compValue: "0x",
         },
         {
           parent: 3,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["address"], [address2]),
         },
         {
           parent: 4,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: 0,
           compValue: "0x",
         },
         {
           parent: 4,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.EqualTo,
           compValue: defaultAbiCoder.encode(["address"], [address3]),
         },
@@ -983,7 +981,7 @@ describe("Operator", async () => {
 
       await modifier
         .connect(owner)
-        .assignRoles(invoker.address, [ROLE_KEY], [true]);
+        .grantRole(invoker.address, ROLE_KEY, 0, 0, 0);
 
       // set it to true
       await modifier
@@ -996,54 +994,54 @@ describe("Operator", async () => {
         [
           {
             parent: 0,
-            paramType: AbiType.None,
+            paramType: Encoding.None,
             operator: Operator.Or,
             compValue: "0x",
           },
           // 1
           {
             parent: 0,
-            paramType: AbiType.Calldata,
+            paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             compValue: "0x",
           },
           // 2
           {
             parent: 0,
-            paramType: AbiType.Calldata,
+            paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             compValue: "0x",
           },
           // 3
           {
             parent: 0,
-            paramType: AbiType.Calldata,
+            paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             compValue: "0x",
           },
           // first variant
           {
             parent: 1,
-            paramType: AbiType.Static,
+            paramType: Encoding.Static,
             operator: 0,
             compValue: "0x",
           },
           {
             parent: 1,
-            paramType: AbiType.Dynamic,
+            paramType: Encoding.Dynamic,
             operator: Operator.EqualTo,
             compValue: defaultAbiCoder.encode(["string"], ["First String"]),
           },
           // second variant
           {
             parent: 2,
-            paramType: AbiType.Static,
+            paramType: Encoding.Static,
             operator: Operator.EqualTo,
             compValue: defaultAbiCoder.encode(["bool"], [true]),
           },
           {
             parent: 2,
-            paramType: AbiType.Dynamic,
+            paramType: Encoding.Dynamic,
             operator: Operator.EqualTo,
             compValue: defaultAbiCoder.encode(["string"], ["Good Morning!"]),
           },
@@ -1051,13 +1049,13 @@ describe("Operator", async () => {
           {
             parent: 3,
 
-            paramType: AbiType.Static,
+            paramType: Encoding.Static,
             operator: Operator.Pass,
             compValue: "0x",
           },
           {
             parent: 3,
-            paramType: AbiType.Dynamic,
+            paramType: Encoding.Dynamic,
             operator: Operator.EqualTo,
             compValue: defaultAbiCoder.encode(["string"], ["Third String"]),
           },

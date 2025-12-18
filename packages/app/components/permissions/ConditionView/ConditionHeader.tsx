@@ -1,4 +1,4 @@
-import { Condition, Operator, ParameterType } from "zodiac-roles-sdk"
+import { Encoding, Condition, Operator } from "zodiac-roles-sdk"
 import { AbiFunction, AbiParameter } from "viem"
 import { ReactNode } from "react"
 import { BsLightningCharge } from "react-icons/bs"
@@ -28,8 +28,7 @@ const ConditionHeader: React.FC<Props> = ({
   const paramName =
     paramIndex !== undefined ? abi?.name || `[${paramIndex}]` : "" // e.g.: array elements don't have a param name
 
-  const paramTypeLabel =
-    !abi || "inputs" in abi ? ParameterType[paramType] : abi.type
+  const paramTypeLabel = !abi || "inputs" in abi ? Encoding[paramType] : abi.type
 
   const abiMismatch = abi && condition && !matchesAbi(condition, abi)
 
@@ -37,10 +36,10 @@ const ConditionHeader: React.FC<Props> = ({
 
   // only conditions that aren't used are collapsible
   const isCollapsible =
-    paramType >= ParameterType.Tuple &&
+    paramType >= Encoding.Tuple &&
     !(
       condition.operator >= Operator.Matches &&
-      condition.operator <= Operator.ArraySubset
+      condition.operator <= Operator.ArrayTailMatches
     )
 
   return (
@@ -74,7 +73,7 @@ const ConditionHeader: React.FC<Props> = ({
               >
                 {paramTypeLabel}
                 <BsLightningCharge />
-                {ParameterType[paramType]}
+                {Encoding[paramType]}
               </Flex>
             ) : (
               paramTypeLabel
@@ -107,8 +106,8 @@ const OperatorLabels: Record<number, ReactNode> = {
   [Operator.Matches]: "matches",
   [Operator.ArraySome]: "has at least one element that",
   [Operator.ArrayEvery]: "only has elements that",
-  [Operator.ArraySubset]:
-    "for each sub condition, has at least one element that meets it",
+  [Operator.ArrayTailMatches]:
+    "rmatches the end of the collection",
 
   [Operator.EqualToAvatar]: (
     <>

@@ -1,23 +1,17 @@
 import { describe, it, expect } from "vitest"
-import { Function, Operator, ParameterType } from "zodiac-roles-deployments"
+import { Encoding, Function, Operator } from "zodiac-roles-deployments"
 import { subtractFunction } from "./subtractFunction"
 import { abiEncode } from "../abiEncode"
 
 const COMP = (id: number) => ({
-  paramType: ParameterType.Static,
+  paramType: Encoding.Static,
   operator: Operator.EqualTo,
   compValue: abiEncode(["uint256"], [id]),
 })
 
 const OR = (...children: any[]) => ({
-  paramType: ParameterType.None,
+  paramType: Encoding.None,
   operator: Operator.Or,
-  children,
-})
-
-const MATCHES = (paramType: ParameterType, ...children: any[]) => ({
-  paramType,
-  operator: Operator.Matches,
   children,
 })
 

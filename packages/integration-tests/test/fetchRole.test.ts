@@ -5,7 +5,7 @@ import { fetchRole } from "zodiac-roles-deployments"
 chai.use(chaiAsPromised)
 const expect = chai.expect
 
-describe("fetchRole", () => {
+describe.skip("fetchRole", () => {
   it("allows fetching historic role states", async () => {
     const role = await fetchRole({
       address: "0x13c61a25db73e7a94a244bd2205adba8b4a60f4a",

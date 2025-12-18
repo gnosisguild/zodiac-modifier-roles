@@ -1,5 +1,5 @@
 import { ParamType } from "ethers"
-import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
+import { Encoding, Condition, Operator } from "zodiac-roles-deployments"
 
 import { mapScoping } from "./matches"
 
@@ -21,7 +21,7 @@ export const every =
       throw new Error("every() element condition must not be undefined")
     }
     return {
-      paramType: ParameterType.Array,
+      paramType: Encoding.Array,
       operator: Operator.ArrayEvery,
       children: [
         mapScoping(elementScoping, abiType.arrayChildren!) as Condition, // cast is safe because of earlier elementScoping check
@@ -45,7 +45,7 @@ export const some =
       throw new Error("some() element condition must not be undefined")
     }
     return {
-      paramType: ParameterType.Array,
+      paramType: Encoding.Array,
       operator: Operator.ArraySome,
       children: [
         mapScoping(elementScoping, abiType.arrayChildren!) as Condition, // cast is safe because of earlier elementScoping check
@@ -53,26 +53,4 @@ export const some =
     }
   }
 
-/**
- * Passes if every element of the array matches one of the given conditions. Every condition must be used at most once.
- * @param elementScopings The conditions on the array elements
- */
-export const subset =
-  <S extends Scoping<ArrayElement<T>>[], T extends any[]>(
-    elementScopings: S
-  ): ConditionFunction<T> =>
-  (abiType: ParamType) => {
-    if (abiType.baseType !== "array") {
-      throw new Error("subset() can only be used on array types")
-    }
-    return {
-      paramType: ParameterType.Array,
-      operator: Operator.ArraySubset,
-      children: elementScopings.map((elementScoping) => {
-        if (elementScoping === undefined) {
-          throw new Error("subset() element condition must not be undefined")
-        }
-        return mapScoping(elementScoping, abiType.arrayChildren!) as Condition // cast is safe because of earlier elementScoping check
-      }),
-    }
-  }
+

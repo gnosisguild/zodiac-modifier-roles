@@ -1,7 +1,7 @@
-import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
+import { Encoding, Condition, Operator } from "zodiac-roles-deployments"
 
 export type TypeTree = {
-  paramType: ParameterType
+  paramType: Encoding
   children: TypeTree[]
 }
 
@@ -57,22 +57,19 @@ export function createTypeTree(condition: Condition): TypeTree | null {
 }
 
 export function isLogical({ operator }: { operator: Operator }) {
-  return [Operator.And, Operator.Or, Operator.Nor].includes(operator)
+  return [Operator.And, Operator.Or].includes(operator)
 }
 
-export function isComplex({ paramType }: { paramType: ParameterType }) {
-  return [
-    ParameterType.AbiEncoded,
-    ParameterType.Calldata,
-    ParameterType.Array,
-    ParameterType.Tuple,
-  ].includes(paramType)
+export function isComplex({ paramType }: { paramType: Encoding }) {
+  return [Encoding.AbiEncoded, Encoding.Array, Encoding.Tuple].includes(
+    paramType
+  )
 }
 
-export function isSimple({ paramType }: { paramType: ParameterType }) {
-  return [ParameterType.Dynamic, ParameterType.Static].includes(paramType)
+export function isSimple({ paramType }: { paramType: Encoding }) {
+  return [Encoding.Dynamic, Encoding.Static].includes(paramType)
 }
 
-export function isArray({ paramType }: { paramType: ParameterType }) {
-  return paramType == ParameterType.Array
+export function isArray({ paramType }: { paramType: Encoding }) {
+  return paramType == Encoding.Array
 }

@@ -2,7 +2,7 @@ import { expect } from "chai";
 import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import { AbiType, ExecutionOptions, Operator } from "./utils";
+import { Encoding, ExecutionOptions, Operator } from "./utils";
 import { deployRolesMod } from "./setup";
 
 const AddressOne = "0x0000000000000000000000000000000000000001";
@@ -31,10 +31,10 @@ describe("EmitsEvent", async () => {
     await expect(
       modifier
         .connect(owner)
-        .allowTarget(ROLE_KEY, AddressOne, ExecutionOptions.Send),
+        .allowTarget(ROLE_KEY, AddressOne, [], ExecutionOptions.Send),
     )
       .to.emit(modifier, "AllowTarget")
-      .withArgs(ROLE_KEY, AddressOne, ExecutionOptions.Send);
+      .withArgs(ROLE_KEY, AddressOne, [], ExecutionOptions.Send);
   });
   it("ScopeTarget", async () => {
     const { owner, modifier } = await loadFixture(setup);
@@ -83,13 +83,13 @@ describe("EmitsEvent", async () => {
         [
           {
             parent: 0,
-            paramType: AbiType.Calldata,
+            paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: AbiType.Static,
+            paramType: Encoding.Static,
             operator: Operator.Pass,
             compValue: "0x",
           },

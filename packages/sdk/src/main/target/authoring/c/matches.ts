@@ -1,5 +1,9 @@
 import { BigNumberish, isHexString, ParamType } from "ethers"
-import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
+import {
+  Condition,
+  Operator,
+  Encoding as ParameterType,
+} from "zodiac-roles-deployments"
 
 import { coercePermission } from "../../../permission/coercePermission"
 import { checkParameterTypeCompatibility } from "../../../condition/conditionIntegrity"
@@ -17,7 +21,7 @@ import {
   TupleScopings,
 } from "../types"
 
-type AbiType = string | ParamType
+type Encoding = string | ParamType
 
 /**
  * Matches a tuple or array against a structure of conditions.
@@ -101,7 +105,7 @@ export const matches =
 const calldataMatchesScopings =
   <S extends TupleScopings<any>>(
     scopings: S,
-    abiTypes: readonly AbiType[],
+    abiTypes: readonly Encoding[],
     options: {
       selector?: `0x${string}`
       etherWithinAllowance?: `0x${string}`
@@ -130,7 +134,7 @@ const calldataMatchesScopings =
     assertCompatibleParamTypes(conditions, paramTypes)
 
     const matchesCondition = {
-      paramType: ParameterType.Calldata,
+      paramType: ParameterType.AbiEncoded,
       operator: Operator.Matches,
       children: conditions.map(
         (condition, index) => condition || describeStructure(paramTypes[index])
@@ -182,10 +186,10 @@ const calldataMatchesFunctionPermission =
     if (condition) {
       if (
         condition.operator !== Operator.Matches ||
-        condition.paramType !== ParameterType.Calldata
+        condition.paramType !== ParameterType.AbiEncoded
       ) {
         throw new Error(
-          `calldataMatches expects a function permission with an \`Operator.matches\`, \`ParamType.Calldata\` condition, got: \`Operator.${
+          `calldataMatches expects a function permission with an \`Operator.matches\`, \`ParamType.AbiEncoded\` condition, got: \`Operator.${
             Operator[condition.operator]
           }\`, \`ParamType.${ParameterType[condition.paramType]}\``
         )
@@ -215,7 +219,7 @@ type CalldataMatches = {
    **/
   <S extends TupleScopings<any>>(
     scopings: S,
-    abiTypes: readonly AbiType[],
+    abiTypes: readonly Encoding[],
     options?: {
       selector?: `0x${string}`
       etherWithinAllowance?: `0x${string}`
@@ -236,7 +240,7 @@ type CalldataMatches = {
 
 export const calldataMatches: CalldataMatches = <S extends TupleScopings<any>>(
   scopingsOrFunctionPermission: S | FunctionPermission,
-  abiTypes?: readonly AbiType[],
+  abiTypes?: readonly Encoding[],
   options?: {
     selector?: `0x${string}`
     etherWithinAllowance?: `0x${string}`
@@ -261,7 +265,7 @@ export const calldataMatches: CalldataMatches = <S extends TupleScopings<any>>(
  * @param abiTypes The parameter types defining how to decode bytes
  **/
 export const abiEncodedMatches =
-  <S extends TupleScopings<any>>(scopings: S, abiTypes: AbiType[]) =>
+  <S extends TupleScopings<any>>(scopings: S, abiTypes: Encoding[]) =>
   (abiType?: ParamType) => {
     const paramTypes = abiTypes.map((abiType) => ParamType.from(abiType))
 
@@ -406,11 +410,10 @@ const assertCompatibleParamTypes = (
 
     if (scopedType === expectedType) return
 
-    // allow dynamic type values to be interpreted as calldata or abi encoded
+    // allow dynamic type values to be interpreted as abi encoded
     if (
       expectedType === ParameterType.Dynamic &&
-      (scopedType === ParameterType.Calldata ||
-        scopedType === ParameterType.AbiEncoded)
+      scopedType === ParameterType.AbiEncoded
     ) {
       return
     }

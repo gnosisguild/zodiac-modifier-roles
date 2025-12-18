@@ -24,17 +24,16 @@ Specifies how to decode and pluck the parameter value from calldata. It can be o
 | **`Tuple`**      | Decode the value as a tuple. The `children` condition nodes inform the types of the tuple's fields.                      |
 | **`Array`**      | Interpret the word as an offset to a dynamic length array. The `children` condition nodes inform the array element type. |
 | **`AbiEncoded`** | Decode the value using standard ABI decoding. The `children` condition nodes inform the individual field types.          |
-| **`Calldata`**   | Decode the value like `AbiEncoded`, but skip the first 4 bytes (function selector).                                      |
 | **`None`**       | Used with logical expressions. The `children` condition nodes inform how to interpret the current scope.                 |
 
 ### `children`
 
 An array of sub conditions, used for any of the following purposes:
 
-- Inform the decoding of complex types by defining types of their fields or elements (required for `ParamType.AbiEncoded`, `ParamType.Calldata`, `ParamType.Tuple`, `ParamType.Array`)
+- Inform the decoding of complex types by defining types of their fields or elements (required for `ParamType.AbiEncoded`, `ParamType.Tuple`, `ParamType.Array`)
 - Set conditions on specific fields of a tuple type value (via `Operator.Matches`)
-- Set conditions on elements of an array type value (via `Operator.ArraySome`, `Operator.ArrayEvery`, `Operator.ArraySubset`)
-- Define branch conditions for n-ary logical operators (`Operator.And`, `Operator.Or`, `Operator.Nor`)
+- Set conditions on elements of an array type value (via `Operator.ArraySome`, `Operator.ArrayEvery`, `Operator.ArrayTailMatches`)
+- Define branch conditions for n-ary logical operators (`Operator.And`, `Operator.Or`)
 
 ### `operator`
 
@@ -49,8 +48,7 @@ Defines the value to compare against (only used with comparison operators).
 ### `Matches`
 
 Allows setting conditions on selected fields of tuple type parameters.
-Used with `ParamType.Calldata` it allows setting conditions on specific parameters of the function call.
-Used with `ParamType.AbiEncoded` it allows setting conditions on selected ABI encoded variables within a bytes value.
+Used with `ParamType.AbiEncoded` it allows setting conditions on specific parameters of the function call or on selected ABI encoded variables within a bytes value.
 
 ### Comparisons
 
@@ -104,11 +102,6 @@ Checks that at least one element of the array matches the condition.
 
 Checks that every element of the array matches the condition.
 
-#### `ArraySubset`
-
-Checks that every element of the array passes at least one child condition.
-Every child condition must only be taken into account once, meaning that if multiple elements are supposed to match the same condition that condition must appear multiple times in the children.
-
 ### Logical Expressions
 
 Logical expressions are n-ary operators that take an array of child conditions and combine their evaluation results.
@@ -121,10 +114,6 @@ Checks that every child condition evaluates to `true`.
 #### `Or`
 
 Checks that at least one of the child conditions evaluates to `true`.
-
-#### `Nor`
-
-Checks that every child condition evaluates to `false`.
 
 ### Allowance Expressions
 
@@ -163,7 +152,7 @@ The following condition enforces that the Balancer [single swap](https://docs.ba
 
 <BalancerSwapExample />
 
-The root condition node generally targets the entire calldata range after the 4 bytes function selector. It uses a `ParamType.Calldata` matches structure defining how to decode the bytes in that range.
+The root condition node generally targets the entire calldata range after the 4 bytes function selector. It uses a `ParamType.AbiEncoded` matches structure defining how to decode the bytes in that range.
 
 We define `Operator.Matches` checks on both tuples.
 

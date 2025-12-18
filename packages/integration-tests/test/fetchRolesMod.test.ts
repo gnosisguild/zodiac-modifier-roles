@@ -5,7 +5,7 @@ import { fetchRolesMod } from "zodiac-roles-deployments"
 chai.use(chaiAsPromised)
 const expect = chai.expect
 
-describe("fetchRolesMod", () => {
+describe.skip("fetchRolesMod", () => {
   it("fetches the mod's base config, allowance, and unwrap adapter", async () => {
     const rolesMod = await fetchRolesMod({
       address: "0x13c61a25db73e7a94a244bd2205adba8b4a60f4a",

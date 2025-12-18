@@ -4,7 +4,7 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { setupOneParamAddress } from "../setup";
 import {
-  AbiType,
+  Encoding,
   BYTES32_ZERO,
   Operator,
   PermissionCheckerStatus,
@@ -22,13 +22,13 @@ describe("Operator - EqualToAvatar", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: AbiType.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.EqualToAvatar,
         compValue: `0x`,
       },

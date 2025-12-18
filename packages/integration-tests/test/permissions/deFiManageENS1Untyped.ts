@@ -120,7 +120,7 @@ const preset = [
     targetAddress: COMPTROLLER,
     signature: "claimComp(address,address[])",
     condition: c.calldataMatches(
-      [c.avatar, c.subset([cDAI, cUSDC])],
+      [c.avatar, c.every(c.or(cDAI, cUSDC))],
       ["address", "address[]"]
     ),
   },

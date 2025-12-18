@@ -2,16 +2,22 @@ import { expect } from "chai";
 import hre from "hardhat";
 import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
 
-import { AbiCoder, BigNumberish, parseEther } from "ethers";
+import {
+  AbiCoder,
+  BigNumberish,
+  parseEther,
+  solidityPacked,
+  ZeroHash,
+} from "ethers";
 
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
 import {
-  AbiType,
+  Encoding,
   Operator,
   ExecutionOptions,
   PermissionCheckerStatus,
-  BYTES32_ZERO,
+  flattenCondition,
 } from "../utils";
 import { deployRolesMod } from "../setup";
 
@@ -62,7 +68,7 @@ describe("Operator - EtherWithinAllowance", async () => {
         .setAllowance(key, balance, maxRefill || 0, refill, period, timestamp);
     }
 
-    await roles.connect(owner).assignRoles(invoker.address, [ROLE_KEY], [true]);
+    await roles.connect(owner).grantRole(invoker.address, ROLE_KEY, 0, 0, 0);
     await roles.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
     await roles.connect(owner).scopeTarget(ROLE_KEY, testAddress);
 
@@ -80,13 +86,13 @@ describe("Operator - EtherWithinAllowance", async () => {
       [
         {
           parent: 0,
-          paramType: AbiType.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: AbiType.None,
+          paramType: Encoding.None,
           operator: Operator.EtherWithinAllowance,
           compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
         },
@@ -234,43 +240,43 @@ describe("Operator - EtherWithinAllowance", async () => {
         [
           {
             parent: 0,
-            paramType: AbiType.None,
+            paramType: Encoding.None,
             operator: Operator.Or,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: AbiType.Calldata,
+            paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: AbiType.Calldata,
+            paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 1,
-            paramType: AbiType.Static,
+            paramType: Encoding.Static,
             operator: Operator.EqualTo,
             compValue: defaultAbiCoder.encode(["uint256"], [value1]),
           },
           {
             parent: 1,
-            paramType: AbiType.None,
+            paramType: Encoding.None,
             operator: Operator.EtherWithinAllowance,
             compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey1]),
           },
           {
             parent: 2,
-            paramType: AbiType.Static,
+            paramType: Encoding.Static,
             operator: Operator.EqualTo,
             compValue: defaultAbiCoder.encode(["uint256"], [value2]),
           },
           {
             parent: 2,
-            paramType: AbiType.None,
+            paramType: Encoding.None,
             operator: Operator.EtherWithinAllowance,
             compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey2]),
           },
@@ -295,17 +301,17 @@ describe("Operator - EtherWithinAllowance", async () => {
        */
       await expect(invoke(1000, valueOther))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.OrViolation, BYTES32_ZERO);
+        .withArgs(PermissionCheckerStatus.OrViolation, ZeroHash);
 
       // Exceed value for Variant1
       await expect(invoke(allowanceAmount1 + 1, value1))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.OrViolation, BYTES32_ZERO);
+        .withArgs(PermissionCheckerStatus.OrViolation, ZeroHash);
 
       // Exceed value for Variant2
       await expect(invoke(allowanceAmount2 + 1, value2))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.OrViolation, BYTES32_ZERO);
+        .withArgs(PermissionCheckerStatus.OrViolation, ZeroHash);
 
       // Checks that both allowance balances still remain unchanged
       expect((await roles.allowances(allowanceKey1)).balance).to.equal(
@@ -337,11 +343,401 @@ describe("Operator - EtherWithinAllowance", async () => {
       // check that neither variant can now be invoked
       await expect(invoke(1, value1))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.OrViolation, BYTES32_ZERO);
+        .withArgs(PermissionCheckerStatus.OrViolation, ZeroHash);
 
       await expect(invoke(1, value2))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.OrViolation, BYTES32_ZERO);
+        .withArgs(PermissionCheckerStatus.OrViolation, ZeroHash);
+    });
+  });
+
+  describe("EtherWithinAllowance - Logical Combinations", () => {
+    it("AND(EtherWithinAllowance, SomeParamComparison)", async () => {
+      const Avatar = await hre.ethers.getContractFactory("TestAvatar");
+      const avatar = await Avatar.deploy();
+
+      const TestContract = await hre.ethers.getContractFactory("TestContract");
+      const testContract = await TestContract.deploy();
+
+      const [owner, invoker] = await hre.ethers.getSigners();
+      const testAddress = await testContract.getAddress();
+      const avatarAddress = await avatar.getAddress();
+
+      await invoker.sendTransaction({
+        to: avatarAddress,
+        value: parseEther("1"),
+      });
+
+      const roles = await deployRolesMod(
+        hre,
+        owner.address,
+        avatarAddress,
+        avatarAddress,
+      );
+      await roles.enableModule(invoker.address);
+      await roles.connect(owner).grantRole(invoker.address, ROLE_KEY, 0, 0, 0);
+      await roles.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
+      await roles.connect(owner).scopeTarget(ROLE_KEY, testAddress);
+
+      const allowanceKey =
+        "0x0000000000000000000000000000000000000000000000000000000000000001";
+      const allowedValue = 42;
+
+      await roles.connect(owner).setAllowance(allowanceKey, 1000, 0, 0, 0, 0);
+
+      const SELECTOR =
+        testContract.interface.getFunction("fnWithSingleParam").selector;
+
+      // Structure: And -> [Calldata -> Static, EtherWithinAllowance] (EtherWithinAllowance sibling of Calldata)
+      await roles.connect(owner).scopeFunction(
+        ROLE_KEY,
+        testAddress,
+        SELECTOR,
+        flattenCondition({
+          paramType: Encoding.None,
+          operator: Operator.And,
+          children: [
+            {
+              paramType: Encoding.AbiEncoded,
+              operator: Operator.Matches,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: defaultAbiCoder.encode(
+                    ["uint256"],
+                    [allowedValue],
+                  ),
+                },
+              ],
+            },
+            {
+              paramType: Encoding.None,
+              operator: Operator.EtherWithinAllowance,
+              compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
+            },
+          ],
+        }),
+        ExecutionOptions.Send,
+      );
+
+      async function invoke(value: BigNumberish, p: BigNumberish) {
+        return roles
+          .connect(invoker)
+          .execTransactionFromModule(
+            testAddress,
+            value,
+            (await testContract.fnWithSingleParam.populateTransaction(p))
+              .data as string,
+            0,
+          );
+      }
+
+      // Wrong param value - should fail
+      await expect(invoke(100, 999))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.ParameterNotAllowed, ZeroHash);
+
+      // Correct param but exceeds allowance - should fail
+      await expect(invoke(1001, allowedValue))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.EtherAllowanceExceeded, allowanceKey);
+
+      // Correct param and within allowance - should succeed
+      await expect(invoke(500, allowedValue)).to.not.be.reverted;
+      expect((await roles.allowances(allowanceKey)).balance).to.equal(500);
+
+      // Exhaust remaining allowance
+      await expect(invoke(500, allowedValue)).to.not.be.reverted;
+      expect((await roles.allowances(allowanceKey)).balance).to.equal(0);
+
+      // Now any call should fail due to exhausted allowance
+      await expect(invoke(1, allowedValue))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.EtherAllowanceExceeded, allowanceKey);
+    });
+
+    it("AND(EtherWithinAllowance, OR(ParamA, ParamB))", async () => {
+      const Avatar = await hre.ethers.getContractFactory("TestAvatar");
+      const avatar = await Avatar.deploy();
+
+      const TestContract = await hre.ethers.getContractFactory("TestContract");
+      const testContract = await TestContract.deploy();
+
+      const [owner, invoker] = await hre.ethers.getSigners();
+      const testAddress = await testContract.getAddress();
+      const avatarAddress = await avatar.getAddress();
+
+      await invoker.sendTransaction({
+        to: avatarAddress,
+        value: parseEther("1"),
+      });
+
+      const roles = await deployRolesMod(
+        hre,
+        owner.address,
+        avatarAddress,
+        avatarAddress,
+      );
+      await roles.enableModule(invoker.address);
+      await roles.connect(owner).grantRole(invoker.address, ROLE_KEY, 0, 0, 0);
+      await roles.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
+      await roles.connect(owner).scopeTarget(ROLE_KEY, testAddress);
+
+      const allowanceKey =
+        "0x0000000000000000000000000000000000000000000000000000000000000001";
+      const allowedValueA = 100;
+      const allowedValueB = 200;
+
+      await roles.connect(owner).setAllowance(allowanceKey, 1000, 0, 0, 0, 0);
+
+      const SELECTOR =
+        testContract.interface.getFunction("fnWithSingleParam").selector;
+
+      // Structure: And -> [Calldata -> Or, EtherWithinAllowance] (EtherWithinAllowance sibling of Calldata)
+      await roles.connect(owner).scopeFunction(
+        ROLE_KEY,
+        testAddress,
+        SELECTOR,
+        flattenCondition({
+          paramType: Encoding.None,
+          operator: Operator.And,
+          children: [
+            {
+              paramType: Encoding.AbiEncoded,
+              operator: Operator.Matches,
+              children: [
+                {
+                  paramType: Encoding.None,
+                  operator: Operator.Or,
+                  children: [
+                    {
+                      paramType: Encoding.Static,
+                      operator: Operator.EqualTo,
+                      compValue: defaultAbiCoder.encode(
+                        ["uint256"],
+                        [allowedValueA],
+                      ),
+                    },
+                    {
+                      paramType: Encoding.Static,
+                      operator: Operator.EqualTo,
+                      compValue: defaultAbiCoder.encode(
+                        ["uint256"],
+                        [allowedValueB],
+                      ),
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              paramType: Encoding.None,
+              operator: Operator.EtherWithinAllowance,
+              compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
+            },
+          ],
+        }),
+        ExecutionOptions.Send,
+      );
+
+      async function invoke(value: BigNumberish, p: BigNumberish) {
+        return roles
+          .connect(invoker)
+          .execTransactionFromModule(
+            testAddress,
+            value,
+            (await testContract.fnWithSingleParam.populateTransaction(p))
+              .data as string,
+            0,
+          );
+      }
+
+      // Wrong param value (not A or B) - should fail
+      await expect(invoke(100, 999))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.OrViolation, ZeroHash);
+
+      // Allowed value A, within allowance - should succeed
+      await expect(invoke(300, allowedValueA)).to.not.be.reverted;
+      expect((await roles.allowances(allowanceKey)).balance).to.equal(700);
+
+      // Allowed value B, within allowance - should succeed
+      await expect(invoke(400, allowedValueB)).to.not.be.reverted;
+      expect((await roles.allowances(allowanceKey)).balance).to.equal(300);
+
+      // Allowed value A, exceeds remaining allowance - should fail
+      await expect(invoke(500, allowedValueA))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.EtherAllowanceExceeded, allowanceKey);
+
+      // Exhaust remaining allowance with value B
+      await expect(invoke(300, allowedValueB)).to.not.be.reverted;
+      expect((await roles.allowances(allowanceKey)).balance).to.equal(0);
+
+      // Both values should now fail due to exhausted allowance
+      await expect(invoke(1, allowedValueA))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.EtherAllowanceExceeded, allowanceKey);
+      await expect(invoke(1, allowedValueB))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.EtherAllowanceExceeded, allowanceKey);
+    });
+  });
+
+  describe("EtherWithinAllowance - Price Adapter", () => {
+    it("works with PriceAdapter", async () => {
+      const Avatar = await hre.ethers.getContractFactory("TestAvatar");
+      const avatar = await Avatar.deploy();
+
+      const TestContract = await hre.ethers.getContractFactory("TestContract");
+      const testContract = await TestContract.deploy();
+
+      const [owner, invoker] = await hre.ethers.getSigners();
+      const testAddress = await testContract.getAddress();
+      const avatarAddress = await avatar.getAddress();
+
+      /*
+       * ETH(18) → accrue USDC(6)
+       */
+
+      // fund avatar with 10 ETH
+      await invoker.sendTransaction({
+        to: avatarAddress,
+        value: parseEther("10"),
+      });
+
+      const roles = await deployRolesMod(
+        hre,
+        owner.address,
+        avatarAddress,
+        avatarAddress,
+      );
+      await roles.enableModule(invoker.address);
+      await roles.connect(owner).grantRole(invoker.address, ROLE_KEY, 0, 0, 0);
+      await roles.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
+      await roles.connect(owner).scopeTarget(ROLE_KEY, testAddress);
+
+      const allowanceKey =
+        "0x0000000000000000000000000000000000000000000000000000000000000001";
+
+      // Deploy ETH/USD adapter: 1 ETH = 2000 USD
+      const MockPriceAdapter =
+        await hre.ethers.getContractFactory("MockPriceAdapter");
+      const ethUsdAdapter = await MockPriceAdapter.deploy(2000n * 10n ** 18n);
+
+      // Set allowance: 5000 USDC (6 decimals)
+      await roles
+        .connect(owner)
+        .setAllowance(allowanceKey, 5000n * 10n ** 6n, 0, 0, 0, 0);
+
+      const compValue = solidityPacked(
+        ["bytes32", "address", "uint8", "uint8"],
+        [allowanceKey, await ethUsdAdapter.getAddress(), 6, 18],
+      );
+
+      const SELECTOR = testContract.interface.getFunction(
+        "receiveEthAndDoNothing",
+      ).selector;
+
+      await roles.connect(owner).scopeFunction(
+        ROLE_KEY,
+        testAddress,
+        SELECTOR,
+        [
+          {
+            parent: 0,
+            paramType: Encoding.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: Encoding.None,
+            operator: Operator.EtherWithinAllowance,
+            compValue,
+          },
+        ],
+        ExecutionOptions.Send,
+      );
+
+      async function sendEth(value: BigNumberish) {
+        return roles
+          .connect(invoker)
+          .execTransactionFromModule(
+            testAddress,
+            value,
+            (await testContract.receiveEthAndDoNothing.populateTransaction())
+              .data as string,
+            0,
+          );
+      }
+
+      // Send 2 ETH → 2 * 2000 = 4000 USDC consumed
+      await expect(sendEth(parseEther("2"))).to.not.be.reverted;
+
+      let allowance = await roles.allowances(allowanceKey);
+      expect(allowance.balance).to.equal(1000n * 10n ** 6n); // 5000 - 4000 = 1000 USDC
+
+      // Send 0.5 ETH → 1000 USDC consumed, total 5000
+      await expect(sendEth(parseEther("0.5"))).to.not.be.reverted;
+
+      allowance = await roles.allowances(allowanceKey);
+      expect(allowance.balance).to.equal(0);
+
+      // Any more reverts (0.001 ETH = 2 USDC, but balance is 0)
+      await expect(sendEth(parseEther("0.001")))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.EtherAllowanceExceeded, allowanceKey);
+    });
+  });
+
+  describe("EtherWithinAllowance - Standalone Root", () => {
+    it("works as standalone root condition with allowTarget", async () => {
+      const { owner, invoker, roles, testContract } = await loadFixture(setup);
+
+      const testContractAddress = await testContract.getAddress();
+      const allowanceKey =
+        "0x0000000000000000000000000000000000000000000000000000000000000002";
+
+      await roles
+        .connect(owner)
+        .setAllowance(allowanceKey, parseEther("2"), 0, 0, 0, 0);
+
+      await roles.connect(owner).allowTarget(
+        ROLE_KEY,
+        testContractAddress,
+        flattenCondition({
+          paramType: Encoding.None,
+          operator: Operator.EtherWithinAllowance,
+          compValue: allowanceKey,
+        }),
+        ExecutionOptions.Send,
+      );
+
+      // Passes with value within allowance
+      await roles
+        .connect(invoker)
+        .execTransactionFromModule(
+          testContractAddress,
+          parseEther("1"),
+          "0x",
+          0,
+        );
+
+      // Fails when exceeding remaining allowance
+      await expect(
+        roles
+          .connect(invoker)
+          .execTransactionFromModule(
+            testContractAddress,
+            parseEther("2"),
+            "0x",
+            0,
+          ),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.EtherAllowanceExceeded, allowanceKey);
     });
   });
 });

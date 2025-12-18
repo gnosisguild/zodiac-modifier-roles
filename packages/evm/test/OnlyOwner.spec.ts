@@ -2,7 +2,7 @@ import { expect } from "chai";
 import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import { AbiType, Operator } from "./utils";
+import { Encoding, Operator } from "./utils";
 import { deployRolesMod } from "./setup";
 
 const SomeAddress = "0x000000000000000000000000000000000000000f";
@@ -35,11 +35,12 @@ describe("OnlyOwner", async () => {
     const { modifier, owner, johnDoe } = await loadFixture(setup);
 
     await expect(
-      modifier.connect(johnDoe).allowTarget(ROLE_KEY, SomeAddress, 0),
+      modifier.connect(johnDoe).allowTarget(ROLE_KEY, SomeAddress, [], 0),
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
-    await expect(modifier.connect(owner).allowTarget(ROLE_KEY, SomeAddress, 0))
-      .to.not.be.reverted;
+    await expect(
+      modifier.connect(owner).allowTarget(ROLE_KEY, SomeAddress, [], 0),
+    ).to.not.be.reverted;
   });
   it("onlyOwner for scopeTarget, simple invoker fails", async () => {
     const { modifier, owner, johnDoe } = await loadFixture(setup);
@@ -101,13 +102,13 @@ describe("OnlyOwner", async () => {
         [
           {
             parent: 0,
-            paramType: AbiType.Calldata,
+            paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: AbiType.Static,
+            paramType: Encoding.Static,
             operator: Operator.Pass,
             compValue: "0x",
           },
@@ -124,13 +125,13 @@ describe("OnlyOwner", async () => {
         [
           {
             parent: 0,
-            paramType: AbiType.Calldata,
+            paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: AbiType.Static,
+            paramType: Encoding.Static,
             operator: Operator.Pass,
             compValue: "0x",
           },

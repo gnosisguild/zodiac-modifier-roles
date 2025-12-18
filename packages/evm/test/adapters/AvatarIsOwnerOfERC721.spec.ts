@@ -4,15 +4,14 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 
 import {
-  AbiType,
+  Encoding,
   BYTES32_ZERO,
   ExecutionOptions,
   Operator,
   PermissionCheckerStatus,
 } from "../utils";
 import { deployRolesMod } from "../setup";
-
-import { ConditionFlatStruct } from "../../typechain-types/contracts/Integrity";
+import { ConditionFlatStruct } from "../../typechain-types/contracts/Roles";
 
 const AddressOne = "0x0000000000000000000000000000000000000001";
 
@@ -35,7 +34,7 @@ describe("AvatarIsOwnerOfERC721", async () => {
     );
     await roles.enableModule(invoker.address);
 
-    await roles.connect(owner).assignRoles(invoker.address, [ROLE_KEY], [true]);
+    await roles.connect(owner).grantRole(invoker.address, ROLE_KEY, 0, 0, 0);
     await roles.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
 
     const MockERC721 = await hre.ethers.getContractFactory("MockERC721");
@@ -98,19 +97,19 @@ describe("AvatarIsOwnerOfERC721", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: AbiType.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.Custom,
         compValue: `${customCheckerAddress}${extra}`,
       },
       {
         parent: 0,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.Pass,
         compValue: `0x`,
       },

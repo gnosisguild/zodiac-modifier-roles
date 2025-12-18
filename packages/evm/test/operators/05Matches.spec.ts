@@ -11,7 +11,7 @@ import {
   setupTwoParamsStatic,
 } from "../setup";
 import {
-  AbiType,
+  Encoding,
   BYTES32_ZERO,
   Operator,
   PermissionCheckerStatus,
@@ -26,25 +26,25 @@ describe("Operator - Matches", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: AbiType.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: AbiType.Array,
+        paramType: Encoding.Array,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 1,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.EqualTo,
         compValue: defaultAbiCoder.encode(["uint256"], [100]),
       },
       {
         parent: 1,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.Pass,
         compValue: "0x",
       },
@@ -69,25 +69,25 @@ describe("Operator - Matches", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: AbiType.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: AbiType.Tuple,
+        paramType: Encoding.Tuple,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 1,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.GreaterThan,
         compValue: defaultAbiCoder.encode(["uint256"], [100]),
       },
       {
         parent: 1,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.Pass,
         compValue: "0x",
       },
@@ -108,25 +108,25 @@ describe("Operator - Matches", async () => {
     await scopeFunction([
       {
         parent: 0,
-        paramType: AbiType.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: AbiType.Array,
+        paramType: Encoding.Array,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 1,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.Pass,
         compValue: "0x",
       },
       {
         parent: 1,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.LessThan,
         compValue: defaultAbiCoder.encode(["uint256"], [100]),
       },
@@ -152,13 +152,13 @@ describe("Operator - Matches", async () => {
       scopeFunction([
         {
           parent: 0,
-          paramType: AbiType.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: AbiType.Array,
+          paramType: Encoding.Array,
           operator: Operator.Matches,
           compValue: "0x",
         },
@@ -166,26 +166,26 @@ describe("Operator - Matches", async () => {
     ).to.be.reverted; // "UnsuitableChildrenCount"
   });
 
-  it("evaluates operator Matches for Calldata", async () => {
+  it("evaluates operator Matches for AbiEncoded", async () => {
     const { roles, invoke, scopeFunction } =
       await loadFixture(setupTwoParamsStatic);
 
     await scopeFunction([
       {
         parent: 0,
-        paramType: AbiType.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.Pass,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.GreaterThan,
         compValue: defaultAbiCoder.encode(["uint256"], [100]),
       },

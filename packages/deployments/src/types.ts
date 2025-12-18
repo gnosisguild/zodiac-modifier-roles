@@ -15,14 +15,13 @@ export enum Clearance {
   Function = 2,
 }
 
-export enum ParameterType {
+export enum Encoding {
   None = 0,
   Static = 1,
   Dynamic = 2,
   Tuple = 3,
-  Array = 4,
-  Calldata = 5,
-  AbiEncoded = 6,
+  Array = 4,  
+  AbiEncoded = 5,
 }
 
 export enum Operator {
@@ -32,22 +31,33 @@ export enum Operator {
   //          🚫 compValue
   Pass = 0,
   // ------------------------------------------------------------
-  // 01-04: LOGICAL EXPRESSIONS
+  // 01-03: LOGICAL EXPRESSIONS
   //          paramType: None
   //          ✅ children
   //          🚫 compValue
   And = 1,
   Or = 2,
-  Nor = 3,
   // ------------------------------------------------------------
-  // 05-14: COMPLEX EXPRESSIONS
-  //          paramType: Calldata / AbiEncoded / Tuple / Array,
-  //          ✅ children
+  // 04:    EMPTY CHECK (passes if data.length == 0)
+  //          paramType: None
+  //          🚫 children
   //          🚫 compValue
+  Empty = 4,
+  // ------------------------------------------------------------
+  // 05-12: COMPLEX EXPRESSIONS
+  //          paramType: AbiEncoded / Tuple / Array,
+  //          ✅ children
+  //          🚫 compValue (exception AbiEncoded.Matches uses compValue to define leading bytes)
   Matches = 5,
   ArraySome = 6,
   ArrayEvery = 7,
-  ArraySubset = 8,
+  ArrayTailMatches = 8,
+  // ------------------------------------------------------------
+  // 13-14: EXTRACTION EXPRESSIONS
+  //          paramType: Dynamic
+  //          ❓ children (at most one child, must resolve to Static)
+  //          ✅ compValue (3 bytes: 2 bytes shift + 1 byte size, 1-32)
+  Slice = 13,
   // ------------------------------------------------------------
   // 15:    SPECIAL COMPARISON (without compValue)
   //          paramType: Static
@@ -57,7 +67,7 @@ export enum Operator {
   // ------------------------------------------------------------
   // 16-31: COMPARISON EXPRESSIONS
   //          paramType: Static / Dynamic / Tuple / Array
-  //          🚫 children
+  //          ❓ children (only for paramType: Tuple / Array to describe their structure)
   //          ✅ compValue
   EqualTo = 16, // paramType: Static / Dynamic / Tuple / Array
   GreaterThan = 17, // paramType: Static
@@ -66,6 +76,7 @@ export enum Operator {
   SignedIntLessThan = 20, // paramType: Static
   Bitmask = 21, // paramType: Static / Dynamic
   Custom = 22, // paramType: Static / Dynamic / Tuple / Array
+  WithinRatio = 23, // paramType: None
   WithinAllowance = 28, // paramType: Static
   EtherWithinAllowance = 29, // paramType: None
   CallWithinAllowance = 30, // paramType: None
@@ -132,7 +143,7 @@ export interface Function {
 }
 
 export interface Condition {
-  paramType: ParameterType
+  paramType: Encoding
   operator: Operator
   compValue?: `0x${string}`
   children?: readonly Condition[]

@@ -1,38 +1,29 @@
 import { describe, it, expect } from "vitest"
-import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
+import { Encoding, Condition, Operator } from "zodiac-roles-deployments"
 
 import { normalizeCondition } from "./normalize"
 import { subtractCondition } from "./subtractCondition"
 import { abiEncode } from "../abiEncode"
 
 const COMP = (id: number): Condition => ({
-  paramType: ParameterType.Static,
+  paramType: Encoding.Static,
   operator: Operator.EqualTo,
   compValue: abiEncode(["uint256"], [id]),
 })
 
 const OR = (...children: Condition[]): Condition => ({
-  paramType: ParameterType.None,
+  paramType: Encoding.None,
   operator: Operator.Or,
   children,
 })
 
 const AND = (...children: Condition[]): Condition => ({
-  paramType: ParameterType.None,
+  paramType: Encoding.None,
   operator: Operator.And,
   children,
 })
 
-const NOR = (...children: Condition[]): Condition => ({
-  paramType: ParameterType.None,
-  operator: Operator.Nor,
-  children,
-})
-
-const MATCHES = (
-  paramType: ParameterType,
-  ...children: Condition[]
-): Condition => ({
+const MATCHES = (paramType: Encoding, ...children: Condition[]): Condition => ({
   paramType,
   operator: Operator.Matches,
   children,
@@ -271,45 +262,45 @@ describe("subtractCondition", () => {
     describe("Pushed down OR (from normalization)", () => {
       it("simple pushed down OR", () => {
         const condition = MATCHES(
-          ParameterType.Calldata,
+          Encoding.AbiEncoded,
           OR(
             {
-              paramType: ParameterType.Static,
+              paramType: Encoding.Static,
               operator: Operator.EqualTo,
               compValue:
                 "0x000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
             },
             {
-              paramType: ParameterType.Static,
+              paramType: Encoding.Static,
               operator: Operator.EqualTo,
               compValue:
                 "0x000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
             }
           ),
           {
-            paramType: ParameterType.Static,
+            paramType: Encoding.Static,
             operator: Operator.Pass,
           },
           {
-            paramType: ParameterType.Static,
+            paramType: Encoding.Static,
             operator: Operator.EqualToAvatar,
           }
         )
 
         const fragment = MATCHES(
-          ParameterType.Calldata,
+          Encoding.AbiEncoded,
           {
-            paramType: ParameterType.Static,
+            paramType: Encoding.Static,
             operator: Operator.EqualTo,
             compValue:
               "0x000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
           },
           {
-            paramType: ParameterType.Static,
+            paramType: Encoding.Static,
             operator: Operator.Pass,
           },
           {
-            paramType: ParameterType.Static,
+            paramType: Encoding.Static,
             operator: Operator.EqualToAvatar,
           }
         )
@@ -318,19 +309,19 @@ describe("subtractCondition", () => {
           normalizeCondition(subtractCondition(condition, fragment)!)
         ).toEqual(
           MATCHES(
-            ParameterType.Calldata,
+            Encoding.AbiEncoded,
             {
-              paramType: ParameterType.Static,
+              paramType: Encoding.Static,
               operator: Operator.EqualTo,
               compValue:
                 "0x000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
             },
             {
-              paramType: ParameterType.Static,
+              paramType: Encoding.Static,
               operator: Operator.Pass,
             },
             {
-              paramType: ParameterType.Static,
+              paramType: Encoding.Static,
               operator: Operator.EqualToAvatar,
             }
           )
@@ -424,13 +415,13 @@ describe("subtractCondition", () => {
 
   describe("MATCHES operator", () => {
     it("exact match returns undefined", () => {
-      const condition = MATCHES(ParameterType.Calldata, COMP(1), COMP(2))
+      const condition = MATCHES(Encoding.AbiEncoded, COMP(1), COMP(2))
       const result = subtractCondition(condition, condition)
       expect(result).toBeUndefined()
     })
 
     it("cannot subtract from non-MATCHES", () => {
-      const condition = MATCHES(ParameterType.Calldata, COMP(1), COMP(2))
+      const condition = MATCHES(Encoding.AbiEncoded, COMP(1), COMP(2))
       const fragment = COMP(1)
 
       const result = subtractCondition(condition, fragment)
@@ -440,20 +431,10 @@ describe("subtractCondition", () => {
 
     it("order matters - different order fails", () => {
       // Original: MATCHES(T, A, B, C)
-      const condition = MATCHES(
-        ParameterType.Calldata,
-        COMP(1),
-        COMP(2),
-        COMP(3)
-      )
+      const condition = MATCHES(Encoding.AbiEncoded, COMP(1), COMP(2), COMP(3))
 
       // Fragment with different order: MATCHES(T, B, A, C) - should not match
-      const fragment = MATCHES(
-        ParameterType.Calldata,
-        COMP(2),
-        COMP(1),
-        COMP(3)
-      )
+      const fragment = MATCHES(Encoding.AbiEncoded, COMP(2), COMP(1), COMP(3))
 
       const result = subtractCondition(condition, fragment)
 
@@ -461,16 +442,16 @@ describe("subtractCondition", () => {
     })
 
     it("different param types returns unchanged", () => {
-      const condition = MATCHES(ParameterType.Calldata, COMP(1), COMP(2))
-      const fragment = MATCHES(ParameterType.AbiEncoded, COMP(1), COMP(2))
+      const condition = MATCHES(Encoding.AbiEncoded, COMP(1), COMP(2))
+      const fragment = MATCHES(Encoding.Tuple, COMP(1), COMP(2))
       const result = subtractCondition(condition, fragment)
       expect(result).toEqual(condition)
       expect(result).toBe(condition)
     })
 
     it("different lengths returns unchanged", () => {
-      const condition = MATCHES(ParameterType.Calldata, COMP(1), COMP(2))
-      const fragment = MATCHES(ParameterType.Calldata, COMP(1))
+      const condition = MATCHES(Encoding.AbiEncoded, COMP(1), COMP(2))
+      const fragment = MATCHES(Encoding.AbiEncoded, COMP(1))
 
       const result = subtractCondition(condition, fragment)
 
@@ -479,13 +460,13 @@ describe("subtractCondition", () => {
 
     it("single position OR subtraction", () => {
       const condition = MATCHES(
-        ParameterType.Calldata,
+        Encoding.AbiEncoded,
         OR(COMP(1), COMP(2)),
         COMP(3)
       )
-      const fragment = MATCHES(ParameterType.Calldata, COMP(1), COMP(3))
+      const fragment = MATCHES(Encoding.AbiEncoded, COMP(1), COMP(3))
       const result = subtractCondition(condition, fragment)
-      expect(result).toEqual(MATCHES(ParameterType.Calldata, COMP(2), COMP(3)))
+      expect(result).toEqual(MATCHES(Encoding.AbiEncoded, COMP(2), COMP(3)))
     })
 
     it("OR subtraction at different positions", () => {
@@ -494,23 +475,23 @@ describe("subtractCondition", () => {
       const c = COMP(3)
 
       // First position
-      const condition1 = MATCHES(ParameterType.Calldata, OR(a, b), c)
-      const fragment1 = MATCHES(ParameterType.Calldata, a, c)
+      const condition1 = MATCHES(Encoding.AbiEncoded, OR(a, b), c)
+      const fragment1 = MATCHES(Encoding.AbiEncoded, a, c)
       expect(subtractCondition(condition1, fragment1)).toEqual(
-        MATCHES(ParameterType.Calldata, b, c)
+        MATCHES(Encoding.AbiEncoded, b, c)
       )
 
       // Last position
-      const condition2 = MATCHES(ParameterType.Calldata, a, OR(b, c))
-      const fragment2 = MATCHES(ParameterType.Calldata, a, b)
+      const condition2 = MATCHES(Encoding.AbiEncoded, a, OR(b, c))
+      const fragment2 = MATCHES(Encoding.AbiEncoded, a, b)
       expect(subtractCondition(condition2, fragment2)).toEqual(
-        MATCHES(ParameterType.Calldata, a, c)
+        MATCHES(Encoding.AbiEncoded, a, c)
       )
     })
 
     it("complex OR at multiple positions", () => {
       const condition = MATCHES(
-        ParameterType.Calldata,
+        Encoding.AbiEncoded,
         OR(COMP(1), COMP(2)),
         COMP(10),
         OR(COMP(3), COMP(4))
@@ -518,113 +499,88 @@ describe("subtractCondition", () => {
 
       // Single hinge at position 0 - should work
       const fragment1 = MATCHES(
-        ParameterType.Calldata,
+        Encoding.AbiEncoded,
         COMP(1),
         COMP(10),
         OR(COMP(3), COMP(4))
       )
       expect(subtractCondition(condition, fragment1)).toEqual(
-        MATCHES(ParameterType.Calldata, COMP(2), COMP(10), OR(COMP(3), COMP(4)))
+        MATCHES(Encoding.AbiEncoded, COMP(2), COMP(10), OR(COMP(3), COMP(4)))
       )
 
       // Single hinge at position 2 - should work
       const fragment2 = MATCHES(
-        ParameterType.Calldata,
+        Encoding.AbiEncoded,
         OR(COMP(1), COMP(2)),
         COMP(10),
         COMP(3)
       )
       expect(subtractCondition(condition, fragment2)).toEqual(
-        MATCHES(ParameterType.Calldata, OR(COMP(1), COMP(2)), COMP(10), COMP(4))
+        MATCHES(Encoding.AbiEncoded, OR(COMP(1), COMP(2)), COMP(10), COMP(4))
       )
 
       // Multiple position differences - should not work
-      const fragment3 = MATCHES(
-        ParameterType.Calldata,
-        COMP(1),
-        COMP(10),
-        COMP(3)
-      )
+      const fragment3 = MATCHES(Encoding.AbiEncoded, COMP(1), COMP(10), COMP(3))
       expect(subtractCondition(condition, fragment3)).toEqual(condition)
     })
 
     it("nested MATCHES within positions", () => {
-      const nestedA = MATCHES(ParameterType.Tuple, COMP(10), COMP(11))
-      const nestedB = MATCHES(ParameterType.Tuple, COMP(10), COMP(12))
+      const nestedA = MATCHES(Encoding.Tuple, COMP(10), COMP(11))
+      const nestedB = MATCHES(Encoding.Tuple, COMP(10), COMP(12))
       const condition = MATCHES(
-        ParameterType.Calldata,
+        Encoding.AbiEncoded,
         OR(nestedA, nestedB),
         COMP(20)
       )
-      const fragment = MATCHES(ParameterType.Calldata, nestedA, COMP(20))
+      const fragment = MATCHES(Encoding.AbiEncoded, nestedA, COMP(20))
 
       const result = subtractCondition(condition, fragment)
 
-      expect(result).toEqual(MATCHES(ParameterType.Calldata, nestedB, COMP(20)))
+      expect(result).toEqual(MATCHES(Encoding.AbiEncoded, nestedB, COMP(20)))
     })
 
     it("real-world ERC20 transfer example", () => {
       // transfer(address to, uint256 amount) with OR at recipient position
       const condition = MATCHES(
-        ParameterType.Calldata,
+        Encoding.AbiEncoded,
         OR(
           {
-            paramType: ParameterType.Static,
+            paramType: Encoding.Static,
             operator: Operator.EqualTo,
             compValue: "0xALICE",
           },
           {
-            paramType: ParameterType.Static,
+            paramType: Encoding.Static,
             operator: Operator.EqualTo,
             compValue: "0xBOB",
           }
         ),
-        { paramType: ParameterType.Static, operator: Operator.Pass }
+        { paramType: Encoding.Static, operator: Operator.Pass }
       )
 
       const fragment = MATCHES(
-        ParameterType.Calldata,
+        Encoding.AbiEncoded,
         {
-          paramType: ParameterType.Static,
+          paramType: Encoding.Static,
           operator: Operator.EqualTo,
           compValue: "0xALICE",
         },
-        { paramType: ParameterType.Static, operator: Operator.Pass }
+        { paramType: Encoding.Static, operator: Operator.Pass }
       )
 
       const result = subtractCondition(condition, fragment)
 
       expect(result).toEqual(
         MATCHES(
-          ParameterType.Calldata,
+          Encoding.AbiEncoded,
           {
-            paramType: ParameterType.Static,
+            paramType: Encoding.Static,
             operator: Operator.EqualTo,
             compValue: "0xBOB",
           },
-          { paramType: ParameterType.Static, operator: Operator.Pass }
+          { paramType: Encoding.Static, operator: Operator.Pass }
         )
       )
-    })
-  })
-
-  describe("NOR operator", () => {
-    it("NOR(A, B) - A = NOR(A, B) (can't subtract part)", () => {
-      const a = COMP(1)
-      const b = COMP(2)
-      const condition = NOR(a, b)
-
-      const result = subtractCondition(condition, a)
-
-      expect(result).toEqual(condition)
-    })
-
-    it("NOR(A, B) - NOR(A, B) = undefined", () => {
-      const condition = NOR(COMP(1), COMP(2))
-
-      const result = subtractCondition(condition, condition)
-
-      expect(result).toBeUndefined()
     })
   })
 
@@ -638,25 +594,25 @@ describe("subtractCondition", () => {
 
         // Test 1: Single hinge subtraction works the same
         const andCondition = AND(OR(a, b), c)
-        const matchesCondition = MATCHES(ParameterType.Calldata, OR(a, b), c)
+        const matchesCondition = MATCHES(Encoding.AbiEncoded, OR(a, b), c)
 
         const andResult = subtractCondition(andCondition, AND(a, c))
         const matchesResult = subtractCondition(
           matchesCondition,
-          MATCHES(ParameterType.Calldata, a, c)
+          MATCHES(Encoding.AbiEncoded, a, c)
         )
 
         expect(andResult).toEqual(AND(b, c))
-        expect(matchesResult).toEqual(MATCHES(ParameterType.Calldata, b, c))
+        expect(matchesResult).toEqual(MATCHES(Encoding.AbiEncoded, b, c))
 
         // Test 2: Multiple hinges rejected the same way
         const andMulti = AND(OR(a, b), OR(c, d))
-        const matchesMulti = MATCHES(ParameterType.Calldata, OR(a, b), OR(c, d))
+        const matchesMulti = MATCHES(Encoding.AbiEncoded, OR(a, b), OR(c, d))
 
         const andMultiResult = subtractCondition(andMulti, AND(a, c))
         const matchesMultiResult = subtractCondition(
           matchesMulti,
-          MATCHES(ParameterType.Calldata, a, c)
+          MATCHES(Encoding.AbiEncoded, a, c)
         )
 
         expect(andMultiResult).toEqual(andMulti) // unchanged
@@ -679,19 +635,19 @@ describe("subtractCondition", () => {
 
         // MATCHES test
         const matchesCondition = MATCHES(
-          ParameterType.Calldata,
+          Encoding.AbiEncoded,
           OR(COMP(1), COMP(2)),
           COMP(10),
           COMP(20)
         )
         const matchesFragment = MATCHES(
-          ParameterType.Calldata,
+          Encoding.AbiEncoded,
           COMP(1),
           COMP(10),
           COMP(20)
         )
         expect(subtractCondition(matchesCondition, matchesFragment)).toEqual(
-          MATCHES(ParameterType.Calldata, COMP(2), COMP(10), COMP(20))
+          MATCHES(Encoding.AbiEncoded, COMP(2), COMP(10), COMP(20))
         )
       })
 
@@ -746,30 +702,30 @@ describe("subtractCondition", () => {
       it("complex nested positional operators", () => {
         // AND containing MATCHES
         const condition1 = AND(
-          MATCHES(ParameterType.Calldata, OR(COMP(1), COMP(2)), COMP(10)),
+          MATCHES(Encoding.AbiEncoded, OR(COMP(1), COMP(2)), COMP(10)),
           COMP(20)
         )
         const fragment1 = AND(
-          MATCHES(ParameterType.Calldata, COMP(1), COMP(10)),
+          MATCHES(Encoding.AbiEncoded, COMP(1), COMP(10)),
           COMP(20)
         )
         expect(subtractCondition(condition1, fragment1)).toEqual(
-          AND(MATCHES(ParameterType.Calldata, COMP(2), COMP(10)), COMP(20))
+          AND(MATCHES(Encoding.AbiEncoded, COMP(2), COMP(10)), COMP(20))
         )
 
         // MATCHES containing AND
         const condition2 = MATCHES(
-          ParameterType.Calldata,
+          Encoding.AbiEncoded,
           AND(COMP(1), OR(COMP(2), COMP(3))),
           COMP(10)
         )
         const fragment2 = MATCHES(
-          ParameterType.Calldata,
+          Encoding.AbiEncoded,
           AND(COMP(1), COMP(2)),
           COMP(10)
         )
         expect(subtractCondition(condition2, fragment2)).toEqual(
-          MATCHES(ParameterType.Calldata, AND(COMP(1), COMP(3)), COMP(10))
+          MATCHES(Encoding.AbiEncoded, AND(COMP(1), COMP(3)), COMP(10))
         )
       })
     })
@@ -778,13 +734,13 @@ describe("subtractCondition", () => {
       const condition = OR(
         COMP(1),
         AND(COMP(2), COMP(3)),
-        MATCHES(ParameterType.Calldata, COMP(4))
+        MATCHES(Encoding.AbiEncoded, COMP(4))
       )
 
       // Can remove the AND completely
       const result1 = subtractCondition(condition, AND(COMP(2), COMP(3)))
       expect(result1).toEqual(
-        OR(COMP(1), MATCHES(ParameterType.Calldata, COMP(4)))
+        OR(COMP(1), MATCHES(Encoding.AbiEncoded, COMP(4)))
       )
 
       // Cannot remove part of the AND
@@ -794,12 +750,12 @@ describe("subtractCondition", () => {
 
     it("multiple position differences rejected", () => {
       const condition = MATCHES(
-        ParameterType.Calldata,
+        Encoding.AbiEncoded,
         OR(COMP(1), COMP(2)),
         OR(COMP(3), COMP(4))
       )
 
-      const fragment = MATCHES(ParameterType.Calldata, COMP(2), COMP(4))
+      const fragment = MATCHES(Encoding.AbiEncoded, COMP(2), COMP(4))
 
       const result = subtractCondition(condition, fragment)
 
@@ -808,27 +764,27 @@ describe("subtractCondition", () => {
 
     it("single hinge subtraction accepted", () => {
       const condition = MATCHES(
-        ParameterType.Calldata,
+        Encoding.AbiEncoded,
         OR(COMP(1), COMP(2)),
         OR(COMP(3), COMP(4))
       )
 
       const fragmentOneHinge = MATCHES(
-        ParameterType.Calldata,
+        Encoding.AbiEncoded,
         OR(COMP(1), COMP(2)),
         COMP(4)
       )
-      const fragmentTwoHinge = MATCHES(ParameterType.Calldata, COMP(2), COMP(4))
+      const fragmentTwoHinge = MATCHES(Encoding.AbiEncoded, COMP(2), COMP(4))
 
       expect(subtractCondition(condition, fragmentOneHinge)).toEqual(
-        MATCHES(ParameterType.Calldata, OR(COMP(1), COMP(2)), COMP(3))
+        MATCHES(Encoding.AbiEncoded, OR(COMP(1), COMP(2)), COMP(3))
       )
       expect(subtractCondition(condition, fragmentTwoHinge)).toBe(condition)
     })
 
     it("cannot subtract from MATCHES positions", () => {
       const condition = MATCHES(
-        ParameterType.Calldata,
+        Encoding.AbiEncoded,
         COMP(1),
         OR(COMP(2), COMP(3))
       )
@@ -842,7 +798,7 @@ describe("subtractCondition", () => {
     it("cannot subtract from different order matchs", () => {
       // Complex case with multiple reorderings
       const condition = MATCHES(
-        ParameterType.Calldata,
+        Encoding.AbiEncoded,
         COMP(5),
         OR(COMP(1), COMP(2), COMP(3)),
         COMP(10),
@@ -851,7 +807,7 @@ describe("subtractCondition", () => {
 
       // Fragment with completely different order but same semantics
       const fragment = MATCHES(
-        ParameterType.Calldata,
+        Encoding.AbiEncoded,
         COMP(15),
         COMP(2),
         COMP(5),

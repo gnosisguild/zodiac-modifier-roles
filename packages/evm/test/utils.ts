@@ -1,5 +1,6 @@
 import assert from "assert";
 import { BigNumberish, solidityPacked } from "ethers";
+import { ConditionFlatStruct } from "../typechain-types/contracts/Roles";
 
 export const logGas = async (
   message: string,
@@ -32,13 +33,12 @@ export interface SafeTransaction extends MetaTransaction {
   nonce: string | number;
 }
 
-export enum AbiType {
+export enum Encoding {
   None = 0,
   Static,
   Dynamic,
   Tuple,
   Array,
-  Calldata,
   AbiEncoded,
 }
 
@@ -49,28 +49,33 @@ export enum Operator {
   //          🚫 compValue
   /* 00: */ Pass = 0,
   // ------------------------------------------------------------
-  // 01-04: LOGICAL EXPRESSIONS
+  // 01-03: LOGICAL EXPRESSIONS
   //          paramType: None
   //          ✅ children
   //          🚫 compValue
   /* 01: */ And,
   /* 02: */ Or,
-  /* 03: */ Nor,
-  /* 04: */ _Placeholder04,
+  /* 03: */ _Placeholder03,
+  /* 04: */ Empty,
   // ------------------------------------------------------------
-  // 05-14: COMPLEX EXPRESSIONS
-  //          paramType: Calldata / Tuple / Array,
+  // 05-12: COMPLEX EXPRESSIONS
+  //          paramType: AbiEncoded / Tuple / Array,
   //          ✅ children
   //          🚫 compValue
   /* 05: */ Matches,
   /* 06: */ ArraySome,
   /* 07: */ ArrayEvery,
-  /* 08: */ ArraySubset,
+  /* 08: */ ArrayTailMatches,
   /* 09: */ _Placeholder09,
   /* 10: */ _Placeholder10,
   /* 11: */ _Placeholder11,
   /* 12: */ _Placeholder12,
-  /* 13: */ _Placeholder13,
+  // ------------------------------------------------------------
+  // 13-14: EXTRACTION EXPRESSIONS
+  //          paramType: Dynamic
+  //          ❓ children (at most one child, must resolve to Static)
+  //          ✅ compValue (3 bytes: 2 bytes shift + 1 byte size, 1-32)
+  /* 13: */ Slice,
   /* 14: */ _Placeholder14,
   // ------------------------------------------------------------
   // 15:    SPECIAL COMPARISON (without compValue)
@@ -90,7 +95,7 @@ export enum Operator {
   /* 20: */ SignedIntLessThan, // paramType: Static
   /* 21: */ Bitmask, // paramType: Static / Dynamic
   /* 22: */ Custom, // paramType: Static / Dynamic / Tuple / Array
-  /* 23: */ _Placeholder23,
+  /* 23: */ WithinRatio, // paramType: None
   /* 24: */ _Placeholder24,
   /* 25: */ _Placeholder25,
   /* 26: */ _Placeholder26,
@@ -147,6 +152,14 @@ export enum PermissionCheckerStatus {
   CallAllowanceExceeded,
   /// TODO
   EtherAllowanceExceeded,
+  // A Payload overflow was found by the Checker flow
+  CalldataOverflow,
+  RatioBelowMin,
+  RatioAboveMax,
+  // Calldata is not empty when it should be
+  CalldataNotEmpty,
+  // Leading bytes do not match expected value
+  LeadingBytesNotAMatch,
 }
 
 export function removeTrailingOffset(data: string) {
@@ -171,22 +184,15 @@ export const BYTES32_ZERO =
   "0x0000000000000000000000000000000000000000000000000000000000000000";
 
 interface Condition {
-  paramType: AbiType;
-  operator: Operator;
-  compValue?: `0x${string}`;
-  children?: readonly Condition[];
+  paramType: Encoding;
+  operator?: Operator;
+  compValue?: string;
+  children?: Condition[];
 }
 
-interface ConditionFlat {
-  parent: number;
-  paramType: AbiType;
-  operator: Operator;
-  compValue: string;
-}
-
-export function flattenCondition(root: Condition): ConditionFlat[] {
+export function flattenCondition(root: Condition): ConditionFlatStruct[] {
   let queue = [{ node: root, parent: 0 }];
-  let result: ConditionFlat[] = [];
+  let result: ConditionFlatStruct[] = [];
 
   for (let bfsOrder = 0; queue.length > 0; bfsOrder++) {
     const entry = queue.shift();
@@ -198,8 +204,9 @@ export function flattenCondition(root: Condition): ConditionFlat[] {
       ...result,
       {
         parent,
-        compValue: "0x",
-        ...node,
+        operator: node.operator || Operator.Pass,
+        paramType: node.paramType,
+        compValue: node.compValue || "0x",
       },
     ];
 

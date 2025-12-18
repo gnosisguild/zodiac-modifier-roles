@@ -1,6 +1,5 @@
 import dotenv from "dotenv";
 import "@nomicfoundation/hardhat-toolbox";
-import "@nomicfoundation/hardhat-verify";
 
 import "hardhat-contract-sizer";
 import "hardhat-gas-reporter";
@@ -19,25 +18,7 @@ import "./tasks/extract-mastercopy";
 import "./tasks/verify-mastercopies";
 import "./tasks/verify-mastercopy";
 
-const {
-  INFURA_KEY,
-  PK,
-  MNEMONIC,
-  ETHERSCAN_API_KEY,
-  OPTIMISTIC_ETHERSCAN_API_KEY,
-  GNOSISSCAN_API_KEY,
-  POLYGONSCAN_API_KEY,
-  ARBISCAN_API_KEY,
-  SNOWTRACE_API_KEY,
-  ZKEVM_POLYGONSCAN_API_KEY,
-  BASESCAN_API_KEY,
-  BSCSCAN_API_KEY,
-  CELOSCAN_API_KEY,
-  SONICSCAN_API_KEY,
-  BERASCAN_API_KEY,
-  MANTLESCAN_API_KEY,
-  UNISCAN_API_KEY,
-} = process.env;
+const { INFURA_KEY, PK, MNEMONIC, ETHERSCAN_API_KEY } = process.env;
 
 const sharedNetworkConfig: HttpNetworkUserConfig = {};
 if (PK) {
@@ -59,9 +40,9 @@ const config: HardhatUserConfig = {
   solidity: {
     compilers: [
       {
-        version: "0.8.21",
+        version: "0.8.30",
         settings: {
-          evmVersion: "shanghai",
+          evmVersion: "cancun",
           optimizer: {
             enabled: true,
             runs: 100,

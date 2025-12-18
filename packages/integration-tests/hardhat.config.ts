@@ -1,10 +1,27 @@
 import { HardhatUserConfig } from "hardhat/types"
+import "@nomicfoundation/hardhat-toolbox"
 import "@nomicfoundation/hardhat-ethers"
 
-import evmConfig from "../evm/hardhat.config"
-
 const config: HardhatUserConfig = {
-  ...evmConfig,
+  solidity: {
+    compilers: [
+      {
+        version: "0.8.29",
+        settings: {
+          evmVersion: "cancun",
+          optimizer: {
+            enabled: true,
+            runs: 100,
+          },
+        },
+      },
+    ],
+  },
+  networks: {
+    hardhat: {
+      allowUnlimitedContractSize: true,
+    },
+  },
   paths: {
     root: "../evm",
     artifacts: "build/artifacts",

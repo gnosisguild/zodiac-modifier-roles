@@ -1,11 +1,12 @@
 import { expect } from "chai";
 import { time, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import hre from "hardhat";
 
-import { AbiCoder, BigNumberish } from "ethers";
+import { AbiCoder, BigNumberish, solidityPacked } from "ethers";
 
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
-import { AbiType, Operator, PermissionCheckerStatus } from "../utils";
+import { Encoding, Operator, PermissionCheckerStatus } from "../utils";
 import { setupOneParamStatic, setupTwoParamsStatic } from "../setup";
 import { Roles } from "../../typechain-types";
 
@@ -55,13 +56,13 @@ describe("Operator - WithinAllowance", async () => {
       await scopeFunction([
         {
           parent: 0,
-          paramType: AbiType.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.WithinAllowance,
           compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
         },
@@ -86,13 +87,13 @@ describe("Operator - WithinAllowance", async () => {
       await scopeFunction([
         {
           parent: 0,
-          paramType: AbiType.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.WithinAllowance,
           compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
         },
@@ -124,13 +125,13 @@ describe("Operator - WithinAllowance", async () => {
       await scopeFunction([
         {
           parent: 0,
-          paramType: AbiType.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.WithinAllowance,
           compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
         },
@@ -162,13 +163,13 @@ describe("Operator - WithinAllowance", async () => {
       await scopeFunction([
         {
           parent: 0,
-          paramType: AbiType.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.WithinAllowance,
           compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
         },
@@ -202,13 +203,13 @@ describe("Operator - WithinAllowance", async () => {
       await scopeFunction([
         {
           parent: 0,
-          paramType: AbiType.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.WithinAllowance,
           compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
         },
@@ -238,13 +239,13 @@ describe("Operator - WithinAllowance", async () => {
       await scopeFunction([
         {
           parent: 0,
-          paramType: AbiType.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.WithinAllowance,
           compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
         },
@@ -278,19 +279,19 @@ describe("Operator - WithinAllowance", async () => {
       await scopeFunction([
         {
           parent: 0,
-          paramType: AbiType.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.WithinAllowance,
           compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
         },
         {
           parent: 0,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.WithinAllowance,
           compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
         },
@@ -325,19 +326,19 @@ describe("Operator - WithinAllowance", async () => {
       await scopeFunction([
         {
           parent: 0,
-          paramType: AbiType.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.WithinAllowance,
           compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
         },
         {
           parent: 0,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.WithinAllowance,
           compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
         },
@@ -370,13 +371,13 @@ describe("Operator - WithinAllowance", async () => {
       await scopeFunction([
         {
           parent: 0,
-          paramType: AbiType.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.WithinAllowance,
           compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
         },
@@ -409,13 +410,13 @@ describe("Operator - WithinAllowance", async () => {
       await scopeFunction([
         {
           parent: 0,
-          paramType: AbiType.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.WithinAllowance,
           compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
         },
@@ -444,13 +445,13 @@ describe("Operator - WithinAllowance", async () => {
       await scopeFunction([
         {
           parent: 0,
-          paramType: AbiType.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.WithinAllowance,
           compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
         },
@@ -482,13 +483,13 @@ describe("Operator - WithinAllowance", async () => {
       await scopeFunction([
         {
           parent: 0,
-          paramType: AbiType.Calldata,
+          paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: AbiType.Static,
+          paramType: Encoding.Static,
           operator: Operator.WithinAllowance,
           compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
         },
@@ -508,6 +509,617 @@ describe("Operator - WithinAllowance", async () => {
 
       allowance = await roles.allowances(allowanceKey);
       expect(allowance.timestamp).to.equal(timestamp);
+    });
+  });
+
+  describe("WithinAllowance - Price Adapter", () => {
+    function encodeAllowanceCompValue({
+      allowanceKey,
+      adapter = "0x0000000000000000000000000000000000000000",
+      accrueDecimals = 0,
+      paramDecimals = 0,
+    }: {
+      allowanceKey: string;
+      adapter?: string;
+      accrueDecimals?: number;
+      paramDecimals?: number;
+    }): string {
+      return solidityPacked(
+        ["bytes32", "address", "uint8", "uint8"],
+        [allowanceKey, adapter, accrueDecimals, paramDecimals],
+      );
+    }
+
+    const allowanceKey =
+      "0x0000000000000000000000000000000000000000000000000000000000000001";
+
+    // accrue=12, param=6: scale up by 10^6
+    // 1000 units (6 dec) → converted = 1000e6 * 1e18 * 1e12 / 1e24 = 1000e12 (12 dec)
+    it("param(6) → accrue(12): consumes correctly", async () => {
+      const { owner, roles, scopeFunction, invoke } =
+        await loadFixture(setupOneParamStatic);
+
+      const MockPriceAdapter =
+        await hre.ethers.getContractFactory("MockPriceAdapter");
+      const adapter = await MockPriceAdapter.deploy(10n ** 18n); // 1:1 price
+
+      await setAllowance(await roles.connect(owner), allowanceKey, {
+        balance: 2000n * 10n ** 12n, // 2000 units in 12 decimals
+        period: 0,
+        refill: 0,
+        timestamp: 0,
+      });
+
+      await scopeFunction([
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: encodeAllowanceCompValue({
+            allowanceKey,
+            adapter: await adapter.getAddress(),
+            accrueDecimals: 12,
+            paramDecimals: 6,
+          }),
+        },
+      ]);
+
+      // spend 1000 (6 dec) → 1000e12 (12 dec)
+      await expect(invoke(1000n * 10n ** 6n)).to.not.be.reverted;
+
+      const allowance = await roles.allowances(allowanceKey);
+      // sent in 1000 in 6 decimals, but it consumed in 12 decimals
+      expect(allowance.balance).to.equal(1000n * 10n ** 12n);
+    });
+
+    it("param(6) → accrue(12): reverts on overconsume", async () => {
+      const { owner, roles, scopeFunction, invoke } =
+        await loadFixture(setupOneParamStatic);
+
+      const MockPriceAdapter =
+        await hre.ethers.getContractFactory("MockPriceAdapter");
+      const adapter = await MockPriceAdapter.deploy(10n ** 18n);
+
+      await setAllowance(await roles.connect(owner), allowanceKey, {
+        balance: 1000n * 10n ** 12n, // exactly 1000 units (12 dec)
+        period: 0,
+        refill: 0,
+        timestamp: 0,
+      });
+
+      await scopeFunction([
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: encodeAllowanceCompValue({
+            allowanceKey,
+            adapter: await adapter.getAddress(),
+            accrueDecimals: 12,
+            paramDecimals: 6,
+          }),
+        },
+      ]);
+
+      // 1001 (6 dec) → 1001e12 (12 dec) > 1000e12
+      await expect(invoke(1001n * 10n ** 6n))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
+    });
+
+    // accrue=18, param=6: scale up by 10^12
+    it("param(6) → accrue(18): consumes correctly", async () => {
+      const { owner, roles, scopeFunction, invoke } =
+        await loadFixture(setupOneParamStatic);
+
+      const MockPriceAdapter =
+        await hre.ethers.getContractFactory("MockPriceAdapter");
+      const adapter = await MockPriceAdapter.deploy(10n ** 18n);
+
+      await setAllowance(await roles.connect(owner), allowanceKey, {
+        balance: 2000n * 10n ** 18n,
+        period: 0,
+        refill: 0,
+        timestamp: 0,
+      });
+
+      await scopeFunction([
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: encodeAllowanceCompValue({
+            allowanceKey,
+            adapter: await adapter.getAddress(),
+            accrueDecimals: 18,
+            paramDecimals: 6,
+          }),
+        },
+      ]);
+
+      // spend 1000 (6 dec) → 1000e18 (18 dec)
+      await expect(invoke(1000n * 10n ** 6n)).to.not.be.reverted;
+
+      const allowance = await roles.allowances(allowanceKey);
+      expect(allowance.balance).to.equal(1000n * 10n ** 18n);
+    });
+
+    it("param(6) → accrue(18): reverts on overconsume", async () => {
+      const { owner, roles, scopeFunction, invoke } =
+        await loadFixture(setupOneParamStatic);
+
+      const MockPriceAdapter =
+        await hre.ethers.getContractFactory("MockPriceAdapter");
+      const adapter = await MockPriceAdapter.deploy(10n ** 18n);
+
+      await setAllowance(await roles.connect(owner), allowanceKey, {
+        balance: 1000n * 10n ** 18n,
+        period: 0,
+        refill: 0,
+        timestamp: 0,
+      });
+
+      await scopeFunction([
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: encodeAllowanceCompValue({
+            allowanceKey,
+            adapter: await adapter.getAddress(),
+            accrueDecimals: 18,
+            paramDecimals: 6,
+          }),
+        },
+      ]);
+
+      await expect(invoke(1001n * 10n ** 6n))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
+    });
+
+    // accrue=6, param=12: scale down by 10^6
+    it("param(12) → accrue(6): consumes correctly", async () => {
+      const { owner, roles, scopeFunction, invoke } =
+        await loadFixture(setupOneParamStatic);
+
+      const MockPriceAdapter =
+        await hre.ethers.getContractFactory("MockPriceAdapter");
+      const adapter = await MockPriceAdapter.deploy(10n ** 18n);
+
+      await setAllowance(await roles.connect(owner), allowanceKey, {
+        balance: 900n * 10n ** 6n, // 900 units (6 dec)
+        period: 0,
+        refill: 0,
+        timestamp: 0,
+      });
+
+      await scopeFunction([
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: encodeAllowanceCompValue({
+            allowanceKey,
+            adapter: await adapter.getAddress(),
+            accrueDecimals: 6,
+            paramDecimals: 12,
+          }),
+        },
+      ]);
+
+      // spend 1000 (12 dec) → 1000 * 1e6 / 1e6 = 1000 (6 dec) ... wait
+      // formula: value * price * 10^accrue / 10^(18 + param)
+      // = 1000e12 * 1e18 * 1e6 / 1e30 = 1000e36 / 1e30 = 1000e6
+      await expect(invoke(500n * 10n ** 12n)).to.not.be.reverted;
+
+      const allowance = await roles.allowances(allowanceKey);
+      expect(allowance.balance).to.equal(400n * 10n ** 6n);
+    });
+
+    it("param(12) → accrue(6): reverts on overconsume", async () => {
+      const { owner, roles, scopeFunction, invoke } =
+        await loadFixture(setupOneParamStatic);
+
+      const MockPriceAdapter =
+        await hre.ethers.getContractFactory("MockPriceAdapter");
+      const adapter = await MockPriceAdapter.deploy(10n ** 18n);
+
+      await setAllowance(await roles.connect(owner), allowanceKey, {
+        balance: 1000n * 10n ** 6n,
+        period: 0,
+        refill: 0,
+        timestamp: 0,
+      });
+
+      await scopeFunction([
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: encodeAllowanceCompValue({
+            allowanceKey,
+            adapter: await adapter.getAddress(),
+            accrueDecimals: 6,
+            paramDecimals: 12,
+          }),
+        },
+      ]);
+
+      await expect(invoke(1001n * 10n ** 12n))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
+    });
+
+    // accrue=12, param=18: scale down by 10^6
+    it("param(18) → accrue(12): consumes correctly", async () => {
+      const { owner, roles, scopeFunction, invoke } =
+        await loadFixture(setupOneParamStatic);
+
+      const MockPriceAdapter =
+        await hre.ethers.getContractFactory("MockPriceAdapter");
+      const adapter = await MockPriceAdapter.deploy(10n ** 18n);
+
+      await setAllowance(await roles.connect(owner), allowanceKey, {
+        balance: 2000n * 10n ** 12n,
+        period: 0,
+        refill: 0,
+        timestamp: 0,
+      });
+
+      await scopeFunction([
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: encodeAllowanceCompValue({
+            allowanceKey,
+            adapter: await adapter.getAddress(),
+            accrueDecimals: 12,
+            paramDecimals: 18,
+          }),
+        },
+      ]);
+
+      // 1000e18 * 1e18 * 1e12 / 1e36 = 1000e12
+      await expect(invoke(1000n * 10n ** 18n)).to.not.be.reverted;
+
+      const allowance = await roles.allowances(allowanceKey);
+      expect(allowance.balance).to.equal(1000n * 10n ** 12n);
+    });
+
+    it("param(18) → accrue(12): reverts on overconsume", async () => {
+      const { owner, roles, scopeFunction, invoke } =
+        await loadFixture(setupOneParamStatic);
+
+      const MockPriceAdapter =
+        await hre.ethers.getContractFactory("MockPriceAdapter");
+      const adapter = await MockPriceAdapter.deploy(10n ** 18n);
+
+      await setAllowance(await roles.connect(owner), allowanceKey, {
+        balance: 1000n * 10n ** 12n,
+        period: 0,
+        refill: 0,
+        timestamp: 0,
+      });
+
+      await scopeFunction([
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: encodeAllowanceCompValue({
+            allowanceKey,
+            adapter: await adapter.getAddress(),
+            accrueDecimals: 12,
+            paramDecimals: 18,
+          }),
+        },
+      ]);
+
+      await expect(invoke(1001n * 10n ** 18n))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
+    });
+
+    // DAI (18 dec) spending against USDC (6 dec) allowance
+    it("spend DAI(18) → accrue USDC(6)", async () => {
+      const { owner, roles, scopeFunction, invoke } =
+        await loadFixture(setupOneParamStatic);
+
+      const MockPriceAdapter =
+        await hre.ethers.getContractFactory("MockPriceAdapter");
+      // DAI/USDC price = 1e18 (1:1)
+      const adapter = await MockPriceAdapter.deploy(10n ** 18n);
+
+      await setAllowance(await roles.connect(owner), allowanceKey, {
+        balance: 1000n * 10n ** 6n, // 1000 USDC
+        period: 0,
+        refill: 0,
+        timestamp: 0,
+      });
+
+      await scopeFunction([
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: encodeAllowanceCompValue({
+            allowanceKey,
+            adapter: await adapter.getAddress(),
+            accrueDecimals: 6,
+            paramDecimals: 18,
+          }),
+        },
+      ]);
+
+      // spend 500 DAI (18 dec) → 500 USDC (6 dec)
+      await expect(invoke(500n * 10n ** 18n)).to.not.be.reverted;
+
+      const allowance = await roles.allowances(allowanceKey);
+      expect(allowance.balance).to.equal(500n * 10n ** 6n);
+    });
+
+    // USDC (6 dec) spending against DAI (18 dec) allowance
+    it("spend USDC(6) → accrue DAI(18)", async () => {
+      const { owner, roles, scopeFunction, invoke } =
+        await loadFixture(setupOneParamStatic);
+
+      const MockPriceAdapter =
+        await hre.ethers.getContractFactory("MockPriceAdapter");
+      const adapter = await MockPriceAdapter.deploy(10n ** 18n);
+
+      await setAllowance(await roles.connect(owner), allowanceKey, {
+        balance: 1000n * 10n ** 18n, // 1000 DAI
+        period: 0,
+        refill: 0,
+        timestamp: 0,
+      });
+
+      await scopeFunction([
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: encodeAllowanceCompValue({
+            allowanceKey,
+            adapter: await adapter.getAddress(),
+            accrueDecimals: 18,
+            paramDecimals: 6,
+          }),
+        },
+      ]);
+
+      // spend 500 USDC (6 dec) → 500 DAI (18 dec)
+      await expect(invoke(500n * 10n ** 6n)).to.not.be.reverted;
+
+      const allowance = await roles.allowances(allowanceKey);
+      expect(allowance.balance).to.equal(500n * 10n ** 18n);
+    });
+
+    // Multi-asset: USDC(6), DAI(18), ETH(18) all accrue to USDC(6) allowance
+    it("multi-asset (USDC + DAI + ETH) → accrue USDC(6)", async () => {
+      const { owner, roles, invoke, scopeFunction } =
+        await loadFixture(setupTwoParamsStatic);
+
+      const MockPriceAdapter =
+        await hre.ethers.getContractFactory("MockPriceAdapter");
+      const usdcAdapter = await MockPriceAdapter.deploy(10n ** 18n); // 1:1
+      const ethAdapter = await MockPriceAdapter.deploy(2000n * 10n ** 18n); // 1 ETH = 2000 USDC
+
+      await setAllowance(await roles.connect(owner), allowanceKey, {
+        balance: 5000n * 10n ** 6n, // 5000 USDC
+        period: 0,
+        refill: 0,
+        timestamp: 0,
+      });
+
+      await scopeFunction([
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: encodeAllowanceCompValue({
+            allowanceKey,
+            adapter: await usdcAdapter.getAddress(),
+            accrueDecimals: 6,
+            paramDecimals: 6,
+          }),
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: encodeAllowanceCompValue({
+            allowanceKey,
+            adapter: await ethAdapter.getAddress(),
+            accrueDecimals: 6,
+            paramDecimals: 18,
+          }),
+        },
+      ]);
+
+      // spend 1000 USDC + 1 ETH (2000 USDC) = 3000 USDC total
+      await expect(invoke(1000n * 10n ** 6n, 1n * 10n ** 18n)).to.not.be
+        .reverted;
+
+      let allowance = await roles.allowances(allowanceKey);
+      expect(allowance.balance).to.equal(2000n * 10n ** 6n); // 5000 - 3000 = 2000
+
+      // spend remaining: 0 USDC + 1 ETH = 2000 USDC
+      await expect(invoke(0, 1n * 10n ** 18n)).to.not.be.reverted;
+
+      allowance = await roles.allowances(allowanceKey);
+      expect(allowance.balance).to.equal(0);
+
+      // any more reverts
+      await expect(invoke(1, 0))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
+    });
+
+    it("preserves decimal precision when scaling down (18 → 6)", async () => {
+      const { owner, roles, scopeFunction, invoke } =
+        await loadFixture(setupOneParamStatic);
+
+      const MockPriceAdapter =
+        await hre.ethers.getContractFactory("MockPriceAdapter");
+      const adapter = await MockPriceAdapter.deploy(10n ** 18n); // 1:1 price
+
+      // 1.123456789123456789 in 18 decimals
+      const valueInParamDecimals = 1123456789123456789n;
+      // Expected: 1.123456 in 6 decimals (truncates after 6 decimals)
+      const valueInAccrueDecimals = 1123456n;
+
+      await setAllowance(await roles.connect(owner), allowanceKey, {
+        balance: valueInAccrueDecimals,
+        period: 0,
+        refill: 0,
+        timestamp: 0,
+      });
+
+      await scopeFunction([
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: encodeAllowanceCompValue({
+            allowanceKey,
+            adapter: await adapter.getAddress(),
+            accrueDecimals: 6,
+            paramDecimals: 18,
+          }),
+        },
+      ]);
+
+      let allowance = await roles.allowances(allowanceKey);
+      expect(allowance.balance).to.equal(valueInAccrueDecimals);
+
+      await expect(invoke(valueInParamDecimals)).to.not.be.reverted;
+
+      allowance = await roles.allowances(allowanceKey);
+      expect(allowance.balance).to.equal(0);
+    });
+
+    it("preserves decimal precision when scaling up (6 → 18)", async () => {
+      const { owner, roles, scopeFunction, invoke } =
+        await loadFixture(setupOneParamStatic);
+
+      const MockPriceAdapter =
+        await hre.ethers.getContractFactory("MockPriceAdapter");
+      const adapter = await MockPriceAdapter.deploy(10n ** 18n); // 1:1 price
+
+      // 1.123456 in 6 decimals
+      const valueInParamDecimals = 1123456n;
+      // Expected: 1.123456000000000000 in 18 decimals
+      const valueInAccrueDecimals = 1123456000000000000n;
+
+      await setAllowance(await roles.connect(owner), allowanceKey, {
+        balance: valueInAccrueDecimals,
+        period: 0,
+        refill: 0,
+        timestamp: 0,
+      });
+
+      await scopeFunction([
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: encodeAllowanceCompValue({
+            allowanceKey,
+            adapter: await adapter.getAddress(),
+            accrueDecimals: 18,
+            paramDecimals: 6,
+          }),
+        },
+      ]);
+
+      let allowance = await roles.allowances(allowanceKey);
+      expect(allowance.balance).to.equal(valueInAccrueDecimals);
+
+      await expect(invoke(valueInParamDecimals)).to.not.be.reverted;
+
+      allowance = await roles.allowances(allowanceKey);
+      expect(allowance.balance).to.equal(0);
     });
   });
 });

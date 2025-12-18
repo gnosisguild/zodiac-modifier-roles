@@ -4,7 +4,7 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { AbiCoder } from "ethers";
 
 import {
-  AbiType,
+  Encoding,
   ExecutionOptions,
   Operator,
   PermissionCheckerStatus,
@@ -132,49 +132,49 @@ describe("OldTests", async () => {
     const conditionTree = [
       {
         parent: 0,
-        paramType: AbiType.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         compValue: "0x",
       },
       {
         parent: 0,
-        paramType: AbiType.Dynamic,
+        paramType: Encoding.Dynamic,
         operator: Operator.EqualTo,
         compValue: encodedParam_3,
       },
       {
         parent: 0,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.EqualTo,
         compValue: encodedParam_4,
       },
       {
         parent: 0,
-        paramType: AbiType.Dynamic,
+        paramType: Encoding.Dynamic,
         operator: Operator.EqualTo,
         compValue: encodedParam_5,
       },
       {
         parent: 0,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.EqualTo,
         compValue: encodedParam_6,
       },
       {
         parent: 0,
-        paramType: AbiType.Static,
+        paramType: Encoding.Static,
         operator: Operator.EqualTo,
         compValue: encodedParam_7,
       },
       {
         parent: 0,
-        paramType: AbiType.Dynamic,
+        paramType: Encoding.Dynamic,
         operator: Operator.EqualTo,
         compValue: encodedParam_8,
       },
       {
         parent: 0,
-        paramType: AbiType.Dynamic,
+        paramType: Encoding.Dynamic,
         operator: Operator.EqualTo,
         compValue: encodedParam_9,
       },
@@ -206,7 +206,7 @@ describe("OldTests", async () => {
         setupRolesWithOwnerAndInvoker,
       );
 
-      await modifier.assignRoles(invoker.address, [ROLE_KEY], [true]);
+      await modifier.grantRole(invoker.address, ROLE_KEY, 0, 0, 0);
       await modifier.setDefaultRole(invoker.address, ROLE_KEY);
       const testContractAddress = await testContract.getAddress();
       await expect(
@@ -225,7 +225,7 @@ describe("OldTests", async () => {
       const testContractAddress = await testContract.getAddress();
       await modifier
         .connect(owner)
-        .allowTarget(ROLE_KEY, testContractAddress, ExecutionOptions.None);
+        .allowTarget(ROLE_KEY, testContractAddress, [], ExecutionOptions.None);
 
       const mint = await testContract.mint.populateTransaction(
         user1.address,
@@ -248,16 +248,19 @@ describe("OldTests", async () => {
       const { avatar, modifier, testContract } = await loadFixture(txSetup);
       const [user1] = await hre.ethers.getSigners();
       const testContractAddress = await testContract.getAddress();
-      const assign = await modifier.assignRoles.populateTransaction(
+      const grant = await modifier.grantRole.populateTransaction(
         user1.address,
-        [ROLE_KEY1],
-        [true],
+        ROLE_KEY1,
+        0,
+        0,
+        0,
       );
-      await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
+      await avatar.exec(await modifier.getAddress(), 0, grant.data || "", 0);
 
       const allowTargetAddress = await modifier.allowTarget.populateTransaction(
         ROLE_KEY1,
         testContractAddress,
+        [],
         ExecutionOptions.None,
       );
       await avatar.exec(
@@ -302,16 +305,19 @@ describe("OldTests", async () => {
     it("executes a call to an allowed target", async () => {
       const { avatar, modifier, testContract } = await loadFixture(txSetup);
       const [user1] = await hre.ethers.getSigners();
-      const assign = await modifier.assignRoles.populateTransaction(
+      const grant = await modifier.grantRole.populateTransaction(
         user1.address,
-        [ROLE_KEY1],
-        [true],
+        ROLE_KEY1,
+        0,
+        0,
+        0,
       );
-      await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
+      await avatar.exec(await modifier.getAddress(), 0, grant.data || "", 0);
 
       const allowTargetAddress = await modifier.allowTarget.populateTransaction(
         ROLE_KEY1,
         await testContract.getAddress(),
+        [],
         ExecutionOptions.None,
       );
       await avatar.exec(
@@ -352,12 +358,14 @@ describe("OldTests", async () => {
       const { avatar, modifier, testContract, encodedParam_1, encodedParam_2 } =
         await loadFixture(txSetup);
       const [user1] = await hre.ethers.getSigners();
-      const assign = await modifier.assignRoles.populateTransaction(
+      const grant = await modifier.grantRole.populateTransaction(
         user1.address,
-        [ROLE_KEY1],
-        [true],
+        ROLE_KEY1,
+        0,
+        0,
+        0,
       );
-      await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
+      await avatar.exec(await modifier.getAddress(), 0, grant.data || "", 0);
 
       const defaultRole = await modifier.setDefaultRole.populateTransaction(
         user1.address,
@@ -388,19 +396,19 @@ describe("OldTests", async () => {
         [
           {
             parent: 0,
-            paramType: AbiType.Calldata,
+            paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: AbiType.Static,
+            paramType: Encoding.Static,
             operator: Operator.EqualTo,
             compValue: encodedParam_1,
           },
           {
             parent: 0,
-            paramType: AbiType.Static,
+            paramType: Encoding.Static,
             operator: Operator.EqualTo,
             compValue: encodedParam_2,
           },
@@ -436,12 +444,14 @@ describe("OldTests", async () => {
 
       const { avatar, modifier, testContract, encodedParam_1, encodedParam_2 } =
         await loadFixture(txSetup);
-      const assign = await modifier.assignRoles.populateTransaction(
+      const grant = await modifier.grantRole.populateTransaction(
         user1.address,
-        [ROLE_KEY1],
-        [true],
+        ROLE_KEY1,
+        0,
+        0,
+        0,
       );
-      await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
+      await avatar.exec(await modifier.getAddress(), 0, grant.data || "", 0);
 
       const defaultRole = await modifier.setDefaultRole.populateTransaction(
         user1.address,
@@ -472,19 +482,19 @@ describe("OldTests", async () => {
         [
           {
             parent: 0,
-            paramType: AbiType.Calldata,
+            paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: AbiType.Static,
+            paramType: Encoding.Static,
             operator: Operator.EqualTo,
             compValue: encodedParam_1,
           },
           {
             parent: 0,
-            paramType: AbiType.Static,
+            paramType: Encoding.Static,
             operator: Operator.EqualTo,
             compValue: encodedParam_2,
           },
@@ -517,13 +527,15 @@ describe("OldTests", async () => {
       const { avatar, modifier, testContract, conditionTree } =
         await loadFixture(txSetup);
       const [user1] = await hre.ethers.getSigners();
-      const assign = await modifier.assignRoles.populateTransaction(
+      const grant = await modifier.grantRole.populateTransaction(
         user1.address,
-        [ROLE_KEY1],
-        [true],
+        ROLE_KEY1,
+        0,
+        0,
+        0,
       );
 
-      await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
+      await avatar.exec(await modifier.getAddress(), 0, grant.data || "", 0);
 
       const defaultRole = await modifier.setDefaultRole.populateTransaction(
         user1.address,
@@ -587,13 +599,15 @@ describe("OldTests", async () => {
       const { avatar, modifier, testContract, conditionTree } =
         await loadFixture(txSetup);
       const [user1] = await hre.ethers.getSigners();
-      const assign = await modifier.assignRoles.populateTransaction(
+      const grant = await modifier.grantRole.populateTransaction(
         user1.address,
-        [ROLE_KEY1],
-        [true],
+        ROLE_KEY1,
+        0,
+        0,
+        0,
       );
 
-      await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
+      await avatar.exec(await modifier.getAddress(), 0, grant.data || "", 0);
 
       const defaultRole = await modifier.setDefaultRole.populateTransaction(
         user1.address,
@@ -666,12 +680,14 @@ describe("OldTests", async () => {
       } = await loadFixture(txSetup);
       const [user1] = await hre.ethers.getSigners();
 
-      const assign = await modifier.assignRoles.populateTransaction(
+      const grant = await modifier.grantRole.populateTransaction(
         user1.address,
-        [ROLE_KEY1],
-        [true],
+        ROLE_KEY1,
+        0,
+        0,
+        0,
       );
-      await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
+      await avatar.exec(await modifier.getAddress(), 0, grant.data || "", 0);
 
       const defaultRole = await modifier.setDefaultRole.populateTransaction(
         user1.address,
@@ -702,19 +718,19 @@ describe("OldTests", async () => {
         [
           {
             parent: 0,
-            paramType: AbiType.Calldata,
+            paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: AbiType.Static,
+            paramType: Encoding.Static,
             operator: Operator.EqualTo,
             compValue: encodedParam_1,
           },
           {
             parent: 0,
-            paramType: AbiType.Static,
+            paramType: Encoding.Static,
             operator: Operator.EqualTo,
             compValue: encodedParam_2,
           },
@@ -778,12 +794,14 @@ describe("OldTests", async () => {
       } = await loadFixture(txSetup);
       const [user1] = await hre.ethers.getSigners();
 
-      const assign = await modifier.assignRoles.populateTransaction(
+      const grant = await modifier.grantRole.populateTransaction(
         user1.address,
-        [ROLE_KEY1],
-        [true],
+        ROLE_KEY1,
+        0,
+        0,
+        0,
       );
-      await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
+      await avatar.exec(await modifier.getAddress(), 0, grant.data || "", 0);
 
       const defaultRole = await modifier.setDefaultRole.populateTransaction(
         user1.address,
@@ -814,19 +832,19 @@ describe("OldTests", async () => {
         [
           {
             parent: 0,
-            paramType: AbiType.Calldata,
+            paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: AbiType.Static,
+            paramType: Encoding.Static,
             operator: Operator.EqualTo,
             compValue: encodedParam_1,
           },
           {
             parent: 0,
-            paramType: AbiType.Static,
+            paramType: Encoding.Static,
             operator: Operator.EqualTo,
             compValue: encodedParam_2,
           },
@@ -875,12 +893,14 @@ describe("OldTests", async () => {
       } = await loadFixture(txSetup);
       const [user1] = await hre.ethers.getSigners();
 
-      const assign = await modifier.assignRoles.populateTransaction(
+      const grant = await modifier.grantRole.populateTransaction(
         user1.address,
-        [ROLE_KEY1],
-        [true],
+        ROLE_KEY1,
+        0,
+        0,
+        0,
       );
-      await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
+      await avatar.exec(await modifier.getAddress(), 0, grant.data || "", 0);
 
       const defaultRole = await modifier.setDefaultRole.populateTransaction(
         user1.address,
@@ -911,19 +931,19 @@ describe("OldTests", async () => {
         [
           {
             parent: 0,
-            paramType: AbiType.Calldata,
+            paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: AbiType.Static,
+            paramType: Encoding.Static,
             operator: Operator.EqualTo,
             compValue: encodedParam_1,
           },
           {
             parent: 0,
-            paramType: AbiType.Static,
+            paramType: Encoding.Static,
             operator: Operator.EqualTo,
             compValue: encodedParam_2,
           },
@@ -975,6 +995,7 @@ describe("OldTests", async () => {
       const allowTargetAddress = await modifier.allowTarget.populateTransaction(
         ROLE_KEY1,
         await testContract.getAddress(),
+        [],
         ExecutionOptions.None,
       );
       await avatar.exec(
@@ -1004,16 +1025,19 @@ describe("OldTests", async () => {
     it("reverts if the call is not an allowed target", async () => {
       const { avatar, modifier, testContract } = await loadFixture(txSetup);
       const [user1] = await hre.ethers.getSigners();
-      const assign = await modifier.assignRoles.populateTransaction(
+      const grant = await modifier.grantRole.populateTransaction(
         user1.address,
-        [ROLE_KEY1],
-        [true],
+        ROLE_KEY1,
+        0,
+        0,
+        0,
       );
-      await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
+      await avatar.exec(await modifier.getAddress(), 0, grant.data || "", 0);
 
       const allowTargetAddress = await modifier.allowTarget.populateTransaction(
         ROLE_KEY1,
         await testContract.getAddress(),
+        [],
         ExecutionOptions.None,
       );
       await avatar.exec(
@@ -1058,16 +1082,19 @@ describe("OldTests", async () => {
     it("executes a call to an allowed target", async () => {
       const { avatar, modifier, testContract } = await loadFixture(txSetup);
       const [user1] = await hre.ethers.getSigners();
-      const assign = await modifier.assignRoles.populateTransaction(
+      const grant = await modifier.grantRole.populateTransaction(
         user1.address,
-        [ROLE_KEY1],
-        [true],
+        ROLE_KEY1,
+        0,
+        0,
+        0,
       );
-      await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
+      await avatar.exec(await modifier.getAddress(), 0, grant.data || "", 0);
 
       const allowTargetAddress = await modifier.allowTarget.populateTransaction(
         ROLE_KEY1,
         await testContract.getAddress(),
+        [],
         ExecutionOptions.None,
       );
       await avatar.exec(
@@ -1117,13 +1144,14 @@ describe("OldTests", async () => {
 
       await modifier
         .connect(owner)
-        .assignRoles(invoker.address, [ROLE_KEY], [true]);
+        .grantRole(invoker.address, ROLE_KEY, 0, 0, 0);
 
       await modifier
         .connect(owner)
         .allowTarget(
           ROLE_KEY,
           await testContract.getAddress(),
+          [],
           ExecutionOptions.None,
         );
 
@@ -1151,13 +1179,14 @@ describe("OldTests", async () => {
 
       await modifier
         .connect(owner)
-        .assignRoles(invoker.address, [ROLE_KEY], [true]);
+        .grantRole(invoker.address, ROLE_KEY, 0, 0, 0);
 
       await modifier
         .connect(owner)
         .allowTarget(
           ROLE_KEY,
           await testContract.getAddress(),
+          [],
           ExecutionOptions.None,
         );
 
@@ -1215,13 +1244,14 @@ describe("OldTests", async () => {
 
       await modifier
         .connect(owner)
-        .assignRoles(invoker.address, [ROLE_KEY], [true]);
+        .grantRole(invoker.address, ROLE_KEY, 0, 0, 0);
 
       await modifier
         .connect(owner)
         .allowTarget(
           ROLE_KEY,
           await testContract.getAddress(),
+          [],
           ExecutionOptions.None,
         );
 
@@ -1250,13 +1280,14 @@ describe("OldTests", async () => {
 
       await modifier
         .connect(owner)
-        .assignRoles(invoker.address, [ROLE_KEY], [true]);
+        .grantRole(invoker.address, ROLE_KEY, 0, 0, 0);
 
       await modifier
         .connect(owner)
         .allowTarget(
           ROLE_KEY,
           await testContract.getAddress(),
+          [],
           ExecutionOptions.None,
         );
 
@@ -1290,12 +1321,14 @@ describe("OldTests", async () => {
 
       const SHOULD_REVERT = true;
 
-      const assign = await modifier.assignRoles.populateTransaction(
+      const grant = await modifier.grantRole.populateTransaction(
         user1.address,
-        [ROLE_KEY],
-        [true],
+        ROLE_KEY,
+        0,
+        0,
+        0,
       );
-      await avatar.exec(await modifier.getAddress(), 0, assign.data || "", 0);
+      await avatar.exec(await modifier.getAddress(), 0, grant.data || "", 0);
 
       const scopeTarget = await modifier.scopeTarget.populateTransaction(
         ROLE_KEY,
@@ -1315,19 +1348,19 @@ describe("OldTests", async () => {
         [
           {
             parent: 0,
-            paramType: AbiType.Calldata,
+            paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
-            paramType: AbiType.Static,
+            paramType: Encoding.Static,
             operator: Operator.EqualTo,
             compValue: encodedParam_1,
           },
           {
             parent: 0,
-            paramType: AbiType.Static,
+            paramType: Encoding.Static,
             operator: Operator.EqualTo,
             compValue: encodedParam_2,
           },
