@@ -1,6 +1,6 @@
 import { AbiParameter } from "viem"
 import { invariant } from "@epic-web/invariant"
-import { arrayElementType } from "@/utils/abi"
+import { arrayElementType, tupleValues } from "@/utils/abi"
 
 export type PrimitiveValue = string | boolean | number | bigint
 
@@ -33,7 +33,10 @@ export const mapAbiInputs = (
           )
           value = mapAbiInputsInArray(input, value)
         } else {
-          value = mapAbiInputs(input.components, Object.values(value))
+          value = mapAbiInputs(
+            input.components,
+            tupleValues(value, input.components)
+          )
         }
       }
       return [input.name ?? `[${index}]`, value]
@@ -54,6 +57,9 @@ const mapAbiInputsInArray = (
   return values.map((value) =>
     isNestedArray
       ? mapAbiInputsInArray(elementType, value)
-      : mapAbiInputs(elementType.components, Object.values(value))
+      : mapAbiInputs(
+          elementType.components,
+          tupleValues(value, elementType.components)
+        )
   )
 }
