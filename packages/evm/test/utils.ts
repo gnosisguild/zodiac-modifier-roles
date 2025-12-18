@@ -1,5 +1,6 @@
 import assert from "assert";
 import { BigNumberish, solidityPacked } from "ethers";
+import { ConditionFlatStruct } from "../typechain-types/contracts/Roles";
 
 export const logGas = async (
   message: string,
@@ -57,7 +58,7 @@ export enum Operator {
   /* 03: */ _Placeholder03,
   /* 04: */ Empty,
   // ------------------------------------------------------------
-  // 05-14: COMPLEX EXPRESSIONS
+  // 05-12: COMPLEX EXPRESSIONS
   //          paramType: AbiEncoded / Tuple / Array,
   //          ✅ children
   //          🚫 compValue
@@ -69,7 +70,12 @@ export enum Operator {
   /* 10: */ _Placeholder10,
   /* 11: */ _Placeholder11,
   /* 12: */ _Placeholder12,
-  /* 13: */ _Placeholder13,
+  // ------------------------------------------------------------
+  // 13-14: EXTRACTION EXPRESSIONS
+  //          paramType: Dynamic
+  //          ❓ children (at most one child, must resolve to Static)
+  //          ✅ compValue (3 bytes: 2 bytes shift + 1 byte size, 1-32)
+  /* 13: */ Slice,
   /* 14: */ _Placeholder14,
   // ------------------------------------------------------------
   // 15:    SPECIAL COMPARISON (without compValue)
@@ -184,16 +190,9 @@ interface Condition {
   children?: Condition[];
 }
 
-interface ConditionFlat {
-  parent: number;
-  paramType: Encoding;
-  operator: Operator;
-  compValue: string;
-}
-
-export function flattenCondition(root: Condition): ConditionFlat[] {
+export function flattenCondition(root: Condition): ConditionFlatStruct[] {
   let queue = [{ node: root, parent: 0 }];
-  let result: ConditionFlat[] = [];
+  let result: ConditionFlatStruct[] = [];
 
   for (let bfsOrder = 0; queue.length > 0; bfsOrder++) {
     const entry = queue.shift();

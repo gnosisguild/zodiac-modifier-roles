@@ -5,84 +5,84 @@ import "../../core/serialize/ConditionPacker.sol";
 import "../../core/serialize/ConditionUnpacker.sol";
 import "../../core/serialize/TypeTree.sol";
 
-import "../../types/Types.sol";
-
 contract MockPackerUnpacker {
-    struct ConditionFlatOut {
+    struct FlatConditionForTest {
         uint256 parent;
         Operator operator;
         bytes compValue;
+        uint256 sChildCount;
     }
 
-    function pack(
-        ConditionFlat[] calldata conditions
-    ) external pure returns (bytes memory buffer) {
-        Layout memory layout = TypeTree.inspect(conditions, 0);
-        return ConditionPacker.pack(conditions, layout);
+    struct FlatLayoutForTest {
+        uint256 parent;
+        Encoding encoding;
+        uint256 leadingBytes;
+        bool inlined;
     }
 
-    function unpack(
-        bytes memory buffer
+    function roundtrip(
+        ConditionFlat[] memory conditions
     )
-        external
+        public
         view
         returns (
-            ConditionFlatOut[] memory conditionsOut,
-            LayoutFlat[] memory layoutOut
+            FlatConditionForTest[] memory flatConditions,
+            FlatLayoutForTest[] memory flatLayouts
         )
     {
+        // Pack
+        Layout memory typeTree = TypeTree.inspect(conditions, 0);
+        bytes memory buffer = ConditionPacker.pack(conditions, typeTree);
+
+        // Unpack
         (Condition memory condition, Layout memory layout) = ConditionUnpacker
             .unpack(buffer);
 
-        conditionsOut = _flattenCondition(condition);
-        layoutOut = _flattenLayout(layout);
+        // Flatten both to BFS order
+        flatConditions = _flattenCondition(condition);
+        flatLayouts = _flattenLayout(layout);
     }
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // Condition Helpers
-    // ═══════════════════════════════════════════════════════════════════════════
 
     function _flattenCondition(
         Condition memory root
-    ) private pure returns (ConditionFlatOut[] memory flat) {
-        uint256 nodeCount = _countConditionNodes(root);
-        flat = new ConditionFlatOut[](nodeCount);
+    ) internal pure returns (FlatConditionForTest[] memory) {
+        uint256 total = _countConditionNodes(root);
+        FlatConditionForTest[] memory result = new FlatConditionForTest[](
+            total
+        );
 
-        Condition[] memory queue = new Condition[](nodeCount);
-        uint256[] memory parents = new uint256[](nodeCount);
+        Condition[] memory queue = new Condition[](total);
+        uint256[] memory parents = new uint256[](total);
 
         queue[0] = root;
         parents[0] = 0;
-        uint256 queueHead = 0;
-        uint256 queueTail = 1;
-        uint256 bfsIndex = 0;
 
-        while (queueHead < queueTail) {
-            Condition memory node = queue[queueHead];
-            uint256 parent = parents[queueHead];
-            queueHead++;
+        uint256 head = 0;
+        uint256 tail = 1;
+        uint256 current = 0;
 
-            bytes memory compValue;
-            if (node.compValue.length > 0) {
-                compValue = bytes.concat(node.compValue);
-            } else {
-                compValue = "";
-            }
+        while (head < tail) {
+            Condition memory node = queue[head];
+            uint256 parent = parents[head];
+            head++;
 
-            flat[bfsIndex] = ConditionFlatOut({
+            result[current] = FlatConditionForTest({
                 parent: parent,
                 operator: node.operator,
-                compValue: compValue
+                compValue: node.compValue,
+                sChildCount: node.sChildCount
             });
 
             for (uint256 i = 0; i < node.children.length; ++i) {
-                queue[queueTail] = node.children[i];
-                parents[queueTail] = bfsIndex;
-                queueTail++;
+                queue[tail] = node.children[i];
+                parents[tail] = current;
+                tail++;
             }
 
-            bfsIndex++;
+            current++;
         }
+
+        return result;
     }
 
     function _countConditionNodes(
@@ -94,17 +94,14 @@ contract MockPackerUnpacker {
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // Layout Helpers
-    // ═══════════════════════════════════════════════════════════════════════════
-
     function _flattenLayout(
         Layout memory root
-    ) private pure returns (LayoutFlat[] memory result) {
-        result = new LayoutFlat[](_countLayoutNodes(root));
+    ) internal pure returns (FlatLayoutForTest[] memory) {
+        uint256 total = _countLayoutNodes(root);
+        FlatLayoutForTest[] memory result = new FlatLayoutForTest[](total);
 
-        Layout[] memory queue = new Layout[](result.length);
-        uint256[] memory parents = new uint256[](result.length);
+        Layout[] memory queue = new Layout[](total);
+        uint256[] memory parents = new uint256[](total);
 
         queue[0] = root;
         parents[0] = 0;
@@ -118,9 +115,11 @@ contract MockPackerUnpacker {
             uint256 parent = parents[head];
             head++;
 
-            result[current] = LayoutFlat({
+            result[current] = FlatLayoutForTest({
                 parent: parent,
-                encoding: node.encoding
+                encoding: node.encoding,
+                leadingBytes: node.leadingBytes,
+                inlined: node.inlined
             });
 
             for (uint256 i = 0; i < node.children.length; ++i) {
@@ -131,14 +130,16 @@ contract MockPackerUnpacker {
 
             current++;
         }
+
+        return result;
     }
 
     function _countLayoutNodes(
-        Layout memory root
+        Layout memory node
     ) private pure returns (uint256 count) {
         count = 1;
-        for (uint256 i; i < root.children.length; i++) {
-            count += _countLayoutNodes(root.children[i]);
+        for (uint256 i = 0; i < node.children.length; ++i) {
+            count += _countLayoutNodes(node.children[i]);
         }
     }
 }
