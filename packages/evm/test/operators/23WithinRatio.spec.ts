@@ -1010,6 +1010,107 @@ describe("WithinRatio Operator", () => {
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(PermissionCheckerStatus.RatioAboveMax, ZeroHash);
     });
+
+    it("from EtherValue", async () => {
+      const [owner, member] = await hre.ethers.getSigners();
+
+      const Avatar = await hre.ethers.getContractFactory("TestAvatar");
+      const avatar = await Avatar.deploy();
+      const avatarAddress = await avatar.getAddress();
+
+      // Fund avatar
+      await owner.sendTransaction({
+        to: avatarAddress,
+        value: 10n ** 18n,
+      });
+
+      const TestContract = await hre.ethers.getContractFactory("TestContract");
+      const testContract = await TestContract.deploy();
+      const testContractAddress = await testContract.getAddress();
+
+      const roles = await deployRolesMod(
+        hre,
+        owner.address,
+        avatarAddress,
+        avatarAddress,
+      );
+
+      await roles.connect(owner).enableModule(member.address);
+
+      const roleKey =
+        "0x0000000000000000000000000000000000000000000000000000000000000001";
+      await roles.connect(owner).grantRole(member.address, roleKey, 0, 0, 0);
+      await roles.connect(owner).setDefaultRole(member.address, roleKey);
+      await roles.connect(owner).scopeTarget(roleKey, testContractAddress);
+
+      const SELECTOR =
+        testContract.interface.getFunction("fnWithSingleParam").selector;
+
+      // Pluck ether value -> pluckedValues[0]
+      // Pluck param -> pluckedValues[1]
+      // Check ratio: param / ether <= 200%
+      // Both values use 18 decimals for normalization
+      const compValue = encodeWithinRatioCompValue({
+        referenceIndex: 0,
+        referenceDecimals: 18,
+        relativeIndex: 1,
+        relativeDecimals: 18,
+        minRatio: 0,
+        maxRatio: 20000, // 200%
+      });
+
+      // Non-structural children (EtherValue, None) must come after structural (AbiEncoded)
+      await roles.connect(owner).scopeFunction(
+        roleKey,
+        testContractAddress,
+        SELECTOR,
+        flattenCondition({
+          paramType: Encoding.None,
+          operator: Operator.And,
+          children: [
+            {
+              paramType: Encoding.AbiEncoded,
+              operator: Operator.Matches,
+              children: [pluck(1)],
+            },
+            {
+              paramType: Encoding.EtherValue,
+              operator: Operator.Pluck,
+              compValue: "0x00",
+            },
+            {
+              paramType: Encoding.None,
+              operator: Operator.WithinRatio,
+              compValue,
+            },
+          ],
+        }),
+        1, // ExecutionOptions.Send
+      );
+
+      async function invoke(etherValue: bigint, param: bigint) {
+        return roles
+          .connect(member)
+          .execTransactionFromModule(
+            testContractAddress,
+            etherValue,
+            (await testContract.fnWithSingleParam.populateTransaction(param))
+              .data as string,
+            0,
+          );
+      }
+
+      // ether = 1 ETH, param = 2 * 10^18 → ratio = 200% → pass
+      await expect(invoke(10n ** 18n, 2n * 10n ** 18n)).to.not.be.reverted;
+
+      // ether = 1 ETH, param = 1 * 10^18 → ratio = 100% → pass
+      await expect(invoke(10n ** 18n, 1n * 10n ** 18n)).to.not.be.reverted;
+
+      // ether = 1 ETH, param = 2.1 * 10^18 → ratio = 210% > 200% → fail
+      await expect(invoke(10n ** 18n, 21n * 10n ** 17n))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.RatioAboveMax, ZeroHash);
+    });
   });
 });
 

@@ -40,6 +40,8 @@ export enum Encoding {
   Tuple,
   Array,
   AbiEncoded,
+  /* Entries bellow get aliased to None */
+  EtherValue,
 }
 
 export enum Operator {

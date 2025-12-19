@@ -3649,6 +3649,173 @@ describe("Integrity", () => {
         .withArgs(4, 0); // WithinRatio at index 4, referenceIndex 0 not yet visited
     });
   });
+
+  describe("EtherValue Encoding", () => {
+    it("should revert if EtherValue has children", async () => {
+      const { mock, enforce } = await loadFixture(setup);
+      const conditions = flattenCondition({
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        children: [
+          {
+            paramType: Encoding.EtherValue,
+            operator: Operator.Pass,
+            children: [
+              {
+                paramType: Encoding.Static,
+                operator: Operator.Pass,
+              },
+            ],
+          },
+        ],
+      });
+      await expect(enforce(conditions))
+        .to.be.revertedWithCustomError(mock, "UnsuitableChildCount")
+        .withArgs(1);
+    });
+
+    it("should revert if EtherValue has Array as first structural parent", async () => {
+      const { mock, enforce } = await loadFixture(setup);
+      const conditions = flattenCondition({
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        children: [
+          {
+            paramType: Encoding.Array,
+            operator: Operator.ArrayEvery,
+            children: [
+              {
+                paramType: Encoding.EtherValue,
+                operator: Operator.Pass,
+              },
+            ],
+          },
+        ],
+      });
+      await expect(enforce(conditions))
+        .to.be.revertedWithCustomError(mock, "UnsuitableParent")
+        .withArgs(2);
+    });
+
+    it("should revert if EtherValue is used with unsupported operator (Matches)", async () => {
+      const { mock, enforce } = await loadFixture(setup);
+      const conditions = flattenCondition({
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        children: [
+          {
+            paramType: Encoding.EtherValue,
+            operator: Operator.Matches,
+          },
+        ],
+      });
+      await expect(enforce(conditions))
+        .to.be.revertedWithCustomError(mock, "UnsuitableParameterType")
+        .withArgs(1);
+    });
+
+    it("should revert if EtherValue is used with Bitmask operator", async () => {
+      const { mock, enforce } = await loadFixture(setup);
+      const conditions = flattenCondition({
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        children: [
+          {
+            paramType: Encoding.EtherValue,
+            operator: Operator.Bitmask,
+            compValue: "0x00000102", // shift + mask + expected
+          },
+        ],
+      });
+      await expect(enforce(conditions))
+        .to.be.revertedWithCustomError(mock, "UnsuitableParameterType")
+        .withArgs(1);
+    });
+
+    it("should pass for EtherValue with WithinAllowance operator", async () => {
+      const { enforce } = await loadFixture(setup);
+      const allowanceKey =
+        "0x0000000000000000000000000000000000000000000000000000000000000001";
+      const conditions = flattenCondition({
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        children: [
+          {
+            paramType: Encoding.Static,
+            operator: Operator.Pass,
+          },
+          {
+            paramType: Encoding.EtherValue,
+            operator: Operator.WithinAllowance,
+            compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
+          },
+        ],
+      });
+      await expect(enforce(conditions)).to.not.be.reverted;
+    });
+
+    it("should pass for EtherValue with Pluck operator", async () => {
+      const { enforce } = await loadFixture(setup);
+      const conditions = flattenCondition({
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        children: [
+          {
+            paramType: Encoding.Static,
+            operator: Operator.Pass,
+          },
+          {
+            paramType: Encoding.EtherValue,
+            operator: Operator.Pluck,
+            compValue: "0x00",
+          },
+        ],
+      });
+      await expect(enforce(conditions)).to.not.be.reverted;
+    });
+
+    it("should pass for EtherValue with comparison operators", async () => {
+      const { enforce } = await loadFixture(setup);
+      const conditions = flattenCondition({
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        children: [
+          {
+            paramType: Encoding.Static,
+            operator: Operator.Pass,
+          },
+          {
+            paramType: Encoding.EtherValue,
+            operator: Operator.GreaterThan,
+            compValue: defaultAbiCoder.encode(["uint256"], [1000]),
+          },
+        ],
+      });
+      await expect(enforce(conditions)).to.not.be.reverted;
+    });
+
+    it("should revert if EtherValue comes before structural children", async () => {
+      const { mock, enforce } = await loadFixture(setup);
+      const conditions = flattenCondition({
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        children: [
+          {
+            paramType: Encoding.EtherValue,
+            operator: Operator.Pass,
+          },
+          // Structural child after non-structural EtherValue (invalid)
+          {
+            paramType: Encoding.Static,
+            operator: Operator.Pass,
+          },
+        ],
+      });
+      await expect(enforce(conditions))
+        .to.be.revertedWithCustomError(mock, "NonStructuralChildrenMustComeLast")
+        .withArgs(0);
+    });
+  });
 });
 
 function encodeWithinRatioCompValue({

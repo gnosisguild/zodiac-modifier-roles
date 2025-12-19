@@ -28,6 +28,7 @@ library ConditionsTransform {
     ) external returns (address) {
         Integrity.enforce(conditions);
 
+        _patchEtherValue(conditions);
         _removeExtraneousOffsets(conditions);
 
         Layout memory layout;
@@ -40,6 +41,19 @@ library ConditionsTransform {
         address pointer = ImmutableStorage.store(buffer);
 
         return pointer;
+    }
+
+    /**
+     * @dev Patches EtherValue encoding to None after Integrity validation.
+     *      This enables downstream detection via payload.size == 0.
+     */
+    function _patchEtherValue(ConditionFlat[] memory conditions) private pure {
+        uint256 count = conditions.length;
+        for (uint256 i; i < count; ++i) {
+            if (conditions[i].paramType == Encoding.EtherValue) {
+                conditions[i].paramType = Encoding.None;
+            }
+        }
     }
 
     /**

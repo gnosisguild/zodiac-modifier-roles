@@ -2,13 +2,25 @@ import { expect } from "chai";
 import { time, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import hre from "hardhat";
 
-import { AbiCoder, BigNumberish, solidityPacked } from "ethers";
+import { AbiCoder, BigNumberish, parseEther, solidityPacked } from "ethers";
 
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
-import { Encoding, Operator, PermissionCheckerStatus } from "../utils";
-import { setupOneParamStatic, setupTwoParamsStatic } from "../setup";
+import {
+  Encoding,
+  ExecutionOptions,
+  Operator,
+  PermissionCheckerStatus,
+} from "../utils";
+import {
+  setupAvatarAndRoles,
+  setupOneParamStatic,
+  setupTwoParamsStatic,
+} from "../setup";
 import { Roles } from "../../typechain-types";
+
+const ROLE_KEY =
+  "0x0000000000000000000000000000000000000000000000000000000000000001";
 
 describe("Operator - WithinAllowance", async () => {
   function setAllowance(
@@ -1120,6 +1132,88 @@ describe("Operator - WithinAllowance", async () => {
 
       allowance = await roles.allowances(allowanceKey);
       expect(allowance.balance).to.equal(0);
+    });
+  });
+
+  describe("WithinAllowance - from EtherValue", () => {
+    it("enforces ether allowance from transaction.value", async () => {
+      const { owner, member, roles, testContract, scopeFunction } =
+        await loadFixture(setupAvatarAndRoles);
+
+      // Fund the avatar
+      const avatarAddress = await roles.avatar();
+      await owner.sendTransaction({
+        to: avatarAddress,
+        value: parseEther("1"),
+      });
+
+      const allowanceKey =
+        "0x0000000000000000000000000000000000000000000000000000000000000001";
+
+      await setAllowance(await roles.connect(owner), allowanceKey, {
+        balance: 10000,
+        period: 0,
+        refill: 0,
+        timestamp: 0,
+      });
+
+      const { selector } = testContract.interface.getFunction("oneParamStatic");
+
+      // Static param passes, EtherValue checks allowance
+      await scopeFunction(
+        selector,
+        [
+          {
+            parent: 0,
+            paramType: Encoding.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: Encoding.Static,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: Encoding.EtherValue,
+            operator: Operator.WithinAllowance,
+            compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
+          },
+        ],
+        ExecutionOptions.Send,
+      );
+
+      async function invoke(value: bigint, param: bigint) {
+        return roles
+          .connect(member)
+          .execTransactionFromModule(
+            await testContract.getAddress(),
+            value,
+            (await testContract.oneParamStatic.populateTransaction(param))
+              .data as string,
+            0,
+          );
+      }
+
+      // Exceeds allowance
+      await expect(invoke(10001n, 123n))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
+
+      // Within allowance
+      await expect(invoke(5000n, 456n)).to.not.be.reverted;
+      expect((await roles.allowances(allowanceKey)).balance).to.equal(5000);
+
+      // Exhaust remaining
+      await expect(invoke(5000n, 789n)).to.not.be.reverted;
+      expect((await roles.allowances(allowanceKey)).balance).to.equal(0);
+
+      // Now fails
+      await expect(invoke(1n, 999n))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
     });
   });
 });

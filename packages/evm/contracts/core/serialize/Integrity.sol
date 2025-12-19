@@ -131,8 +131,8 @@ library Integrity {
                 revert IRolesError.UnsuitableCompValue(index);
             }
         } else if (operator == Operator.Pluck) {
-            // Pluck must be Static
-            if (encoding != Encoding.Static) {
+            // Pluck must be Static or EtherValue
+            if (!_isStaticLike(encoding)) {
                 revert IRolesError.UnsuitableParameterType(index);
             }
             // compValue is the index (1 byte, 0-255)
@@ -140,7 +140,7 @@ library Integrity {
                 revert IRolesError.UnsuitableCompValue(index);
             }
         } else if (operator == Operator.EqualToAvatar) {
-            if (encoding != Encoding.Static) {
+            if (!_isStaticLike(encoding)) {
                 revert IRolesError.UnsuitableParameterType(index);
             }
             if (compValue.length != 0) {
@@ -151,7 +151,8 @@ library Integrity {
                 encoding != Encoding.Static &&
                 encoding != Encoding.Dynamic &&
                 encoding != Encoding.Tuple &&
-                encoding != Encoding.Array
+                encoding != Encoding.Array &&
+                encoding != Encoding.EtherValue
             ) {
                 revert IRolesError.UnsuitableParameterType(index);
             }
@@ -164,7 +165,7 @@ library Integrity {
             operator == Operator.SignedIntGreaterThan ||
             operator == Operator.SignedIntLessThan
         ) {
-            if (encoding != Encoding.Static) {
+            if (!_isStaticLike(encoding)) {
                 revert IRolesError.UnsuitableParameterType(index);
             }
             if (compValue.length != 32) {
@@ -183,7 +184,7 @@ library Integrity {
                 revert IRolesError.UnsuitableCompValue(index);
             }
         } else if (operator == Operator.WithinAllowance) {
-            if (encoding != Encoding.Static) {
+            if (!_isStaticLike(encoding)) {
                 revert IRolesError.UnsuitableParameterType(index);
             }
             // 32 bytes: allowanceKey only (legacy)
@@ -266,6 +267,13 @@ library Integrity {
                     revert IRolesError.UnsuitableParent(i);
                 }
             }
+
+            // EtherValue cannot be direct child of Array
+            if (conditions[i].paramType == Encoding.EtherValue) {
+                if (_firstStructuralParent(conditions, i) == Encoding.Array) {
+                    revert IRolesError.UnsuitableParent(i);
+                }
+            }
         }
     }
 
@@ -324,9 +332,12 @@ library Integrity {
                 if (childCount == 0) {
                     revert IRolesError.UnsuitableChildCount(i);
                 }
-            } else {
-                assert(condition.paramType == Encoding.Array);
-
+            } else if (condition.paramType == Encoding.EtherValue) {
+                // EtherValue is non-structural, no children allowed
+                if (childCount != 0) {
+                    revert IRolesError.UnsuitableChildCount(i);
+                }
+            } else if (condition.paramType == Encoding.Array) {
                 if (sChildCount == 0) {
                     revert IRolesError.UnsuitableChildCount(i);
                 }
@@ -346,6 +357,12 @@ library Integrity {
                         condition.operator == Operator.ArrayTailMatches) &&
                     childCount != sChildCount
                 ) {
+                    revert IRolesError.UnsuitableChildCount(i);
+                }
+            } else {
+                assert(condition.paramType == Encoding.EtherValue);
+                // EtherValue is non-structural, no children allowed
+                if (childCount != 0) {
                     revert IRolesError.UnsuitableChildCount(i);
                 }
             }
@@ -582,5 +599,29 @@ library Integrity {
         }
 
         return visited;
+    }
+
+    function _isStaticLike(Encoding encoding) private pure returns (bool) {
+        return encoding == Encoding.Static || encoding == Encoding.EtherValue;
+    }
+
+    function _firstStructuralParent(
+        ConditionFlat[] memory conditions,
+        uint256 i
+    ) private pure returns (Encoding result) {
+        while (true) {
+            ConditionFlat memory current = conditions[i];
+
+            if (current.parent == i) return Encoding.None; // reached root
+
+            ConditionFlat memory parent = conditions[current.parent];
+
+            bool isStructural = parent.paramType != Encoding.None &&
+                parent.paramType != Encoding.EtherValue;
+            if (isStructural) {
+                return parent.paramType;
+            }
+            i = current.parent;
+        }
     }
 }
