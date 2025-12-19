@@ -551,9 +551,8 @@ describe("Operator - WithinAllowance", async () => {
       const { owner, roles, scopeFunction, invoke } =
         await loadFixture(setupOneParamStatic);
 
-      const MockPriceAdapter =
-        await hre.ethers.getContractFactory("MockPriceAdapter");
-      const adapter = await MockPriceAdapter.deploy(10n ** 18n); // 1:1 price
+      const MockPricing = await hre.ethers.getContractFactory("MockPricing");
+      const adapter = await MockPricing.deploy(10n ** 18n); // 1:1 price
 
       await setAllowance(await roles.connect(owner), allowanceKey, {
         balance: 2000n * 10n ** 12n, // 2000 units in 12 decimals
@@ -594,9 +593,8 @@ describe("Operator - WithinAllowance", async () => {
       const { owner, roles, scopeFunction, invoke } =
         await loadFixture(setupOneParamStatic);
 
-      const MockPriceAdapter =
-        await hre.ethers.getContractFactory("MockPriceAdapter");
-      const adapter = await MockPriceAdapter.deploy(10n ** 18n);
+      const MockPricing = await hre.ethers.getContractFactory("MockPricing");
+      const adapter = await MockPricing.deploy(10n ** 18n);
 
       await setAllowance(await roles.connect(owner), allowanceKey, {
         balance: 1000n * 10n ** 12n, // exactly 1000 units (12 dec)
@@ -636,9 +634,8 @@ describe("Operator - WithinAllowance", async () => {
       const { owner, roles, scopeFunction, invoke } =
         await loadFixture(setupOneParamStatic);
 
-      const MockPriceAdapter =
-        await hre.ethers.getContractFactory("MockPriceAdapter");
-      const adapter = await MockPriceAdapter.deploy(10n ** 18n);
+      const MockPricing = await hre.ethers.getContractFactory("MockPricing");
+      const adapter = await MockPricing.deploy(10n ** 18n);
 
       await setAllowance(await roles.connect(owner), allowanceKey, {
         balance: 2000n * 10n ** 18n,
@@ -678,9 +675,8 @@ describe("Operator - WithinAllowance", async () => {
       const { owner, roles, scopeFunction, invoke } =
         await loadFixture(setupOneParamStatic);
 
-      const MockPriceAdapter =
-        await hre.ethers.getContractFactory("MockPriceAdapter");
-      const adapter = await MockPriceAdapter.deploy(10n ** 18n);
+      const MockPricing = await hre.ethers.getContractFactory("MockPricing");
+      const adapter = await MockPricing.deploy(10n ** 18n);
 
       await setAllowance(await roles.connect(owner), allowanceKey, {
         balance: 1000n * 10n ** 18n,
@@ -719,9 +715,8 @@ describe("Operator - WithinAllowance", async () => {
       const { owner, roles, scopeFunction, invoke } =
         await loadFixture(setupOneParamStatic);
 
-      const MockPriceAdapter =
-        await hre.ethers.getContractFactory("MockPriceAdapter");
-      const adapter = await MockPriceAdapter.deploy(10n ** 18n);
+      const MockPricing = await hre.ethers.getContractFactory("MockPricing");
+      const adapter = await MockPricing.deploy(10n ** 18n);
 
       await setAllowance(await roles.connect(owner), allowanceKey, {
         balance: 900n * 10n ** 6n, // 900 units (6 dec)
@@ -763,9 +758,8 @@ describe("Operator - WithinAllowance", async () => {
       const { owner, roles, scopeFunction, invoke } =
         await loadFixture(setupOneParamStatic);
 
-      const MockPriceAdapter =
-        await hre.ethers.getContractFactory("MockPriceAdapter");
-      const adapter = await MockPriceAdapter.deploy(10n ** 18n);
+      const MockPricing = await hre.ethers.getContractFactory("MockPricing");
+      const adapter = await MockPricing.deploy(10n ** 18n);
 
       await setAllowance(await roles.connect(owner), allowanceKey, {
         balance: 1000n * 10n ** 6n,
@@ -804,9 +798,8 @@ describe("Operator - WithinAllowance", async () => {
       const { owner, roles, scopeFunction, invoke } =
         await loadFixture(setupOneParamStatic);
 
-      const MockPriceAdapter =
-        await hre.ethers.getContractFactory("MockPriceAdapter");
-      const adapter = await MockPriceAdapter.deploy(10n ** 18n);
+      const MockPricing = await hre.ethers.getContractFactory("MockPricing");
+      const adapter = await MockPricing.deploy(10n ** 18n);
 
       await setAllowance(await roles.connect(owner), allowanceKey, {
         balance: 2000n * 10n ** 12n,
@@ -846,9 +839,8 @@ describe("Operator - WithinAllowance", async () => {
       const { owner, roles, scopeFunction, invoke } =
         await loadFixture(setupOneParamStatic);
 
-      const MockPriceAdapter =
-        await hre.ethers.getContractFactory("MockPriceAdapter");
-      const adapter = await MockPriceAdapter.deploy(10n ** 18n);
+      const MockPricing = await hre.ethers.getContractFactory("MockPricing");
+      const adapter = await MockPricing.deploy(10n ** 18n);
 
       await setAllowance(await roles.connect(owner), allowanceKey, {
         balance: 1000n * 10n ** 12n,
@@ -887,10 +879,9 @@ describe("Operator - WithinAllowance", async () => {
       const { owner, roles, scopeFunction, invoke } =
         await loadFixture(setupOneParamStatic);
 
-      const MockPriceAdapter =
-        await hre.ethers.getContractFactory("MockPriceAdapter");
+      const MockPricing = await hre.ethers.getContractFactory("MockPricing");
       // DAI/USDC price = 1e18 (1:1)
-      const adapter = await MockPriceAdapter.deploy(10n ** 18n);
+      const adapter = await MockPricing.deploy(10n ** 18n);
 
       await setAllowance(await roles.connect(owner), allowanceKey, {
         balance: 1000n * 10n ** 6n, // 1000 USDC
@@ -931,9 +922,8 @@ describe("Operator - WithinAllowance", async () => {
       const { owner, roles, scopeFunction, invoke } =
         await loadFixture(setupOneParamStatic);
 
-      const MockPriceAdapter =
-        await hre.ethers.getContractFactory("MockPriceAdapter");
-      const adapter = await MockPriceAdapter.deploy(10n ** 18n);
+      const MockPricing = await hre.ethers.getContractFactory("MockPricing");
+      const adapter = await MockPricing.deploy(10n ** 18n);
 
       await setAllowance(await roles.connect(owner), allowanceKey, {
         balance: 1000n * 10n ** 18n, // 1000 DAI
@@ -974,10 +964,9 @@ describe("Operator - WithinAllowance", async () => {
       const { owner, roles, invoke, scopeFunction } =
         await loadFixture(setupTwoParamsStatic);
 
-      const MockPriceAdapter =
-        await hre.ethers.getContractFactory("MockPriceAdapter");
-      const usdcAdapter = await MockPriceAdapter.deploy(10n ** 18n); // 1:1
-      const ethAdapter = await MockPriceAdapter.deploy(2000n * 10n ** 18n); // 1 ETH = 2000 USDC
+      const MockPricing = await hre.ethers.getContractFactory("MockPricing");
+      const usdcAdapter = await MockPricing.deploy(10n ** 18n); // 1:1
+      const ethAdapter = await MockPricing.deploy(2000n * 10n ** 18n); // 1 ETH = 2000 USDC
 
       await setAllowance(await roles.connect(owner), allowanceKey, {
         balance: 5000n * 10n ** 6n, // 5000 USDC
@@ -1040,9 +1029,8 @@ describe("Operator - WithinAllowance", async () => {
       const { owner, roles, scopeFunction, invoke } =
         await loadFixture(setupOneParamStatic);
 
-      const MockPriceAdapter =
-        await hre.ethers.getContractFactory("MockPriceAdapter");
-      const adapter = await MockPriceAdapter.deploy(10n ** 18n); // 1:1 price
+      const MockPricing = await hre.ethers.getContractFactory("MockPricing");
+      const adapter = await MockPricing.deploy(10n ** 18n); // 1:1 price
 
       // 1.123456789123456789 in 18 decimals
       const valueInParamDecimals = 1123456789123456789n;
@@ -1089,9 +1077,8 @@ describe("Operator - WithinAllowance", async () => {
       const { owner, roles, scopeFunction, invoke } =
         await loadFixture(setupOneParamStatic);
 
-      const MockPriceAdapter =
-        await hre.ethers.getContractFactory("MockPriceAdapter");
-      const adapter = await MockPriceAdapter.deploy(10n ** 18n); // 1:1 price
+      const MockPricing = await hre.ethers.getContractFactory("MockPricing");
+      const adapter = await MockPricing.deploy(10n ** 18n); // 1:1 price
 
       // 1.123456 in 6 decimals
       const valueInParamDecimals = 1123456n;

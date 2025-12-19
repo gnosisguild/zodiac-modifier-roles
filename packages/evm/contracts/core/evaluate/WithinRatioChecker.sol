@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "../../periphery/interfaces/IPriceAdapter.sol";
+import "../../periphery/interfaces/IPricing.sol";
 
 import "../../types/Types.sol";
 
@@ -19,17 +19,6 @@ import "../../types/Types.sol";
 library WithinRatioChecker {
     /// @dev 100% = 10000 bps
     uint256 private constant BPS = 10000;
-
-    struct CompValue {
-        uint8 referenceIndex;
-        uint8 referenceDecimals;
-        uint8 relativeIndex;
-        uint8 relativeDecimals;
-        uint32 minRatio;
-        uint32 maxRatio;
-        address referenceAdapter;
-        address relativeAdapter;
-    }
 
     function check(
         bytes memory compValue,
@@ -97,11 +86,11 @@ library WithinRatioChecker {
          */
         uint256 priceScale = 10 ** (precision - 18);
         uint256 priceReference = unpacked.referenceAdapter != address(0)
-            ? IPriceAdapter(unpacked.referenceAdapter).getPrice() * priceScale
+            ? IPricing(unpacked.referenceAdapter).getPrice() * priceScale
             : (10 ** precision);
 
         uint256 priceRelative = unpacked.relativeAdapter != address(0)
-            ? IPriceAdapter(unpacked.relativeAdapter).getPrice() * priceScale
+            ? IPricing(unpacked.relativeAdapter).getPrice() * priceScale
             : (10 ** precision);
 
         // Convert to common base
@@ -144,5 +133,16 @@ library WithinRatioChecker {
                 )
             }
         }
+    }
+
+    struct CompValue {
+        uint8 referenceIndex;
+        uint8 referenceDecimals;
+        uint8 relativeIndex;
+        uint8 relativeDecimals;
+        uint32 minRatio;
+        uint32 maxRatio;
+        address referenceAdapter;
+        address relativeAdapter;
     }
 }

@@ -314,9 +314,8 @@ describe("WithinRatio Operator", () => {
           await loadFixture(setupTwoParamsStatic);
 
         // Deploy ETH/USD adapter: 1 ETH = 2000 USD
-        const MockPriceAdapter =
-          await hre.ethers.getContractFactory("MockPriceAdapter");
-        const ethUsdAdapter = await MockPriceAdapter.deploy(2000n * 10n ** 18n);
+        const MockPricing = await hre.ethers.getContractFactory("MockPricing");
+        const ethUsdAdapter = await MockPricing.deploy(2000n * 10n ** 18n);
 
         const compValue = encodeWithinRatioCompValue({
           referenceAdapter: await ethUsdAdapter.getAddress(),
@@ -369,11 +368,8 @@ describe("WithinRatio Operator", () => {
           await loadFixture(setupTwoParamsStatic);
 
         // Deploy WBTC/USD adapter: 1 WBTC = 150,000 USD
-        const MockPriceAdapter =
-          await hre.ethers.getContractFactory("MockPriceAdapter");
-        const wbtcUsdAdapter = await MockPriceAdapter.deploy(
-          150000n * 10n ** 18n,
-        );
+        const MockPricing = await hre.ethers.getContractFactory("MockPricing");
+        const wbtcUsdAdapter = await MockPricing.deploy(150000n * 10n ** 18n);
 
         const compValue = encodeWithinRatioCompValue({
           referenceAdapter: "0x0000000000000000000000000000000000000000",
@@ -431,14 +427,11 @@ describe("WithinRatio Operator", () => {
           await loadFixture(setupTwoParamsStatic);
 
         // Deploy ETH/USD adapter: 1 ETH = 2000 USD
-        const MockPriceAdapter =
-          await hre.ethers.getContractFactory("MockPriceAdapter");
-        const ethUsdAdapter = await MockPriceAdapter.deploy(2000n * 10n ** 18n);
+        const MockPricing = await hre.ethers.getContractFactory("MockPricing");
+        const ethUsdAdapter = await MockPricing.deploy(2000n * 10n ** 18n);
 
         // Deploy BTC/USD adapter: 1 BTC = 150,000 USD
-        const btcUsdAdapter = await MockPriceAdapter.deploy(
-          150000n * 10n ** 18n,
-        );
+        const btcUsdAdapter = await MockPricing.deploy(150000n * 10n ** 18n);
 
         const compValue = encodeWithinRatioCompValue({
           referenceAdapter: await ethUsdAdapter.getAddress(),
@@ -496,9 +489,8 @@ describe("WithinRatio Operator", () => {
           await loadFixture(setupTwoParamsStatic);
 
         // Deploy ETH/WBTC adapter: 1 ETH = 0.045 WBTC
-        const MockPriceAdapter =
-          await hre.ethers.getContractFactory("MockPriceAdapter");
-        const ethWbtcAdapter = await MockPriceAdapter.deploy(45n * 10n ** 15n);
+        const MockPricing = await hre.ethers.getContractFactory("MockPricing");
+        const ethWbtcAdapter = await MockPricing.deploy(45n * 10n ** 15n);
 
         const compValue = encodeWithinRatioCompValue({
           referenceAdapter: "0x0000000000000000000000000000000000000000",
@@ -556,9 +548,8 @@ describe("WithinRatio Operator", () => {
           await loadFixture(setupTwoParamsStatic);
 
         // Deploy WBTC/ETH adapter: 1 WBTC = 10 ETH
-        const MockPriceAdapter =
-          await hre.ethers.getContractFactory("MockPriceAdapter");
-        const wbtcEthAdapter = await MockPriceAdapter.deploy(10n * 10n ** 18n);
+        const MockPricing = await hre.ethers.getContractFactory("MockPricing");
+        const wbtcEthAdapter = await MockPricing.deploy(10n * 10n ** 18n);
 
         const compValue = encodeWithinRatioCompValue({
           referenceAdapter: "0x0000000000000000000000000000000000000000",
@@ -616,9 +607,8 @@ describe("WithinRatio Operator", () => {
           await loadFixture(setupTwoParamsStatic);
 
         // Deploy FunkyToken/USDC adapter: 1 FunkyToken = 2 USDC (price adapters always return 18 decimals)
-        const MockPriceAdapter =
-          await hre.ethers.getContractFactory("MockPriceAdapter");
-        const funkyUsdcAdapter = await MockPriceAdapter.deploy(2n * 10n ** 18n);
+        const MockPricing = await hre.ethers.getContractFactory("MockPricing");
+        const funkyUsdcAdapter = await MockPricing.deploy(2n * 10n ** 18n);
 
         const compValue = encodeWithinRatioCompValue({
           referenceAdapter: "0x0000000000000000000000000000000000000000",
