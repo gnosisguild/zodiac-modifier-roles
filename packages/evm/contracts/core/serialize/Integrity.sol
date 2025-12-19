@@ -147,12 +147,13 @@ library Integrity {
                 revert IRolesError.UnsuitableCompValue(index);
             }
         } else if (operator == Operator.EqualTo) {
+            // Note: EtherValue is NOT allowed with EqualTo because _compare uses
+            // keccak256 which doesn't work with EtherValue's empty payload
             if (
                 encoding != Encoding.Static &&
                 encoding != Encoding.Dynamic &&
                 encoding != Encoding.Tuple &&
-                encoding != Encoding.Array &&
-                encoding != Encoding.EtherValue
+                encoding != Encoding.Array
             ) {
                 revert IRolesError.UnsuitableParameterType(index);
             }
@@ -197,20 +198,6 @@ library Integrity {
                     revert IRolesError.AllowanceDecimalsExceedMax(index);
                 }
             }
-        } else if (operator == Operator.EtherWithinAllowance) {
-            if (encoding != Encoding.None) {
-                revert IRolesError.UnsuitableParameterType(index);
-            }
-            // 32 bytes: allowanceKey only (legacy)
-            // 54 bytes: allowanceKey + adapter + accrueDecimals + paramDecimals
-            if (compValue.length != 32 && compValue.length != 54) {
-                revert IRolesError.UnsuitableCompValue(index);
-            }
-            if (compValue.length == 54) {
-                if (uint8(compValue[52]) > 18 || uint8(compValue[53]) > 18) {
-                    revert IRolesError.AllowanceDecimalsExceedMax(index);
-                }
-            }
         } else if (operator == Operator.CallWithinAllowance) {
             if (encoding != Encoding.None) {
                 revert IRolesError.UnsuitableParameterType(index);
@@ -235,10 +222,7 @@ library Integrity {
         uint256 length = conditions.length;
 
         for (uint256 i = 0; i < length; ++i) {
-            if (
-                conditions[i].operator == Operator.EtherWithinAllowance ||
-                conditions[i].operator == Operator.CallWithinAllowance
-            ) {
+            if (conditions[i].operator == Operator.CallWithinAllowance) {
                 if (conditions[i].parent != i) {
                     (, , uint256 countOtherNodes) = _countParentNodes(
                         conditions,
@@ -287,8 +271,7 @@ library Integrity {
 
             if (condition.paramType == Encoding.None) {
                 if (
-                    (condition.operator == Operator.EtherWithinAllowance ||
-                        condition.operator == Operator.CallWithinAllowance ||
+                    (condition.operator == Operator.CallWithinAllowance ||
                         condition.operator == Operator.WithinRatio ||
                         condition.operator == Operator.Empty) && childCount != 0
                 ) {

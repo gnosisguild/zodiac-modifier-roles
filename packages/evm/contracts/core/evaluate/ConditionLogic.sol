@@ -121,14 +121,6 @@ library ConditionLogic {
                         Status.AllowanceExceeded,
                         consumptions
                     );
-            } else if (operator == Operator.EtherWithinAllowance) {
-                return
-                    __allowance(
-                        context.value,
-                        condition.compValue,
-                        Status.EtherAllowanceExceeded,
-                        consumptions
-                    );
             } else if (operator == Operator.CallWithinAllowance) {
                 return
                     __allowance(

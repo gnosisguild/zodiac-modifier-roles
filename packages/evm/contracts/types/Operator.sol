@@ -65,7 +65,7 @@ enum Operator {
     /* 26: */ _Placeholder26,
     /* 27: */ _Placeholder27,
     /* 28: */ WithinAllowance, // paramType: Static
-    /* 29: */ EtherWithinAllowance, // paramType: None
+    /* 29: */ _Placeholder29,
     /* 30: */ CallWithinAllowance, // paramType: None
     /* 31: */ _Placeholder31
 }

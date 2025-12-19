@@ -269,7 +269,7 @@ describe("Operator - Empty", async () => {
     });
   });
 
-  describe("Empty combined with EtherWithinAllowance", () => {
+  describe("Empty combined with Ether WithinAllowance", () => {
     it("passes when calldata is empty and ether allowance available", async () => {
       const { owner, member, roles, testContract, roleKey } =
         await loadFixture(setup);
@@ -293,8 +293,8 @@ describe("Operator - Empty", async () => {
               operator: Operator.Empty,
             },
             {
-              paramType: Encoding.None,
-              operator: Operator.EtherWithinAllowance,
+              paramType: Encoding.EtherValue,
+              operator: Operator.WithinAllowance,
               compValue: allowanceKey,
             },
           ],
@@ -337,8 +337,8 @@ describe("Operator - Empty", async () => {
               operator: Operator.Empty,
             },
             {
-              paramType: Encoding.None,
-              operator: Operator.EtherWithinAllowance,
+              paramType: Encoding.EtherValue,
+              operator: Operator.WithinAllowance,
               compValue: allowanceKey,
             },
           ],
@@ -357,7 +357,7 @@ describe("Operator - Empty", async () => {
           ),
       )
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.EtherAllowanceExceeded, allowanceKey);
+        .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
     });
 
     it("fails when calldata is not empty even with ether allowance", async () => {
@@ -383,8 +383,8 @@ describe("Operator - Empty", async () => {
               operator: Operator.Empty,
             },
             {
-              paramType: Encoding.None,
-              operator: Operator.EtherWithinAllowance,
+              paramType: Encoding.EtherValue,
+              operator: Operator.WithinAllowance,
               compValue: allowanceKey,
             },
           ],
@@ -407,7 +407,7 @@ describe("Operator - Empty", async () => {
     });
   });
 
-  describe("Empty with both CallWithinAllowance and EtherWithinAllowance", () => {
+  describe("Empty with both CallWithinAllowance and Ether WithinAllowance", () => {
     it("passes when all conditions are satisfied", async () => {
       const { owner, member, roles, testContract, roleKey } =
         await loadFixture(setup);
@@ -438,8 +438,8 @@ describe("Operator - Empty", async () => {
               compValue: callAllowanceKey,
             },
             {
-              paramType: Encoding.None,
-              operator: Operator.EtherWithinAllowance,
+              paramType: Encoding.EtherValue,
+              operator: Operator.WithinAllowance,
               compValue: etherAllowanceKey,
             },
           ],
@@ -489,8 +489,8 @@ describe("Operator - Empty", async () => {
               compValue: callAllowanceKey,
             },
             {
-              paramType: Encoding.None,
-              operator: Operator.EtherWithinAllowance,
+              paramType: Encoding.EtherValue,
+              operator: Operator.WithinAllowance,
               compValue: etherAllowanceKey,
             },
           ],
@@ -556,8 +556,8 @@ describe("Operator - Empty", async () => {
               compValue: callAllowanceKey,
             },
             {
-              paramType: Encoding.None,
-              operator: Operator.EtherWithinAllowance,
+              paramType: Encoding.EtherValue,
+              operator: Operator.WithinAllowance,
               compValue: etherAllowanceKey,
             },
           ],
@@ -576,10 +576,7 @@ describe("Operator - Empty", async () => {
           ),
       )
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(
-          PermissionCheckerStatus.EtherAllowanceExceeded,
-          etherAllowanceKey,
-        );
+        .withArgs(PermissionCheckerStatus.AllowanceExceeded, etherAllowanceKey);
     });
   });
 
@@ -700,7 +697,7 @@ describe("Operator - Empty", async () => {
         .connect(owner)
         .setAllowance(etherAllowanceKey, parseEther("5"), 0, 0, 0, 0);
 
-      // Or(Empty, And(CallWithinAllowance, EtherWithinAllowance))
+      // Or(Empty, And(CallWithinAllowance, EtherValue.WithinAllowance))
       await roles.connect(owner).allowTarget(
         roleKey,
         testContractAddress,
@@ -722,8 +719,8 @@ describe("Operator - Empty", async () => {
                   compValue: callAllowanceKey,
                 },
                 {
-                  paramType: Encoding.None,
-                  operator: Operator.EtherWithinAllowance,
+                  paramType: Encoding.EtherValue,
+                  operator: Operator.WithinAllowance,
                   compValue: etherAllowanceKey,
                 },
               ],

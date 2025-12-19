@@ -1,15 +1,28 @@
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import hre from "hardhat";
 
 import {
   Encoding,
   BYTES32_ZERO,
+  ExecutionOptions,
   flattenCondition,
   Operator,
   PermissionCheckerStatus,
 } from "../utils";
-import { setupOneParamArrayOfBytes, setupOneParamBytes } from "../setup";
-import { Interface, AbiCoder, ZeroHash } from "ethers";
+import {
+  deployRolesMod,
+  setupOneParamArrayOfBytes,
+  setupOneParamBytes,
+} from "../setup";
+import {
+  Interface,
+  AbiCoder,
+  ZeroHash,
+  parseEther,
+  randomBytes,
+  hexlify,
+} from "ethers";
 
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
@@ -250,3 +263,184 @@ function encode(types: any, values: any, removeOffset = false) {
   const result = defaultAbiCoder.encode(types, values);
   return removeOffset ? `0x${result.slice(66)}` : result;
 }
+
+function randomBytes32(): string {
+  return hexlify(randomBytes(32));
+}
+
+async function setupEtherValueTest() {
+  const [owner, member] = await hre.ethers.getSigners();
+
+  const Avatar = await hre.ethers.getContractFactory("TestAvatar");
+  const avatar = await Avatar.deploy();
+
+  const TestContract = await hre.ethers.getContractFactory("TestContract");
+  const testContract = await TestContract.deploy();
+
+  const avatarAddress = await avatar.getAddress();
+  const roles = await deployRolesMod(
+    hre,
+    owner.address,
+    avatarAddress,
+    avatarAddress,
+  );
+
+  const roleKey = randomBytes32();
+
+  await roles.connect(owner).enableModule(member.address);
+  await roles.connect(owner).grantRole(member.address, roleKey, 0, 0, 0);
+  await roles.connect(owner).setDefaultRole(member.address, roleKey);
+
+  // Fund the avatar for value transfer tests
+  await owner.sendTransaction({
+    to: avatarAddress,
+    value: parseEther("100"),
+  });
+
+  return { owner, member, roles, testContract, roleKey };
+}
+
+describe("EtherValue encoding", () => {
+  it("Or over embedded AbiEncoded with different ether value restrictions per branch", async () => {
+    const { owner, member, roles, testContract, roleKey } =
+      await loadFixture(setupEtherValueTest);
+
+    const testContractAddress = await testContract.getAddress();
+
+    // Use oneParamBytes(bytes) - the bytes param will contain embedded calldata
+    const SELECTOR =
+      testContract.interface.getFunction("oneParamBytes").selector;
+
+    // Embedded function interfaces
+    const iface = new Interface([
+      "function fnZeroEther(uint256 a)",
+      "function fnLimitedEther(uint256 a, bool b)",
+    ]);
+
+    await roles.connect(owner).scopeTarget(roleKey, testContractAddress);
+
+    // Scope oneParamBytes with an OR over embedded functions:
+    // - fnZeroEther: ether value must be 0
+    // - fnLimitedEther: ether value must be < 10 ether
+    await roles.connect(owner).scopeFunction(
+      roleKey,
+      testContractAddress,
+      SELECTOR,
+      flattenCondition({
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        children: [
+          {
+            paramType: Encoding.None,
+            operator: Operator.Or,
+            children: [
+              // Branch 1: fnZeroEther(uint256) - ether must be 0
+              {
+                paramType: Encoding.AbiEncoded,
+                operator: Operator.Matches,
+                compValue:
+                  "0x0004" +
+                  iface.getFunction("fnZeroEther")!.selector.slice(2),
+                children: [
+                  {
+                    paramType: Encoding.Static,
+                    operator: Operator.Pass,
+                  },
+                  {
+                    paramType: Encoding.EtherValue,
+                    operator: Operator.LessThan,
+                    compValue: defaultAbiCoder.encode(["uint256"], [1]), // must be < 1 (i.e., 0)
+                  },
+                ],
+              },
+              // Branch 2: fnLimitedEther(uint256, bool) - ether must be < 10
+              {
+                paramType: Encoding.AbiEncoded,
+                operator: Operator.Matches,
+                compValue:
+                  "0x0004" +
+                  iface.getFunction("fnLimitedEther")!.selector.slice(2),
+                children: [
+                  {
+                    paramType: Encoding.Static,
+                    operator: Operator.Pass,
+                  },
+                  {
+                    paramType: Encoding.Static,
+                    operator: Operator.Pass,
+                  },
+                  {
+                    paramType: Encoding.EtherValue,
+                    operator: Operator.LessThan,
+                    compValue: defaultAbiCoder.encode(
+                      ["uint256"],
+                      [parseEther("10")],
+                    ),
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      }),
+      ExecutionOptions.Send,
+    );
+
+    // fnZeroEther with 0 ether - passes
+    const calldataZeroEther = testContract.interface.encodeFunctionData(
+      "oneParamBytes",
+      [iface.encodeFunctionData("fnZeroEther", [123])],
+    );
+
+    await expect(
+      roles
+        .connect(member)
+        .execTransactionFromModule(
+          testContractAddress,
+          0,
+          calldataZeroEther,
+          0,
+        ),
+    ).to.not.be.reverted;
+
+    // fnZeroEther with 1 ether - fails (must be < 1)
+    await expect(
+      roles
+        .connect(member)
+        .execTransactionFromModule(
+          testContractAddress,
+          parseEther("1"),
+          calldataZeroEther,
+          0,
+        ),
+    ).to.be.revertedWithCustomError(roles, "ConditionViolation");
+
+    // fnLimitedEther with 5 ether - passes (< 10)
+    const calldataLimitedEther = testContract.interface.encodeFunctionData(
+      "oneParamBytes",
+      [iface.encodeFunctionData("fnLimitedEther", [456, true])],
+    );
+    await expect(
+      roles
+        .connect(member)
+        .execTransactionFromModule(
+          testContractAddress,
+          parseEther("5"),
+          calldataLimitedEther,
+          0,
+        ),
+    ).to.not.be.reverted;
+
+    // fnLimitedEther with 15 ether - fails (>= 10)
+    await expect(
+      roles
+        .connect(member)
+        .execTransactionFromModule(
+          testContractAddress,
+          parseEther("15"),
+          calldataLimitedEther,
+          0,
+        ),
+    ).to.be.revertedWithCustomError(roles, "ConditionViolation");
+  });
+});

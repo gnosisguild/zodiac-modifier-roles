@@ -78,7 +78,6 @@ export enum Operator {
   Custom = 22, // paramType: Static / Dynamic / Tuple / Array
   WithinRatio = 23, // paramType: None
   WithinAllowance = 28, // paramType: Static
-  EtherWithinAllowance = 29, // paramType: None
   CallWithinAllowance = 30, // paramType: None
 }
 

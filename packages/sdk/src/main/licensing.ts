@@ -93,8 +93,7 @@ const assertPublicFeatureScope = (role: Role, owner: PrefixedAddress) => {
 const usesAllowances = (condition: Condition): boolean => {
   if (
     condition.operator === Operator.WithinAllowance ||
-    condition.operator === Operator.CallWithinAllowance ||
-    condition.operator === Operator.EtherWithinAllowance
+    condition.operator === Operator.CallWithinAllowance
   ) {
     return true
   }
