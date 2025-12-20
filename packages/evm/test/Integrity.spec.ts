@@ -393,7 +393,7 @@ describe("Integrity", () => {
           .withArgs(1);
       });
 
-      it("should revert if EqualTo has an empty or non-32-byte-multiple compValue", async () => {
+      it("should revert if EqualTo has an empty compValue", async () => {
         const { mock, enforce } = await loadFixture(setup);
         await expect(
           enforce(
@@ -411,7 +411,11 @@ describe("Integrity", () => {
         )
           .to.be.revertedWithCustomError(mock, "UnsuitableCompValue")
           .withArgs(1);
+      });
 
+      it("should accept EqualTo with any length compValue", async () => {
+        const { mock, enforce } = await loadFixture(setup);
+        // 31 bytes - arbitrary length is allowed
         await expect(
           enforce(
             flattenCondition({
@@ -420,14 +424,12 @@ describe("Integrity", () => {
                 {
                   paramType: Encoding.Static,
                   operator: Operator.EqualTo,
-                  compValue: "0x" + "00".repeat(31), // Not multiple of 32
+                  compValue: "0x" + "00".repeat(31),
                 },
               ],
             }),
           ),
-        )
-          .to.be.revertedWithCustomError(mock, "UnsuitableCompValue")
-          .withArgs(1);
+        ).to.not.be.reverted;
       });
     });
 

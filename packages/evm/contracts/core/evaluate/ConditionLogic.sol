@@ -50,7 +50,7 @@ library ConditionLogic {
             } else if (operator == Operator.Slice) {
                 return _slice(data, condition, payload, consumptions, context);
             } else if (operator == Operator.Pluck) {
-                context.pluckedValues[uint8(condition.compValue[0])] = __word(
+                context.pluckedValues[uint8(condition.compValue[0])] = __input(
                     data,
                     payload,
                     context
@@ -116,7 +116,7 @@ library ConditionLogic {
             } else if (operator == Operator.WithinAllowance) {
                 return
                     __allowance(
-                        uint256(__word(data, payload, context)),
+                        uint256(__input(data, payload, context)),
                         condition.compValue,
                         Status.AllowanceExceeded,
                         consumptions
@@ -396,10 +396,9 @@ library ConditionLogic {
         Context memory context
     ) private pure returns (Status) {
         Operator operator = condition.operator;
+        // For >32 bytes, compValue is already pre-hashed at storage time
         bytes32 compValue = bytes32(condition.compValue);
-        bytes32 value = operator == Operator.EqualTo
-            ? keccak256(data[payload.location:payload.location + payload.size])
-            : __word(data, payload, context);
+        bytes32 value = __input(data, payload, context);
 
         if (operator == Operator.EqualTo && value != compValue) {
             return Status.ParameterNotAllowed;
@@ -420,7 +419,7 @@ library ConditionLogic {
     ) private pure returns (Status) {
         Operator operator = condition.operator;
         int256 compValue = int256(uint256(bytes32(condition.compValue)));
-        int256 value = int256(uint256(__word(data, payload, context)));
+        int256 value = int256(uint256(__input(data, payload, context)));
 
         if (operator == Operator.SignedIntGreaterThan && value <= compValue) {
             return Status.ParameterLessThanAllowed;
@@ -487,27 +486,36 @@ library ConditionLogic {
      * @dev Reads a value from calldata or from Transaction.value, right-aligning when needed.
      *      - payload.size == 0: returns context.value (ether amount)
      *      - payload.size <= 32: reads from calldata and right-aligns
+     *      - payload.size > 32: returns keccak256 hash of the calldata slice
      *
      * @param data    The calldata to read from.
      * @param payload The payload specifying location and size.
      * @param context The execution context (for ether value).
-     * @return result The value as bytes32, right-aligned.
+     * @return result The value as bytes32, right-aligned or hashed.
      */
-    function __word(
+    function __input(
         bytes calldata data,
         Payload memory payload,
         Context memory context
     ) private pure returns (bytes32 result) {
-        if (payload.size == 0) {
-            return bytes32(context.value);
+        if (payload.size == 32) {
+            assembly {
+                result := calldataload(add(data.offset, mload(payload)))
+            }
+            return result;
         }
 
         uint256 size = payload.size;
-        assembly {
-            result := calldataload(add(data.offset, mload(payload)))
-
-            // Right-align: when size == 32, shift is 0 (no-op)
-            result := shr(mul(sub(32, size), 8), result)
+        if (size == 0) {
+            return bytes32(context.value);
         }
+
+        uint256 location = payload.location;
+        if (size < 32) {
+            // Right-align
+            return bytes32(data[location:]) >> ((32 - size) * 8);
+        }
+
+        return keccak256(data[location:location + size]);
     }
 }

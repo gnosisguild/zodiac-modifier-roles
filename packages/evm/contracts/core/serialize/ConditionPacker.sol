@@ -101,10 +101,13 @@ library ConditionPacker {
             // 2 bytes for length field
             result += 2;
 
-            if (conditions[i].operator == Operator.EqualTo) {
-                result += 32; // keccak256 hash is always 32 bytes
-            } else if (conditions[i].paramType == Encoding.AbiEncoded) {
+            if (conditions[i].paramType == Encoding.AbiEncoded) {
                 result += conditions[i].compValue.length - 2; // skip leadingBytes
+            } else if (
+                conditions[i].operator == Operator.EqualTo &&
+                conditions[i].compValue.length > 32
+            ) {
+                result += 32; // store keccak256 hash
             } else {
                 result += conditions[i].compValue.length;
             }
@@ -153,22 +156,22 @@ library ConditionPacker {
             if (!hasCompValue) continue;
 
             // Pack CompValue - three cases:
-            // 1. EqualTo: store keccak256 hash (32 bytes)
-            // 2. AbiEncoded match bytes: store N bytes (skip first 2 bytes of compValue)
+            // 1. AbiEncoded match bytes: store N bytes (skip first 2 bytes of compValue)
+            // 2. EqualTo with >32 bytes: store keccak256 hash (32 bytes)
             // 3. Other comparisons: store compValue as-is
-            bytes memory compValue;
+            bytes memory compValue = condition.compValue;
             uint256 length;
             uint256 srcOffset;
-            if (condition.operator == Operator.EqualTo) {
-                compValue = abi.encodePacked(keccak256(condition.compValue));
-                length = 32;
-                srcOffset = 0;
-            } else if (condition.paramType == Encoding.AbiEncoded) {
-                compValue = condition.compValue;
+            if (condition.paramType == Encoding.AbiEncoded) {
                 length = compValue.length - 2;
                 srcOffset = 2; // skip leadingBytes
+            } else if (
+                condition.operator == Operator.EqualTo && compValue.length > 32
+            ) {
+                compValue = abi.encodePacked(keccak256(compValue));
+                length = 32;
+                srcOffset = 0;
             } else {
-                compValue = condition.compValue;
                 length = compValue.length;
                 srcOffset = 0;
             }

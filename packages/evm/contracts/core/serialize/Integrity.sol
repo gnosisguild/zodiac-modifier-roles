@@ -147,8 +147,7 @@ library Integrity {
                 revert IRolesError.UnsuitableCompValue(index);
             }
         } else if (operator == Operator.EqualTo) {
-            // Note: EtherValue is NOT allowed with EqualTo because _compare uses
-            // keccak256 which doesn't work with EtherValue's empty payload
+            // EtherValue is NOT allowed - it has no calldata to compare
             if (
                 encoding != Encoding.Static &&
                 encoding != Encoding.Dynamic &&
@@ -157,7 +156,8 @@ library Integrity {
             ) {
                 revert IRolesError.UnsuitableParameterType(index);
             }
-            if (compValue.length == 0 || compValue.length % 32 != 0) {
+            // compValue contains the raw expected bytes (not a hash)
+            if (compValue.length == 0) {
                 revert IRolesError.UnsuitableCompValue(index);
             }
         } else if (

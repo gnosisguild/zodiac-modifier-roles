@@ -107,9 +107,7 @@ library ConditionUnpacker {
                 }
             } else if (node.operator == Operator.EqualToAvatar) {
                 node.operator = Operator.EqualTo;
-                node.compValue = abi.encodePacked(
-                    keccak256(abi.encode(_avatar()))
-                );
+                node.compValue = abi.encode(_avatar());
             }
 
             unchecked {
