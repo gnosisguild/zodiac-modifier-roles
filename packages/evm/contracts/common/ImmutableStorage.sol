@@ -12,9 +12,9 @@ library ImmutableStorage {
     address public constant SINGLETON_FACTORY =
         0xce0042B868300000d44A59004Da54A005ffdcf9f;
 
-    function store(bytes memory data) internal returns (address pointer) {
-        bytes memory bytecode = _creationBytecode(data);
-        pointer = _address(bytecode);
+    function store(bytes memory buffer) internal returns (address pointer) {
+        bytes memory bytecode = _creationBytecode(buffer);
+        pointer = _calculateAddress(bytecode);
 
         uint256 size;
         assembly {
@@ -52,20 +52,6 @@ library ImmutableStorage {
         }
     }
 
-    function _address(
-        bytes memory creationBytecode
-    ) private pure returns (address) {
-        bytes32 hash = keccak256(
-            abi.encodePacked(
-                bytes1(0xff),
-                SINGLETON_FACTORY,
-                bytes32(0),
-                keccak256(creationBytecode)
-            )
-        );
-        return address(uint160(uint256(hash)));
-    }
-
     /**
      * @notice Generates creation bytecode that deploys a contract containing `data` as its runtime bytecode.
      * @dev The generated constructor copies `data` into memory and returns it as the contract's code.
@@ -97,5 +83,19 @@ library ImmutableStorage {
                 hex"00",
                 data
             );
+    }
+
+    function _calculateAddress(
+        bytes memory creationBytecode
+    ) private pure returns (address) {
+        bytes32 hash = keccak256(
+            abi.encodePacked(
+                bytes1(0xff),
+                SINGLETON_FACTORY,
+                bytes32(0),
+                keccak256(creationBytecode)
+            )
+        );
+        return address(uint160(uint256(hash)));
     }
 }
