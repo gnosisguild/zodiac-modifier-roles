@@ -342,6 +342,23 @@ describe("Roles", async () => {
 
       return { roles, invoke, allowanceKey, owner, invoker };
     }
+    it("reverts if data is set and is not at least 4 bytes", async () => {
+      const { roles, testContract, owner, invoker } = await loadFixture(setup);
+
+      await roles.connect(owner).grantRole(invoker.address, ROLE_KEY, 0, 0, 0);
+      await roles.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
+
+      await expect(
+        roles
+          .connect(invoker)
+          .execTransactionFromModule(
+            await testContract.getAddress(),
+            0,
+            "0xab",
+            0,
+          ),
+      ).to.be.revertedWithCustomError(roles, "FunctionSignatureTooShort");
+    });
     it("invoker not enabled as a module is not authorized", async () => {
       const { roles, invoke, owner, invoker } = await loadFixture(setup_);
 

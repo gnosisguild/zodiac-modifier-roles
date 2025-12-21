@@ -101,7 +101,7 @@ async function setup() {
   };
 }
 
-describe("Multi Entrypoint", async () => {
+describe("Transaction Bundle", async () => {
   it("reverts immediately if unwrapper reverts", async () => {
     const { invoker, roles, multisend } = await loadFixture(setup);
 
@@ -114,6 +114,52 @@ describe("Multi Entrypoint", async () => {
           await multisend.getAddress(),
           0,
           data as string,
+          Operation.DelegateCall,
+        ),
+    ).to.be.revertedWithCustomError(roles, "MalformedMultiEntrypoint");
+  });
+
+  it("reverts if multisend tx data offset is not 32 bytes", async () => {
+    const { owner, invoker, roles, multisend, testContract } =
+      await loadFixture(setup);
+    const testContractAddress = await testContract.getAddress();
+
+    await roles.connect(owner).scopeTarget(ROLE_KEY, testContractAddress);
+    await roles
+      .connect(owner)
+      .allowFunction(
+        ROLE_KEY,
+        testContractAddress,
+        testContract.interface.getFunction("doNothing").selector,
+        [],
+        ExecutionOptions.None,
+      );
+
+    let multisendCalldata = (
+      await multisend.multiSend.populateTransaction(
+        encodeMultisendPayload([
+          {
+            to: testContractAddress,
+            value: 0,
+            data: (await testContract.doNothing.populateTransaction())
+              .data as string,
+            operation: Operation.Call,
+          },
+        ]),
+      )
+    ).data as string;
+
+    // setting offset to 0x21 bytes instead of 0x20
+    multisendCalldata =
+      multisendCalldata.slice(0, 73) + "1" + multisendCalldata.slice(74);
+
+    await expect(
+      roles
+        .connect(invoker)
+        .execTransactionFromModule(
+          await multisend.getAddress(),
+          0,
+          multisendCalldata,
           Operation.DelegateCall,
         ),
     ).to.be.revertedWithCustomError(roles, "MalformedMultiEntrypoint");
