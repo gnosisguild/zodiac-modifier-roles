@@ -87,4 +87,7 @@ interface IRolesError {
 
     /// Slice child must resolve to Static type
     error SliceChildNotStatic(uint256 index);
+
+    /// WithinRatio references a Pluck index that hasn't been visited yet in DFS order
+    error PluckNotVisitedBeforeRef(uint256 index, uint8 pluckIndex);
 }

@@ -473,7 +473,10 @@ describe("TypeTree", () => {
           { paramType: Encoding.Static, operator: Operator.Pass },
           { paramType: Encoding.Dynamic, operator: Operator.Pass },
           { paramType: Encoding.None, operator: Operator.WithinRatio },
-          { paramType: Encoding.None, operator: Operator.EtherWithinAllowance },
+          {
+            paramType: Encoding.EtherValue,
+            operator: Operator.GreaterThan,
+          },
           { paramType: Encoding.None, operator: Operator.CallWithinAllowance },
         ],
       });
@@ -494,7 +497,6 @@ describe("TypeTree", () => {
         paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         children: [
-          { paramType: Encoding.None, operator: Operator.EtherWithinAllowance },
           { paramType: Encoding.None, operator: Operator.CallWithinAllowance },
         ],
       });

@@ -49,6 +49,18 @@ library ConditionLogic {
                 return _or(data, condition, payload, consumptions, context);
             } else if (operator == Operator.Slice) {
                 return _slice(data, condition, payload, consumptions, context);
+            } else if (operator == Operator.Pluck) {
+                context.pluckedValues[uint8(condition.compValue[0])] = __input(
+                    data,
+                    payload,
+                    context
+                );
+                return
+                    Result({
+                        status: Status.Ok,
+                        consumptions: consumptions,
+                        info: 0
+                    });
             } else if (operator == Operator.Empty) {
                 return
                     Result({
@@ -85,31 +97,28 @@ library ConditionLogic {
             if (operator <= Operator.LessThan) {
                 return
                     Result({
-                        status: _compare(data, condition, payload),
+                        status: _compare(data, condition, payload, context),
                         consumptions: consumptions,
                         info: 0
                     });
             } else if (operator <= Operator.SignedIntLessThan) {
                 return
                     Result({
-                        status: _compareSignedInt(data, condition, payload),
+                        status: _compareSignedInt(
+                            data,
+                            condition,
+                            payload,
+                            context
+                        ),
                         consumptions: consumptions,
                         info: 0
                     });
             } else if (operator == Operator.WithinAllowance) {
                 return
                     __allowance(
-                        uint256(__word(data, payload)),
+                        uint256(__input(data, payload, context)),
                         condition.compValue,
                         Status.AllowanceExceeded,
-                        consumptions
-                    );
-            } else if (operator == Operator.EtherWithinAllowance) {
-                return
-                    __allowance(
-                        context.value,
-                        condition.compValue,
-                        Status.EtherAllowanceExceeded,
                         consumptions
                     );
             } else if (operator == Operator.CallWithinAllowance) {
@@ -135,9 +144,8 @@ library ConditionLogic {
                 return
                     Result({
                         status: WithinRatioChecker.check(
-                            data,
                             condition.compValue,
-                            payload
+                            context.pluckedValues
                         ),
                         consumptions: consumptions,
                         info: 0
@@ -189,12 +197,13 @@ library ConditionLogic {
             return result;
         }
 
+        Payload memory emptyPayload;
         result.consumptions = consumptions;
         for (uint256 i; i < condition.children.length; ++i) {
             result = evaluate(
                 data,
                 condition.children[i],
-                i < sChildCount ? payload.children[i] : payload,
+                i < sChildCount ? payload.children[i] : emptyPayload,
                 result.consumptions,
                 context
             );
@@ -212,12 +221,15 @@ library ConditionLogic {
         Consumption[] memory consumptions,
         Context memory context
     ) private view returns (Result memory result) {
+        Payload memory emptyPayload;
         result.consumptions = consumptions;
         for (uint256 i; i < condition.children.length; ++i) {
             result = evaluate(
                 data,
                 condition.children[i],
-                payload.variant ? payload.children[i] : payload,
+                i < condition.sChildCount
+                    ? (payload.variant ? payload.children[i] : payload)
+                    : emptyPayload,
                 result.consumptions,
                 context
             );
@@ -235,11 +247,14 @@ library ConditionLogic {
         Consumption[] memory consumptions,
         Context memory context
     ) private view returns (Result memory result) {
+        Payload memory emptyPayload;
         for (uint256 i; i < condition.children.length; ++i) {
             result = evaluate(
                 data,
                 condition.children[i],
-                payload.variant ? payload.children[i] : payload,
+                i < condition.sChildCount
+                    ? (payload.variant ? payload.children[i] : payload)
+                    : emptyPayload,
                 consumptions,
                 context
             );
@@ -257,8 +272,12 @@ library ConditionLogic {
     }
 
     /*
-     * Slice extracts a portion from calldata and presents it
-     * as a static-like payload for downstream comparisons.
+     * Slice creates a new Payload that points to a byte-range within the
+     * current payload, so the child transparently evaluates against that
+     * slice.
+     *
+     * The child will read the slice via __input, which right-aligns values
+     * <=32 bytes to match comparison compValue encoding.
      */
     function _slice(
         bytes calldata data,
@@ -377,13 +396,13 @@ library ConditionLogic {
     function _compare(
         bytes calldata data,
         Condition memory condition,
-        Payload memory payload
+        Payload memory payload,
+        Context memory context
     ) private pure returns (Status) {
         Operator operator = condition.operator;
+        // For >32 bytes, compValue is already pre-hashed at storage time
         bytes32 compValue = bytes32(condition.compValue);
-        bytes32 value = operator == Operator.EqualTo
-            ? keccak256(data[payload.location:payload.location + payload.size])
-            : __word(data, payload);
+        bytes32 value = __input(data, payload, context);
 
         if (operator == Operator.EqualTo && value != compValue) {
             return Status.ParameterNotAllowed;
@@ -399,11 +418,12 @@ library ConditionLogic {
     function _compareSignedInt(
         bytes calldata data,
         Condition memory condition,
-        Payload memory payload
+        Payload memory payload,
+        Context memory context
     ) private pure returns (Status) {
         Operator operator = condition.operator;
         int256 compValue = int256(uint256(bytes32(condition.compValue)));
-        int256 value = int256(uint256(__word(data, payload)));
+        int256 value = int256(uint256(__input(data, payload, context)));
 
         if (operator == Operator.SignedIntGreaterThan && value <= compValue) {
             return Status.ParameterLessThanAllowed;
@@ -467,29 +487,39 @@ library ConditionLogic {
     }
 
     /**
-     * @dev Reads a static value from calldata, right-aligning when payload.size < 32.
-     *      For standard 32-byte payloads, reads the full word.
-     *      For sliced payloads (< 32 bytes), reads the slice and right-aligns it.
+     * @dev Reads a value from calldata or from Transaction.value, right-aligning when needed.
+     *      - payload.size == 0: returns context.value (ether amount)
+     *      - payload.size <= 32: reads from calldata and right-aligns
+     *      - payload.size > 32: returns keccak256 hash of the calldata slice
      *
      * @param data    The calldata to read from.
      * @param payload The payload specifying location and size.
-     * @return result The value as bytes32, right-aligned if size < 32.
+     * @param context The execution context (for ether value).
+     * @return result The value as bytes32, right-aligned or hashed.
      */
-    function __word(
+    function __input(
         bytes calldata data,
-        Payload memory payload
+        Payload memory payload,
+        Context memory context
     ) private pure returns (bytes32 result) {
-        assembly {
-            // bytes32(data[payload.location:])
-            result := calldataload(add(data.offset, mload(payload)))
+        if (payload.size == 32) {
+            assembly {
+                result := calldataload(add(data.offset, mload(payload)))
+            }
+            return result;
         }
 
-        if (payload.size < 32) {
-            uint256 size = payload.size;
-            assembly {
-                // result >> ((32 - size) * 8);
-                result := shr(mul(sub(32, size), 8), result)
-            }
+        uint256 size = payload.size;
+        if (size == 0) {
+            return bytes32(context.value);
         }
+
+        uint256 location = payload.location;
+        if (size < 32) {
+            // Right-align
+            return bytes32(data[location:]) >> ((32 - size) * 8);
+        }
+
+        return keccak256(data[location:location + size]);
     }
 }

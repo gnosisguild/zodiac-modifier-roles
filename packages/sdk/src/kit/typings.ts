@@ -41,8 +41,6 @@ type Options = {
   send?: boolean
   /** Allow making delegate calls */
   delegatecall?: boolean
-  /** Restrict the total Ether value sent using the specified allowance, named by its key */
-  etherWithinAllowance?: string
   /** Restrict the call rate using the specified allowance, named by its key */
   callWithinAllowance?: string
 }
@@ -133,8 +131,8 @@ const emptyCalldataMatches = {
 }
 
 /**
- * EthersWithinAllowance and CallWithinAllowance are global conditions that restrict the total Ether value sent or the call rate.
- * They must be appended as children of the root calldata matches node.
+ * CallWithinAllowance is a global condition that restricts the call rate.
+ * It must be appended as a child of the root calldata matches node.
  */
 const applyGlobalAllowance = (
   condition: Condition = emptyCalldataMatches,
@@ -160,20 +158,6 @@ const applyOptions = (
   options: Options
 ): FunctionPermissionCoerced => {
   let condition = entry.condition
-
-  if (options.etherWithinAllowance) {
-    if (!options.send) {
-      throw new Error(
-        "`etherWithinAllowance` can only be used if `send` is allowed"
-      )
-    }
-
-    condition = applyGlobalAllowance(condition, {
-      paramType: Encoding.None,
-      operator: Operator.EtherWithinAllowance,
-      compValue: encodeKey(options.etherWithinAllowance),
-    })
-  }
 
   if (options.callWithinAllowance) {
     condition = applyGlobalAllowance(condition, {

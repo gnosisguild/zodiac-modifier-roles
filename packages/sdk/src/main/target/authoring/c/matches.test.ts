@@ -5,9 +5,9 @@ import { calldataMatches } from "./matches"
 import { encodeKey } from "../../../keys"
 
 describe("calldataMatches", () => {
-  it("correctly encodes EtherWithinAllowance conditions", () => {
+  it("correctly encodes CallWithinAllowance conditions", () => {
     const result = calldataMatches([], [], {
-      etherWithinAllowance: encodeKey("test-allowance"),
+      callWithinAllowance: encodeKey("test-allowance"),
     })()
 
     expect(result).toEqual({
@@ -16,7 +16,7 @@ describe("calldataMatches", () => {
       children: [
         {
           paramType: Encoding.None,
-          operator: Operator.EtherWithinAllowance,
+          operator: Operator.CallWithinAllowance,
           compValue: encodeKey("test-allowance"),
         },
       ],

@@ -5,11 +5,17 @@ import { AbiCoder, BigNumberish, solidityPacked, ZeroHash } from "ethers";
 
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
-import { Encoding, Operator, PermissionCheckerStatus } from "../utils";
+import {
+  Encoding,
+  flattenCondition,
+  Operator,
+  PermissionCheckerStatus,
+} from "../utils";
 import {
   setupOneParamBytes,
   setupOneParamBytes32,
   setupOneParamDynamicTuple,
+  setupTwoParamsStaticDynamic,
 } from "../setup";
 import { Roles } from "../../typechain-types";
 
@@ -891,6 +897,126 @@ describe("Operator - Slice", async () => {
       await expect(invoke(bytes32Fail))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed, ZeroHash);
+    });
+  });
+
+  describe("WithinRatio", () => {
+    // Helper to encode compValue for WithinRatio operator
+    function encodeWithinRatioCompValue({
+      referenceAdapter = "0x0000000000000000000000000000000000000000",
+      relativeAdapter = "0x0000000000000000000000000000000000000000",
+      referenceIndex,
+      referenceDecimals,
+      relativeIndex,
+      relativeDecimals,
+      minRatio,
+      maxRatio,
+    }: {
+      referenceAdapter?: string;
+      relativeAdapter?: string;
+      referenceIndex: number;
+      referenceDecimals: number;
+      relativeIndex: number;
+      relativeDecimals: number;
+      minRatio: number;
+      maxRatio: number;
+    }) {
+      return solidityPacked(
+        [
+          "uint8",
+          "uint8",
+          "uint8",
+          "uint8",
+          "uint32",
+          "uint32",
+          "address",
+          "address",
+        ],
+        [
+          referenceIndex,
+          referenceDecimals,
+          relativeIndex,
+          relativeDecimals,
+          minRatio,
+          maxRatio,
+          referenceAdapter,
+          relativeAdapter,
+        ],
+      );
+    }
+
+    function pluck(index: number) {
+      return {
+        paramType: Encoding.Static,
+        operator: Operator.Pluck,
+        compValue: "0x" + index.toString(16).padStart(2, "0"),
+      };
+    }
+
+    it("slices bytes then plucks for WithinRatio comparison with static param", async () => {
+      const { roles, invoke, scopeFunction } = await loadFixture(
+        setupTwoParamsStaticDynamic,
+      );
+
+      // twoParamsStaticDynamic(uint256, bytes memory)
+      // - Pluck the static uint256 param directly
+      // - Slice 32 bytes from the dynamic bytes param, then Pluck
+      // - Compare with WithinRatio
+      const compValue = encodeWithinRatioCompValue({
+        referenceIndex: 5, // plucked from static param
+        referenceDecimals: 0,
+        relativeIndex: 12, // plucked from sliced bytes
+        relativeDecimals: 0,
+        minRatio: 9000, // 90%
+        maxRatio: 11000, // 110%
+      });
+
+      await scopeFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            pluck(5), // param 0 (uint256) -> pluckedValues[5]
+            {
+              // param 1 (bytes) - slice first 32 bytes then pluck
+              paramType: Encoding.Dynamic,
+              operator: Operator.Slice,
+              compValue: encodeSliceCompValue(0, 32),
+              children: [pluck(12)], // sliced value -> pluckedValues[12]
+            },
+            {
+              paramType: Encoding.None,
+              operator: Operator.WithinRatio,
+              compValue,
+            },
+          ],
+        }),
+      );
+
+      // Reference: 1000 (static param)
+      // Relative: 950 (sliced from bytes)
+      // Ratio = 950/1000 = 95% - within 90-110% range → pass
+      const bytes950 = defaultAbiCoder.encode(["uint256"], [950]);
+      await expect(invoke(1000, bytes950)).to.not.be.reverted;
+
+      // Reference: 1000, Relative: 1100
+      // Ratio = 1100/1000 = 110% - at boundary → pass
+      const bytes1100 = defaultAbiCoder.encode(["uint256"], [1100]);
+      await expect(invoke(1000, bytes1100)).to.not.be.reverted;
+
+      // Reference: 1000, Relative: 1101
+      // Ratio = 1101/1000 = 110.1% - above max → fail
+      const bytes1101 = defaultAbiCoder.encode(["uint256"], [1101]);
+      await expect(invoke(1000, bytes1101))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.RatioAboveMax, ZeroHash);
+
+      // Reference: 1000, Relative: 899
+      // Ratio = 899/1000 = 89.9% - below min → fail
+      const bytes899 = defaultAbiCoder.encode(["uint256"], [899]);
+      await expect(invoke(1000, bytes899))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.RatioBelowMin, ZeroHash);
     });
   });
 });

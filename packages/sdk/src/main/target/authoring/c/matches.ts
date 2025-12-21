@@ -109,7 +109,6 @@ const calldataMatchesScopings =
     abiTypes: readonly Encoding[],
     options: {
       selector?: `0x${string}`
-      etherWithinAllowance?: string
       callWithinAllowance?: string
     } = {}
   ) =>
@@ -123,7 +122,7 @@ const calldataMatchesScopings =
       )
     }
 
-    const { selector, etherWithinAllowance, callWithinAllowance } = options
+    const { selector, callWithinAllowance } = options
 
     // map scoping items to conditions
     const conditions: (Condition | undefined)[] = paramTypes.map(
@@ -140,14 +139,6 @@ const calldataMatchesScopings =
       children: conditions.map(
         (condition, index) => condition || describeStructure(paramTypes[index])
       ),
-    }
-
-    if (etherWithinAllowance) {
-      matchesCondition.children.push({
-        paramType: ParameterType.None,
-        operator: Operator.EtherWithinAllowance,
-        compValue: encodeKey(etherWithinAllowance),
-      })
     }
 
     if (callWithinAllowance) {
@@ -223,7 +214,6 @@ type CalldataMatches = {
     abiTypes: readonly Encoding[],
     options?: {
       selector?: `0x${string}`
-      etherWithinAllowance?: string
       callWithinAllowance?: string
     }
   ): (abiType?: ParamType) => Condition
@@ -244,7 +234,6 @@ export const calldataMatches: CalldataMatches = <S extends TupleScopings<any>>(
   abiTypes?: readonly Encoding[],
   options?: {
     selector?: `0x${string}`
-    etherWithinAllowance?: string
     callWithinAllowance?: string
   }
 ): ((abiType?: ParamType) => Condition) => {
@@ -435,7 +424,7 @@ const assertCompatibleParamTypes = (
 const checkScopedType = (condition: Condition): ParameterType => {
   if (condition.paramType === ParameterType.None) {
     if (!condition.children || condition.children.length === 0) {
-      // e.g.: Operator.EtherWithinAllowance / Operator.CallWithinAllowance
+      // e.g.: Operator.CallWithinAllowance
       return ParameterType.None
     }
 
