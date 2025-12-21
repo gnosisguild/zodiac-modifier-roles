@@ -132,7 +132,7 @@ library Integrity {
             }
         } else if (operator == Operator.Pluck) {
             // Pluck must be Static or EtherValue
-            if (!_isStaticLike(encoding)) {
+            if (!_isWordLike(encoding)) {
                 revert IRolesError.UnsuitableParameterType(index);
             }
             // compValue is the index (1 byte, 0-255)
@@ -140,25 +140,25 @@ library Integrity {
                 revert IRolesError.UnsuitableCompValue(index);
             }
         } else if (operator == Operator.EqualToAvatar) {
-            if (!_isStaticLike(encoding)) {
+            if (!_isWordLike(encoding)) {
                 revert IRolesError.UnsuitableParameterType(index);
             }
             if (compValue.length != 0) {
                 revert IRolesError.UnsuitableCompValue(index);
             }
         } else if (operator == Operator.EqualTo) {
-            // EtherValue is NOT allowed - it has no calldata to compare
             if (
                 encoding != Encoding.Static &&
                 encoding != Encoding.Dynamic &&
                 encoding != Encoding.Tuple &&
-                encoding != Encoding.Array
+                encoding != Encoding.Array &&
+                encoding != Encoding.EtherValue
             ) {
                 revert IRolesError.UnsuitableParameterType(index);
             }
 
             bool unsuitable;
-            if (encoding == Encoding.Static) {
+            if (_isWordLike(encoding)) {
                 unsuitable = compValue.length != 32;
             } else if (encoding == Encoding.Dynamic) {
                 unsuitable = compValue.length == 0;
@@ -175,7 +175,7 @@ library Integrity {
             operator == Operator.SignedIntGreaterThan ||
             operator == Operator.SignedIntLessThan
         ) {
-            if (!_isStaticLike(encoding)) {
+            if (!_isWordLike(encoding)) {
                 revert IRolesError.UnsuitableParameterType(index);
             }
             if (compValue.length != 32) {
@@ -194,7 +194,7 @@ library Integrity {
                 revert IRolesError.UnsuitableCompValue(index);
             }
         } else if (operator == Operator.WithinAllowance) {
-            if (!_isStaticLike(encoding)) {
+            if (!_isWordLike(encoding)) {
                 revert IRolesError.UnsuitableParameterType(index);
             }
             // 32 bytes: allowanceKey only (legacy)
@@ -593,7 +593,7 @@ library Integrity {
         return visited;
     }
 
-    function _isStaticLike(Encoding encoding) private pure returns (bool) {
+    function _isWordLike(Encoding encoding) private pure returns (bool) {
         return encoding == Encoding.Static || encoding == Encoding.EtherValue;
     }
 
