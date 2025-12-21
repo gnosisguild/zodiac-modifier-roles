@@ -157,7 +157,7 @@ describe("Packer and Unpacker", () => {
 
       const [conditions] = await mock.roundtrip(flatInput);
       expect(conditionFieldsOnly(conditions)).to.deep.equal(
-        hashEqualToCompValues(flatInput),
+        conditionFieldsOnly(flatInput),
       );
     });
 
@@ -187,7 +187,7 @@ describe("Packer and Unpacker", () => {
 
       const [conditions] = await mock.roundtrip(flatInput);
       expect(conditionFieldsOnly(conditions)).to.deep.equal(
-        hashEqualToCompValues(flatInput),
+        conditionFieldsOnly(flatInput),
       );
     });
 
@@ -215,7 +215,7 @@ describe("Packer and Unpacker", () => {
 
       const [conditions] = await mock.roundtrip(flatInput);
       expect(conditionFieldsOnly(conditions)).to.deep.equal(
-        hashEqualToCompValues(flatInput),
+        conditionFieldsOnly(flatInput),
       );
     });
 
@@ -258,7 +258,7 @@ describe("Packer and Unpacker", () => {
 
       const [conditions] = await mock.roundtrip(flatInput);
       expect(conditionFieldsOnly(conditions)).to.deep.equal(
-        hashEqualToCompValues(flatInput),
+        conditionFieldsOnly(flatInput),
       );
     });
 
@@ -354,7 +354,7 @@ describe("Packer and Unpacker", () => {
 
       const [conditions] = await mock.roundtrip(flatInput);
       expect(conditionFieldsOnly(conditions)).to.deep.equal(
-        hashEqualToCompValues(flatInput),
+        conditionFieldsOnly(flatInput),
       );
     });
 
@@ -592,27 +592,5 @@ function layoutFieldsOnly(result: any) {
   return result.map((node: any) => ({
     encoding: Number(node.encoding),
     parent: Number(node.parent),
-  }));
-}
-
-function hashEqualToCompValues(
-  input: {
-    parent: number;
-    paramType: Encoding;
-    operator: Operator;
-    compValue: string;
-  }[],
-): {
-  parent: number;
-  operator: Operator;
-  compValue: string;
-}[] {
-  return input.map((node) => ({
-    parent: node.parent,
-    operator: node.operator,
-    compValue:
-      node.operator === Operator.EqualTo && node.compValue !== "0x"
-        ? hre.ethers.keccak256(node.compValue)
-        : node.compValue,
   }));
 }

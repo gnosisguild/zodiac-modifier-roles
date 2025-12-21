@@ -9,7 +9,9 @@ enum Encoding {
     Dynamic,
     Tuple,
     Array,
-    AbiEncoded
+    AbiEncoded,
+    /* EtherValue is a nonstructural, and an alias for None */
+    EtherValue
 }
 
 struct Condition {

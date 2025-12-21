@@ -103,10 +103,7 @@ const ConditionView: React.FC<Props> = ({ condition, paramIndex, abi }) => {
   //     />
   //   )
   // }
-  // if (
-  //   condition.operator === Operator.EtherWithinAllowance ||
-  //   condition.operator === Operator.CallWithinAllowance
-  // ) {
+  // if (condition.operator === Operator.CallWithinAllowance) {
   //   return (
   //     <GlobalWithinAllowanceConditionView
   //       condition={condition}
