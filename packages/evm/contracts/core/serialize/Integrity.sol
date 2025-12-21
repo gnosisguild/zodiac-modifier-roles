@@ -156,8 +156,17 @@ library Integrity {
             ) {
                 revert IRolesError.UnsuitableParameterType(index);
             }
-            // compValue contains the raw expected bytes (not a hash)
-            if (compValue.length == 0) {
+
+            bool unsuitable;
+            if (encoding == Encoding.Static) {
+                unsuitable = compValue.length != 32;
+            } else if (encoding == Encoding.Dynamic) {
+                unsuitable = compValue.length == 0;
+            } else {
+                unsuitable = compValue.length < 32;
+            }
+
+            if (unsuitable) {
                 revert IRolesError.UnsuitableCompValue(index);
             }
         } else if (

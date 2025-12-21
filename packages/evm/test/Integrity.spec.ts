@@ -413,9 +413,9 @@ describe("Integrity", () => {
           .withArgs(1);
       });
 
-      it("should accept EqualTo with any length compValue", async () => {
+      it("should revert if Static EqualTo has non-32-byte compValue", async () => {
         const { mock, enforce } = await loadFixture(setup);
-        // 31 bytes - arbitrary length is allowed
+        // 31 bytes - invalid for Static
         await expect(
           enforce(
             flattenCondition({
@@ -423,6 +423,27 @@ describe("Integrity", () => {
               children: [
                 {
                   paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: "0x" + "00".repeat(31),
+                },
+              ],
+            }),
+          ),
+        )
+          .to.be.revertedWithCustomError(mock, "UnsuitableCompValue")
+          .withArgs(1);
+      });
+
+      it("should accept Dynamic EqualTo with any length compValue", async () => {
+        const { mock, enforce } = await loadFixture(setup);
+        // 31 bytes - valid for Dynamic
+        await expect(
+          enforce(
+            flattenCondition({
+              paramType: Encoding.AbiEncoded,
+              children: [
+                {
+                  paramType: Encoding.Dynamic,
                   operator: Operator.EqualTo,
                   compValue: "0x" + "00".repeat(31),
                 },
