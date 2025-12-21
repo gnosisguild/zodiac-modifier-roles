@@ -2,9 +2,9 @@
 pragma solidity >=0.8.17 <0.9.0;
 
 /**
- * @notice Interface for price adapters
+ * @notice Interface for pricing contracts
  * @dev Returns a price with 18 decimals precision
  */
-interface IPriceAdapter {
+interface IPricing {
     function getPrice() external view returns (uint256 price);
 }

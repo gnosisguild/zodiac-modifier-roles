@@ -393,7 +393,7 @@ describe("Integrity", () => {
           .withArgs(1);
       });
 
-      it("should revert if EqualTo has an empty or non-32-byte-multiple compValue", async () => {
+      it("should revert if EqualTo has an empty compValue", async () => {
         const { mock, enforce } = await loadFixture(setup);
         await expect(
           enforce(
@@ -411,7 +411,11 @@ describe("Integrity", () => {
         )
           .to.be.revertedWithCustomError(mock, "UnsuitableCompValue")
           .withArgs(1);
+      });
 
+      it("should revert if Static EqualTo has non-32-byte compValue", async () => {
+        const { mock, enforce } = await loadFixture(setup);
+        // 31 bytes - invalid for Static
         await expect(
           enforce(
             flattenCondition({
@@ -420,7 +424,7 @@ describe("Integrity", () => {
                 {
                   paramType: Encoding.Static,
                   operator: Operator.EqualTo,
-                  compValue: "0x" + "00".repeat(31), // Not multiple of 32
+                  compValue: "0x" + "00".repeat(31),
                 },
               ],
             }),
@@ -428,6 +432,25 @@ describe("Integrity", () => {
         )
           .to.be.revertedWithCustomError(mock, "UnsuitableCompValue")
           .withArgs(1);
+      });
+
+      it("should accept Dynamic EqualTo with any length compValue", async () => {
+        const { mock, enforce } = await loadFixture(setup);
+        // 31 bytes - valid for Dynamic
+        await expect(
+          enforce(
+            flattenCondition({
+              paramType: Encoding.AbiEncoded,
+              children: [
+                {
+                  paramType: Encoding.Dynamic,
+                  operator: Operator.EqualTo,
+                  compValue: "0x" + "00".repeat(31),
+                },
+              ],
+            }),
+          ),
+        ).to.not.be.reverted;
       });
     });
 
@@ -625,7 +648,7 @@ describe("Integrity", () => {
       });
     });
 
-    describe("Allowance Operators (EtherWithinAllowance, CallWithinAllowance)", () => {
+    describe("Allowance Operators (CallWithinAllowance)", () => {
       it("should revert if they have children", async () => {
         const { mock, enforce } = await loadFixture(setup);
         const conditions = flattenCondition({
@@ -633,7 +656,7 @@ describe("Integrity", () => {
           children: [
             {
               paramType: Encoding.None,
-              operator: Operator.EtherWithinAllowance,
+              operator: Operator.CallWithinAllowance,
               compValue: ZeroHash,
               children: [
                 { paramType: Encoding.Static, operator: Operator.Pass },
@@ -653,7 +676,7 @@ describe("Integrity", () => {
           children: [
             {
               paramType: Encoding.Static, // Invalid
-              operator: Operator.EtherWithinAllowance,
+              operator: Operator.CallWithinAllowance,
               compValue: ZeroHash,
             },
           ],
@@ -674,7 +697,7 @@ describe("Integrity", () => {
               children: [
                 {
                   paramType: Encoding.None,
-                  operator: Operator.EtherWithinAllowance,
+                  operator: Operator.CallWithinAllowance,
                   compValue: ZeroHash,
                 },
               ],
@@ -717,10 +740,10 @@ describe("Integrity", () => {
           children: [
             // Structural child required
             { paramType: Encoding.Static, operator: Operator.Pass },
-            // EtherWithinAllowance is non-structural
+            // CallWithinAllowance is non-structural
             {
               paramType: Encoding.None,
-              operator: Operator.EtherWithinAllowance,
+              operator: Operator.CallWithinAllowance,
               compValue: ZeroHash,
             },
           ],
@@ -740,7 +763,7 @@ describe("Integrity", () => {
                 { paramType: Encoding.Static, operator: Operator.Pass },
                 {
                   paramType: Encoding.None,
-                  operator: Operator.EtherWithinAllowance,
+                  operator: Operator.CallWithinAllowance,
                   compValue: ZeroHash,
                 },
               ],
@@ -766,7 +789,7 @@ describe("Integrity", () => {
                     { paramType: Encoding.Static, operator: Operator.Pass },
                     {
                       paramType: Encoding.None,
-                      operator: Operator.EtherWithinAllowance,
+                      operator: Operator.CallWithinAllowance,
                       compValue: ZeroHash,
                     },
                   ],
@@ -792,7 +815,7 @@ describe("Integrity", () => {
 
       it("should pass when nested inside a AbiEncoded variant (Or with AbiEncoded branches)", async () => {
         const { enforce } = await loadFixture(setup);
-        // This tests the scenario: AbiEncoded -> Or -> AbiEncoded -> EtherWithinAllowance
+        // This tests the scenario: AbiEncoded -> Or -> AbiEncoded -> CallWithinAllowance
         // where we have calldata variants and allowance inside one variant
         const conditions = flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -807,7 +830,7 @@ describe("Integrity", () => {
                     { paramType: Encoding.Static, operator: Operator.Pass },
                     {
                       paramType: Encoding.None,
-                      operator: Operator.EtherWithinAllowance,
+                      operator: Operator.CallWithinAllowance,
                       compValue: ZeroHash,
                     },
                   ],
@@ -848,7 +871,7 @@ describe("Integrity", () => {
             // Central allowance that applies to all branches
             {
               paramType: Encoding.None,
-              operator: Operator.EtherWithinAllowance,
+              operator: Operator.CallWithinAllowance,
               compValue: ZeroHash,
             },
           ],
@@ -858,30 +881,10 @@ describe("Integrity", () => {
 
       it("should pass with allowance as the only condition (no calldata restrictions)", async () => {
         const { enforce } = await loadFixture(setup);
-        // Scoping a function without any calldata arguments, only restricting ether value
+        // Scoping a function without any calldata arguments, only restricting call rate
         const conditions = flattenCondition({
           paramType: Encoding.AbiEncoded,
           children: [
-            {
-              paramType: Encoding.None,
-              operator: Operator.EtherWithinAllowance,
-              compValue: ZeroHash,
-            },
-          ],
-        });
-        await expect(enforce(conditions)).to.not.be.reverted;
-      });
-
-      it("should pass with both Ether and Call allowances as the only conditions", async () => {
-        const { enforce } = await loadFixture(setup);
-        const conditions = flattenCondition({
-          paramType: Encoding.AbiEncoded,
-          children: [
-            {
-              paramType: Encoding.None,
-              operator: Operator.EtherWithinAllowance,
-              compValue: ZeroHash,
-            },
             {
               paramType: Encoding.None,
               operator: Operator.CallWithinAllowance,
@@ -908,26 +911,6 @@ describe("Integrity", () => {
         await expect(enforce(conditions))
           .to.be.revertedWithCustomError(mock, "UnsuitableCompValue")
           .withArgs(1);
-      });
-
-      it("should revert if EtherWithinAllowance compValue has invalid length", async () => {
-        const { mock, enforce } = await loadFixture(setup);
-        // 53 bytes - invalid (not 32 or 54)
-        const conditions = flattenCondition({
-          paramType: Encoding.AbiEncoded,
-          children: [
-            // Structural child required
-            { paramType: Encoding.Static, operator: Operator.Pass },
-            {
-              paramType: Encoding.None,
-              operator: Operator.EtherWithinAllowance,
-              compValue: "0x" + "00".repeat(53),
-            },
-          ],
-        });
-        await expect(enforce(conditions))
-          .to.be.revertedWithCustomError(mock, "UnsuitableCompValue")
-          .withArgs(2);
       });
 
       it("should pass with valid 54-byte compValue (allowanceKey + adapter + decimals)", async () => {
@@ -996,25 +979,6 @@ describe("Integrity", () => {
         await expect(enforce(conditions))
           .to.be.revertedWithCustomError(mock, "AllowanceDecimalsExceedMax")
           .withArgs(1);
-      });
-
-      it("should revert if EtherWithinAllowance decimals exceed 18", async () => {
-        const { mock, enforce } = await loadFixture(setup);
-        // 54 bytes with invalid decimals
-        const conditions = flattenCondition({
-          paramType: Encoding.AbiEncoded,
-          children: [
-            { paramType: Encoding.Static, operator: Operator.Pass },
-            {
-              paramType: Encoding.None,
-              operator: Operator.EtherWithinAllowance,
-              compValue: "0x" + "00".repeat(52) + "ff" + "00", // 0xff = 255
-            },
-          ],
-        });
-        await expect(enforce(conditions))
-          .to.be.revertedWithCustomError(mock, "AllowanceDecimalsExceedMax")
-          .withArgs(2);
       });
 
       it("should pass with valid decimals (both = 18)", async () => {
@@ -2194,11 +2158,6 @@ describe("Integrity", () => {
           // Non-structural children last
           {
             paramType: Encoding.None,
-            operator: Operator.EtherWithinAllowance,
-            compValue: ZeroHash,
-          },
-          {
-            paramType: Encoding.None,
             operator: Operator.CallWithinAllowance,
             compValue: ZeroHash,
           },
@@ -2227,11 +2186,6 @@ describe("Integrity", () => {
         children: [
           {
             paramType: Encoding.None,
-            operator: Operator.EtherWithinAllowance,
-            compValue: ZeroHash,
-          },
-          {
-            paramType: Encoding.None,
             operator: Operator.CallWithinAllowance,
             compValue: ZeroHash,
           },
@@ -2248,7 +2202,7 @@ describe("Integrity", () => {
           // Non-structural child first (incorrect)
           {
             paramType: Encoding.None,
-            operator: Operator.EtherWithinAllowance,
+            operator: Operator.CallWithinAllowance,
             compValue: ZeroHash,
           },
           // Structural child after non-structural (incorrect)
@@ -2275,7 +2229,7 @@ describe("Integrity", () => {
             children: [
               {
                 paramType: Encoding.None,
-                operator: Operator.EtherWithinAllowance,
+                operator: Operator.CallWithinAllowance,
                 compValue: ZeroHash,
               },
             ],
@@ -3232,42 +3186,6 @@ describe("Integrity", () => {
   });
 
   describe("Type matching with non-structural children", () => {
-    it("allows Array with matching Static children and non-structural WithinRatio", async () => {
-      const { enforce } = await loadFixture(setup);
-
-      const compValue = encodeWithinRatioCompValue({
-        referenceIndex: 0,
-        referenceDecimals: 0,
-        relativeIndex: 1,
-        relativeDecimals: 0,
-        minRatio: 0,
-        maxRatio: 15000,
-      });
-
-      // All structural children (Static) match, non-structural WithinRatio should be ignored
-      const conditions = flattenCondition({
-        paramType: Encoding.AbiEncoded,
-        operator: Operator.Matches,
-        children: [
-          {
-            paramType: Encoding.Array,
-            operator: Operator.Matches,
-            children: [
-              { paramType: Encoding.Static, operator: Operator.Pass },
-              { paramType: Encoding.Static, operator: Operator.Pass },
-              { paramType: Encoding.Static, operator: Operator.Pass },
-              {
-                paramType: Encoding.None,
-                operator: Operator.WithinRatio,
-                compValue,
-              },
-            ],
-          },
-        ],
-      });
-      await expect(enforce(conditions)).to.not.be.reverted;
-    });
-
     it("allows Tuple with matching Static children and non-structural WithinRatio", async () => {
       const { enforce } = await loadFixture(setup);
 
@@ -3280,6 +3198,7 @@ describe("Integrity", () => {
         maxRatio: 15000,
       });
 
+      // First two Static children are Pluck to populate indices for WithinRatio
       const conditions = flattenCondition({
         paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
@@ -3288,8 +3207,16 @@ describe("Integrity", () => {
             paramType: Encoding.Tuple,
             operator: Operator.Matches,
             children: [
-              { paramType: Encoding.Static, operator: Operator.Pass },
-              { paramType: Encoding.Static, operator: Operator.Pass },
+              {
+                paramType: Encoding.Static,
+                operator: Operator.Pluck,
+                compValue: "0x00",
+              },
+              {
+                paramType: Encoding.Static,
+                operator: Operator.Pluck,
+                compValue: "0x01",
+              },
               { paramType: Encoding.Static, operator: Operator.Pass },
               {
                 paramType: Encoding.None,
@@ -3315,6 +3242,7 @@ describe("Integrity", () => {
         maxRatio: 15000,
       });
 
+      // First two children of And are Pluck to populate indices for WithinRatio
       const conditions = flattenCondition({
         paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
@@ -3323,8 +3251,16 @@ describe("Integrity", () => {
             paramType: Encoding.None,
             operator: Operator.And,
             children: [
-              { paramType: Encoding.Static, operator: Operator.Pass },
-              { paramType: Encoding.Static, operator: Operator.Pass },
+              {
+                paramType: Encoding.Static,
+                operator: Operator.Pluck,
+                compValue: "0x00",
+              },
+              {
+                paramType: Encoding.Static,
+                operator: Operator.Pluck,
+                compValue: "0x01",
+              },
               {
                 paramType: Encoding.None,
                 operator: Operator.WithinRatio,
@@ -3351,6 +3287,7 @@ describe("Integrity", () => {
         maxRatio: 15000,
       });
 
+      // First two children of Or are Pluck to populate indices for WithinRatio
       const conditions = flattenCondition({
         paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
@@ -3359,8 +3296,16 @@ describe("Integrity", () => {
             paramType: Encoding.None,
             operator: Operator.Or,
             children: [
-              { paramType: Encoding.Static, operator: Operator.Pass },
-              { paramType: Encoding.Static, operator: Operator.Pass },
+              {
+                paramType: Encoding.Static,
+                operator: Operator.Pluck,
+                compValue: "0x00",
+              },
+              {
+                paramType: Encoding.Static,
+                operator: Operator.Pluck,
+                compValue: "0x01",
+              },
               {
                 paramType: Encoding.None,
                 operator: Operator.WithinRatio,
@@ -3375,7 +3320,7 @@ describe("Integrity", () => {
       await expect(enforce(conditions)).to.not.be.reverted;
     });
 
-    it("allows And with type-equivalent Dynamic children and non-structural EtherWithinAllowance", async () => {
+    it("allows And with type-equivalent Dynamic children and non-structural CallWithinAllowance", async () => {
       const { enforce } = await loadFixture(setup);
 
       // Type-equivalent structural children, non-structural should be ignored
@@ -3391,7 +3336,7 @@ describe("Integrity", () => {
               { paramType: Encoding.Dynamic, operator: Operator.Pass },
               {
                 paramType: Encoding.None,
-                operator: Operator.EtherWithinAllowance,
+                operator: Operator.CallWithinAllowance,
                 compValue: ZeroHash,
               },
             ],
@@ -3401,19 +3346,10 @@ describe("Integrity", () => {
       await expect(enforce(conditions)).to.not.be.reverted;
     });
 
-    it("rejects Array with non-matching structural children despite non-structural child", async () => {
+    it("rejects Array with non-matching structural children", async () => {
       const { mock, enforce } = await loadFixture(setup);
 
-      const compValue = encodeWithinRatioCompValue({
-        referenceIndex: 0,
-        referenceDecimals: 0,
-        relativeIndex: 1,
-        relativeDecimals: 0,
-        minRatio: 0,
-        maxRatio: 15000,
-      });
-
-      // Mixing Static and Dynamic structural children should still fail
+      // Mixing Static and Dynamic structural children should fail
       const conditions = flattenCondition({
         paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
@@ -3424,11 +3360,6 @@ describe("Integrity", () => {
             children: [
               { paramType: Encoding.Static, operator: Operator.Pass },
               { paramType: Encoding.Dynamic, operator: Operator.Pass }, // Doesn't match previous
-              {
-                paramType: Encoding.None,
-                operator: Operator.WithinRatio,
-                compValue,
-              },
             ],
           },
         ],
@@ -3472,6 +3403,315 @@ describe("Integrity", () => {
       await expect(enforce(conditions))
         .to.be.revertedWithCustomError(mock, "UnsuitableChildTypeTree")
         .withArgs(1);
+    });
+  });
+
+  describe("Pluck Order Validation", () => {
+    it("allows WithinRatio when Pluck indices are visited before in DFS order", async () => {
+      const { enforce } = await loadFixture(setup);
+
+      const compValue = encodeWithinRatioCompValue({
+        referenceIndex: 0,
+        referenceDecimals: 0,
+        relativeIndex: 1,
+        relativeDecimals: 0,
+        minRatio: 9000,
+        maxRatio: 11000,
+      });
+
+      // Structure: Matches with two Plucks followed by WithinRatio
+      // DFS order: Matches -> Pluck(0) -> Pluck(1) -> WithinRatio
+      const conditions = flattenCondition({
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        children: [
+          {
+            paramType: Encoding.Static,
+            operator: Operator.Pluck,
+            compValue: "0x00", // index 0
+          },
+          {
+            paramType: Encoding.Static,
+            operator: Operator.Pluck,
+            compValue: "0x01", // index 1
+          },
+          {
+            paramType: Encoding.None,
+            operator: Operator.WithinRatio,
+            compValue,
+          },
+        ],
+      });
+
+      await expect(enforce(conditions)).to.not.be.reverted;
+    });
+
+    it("reverts when WithinRatio references a Pluck index not yet visited in DFS order", async () => {
+      const { mock, enforce } = await loadFixture(setup);
+
+      const compValue = encodeWithinRatioCompValue({
+        referenceIndex: 0,
+        referenceDecimals: 0,
+        relativeIndex: 5, // index 5 is never plucked
+        relativeDecimals: 0,
+        minRatio: 9000,
+        maxRatio: 11000,
+      });
+
+      // Structure: Matches with one Pluck and WithinRatio referencing non-existent index
+      const conditions = flattenCondition({
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        children: [
+          {
+            paramType: Encoding.Static,
+            operator: Operator.Pluck,
+            compValue: "0x00", // index 0
+          },
+          {
+            paramType: Encoding.Static,
+            operator: Operator.Pass,
+          },
+          {
+            paramType: Encoding.None,
+            operator: Operator.WithinRatio,
+            compValue,
+          },
+        ],
+      });
+
+      await expect(enforce(conditions))
+        .to.be.revertedWithCustomError(mock, "PluckNotVisitedBeforeRef")
+        .withArgs(3, 5); // WithinRatio is at BFS index 3, missing pluck index 5
+    });
+
+    it("reverts when WithinRatio comes before Pluck in DFS order (nested structure)", async () => {
+      const { mock, enforce } = await loadFixture(setup);
+
+      const compValue = encodeWithinRatioCompValue({
+        referenceIndex: 0,
+        referenceDecimals: 0,
+        relativeIndex: 1,
+        relativeDecimals: 0,
+        minRatio: 9000,
+        maxRatio: 11000,
+      });
+
+      // Structure: And with WithinRatio in first branch, Plucks in second branch
+      // BFS: And -> Matches1 -> Matches2 -> WithinRatio -> Pluck(0) -> Pluck(1)
+      // DFS: And -> Matches1 -> WithinRatio -> Matches2 -> Pluck(0) -> Pluck(1)
+      // WithinRatio is visited before Plucks in DFS
+      const conditions = flattenCondition({
+        paramType: Encoding.None,
+        operator: Operator.And,
+        children: [
+          {
+            paramType: Encoding.AbiEncoded,
+            operator: Operator.Matches,
+            children: [
+              {
+                paramType: Encoding.Static,
+                operator: Operator.Pass,
+              },
+              {
+                paramType: Encoding.None,
+                operator: Operator.WithinRatio,
+                compValue,
+              },
+            ],
+          },
+          {
+            paramType: Encoding.AbiEncoded,
+            operator: Operator.Matches,
+            children: [
+              {
+                paramType: Encoding.Static,
+                operator: Operator.Pluck,
+                compValue: "0x00", // index 0
+              },
+              {
+                paramType: Encoding.Static,
+                operator: Operator.Pluck,
+                compValue: "0x01", // index 1
+              },
+            ],
+          },
+        ],
+      });
+
+      await expect(enforce(conditions))
+        .to.be.revertedWithCustomError(mock, "PluckNotVisitedBeforeRef")
+        .withArgs(4, 0); // WithinRatio at index 4, referenceIndex 0 not yet visited
+    });
+  });
+
+  describe("EtherValue Encoding", () => {
+    it("should revert if EtherValue has children", async () => {
+      const { mock, enforce } = await loadFixture(setup);
+      const conditions = flattenCondition({
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        children: [
+          {
+            paramType: Encoding.EtherValue,
+            operator: Operator.Pass,
+            children: [
+              {
+                paramType: Encoding.Static,
+                operator: Operator.Pass,
+              },
+            ],
+          },
+        ],
+      });
+      await expect(enforce(conditions))
+        .to.be.revertedWithCustomError(mock, "UnsuitableChildCount")
+        .withArgs(1);
+    });
+
+    it("should revert if ArrayPrimitive has non-structural children (EtherValue)", async () => {
+      const { mock, enforce } = await loadFixture(setup);
+      const conditions = flattenCondition({
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        children: [
+          {
+            paramType: Encoding.Array,
+            operator: Operator.ArrayEvery,
+            children: [
+              {
+                paramType: Encoding.EtherValue,
+                operator: Operator.Pass,
+              },
+            ],
+          },
+        ],
+      });
+      await expect(enforce(conditions))
+        .to.be.revertedWithCustomError(mock, "UnsuitableChildCount")
+        .withArgs(1);
+    });
+
+    it("should revert if EtherValue is used with unsupported operator (Matches)", async () => {
+      const { mock, enforce } = await loadFixture(setup);
+      const conditions = flattenCondition({
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        children: [
+          {
+            paramType: Encoding.EtherValue,
+            operator: Operator.Matches,
+          },
+        ],
+      });
+      await expect(enforce(conditions))
+        .to.be.revertedWithCustomError(mock, "UnsuitableParameterType")
+        .withArgs(1);
+    });
+
+    it("should revert if EtherValue is used with Bitmask operator", async () => {
+      const { mock, enforce } = await loadFixture(setup);
+      const conditions = flattenCondition({
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        children: [
+          {
+            paramType: Encoding.EtherValue,
+            operator: Operator.Bitmask,
+            compValue: "0x00000102", // shift + mask + expected
+          },
+        ],
+      });
+      await expect(enforce(conditions))
+        .to.be.revertedWithCustomError(mock, "UnsuitableParameterType")
+        .withArgs(1);
+    });
+
+    it("should pass for EtherValue with WithinAllowance operator", async () => {
+      const { enforce } = await loadFixture(setup);
+      const allowanceKey =
+        "0x0000000000000000000000000000000000000000000000000000000000000001";
+      const conditions = flattenCondition({
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        children: [
+          {
+            paramType: Encoding.Static,
+            operator: Operator.Pass,
+          },
+          {
+            paramType: Encoding.EtherValue,
+            operator: Operator.WithinAllowance,
+            compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
+          },
+        ],
+      });
+      await expect(enforce(conditions)).to.not.be.reverted;
+    });
+
+    it("should pass for EtherValue with Pluck operator", async () => {
+      const { enforce } = await loadFixture(setup);
+      const conditions = flattenCondition({
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        children: [
+          {
+            paramType: Encoding.Static,
+            operator: Operator.Pass,
+          },
+          {
+            paramType: Encoding.EtherValue,
+            operator: Operator.Pluck,
+            compValue: "0x00",
+          },
+        ],
+      });
+      await expect(enforce(conditions)).to.not.be.reverted;
+    });
+
+    it("should pass for EtherValue with comparison operators", async () => {
+      const { enforce } = await loadFixture(setup);
+      const conditions = flattenCondition({
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        children: [
+          {
+            paramType: Encoding.Static,
+            operator: Operator.Pass,
+          },
+          {
+            paramType: Encoding.EtherValue,
+            operator: Operator.GreaterThan,
+            compValue: defaultAbiCoder.encode(["uint256"], [1000]),
+          },
+        ],
+      });
+      await expect(enforce(conditions)).to.not.be.reverted;
+    });
+
+    it("should revert if EtherValue comes before structural children", async () => {
+      const { mock, enforce } = await loadFixture(setup);
+      const conditions = flattenCondition({
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        children: [
+          {
+            paramType: Encoding.EtherValue,
+            operator: Operator.Pass,
+          },
+          // Structural child after non-structural EtherValue (invalid)
+          {
+            paramType: Encoding.Static,
+            operator: Operator.Pass,
+          },
+        ],
+      });
+      await expect(enforce(conditions))
+        .to.be.revertedWithCustomError(
+          mock,
+          "NonStructuralChildrenMustComeLast",
+        )
+        .withArgs(0);
     });
   });
 });

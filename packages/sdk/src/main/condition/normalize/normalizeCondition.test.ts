@@ -303,7 +303,7 @@ suite("normalizeCondition()", () => {
     })
   })
 
-  it("keeps EtherWithinAllowance (moving it to the end) while pruning trailing Pass nodes on AbiEncoded.Matches", () => {
+  it("keeps CallWithinAllowance (moving it to the end) while pruning trailing Pass nodes on AbiEncoded.Matches", () => {
     expect(
       normalizeCondition({
         paramType: Encoding.AbiEncoded,
@@ -311,7 +311,7 @@ suite("normalizeCondition()", () => {
         children: [
           {
             paramType: Encoding.None,
-            operator: Operator.EtherWithinAllowance,
+            operator: Operator.CallWithinAllowance,
             compValue: encodeKey("test-allowance"),
           },
           {
@@ -335,14 +335,14 @@ suite("normalizeCondition()", () => {
         },
         {
           paramType: Encoding.None,
-          operator: Operator.EtherWithinAllowance,
+          operator: Operator.CallWithinAllowance,
           compValue: encodeKey("test-allowance"),
         },
       ],
     })
   })
 
-  it("does not change the position of children other than EtherWithinAllowance and CallWithinAllowance", async () => {
+  it("does not change the position of children other than CallWithinAllowance", async () => {
     const condition = {
       paramType: Encoding.AbiEncoded,
       operator: Operator.Matches,

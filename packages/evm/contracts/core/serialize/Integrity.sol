@@ -23,6 +23,7 @@ library Integrity {
         _children(conditions);
         _nonStructuralOrdering(conditions);
         _typeTree(conditions);
+        _pluckOrder(conditions, 0, 0);
     }
 
     function _root(ConditionFlat[] memory conditions) private pure {
@@ -129,6 +130,15 @@ library Integrity {
             if (size == 0 || size > 32) {
                 revert IRolesError.UnsuitableCompValue(index);
             }
+        } else if (operator == Operator.Pluck) {
+            // Pluck must be Static or EtherValue
+            if (!_isWordLike(encoding)) {
+                revert IRolesError.UnsuitableParameterType(index);
+            }
+            // compValue is the index (1 byte, 0-255)
+            if (compValue.length != 1) {
+                revert IRolesError.UnsuitableCompValue(index);
+            }
         } else if (operator == Operator.EqualToAvatar) {
             if (encoding != Encoding.Static) {
                 revert IRolesError.UnsuitableParameterType(index);
@@ -141,11 +151,22 @@ library Integrity {
                 encoding != Encoding.Static &&
                 encoding != Encoding.Dynamic &&
                 encoding != Encoding.Tuple &&
-                encoding != Encoding.Array
+                encoding != Encoding.Array &&
+                encoding != Encoding.EtherValue
             ) {
                 revert IRolesError.UnsuitableParameterType(index);
             }
-            if (compValue.length == 0 || compValue.length % 32 != 0) {
+
+            bool unsuitable;
+            if (_isWordLike(encoding)) {
+                unsuitable = compValue.length != 32;
+            } else if (encoding == Encoding.Dynamic) {
+                unsuitable = compValue.length == 0;
+            } else {
+                unsuitable = compValue.length < 32;
+            }
+
+            if (unsuitable) {
                 revert IRolesError.UnsuitableCompValue(index);
             }
         } else if (
@@ -154,7 +175,7 @@ library Integrity {
             operator == Operator.SignedIntGreaterThan ||
             operator == Operator.SignedIntLessThan
         ) {
-            if (encoding != Encoding.Static) {
+            if (!_isWordLike(encoding)) {
                 revert IRolesError.UnsuitableParameterType(index);
             }
             if (compValue.length != 32) {
@@ -173,21 +194,7 @@ library Integrity {
                 revert IRolesError.UnsuitableCompValue(index);
             }
         } else if (operator == Operator.WithinAllowance) {
-            if (encoding != Encoding.Static) {
-                revert IRolesError.UnsuitableParameterType(index);
-            }
-            // 32 bytes: allowanceKey only (legacy)
-            // 54 bytes: allowanceKey + adapter + accrueDecimals + paramDecimals
-            if (compValue.length != 32 && compValue.length != 54) {
-                revert IRolesError.UnsuitableCompValue(index);
-            }
-            if (compValue.length == 54) {
-                if (uint8(compValue[52]) > 18 || uint8(compValue[53]) > 18) {
-                    revert IRolesError.AllowanceDecimalsExceedMax(index);
-                }
-            }
-        } else if (operator == Operator.EtherWithinAllowance) {
-            if (encoding != Encoding.None) {
+            if (!_isWordLike(encoding)) {
                 revert IRolesError.UnsuitableParameterType(index);
             }
             // 32 bytes: allowanceKey only (legacy)
@@ -224,10 +231,7 @@ library Integrity {
         uint256 length = conditions.length;
 
         for (uint256 i = 0; i < length; ++i) {
-            if (
-                conditions[i].operator == Operator.EtherWithinAllowance ||
-                conditions[i].operator == Operator.CallWithinAllowance
-            ) {
+            if (conditions[i].operator == Operator.CallWithinAllowance) {
                 if (conditions[i].parent != i) {
                     (, , uint256 countOtherNodes) = _countParentNodes(
                         conditions,
@@ -269,8 +273,7 @@ library Integrity {
 
             if (condition.paramType == Encoding.None) {
                 if (
-                    (condition.operator == Operator.EtherWithinAllowance ||
-                        condition.operator == Operator.CallWithinAllowance ||
+                    (condition.operator == Operator.CallWithinAllowance ||
                         condition.operator == Operator.WithinRatio ||
                         condition.operator == Operator.Empty) && childCount != 0
                 ) {
@@ -314,10 +317,17 @@ library Integrity {
                 if (childCount == 0) {
                     revert IRolesError.UnsuitableChildCount(i);
                 }
-            } else {
-                assert(condition.paramType == Encoding.Array);
-
+            } else if (condition.paramType == Encoding.Array) {
                 if (sChildCount == 0) {
+                    revert IRolesError.UnsuitableChildCount(i);
+                }
+                // Enforce only structural children for array iteration operators
+                if (
+                    (condition.operator == Operator.ArraySome ||
+                        condition.operator == Operator.ArrayEvery ||
+                        condition.operator == Operator.ArrayTailMatches) &&
+                    childCount != sChildCount
+                ) {
                     revert IRolesError.UnsuitableChildCount(i);
                 }
 
@@ -328,14 +338,10 @@ library Integrity {
                 ) {
                     revert IRolesError.UnsuitableChildCount(i);
                 }
-
-                // Enforce only structural children for array iteration operators
-                if (
-                    (condition.operator == Operator.ArraySome ||
-                        condition.operator == Operator.ArrayEvery ||
-                        condition.operator == Operator.ArrayTailMatches) &&
-                    childCount != sChildCount
-                ) {
+            } else {
+                assert(condition.paramType == Encoding.EtherValue);
+                // EtherValue is non-structural, no children allowed
+                if (childCount != 0) {
                     revert IRolesError.UnsuitableChildCount(i);
                 }
             }
@@ -497,10 +503,7 @@ library Integrity {
 
     /**
      * @notice Validates WithinRatio operator constraints
-     * @dev Checks that:
-     *      1. At least one ratio bound (min or max) is provided
-     *      2. Referenced indices are within parent's children bounds
-     *      3. Referenced children resolve to non-variant Static types
+     * @dev Checks that at least one ratio bound (min or max) is provided
      */
     function _withinRatio(
         ConditionFlat[] memory conditions,
@@ -511,50 +514,73 @@ library Integrity {
         }
 
         bytes memory compValue = conditions[i].compValue;
-        bytes32 compValue32 = bytes32(compValue);
 
-        // Extract indices and ratios from compValue
-        uint8 referenceIndex = uint8(bytes1(compValue32));
-        uint8 relativeIndex = uint8(bytes1(compValue32 << 16));
-        uint32 minRatio = uint32(bytes4(compValue32 << 32));
-        uint32 maxRatio = uint32(bytes4(compValue32 << 64));
+        // Layout: referenceIndex(1) + referenceDecimals(1) + relativeIndex(1) + relativeDecimals(1)
+        //         + minRatio(4) + maxRatio(4) + referenceAdapter(0|20) + relativeAdapter(0|20)
+        uint32 minRatio;
+        uint32 maxRatio;
+        assembly {
+            // Skip 32 bytes for memory length + 4 bytes (indices + decimals)
+            // minRatio is at offset 4 (0x24 from compValue pointer)
+            minRatio := shr(224, mload(add(compValue, 0x24)))
+            // maxRatio is at offset 8 (0x28 from compValue pointer)
+            maxRatio := shr(224, mload(add(compValue, 0x28)))
+        }
+
         // Validate that at least one ratio is provided
         if (minRatio == 0 && maxRatio == 0) {
             revert IRolesError.WithinRatioNoRatioProvided(i);
         }
+    }
 
-        // Find nearest structural parent (should be Calldata/AbiEncoded/Tuple/Array)
-        uint256 parentIndex = conditions[i].parent;
-        while (conditions[parentIndex].paramType == Encoding.None) {
-            parentIndex = conditions[parentIndex].parent;
+    /**
+     * @notice Ensures pluck values are extracted before being referenced, in
+     *         DFS traversal order
+     */
+    function _pluckOrder(
+        ConditionFlat[] memory conditions,
+        uint256 index,
+        uint256 visited
+    ) private pure returns (uint256) {
+        ConditionFlat memory condition = conditions[index];
+
+        if (condition.operator == Operator.Pluck) {
+            uint8 pluckIndex = uint8(condition.compValue[0]);
+            visited |= (1 << pluckIndex);
         }
 
-        // Get parent's children bounds
-        (uint256 childStart, , ) = Topology.childBounds(
+        if (condition.operator == Operator.WithinRatio) {
+            uint8 referenceIndex = uint8(condition.compValue[0]);
+
+            if ((visited & (1 << referenceIndex)) == 0) {
+                revert IRolesError.PluckNotVisitedBeforeRef(
+                    index,
+                    referenceIndex
+                );
+            }
+
+            uint8 relativeIndex = uint8(condition.compValue[2]);
+            if ((visited & (1 << relativeIndex)) == 0) {
+                revert IRolesError.PluckNotVisitedBeforeRef(
+                    index,
+                    relativeIndex
+                );
+            }
+        }
+
+        (uint256 childStart, uint256 childCount, ) = Topology.childBounds(
             conditions,
-            parentIndex
+            index
         );
 
-        {
-            // Check reference child is Static
-            Layout memory layout = TypeTree.inspect(
-                conditions,
-                childStart + referenceIndex
-            );
-            if (layout.encoding != Encoding.Static) {
-                revert IRolesError.WithinRatioTargetNotStatic(i);
-            }
+        for (uint256 i = 0; i < childCount; ++i) {
+            visited = _pluckOrder(conditions, childStart + i, visited);
         }
 
-        {
-            // Check relative child is Static
-            Layout memory layout = TypeTree.inspect(
-                conditions,
-                childStart + relativeIndex
-            );
-            if (layout.encoding != Encoding.Static) {
-                revert IRolesError.WithinRatioTargetNotStatic(i);
-            }
-        }
+        return visited;
+    }
+
+    function _isWordLike(Encoding encoding) private pure returns (bool) {
+        return encoding == Encoding.Static || encoding == Encoding.EtherValue;
     }
 }
