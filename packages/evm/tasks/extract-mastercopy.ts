@@ -37,18 +37,6 @@ task(
   });
   writeMastercopyFromBuild({
     contractVersion: packageJson.version,
-    contractName: "MorphoBundler3Unwrapper",
-    compilerInput: await hre.run("verify:etherscan-get-minimal-input", {
-      sourceName: "contracts/periphery/unwrappers/MorphoBundler3Unwrapper.sol",
-    }),
-    constructorArgs: {
-      types: [],
-      values: [],
-    },
-    salt: ZeroHash,
-  });
-  writeMastercopyFromBuild({
-    contractVersion: packageJson.version,
     contractName: "ConditionsTransform",
     compilerInput: await hre.run("verify:etherscan-get-minimal-input", {
       sourceName: "contracts/core/serialize/ConditionsTransform.sol",

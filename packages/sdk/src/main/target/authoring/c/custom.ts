@@ -30,10 +30,6 @@ const encodeCustomCompValue = (
   extra: BytesLike = "0x"
 ) => {
   const extraHex = hexlify(extra).slice(2)
-  if (extraHex.length > 24) {
-    // 12 bytes
-    throw new Error("Extra data is too long")
-  }
   return (getAddress(customConditionAddress).toLowerCase() +
-    extraHex.padEnd(24, "0")) as `0x${string}`
+    extraHex) as `0x${string}`
 }
