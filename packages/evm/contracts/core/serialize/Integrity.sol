@@ -140,7 +140,7 @@ library Integrity {
                 revert IRolesError.UnsuitableCompValue(index);
             }
         } else if (operator == Operator.EqualToAvatar) {
-            if (!_isWordLike(encoding)) {
+            if (encoding != Encoding.Static) {
                 revert IRolesError.UnsuitableParameterType(index);
             }
             if (compValue.length != 0) {
@@ -315,11 +315,6 @@ library Integrity {
                 }
             } else if (condition.paramType == Encoding.AbiEncoded) {
                 if (childCount == 0) {
-                    revert IRolesError.UnsuitableChildCount(i);
-                }
-            } else if (condition.paramType == Encoding.EtherValue) {
-                // EtherValue is non-structural, no children allowed
-                if (childCount != 0) {
                     revert IRolesError.UnsuitableChildCount(i);
                 }
             } else if (condition.paramType == Encoding.Array) {
