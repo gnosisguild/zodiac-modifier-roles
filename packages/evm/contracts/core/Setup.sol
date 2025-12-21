@@ -157,12 +157,14 @@ abstract contract Setup is RolesStorage {
         ExecutionOptions options
     ) external onlyOwner {
         bytes32 key = bytes32(bytes20(targetAddress)) | (~bytes32(0) >> 160);
+        address pointer = ConditionsTransform.packAndStore(
+            _withPassDefault(conditions)
+        );
 
         roles[roleKey].clearance[targetAddress] = Clearance.Target;
-        roles[roleKey].scopeConfig[key] = ScopeConfig.pack(
-            options,
-            ConditionsTransform.packAndStore(_withPassDefault(conditions))
-        );
+        roles[roleKey].scopeConfig[key] =
+            (uint256(options) << 160) |
+            uint256(uint160(pointer));
 
         emit AllowTarget(roleKey, targetAddress, conditions, options);
     }
