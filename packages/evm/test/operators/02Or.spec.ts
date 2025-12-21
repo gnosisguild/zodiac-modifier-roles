@@ -19,10 +19,10 @@ const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
 describe("Operator - Or", async () => {
   it("evaluates operator Or with a single child", async () => {
-    const { roles, scopeFunction, invoke } =
+    const { roles, allowFunction, invoke } =
       await loadFixture(setupOneParamStatic);
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -51,10 +51,10 @@ describe("Operator - Or", async () => {
   });
 
   it("evaluates operator Or with multiple children", async () => {
-    const { roles, scopeFunction, invoke } =
+    const { roles, allowFunction, invoke } =
       await loadFixture(setupOneParamStatic);
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -99,7 +99,7 @@ describe("Operator - Or", async () => {
   });
 
   it("evaluates operator OR, with type equivalent sibling children", async () => {
-    const { roles, scopeFunction, invoke } = await loadFixture(
+    const { roles, allowFunction, invoke } = await loadFixture(
       setupOneParamStaticTuple,
     );
 
@@ -148,7 +148,7 @@ describe("Operator - Or", async () => {
       ],
     }) as ConditionFlatStruct[];
 
-    await scopeFunction(conditions);
+    await allowFunction(conditions);
 
     // A
     await expect(invoke({ a: 123, b: true })).to.not.be.reverted;
@@ -165,7 +165,7 @@ describe("Operator - Or", async () => {
   it("evaluates operator OR, with variant children", async () => {
     const {
       roles,
-      scopeFunction,
+      allowFunction,
       invoke: _invoke,
     } = await loadFixture(setupTwoParamsStaticDynamic);
 
@@ -213,7 +213,7 @@ describe("Operator - Or", async () => {
       ],
     }) as ConditionFlatStruct[];
 
-    await scopeFunction(conditions);
+    await allowFunction(conditions);
 
     const invokeA = (a: number, b: string) => {
       const embedded = defaultAbiCoder.encode(["bytes"], [b]);

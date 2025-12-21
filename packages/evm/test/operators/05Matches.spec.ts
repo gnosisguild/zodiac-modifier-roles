@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import { AbiCoder } from "ethers";
+import { AbiCoder, ZeroHash } from "ethers";
 
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
@@ -10,20 +10,15 @@ import {
   setupOneParamStaticTuple,
   setupTwoParamsStatic,
 } from "../setup";
-import {
-  Encoding,
-  BYTES32_ZERO,
-  Operator,
-  PermissionCheckerStatus,
-} from "../utils";
+import { Encoding, Operator, PermissionCheckerStatus } from "../utils";
 
 describe("Operator - Matches", async () => {
   it("throws on children length mismatch", async () => {
-    const { roles, invoke, scopeFunction } = await loadFixture(
+    const { roles, invoke, allowFunction } = await loadFixture(
       setupOneParamArrayOfStatic,
     );
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -52,21 +47,21 @@ describe("Operator - Matches", async () => {
 
     await expect(invoke([100, 2, 3]))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterNotAMatch, BYTES32_ZERO);
+      .withArgs(PermissionCheckerStatus.ParameterNotAMatch, ZeroHash);
 
     await expect(invoke([100, 8888])).to.not.be.reverted;
 
     await expect(invoke([100]))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterNotAMatch, BYTES32_ZERO);
+      .withArgs(PermissionCheckerStatus.ParameterNotAMatch, ZeroHash);
   });
 
   it("evaluates operator Matches for Tuple", async () => {
-    const { roles, invoke, scopeFunction } = await loadFixture(
+    const { roles, invoke, allowFunction } = await loadFixture(
       setupOneParamStaticTuple,
     );
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -97,15 +92,15 @@ describe("Operator - Matches", async () => {
     await expect(invoke({ a: 101, b: true })).to.not.be.reverted;
     await expect(invoke({ a: 100, b: true }))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed, BYTES32_ZERO);
+      .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed, ZeroHash);
   });
 
   it("evaluates operator Matches for Array", async () => {
-    const { roles, invoke, scopeFunction } = await loadFixture(
+    const { roles, invoke, allowFunction } = await loadFixture(
       setupOneParamArrayOfStatic,
     );
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -135,21 +130,18 @@ describe("Operator - Matches", async () => {
     await expect(invoke([1111, 99])).to.not.be.reverted;
     await expect(invoke([1111, 99, 100]))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterNotAMatch, BYTES32_ZERO);
+      .withArgs(PermissionCheckerStatus.ParameterNotAMatch, ZeroHash);
 
     await expect(invoke([1111, 100]))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(
-        PermissionCheckerStatus.ParameterGreaterThanAllowed,
-        BYTES32_ZERO,
-      );
+      .withArgs(PermissionCheckerStatus.ParameterGreaterThanAllowed, ZeroHash);
   });
 
   it("evaluates operator Matches for Array - empty", async () => {
-    const { scopeFunction } = await loadFixture(setupOneParamArrayOfStatic);
+    const { allowFunction } = await loadFixture(setupOneParamArrayOfStatic);
 
     await expect(
-      scopeFunction([
+      allowFunction([
         {
           parent: 0,
           paramType: Encoding.AbiEncoded,
@@ -167,10 +159,10 @@ describe("Operator - Matches", async () => {
   });
 
   it("evaluates operator Matches for AbiEncoded", async () => {
-    const { roles, invoke, scopeFunction } =
+    const { roles, invoke, allowFunction } =
       await loadFixture(setupTwoParamsStatic);
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -193,7 +185,7 @@ describe("Operator - Matches", async () => {
 
     await expect(invoke(2222, 100))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed, BYTES32_ZERO);
+      .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed, ZeroHash);
 
     await expect(invoke(2222, 101)).to.not.be.reverted;
   });

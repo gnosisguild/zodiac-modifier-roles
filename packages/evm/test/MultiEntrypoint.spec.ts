@@ -169,6 +169,7 @@ describe("Multi Entrypoint", async () => {
         ROLE_KEY,
         testContractAddress,
         testContract.interface.getFunction("doNothing").selector,
+        [],
         ExecutionOptions.None,
       );
 
@@ -178,6 +179,7 @@ describe("Multi Entrypoint", async () => {
         ROLE_KEY,
         testContractAddress,
         testContract.interface.getFunction("doEvenLess").selector,
+        [],
         ExecutionOptions.None,
       );
 
@@ -209,13 +211,15 @@ describe("Multi Entrypoint", async () => {
     const testContractAddress = await testContract.getAddress();
     await roles.connect(owner).scopeTarget(ROLE_KEY, testContractAddress);
 
-    await roles.connect(owner).allowFunction(
-      ROLE_KEY,
-      testContractAddress,
-
-      testContract.interface.getFunction("setAStorageNumber").selector,
-      ExecutionOptions.None,
-    );
+    await roles
+      .connect(owner)
+      .allowFunction(
+        ROLE_KEY,
+        testContractAddress,
+        testContract.interface.getFunction("setAStorageNumber").selector,
+        [],
+        ExecutionOptions.None,
+      );
 
     const multisendCallData = (
       await multisend.multiSend.populateTransaction(
@@ -287,6 +291,7 @@ describe("Multi Entrypoint", async () => {
         ROLE_KEY,
         testContractAddress,
         testContract.interface.getFunction("doNothing").selector,
+        [],
         ExecutionOptions.None,
       );
 
@@ -296,16 +301,19 @@ describe("Multi Entrypoint", async () => {
         ROLE_KEY,
         testContractAddress,
         testContract.interface.getFunction("doEvenLess").selector,
+        [],
         ExecutionOptions.None,
       );
 
-    await roles.connect(owner).allowFunction(
-      ROLE_KEY,
-      testContractAddress,
-
-      testContract.interface.getFunction("setAStorageNumber").selector,
-      ExecutionOptions.None,
-    );
+    await roles
+      .connect(owner)
+      .allowFunction(
+        ROLE_KEY,
+        testContractAddress,
+        testContract.interface.getFunction("setAStorageNumber").selector,
+        [],
+        ExecutionOptions.None,
+      );
 
     expect(await testContract.aStorageNumber()).to.equal(0);
     await expect(

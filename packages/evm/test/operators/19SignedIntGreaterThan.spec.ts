@@ -15,10 +15,10 @@ import { setupOneParamIntSmall, setupOneParamIntWord } from "../setup";
 
 describe("Operator - SignedIntGreaterThan", async () => {
   it("evaluates operator SignedIntGreaterThan - positive full word", async () => {
-    const { roles, scopeFunction, invoke } =
+    const { roles, allowFunction, invoke } =
       await loadFixture(setupOneParamIntWord);
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -43,10 +43,10 @@ describe("Operator - SignedIntGreaterThan", async () => {
   });
 
   it("evaluates operator SignedIntGreaterThan - negative full word", async () => {
-    const { roles, scopeFunction, invoke } =
+    const { roles, allowFunction, invoke } =
       await loadFixture(setupOneParamIntWord);
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -73,11 +73,11 @@ describe("Operator - SignedIntGreaterThan", async () => {
   });
 
   it("evaluates operator SignedIntGreaterThan - positive smaller than word", async () => {
-    const { roles, scopeFunction, invoke } = await loadFixture(
+    const { roles, allowFunction, invoke } = await loadFixture(
       setupOneParamIntSmall,
     );
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -103,11 +103,11 @@ describe("Operator - SignedIntGreaterThan", async () => {
   });
 
   it("evaluates operator SignedIntGreaterThan - negative smaller than word", async () => {
-    const { roles, scopeFunction, invoke } = await loadFixture(
+    const { roles, allowFunction, invoke } = await loadFixture(
       setupOneParamIntSmall,
     );
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,

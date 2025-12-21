@@ -389,7 +389,7 @@ describe("OldTests", async () => {
         0,
       );
 
-      const paramScoped = await modifier.scopeFunction.populateTransaction(
+      const paramScoped = await modifier.allowFunction.populateTransaction(
         ROLE_KEY1,
         await testContract.getAddress(),
         testContract.interface.getFunction("mint").selector,
@@ -475,7 +475,7 @@ describe("OldTests", async () => {
         0,
       );
 
-      const paramScoped = await modifier.scopeFunction.populateTransaction(
+      const paramScoped = await modifier.allowFunction.populateTransaction(
         ROLE_KEY1,
         await testContract.getAddress(),
         testContract.interface.getFunction("mint").selector,
@@ -559,7 +559,7 @@ describe("OldTests", async () => {
         0,
       );
 
-      const paramScoped = await modifier.scopeFunction.populateTransaction(
+      const paramScoped = await modifier.allowFunction.populateTransaction(
         ROLE_KEY1,
         await testContract.getAddress(),
         testContract.interface.getFunction("testDynamic").selector,
@@ -631,7 +631,7 @@ describe("OldTests", async () => {
         0,
       );
 
-      const paramScoped = await modifier.scopeFunction.populateTransaction(
+      const paramScoped = await modifier.allowFunction.populateTransaction(
         ROLE_KEY1,
         await testContract.getAddress(),
         "0x273454bf",
@@ -711,7 +711,7 @@ describe("OldTests", async () => {
         0,
       );
 
-      const paramScoped = await modifier.scopeFunction.populateTransaction(
+      const paramScoped = await modifier.allowFunction.populateTransaction(
         ROLE_KEY1,
         await testContract.getAddress(),
         testContract.interface.getFunction("mint").selector,
@@ -744,7 +744,7 @@ describe("OldTests", async () => {
         0,
       );
 
-      const paramScoped_2 = await modifier.scopeFunction.populateTransaction(
+      const paramScoped_2 = await modifier.allowFunction.populateTransaction(
         ROLE_KEY1,
         await testContract.getAddress(),
         "0x273454bf",
@@ -825,7 +825,7 @@ describe("OldTests", async () => {
         0,
       );
 
-      const paramScoped = await modifier.scopeFunction.populateTransaction(
+      const paramScoped = await modifier.allowFunction.populateTransaction(
         ROLE_KEY1,
         await testContract.getAddress(),
         testContract.interface.getFunction("mint").selector,
@@ -924,7 +924,7 @@ describe("OldTests", async () => {
         0,
       );
 
-      const paramScoped = await modifier.scopeFunction.populateTransaction(
+      const paramScoped = await modifier.allowFunction.populateTransaction(
         ROLE_KEY1,
         await testContract.getAddress(),
         testContract.interface.getFunction("mint").selector,
@@ -957,7 +957,7 @@ describe("OldTests", async () => {
         0,
       );
 
-      const paramScoped_2 = await modifier.scopeFunction.populateTransaction(
+      const paramScoped_2 = await modifier.allowFunction.populateTransaction(
         ROLE_KEY1,
         await testContract.getAddress(),
         "0x273454bf",
@@ -1341,7 +1341,7 @@ describe("OldTests", async () => {
         0,
       );
 
-      const paramScoped = await modifier.scopeFunction.populateTransaction(
+      const paramScoped = await modifier.allowFunction.populateTransaction(
         ROLE_KEY,
         await testContract.getAddress(),
         testContract.interface.getFunction("mint").selector,
@@ -1374,7 +1374,7 @@ describe("OldTests", async () => {
         0,
       );
 
-      const paramScoped_2 = await modifier.scopeFunction.populateTransaction(
+      const paramScoped_2 = await modifier.allowFunction.populateTransaction(
         ROLE_KEY,
         await testContract.getAddress(),
         "0x273454bf",

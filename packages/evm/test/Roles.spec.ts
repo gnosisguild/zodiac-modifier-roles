@@ -63,7 +63,7 @@ describe("Roles", async () => {
     await roles
       .connect(owner)
       .scopeTarget(ROLE_KEY, await testContract.getAddress());
-    await roles.connect(owner).scopeFunction(
+    await roles.connect(owner).allowFunction(
       ROLE_KEY,
       await testContract.getAddress(),
       testContract.interface.getFunction("spendAndMaybeRevert").selector,
@@ -656,7 +656,7 @@ describe("Roles", async () => {
       const SELECTOR =
         testContract.interface.getFunction("fnWithSingleParam").selector;
 
-      await roles.connect(owner).scopeFunction(
+      await roles.connect(owner).allowFunction(
         ROLE_KEY1,
         await testContract.getAddress(),
         SELECTOR,
@@ -677,7 +677,7 @@ describe("Roles", async () => {
         ExecutionOptions.None,
       );
 
-      await roles.connect(owner).scopeFunction(
+      await roles.connect(owner).allowFunction(
         ROLE_KEY1,
         await testContract2.getAddress(),
         SELECTOR,
@@ -726,7 +726,7 @@ describe("Roles", async () => {
         .connect(owner)
         .scopeTarget(ROLE_KEY1, await testContract.getAddress());
 
-      await roles.connect(owner).scopeFunction(
+      await roles.connect(owner).allowFunction(
         ROLE_KEY1,
         await testContract.getAddress(),
         testContract.interface.getFunction("dynamic").selector,
@@ -795,7 +795,7 @@ describe("Roles", async () => {
 
       await expect(invoke(123456, "0xaabbccdd4500d1")).to.not.be.reverted;
 
-      await roles.connect(owner).scopeFunction(
+      await roles.connect(owner).allowFunction(
         ROLE_KEY1,
         await testContract.getAddress(),
         testContract.interface.getFunction("dynamic").selector,
@@ -834,7 +834,7 @@ describe("Roles", async () => {
     it("covering a test branch", async () => {
       const { roles, testContract, owner } = await loadFixture(setup);
 
-      await roles.connect(owner).scopeFunction(
+      await roles.connect(owner).allowFunction(
         ROLE_KEY1,
         await testContract.getAddress(),
         testContract.interface.getFunction("dynamic").selector,

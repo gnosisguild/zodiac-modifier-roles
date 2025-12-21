@@ -15,7 +15,7 @@ const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
 describe("Operator - And", async () => {
   it("evaluates operator And with a single child", async () => {
-    const { roles, invoke, scopeFunction } =
+    const { roles, invoke, allowFunction } =
       await loadFixture(setupOneParamStatic);
 
     const conditions = [
@@ -39,14 +39,14 @@ describe("Operator - And", async () => {
       },
     ];
 
-    await scopeFunction(conditions);
+    await allowFunction(conditions);
 
     await expect(invoke(2))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(PermissionCheckerStatus.ParameterNotAllowed, ZeroHash);
   });
   it("evaluates operator And with multiple children", async () => {
-    const { roles, scopeFunction, invoke } =
+    const { roles, allowFunction, invoke } =
       await loadFixture(setupOneParamStatic);
 
     const conditions = [
@@ -75,7 +75,7 @@ describe("Operator - And", async () => {
         compValue: defaultAbiCoder.encode(["uint256"], [30]),
       },
     ];
-    await scopeFunction(conditions);
+    await allowFunction(conditions);
 
     await expect(invoke(1))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
@@ -97,8 +97,7 @@ describe("Operator - And", async () => {
   it("evaluates operator And, with type equivalent siblings children", async () => {
     const {
       roles,
-      scopeFunction,
-      testContract,
+      allowFunction,
       invoke: _invoke,
     } = await loadFixture(setupTwoParamsStaticDynamic);
 
@@ -144,7 +143,7 @@ describe("Operator - And", async () => {
       ],
     }) as ConditionFlatStruct[];
 
-    await scopeFunction(conditions);
+    await allowFunction(conditions);
 
     const invoke = (a: number, b: number) => {
       const embedded = defaultAbiCoder.encode(["uint256"], [b]);
@@ -164,7 +163,7 @@ describe("Operator - And", async () => {
   it("evaluates operator And, with variant children", async () => {
     const {
       roles,
-      scopeFunction,
+      allowFunction,
       invoke: _invoke,
     } = await loadFixture(setupTwoParamsStaticDynamic);
 
@@ -225,7 +224,7 @@ describe("Operator - And", async () => {
       ],
     }) as ConditionFlatStruct[];
 
-    await scopeFunction(conditions);
+    await allowFunction(conditions);
 
     const invoke = (a: number, b: number[]) => {
       const embedded =

@@ -197,21 +197,34 @@ abstract contract Setup is RolesStorage {
                         FUNCTION PERMISSIONS
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Specifies the functions that can be called.
+    /// @dev Specifies the functions that can be called, optionally with conditions.
     /// @param roleKey identifier of the role to be modified.
     /// @param targetAddress Destination address of transaction.
     /// @param selector 4 byte function selector.
+    /// @param conditions The conditions to enforce (empty for wildcarded).
     /// @param options designates if a transaction can send ether and/or delegatecall to target.
     function allowFunction(
         bytes32 roleKey,
         address targetAddress,
         bytes4 selector,
+        ConditionFlat[] calldata conditions,
         ExecutionOptions options
     ) external onlyOwner {
-        roles[roleKey].scopeConfig[_key(targetAddress, selector)] = ScopeConfig
-            .packAsWildcarded(options);
+        roles[roleKey].scopeConfig[_key(targetAddress, selector)] = conditions
+            .length == 0
+            ? ScopeConfig.packAsWildcarded(options)
+            : ScopeConfig.pack(
+                options,
+                ConditionsTransform.packAndStore(conditions)
+            );
 
-        emit AllowFunction(roleKey, targetAddress, selector, options);
+        emit AllowFunction(
+            roleKey,
+            targetAddress,
+            selector,
+            conditions,
+            options
+        );
     }
 
     /// @dev Removes the functions that can be called.
@@ -225,33 +238,6 @@ abstract contract Setup is RolesStorage {
     ) external onlyOwner {
         delete roles[roleKey].scopeConfig[_key(targetAddress, selector)];
         emit RevokeFunction(roleKey, targetAddress, selector);
-    }
-
-    /// @dev Sets conditions to enforce on calls to the specified target.
-    /// @param roleKey identifier of the role to be modified.
-    /// @param targetAddress Destination address of transaction.
-    /// @param selector 4 byte function selector.
-    /// @param conditions The conditions to enforce.
-    /// @param options designates if a transaction can send ether and/or delegatecall to target.
-    function scopeFunction(
-        bytes32 roleKey,
-        address targetAddress,
-        bytes4 selector,
-        ConditionFlat[] memory conditions,
-        ExecutionOptions options
-    ) external onlyOwner {
-        address pointer = ConditionsTransform.packAndStore(conditions);
-
-        roles[roleKey].scopeConfig[_key(targetAddress, selector)] = ScopeConfig
-            .pack(options, pointer);
-
-        emit ScopeFunction(
-            roleKey,
-            targetAddress,
-            selector,
-            conditions,
-            options
-        );
     }
 
     /*//////////////////////////////////////////////////////////////
