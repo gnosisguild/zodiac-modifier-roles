@@ -39,15 +39,19 @@ library ImmutableStorage {
      * @return buffer The raw bytecode (minus the prepended 0x00) read from `pointer`.
      */
     function load(address pointer) internal view returns (bytes memory buffer) {
-        // Determine code size, subtracting 1 to skip the leading 0x00 byte.
-        uint256 size;
         assembly {
-            size := sub(extcodesize(pointer), 1)
-        }
+            let size := sub(extcodesize(pointer), 1)
+            // free memory point ought to be multiple of 32
+            let rounded := and(add(size, 31), not(31))
 
-        // Copy the contract code starting from offset 0x01 (skip the 0x00 prefix).
-        buffer = new bytes(size);
-        assembly {
+            // Get free pointer
+            buffer := mload(0x40)
+            // Store length
+            mstore(buffer, size)
+            // Update free pointer
+            mstore(0x40, add(add(buffer, 0x20), rounded))
+
+            // Copy code starting from offset 0x01 (skip the 0x00 prefix)
             extcodecopy(pointer, add(buffer, 0x20), 0x01, size)
         }
     }
