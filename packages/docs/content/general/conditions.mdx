@@ -125,14 +125,11 @@ If the condition evaluates to `false` or executing the call reverts, allowances 
 #### `WithinAllowance`
 
 Checks that the `uint` value in scope does not exceed the given allowance and consumes that amount.
-
-#### `EtherWithinAllowance`
-
-Checks that the transaction's ether value does not exceed the given allowance and consumes that amount.
+For limiting ether value, use `Encoding.EtherValue` with `WithinAllowance` to reference the transaction's ether value.
 
 #### `CallWithinAllowance`
 
-Useful for tracking function call quotas, checks that the given allowance is not depleted and decrements it by `1.
+Useful for tracking function call quotas, checks that the given allowance is not depleted and decrements it by `1`.
 
 ### `Pass`
 

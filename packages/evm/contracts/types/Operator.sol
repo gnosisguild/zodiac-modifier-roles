@@ -3,7 +3,7 @@ pragma solidity >=0.8.17 <0.9.0;
 
 enum Operator {
     // 00:    EMPTY EXPRESSION (default, always passes)
-    //          paramType: Static / Dynamic / Tuple / Array
+    //          paramType: Static / Dynamic / Tuple / Array / EtherValue
     //          ❓ children (only for paramType: Tuple / Array to describe their structure)
     //          🚫 compValue
     /* 00: */ Pass,
@@ -36,11 +36,10 @@ enum Operator {
     /* 12: */ _Placeholder12,
     // ------------------------------------------------------------
     // 13-14: EXTRACTION EXPRESSIONS
-    //          paramType: Dynamic
     //          ❓ children (at most one child, must resolve to Static)
-    //          ✅ compValue (3 bytes: 2 bytes shift + 1 byte size, 1-32)
-    /* 13: */ Slice,
-    /* 14: */ _Placeholder14,
+    //          ✅ compValue
+    /* 13: */ Slice, // paramType: Static / Dynamic, compValue: 3 bytes (2 bytes shift + 1 byte size, 1-32)
+    /* 14: */ Pluck, // paramType: Static / EtherValue, compValue: 1 byte (index into pluckedValues, 0-255)
     // ------------------------------------------------------------
     // 15:    SPECIAL COMPARISON (without compValue)
     //          paramType: Static
@@ -49,23 +48,23 @@ enum Operator {
     /* 15: */ EqualToAvatar,
     // ------------------------------------------------------------
     // 16-31: COMPARISON EXPRESSIONS
-    //          paramType: Static / Dynamic / Tuple / Array
+    //          paramType: Static / Dynamic / Tuple / Array / EtherValue
     //          ❓ children (only for paramType: Tuple / Array to describe their structure)
     //          ✅ compValue
-    /* 16: */ EqualTo, // paramType: Static / Dynamic / Tuple / Array
-    /* 17: */ GreaterThan, // paramType: Static
-    /* 18: */ LessThan, // paramType: Static
-    /* 19: */ SignedIntGreaterThan, // paramType: Static
-    /* 20: */ SignedIntLessThan, // paramType: Static
+    /* 16: */ EqualTo, // paramType: Static / Dynamic / Tuple / Array / EtherValue
+    /* 17: */ GreaterThan, // paramType: Static / EtherValue
+    /* 18: */ LessThan, // paramType: Static / EtherValue
+    /* 19: */ SignedIntGreaterThan, // paramType: Static / EtherValue
+    /* 20: */ SignedIntLessThan, // paramType: Static / EtherValue
     /* 21: */ Bitmask, // paramType: Static / Dynamic
-    /* 22: */ Custom, // paramType: Static / Dynamic / Tuple / Array
+    /* 22: */ Custom, // paramType: Static / Dynamic / Tuple / Array / EtherValue
     /* 23: */ WithinRatio, // paramType: None
     /* 24: */ _Placeholder24,
     /* 25: */ _Placeholder25,
     /* 26: */ _Placeholder26,
     /* 27: */ _Placeholder27,
-    /* 28: */ WithinAllowance, // paramType: Static
-    /* 29: */ EtherWithinAllowance, // paramType: None
+    /* 28: */ WithinAllowance, // paramType: Static / EtherValue
+    /* 29: */ _Placeholder29,
     /* 30: */ CallWithinAllowance, // paramType: None
     /* 31: */ _Placeholder31
 }
