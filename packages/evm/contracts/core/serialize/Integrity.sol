@@ -190,7 +190,7 @@ library Integrity {
                 revert IRolesError.UnsuitableCompValue(index);
             }
         } else if (operator == Operator.Custom) {
-            if (compValue.length != 32) {
+            if (compValue.length < 20) {
                 revert IRolesError.UnsuitableCompValue(index);
             }
         } else if (operator == Operator.WithinAllowance) {

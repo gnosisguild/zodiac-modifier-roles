@@ -11,6 +11,6 @@ interface ICustomCondition {
         Operation operation,
         uint256 location,
         uint256 size,
-        bytes12 extra
+        bytes calldata extra
     ) external view returns (bool success, bytes32 reason);
 }

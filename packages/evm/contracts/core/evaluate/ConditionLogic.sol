@@ -443,12 +443,22 @@ library ConditionLogic {
         Consumption[] memory consumptions,
         Context memory context
     ) private view returns (Result memory) {
-        // 20 bytes on the left
+        // first 20 bytes: adapter address
         ICustomCondition adapter = ICustomCondition(
-            address(bytes20(bytes32(condition.compValue)))
+            address(bytes20(condition.compValue))
         );
-        // 12 bytes on the right
-        bytes12 extra = bytes12(uint96(uint256(bytes32(condition.compValue))));
+
+        bytes memory extra;
+        if (condition.compValue.length > 20) {
+            bytes memory compValue = condition.compValue;
+            assembly {
+                let len := sub(mload(compValue), 20)
+                extra := mload(0x40)
+                mstore(0x40, add(extra, add(0x40, len)))
+                mstore(extra, len)
+                mcopy(add(extra, 0x20), add(compValue, 0x34), len)
+            }
+        }
 
         (bool success, bytes32 info) = adapter.check(
             context.to,
