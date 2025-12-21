@@ -5,7 +5,7 @@ import {ExecutionOptions} from "../types/Permission.sol";
 
 library ScopeConfig {
     /**
-     * Bit-packed configuration (bytes32):
+     * Bit-packed configuration (uint256):
      * ┌─────────────────────────────┬─────────┬───────────────────────┐
      * │          (unused)           │ options │        pointer        │
      * │          94 bits            │ 2 bits  │        160 bits       │
@@ -14,14 +14,14 @@ library ScopeConfig {
     function pack(
         ExecutionOptions options,
         address pointer
-    ) internal pure returns (bytes32) {
-        return bytes32((uint256(options) << 160) | uint256(uint160(pointer)));
+    ) internal pure returns (uint256) {
+        return (uint256(options) << 160) | uint256(uint160(pointer));
     }
 
     function unpack(
-        bytes32 scopeConfig
+        uint256 scopeConfig
     ) internal pure returns (ExecutionOptions options, address pointer) {
-        options = ExecutionOptions((uint256(scopeConfig) >> 160));
-        pointer = address(uint160(uint256(scopeConfig)));
+        options = ExecutionOptions((scopeConfig >> 160) & 0x3);
+        pointer = address(uint160(scopeConfig));
     }
 }

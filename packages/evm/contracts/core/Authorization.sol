@@ -102,7 +102,7 @@ abstract contract Authorization is RolesStorage {
                     : (bytes32(bytes4(data)) >> 160)
             );
 
-        bytes32 scopeConfig = role.scopeConfig[key];
+        uint256 scopeConfig = role.scopeConfig[key];
         if (scopeConfig == 0) {
             return
                 Result(
@@ -119,21 +119,18 @@ abstract contract Authorization is RolesStorage {
 
     /// @dev Checks function permission and evaluates conditions.
     function _function(
-        bytes32 scopeConfig,
+        uint256 scopeConfig,
         bytes calldata data,
         Consumption[] memory consumptions,
         Transaction memory transaction
     ) private view returns (Result memory result) {
-        (ExecutionOptions options, address pointer) = ScopeConfig.unpack(
-            scopeConfig
-        );
-
+        uint256 options = (scopeConfig >> 160);
         /*
          * ExecutionOptions can send:
          *  options == ExecutionOptions.Send ||
          *  options == ExecutionOptions.Both
          */
-        if (uint8(options) & 1 == 0 && transaction.value > 0) {
+        if (options & 1 == 0 && transaction.value > 0) {
             return Result(Status.SendNotAllowed, consumptions, 0);
         }
 
@@ -143,11 +140,12 @@ abstract contract Authorization is RolesStorage {
          * options == ExecutionOptions.Both
          */
         if (
-            uint8(options) & 2 == 0 &&
-            transaction.operation == Operation.DelegateCall
+            options & 2 == 0 && transaction.operation == Operation.DelegateCall
         ) {
             return Result(Status.DelegateCallNotAllowed, consumptions, 0);
         }
+
+        address pointer = address(uint160(scopeConfig));
 
         (
             Condition memory condition,
@@ -160,20 +158,18 @@ abstract contract Authorization is RolesStorage {
             payload = AbiDecoder.inspect(data, layout);
         }
 
-        Context memory context = Context(
-            transaction.to,
-            transaction.value,
-            transaction.operation,
-            new bytes32[](maxPluckIndex + 1)
-        );
-
         return
             ConditionLogic.evaluate(
                 data,
                 condition,
                 payload,
                 consumptions,
-                context
+                Context(
+                    transaction.to,
+                    transaction.value,
+                    transaction.operation,
+                    new bytes32[](maxPluckIndex + 1)
+                )
             );
     }
 }
