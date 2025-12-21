@@ -2,7 +2,7 @@
 pragma solidity >=0.8.17 <0.9.0;
 
 import "../../common/AllowanceLoader.sol";
-import "../../periphery/interfaces/IPriceAdapter.sol";
+import "../../periphery/interfaces/IPricing.sol";
 
 import {Consumption} from "../../types/Allowance.sol";
 
@@ -42,8 +42,8 @@ library WithinAllowanceChecker {
         }
     }
 
-    /// @dev Converts value to base denomination via price adapter encoded in
-    ///      compValue. Returns value unchanged if no adapter configured.
+    /// @dev Converts value to base denomination via pricing contract encoded in
+    ///      compValue. Returns value unchanged if no pricing configured.
     function _convert(
         uint256 value,
         bytes memory compValue
@@ -66,7 +66,7 @@ library WithinAllowanceChecker {
             uint8 accrueDecimals = uint8(compValue[52]);
             uint8 paramDecimals = uint8(compValue[53]);
 
-            uint256 price = IPriceAdapter(adapter).getPrice();
+            uint256 price = IPricing(adapter).getPrice();
 
             /*
              *             value × price     10^accrueDecimals

@@ -118,7 +118,6 @@ const checkParamTypeIntegrity = (condition: Condition): void => {
 
     [Operator.WithinAllowance]: [Encoding.Static],
 
-    [Operator.EtherWithinAllowance]: [Encoding.None],
     [Operator.CallWithinAllowance]: [Encoding.None],
   }
   const compatibleTypes = COMPATIBLE_TYPES[condition.operator]

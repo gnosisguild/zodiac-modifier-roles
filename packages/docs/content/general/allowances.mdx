@@ -50,15 +50,13 @@ Upon consumption of an allowance, the `balance` and `timestamp` fields will auto
 
 ## Usage
 
-There are three different ways allowances can be used:
+There are two different ways allowances can be used:
 
-### Allowance on a `uint` field
+### Allowance on a `uint` field or Ether value
 
 To define an allowance on any `uint` field in the transaction calldata, use a [`WithinAllowance`](/general/conditions#withinallowance) condition.
 
-### Allowance on the Ether `value`
-
-To define an allowance on the Ether `value` sent with the transaction, use an [`EtherWithinAllowance`](/general/conditions#etherwithinallowance) condition.
+To define an allowance on the Ether `value` sent with the transaction, use [`WithinAllowance`](/general/conditions#withinallowance) with `Encoding.EtherValue` parameter type.
 
 ### Call Rate Limits
 

@@ -134,8 +134,8 @@ describe("Topology Library", () => {
                 children: [],
               },
               {
-                paramType: Encoding.None,
-                operator: Operator.EtherWithinAllowance,
+                paramType: Encoding.EtherValue,
+                operator: Operator.WithinAllowance,
                 children: [],
               },
               {
@@ -263,11 +263,6 @@ describe("Topology Library", () => {
                     operator: Operator.WithinRatio,
                     children: [],
                   },
-                  {
-                    paramType: Encoding.None,
-                    operator: Operator.EtherWithinAllowance,
-                    children: [],
-                  },
                 ],
               },
               {
@@ -341,11 +336,6 @@ describe("Topology Library", () => {
               {
                 paramType: Encoding.None,
                 operator: Operator.WithinRatio,
-                children: [],
-              },
-              {
-                paramType: Encoding.None,
-                operator: Operator.EtherWithinAllowance,
                 children: [],
               },
               {
@@ -459,7 +449,7 @@ describe("Topology Library", () => {
           },
           {
             paramType: Encoding.None,
-            operator: Operator.EtherWithinAllowance,
+            operator: Operator.CallWithinAllowance,
             children: [],
           },
         ],
