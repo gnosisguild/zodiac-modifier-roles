@@ -50,10 +50,17 @@ enum Status {
     LeadingBytesNotAMatch
 }
 
+struct Transaction {
+    address to;
+    uint256 value;
+    Operation operation;
+}
+
 struct Context {
     address to;
     uint256 value;
     Operation operation;
+    bytes32[] pluckedValues;
 }
 
 struct Result {

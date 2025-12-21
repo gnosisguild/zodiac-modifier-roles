@@ -1,16 +1,13 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "../common/AbiDecoder.sol";
 import "../common/ImmutableStorage.sol";
 import "../common/ScopeConfig.sol";
 import "../periphery/interfaces/ITransactionUnwrapper.sol";
 
-import "./Storage.sol";
 import "./evaluate/ConditionLogic.sol";
 import "./serialize/ConditionUnpacker.sol";
-
-import "../types/Types.sol";
+import "./Storage.sol";
 
 /**
  * @title Authorization - Authorizes transactions based on target clearance
@@ -27,13 +24,18 @@ abstract contract Authorization is RolesStorage {
         Operation operation
     ) internal view returns (Consumption[] memory) {
         Result memory result;
-        Context memory context = Context(to, value, operation);
+        Transaction memory transaction = Transaction(to, value, operation);
 
         address adapter = unwrappers[_key(to, bytes4(data))];
         if (adapter == address(0)) {
-            result = _transaction(roleKey, data, result.consumptions, context);
+            result = _transaction(
+                roleKey,
+                data,
+                result.consumptions,
+                transaction
+            );
         } else {
-            result = _transactionBundle(adapter, roleKey, data, context);
+            result = _transactionBundle(adapter, roleKey, data, transaction);
         }
         if (result.status != Status.Ok) {
             revert ConditionViolation(result.status, result.info);
@@ -46,29 +48,25 @@ abstract contract Authorization is RolesStorage {
         address adapter,
         bytes32 roleKey,
         bytes calldata data,
-        Context memory context
+        Transaction memory transaction
     ) private view returns (Result memory result) {
         try
             ITransactionUnwrapper(adapter).unwrap(
-                context.to,
-                context.value,
+                transaction.to,
+                transaction.value,
                 data,
-                context.operation
+                transaction.operation
             )
-        returns (UnwrappedTransaction[] memory transactions) {
-            for (uint256 i; i < transactions.length; ++i) {
-                UnwrappedTransaction memory transaction = transactions[i];
-                uint256 left = transaction.dataLocation;
-                uint256 right = left + transaction.dataSize;
+        returns (UnwrappedTransaction[] memory unwrapped) {
+            for (uint256 i; i < unwrapped.length; ++i) {
+                UnwrappedTransaction memory entry = unwrapped[i];
+                uint256 left = entry.dataLocation;
+                uint256 right = left + entry.dataSize;
                 result = _transaction(
                     roleKey,
                     data[left:right],
                     result.consumptions,
-                    Context(
-                        transaction.to,
-                        transaction.value,
-                        transaction.operation
-                    )
+                    Transaction(entry.to, entry.value, entry.operation)
                 );
                 if (result.status != Status.Ok) {
                     return result;
@@ -84,7 +82,7 @@ abstract contract Authorization is RolesStorage {
         bytes32 roleKey,
         bytes calldata data,
         Consumption[] memory consumptions,
-        Context memory context
+        Transaction memory transaction
     ) private view returns (Result memory) {
         Role storage role = roles[roleKey];
 
@@ -92,14 +90,17 @@ abstract contract Authorization is RolesStorage {
             revert FunctionSignatureTooShort();
         }
 
-        Clearance clearance = role.clearance[context.to];
+        Clearance clearance = role.clearance[transaction.to];
         if (clearance == Clearance.None) {
             return Result(Status.TargetAddressNotAllowed, consumptions, 0);
         }
 
-        bytes32 key = clearance == Clearance.Target
-            ? bytes32(bytes20(context.to)) | (~bytes32(0) >> 160)
-            : bytes32(bytes20(context.to)) | (bytes32(bytes4(data)) >> 160);
+        bytes32 key = bytes32(bytes20(transaction.to)) |
+            (
+                clearance == Clearance.Target
+                    ? (~bytes32(0) >> 160)
+                    : (bytes32(bytes4(data)) >> 160)
+            );
 
         bytes32 scopeConfig = role.scopeConfig[key];
         if (scopeConfig == 0) {
@@ -113,7 +114,7 @@ abstract contract Authorization is RolesStorage {
                 );
         }
 
-        return _function(scopeConfig, data, consumptions, context);
+        return _function(scopeConfig, data, consumptions, transaction);
     }
 
     /// @dev Checks function permission and evaluates conditions if present.
@@ -121,35 +122,56 @@ abstract contract Authorization is RolesStorage {
         bytes32 scopeConfig,
         bytes calldata data,
         Consumption[] memory consumptions,
-        Context memory context
-    ) private view returns (Result memory) {
+        Transaction memory transaction
+    ) private view returns (Result memory result) {
         (
             bool isWildcarded,
             ExecutionOptions options,
             address pointer
         ) = ScopeConfig.unpack(scopeConfig);
 
-        Status status = _executionOptions(
-            context.value,
-            context.operation,
-            options
-        );
-        if (status != Status.Ok) {
-            return Result(status, consumptions, 0);
+        /*
+         * ExecutionOptions can send:
+         *  options == ExecutionOptions.Send ||
+         *  options == ExecutionOptions.Both
+         */
+        if (uint8(options) & 1 == 0 && transaction.value > 0) {
+            return Result(Status.SendNotAllowed, consumptions, 0);
+        }
+
+        /*
+         * ExecutionOptions can delegateCall:
+         * options == ExecutionOptions.DelegateCall ||
+         * options == ExecutionOptions.Both
+         */
+        if (
+            uint8(options) & 2 == 0 &&
+            transaction.operation == Operation.DelegateCall
+        ) {
+            return Result(Status.DelegateCallNotAllowed, consumptions, 0);
         }
 
         if (isWildcarded) {
             return Result(Status.Ok, consumptions, 0);
         }
 
-        (Condition memory condition, Layout memory layout) = ConditionUnpacker
-            .unpack(ImmutableStorage.load(pointer));
+        (
+            Condition memory condition,
+            Layout memory layout,
+            uint256 maxPluckIndex
+        ) = ConditionUnpacker.unpack(ImmutableStorage.load(pointer));
 
-        // Its possible that we have a fully nonStructural tree
         Payload memory payload;
         if (layout.encoding != Encoding.None) {
             payload = AbiDecoder.inspect(data, layout);
         }
+
+        Context memory context = Context(
+            transaction.to,
+            transaction.value,
+            transaction.operation,
+            new bytes32[](maxPluckIndex + 1)
+        );
 
         return
             ConditionLogic.evaluate(
@@ -159,31 +181,5 @@ abstract contract Authorization is RolesStorage {
                 consumptions,
                 context
             );
-    }
-
-    /// @dev Validates that the execution mode (value transfer and/or
-    ///      delegatecall) is permitted by the current configuration.
-    function _executionOptions(
-        uint256 value,
-        Operation operation,
-        ExecutionOptions options
-    ) private pure returns (Status) {
-        if (
-            value > 0 &&
-            options != ExecutionOptions.Send &&
-            options != ExecutionOptions.Both
-        ) {
-            return Status.SendNotAllowed;
-        }
-
-        if (
-            operation == Operation.DelegateCall &&
-            options != ExecutionOptions.DelegateCall &&
-            options != ExecutionOptions.Both
-        ) {
-            return Status.DelegateCallNotAllowed;
-        }
-
-        return Status.Ok;
     }
 }

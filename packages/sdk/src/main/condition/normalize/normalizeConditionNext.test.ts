@@ -43,11 +43,6 @@ const OR = (...children: Condition[]): Condition => ({
   children,
 })
 
-const ETHER_ALLOWANCE = (): Condition => ({
-  paramType: Encoding.None,
-  operator: Operator.EtherWithinAllowance,
-})
-
 const CALL_ALLOWANCE = (): Condition => ({
   paramType: Encoding.None,
   operator: Operator.CallWithinAllowance,
@@ -100,7 +95,7 @@ describe("normalizeCondition", () => {
       it("keeps allowance conditions while pruning Pass nodes", () => {
         const input = MATCHES(
           Encoding.AbiEncoded,
-          ETHER_ALLOWANCE(),
+          CALL_ALLOWANCE(),
           PASS(),
           PASS()
         )
@@ -110,7 +105,7 @@ describe("normalizeCondition", () => {
         expect(result).toEqual({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
-          children: [PASS(), ETHER_ALLOWANCE()],
+          children: [PASS(), CALL_ALLOWANCE()],
         })
       })
 
@@ -380,7 +375,6 @@ describe("normalizeCondition", () => {
     it("handles conditions with allowance operators", () => {
       const input = MATCHES(
         Encoding.AbiEncoded,
-        ETHER_ALLOWANCE(),
         CALL_ALLOWANCE(),
         PASS()
       )
@@ -390,7 +384,7 @@ describe("normalizeCondition", () => {
       expect(result).toEqual({
         paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
-        children: [PASS(), ETHER_ALLOWANCE(), CALL_ALLOWANCE()],
+        children: [PASS(), CALL_ALLOWANCE()],
       })
     })
 

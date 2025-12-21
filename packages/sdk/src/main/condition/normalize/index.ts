@@ -48,11 +48,10 @@ const prunePassNodes = (condition: Condition): Condition => {
   if (!canPrune) return condition
 
   const isGlobalAllowance = (child: Condition) =>
-    child.operator === Operator.EtherWithinAllowance ||
     child.operator === Operator.CallWithinAllowance
 
   // keep all children nodes with Encoding.None
-  // (EtherWithinAllowance, CallWithinAllowance conditions appear as children of AbiEncoded.Matches)
+  // (CallWithinAllowance conditions appear as children of AbiEncoded.Matches)
   const tailChildren = condition.children.filter(isGlobalAllowance)
   const prunableChildren = condition.children.filter(
     (child) => !isGlobalAllowance(child)
