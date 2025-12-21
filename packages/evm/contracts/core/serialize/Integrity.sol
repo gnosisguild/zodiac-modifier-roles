@@ -260,13 +260,6 @@ library Integrity {
                     revert IRolesError.UnsuitableParent(i);
                 }
             }
-
-            // EtherValue cannot be direct child of Array
-            if (conditions[i].paramType == Encoding.EtherValue) {
-                if (_firstStructuralParent(conditions, i) == Encoding.Array) {
-                    revert IRolesError.UnsuitableParent(i);
-                }
-            }
         }
     }
 
@@ -333,21 +326,20 @@ library Integrity {
                 if (sChildCount == 0) {
                     revert IRolesError.UnsuitableChildCount(i);
                 }
-
-                if (
-                    (condition.operator == Operator.ArraySome ||
-                        condition.operator == Operator.ArrayEvery) &&
-                    childCount != 1
-                ) {
-                    revert IRolesError.UnsuitableChildCount(i);
-                }
-
                 // Enforce only structural children for array iteration operators
                 if (
                     (condition.operator == Operator.ArraySome ||
                         condition.operator == Operator.ArrayEvery ||
                         condition.operator == Operator.ArrayTailMatches) &&
                     childCount != sChildCount
+                ) {
+                    revert IRolesError.UnsuitableChildCount(i);
+                }
+
+                if (
+                    (condition.operator == Operator.ArraySome ||
+                        condition.operator == Operator.ArrayEvery) &&
+                    childCount != 1
                 ) {
                     revert IRolesError.UnsuitableChildCount(i);
                 }
@@ -595,25 +587,5 @@ library Integrity {
 
     function _isWordLike(Encoding encoding) private pure returns (bool) {
         return encoding == Encoding.Static || encoding == Encoding.EtherValue;
-    }
-
-    function _firstStructuralParent(
-        ConditionFlat[] memory conditions,
-        uint256 i
-    ) private pure returns (Encoding result) {
-        while (true) {
-            ConditionFlat memory current = conditions[i];
-
-            if (current.parent == i) return Encoding.None; // reached root
-
-            ConditionFlat memory parent = conditions[current.parent];
-
-            bool isStructural = parent.paramType != Encoding.None &&
-                parent.paramType != Encoding.EtherValue;
-            if (isStructural) {
-                return parent.paramType;
-            }
-            i = current.parent;
-        }
     }
 }

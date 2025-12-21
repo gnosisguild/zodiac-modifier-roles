@@ -3186,51 +3186,6 @@ describe("Integrity", () => {
   });
 
   describe("Type matching with non-structural children", () => {
-    it("allows Array with matching Static children and non-structural WithinRatio", async () => {
-      const { enforce } = await loadFixture(setup);
-
-      const compValue = encodeWithinRatioCompValue({
-        referenceIndex: 0,
-        referenceDecimals: 0,
-        relativeIndex: 1,
-        relativeDecimals: 0,
-        minRatio: 0,
-        maxRatio: 15000,
-      });
-
-      // All structural children (Static) match, non-structural WithinRatio should be ignored
-      // First two Static children are Pluck to populate indices for WithinRatio
-      const conditions = flattenCondition({
-        paramType: Encoding.AbiEncoded,
-        operator: Operator.Matches,
-        children: [
-          {
-            paramType: Encoding.Array,
-            operator: Operator.Matches,
-            children: [
-              {
-                paramType: Encoding.Static,
-                operator: Operator.Pluck,
-                compValue: "0x00",
-              },
-              {
-                paramType: Encoding.Static,
-                operator: Operator.Pluck,
-                compValue: "0x01",
-              },
-              { paramType: Encoding.Static, operator: Operator.Pass },
-              {
-                paramType: Encoding.None,
-                operator: Operator.WithinRatio,
-                compValue,
-              },
-            ],
-          },
-        ],
-      });
-      await expect(enforce(conditions)).to.not.be.reverted;
-    });
-
     it("allows Tuple with matching Static children and non-structural WithinRatio", async () => {
       const { enforce } = await loadFixture(setup);
 
@@ -3391,19 +3346,10 @@ describe("Integrity", () => {
       await expect(enforce(conditions)).to.not.be.reverted;
     });
 
-    it("rejects Array with non-matching structural children despite non-structural child", async () => {
+    it("rejects Array with non-matching structural children", async () => {
       const { mock, enforce } = await loadFixture(setup);
 
-      const compValue = encodeWithinRatioCompValue({
-        referenceIndex: 0,
-        referenceDecimals: 0,
-        relativeIndex: 1,
-        relativeDecimals: 0,
-        minRatio: 0,
-        maxRatio: 15000,
-      });
-
-      // Mixing Static and Dynamic structural children should still fail
+      // Mixing Static and Dynamic structural children should fail
       const conditions = flattenCondition({
         paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
@@ -3414,11 +3360,6 @@ describe("Integrity", () => {
             children: [
               { paramType: Encoding.Static, operator: Operator.Pass },
               { paramType: Encoding.Dynamic, operator: Operator.Pass }, // Doesn't match previous
-              {
-                paramType: Encoding.None,
-                operator: Operator.WithinRatio,
-                compValue,
-              },
             ],
           },
         ],
@@ -3628,7 +3569,7 @@ describe("Integrity", () => {
         .withArgs(1);
     });
 
-    it("should revert if EtherValue has Array as first structural parent", async () => {
+    it("should revert if ArrayPrimitive has non-structural children (EtherValue)", async () => {
       const { mock, enforce } = await loadFixture(setup);
       const conditions = flattenCondition({
         paramType: Encoding.AbiEncoded,
@@ -3647,8 +3588,8 @@ describe("Integrity", () => {
         ],
       });
       await expect(enforce(conditions))
-        .to.be.revertedWithCustomError(mock, "UnsuitableParent")
-        .withArgs(2);
+        .to.be.revertedWithCustomError(mock, "UnsuitableChildCount")
+        .withArgs(1);
     });
 
     it("should revert if EtherValue is used with unsupported operator (Matches)", async () => {

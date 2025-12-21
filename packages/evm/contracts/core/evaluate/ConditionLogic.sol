@@ -272,8 +272,12 @@ library ConditionLogic {
     }
 
     /*
-     * Slice extracts a portion from calldata and presents it
-     * as a static-like payload for downstream comparisons.
+     * Slice creates a new Payload that points to a byte-range within the
+     * current payload, so the child transparently evaluates against that
+     * slice.
+     *
+     * The child will read the slice via __input, which right-aligns values
+     * <=32 bytes to match comparison compValue encoding.
      */
     function _slice(
         bytes calldata data,
