@@ -117,18 +117,16 @@ abstract contract Authorization is RolesStorage {
         return _function(scopeConfig, data, consumptions, transaction);
     }
 
-    /// @dev Checks function permission and evaluates conditions if present.
+    /// @dev Checks function permission and evaluates conditions.
     function _function(
         bytes32 scopeConfig,
         bytes calldata data,
         Consumption[] memory consumptions,
         Transaction memory transaction
     ) private view returns (Result memory result) {
-        (
-            bool isWildcarded,
-            ExecutionOptions options,
-            address pointer
-        ) = ScopeConfig.unpack(scopeConfig);
+        (ExecutionOptions options, address pointer) = ScopeConfig.unpack(
+            scopeConfig
+        );
 
         /*
          * ExecutionOptions can send:
@@ -149,10 +147,6 @@ abstract contract Authorization is RolesStorage {
             transaction.operation == Operation.DelegateCall
         ) {
             return Result(Status.DelegateCallNotAllowed, consumptions, 0);
-        }
-
-        if (isWildcarded) {
-            return Result(Status.Ok, consumptions, 0);
         }
 
         (

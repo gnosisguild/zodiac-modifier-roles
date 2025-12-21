@@ -32,12 +32,10 @@ import {Clearance} from "../types/Permission.sol";
  *      │
  *      ├─ not set ───────────────────► function blocked
  *      │
- *      ├─ wildcarded ────────────────► function allowed, no parameter checks
- *      │                               + ExecutionOptions
- *      │
- *      └─ scoped ────────────────────► function allowed with conditions
+ *      └─ set ───────────────────────► function allowed with conditions
  *                                      + ExecutionOptions
  *                                      + Condition tree (parameter constraints)
+ *                                      (Pass condition when no constraints)
  *
  * Allowances (separate storage, referenced by conditions)
  */
@@ -150,23 +148,21 @@ abstract contract Setup is RolesStorage {
     /// @dev Allows transactions to a target address, optionally with conditions.
     /// @param roleKey identifier of the role to be modified.
     /// @param targetAddress Destination address of transaction.
-    /// @param conditions The conditions to enforce on all calls (empty for wildcarded).
+    /// @param conditions The conditions to enforce on all calls (empty for pass-through).
     /// @param options designates if a transaction can send ether and/or delegatecall to target.
     function allowTarget(
         bytes32 roleKey,
         address targetAddress,
-        ConditionFlat[] calldata conditions,
+        ConditionFlat[] memory conditions,
         ExecutionOptions options
     ) external onlyOwner {
         bytes32 key = bytes32(bytes20(targetAddress)) | (~bytes32(0) >> 160);
 
         roles[roleKey].clearance[targetAddress] = Clearance.Target;
-        roles[roleKey].scopeConfig[key] = conditions.length == 0
-            ? ScopeConfig.packAsWildcarded(options)
-            : ScopeConfig.pack(
-                options,
-                ConditionsTransform.packAndStore(conditions)
-            );
+        roles[roleKey].scopeConfig[key] = ScopeConfig.pack(
+            options,
+            ConditionsTransform.packAndStore(_withPassDefault(conditions))
+        );
 
         emit AllowTarget(roleKey, targetAddress, conditions, options);
     }
@@ -201,21 +197,19 @@ abstract contract Setup is RolesStorage {
     /// @param roleKey identifier of the role to be modified.
     /// @param targetAddress Destination address of transaction.
     /// @param selector 4 byte function selector.
-    /// @param conditions The conditions to enforce (empty for wildcarded).
+    /// @param conditions The conditions to enforce (empty for pass-through).
     /// @param options designates if a transaction can send ether and/or delegatecall to target.
     function allowFunction(
         bytes32 roleKey,
         address targetAddress,
         bytes4 selector,
-        ConditionFlat[] calldata conditions,
+        ConditionFlat[] memory conditions,
         ExecutionOptions options
     ) external onlyOwner {
-        roles[roleKey].scopeConfig[_key(targetAddress, selector)] = conditions
-            .length == 0
-            ? ScopeConfig.packAsWildcarded(options)
-            : ScopeConfig.pack(
+        roles[roleKey].scopeConfig[_key(targetAddress, selector)] = ScopeConfig
+            .pack(
                 options,
-                ConditionsTransform.packAndStore(conditions)
+                ConditionsTransform.packAndStore(_withPassDefault(conditions))
             );
 
         emit AllowFunction(
@@ -298,5 +292,15 @@ abstract contract Setup is RolesStorage {
     ) external onlyOwner {
         unwrappers[bytes32(bytes20(to)) | (bytes32(selector) >> 160)] = adapter;
         emit SetUnwrapAdapter(to, selector, adapter);
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                               INTERNALS
+    //////////////////////////////////////////////////////////////*/
+
+    function _withPassDefault(
+        ConditionFlat[] memory conditions
+    ) private pure returns (ConditionFlat[] memory) {
+        return conditions.length > 0 ? conditions : new ConditionFlat[](1);
     }
 }
