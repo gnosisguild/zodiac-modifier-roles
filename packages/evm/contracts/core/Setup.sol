@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "../common/ScopeConfig.sol";
-
 import "./serialize/ConditionsTransform.sol";
 import "./Storage.sol";
 
@@ -157,14 +155,9 @@ abstract contract Setup is RolesStorage {
         ExecutionOptions options
     ) external onlyOwner {
         bytes32 key = bytes32(bytes20(targetAddress)) | (~bytes32(0) >> 160);
-        address pointer = ConditionsTransform.packAndStore(
-            _withPassDefault(conditions)
-        );
 
         roles[roleKey].clearance[targetAddress] = Clearance.Target;
-        roles[roleKey].scopeConfig[key] =
-            (uint256(options) << 160) |
-            uint256(uint160(pointer));
+        roles[roleKey].scopeConfig[key] = _packScopeConfig(conditions, options);
 
         emit AllowTarget(roleKey, targetAddress, conditions, options);
     }
@@ -208,11 +201,9 @@ abstract contract Setup is RolesStorage {
         ConditionFlat[] memory conditions,
         ExecutionOptions options
     ) external onlyOwner {
-        roles[roleKey].scopeConfig[_key(targetAddress, selector)] = ScopeConfig
-            .pack(
-                options,
-                ConditionsTransform.packAndStore(_withPassDefault(conditions))
-            );
+        bytes32 key = _key(targetAddress, selector);
+
+        roles[roleKey].scopeConfig[key] = _packScopeConfig(conditions, options);
 
         emit AllowFunction(
             roleKey,
@@ -300,9 +291,16 @@ abstract contract Setup is RolesStorage {
                                INTERNALS
     //////////////////////////////////////////////////////////////*/
 
-    function _withPassDefault(
-        ConditionFlat[] memory conditions
-    ) private pure returns (ConditionFlat[] memory) {
-        return conditions.length > 0 ? conditions : new ConditionFlat[](1);
+    /// @dev Packs ExecutionOptions and condition pointer into a single uint256.
+    /// If conditions is empty, stores a single zero-initialized ConditionFlat,
+    /// which evaluates as Operator.Pass (allowing any parameters).
+    function _packScopeConfig(
+        ConditionFlat[] memory conditions,
+        ExecutionOptions options
+    ) private returns (uint256) {
+        address pointer = ConditionsTransform.packAndStore(
+            conditions.length > 0 ? conditions : new ConditionFlat[](1)
+        );
+        return (uint256(options) << 160) | uint160(pointer);
     }
 }
