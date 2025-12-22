@@ -15,20 +15,20 @@ const AddressOne = "0x0000000000000000000000000000000000000001";
 
 describe("Operator - Custom", async () => {
   async function setup() {
-    const { roles, scopeFunction, invoke } =
+    const { roles, allowFunction, invoke } =
       await loadFixture(setupOneParamStatic);
 
     const CustomChecker =
       await hre.ethers.getContractFactory("TestCustomChecker");
     const customChecker = await CustomChecker.deploy();
 
-    return { roles, customChecker, scopeFunction, invoke };
+    return { roles, customChecker, allowFunction, invoke };
   }
   it("evaluates operator Custom - result is check pass", async () => {
-    const { customChecker, scopeFunction, invoke } = await loadFixture(setup);
+    const { customChecker, allowFunction, invoke } = await loadFixture(setup);
     const customerCheckerAddress = await customChecker.getAddress();
     const extra = "aabbccddeeff112233445566";
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -47,11 +47,11 @@ describe("Operator - Custom", async () => {
     await expect(invoke(101)).to.not.be.reverted;
   });
   it("evaluates operator Custom - result is check fail", async () => {
-    const { roles, customChecker, scopeFunction, invoke } =
+    const { roles, customChecker, allowFunction, invoke } =
       await loadFixture(setup);
     const customerCheckerAddress = await customChecker.getAddress();
     const extra = "aabbccddeeff112233445566";
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -75,11 +75,11 @@ describe("Operator - Custom", async () => {
       );
   });
   it("evaluates operator Custom - result is check fail due to operation", async () => {
-    const { roles, customChecker, scopeFunction, invoke } =
+    const { roles, customChecker, allowFunction, invoke } =
       await loadFixture(setup);
     const customerCheckerAddress = await customChecker.getAddress();
     const extra = "aabbccddeeff112233445566";
-    await scopeFunction(
+    await allowFunction(
       [
         {
           parent: 0,
@@ -106,14 +106,14 @@ describe("Operator - Custom", async () => {
   });
 
   it("supports unlimited extra bytes (more than 12 bytes)", async () => {
-    const { roles, customChecker, scopeFunction, invoke } =
+    const { roles, customChecker, allowFunction, invoke } =
       await loadFixture(setup);
     const customerCheckerAddress = await customChecker.getAddress();
     // 64 bytes of extra data (well beyond the old 12-byte limit)
     const extra =
       "0102030405060708091011121314151617181920212223242526272829303132" +
       "3334353637383940414243444546474849505152535455565758596061626364";
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -141,10 +141,10 @@ describe("Operator - Custom", async () => {
   });
 
   it("supports empty extra bytes", async () => {
-    const { customChecker, scopeFunction, invoke } = await loadFixture(setup);
+    const { customChecker, allowFunction, invoke } = await loadFixture(setup);
     const customerCheckerAddress = await customChecker.getAddress();
     // No extra bytes - just the address
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -164,9 +164,9 @@ describe("Operator - Custom", async () => {
   });
 
   it.skip("adapter does not implement ICustomChecker", async () => {
-    const { roles, scopeFunction, invoke } = await loadFixture(setup);
+    const { roles, allowFunction, invoke } = await loadFixture(setup);
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,

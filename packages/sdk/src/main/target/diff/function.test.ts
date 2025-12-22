@@ -36,7 +36,7 @@ suite("diffFunction", () => {
     expect(plus).toHaveLength(1)
     expect(plus).toEqual([
       {
-        call: "scopeFunction",
+        call: "allowFunction",
         roleKey,
         targetAddress,
         selector,
@@ -165,7 +165,7 @@ suite("diffFunction", () => {
     expect(plus).toHaveLength(0)
     expect(minus).toEqual([
       {
-        call: "scopeFunction",
+        call: "allowFunction",
         roleKey,
         targetAddress,
         selector,
@@ -200,7 +200,7 @@ suite("diffFunction", () => {
     expect(plus).toHaveLength(1)
     expect(plus).toEqual([
       {
-        call: "scopeFunction",
+        call: "allowFunction",
         roleKey,
         targetAddress,
         selector,
@@ -299,7 +299,7 @@ suite("diffFunction", () => {
     expect(plus).toHaveLength(1)
     expect(plus).toEqual([
       {
-        call: "scopeFunction",
+        call: "allowFunction",
         roleKey,
         targetAddress,
         selector,
@@ -335,7 +335,7 @@ suite("diffFunction", () => {
     expect(plus).toHaveLength(0)
     expect(minus).toEqual([
       {
-        call: "scopeFunction",
+        call: "allowFunction",
         roleKey,
         targetAddress,
         selector,

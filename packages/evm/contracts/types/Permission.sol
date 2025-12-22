@@ -17,5 +17,5 @@ enum ExecutionOptions {
 struct Role {
     mapping(address => uint256) members;
     mapping(address => Clearance) clearance;
-    mapping(bytes32 => bytes32) scopeConfig;
+    mapping(bytes32 => uint256) scopeConfig;
 }

@@ -70,6 +70,7 @@ interface IRolesEvent {
         bytes32 roleKey,
         address targetAddress,
         bytes4 selector,
+        ConditionFlat[] conditions,
         ExecutionOptions options
     );
 
@@ -78,15 +79,6 @@ interface IRolesEvent {
         bytes32 roleKey,
         address targetAddress,
         bytes4 selector
-    );
-
-    /// Emitted when a function is scoped with conditions
-    event ScopeFunction(
-        bytes32 roleKey,
-        address targetAddress,
-        bytes4 selector,
-        ConditionFlat[] conditions,
-        ExecutionOptions options
     );
 
     /// Emitted when an allowance is configured
