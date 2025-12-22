@@ -601,7 +601,7 @@ suite("diffTarget - Misc", () => {
 
     expect(plus).to.deep.equal([
       {
-        call: "scopeFunction",
+        call: "allowFunction",
         roleKey,
         targetAddress: "0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb",
         selector: "0x095ea7b3",
@@ -728,7 +728,7 @@ suite("diffTarget - Misc", () => {
       minus: [],
       plus: [
         {
-          call: "scopeFunction",
+          call: "allowFunction",
           roleKey,
           targetAddress: "0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb",
           selector: "0x095ea7b3",

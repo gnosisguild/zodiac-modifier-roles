@@ -11,7 +11,8 @@ contract TestCustomChecker is ICustomCondition {
         Operation operation,
         uint256 location,
         uint256 size,
-        bytes calldata extra
+        bytes calldata extra,
+        bytes32[] memory
     ) public pure returns (bool success, bytes32 reason) {
         uint256 param = uint256(bytes32(data[location:location + size]));
 

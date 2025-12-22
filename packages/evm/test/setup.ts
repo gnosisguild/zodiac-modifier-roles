@@ -10,8 +10,8 @@ import {
 
 import { ExecutionOptions } from "./utils";
 
-import { ConditionFlatStruct } from "../typechain-types/contracts/scoped-function/serialize/Integrity";
-import { TestContract } from "../typechain-types/contracts/test";
+import { ConditionFlatStruct } from "../typechain-types/contracts/core/Membership";
+import { TestContract } from "../typechain-types/contracts/__test__/fixtures/TestContract";
 
 const DEFAULT_ROLE_KEY =
   "0x000000000000000000000000000000000000000000000000000000000aabbcc1";
@@ -87,14 +87,14 @@ export async function setupAvatarAndRoles(roleKey = DEFAULT_ROLE_KEY) {
 
   const testContractAddress = await testContract.getAddress();
 
-  const scopeFunction = (
+  const allowFunction = (
     selector: string,
     conditions: ConditionFlatStruct[],
     options?: ExecutionOptions,
   ) =>
     roles
       .connect(owner)
-      .scopeFunction(
+      .allowFunction(
         roleKey,
         testContractAddress,
         selector,
@@ -126,7 +126,7 @@ export async function setupAvatarAndRoles(roleKey = DEFAULT_ROLE_KEY) {
     roles,
     roleKey,
     testContract,
-    scopeFunction,
+    allowFunction,
     execTransactionFromModule,
   };
 }
@@ -156,14 +156,14 @@ export async function setupRoles(roleKey = DEFAULT_ROLE_KEY) {
 
   const testContractAddress = await testContract.getAddress();
 
-  const scopeFunction = (
+  const allowFunction = (
     selector: string,
     conditions: ConditionFlatStruct[],
     options?: ExecutionOptions,
   ) =>
     roles
       .connect(owner)
-      .scopeFunction(
+      .allowFunction(
         roleKey,
         testContractAddress,
         selector,
@@ -195,7 +195,7 @@ export async function setupRoles(roleKey = DEFAULT_ROLE_KEY) {
     roles,
     roleKey,
     testContract,
-    scopeFunction,
+    allowFunction,
     execTransactionFromModule,
   };
 }
@@ -206,7 +206,7 @@ export async function setupFnThatMaybeReturns() {
     member,
     roles,
     testContract,
-    scopeFunction,
+    allowFunction,
     execTransactionFromModule,
   } = await setupAvatarAndRoles();
 
@@ -222,10 +222,10 @@ export async function setupFnThatMaybeReturns() {
   return {
     owner,
     roles,
-    scopeFunction: (
+    allowFunction: (
       conditions: ConditionFlatStruct[],
       options?: ExecutionOptions,
-    ) => scopeFunction(selector, conditions, options),
+    ) => allowFunction(selector, conditions, options),
     invoke,
   };
 }
@@ -236,7 +236,7 @@ export async function setupOneParamStatic() {
     member,
     roles,
     testContract,
-    scopeFunction,
+    allowFunction,
     execTransactionFromModule,
   } = await setupAvatarAndRoles();
 
@@ -245,10 +245,10 @@ export async function setupOneParamStatic() {
     owner,
     member,
     roles,
-    scopeFunction: (
+    allowFunction: (
       conditions: ConditionFlatStruct[],
       options?: ExecutionOptions,
-    ) => scopeFunction(selector, conditions, options),
+    ) => allowFunction(selector, conditions, options),
     invoke: async (a: BigNumberish, operation: 0 | 1 = 0) =>
       execTransactionFromModule({
         data: (await testContract.oneParamStatic.populateTransaction(a)).data,
@@ -263,7 +263,7 @@ export async function setupTwoParamsStatic() {
     member,
     roles,
     testContract,
-    scopeFunction,
+    allowFunction,
     execTransactionFromModule,
   } = await setupAvatarAndRoles();
 
@@ -279,10 +279,10 @@ export async function setupTwoParamsStatic() {
     owner,
     member,
     roles,
-    scopeFunction: (
+    allowFunction: (
       conditions: ConditionFlatStruct[],
       options?: ExecutionOptions,
-    ) => scopeFunction(selector, conditions, options),
+    ) => allowFunction(selector, conditions, options),
     invoke,
   };
 }
@@ -292,7 +292,7 @@ export async function setupOneParamStaticTuple() {
     member,
     roles,
     testContract,
-    scopeFunction,
+    allowFunction,
     execTransactionFromModule,
   } = await setupAvatarAndRoles();
 
@@ -311,10 +311,10 @@ export async function setupOneParamStaticTuple() {
     roles,
     owner,
     member,
-    scopeFunction: (
+    allowFunction: (
       conditions: ConditionFlatStruct[],
       options?: ExecutionOptions,
-    ) => scopeFunction(selector, conditions, options),
+    ) => allowFunction(selector, conditions, options),
     invoke,
   };
 }
@@ -324,7 +324,7 @@ export async function setupOneParamStaticNestedTuple() {
     member,
     roles,
     testContract,
-    scopeFunction,
+    allowFunction,
     execTransactionFromModule,
   } = await setupAvatarAndRoles();
 
@@ -344,10 +344,10 @@ export async function setupOneParamStaticNestedTuple() {
     roles,
     owner,
     member,
-    scopeFunction: (
+    allowFunction: (
       conditions: ConditionFlatStruct[],
       options?: ExecutionOptions,
-    ) => scopeFunction(selector, conditions, options),
+    ) => allowFunction(selector, conditions, options),
     invoke,
   };
 }
@@ -358,7 +358,7 @@ export async function setupOneParamArrayOfBytes() {
     member,
     roles,
     testContract,
-    scopeFunction,
+    allowFunction,
     execTransactionFromModule,
   } = await setupAvatarAndRoles();
 
@@ -369,10 +369,10 @@ export async function setupOneParamArrayOfBytes() {
     owner,
     member,
     roles,
-    scopeFunction: (
+    allowFunction: (
       conditions: ConditionFlatStruct[],
       options?: ExecutionOptions,
-    ) => scopeFunction(selector, conditions, options),
+    ) => allowFunction(selector, conditions, options),
     invoke: async (params: string[]) =>
       execTransactionFromModule({
         data: (
@@ -388,7 +388,7 @@ export async function setupTwoParamsStaticTupleStatic() {
     member,
     roles,
     testContract,
-    scopeFunction,
+    allowFunction,
     execTransactionFromModule,
   } = await setupAvatarAndRoles();
 
@@ -408,10 +408,10 @@ export async function setupTwoParamsStaticTupleStatic() {
     roles,
     owner,
     member,
-    scopeFunction: (
+    allowFunction: (
       conditions: ConditionFlatStruct[],
       options?: ExecutionOptions,
-    ) => scopeFunction(selector, conditions, options),
+    ) => allowFunction(selector, conditions, options),
     invoke,
   };
 }
@@ -422,7 +422,7 @@ export async function setupTwoParamsStaticDynamic() {
     member,
     roles,
     testContract,
-    scopeFunction,
+    allowFunction,
     execTransactionFromModule,
   } = await setupAvatarAndRoles();
 
@@ -443,10 +443,10 @@ export async function setupTwoParamsStaticDynamic() {
     owner,
     member,
     testContract,
-    scopeFunction: (
+    allowFunction: (
       conditions: ConditionFlatStruct[],
       options?: ExecutionOptions,
-    ) => scopeFunction(selector, conditions, options),
+    ) => allowFunction(selector, conditions, options),
     invoke,
   };
 }
@@ -456,7 +456,7 @@ export async function setupOneParamDynamicTuple() {
     member,
     roles,
     testContract,
-    scopeFunction,
+    allowFunction,
     execTransactionFromModule,
   } = await setupAvatarAndRoles();
 
@@ -475,10 +475,10 @@ export async function setupOneParamDynamicTuple() {
     roles,
     owner,
     member,
-    scopeFunction: (
+    allowFunction: (
       conditions: ConditionFlatStruct[],
       options?: ExecutionOptions,
-    ) => scopeFunction(selector, conditions, options),
+    ) => allowFunction(selector, conditions, options),
     invoke,
   };
 }
@@ -488,7 +488,7 @@ export async function setupOneParamDynamicNestedTuple() {
     member,
     roles,
     testContract,
-    scopeFunction,
+    allowFunction,
     execTransactionFromModule,
   } = await setupAvatarAndRoles();
 
@@ -508,10 +508,10 @@ export async function setupOneParamDynamicNestedTuple() {
     roles,
     owner,
     member,
-    scopeFunction: (
+    allowFunction: (
       conditions: ConditionFlatStruct[],
       options?: ExecutionOptions,
-    ) => scopeFunction(selector, conditions, options),
+    ) => allowFunction(selector, conditions, options),
     invoke,
   };
 }
@@ -521,7 +521,7 @@ export async function setupOneParamArrayOfStatic() {
     member,
     roles,
     testContract,
-    scopeFunction,
+    allowFunction,
     execTransactionFromModule,
   } = await setupAvatarAndRoles();
 
@@ -540,10 +540,10 @@ export async function setupOneParamArrayOfStatic() {
     owner,
     member,
     roles,
-    scopeFunction: (
+    allowFunction: (
       conditions: ConditionFlatStruct[],
       options?: ExecutionOptions,
-    ) => scopeFunction(selector, conditions, options),
+    ) => allowFunction(selector, conditions, options),
     invoke,
   };
 }
@@ -553,7 +553,7 @@ export async function setupOneParamArrayOfStaticTuple() {
     member,
     roles,
     testContract,
-    scopeFunction,
+    allowFunction,
     execTransactionFromModule,
   } = await setupAvatarAndRoles();
 
@@ -573,10 +573,10 @@ export async function setupOneParamArrayOfStaticTuple() {
     roles,
     owner,
     member,
-    scopeFunction: (
+    allowFunction: (
       conditions: ConditionFlatStruct[],
       options?: ExecutionOptions,
-    ) => scopeFunction(selector, conditions, options),
+    ) => allowFunction(selector, conditions, options),
     invoke,
   };
 }
@@ -586,7 +586,7 @@ export async function setupOneParamArrayOfDynamicTuple() {
     member,
     roles,
     testContract,
-    scopeFunction,
+    allowFunction,
     execTransactionFromModule,
   } = await setupAvatarAndRoles();
 
@@ -606,10 +606,10 @@ export async function setupOneParamArrayOfDynamicTuple() {
     roles,
     owner,
     member,
-    scopeFunction: (
+    allowFunction: (
       conditions: ConditionFlatStruct[],
       options?: ExecutionOptions,
-    ) => scopeFunction(selector, conditions, options),
+    ) => allowFunction(selector, conditions, options),
     invoke,
   };
 }
@@ -619,7 +619,7 @@ export async function setupOneParamUintWord() {
     member,
     roles,
     testContract,
-    scopeFunction,
+    allowFunction,
     execTransactionFromModule,
   } = await setupAvatarAndRoles();
 
@@ -635,10 +635,10 @@ export async function setupOneParamUintWord() {
     roles,
     owner,
     member,
-    scopeFunction: (
+    allowFunction: (
       conditions: ConditionFlatStruct[],
       options?: ExecutionOptions,
-    ) => scopeFunction(selector, conditions, options),
+    ) => allowFunction(selector, conditions, options),
     invoke,
   };
 }
@@ -648,7 +648,7 @@ export async function setupOneParamUintSmall() {
     member,
     roles,
     testContract,
-    scopeFunction,
+    allowFunction,
     execTransactionFromModule,
   } = await setupAvatarAndRoles();
   2;
@@ -664,10 +664,10 @@ export async function setupOneParamUintSmall() {
     roles,
     owner,
     member,
-    scopeFunction: (
+    allowFunction: (
       conditions: ConditionFlatStruct[],
       options?: ExecutionOptions,
-    ) => scopeFunction(selector, conditions, options),
+    ) => allowFunction(selector, conditions, options),
     invoke,
   };
 }
@@ -677,7 +677,7 @@ export async function setupOneParamIntWord() {
     member,
     roles,
     testContract,
-    scopeFunction,
+    allowFunction,
     execTransactionFromModule,
   } = await setupAvatarAndRoles();
 
@@ -693,10 +693,10 @@ export async function setupOneParamIntWord() {
     roles,
     owner,
     member,
-    scopeFunction: (
+    allowFunction: (
       conditions: ConditionFlatStruct[],
       options?: ExecutionOptions,
-    ) => scopeFunction(selector, conditions, options),
+    ) => allowFunction(selector, conditions, options),
     invoke,
   };
 }
@@ -706,7 +706,7 @@ export async function setupOneParamIntSmall() {
     member,
     roles,
     testContract,
-    scopeFunction,
+    allowFunction,
     execTransactionFromModule,
   } = await setupAvatarAndRoles();
 
@@ -722,10 +722,10 @@ export async function setupOneParamIntSmall() {
     roles,
     owner,
     member,
-    scopeFunction: (
+    allowFunction: (
       conditions: ConditionFlatStruct[],
       options?: ExecutionOptions,
-    ) => scopeFunction(selector, conditions, options),
+    ) => allowFunction(selector, conditions, options),
     invoke,
   };
 }
@@ -735,7 +735,7 @@ export async function setupOneParamBytesWord() {
     member,
     roles,
     testContract,
-    scopeFunction,
+    allowFunction,
     execTransactionFromModule,
   } = await setupAvatarAndRoles();
 
@@ -751,10 +751,10 @@ export async function setupOneParamBytesWord() {
     roles,
     owner,
     member,
-    scopeFunction: (
+    allowFunction: (
       conditions: ConditionFlatStruct[],
       options?: ExecutionOptions,
-    ) => scopeFunction(selector, conditions, options),
+    ) => allowFunction(selector, conditions, options),
     invoke,
   };
 }
@@ -764,7 +764,7 @@ export async function setupOneParamBytesSmall() {
     member,
     roles,
     testContract,
-    scopeFunction,
+    allowFunction,
     execTransactionFromModule,
   } = await setupAvatarAndRoles();
 
@@ -780,10 +780,10 @@ export async function setupOneParamBytesSmall() {
     roles,
     owner,
     member,
-    scopeFunction: (
+    allowFunction: (
       conditions: ConditionFlatStruct[],
       options?: ExecutionOptions,
-    ) => scopeFunction(selector, conditions, options),
+    ) => allowFunction(selector, conditions, options),
     invoke,
   };
 }
@@ -793,7 +793,7 @@ export async function setupOneParamBytes() {
     member,
     roles,
     testContract,
-    scopeFunction,
+    allowFunction,
     execTransactionFromModule,
   } = await setupAvatarAndRoles();
 
@@ -809,10 +809,10 @@ export async function setupOneParamBytes() {
     roles,
     owner,
     member,
-    scopeFunction: (
+    allowFunction: (
       conditions: ConditionFlatStruct[],
       options?: ExecutionOptions,
-    ) => scopeFunction(selector, conditions, options),
+    ) => allowFunction(selector, conditions, options),
     invoke,
   };
 }
@@ -822,7 +822,7 @@ export async function setupOneParamString() {
     member,
     roles,
     testContract,
-    scopeFunction,
+    allowFunction,
     execTransactionFromModule,
   } = await setupAvatarAndRoles();
 
@@ -838,10 +838,10 @@ export async function setupOneParamString() {
     roles,
     owner,
     member,
-    scopeFunction: (
+    allowFunction: (
       conditions: ConditionFlatStruct[],
       options?: ExecutionOptions,
-    ) => scopeFunction(selector, conditions, options),
+    ) => allowFunction(selector, conditions, options),
     invoke,
   };
 }
@@ -851,7 +851,7 @@ export async function setupOneParamAddress() {
     member,
     roles,
     testContract,
-    scopeFunction,
+    allowFunction,
     execTransactionFromModule,
   } = await setupAvatarAndRoles();
 
@@ -865,10 +865,10 @@ export async function setupOneParamAddress() {
 
   return {
     roles,
-    scopeFunction: (
+    allowFunction: (
       conditions: ConditionFlatStruct[],
       options?: ExecutionOptions,
-    ) => scopeFunction(selector, conditions, options),
+    ) => allowFunction(selector, conditions, options),
     invoke,
   };
 }
@@ -878,7 +878,7 @@ export async function setupOneParamBytes32() {
     member,
     roles,
     testContract,
-    scopeFunction,
+    allowFunction,
     execTransactionFromModule,
   } = await setupAvatarAndRoles();
 
@@ -894,10 +894,10 @@ export async function setupOneParamBytes32() {
     roles,
     owner,
     member,
-    scopeFunction: (
+    allowFunction: (
       conditions: ConditionFlatStruct[],
       options?: ExecutionOptions,
-    ) => scopeFunction(selector, conditions, options),
+    ) => allowFunction(selector, conditions, options),
     invoke,
   };
 }

@@ -27,7 +27,7 @@ describe("Operator - Pass", async () => {
 
     await roles
       .connect(owner)
-      .scopeFunction(
+      .allowFunction(
         roleKey,
         await testContract.getAddress(),
         testContract.interface.getFunction("oneParamStatic").selector,

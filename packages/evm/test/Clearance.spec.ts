@@ -126,6 +126,7 @@ describe("Clearance", async () => {
         ROLE_KEY,
         testContractAddress,
         SELECTOR,
+        [],
         ExecutionOptions.None,
       );
 
@@ -166,6 +167,7 @@ describe("Clearance", async () => {
         ROLE_KEY,
         testContractAddress,
         SELECTOR,
+        [],
         ExecutionOptions.None,
       );
 
@@ -228,6 +230,7 @@ describe("Clearance", async () => {
         ROLE_KEY,
         testContractAddress,
         selectorDoNothing,
+        [],
         ExecutionOptions.None,
       );
 
@@ -279,6 +282,7 @@ describe("Clearance", async () => {
         ROLE_KEY,
         testContractAddress,
         SELECTOR1,
+        [],
         ExecutionOptions.None,
       );
 
@@ -343,6 +347,7 @@ describe("Clearance", async () => {
         ROLE_KEY,
         testContractAddress,
         selector1,
+        [],
         ExecutionOptions.None,
       );
 
@@ -352,6 +357,7 @@ describe("Clearance", async () => {
         ROLE_KEY,
         testContractAddress,
         selector2,
+        [],
         ExecutionOptions.None,
       );
 

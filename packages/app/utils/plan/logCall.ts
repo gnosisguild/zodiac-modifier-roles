@@ -30,19 +30,17 @@ export const logCall = (
     }
 
     case "allowFunction": {
-      const { targetAddress, selector, executionOptions } = call
-      log(
-        `✅ Allow ${ExecutionOptionLabel[executionOptions]} to ${targetAddress}.${selector}`
-      )
-      break
-    }
-
-    case "scopeFunction": {
       const { targetAddress, selector, executionOptions, condition } = call
-      const cid = conditionAddress(condition)
-      log(
-        `✅ Allow ${ExecutionOptionLabel[executionOptions]} to ${targetAddress}.${selector} under condition ${cid}`
-      )
+      if (condition) {
+        const cid = conditionAddress(condition)
+        log(
+          `✅ Allow ${ExecutionOptionLabel[executionOptions]} to ${targetAddress}.${selector} under condition ${cid}`
+        )
+      } else {
+        log(
+          `✅ Allow ${ExecutionOptionLabel[executionOptions]} to ${targetAddress}.${selector}`
+        )
+      }
       break
     }
 
