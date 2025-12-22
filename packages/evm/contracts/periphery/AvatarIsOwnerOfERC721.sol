@@ -18,7 +18,8 @@ contract AvatarIsOwnerOfERC721 is ICustomCondition {
         Operation /* operation */,
         uint256 location,
         uint256 size,
-        bytes calldata /* extra */
+        bytes calldata /* extra */,
+        bytes32[] memory /* pluckedValues */
     ) public view returns (bool success, bytes32 reason) {
         address avatar = IModifier(msg.sender).avatar();
         uint256 tokenId = uint256(bytes32(data[location:location + size]));

@@ -592,7 +592,7 @@ describe("Operator - Empty", async () => {
       // Scope function with Or: either param == 42 OR Empty calldata
       // (structural children must come before non-structural)
       await roles.connect(owner).scopeTarget(roleKey, testContractAddress);
-      await roles.connect(owner).scopeFunction(
+      await roles.connect(owner).allowFunction(
         roleKey,
         testContractAddress,
         SELECTOR,
