@@ -11,6 +11,7 @@ interface ICustomCondition {
         Operation operation,
         uint256 location,
         uint256 size,
-        bytes calldata extra
+        bytes calldata extra,
+        bytes32[] memory pluckedValues
     ) external view returns (bool success, bytes32 reason);
 }

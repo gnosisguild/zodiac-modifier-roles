@@ -310,6 +310,7 @@ describe("ExecutionOptions", async () => {
             ROLE_KEY,
             testContractAddress,
             SELECTOR,
+            [],
             ExecutionOptions.None,
           );
 
@@ -342,6 +343,7 @@ describe("ExecutionOptions", async () => {
             ROLE_KEY,
             testContractAddress,
             "0x00000000",
+            [],
             ExecutionOptions.None,
           );
 
@@ -376,6 +378,7 @@ describe("ExecutionOptions", async () => {
             ROLE_KEY,
             testContractAddress,
             SELECTOR,
+            [],
             ExecutionOptions.Send,
           );
 
@@ -407,6 +410,7 @@ describe("ExecutionOptions", async () => {
             ROLE_KEY,
             testContractAddress,
             "0x00000000",
+            [],
             ExecutionOptions.Send,
           );
 
@@ -441,6 +445,7 @@ describe("ExecutionOptions", async () => {
             ROLE_KEY,
             testContractAddress,
             SELECTOR,
+            [],
             ExecutionOptions.DelegateCall,
           );
 
@@ -473,6 +478,7 @@ describe("ExecutionOptions", async () => {
             ROLE_KEY,
             testContractAddress,
             "0x00000000",
+            [],
             ExecutionOptions.DelegateCall,
           );
 
@@ -507,6 +513,7 @@ describe("ExecutionOptions", async () => {
             ROLE_KEY,
             testContractAddress,
             SELECTOR,
+            [],
             ExecutionOptions.Both,
           );
 
@@ -538,6 +545,7 @@ describe("ExecutionOptions", async () => {
             ROLE_KEY,
             testContractAddress,
             "0x00000000",
+            [],
             ExecutionOptions.Both,
           );
 
@@ -619,6 +627,7 @@ describe("ExecutionOptions", async () => {
           ROLE_KEY,
           testContractAddress,
           SELECTOR,
+          [],
           ExecutionOptions.Both,
         );
 
@@ -650,6 +659,7 @@ describe("ExecutionOptions", async () => {
           ROLE_KEY,
           testContractAddress,
           SELECTOR,
+          [],
           ExecutionOptions.None,
         );
 
@@ -682,6 +692,7 @@ describe("ExecutionOptions", async () => {
           ROLE_KEY,
           testContractAddress,
           "0x00000000",
+          [],
           ExecutionOptions.Send,
         );
 

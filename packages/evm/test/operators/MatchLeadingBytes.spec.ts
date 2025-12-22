@@ -294,7 +294,7 @@ describe("AbiEncoded Match Leading Bytes", () => {
       const SELECTOR = testContract.interface.getFunction("dynamic").selector;
 
       await roles.connect(owner).scopeTarget(roleKey, targetAddress);
-      await roles.connect(owner).scopeFunction(
+      await roles.connect(owner).allowFunction(
         roleKey,
         targetAddress,
         SELECTOR,
@@ -389,7 +389,7 @@ describe("AbiEncoded Match Leading Bytes", () => {
         "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef";
 
       await roles.connect(owner).scopeTarget(roleKey, targetAddress);
-      await roles.connect(owner).scopeFunction(
+      await roles.connect(owner).allowFunction(
         roleKey,
         targetAddress,
         SELECTOR,

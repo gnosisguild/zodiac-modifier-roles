@@ -49,13 +49,13 @@ describe("AvatarIsOwnerOfERC721", async () => {
     );
     const customChecker = await CustomChecker.deploy();
 
-    async function scopeFunction(
+    async function allowFunction(
       conditions: ConditionFlatStruct[],
       options: ExecutionOptions = ExecutionOptions.None,
     ) {
       await roles
         .connect(owner)
-        .scopeFunction(
+        .allowFunction(
           ROLE_KEY,
           mockERC721Address,
           SELECTOR,
@@ -83,18 +83,18 @@ describe("AvatarIsOwnerOfERC721", async () => {
       roles,
       mockERC721,
       customChecker,
-      scopeFunction,
+      allowFunction,
       invoke,
     };
   }
 
   it("passes a comparison", async () => {
-    const { roles, avatar, mockERC721, customChecker, scopeFunction, invoke } =
+    const { roles, avatar, mockERC721, customChecker, allowFunction, invoke } =
       await loadFixture(setup);
     const avatarAddress = await avatar.getAddress();
     const customCheckerAddress = await customChecker.getAddress();
     const extra = "000000000000000000000000";
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,

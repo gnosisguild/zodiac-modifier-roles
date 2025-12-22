@@ -29,11 +29,11 @@ import {
 
 describe("Operator - EqualTo", async () => {
   it("evaluates operator EqualTo for Static - uint full word", async () => {
-    const { roles, scopeFunction, invoke } = await loadFixture(
+    const { roles, allowFunction, invoke } = await loadFixture(
       setupOneParamUintWord,
     );
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -54,11 +54,11 @@ describe("Operator - EqualTo", async () => {
     await expect(invoke(123)).to.not.be.reverted;
   });
   it("evaluates operator EqualTo for Static - uint smaller than word", async () => {
-    const { roles, scopeFunction, invoke } = await loadFixture(
+    const { roles, allowFunction, invoke } = await loadFixture(
       setupOneParamUintSmall,
     );
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -79,10 +79,10 @@ describe("Operator - EqualTo", async () => {
     await expect(invoke(50)).to.not.be.reverted;
   });
   it("evaluates operator EqualTo for Static - signed integer full word", async () => {
-    const { roles, scopeFunction, invoke } =
+    const { roles, allowFunction, invoke } =
       await loadFixture(setupOneParamIntWord);
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -103,11 +103,11 @@ describe("Operator - EqualTo", async () => {
     await expect(invoke(-5555)).to.not.be.reverted;
   });
   it("evaluates operator EqualTo for Static - integer smaller than word", async () => {
-    const { roles, scopeFunction, invoke } = await loadFixture(
+    const { roles, allowFunction, invoke } = await loadFixture(
       setupOneParamIntSmall,
     );
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -128,7 +128,7 @@ describe("Operator - EqualTo", async () => {
     await expect(invoke(-55)).to.not.be.reverted;
   });
   it("evaluates operator EqualTo for Static - bytes full word", async () => {
-    const { roles, scopeFunction, invoke } = await loadFixture(
+    const { roles, allowFunction, invoke } = await loadFixture(
       setupOneParamBytesWord,
     );
 
@@ -136,7 +136,7 @@ describe("Operator - EqualTo", async () => {
       "0x1234567890123456789012345678901234567890123456789012345678901234";
     const otherValue =
       "0x0000000000000000000000000000000000000000000000000000000000000011";
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -157,11 +157,11 @@ describe("Operator - EqualTo", async () => {
     await expect(invoke(value)).to.not.be.reverted;
   });
   it("evaluates operator EqualTo for Static - smaller than full word", async () => {
-    const { roles, scopeFunction, invoke } = await loadFixture(
+    const { roles, allowFunction, invoke } = await loadFixture(
       setupOneParamBytesSmall,
     );
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -182,10 +182,10 @@ describe("Operator - EqualTo", async () => {
     await expect(invoke("0xa1")).to.not.be.reverted;
   });
   it("evaluates operator EqualTo for String", async () => {
-    const { roles, scopeFunction, invoke } =
+    const { roles, allowFunction, invoke } =
       await loadFixture(setupOneParamString);
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -206,10 +206,10 @@ describe("Operator - EqualTo", async () => {
     await expect(invoke("Hello World!")).to.not.be.reverted;
   });
   it("evaluates operator EqualTo for String - empty", async () => {
-    const { roles, scopeFunction, invoke } =
+    const { roles, allowFunction, invoke } =
       await loadFixture(setupOneParamString);
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -230,12 +230,12 @@ describe("Operator - EqualTo", async () => {
     await expect(invoke("")).to.not.be.reverted;
   });
   it("evaluates operator EqualTo for String - large", async () => {
-    const { roles, scopeFunction, invoke } =
+    const { roles, allowFunction, invoke } =
       await loadFixture(setupOneParamString);
 
     const value =
       "úúúúúA string which is longer than 32 bytes, and it has also some special characters ééééééé";
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -260,10 +260,10 @@ describe("Operator - EqualTo", async () => {
     await expect(invoke(value)).to.not.be.reverted;
   });
   it("evaluates operator EqualTo for Bytes", async () => {
-    const { roles, scopeFunction, invoke } =
+    const { roles, allowFunction, invoke } =
       await loadFixture(setupOneParamBytes);
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -287,13 +287,13 @@ describe("Operator - EqualTo", async () => {
     await expect(invoke("0xbadfed")).to.not.be.reverted;
   });
   it("evaluates operator EqualTo for Bytes - large", async () => {
-    const { roles, scopeFunction, invoke } =
+    const { roles, allowFunction, invoke } =
       await loadFixture(setupOneParamBytes);
 
     const largeValue =
       "0xdeadbeef000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000ff";
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -317,10 +317,10 @@ describe("Operator - EqualTo", async () => {
     await expect(invoke(largeValue)).to.not.be.reverted;
   });
   it("evaluates operator EqualTo for Bytes - empty", async () => {
-    const { roles, scopeFunction, invoke } =
+    const { roles, allowFunction, invoke } =
       await loadFixture(setupOneParamBytes);
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -344,11 +344,11 @@ describe("Operator - EqualTo", async () => {
     await expect(invoke("0x")).to.not.be.reverted;
   });
   it("evaluates operator EqualTo for Array", async () => {
-    const { roles, scopeFunction, invoke } = await loadFixture(
+    const { roles, allowFunction, invoke } = await loadFixture(
       setupOneParamArrayOfStatic,
     );
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -378,11 +378,11 @@ describe("Operator - EqualTo", async () => {
     await expect(invoke([4, 5, 6])).to.not.be.reverted;
   });
   it("evaluates operator EqualTo for Array - empty", async () => {
-    const { roles, scopeFunction, invoke } = await loadFixture(
+    const { roles, allowFunction, invoke } = await loadFixture(
       setupOneParamArrayOfStatic,
     );
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -413,11 +413,11 @@ describe("Operator - EqualTo", async () => {
       .withArgs(PermissionCheckerStatus.ParameterNotAllowed, BYTES32_ZERO);
   });
   it("evaluates operator EqualTo for Tuple - static", async () => {
-    const { roles, scopeFunction, invoke } = await loadFixture(
+    const { roles, allowFunction, invoke } = await loadFixture(
       setupTwoParamsStaticTupleStatic,
     );
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -464,11 +464,11 @@ describe("Operator - EqualTo", async () => {
     await expect(invoke({ a: 123, b: false }, 1)).to.not.be.reverted;
   });
   it("evaluates operator EqualTo for Tuple - static nested", async () => {
-    const { roles, scopeFunction, invoke } = await loadFixture(
+    const { roles, allowFunction, invoke } = await loadFixture(
       setupOneParamStaticNestedTuple,
     );
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -517,11 +517,11 @@ describe("Operator - EqualTo", async () => {
     await expect(invoke({ a: 9, b: { a: 8, b: false } })).to.not.be.reverted;
   });
   it("evaluates operator EqualTo for Tuple - dynamic", async () => {
-    const { roles, scopeFunction, invoke } = await loadFixture(
+    const { roles, allowFunction, invoke } = await loadFixture(
       setupOneParamDynamicTuple,
     );
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -561,11 +561,11 @@ describe("Operator - EqualTo", async () => {
     await expect(invoke({ a: 100, b: "0xbadfed" })).to.not.be.reverted;
   });
   it("evaluates operator EqualTo for Tuple - dynamic nested", async () => {
-    const { roles, scopeFunction, invoke } = await loadFixture(
+    const { roles, allowFunction, invoke } = await loadFixture(
       setupOneParamDynamicNestedTuple,
     );
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,

@@ -63,7 +63,7 @@ describe("Roles", async () => {
     await roles
       .connect(owner)
       .scopeTarget(ROLE_KEY, await testContract.getAddress());
-    await roles.connect(owner).scopeFunction(
+    await roles.connect(owner).allowFunction(
       ROLE_KEY,
       await testContract.getAddress(),
       testContract.interface.getFunction("spendAndMaybeRevert").selector,
@@ -342,6 +342,23 @@ describe("Roles", async () => {
 
       return { roles, invoke, allowanceKey, owner, invoker };
     }
+    it("reverts if data is set and is not at least 4 bytes", async () => {
+      const { roles, testContract, owner, invoker } = await loadFixture(setup);
+
+      await roles.connect(owner).grantRole(invoker.address, ROLE_KEY, 0, 0, 0);
+      await roles.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
+
+      await expect(
+        roles
+          .connect(invoker)
+          .execTransactionFromModule(
+            await testContract.getAddress(),
+            0,
+            "0xab",
+            0,
+          ),
+      ).to.be.revertedWithCustomError(roles, "FunctionSignatureTooShort");
+    });
     it("invoker not enabled as a module is not authorized", async () => {
       const { roles, invoke, owner, invoker } = await loadFixture(setup_);
 
@@ -656,7 +673,7 @@ describe("Roles", async () => {
       const SELECTOR =
         testContract.interface.getFunction("fnWithSingleParam").selector;
 
-      await roles.connect(owner).scopeFunction(
+      await roles.connect(owner).allowFunction(
         ROLE_KEY1,
         await testContract.getAddress(),
         SELECTOR,
@@ -677,7 +694,7 @@ describe("Roles", async () => {
         ExecutionOptions.None,
       );
 
-      await roles.connect(owner).scopeFunction(
+      await roles.connect(owner).allowFunction(
         ROLE_KEY1,
         await testContract2.getAddress(),
         SELECTOR,
@@ -726,7 +743,7 @@ describe("Roles", async () => {
         .connect(owner)
         .scopeTarget(ROLE_KEY1, await testContract.getAddress());
 
-      await roles.connect(owner).scopeFunction(
+      await roles.connect(owner).allowFunction(
         ROLE_KEY1,
         await testContract.getAddress(),
         testContract.interface.getFunction("dynamic").selector,
@@ -795,7 +812,7 @@ describe("Roles", async () => {
 
       await expect(invoke(123456, "0xaabbccdd4500d1")).to.not.be.reverted;
 
-      await roles.connect(owner).scopeFunction(
+      await roles.connect(owner).allowFunction(
         ROLE_KEY1,
         await testContract.getAddress(),
         testContract.interface.getFunction("dynamic").selector,
@@ -834,7 +851,7 @@ describe("Roles", async () => {
     it("covering a test branch", async () => {
       const { roles, testContract, owner } = await loadFixture(setup);
 
-      await roles.connect(owner).scopeFunction(
+      await roles.connect(owner).allowFunction(
         ROLE_KEY1,
         await testContract.getAddress(),
         testContract.interface.getFunction("dynamic").selector,

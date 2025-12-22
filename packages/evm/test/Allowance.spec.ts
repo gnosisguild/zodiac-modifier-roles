@@ -24,13 +24,13 @@ const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
 describe("Allowance", async () => {
   it("unexistent allowance produces error", async () => {
-    const { roles, scopeFunction, invoke } =
+    const { roles, allowFunction, invoke } =
       await loadFixture(setupTwoParamsStatic);
 
     const allowanceKey =
       "0x123000000000000000000000000000000000000000000000000000000000000f";
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -56,7 +56,7 @@ describe("Allowance", async () => {
       .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
   });
   it("raises ConsumeAllowance event", async () => {
-    const { roles, scopeFunction, invoke, owner } = await loadFixture(
+    const { roles, allowFunction, invoke, owner } = await loadFixture(
       setupFnThatMaybeReturns,
     );
 
@@ -81,7 +81,7 @@ describe("Allowance", async () => {
         },
       ],
     });
-    await scopeFunction(conditionsFlat);
+    await allowFunction(conditionsFlat);
     const maybe = false;
 
     expect((await roles.allowances(allowanceKey)).balance).to.equal(1000);
@@ -91,7 +91,7 @@ describe("Allowance", async () => {
     expect((await roles.allowances(allowanceKey)).balance).to.equal(900);
   });
   it("does not raise ConsumeAllowance, when inner transaction reverts, shouldRevert=false", async () => {
-    const { roles, scopeFunction, invoke, owner } = await loadFixture(
+    const { roles, allowFunction, invoke, owner } = await loadFixture(
       setupFnThatMaybeReturns,
     );
 
@@ -116,7 +116,7 @@ describe("Allowance", async () => {
         },
       ],
     });
-    await scopeFunction(conditionsFlat);
+    await allowFunction(conditionsFlat);
 
     expect((await roles.allowances(allowanceKey)).balance).to.equal(1000);
 
@@ -125,14 +125,14 @@ describe("Allowance", async () => {
     expect((await roles.allowances(allowanceKey)).balance).to.equal(1000);
   });
   it("consumption in truthy And branch bleeds to other branches", async () => {
-    const { roles, scopeFunction, invoke, owner } =
+    const { roles, allowFunction, invoke, owner } =
       await loadFixture(setupTwoParamsStatic);
 
     const allowanceKey =
       "0x000000000000000000000000000000000000000000000000000000000000000f";
     await roles.connect(owner).setAllowance(allowanceKey, 300, 0, 0, 0, 0);
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -171,14 +171,14 @@ describe("Allowance", async () => {
     expect((await roles.allowances(allowanceKey)).balance).to.equal(100);
   });
   it("consumption in falsy Or branch gets discarded", async () => {
-    const { roles, scopeFunction, invoke, owner } =
+    const { roles, allowFunction, invoke, owner } =
       await loadFixture(setupTwoParamsStatic);
 
     const allowanceKey =
       "0x000000000000000000000000000000000000000000000000000000000000000f";
     await roles.connect(owner).setAllowance(allowanceKey, 1000, 0, 0, 0, 0);
 
-    await scopeFunction(
+    await allowFunction(
       flattenCondition({
         paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
@@ -236,7 +236,7 @@ describe("Allowance", async () => {
     expect((await roles.allowances(allowanceKey)).balance).to.equal(499);
   });
   it("consumption in ArraySome gets counted once", async () => {
-    const { roles, scopeFunction, invoke, owner } = await loadFixture(
+    const { roles, allowFunction, invoke, owner } = await loadFixture(
       setupOneParamArrayOfDynamicTuple,
     );
 
@@ -275,7 +275,7 @@ describe("Allowance", async () => {
         },
       ],
     });
-    await scopeFunction(conditionsFlat);
+    await allowFunction(conditionsFlat);
 
     expect((await roles.allowances(allowanceKey)).balance).to.equal(1000);
 
@@ -299,7 +299,7 @@ describe("Allowance", async () => {
     expect((await roles.allowances(allowanceKey)).balance).to.equal(800);
   });
   it("consumption in ArrayEvery gets counted for all elements", async () => {
-    const { roles, scopeFunction, invoke, owner } = await loadFixture(
+    const { roles, allowFunction, invoke, owner } = await loadFixture(
       setupOneParamArrayOfDynamicTuple,
     );
 
@@ -338,7 +338,7 @@ describe("Allowance", async () => {
         },
       ],
     });
-    await scopeFunction(conditionsFlat);
+    await allowFunction(conditionsFlat);
 
     expect((await roles.allowances(allowanceKey)).balance).to.equal(1000);
 
@@ -367,7 +367,7 @@ describe("Allowance", async () => {
       owner,
       roles,
       testContract,
-      scopeFunction,
+      allowFunction,
       execTransactionFromModule,
     } = await loadFixture(setupAvatarAndRoles);
 
@@ -417,7 +417,7 @@ describe("Allowance", async () => {
     });
 
     const { selector } = testContract.interface.getFunction("oneParamStatic");
-    await scopeFunction(selector, conditionsFlat);
+    await allowFunction(selector, conditionsFlat);
 
     const invoke = async (a: number) => {
       const { data } = await testContract.oneParamStatic.populateTransaction(a);
@@ -437,7 +437,7 @@ describe("Allowance", async () => {
       owner,
       roles,
       testContract,
-      scopeFunction,
+      allowFunction,
       execTransactionFromModule,
     } = await loadFixture(setupAvatarAndRoles);
 
@@ -494,7 +494,7 @@ describe("Allowance", async () => {
     });
 
     const { selector } = testContract.interface.getFunction("oneParamStatic");
-    await scopeFunction(selector, conditionsFlat);
+    await allowFunction(selector, conditionsFlat);
 
     const invoke = async (a: number) => {
       const { data } = await testContract.oneParamStatic.populateTransaction(a);
@@ -510,7 +510,7 @@ describe("Allowance", async () => {
     expect((await roles.allowances(allowanceKey2)).balance).to.equal(49);
   });
   it("failing Matches returns unchanged in memory consumptions", async () => {
-    const { roles, scopeFunction, invoke, owner } = await loadFixture(
+    const { roles, allowFunction, invoke, owner } = await loadFixture(
       setupOneParamStaticTuple,
     );
 
@@ -571,7 +571,7 @@ describe("Allowance", async () => {
       ],
     });
 
-    await scopeFunction(conditionsFlat);
+    await allowFunction(conditionsFlat);
 
     expect((await roles.allowances(allowanceKey1)).balance).to.equal(100);
     expect((await roles.allowances(allowanceKey2)).balance).to.equal(100);
@@ -582,7 +582,7 @@ describe("Allowance", async () => {
     expect((await roles.allowances(allowanceKey2)).balance).to.equal(35);
   });
   it("balance above maxRefill gets consumed", async () => {
-    const { roles, scopeFunction, invoke, owner } = await loadFixture(
+    const { roles, allowFunction, invoke, owner } = await loadFixture(
       setupFnThatMaybeReturns,
     );
 
@@ -609,7 +609,7 @@ describe("Allowance", async () => {
         },
       ],
     });
-    await scopeFunction(conditionsFlat);
+    await allowFunction(conditionsFlat);
     const maybe = false;
 
     expect((await roles.allowances(allowanceKey)).balance).to.equal(1300);
@@ -710,7 +710,7 @@ describe("Allowance", async () => {
 
       await setAllowance(allowanceKey1, balance1);
       await setAllowance(allowanceKey2, balance2);
-      await roles.connect(owner).scopeFunction(
+      await roles.connect(owner).allowFunction(
         roleKey,
         await testContract.getAddress(),
         testContract.interface.getFunction("oneParamStatic").selector,
@@ -731,7 +731,7 @@ describe("Allowance", async () => {
         ExecutionOptions.None,
       );
 
-      await roles.connect(owner).scopeFunction(
+      await roles.connect(owner).allowFunction(
         roleKey,
         await testContract.getAddress(),
         testContract.interface.getFunction("twoParamsStatic").selector,
@@ -836,7 +836,7 @@ describe("Allowance", async () => {
       await setAllowance(allowanceKey1, balance1);
       await setAllowance(allowanceKey2, balance2);
 
-      await roles.connect(owner).scopeFunction(
+      await roles.connect(owner).allowFunction(
         roleKey,
         await testContract.getAddress(),
         testContract.interface.getFunction("oneParamStatic").selector,
@@ -857,7 +857,7 @@ describe("Allowance", async () => {
         ExecutionOptions.None,
       );
 
-      await roles.connect(owner).scopeFunction(
+      await roles.connect(owner).allowFunction(
         roleKey,
         await testContract.getAddress(),
         testContract.interface.getFunction("twoParamsStatic").selector,
@@ -949,7 +949,7 @@ describe("Allowance", async () => {
         .connect(owner)
         .setAllowance(allowanceKey, balance, 0, 0, 0, 0);
 
-      await roles.connect(owner).scopeFunction(
+      await roles.connect(owner).allowFunction(
         roleKey,
         testContractAddress,
         testContract.interface.getFunction("oneParamStatic").selector,
@@ -970,7 +970,7 @@ describe("Allowance", async () => {
         ExecutionOptions.None,
       );
 
-      await roles.connect(owner).scopeFunction(
+      await roles.connect(owner).allowFunction(
         roleKey,
         testContractAddress,
         testContract.interface.getFunction("twoParamsStatic").selector,
@@ -1066,7 +1066,7 @@ describe("Allowance", async () => {
       await setAllowance(allowanceKey1, balance1);
       await setAllowance(allowanceKey2, balance2);
       const testContractAddress = await testContract.getAddress();
-      await roles.connect(owner).scopeFunction(
+      await roles.connect(owner).allowFunction(
         roleKey,
         testContractAddress,
         testContract.interface.getFunction("oneParamStatic").selector,
@@ -1093,10 +1093,11 @@ describe("Allowance", async () => {
           roleKey,
           testContractAddress,
           testContract.interface.getFunction("doNothing").selector,
+          [],
           ExecutionOptions.None,
         );
 
-      await roles.connect(owner).scopeFunction(
+      await roles.connect(owner).allowFunction(
         roleKey,
         testContractAddress,
         testContract.interface.getFunction("twoParamsStatic").selector,
@@ -1208,7 +1209,7 @@ describe("Allowance", async () => {
       await setAllowance(allowanceKey1, balance1);
       await setAllowance(allowanceKey2, balance2);
       const testContractAddress = await testContract.getAddress();
-      await roles.connect(owner).scopeFunction(
+      await roles.connect(owner).allowFunction(
         roleKey,
         testContractAddress,
         testContract.interface.getFunction("oneParamStatic").selector,
@@ -1229,7 +1230,7 @@ describe("Allowance", async () => {
         ExecutionOptions.None,
       );
       const testEncoderAddress = await testEncoder.getAddress();
-      await roles.connect(owner).scopeFunction(
+      await roles.connect(owner).allowFunction(
         roleKey,
         testEncoderAddress,
         testEncoder.interface.getFunction("simple").selector,
@@ -1250,7 +1251,7 @@ describe("Allowance", async () => {
         ExecutionOptions.None,
       );
 
-      await roles.connect(owner).scopeFunction(
+      await roles.connect(owner).allowFunction(
         roleKey,
         testContractAddress,
 

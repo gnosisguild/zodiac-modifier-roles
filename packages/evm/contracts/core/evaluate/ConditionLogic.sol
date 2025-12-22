@@ -467,7 +467,8 @@ library ConditionLogic {
             context.operation,
             payload.location,
             payload.size,
-            extra
+            extra,
+            context.pluckedValues
         );
         return
             Result({
