@@ -23,8 +23,7 @@ library BitmaskChecker {
         uint256 shift = uint16(bytes2(compValue));
         uint256 length = (compValue.length - 2) / 2;
 
-        // Dynamic params: skip 32-byte length prefix.
-        uint256 start = payload.location + (payload.size == 32 ? 0 : 32);
+        uint256 start = payload.location + (payload.inlined ? 0 : 32);
         uint256 end = data.length;
 
         if (shift + length > end - start) {

@@ -52,7 +52,7 @@ describe("Operator - WithinAllowance", async () => {
 
   describe("WithinAllowance - Check", () => {
     it("passes a check with enough balance available and no refill (interval = 0)", async () => {
-      const { owner, roles, scopeFunction, invoke } =
+      const { owner, roles, allowFunction, invoke } =
         await loadFixture(setupOneParamStatic);
 
       const allowanceKey =
@@ -65,7 +65,7 @@ describe("Operator - WithinAllowance", async () => {
         timestamp: 0,
       });
 
-      await scopeFunction([
+      await allowFunction([
         {
           parent: 0,
           paramType: Encoding.AbiEncoded,
@@ -90,13 +90,13 @@ describe("Operator - WithinAllowance", async () => {
         .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
     });
     it("passes a check with only from balance and refill configured", async () => {
-      const { roles, owner, scopeFunction, invoke } =
+      const { roles, owner, allowFunction, invoke } =
         await loadFixture(setupOneParamStatic);
 
       const allowanceKey =
         "0x1000000000000000000000000000000000000000000000000000000000000000";
 
-      await scopeFunction([
+      await allowFunction([
         {
           parent: 0,
           paramType: Encoding.AbiEncoded,
@@ -128,13 +128,13 @@ describe("Operator - WithinAllowance", async () => {
         .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
     });
     it("passes a check balance from available+refill", async () => {
-      const { roles, owner, scopeFunction, invoke } =
+      const { roles, owner, allowFunction, invoke } =
         await loadFixture(setupOneParamStatic);
 
       const allowanceKey =
         "0x1000000000000000000000000000000000000000000000000000000000000000";
 
-      await scopeFunction([
+      await allowFunction([
         {
           parent: 0,
           paramType: Encoding.AbiEncoded,
@@ -167,12 +167,12 @@ describe("Operator - WithinAllowance", async () => {
         .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
     });
     it("fails a check, with some balance and not enough elapsed for next refill", async () => {
-      const { owner, roles, scopeFunction, invoke } =
+      const { owner, roles, allowFunction, invoke } =
         await loadFixture(setupOneParamStatic);
       const allowanceKey =
         "0x1000000000000000000000000000000000000000000000000000000000000000";
 
-      await scopeFunction([
+      await allowFunction([
         {
           parent: 0,
           paramType: Encoding.AbiEncoded,
@@ -205,14 +205,14 @@ describe("Operator - WithinAllowance", async () => {
         .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
     });
     it("passes a check with balance from refill and bellow maxRefill", async () => {
-      const { owner, roles, scopeFunction, invoke } =
+      const { owner, roles, allowFunction, invoke } =
         await loadFixture(setupOneParamStatic);
 
       const interval = 10000;
       const allowanceKey =
         "0x1000000000000000000000000000000000000000000000000000000000000000";
 
-      await scopeFunction([
+      await allowFunction([
         {
           parent: 0,
           paramType: Encoding.AbiEncoded,
@@ -243,12 +243,12 @@ describe("Operator - WithinAllowance", async () => {
       await expect(invoke(1000)).to.not.be.reverted;
     });
     it("fails a check with balance from refill but capped by maxRefill", async () => {
-      const { owner, roles, scopeFunction, invoke } =
+      const { owner, roles, allowFunction, invoke } =
         await loadFixture(setupOneParamStatic);
 
       const allowanceKey =
         "0x1000000000000000000000000000000000000000000000000000000000000000";
-      await scopeFunction([
+      await allowFunction([
         {
           parent: 0,
           paramType: Encoding.AbiEncoded,
@@ -282,13 +282,13 @@ describe("Operator - WithinAllowance", async () => {
 
   describe("WithinAllowance - Consumption", async () => {
     it("Consumes balance, even with multiple references to same allowance", async () => {
-      const { owner, roles, invoke, scopeFunction } =
+      const { owner, roles, invoke, allowFunction } =
         await loadFixture(setupTwoParamsStatic);
 
       const allowanceKey =
         "0x0000000000000000000000000000000000000000000000000000000000000001";
 
-      await scopeFunction([
+      await allowFunction([
         {
           parent: 0,
           paramType: Encoding.AbiEncoded,
@@ -330,12 +330,12 @@ describe("Operator - WithinAllowance", async () => {
       expect(allowance.balance).to.equal(0);
     });
     it("Fails, when multiple parameters referencing the same limit overspend", async () => {
-      const { owner, roles, invoke, scopeFunction } =
+      const { owner, roles, invoke, allowFunction } =
         await loadFixture(setupTwoParamsStatic);
       const allowanceKey =
         "0x1000000000000000000000000000000000000000000000000000000000000000";
 
-      await scopeFunction([
+      await allowFunction([
         {
           parent: 0,
           paramType: Encoding.AbiEncoded,
@@ -373,14 +373,14 @@ describe("Operator - WithinAllowance", async () => {
       expect(allowance.balance).to.equal(3000);
     });
     it("Updates timestamp", async () => {
-      const { owner, roles, invoke, scopeFunction } =
+      const { owner, roles, invoke, allowFunction } =
         await loadFixture(setupOneParamStatic);
 
       const interval = 600;
       const allowanceKey =
         "0x1000000000000000000000000000000000000000000000000000000000000000";
 
-      await scopeFunction([
+      await allowFunction([
         {
           parent: 0,
           paramType: Encoding.AbiEncoded,
@@ -415,11 +415,11 @@ describe("Operator - WithinAllowance", async () => {
       expect(timeDifference).to.be.lte(interval * 2);
     });
     it("Does not updates timestamp if interval is zero", async () => {
-      const { owner, roles, invoke, scopeFunction } =
+      const { owner, roles, invoke, allowFunction } =
         await loadFixture(setupOneParamStatic);
       const allowanceKey =
         "0x1000000000000000000000000000000000000000000000000000000000000000";
-      await scopeFunction([
+      await allowFunction([
         {
           parent: 0,
           paramType: Encoding.AbiEncoded,
@@ -446,7 +446,7 @@ describe("Operator - WithinAllowance", async () => {
       expect(allowance.timestamp).to.equal(123);
     });
     it("Updates timestamp from past timestamp", async () => {
-      const { owner, roles, invoke, scopeFunction } =
+      const { owner, roles, invoke, allowFunction } =
         await loadFixture(setupOneParamStatic);
 
       const interval = 600;
@@ -454,7 +454,7 @@ describe("Operator - WithinAllowance", async () => {
       const allowanceKey =
         "0x1000000000000000000000000000000000000000000000000000000000000000";
 
-      await scopeFunction([
+      await allowFunction([
         {
           parent: 0,
           paramType: Encoding.AbiEncoded,
@@ -486,13 +486,13 @@ describe("Operator - WithinAllowance", async () => {
       expect(allowance.timestamp).to.be.greaterThan(timestamp);
     });
     it("Does not update timestamp from future timestamp", async () => {
-      const { owner, roles, invoke, scopeFunction } =
+      const { owner, roles, invoke, allowFunction } =
         await loadFixture(setupOneParamStatic);
 
       const interval = 600;
       const allowanceKey =
         "0x1000000000000000000000000000000000000000000000000000000000000000";
-      await scopeFunction([
+      await allowFunction([
         {
           parent: 0,
           paramType: Encoding.AbiEncoded,
@@ -548,7 +548,7 @@ describe("Operator - WithinAllowance", async () => {
     // accrue=12, param=6: scale up by 10^6
     // 1000 units (6 dec) → converted = 1000e6 * 1e18 * 1e12 / 1e24 = 1000e12 (12 dec)
     it("param(6) → accrue(12): consumes correctly", async () => {
-      const { owner, roles, scopeFunction, invoke } =
+      const { owner, roles, allowFunction, invoke } =
         await loadFixture(setupOneParamStatic);
 
       const MockPricing = await hre.ethers.getContractFactory("MockPricing");
@@ -561,7 +561,7 @@ describe("Operator - WithinAllowance", async () => {
         timestamp: 0,
       });
 
-      await scopeFunction([
+      await allowFunction([
         {
           parent: 0,
           paramType: Encoding.AbiEncoded,
@@ -590,7 +590,7 @@ describe("Operator - WithinAllowance", async () => {
     });
 
     it("param(6) → accrue(12): reverts on overconsume", async () => {
-      const { owner, roles, scopeFunction, invoke } =
+      const { owner, roles, allowFunction, invoke } =
         await loadFixture(setupOneParamStatic);
 
       const MockPricing = await hre.ethers.getContractFactory("MockPricing");
@@ -603,7 +603,7 @@ describe("Operator - WithinAllowance", async () => {
         timestamp: 0,
       });
 
-      await scopeFunction([
+      await allowFunction([
         {
           parent: 0,
           paramType: Encoding.AbiEncoded,
@@ -631,7 +631,7 @@ describe("Operator - WithinAllowance", async () => {
 
     // accrue=18, param=6: scale up by 10^12
     it("param(6) → accrue(18): consumes correctly", async () => {
-      const { owner, roles, scopeFunction, invoke } =
+      const { owner, roles, allowFunction, invoke } =
         await loadFixture(setupOneParamStatic);
 
       const MockPricing = await hre.ethers.getContractFactory("MockPricing");
@@ -644,7 +644,7 @@ describe("Operator - WithinAllowance", async () => {
         timestamp: 0,
       });
 
-      await scopeFunction([
+      await allowFunction([
         {
           parent: 0,
           paramType: Encoding.AbiEncoded,
@@ -672,7 +672,7 @@ describe("Operator - WithinAllowance", async () => {
     });
 
     it("param(6) → accrue(18): reverts on overconsume", async () => {
-      const { owner, roles, scopeFunction, invoke } =
+      const { owner, roles, allowFunction, invoke } =
         await loadFixture(setupOneParamStatic);
 
       const MockPricing = await hre.ethers.getContractFactory("MockPricing");
@@ -685,7 +685,7 @@ describe("Operator - WithinAllowance", async () => {
         timestamp: 0,
       });
 
-      await scopeFunction([
+      await allowFunction([
         {
           parent: 0,
           paramType: Encoding.AbiEncoded,
@@ -712,7 +712,7 @@ describe("Operator - WithinAllowance", async () => {
 
     // accrue=6, param=12: scale down by 10^6
     it("param(12) → accrue(6): consumes correctly", async () => {
-      const { owner, roles, scopeFunction, invoke } =
+      const { owner, roles, allowFunction, invoke } =
         await loadFixture(setupOneParamStatic);
 
       const MockPricing = await hre.ethers.getContractFactory("MockPricing");
@@ -725,7 +725,7 @@ describe("Operator - WithinAllowance", async () => {
         timestamp: 0,
       });
 
-      await scopeFunction([
+      await allowFunction([
         {
           parent: 0,
           paramType: Encoding.AbiEncoded,
@@ -755,7 +755,7 @@ describe("Operator - WithinAllowance", async () => {
     });
 
     it("param(12) → accrue(6): reverts on overconsume", async () => {
-      const { owner, roles, scopeFunction, invoke } =
+      const { owner, roles, allowFunction, invoke } =
         await loadFixture(setupOneParamStatic);
 
       const MockPricing = await hre.ethers.getContractFactory("MockPricing");
@@ -768,7 +768,7 @@ describe("Operator - WithinAllowance", async () => {
         timestamp: 0,
       });
 
-      await scopeFunction([
+      await allowFunction([
         {
           parent: 0,
           paramType: Encoding.AbiEncoded,
@@ -795,7 +795,7 @@ describe("Operator - WithinAllowance", async () => {
 
     // accrue=12, param=18: scale down by 10^6
     it("param(18) → accrue(12): consumes correctly", async () => {
-      const { owner, roles, scopeFunction, invoke } =
+      const { owner, roles, allowFunction, invoke } =
         await loadFixture(setupOneParamStatic);
 
       const MockPricing = await hre.ethers.getContractFactory("MockPricing");
@@ -808,7 +808,7 @@ describe("Operator - WithinAllowance", async () => {
         timestamp: 0,
       });
 
-      await scopeFunction([
+      await allowFunction([
         {
           parent: 0,
           paramType: Encoding.AbiEncoded,
@@ -836,7 +836,7 @@ describe("Operator - WithinAllowance", async () => {
     });
 
     it("param(18) → accrue(12): reverts on overconsume", async () => {
-      const { owner, roles, scopeFunction, invoke } =
+      const { owner, roles, allowFunction, invoke } =
         await loadFixture(setupOneParamStatic);
 
       const MockPricing = await hre.ethers.getContractFactory("MockPricing");
@@ -849,7 +849,7 @@ describe("Operator - WithinAllowance", async () => {
         timestamp: 0,
       });
 
-      await scopeFunction([
+      await allowFunction([
         {
           parent: 0,
           paramType: Encoding.AbiEncoded,
@@ -876,7 +876,7 @@ describe("Operator - WithinAllowance", async () => {
 
     // DAI (18 dec) spending against USDC (6 dec) allowance
     it("spend DAI(18) → accrue USDC(6)", async () => {
-      const { owner, roles, scopeFunction, invoke } =
+      const { owner, roles, allowFunction, invoke } =
         await loadFixture(setupOneParamStatic);
 
       const MockPricing = await hre.ethers.getContractFactory("MockPricing");
@@ -890,7 +890,7 @@ describe("Operator - WithinAllowance", async () => {
         timestamp: 0,
       });
 
-      await scopeFunction([
+      await allowFunction([
         {
           parent: 0,
           paramType: Encoding.AbiEncoded,
@@ -919,7 +919,7 @@ describe("Operator - WithinAllowance", async () => {
 
     // USDC (6 dec) spending against DAI (18 dec) allowance
     it("spend USDC(6) → accrue DAI(18)", async () => {
-      const { owner, roles, scopeFunction, invoke } =
+      const { owner, roles, allowFunction, invoke } =
         await loadFixture(setupOneParamStatic);
 
       const MockPricing = await hre.ethers.getContractFactory("MockPricing");
@@ -932,7 +932,7 @@ describe("Operator - WithinAllowance", async () => {
         timestamp: 0,
       });
 
-      await scopeFunction([
+      await allowFunction([
         {
           parent: 0,
           paramType: Encoding.AbiEncoded,
@@ -961,7 +961,7 @@ describe("Operator - WithinAllowance", async () => {
 
     // Multi-asset: USDC(6), DAI(18), ETH(18) all accrue to USDC(6) allowance
     it("multi-asset (USDC + DAI + ETH) → accrue USDC(6)", async () => {
-      const { owner, roles, invoke, scopeFunction } =
+      const { owner, roles, invoke, allowFunction } =
         await loadFixture(setupTwoParamsStatic);
 
       const MockPricing = await hre.ethers.getContractFactory("MockPricing");
@@ -975,7 +975,7 @@ describe("Operator - WithinAllowance", async () => {
         timestamp: 0,
       });
 
-      await scopeFunction([
+      await allowFunction([
         {
           parent: 0,
           paramType: Encoding.AbiEncoded,
@@ -1026,7 +1026,7 @@ describe("Operator - WithinAllowance", async () => {
     });
 
     it("preserves decimal precision when scaling down (18 → 6)", async () => {
-      const { owner, roles, scopeFunction, invoke } =
+      const { owner, roles, allowFunction, invoke } =
         await loadFixture(setupOneParamStatic);
 
       const MockPricing = await hre.ethers.getContractFactory("MockPricing");
@@ -1044,7 +1044,7 @@ describe("Operator - WithinAllowance", async () => {
         timestamp: 0,
       });
 
-      await scopeFunction([
+      await allowFunction([
         {
           parent: 0,
           paramType: Encoding.AbiEncoded,
@@ -1074,7 +1074,7 @@ describe("Operator - WithinAllowance", async () => {
     });
 
     it("preserves decimal precision when scaling up (6 → 18)", async () => {
-      const { owner, roles, scopeFunction, invoke } =
+      const { owner, roles, allowFunction, invoke } =
         await loadFixture(setupOneParamStatic);
 
       const MockPricing = await hre.ethers.getContractFactory("MockPricing");
@@ -1092,7 +1092,7 @@ describe("Operator - WithinAllowance", async () => {
         timestamp: 0,
       });
 
-      await scopeFunction([
+      await allowFunction([
         {
           parent: 0,
           paramType: Encoding.AbiEncoded,
@@ -1124,7 +1124,7 @@ describe("Operator - WithinAllowance", async () => {
 
   describe("WithinAllowance - from EtherValue", () => {
     it("enforces ether allowance from transaction.value", async () => {
-      const { owner, member, roles, testContract, scopeFunction } =
+      const { owner, member, roles, testContract, allowFunction } =
         await loadFixture(setupAvatarAndRoles);
 
       // Fund the avatar
@@ -1147,7 +1147,7 @@ describe("Operator - WithinAllowance", async () => {
       const { selector } = testContract.interface.getFunction("oneParamStatic");
 
       // Static param passes, EtherValue checks allowance
-      await scopeFunction(
+      await allowFunction(
         selector,
         [
           {

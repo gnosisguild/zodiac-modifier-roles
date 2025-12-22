@@ -59,6 +59,7 @@ describe("EmitsEvent", async () => {
           ROLE_KEY,
           AddressOne,
           "0x12345678",
+          [],
           ExecutionOptions.Both,
         ),
     ).to.emit(modifier, "AllowFunction");
@@ -73,10 +74,10 @@ describe("EmitsEvent", async () => {
       .to.emit(modifier, "RevokeFunction")
       .withArgs(ROLE_KEY, AddressOne, "0x12345678");
   });
-  it("ScopeFunction", async () => {
+  it("AllowFunction with condition", async () => {
     const { modifier, owner } = await loadFixture(setup);
     await expect(
-      modifier.connect(owner).scopeFunction(
+      modifier.connect(owner).allowFunction(
         ROLE_KEY,
         AddressOne,
         "0x12345678",
@@ -96,7 +97,7 @@ describe("EmitsEvent", async () => {
         ],
         ExecutionOptions.None,
       ),
-    ).to.emit(modifier, "ScopeFunction");
+    ).to.emit(modifier, "AllowFunction");
   });
   it("SetAllowance", async () => {
     const { modifier, owner } = await loadFixture(setup);

@@ -1,16 +1,11 @@
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import { AbiCoder } from "ethers";
+import { AbiCoder, ZeroHash } from "ethers";
 
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
-import {
-  Encoding,
-  BYTES32_ZERO,
-  Operator,
-  PermissionCheckerStatus,
-} from "../utils";
+import { Encoding, Operator, PermissionCheckerStatus } from "../utils";
 import {
   setupOneParamAddress,
   setupOneParamUintSmall,
@@ -19,11 +14,11 @@ import {
 
 describe("Operator - GreaterThan", async () => {
   it("evaluates operator GreaterThan - uint full word", async () => {
-    const { roles, scopeFunction, invoke } = await loadFixture(
+    const { roles, allowFunction, invoke } = await loadFixture(
       setupOneParamUintWord,
     );
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -40,18 +35,18 @@ describe("Operator - GreaterThan", async () => {
 
     await expect(invoke(1000))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed, BYTES32_ZERO);
+      .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed, ZeroHash);
     await expect(invoke(999))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed, BYTES32_ZERO);
+      .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed, ZeroHash);
     await expect(invoke(1001)).to.not.be.reverted;
   });
   it("evaluates operator GreaterThan - uint smaller than word", async () => {
-    const { roles, scopeFunction, invoke } = await loadFixture(
+    const { roles, allowFunction, invoke } = await loadFixture(
       setupOneParamUintSmall,
     );
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -68,19 +63,19 @@ describe("Operator - GreaterThan", async () => {
 
     await expect(invoke(50))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed, BYTES32_ZERO);
+      .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed, ZeroHash);
     await expect(invoke(49))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed, BYTES32_ZERO);
+      .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed, ZeroHash);
     await expect(invoke(51)).to.not.be.reverted;
   });
   it("evaluates operator GreaterThan - address", async () => {
-    const { roles, scopeFunction, invoke } =
+    const { roles, allowFunction, invoke } =
       await loadFixture(setupOneParamAddress);
 
     const address = "0x000000000000000000000000000000000000000f";
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -97,10 +92,10 @@ describe("Operator - GreaterThan", async () => {
 
     await expect(invoke(address))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed, BYTES32_ZERO);
+      .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed, ZeroHash);
     await expect(invoke("0x000000000000000000000000000000000000000e"))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed, BYTES32_ZERO);
+      .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed, ZeroHash);
     await expect(invoke("0x000000000000000000000000000000000000001f")).to.not.be
       .reverted;
   });

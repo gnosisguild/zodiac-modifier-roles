@@ -24,13 +24,13 @@ function bitmaskCompValue(
 
 describe("Operator - Bitmask", () => {
   it("overflows on static param by going over calldata limit", async () => {
-    const { roles, scopeFunction, invoke } =
+    const { roles, allowFunction, invoke } =
       await loadFixture(setupOneParamStatic);
 
     // shift 30 + 4 byte mask = 34 bytes needed, but only 32 bytes in calldata
     const compValue = bitmaskCompValue(30, "ffffffff", "00000000");
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -51,13 +51,13 @@ describe("Operator - Bitmask", () => {
   });
 
   it("overflows on dynamic param by going over param size", async () => {
-    const { roles, scopeFunction, invoke } =
+    const { roles, allowFunction, invoke } =
       await loadFixture(setupOneParamBytes);
 
     // 64-byte mask but value is only 5 bytes (padded to 32)
     const compValue = bitmaskCompValue(0, "ff".repeat(64), "00".repeat(64));
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -78,12 +78,12 @@ describe("Operator - Bitmask", () => {
   });
 
   it("works on dynamic", async () => {
-    const { roles, scopeFunction, invoke } =
+    const { roles, allowFunction, invoke } =
       await loadFixture(setupOneParamBytes);
 
     const compValue = bitmaskCompValue(0, "ffff", "aabb");
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -106,12 +106,12 @@ describe("Operator - Bitmask", () => {
   });
 
   it("works on static", async () => {
-    const { roles, scopeFunction, invoke } =
+    const { roles, allowFunction, invoke } =
       await loadFixture(setupOneParamStatic);
 
     const compValue = bitmaskCompValue(0, "ffff", "aabb");
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -146,13 +146,13 @@ describe("Operator - Bitmask", () => {
   });
 
   it("shift works on dynamic", async () => {
-    const { roles, scopeFunction, invoke } =
+    const { roles, allowFunction, invoke } =
       await loadFixture(setupOneParamBytes);
 
     // shift 5, check 1 byte
     const compValue = bitmaskCompValue(5, "ff", "cd");
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -175,13 +175,13 @@ describe("Operator - Bitmask", () => {
   });
 
   it("shift works on static", async () => {
-    const { roles, scopeFunction, invoke } =
+    const { roles, allowFunction, invoke } =
       await loadFixture(setupOneParamStatic);
 
     // shift 15, check 1 byte
     const compValue = bitmaskCompValue(15, "ff", "ab");
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -217,13 +217,13 @@ describe("Operator - Bitmask", () => {
   });
 
   it("multiword works on dynamic", async () => {
-    const { roles, scopeFunction, invoke } =
+    const { roles, allowFunction, invoke } =
       await loadFixture(setupOneParamBytes);
 
     // 64-byte mask spanning 2 words
     const compValue = bitmaskCompValue(0, "ff".repeat(64), "ab".repeat(64));
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -247,13 +247,13 @@ describe("Operator - Bitmask", () => {
   });
 
   it("multiword works on static (crosses into next param)", async () => {
-    const { roles, scopeFunction, invoke } =
+    const { roles, allowFunction, invoke } =
       await loadFixture(setupTwoParamsStatic);
 
     // 64-byte mask reads both params entirely
     const compValue = bitmaskCompValue(0, "ff".repeat(64), "00".repeat(64));
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -278,13 +278,13 @@ describe("Operator - Bitmask", () => {
   });
 
   it("elaborate mask patterns work - only activated bits are considered", async () => {
-    const { roles, scopeFunction, invoke } =
+    const { roles, allowFunction, invoke } =
       await loadFixture(setupOneParamStatic);
 
     // mask 0xf0 checks only high nibble, expected 0xa0
     const compValue = bitmaskCompValue(0, "f0", "a0");
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -330,13 +330,13 @@ describe("Operator - Bitmask", () => {
   });
 
   it("works on static crossing parameter boundary", async () => {
-    const { roles, scopeFunction, invoke } =
+    const { roles, allowFunction, invoke } =
       await loadFixture(setupTwoParamsStatic);
 
     // shift 26, mask 10 bytes = reads 6 bytes from param1, 4 bytes from param2
     const compValue = bitmaskCompValue(26, "ff".repeat(10), "aa".repeat(10));
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
