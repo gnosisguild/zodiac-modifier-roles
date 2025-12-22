@@ -15,11 +15,11 @@ import {
 
 describe("Operator - ArraySome", async () => {
   it("evaluates operator ArraySome", async () => {
-    const { roles, invoke, scopeFunction } = await loadFixture(
+    const { roles, invoke, allowFunction } = await loadFixture(
       setupOneParamArrayOfStaticTuple,
     );
 
-    scopeFunction([
+    allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,

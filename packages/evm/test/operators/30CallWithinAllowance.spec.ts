@@ -63,7 +63,7 @@ describe("Operator - CallWithinAllowance", async () => {
     const SELECTOR = testContract.interface.getFunction("doNothing").selector;
     const allowanceKey =
       "0x0000000000000000000000000000000000000000000000000000000000000001";
-    await roles.connect(owner).scopeFunction(
+    await roles.connect(owner).allowFunction(
       ROLE_KEY,
       testContractAddress,
       SELECTOR,
@@ -238,7 +238,7 @@ describe("Operator - CallWithinAllowance", async () => {
           );
       }
 
-      await roles.connect(owner).scopeFunction(
+      await roles.connect(owner).allowFunction(
         ROLE_KEY,
         testContractAddress,
         SELECTOR,
@@ -337,7 +337,7 @@ describe("Operator - CallWithinAllowance", async () => {
         testContract.interface.getFunction("oneParamStatic").selector;
 
       // Structure: And -> [Calldata -> Static, CallWithinAllowance] (CallWithinAllowance sibling of Calldata)
-      await roles.connect(owner).scopeFunction(
+      await roles.connect(owner).allowFunction(
         ROLE_KEY,
         testAddress,
         SELECTOR,
@@ -435,7 +435,7 @@ describe("Operator - CallWithinAllowance", async () => {
         testContract.interface.getFunction("oneParamStatic").selector;
 
       // Structure: And -> [Calldata -> Or, CallWithinAllowance] (CallWithinAllowance sibling of Calldata)
-      await roles.connect(owner).scopeFunction(
+      await roles.connect(owner).allowFunction(
         ROLE_KEY,
         testAddress,
         SELECTOR,

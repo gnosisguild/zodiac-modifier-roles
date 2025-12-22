@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "../common/ScopeConfig.sol";
-
 import "./serialize/ConditionsTransform.sol";
 import "./Storage.sol";
 
@@ -19,25 +17,23 @@ import {Clearance} from "../types/Permission.sol";
  *  │   │
  *  │   ├─ Clearance.None ────────────► target blocked (default)
  *  │   │
- *  │   ├─ Clearance.Target ──────────► all functions allowed
- *  │   │                               + ExecutionOptions (send/delegatecall)
+ *  │   ├─ Clearance.Target ──────────► all functions allowed, subject to
+ *  │   │                               ExecutionOptions and the target-level
+ *  │   │                               scopeConfig entry (wildcard selector)
  *  │   │
  *  │   └─ Clearance.Function ────────► only specific functions allowed
  *  │                                   (see scopeConfig below)
  *  │
  *  └─ scopeConfig (target + selector → ScopeConfig)
  *      │
- *      │   Used when Clearance.Function (selector != 0)
- *      │   or Clearance.Target with conditions
+ *      │   Used for Clearance.Function (selector == calldata selector)
+ *      │   and for Clearance.Target via the wildcard selector.
  *      │
- *      ├─ not set ───────────────────► function blocked
+ *      ├─ not set ───────────────────► blocked (target/function not allowed)
  *      │
- *      ├─ wildcarded ────────────────► function allowed, no parameter checks
- *      │                               + ExecutionOptions
- *      │
- *      └─ scoped ────────────────────► function allowed with conditions
+ *      └─ set ───────────────────────► allowed with conditions
  *                                      + ExecutionOptions
- *                                      + Condition tree (parameter constraints)
+ *                                      + Condition tree
  *
  * Allowances (separate storage, referenced by conditions)
  */
@@ -150,23 +146,18 @@ abstract contract Setup is RolesStorage {
     /// @dev Allows transactions to a target address, optionally with conditions.
     /// @param roleKey identifier of the role to be modified.
     /// @param targetAddress Destination address of transaction.
-    /// @param conditions The conditions to enforce on all calls (empty for wildcarded).
+    /// @param conditions The conditions to enforce on all calls (empty for pass-through).
     /// @param options designates if a transaction can send ether and/or delegatecall to target.
     function allowTarget(
         bytes32 roleKey,
         address targetAddress,
-        ConditionFlat[] calldata conditions,
+        ConditionFlat[] memory conditions,
         ExecutionOptions options
     ) external onlyOwner {
         bytes32 key = bytes32(bytes20(targetAddress)) | (~bytes32(0) >> 160);
 
         roles[roleKey].clearance[targetAddress] = Clearance.Target;
-        roles[roleKey].scopeConfig[key] = conditions.length == 0
-            ? ScopeConfig.packAsWildcarded(options)
-            : ScopeConfig.pack(
-                options,
-                ConditionsTransform.packAndStore(conditions)
-            );
+        roles[roleKey].scopeConfig[key] = _packScopeConfig(conditions, options);
 
         emit AllowTarget(roleKey, targetAddress, conditions, options);
     }
@@ -197,21 +188,30 @@ abstract contract Setup is RolesStorage {
                         FUNCTION PERMISSIONS
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Specifies the functions that can be called.
+    /// @dev Specifies the functions that can be called, optionally with conditions.
     /// @param roleKey identifier of the role to be modified.
     /// @param targetAddress Destination address of transaction.
     /// @param selector 4 byte function selector.
+    /// @param conditions The conditions to enforce (empty for pass-through).
     /// @param options designates if a transaction can send ether and/or delegatecall to target.
     function allowFunction(
         bytes32 roleKey,
         address targetAddress,
         bytes4 selector,
+        ConditionFlat[] memory conditions,
         ExecutionOptions options
     ) external onlyOwner {
-        roles[roleKey].scopeConfig[_key(targetAddress, selector)] = ScopeConfig
-            .packAsWildcarded(options);
+        bytes32 key = _key(targetAddress, selector);
 
-        emit AllowFunction(roleKey, targetAddress, selector, options);
+        roles[roleKey].scopeConfig[key] = _packScopeConfig(conditions, options);
+
+        emit AllowFunction(
+            roleKey,
+            targetAddress,
+            selector,
+            conditions,
+            options
+        );
     }
 
     /// @dev Removes the functions that can be called.
@@ -225,33 +225,6 @@ abstract contract Setup is RolesStorage {
     ) external onlyOwner {
         delete roles[roleKey].scopeConfig[_key(targetAddress, selector)];
         emit RevokeFunction(roleKey, targetAddress, selector);
-    }
-
-    /// @dev Sets conditions to enforce on calls to the specified target.
-    /// @param roleKey identifier of the role to be modified.
-    /// @param targetAddress Destination address of transaction.
-    /// @param selector 4 byte function selector.
-    /// @param conditions The conditions to enforce.
-    /// @param options designates if a transaction can send ether and/or delegatecall to target.
-    function scopeFunction(
-        bytes32 roleKey,
-        address targetAddress,
-        bytes4 selector,
-        ConditionFlat[] memory conditions,
-        ExecutionOptions options
-    ) external onlyOwner {
-        address pointer = ConditionsTransform.packAndStore(conditions);
-
-        roles[roleKey].scopeConfig[_key(targetAddress, selector)] = ScopeConfig
-            .pack(options, pointer);
-
-        emit ScopeFunction(
-            roleKey,
-            targetAddress,
-            selector,
-            conditions,
-            options
-        );
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -312,5 +285,22 @@ abstract contract Setup is RolesStorage {
     ) external onlyOwner {
         unwrappers[bytes32(bytes20(to)) | (bytes32(selector) >> 160)] = adapter;
         emit SetUnwrapAdapter(to, selector, adapter);
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                               INTERNALS
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev Packs ExecutionOptions and condition pointer into a single uint256.
+    /// If conditions is empty, stores a single zero-initialized ConditionFlat,
+    /// which evaluates as Operator.Pass (allowing any parameters).
+    function _packScopeConfig(
+        ConditionFlat[] memory conditions,
+        ExecutionOptions options
+    ) private returns (uint256) {
+        address pointer = ConditionsTransform.packAndStore(
+            conditions.length > 0 ? conditions : new ConditionFlat[](1)
+        );
+        return (uint256(options) << 160) | uint160(pointer);
     }
 }

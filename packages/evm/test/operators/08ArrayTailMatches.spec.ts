@@ -13,11 +13,11 @@ import { Encoding, Operator, PermissionCheckerStatus } from "../utils";
 
 describe("Operator - ArrayTailMatches", async () => {
   it("passes when all tail element checks pass", async () => {
-    const { invoke, scopeFunction } = await loadFixture(
+    const { invoke, allowFunction } = await loadFixture(
       setupOneParamArrayOfStatic,
     );
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -50,11 +50,11 @@ describe("Operator - ArrayTailMatches", async () => {
   });
 
   it("fails when one of the tail element checks fails", async () => {
-    const { roles, invoke, scopeFunction } = await loadFixture(
+    const { roles, invoke, allowFunction } = await loadFixture(
       setupOneParamArrayOfStatic,
     );
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -87,11 +87,11 @@ describe("Operator - ArrayTailMatches", async () => {
   });
 
   it("fails when array is shorter than required tail length", async () => {
-    const { roles, invoke, scopeFunction } = await loadFixture(
+    const { roles, invoke, allowFunction } = await loadFixture(
       setupOneParamArrayOfStatic,
     );
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -128,11 +128,11 @@ describe("Operator - ArrayTailMatches", async () => {
   });
 
   it("passes when array length equals tail length", async () => {
-    const { invoke, scopeFunction } = await loadFixture(
+    const { invoke, allowFunction } = await loadFixture(
       setupOneParamArrayOfStatic,
     );
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -163,11 +163,11 @@ describe("Operator - ArrayTailMatches", async () => {
   });
 
   it("passes when array is longer than tail length", async () => {
-    const { invoke, scopeFunction } = await loadFixture(
+    const { invoke, allowFunction } = await loadFixture(
       setupOneParamArrayOfStatic,
     );
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -199,11 +199,11 @@ describe("Operator - ArrayTailMatches", async () => {
   });
 
   it("works with complex children like tuples", async () => {
-    const { roles, invoke, scopeFunction } = await loadFixture(
+    const { roles, invoke, allowFunction } = await loadFixture(
       setupOneParamArrayOfStaticTuple,
     );
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,

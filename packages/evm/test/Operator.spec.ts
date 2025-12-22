@@ -74,7 +74,7 @@ describe("Operator", async () => {
       .connect(owner)
       .scopeTarget(ROLE_KEY, await testContract.getAddress());
 
-    await modifier.connect(owner).scopeFunction(
+    await modifier.connect(owner).allowFunction(
       ROLE_KEY,
       await testContract.getAddress(),
       SELECTOR,
@@ -135,7 +135,7 @@ describe("Operator", async () => {
     await modifier
       .connect(owner)
       .scopeTarget(ROLE_KEY, await testContract.getAddress());
-    await modifier.connect(owner).scopeFunction(
+    await modifier.connect(owner).allowFunction(
       ROLE_KEY,
       await testContract.getAddress(),
       SELECTOR,
@@ -209,7 +209,7 @@ describe("Operator", async () => {
     await modifier
       .connect(owner)
       .scopeTarget(ROLE_KEY, await testContract.getAddress());
-    await modifier.connect(owner).scopeFunction(
+    await modifier.connect(owner).allowFunction(
       ROLE_KEY,
       await testContract.getAddress(),
       SELECTOR,
@@ -278,7 +278,7 @@ describe("Operator", async () => {
     await modifier
       .connect(owner)
       .scopeTarget(ROLE_KEY, await testContract.getAddress());
-    await modifier.connect(owner).scopeFunction(
+    await modifier.connect(owner).allowFunction(
       ROLE_KEY,
       await testContract.getAddress(),
       SELECTOR,
@@ -358,7 +358,7 @@ describe("Operator", async () => {
     await modifier
       .connect(owner)
       .scopeTarget(ROLE_KEY, await testEncoder.getAddress());
-    await modifier.connect(owner).scopeFunction(
+    await modifier.connect(owner).allowFunction(
       ROLE_KEY,
       await testEncoder.getAddress(),
       SELECTOR,
@@ -456,7 +456,7 @@ describe("Operator", async () => {
     await modifier
       .connect(owner)
       .scopeTarget(ROLE_KEY, await testEncoder.getAddress());
-    await modifier.connect(owner).scopeFunction(
+    await modifier.connect(owner).allowFunction(
       ROLE_KEY,
       await testEncoder.getAddress(),
       SELECTOR,
@@ -604,7 +604,7 @@ describe("Operator", async () => {
     await modifier
       .connect(owner)
       .scopeTarget(ROLE_KEY, await testEncoder.getAddress());
-    await modifier.connect(owner).scopeFunction(
+    await modifier.connect(owner).allowFunction(
       ROLE_KEY,
       await testEncoder.getAddress(),
       SELECTOR,
@@ -701,7 +701,7 @@ describe("Operator", async () => {
     await modifier
       .connect(owner)
       .scopeTarget(ROLE_KEY, await testEncoder.getAddress());
-    await modifier.connect(owner).scopeFunction(
+    await modifier.connect(owner).allowFunction(
       ROLE_KEY,
       await testEncoder.getAddress(),
       SELECTOR,
@@ -761,7 +761,7 @@ describe("Operator", async () => {
     await modifier
       .connect(owner)
       .scopeTarget(ROLE_KEY, await testEncoder.getAddress());
-    await modifier.connect(owner).scopeFunction(
+    await modifier.connect(owner).allowFunction(
       ROLE_KEY,
       await testEncoder.getAddress(),
       SELECTOR,
@@ -851,7 +851,7 @@ describe("Operator", async () => {
     await modifier
       .connect(owner)
       .scopeTarget(ROLE_KEY, await testEncoder.getAddress());
-    await modifier.connect(owner).scopeFunction(
+    await modifier.connect(owner).allowFunction(
       ROLE_KEY,
       await testEncoder.getAddress(),
       SELECTOR,
@@ -987,7 +987,7 @@ describe("Operator", async () => {
       await modifier
         .connect(owner)
         .scopeTarget(ROLE_KEY, await testContract.getAddress());
-      await modifier.connect(owner).scopeFunction(
+      await modifier.connect(owner).allowFunction(
         ROLE_KEY,
         await testContract.getAddress(),
         SELECTOR,

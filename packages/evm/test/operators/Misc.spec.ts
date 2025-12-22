@@ -28,7 +28,7 @@ const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
 describe("Misc", async () => {
   it("evaluates operator Bitmask and EqualsTo with type equivalent tree", async () => {
-    const { roles, scopeFunction, invoke } =
+    const { roles, allowFunction, invoke } =
       await loadFixture(setupOneParamBytes);
 
     const maskCompValue = (selector: string) => {
@@ -48,7 +48,7 @@ describe("Misc", async () => {
     const fnAllowed2 = iface.getFunction("fnAllowed2");
     if (!fnAllowed1 || !fnAllowed2) return;
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -110,7 +110,7 @@ describe("Misc", async () => {
   });
 
   it("It is possible to setup sibling TypeEquivalence when the first element is Dynamic, and others are Dynamic or AbiEncoded", async () => {
-    const { scopeFunction } = await loadFixture(setupOneParamBytes);
+    const { allowFunction } = await loadFixture(setupOneParamBytes);
 
     const maskCompValue = (selector: string) => {
       const shift = "0000";
@@ -129,7 +129,7 @@ describe("Misc", async () => {
     const fnAllowed2 = iface.getFunction("fnAllowed2");
     if (!fnAllowed1 || !fnAllowed2) return;
     await expect(
-      scopeFunction([
+      allowFunction([
         {
           parent: 0,
           paramType: Encoding.AbiEncoded,
@@ -177,7 +177,7 @@ describe("Misc", async () => {
   });
 
   it("evalutes array.every(OR())", async () => {
-    const { roles, scopeFunction, invoke } = await loadFixture(
+    const { roles, allowFunction, invoke } = await loadFixture(
       setupOneParamArrayOfBytes,
     );
 
@@ -237,7 +237,7 @@ describe("Misc", async () => {
       ],
     });
 
-    await scopeFunction(conditions);
+    await allowFunction(conditions);
 
     // Test data - each entry must match one of the variants
     const validArray = [
@@ -302,7 +302,7 @@ describe("Misc", async () => {
       await roles.connect(owner).scopeTarget(roleKey, testContractAddress);
 
       // Scope to require exactly 1 ether
-      await roles.connect(owner).scopeFunction(
+      await roles.connect(owner).allowFunction(
         roleKey,
         testContractAddress,
         SELECTOR,
@@ -390,7 +390,7 @@ describe("Misc", async () => {
       await roles.connect(owner).scopeTarget(roleKey, testContractAddress);
 
       // Scope to require exactly 0 ether (no value transfer)
-      await roles.connect(owner).scopeFunction(
+      await roles.connect(owner).allowFunction(
         roleKey,
         testContractAddress,
         SELECTOR,
@@ -455,7 +455,7 @@ describe("Misc", async () => {
       // Scope oneParamBytes with an OR over embedded functions:
       // - fnZeroEther: ether value must be 0
       // - fnLimitedEther: ether value must be < 10 ether
-      await roles.connect(owner).scopeFunction(
+      await roles.connect(owner).allowFunction(
         roleKey,
         testContractAddress,
         SELECTOR,

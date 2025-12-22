@@ -58,7 +58,7 @@ describe("AbiEncoded LeadingBytes", async () => {
 
       // Condition: AbiEncoded with 20 bytes offset from start of block
       // (4-byte selector + 16 extra bytes)
-      await roles.connect(owner).scopeFunction(
+      await roles.connect(owner).allowFunction(
         ROLE_KEY,
         testContractAddress,
         selector,
@@ -116,7 +116,7 @@ describe("AbiEncoded LeadingBytes", async () => {
         "oneParamDynamicTuple",
       ).selector;
 
-      await roles.connect(owner).scopeFunction(
+      await roles.connect(owner).allowFunction(
         ROLE_KEY,
         testContractAddress,
         selector,
@@ -175,7 +175,7 @@ describe("AbiEncoded LeadingBytes", async () => {
 
       // Condition: AbiEncoded -> AbiEncoded (bytes param with custom leadingBytes)
       // AbiEncoded handles the dynamic length prefix internally, then skips 10 bytes
-      await roles.connect(owner).scopeFunction(
+      await roles.connect(owner).allowFunction(
         ROLE_KEY,
         testContractAddress,
         selector,
@@ -243,7 +243,7 @@ describe("AbiEncoded LeadingBytes", async () => {
 
       const selector = testContract.interface.getFunction("dynamic").selector;
 
-      await roles.connect(owner).scopeFunction(
+      await roles.connect(owner).allowFunction(
         ROLE_KEY,
         testContractAddress,
         selector,
@@ -309,7 +309,7 @@ describe("AbiEncoded LeadingBytes", async () => {
       const selector = testContract.interface.getFunction("dynamic").selector;
 
       // Condition expects 10 bytes offset
-      await roles.connect(owner).scopeFunction(
+      await roles.connect(owner).allowFunction(
         ROLE_KEY,
         testContractAddress,
         selector,

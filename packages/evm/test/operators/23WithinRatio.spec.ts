@@ -25,7 +25,7 @@ describe("WithinRatio Operator", () => {
   describe("Core Functionality", () => {
     describe("maxRatio enforcement", () => {
       it("enforces maxRatio bound with proper boundary behavior", async () => {
-        const { roles, scopeFunction, invoke } =
+        const { roles, allowFunction, invoke } =
           await loadFixture(setupTwoParamsStatic);
 
         const compValue = encodeWithinRatioCompValue({
@@ -37,7 +37,7 @@ describe("WithinRatio Operator", () => {
           maxRatio: 9500, // 95% upper bound
         });
 
-        await scopeFunction(
+        await allowFunction(
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -79,7 +79,7 @@ describe("WithinRatio Operator", () => {
       });
 
       it("skips check when maxRatio is 0 (no upper bound)", async () => {
-        const { scopeFunction, invoke } =
+        const { allowFunction, invoke } =
           await loadFixture(setupTwoParamsStatic);
 
         // Inverted: pluck second param first, reference uses index 1
@@ -92,7 +92,7 @@ describe("WithinRatio Operator", () => {
           maxRatio: 0, // no upper bound
         });
 
-        await scopeFunction(
+        await allowFunction(
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -122,7 +122,7 @@ describe("WithinRatio Operator", () => {
 
     describe("minRatio enforcement", () => {
       it("enforces minRatio bound with proper boundary behavior", async () => {
-        const { roles, scopeFunction, invoke } =
+        const { roles, allowFunction, invoke } =
           await loadFixture(setupTwoParamsStatic);
 
         const compValue = encodeWithinRatioCompValue({
@@ -134,7 +134,7 @@ describe("WithinRatio Operator", () => {
           maxRatio: 0, // no upper bound
         });
 
-        await scopeFunction(
+        await allowFunction(
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -176,7 +176,7 @@ describe("WithinRatio Operator", () => {
       });
 
       it("skips check when minRatio is 0 (no lower bound)", async () => {
-        const { scopeFunction, invoke } =
+        const { allowFunction, invoke } =
           await loadFixture(setupTwoParamsStatic);
 
         const compValue = encodeWithinRatioCompValue({
@@ -188,7 +188,7 @@ describe("WithinRatio Operator", () => {
           maxRatio: 10000,
         });
 
-        await scopeFunction(
+        await allowFunction(
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -216,7 +216,7 @@ describe("WithinRatio Operator", () => {
 
     describe("price adapter scenarios", () => {
       it("no adapters - min 1/4 ratio (≥25%)", async () => {
-        const { roles, scopeFunction, invoke } =
+        const { roles, allowFunction, invoke } =
           await loadFixture(setupTwoParamsStatic);
 
         const compValue = encodeWithinRatioCompValue({
@@ -228,7 +228,7 @@ describe("WithinRatio Operator", () => {
           maxRatio: 0, // no upper bound
         });
 
-        await scopeFunction(
+        await allowFunction(
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -263,7 +263,7 @@ describe("WithinRatio Operator", () => {
       });
 
       it("no adapters - max 5x ratio (≤500%)", async () => {
-        const { roles, scopeFunction, invoke } =
+        const { roles, allowFunction, invoke } =
           await loadFixture(setupTwoParamsStatic);
 
         const compValue = encodeWithinRatioCompValue({
@@ -275,7 +275,7 @@ describe("WithinRatio Operator", () => {
           maxRatio: 50000, // 500%
         });
 
-        await scopeFunction(
+        await allowFunction(
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -310,7 +310,7 @@ describe("WithinRatio Operator", () => {
       });
 
       it("ETH/USD - ETH converts to USD base", async () => {
-        const { roles, scopeFunction, invoke } =
+        const { roles, allowFunction, invoke } =
           await loadFixture(setupTwoParamsStatic);
 
         // Deploy ETH/USD adapter: 1 ETH = 2000 USD
@@ -328,7 +328,7 @@ describe("WithinRatio Operator", () => {
           maxRatio: 10050, // 100.5%
         });
 
-        await scopeFunction(
+        await allowFunction(
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -364,7 +364,7 @@ describe("WithinRatio Operator", () => {
       });
 
       it("USD/WBTC - WBTC converts to USD base", async () => {
-        const { roles, scopeFunction, invoke } =
+        const { roles, allowFunction, invoke } =
           await loadFixture(setupTwoParamsStatic);
 
         // Deploy WBTC/USD adapter: 1 WBTC = 150,000 USD
@@ -382,7 +382,7 @@ describe("WithinRatio Operator", () => {
           maxRatio: 10100, // 101% (1% slippage tolerance)
         });
 
-        await scopeFunction(
+        await allowFunction(
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -423,7 +423,7 @@ describe("WithinRatio Operator", () => {
       });
 
       it("ETH/BTC - both convert to USD base", async () => {
-        const { roles, scopeFunction, invoke } =
+        const { roles, allowFunction, invoke } =
           await loadFixture(setupTwoParamsStatic);
 
         // Deploy ETH/USD adapter: 1 ETH = 2000 USD
@@ -444,7 +444,7 @@ describe("WithinRatio Operator", () => {
           maxRatio: 10050, // 100.5% (0.5% slippage tolerance)
         });
 
-        await scopeFunction(
+        await allowFunction(
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -485,7 +485,7 @@ describe("WithinRatio Operator", () => {
       });
 
       it("ETH/WBTC - both convert to WBTC base", async () => {
-        const { roles, scopeFunction, invoke } =
+        const { roles, allowFunction, invoke } =
           await loadFixture(setupTwoParamsStatic);
 
         // Deploy ETH/WBTC adapter: 1 ETH = 0.045 WBTC
@@ -503,7 +503,7 @@ describe("WithinRatio Operator", () => {
           maxRatio: 10200, // 102% (2% slippage tolerance)
         });
 
-        await scopeFunction(
+        await allowFunction(
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -544,7 +544,7 @@ describe("WithinRatio Operator", () => {
       });
 
       it("ETH/WBTC - both convert to ETH base", async () => {
-        const { roles, scopeFunction, invoke } =
+        const { roles, allowFunction, invoke } =
           await loadFixture(setupTwoParamsStatic);
 
         // Deploy WBTC/ETH adapter: 1 WBTC = 10 ETH
@@ -562,7 +562,7 @@ describe("WithinRatio Operator", () => {
           maxRatio: 10500, // 105% (5% slippage tolerance)
         });
 
-        await scopeFunction(
+        await allowFunction(
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -603,7 +603,7 @@ describe("WithinRatio Operator", () => {
       });
 
       it("USDC/FunkyToken - large decimal normalization (6 vs 37 decimals)", async () => {
-        const { roles, scopeFunction, invoke } =
+        const { roles, allowFunction, invoke } =
           await loadFixture(setupTwoParamsStatic);
 
         // Deploy FunkyToken/USDC adapter: 1 FunkyToken = 2 USDC (price adapters always return 18 decimals)
@@ -621,7 +621,7 @@ describe("WithinRatio Operator", () => {
           maxRatio: 10025, // 100.25% (0.25% slippage tolerance)
         });
 
-        await scopeFunction(
+        await allowFunction(
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -690,7 +690,7 @@ describe("WithinRatio Operator", () => {
       await roles.connect(owner).setDefaultRole(member.address, roleKey);
       await roles.connect(owner).scopeTarget(roleKey, testContractAddress);
 
-      const scopeFunction = (
+      const allowFunction = (
         selector: string,
         conditions: ConditionFlatStruct[],
 
@@ -698,7 +698,7 @@ describe("WithinRatio Operator", () => {
       ) =>
         roles
           .connect(owner)
-          .scopeFunction(
+          .allowFunction(
             roleKey,
             testContractAddress,
             selector,
@@ -711,11 +711,11 @@ describe("WithinRatio Operator", () => {
           .connect(member)
           .execTransactionFromModule(testContractAddress, 0, data, 0);
 
-      return { roles, testContract, scopeFunction, execTransactionFromModule };
+      return { roles, testContract, allowFunction, execTransactionFromModule };
     }
 
     it("from AbiEncoded", async () => {
-      const { roles, testContract, scopeFunction, execTransactionFromModule } =
+      const { roles, testContract, allowFunction, execTransactionFromModule } =
         await loadFixture(setupWithEncoder);
 
       // Check ratio between first and third params, skipping dynamic middle param
@@ -729,7 +729,7 @@ describe("WithinRatio Operator", () => {
         maxRatio: 12000, // 120%
       });
 
-      await scopeFunction(
+      await allowFunction(
         testContract.interface.getFunction("mixedParams").selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -792,7 +792,7 @@ describe("WithinRatio Operator", () => {
     });
 
     it("from nested AbiEncoded", async () => {
-      const { roles, testContract, scopeFunction, execTransactionFromModule } =
+      const { roles, testContract, allowFunction, execTransactionFromModule } =
         await loadFixture(setupWithEncoder);
 
       // Check ratio between first and third encoded values
@@ -806,7 +806,7 @@ describe("WithinRatio Operator", () => {
         maxRatio: 8000, // 80%
       });
 
-      await scopeFunction(
+      await allowFunction(
         testContract.interface.getFunction("dynamicStatic").selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -862,7 +862,7 @@ describe("WithinRatio Operator", () => {
     });
 
     it("from Tuple", async () => {
-      const { roles, testContract, scopeFunction, execTransactionFromModule } =
+      const { roles, testContract, allowFunction, execTransactionFromModule } =
         await loadFixture(setupWithEncoder);
 
       // MixedTuple has: amount(0), second(1), limit(2), fourth(3)
@@ -877,7 +877,7 @@ describe("WithinRatio Operator", () => {
         maxRatio: 15000, // 150%
       });
 
-      await scopeFunction(
+      await allowFunction(
         testContract.interface.getFunction("mixedTuple").selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -936,7 +936,7 @@ describe("WithinRatio Operator", () => {
     });
 
     it("from Array", async () => {
-      const { roles, testContract, scopeFunction, execTransactionFromModule } =
+      const { roles, testContract, allowFunction, execTransactionFromModule } =
         await loadFixture(setupWithEncoder);
 
       // Pluck array[0] -> pluckedValues[3], Pluck array[2] -> pluckedValues[1]
@@ -950,7 +950,7 @@ describe("WithinRatio Operator", () => {
         maxRatio: 12000, // 120%
       });
 
-      await scopeFunction(
+      await allowFunction(
         testContract.interface.getFunction("uint256ArrayStatic").selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -1050,7 +1050,7 @@ describe("WithinRatio Operator", () => {
       });
 
       // Non-structural children (EtherValue, None) must come after structural (AbiEncoded)
-      await roles.connect(owner).scopeFunction(
+      await roles.connect(owner).allowFunction(
         roleKey,
         testContractAddress,
         SELECTOR,

@@ -68,12 +68,12 @@ describe("OnlyOwner", async () => {
     await expect(
       modifier
         .connect(johnDoe)
-        .allowFunction(ROLE_KEY, SomeAddress, "0x00000000", 0),
+        .allowFunction(ROLE_KEY, SomeAddress, "0x00000000", [], 0),
     ).to.be.revertedWith("Ownable: caller is not the owner");
     await expect(
       modifier
         .connect(owner)
-        .allowFunction(ROLE_KEY, SomeAddress, "0x00000000", 0),
+        .allowFunction(ROLE_KEY, SomeAddress, "0x00000000", [], 0),
     ).to.not.be.reverted;
   });
   it("onlyOwner for revokeFunction, simple invoker fails", async () => {
@@ -91,11 +91,11 @@ describe("OnlyOwner", async () => {
         .revokeFunction(ROLE_KEY, SomeAddress, "0x00000000"),
     ).to.not.be.reverted;
   });
-  it("onlyOwner for scopeFunction, simple invoker fails", async () => {
+  it("onlyOwner for allowFunction with conditions, simple invoker fails", async () => {
     const { modifier, owner, johnDoe } = await loadFixture(setup);
 
     await expect(
-      modifier.connect(johnDoe).scopeFunction(
+      modifier.connect(johnDoe).allowFunction(
         ROLE_KEY,
         SomeAddress,
         "0x00000000",
@@ -118,7 +118,7 @@ describe("OnlyOwner", async () => {
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
     await expect(
-      modifier.connect(owner).scopeFunction(
+      modifier.connect(owner).allowFunction(
         ROLE_KEY,
         SomeAddress,
         "0x00000000",

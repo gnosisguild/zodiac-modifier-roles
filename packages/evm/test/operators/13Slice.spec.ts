@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import { AbiCoder, BigNumberish, solidityPacked, ZeroHash } from "ethers";
+import { AbiCoder, solidityPacked, ZeroHash } from "ethers";
 
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
@@ -17,7 +17,6 @@ import {
   setupOneParamDynamicTuple,
   setupTwoParamsStaticDynamic,
 } from "../setup";
-import { Roles } from "../../typechain-types";
 
 // Helper to encode Slice compValue: 2 bytes shift + 1 byte size
 const encodeSliceCompValue = (shift: number, size: number) =>
@@ -26,11 +25,11 @@ const encodeSliceCompValue = (shift: number, size: number) =>
 describe("Operator - Slice", async () => {
   describe("GreaterThan", () => {
     it("32 bytes slice - passes when value is greater", async () => {
-      const { roles, scopeFunction, invoke } =
+      const { roles, allowFunction, invoke } =
         await loadFixture(setupOneParamBytes);
 
       // Slice the first 32 bytes and compare as uint256
-      await scopeFunction([
+      await allowFunction([
         {
           parent: 0,
           paramType: Encoding.AbiEncoded,
@@ -69,12 +68,12 @@ describe("Operator - Slice", async () => {
     });
 
     it("10 bytes slice - passes when value is greater", async () => {
-      const { roles, scopeFunction, invoke } =
+      const { roles, allowFunction, invoke } =
         await loadFixture(setupOneParamBytes);
 
       // Slice 10 bytes at shift 0 and compare
       // When right-aligned, 10 bytes becomes a uint80
-      await scopeFunction([
+      await allowFunction([
         {
           parent: 0,
           paramType: Encoding.AbiEncoded,
@@ -116,10 +115,10 @@ describe("Operator - Slice", async () => {
 
   describe("LessThan", () => {
     it("32 bytes slice - passes when value is less", async () => {
-      const { roles, scopeFunction, invoke } =
+      const { roles, allowFunction, invoke } =
         await loadFixture(setupOneParamBytes);
 
-      await scopeFunction([
+      await allowFunction([
         {
           parent: 0,
           paramType: Encoding.AbiEncoded,
@@ -164,10 +163,10 @@ describe("Operator - Slice", async () => {
     });
 
     it("10 bytes slice - passes when value is less", async () => {
-      const { roles, scopeFunction, invoke } =
+      const { roles, allowFunction, invoke } =
         await loadFixture(setupOneParamBytes);
 
-      await scopeFunction([
+      await allowFunction([
         {
           parent: 0,
           paramType: Encoding.AbiEncoded,
@@ -214,10 +213,10 @@ describe("Operator - Slice", async () => {
 
   describe("SignedIntGreaterThan", () => {
     it("32 bytes slice - passes when signed value is greater", async () => {
-      const { roles, scopeFunction, invoke } =
+      const { roles, allowFunction, invoke } =
         await loadFixture(setupOneParamBytes);
 
-      await scopeFunction([
+      await allowFunction([
         {
           parent: 0,
           paramType: Encoding.AbiEncoded,
@@ -260,10 +259,10 @@ describe("Operator - Slice", async () => {
     });
 
     it("10 bytes slice - passes when signed value is greater", async () => {
-      const { roles, scopeFunction, invoke } =
+      const { roles, allowFunction, invoke } =
         await loadFixture(setupOneParamBytes);
 
-      await scopeFunction([
+      await allowFunction([
         {
           parent: 0,
           paramType: Encoding.AbiEncoded,
@@ -305,10 +304,10 @@ describe("Operator - Slice", async () => {
 
   describe("SignedIntLessThan", () => {
     it("32 bytes slice - passes when signed value is less", async () => {
-      const { roles, scopeFunction, invoke } =
+      const { roles, allowFunction, invoke } =
         await loadFixture(setupOneParamBytes);
 
-      await scopeFunction([
+      await allowFunction([
         {
           parent: 0,
           paramType: Encoding.AbiEncoded,
@@ -357,10 +356,10 @@ describe("Operator - Slice", async () => {
     });
 
     it("10 bytes slice - passes when signed value is less", async () => {
-      const { roles, scopeFunction, invoke } =
+      const { roles, allowFunction, invoke } =
         await loadFixture(setupOneParamBytes);
 
-      await scopeFunction([
+      await allowFunction([
         {
           parent: 0,
           paramType: Encoding.AbiEncoded,
@@ -407,11 +406,11 @@ describe("Operator - Slice", async () => {
 
   describe("Slice with shift", () => {
     it("extracts slice from middle of bytes", async () => {
-      const { roles, scopeFunction, invoke } =
+      const { roles, allowFunction, invoke } =
         await loadFixture(setupOneParamBytes);
 
       // Slice 4 bytes at shift 4 (skip first 4 bytes)
-      await scopeFunction([
+      await allowFunction([
         {
           parent: 0,
           paramType: Encoding.AbiEncoded,
@@ -448,11 +447,11 @@ describe("Operator - Slice", async () => {
 
   describe("Slice with And operator", () => {
     it("combines multiple conditions on same slice", async () => {
-      const { roles, scopeFunction, invoke } =
+      const { roles, allowFunction, invoke } =
         await loadFixture(setupOneParamBytes);
 
       // Slice 12 bytes at shift 6 with And: value > 100 AND value < 200
-      await scopeFunction([
+      await allowFunction([
         {
           parent: 0,
           paramType: Encoding.AbiEncoded,
@@ -514,7 +513,7 @@ describe("Operator - Slice", async () => {
 
   describe("WithinAllowance", () => {
     it("15 bytes slice at shift 200 - tracks spending against allowance", async () => {
-      const { owner, roles, scopeFunction, invoke } =
+      const { owner, roles, allowFunction, invoke } =
         await loadFixture(setupOneParamBytes);
 
       const allowanceKey =
@@ -523,7 +522,7 @@ describe("Operator - Slice", async () => {
       await roles.connect(owner).setAllowance(allowanceKey, 1000, 0, 0, 0, 0);
 
       // Slice 15 bytes at shift 200
-      await scopeFunction([
+      await allowFunction([
         {
           parent: 0,
           paramType: Encoding.AbiEncoded,
@@ -568,13 +567,13 @@ describe("Operator - Slice", async () => {
 
   describe("EqualTo", () => {
     it("32 bytes slice at shift 50 - checks exact equality", async () => {
-      const { roles, scopeFunction, invoke } =
+      const { roles, allowFunction, invoke } =
         await loadFixture(setupOneParamBytes);
 
       const targetValue = defaultAbiCoder.encode(["uint256"], [123456789]);
 
       // Slice 32 bytes at shift 50
-      await scopeFunction([
+      await allowFunction([
         {
           parent: 0,
           paramType: Encoding.AbiEncoded,
@@ -615,7 +614,7 @@ describe("Operator - Slice", async () => {
 
   describe("Nested dynamic in tuple", () => {
     it("slices bytes from inside a dynamic tuple with EqualTo", async () => {
-      const { roles, scopeFunction, invoke } = await loadFixture(
+      const { roles, allowFunction, invoke } = await loadFixture(
         setupOneParamDynamicTuple,
       );
 
@@ -623,7 +622,7 @@ describe("Operator - Slice", async () => {
       // Slice 32 bytes from the bytes field for EqualTo comparison
       const targetValue = defaultAbiCoder.encode(["uint256"], [12345]);
 
-      await scopeFunction([
+      await allowFunction([
         {
           parent: 0,
           paramType: Encoding.AbiEncoded,
@@ -671,12 +670,12 @@ describe("Operator - Slice", async () => {
     });
 
     it("slices bytes from inside tuple with GreaterThan comparison", async () => {
-      const { roles, scopeFunction, invoke } = await loadFixture(
+      const { roles, allowFunction, invoke } = await loadFixture(
         setupOneParamDynamicTuple,
       );
 
       // Slice first 4 bytes from the bytes field
-      await scopeFunction([
+      await allowFunction([
         {
           parent: 0,
           paramType: Encoding.AbiEncoded,
@@ -721,12 +720,12 @@ describe("Operator - Slice", async () => {
     });
 
     it("slices bytes from inside tuple with shift and comparison", async () => {
-      const { roles, scopeFunction, invoke } = await loadFixture(
+      const { roles, allowFunction, invoke } = await loadFixture(
         setupOneParamDynamicTuple,
       );
 
       // Slice 8 bytes at shift 4 from the bytes field
-      await scopeFunction([
+      await allowFunction([
         {
           parent: 0,
           paramType: Encoding.AbiEncoded,
@@ -777,12 +776,12 @@ describe("Operator - Slice", async () => {
 
   describe("Static Slice", () => {
     it("slices 8 bytes from beginning of bytes32 (Static)", async () => {
-      const { roles, scopeFunction, invoke } =
+      const { roles, allowFunction, invoke } =
         await loadFixture(setupOneParamBytes32);
 
       // Slice first 8 bytes from bytes32 (Static)
       // For Static encoding, there's no length prefix (payload.inlined = true)
-      await scopeFunction([
+      await allowFunction([
         {
           parent: 0,
           paramType: Encoding.AbiEncoded,
@@ -819,12 +818,12 @@ describe("Operator - Slice", async () => {
     });
 
     it("slices 13 bytes from middle of bytes32 (Static)", async () => {
-      const { roles, scopeFunction, invoke } =
+      const { roles, allowFunction, invoke } =
         await loadFixture(setupOneParamBytes32);
 
       // Slice 13 bytes starting at shift 10 from bytes32 (Static)
       // bytes32 layout: [0-9: prefix (10 bytes)][10-22: slice (13 bytes)][23-31: suffix (9 bytes)]
-      await scopeFunction([
+      await allowFunction([
         {
           parent: 0,
           paramType: Encoding.AbiEncoded,
@@ -860,12 +859,12 @@ describe("Operator - Slice", async () => {
     });
 
     it("slices 8 bytes from end of bytes32 (Static)", async () => {
-      const { roles, scopeFunction, invoke } =
+      const { roles, allowFunction, invoke } =
         await loadFixture(setupOneParamBytes32);
 
       // Slice last 8 bytes from bytes32 (Static)
       // bytes32 is 32 bytes, so shift 24 to get last 8 bytes
-      await scopeFunction([
+      await allowFunction([
         {
           parent: 0,
           paramType: Encoding.AbiEncoded,
@@ -954,7 +953,7 @@ describe("Operator - Slice", async () => {
     }
 
     it("slices bytes then plucks for WithinRatio comparison with static param", async () => {
-      const { roles, invoke, scopeFunction } = await loadFixture(
+      const { roles, invoke, allowFunction } = await loadFixture(
         setupTwoParamsStaticDynamic,
       );
 
@@ -971,7 +970,7 @@ describe("Operator - Slice", async () => {
         maxRatio: 11000, // 110%
       });
 
-      await scopeFunction(
+      await allowFunction(
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,

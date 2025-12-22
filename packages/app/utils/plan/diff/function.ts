@@ -88,22 +88,14 @@ function draftCall({
     }
   }
 
-  return fn.wildcarded
-    ? {
-        call: "allowFunction",
-        roleKey,
-        targetAddress,
-        selector,
-        executionOptions: fn.executionOptions,
-      }
-    : {
-        call: "scopeFunction",
-        roleKey,
-        targetAddress,
-        selector,
-        executionOptions: fn.executionOptions,
-        condition: normalizeCondition(fn.condition!),
-      }
+  return {
+    call: "allowFunction",
+    roleKey,
+    targetAddress,
+    selector,
+    executionOptions: fn.executionOptions,
+    ...(fn.condition && { condition: normalizeCondition(fn.condition) }),
+  }
 }
 
 function isPlus(prev: Function | undefined, next: Function | undefined) {

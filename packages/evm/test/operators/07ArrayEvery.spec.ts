@@ -18,11 +18,11 @@ import {
 
 describe("Operator - ArrayEvery", async () => {
   it("evaluates Operator ArrayEvery", async () => {
-    const { roles, invoke, scopeFunction } = await loadFixture(
+    const { roles, invoke, allowFunction } = await loadFixture(
       setupOneParamArrayOfStaticTuple,
     );
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
@@ -89,11 +89,11 @@ describe("Operator - ArrayEvery", async () => {
       );
   });
   it("evaluates Operator ArrayEvery - empty input", async () => {
-    const { roles, invoke, scopeFunction } = await loadFixture(
+    const { roles, invoke, allowFunction } = await loadFixture(
       setupOneParamArrayOfStatic,
     );
 
-    await scopeFunction([
+    await allowFunction([
       {
         parent: 0,
         paramType: Encoding.AbiEncoded,
