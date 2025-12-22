@@ -17,23 +17,23 @@ import {Clearance} from "../types/Permission.sol";
  *  │   │
  *  │   ├─ Clearance.None ────────────► target blocked (default)
  *  │   │
- *  │   ├─ Clearance.Target ──────────► all functions allowed
- *  │   │                               + ExecutionOptions (send/delegatecall)
+ *  │   ├─ Clearance.Target ──────────► all functions allowed, subject to
+ *  │   │                               ExecutionOptions and the target-level
+ *  │   │                               scopeConfig entry (wildcard selector)
  *  │   │
  *  │   └─ Clearance.Function ────────► only specific functions allowed
  *  │                                   (see scopeConfig below)
  *  │
  *  └─ scopeConfig (target + selector → ScopeConfig)
  *      │
- *      │   Used when Clearance.Function (selector != 0)
- *      │   or Clearance.Target with conditions
+ *      │   Used for Clearance.Function (selector == calldata selector)
+ *      │   and for Clearance.Target via the wildcard selector.
  *      │
- *      ├─ not set ───────────────────► function blocked
+ *      ├─ not set ───────────────────► blocked (target/function not allowed)
  *      │
- *      └─ set ───────────────────────► function allowed with conditions
+ *      └─ set ───────────────────────► allowed with conditions
  *                                      + ExecutionOptions
- *                                      + Condition tree (parameter constraints)
- *                                      (Pass condition when no constraints)
+ *                                      + Condition tree
  *
  * Allowances (separate storage, referenced by conditions)
  */

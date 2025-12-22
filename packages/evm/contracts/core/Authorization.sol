@@ -123,7 +123,7 @@ abstract contract Authorization is RolesStorage {
         Consumption[] memory consumptions,
         Transaction memory transaction
     ) private view returns (Result memory result) {
-        uint256 options = (scopeConfig >> 160);
+        uint256 options = scopeConfig >> 160;
         /*
          * ExecutionOptions can send:
          *  options == ExecutionOptions.Send ||
