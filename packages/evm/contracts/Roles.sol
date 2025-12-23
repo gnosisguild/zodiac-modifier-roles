@@ -83,7 +83,7 @@ contract Roles is RolesStorage, Setup, Membership, Authorization, Settlement {
         Operation operation,
         bytes32 roleKey,
         bool shouldRevert
-    ) public returns (bool success) {
+    ) public nonReentrant returns (bool success) {
         (address module, uint256 nextMembership) = _authenticate(roleKey);
         Consumption[] memory consumptions = _authorize(
             roleKey,
@@ -92,7 +92,6 @@ contract Roles is RolesStorage, Setup, Membership, Authorization, Settlement {
             data,
             operation
         );
-        _flushPrepare(consumptions);
         success = IAvatar(target).execTransactionFromModule(
             to,
             value,
@@ -102,7 +101,9 @@ contract Roles is RolesStorage, Setup, Membership, Authorization, Settlement {
         if (shouldRevert && !success) {
             revert ModuleTransactionFailed();
         }
-        _flushCommit(module, roleKey, nextMembership, consumptions, success);
+        if (success) {
+            _flush(module, roleKey, nextMembership, consumptions);
+        }
     }
 
     /// @dev Passes a transaction to the modifier assuming the specified role. Expects return data.
@@ -120,7 +121,7 @@ contract Roles is RolesStorage, Setup, Membership, Authorization, Settlement {
         Operation operation,
         bytes32 roleKey,
         bool shouldRevert
-    ) public returns (bool success, bytes memory returnData) {
+    ) public nonReentrant returns (bool success, bytes memory returnData) {
         (address module, uint256 nextMembership) = _authenticate(roleKey);
         Consumption[] memory consumptions = _authorize(
             roleKey,
@@ -129,12 +130,13 @@ contract Roles is RolesStorage, Setup, Membership, Authorization, Settlement {
             data,
             operation
         );
-        _flushPrepare(consumptions);
         (success, returnData) = IAvatar(target)
             .execTransactionFromModuleReturnData(to, value, data, operation);
         if (shouldRevert && !success) {
             revert ModuleTransactionFailed();
         }
-        _flushCommit(module, roleKey, nextMembership, consumptions, success);
+        if (success) {
+            _flush(module, roleKey, nextMembership, consumptions);
+        }
     }
 }
