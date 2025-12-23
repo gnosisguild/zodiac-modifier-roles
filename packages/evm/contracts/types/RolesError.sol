@@ -16,6 +16,9 @@ interface IRolesError {
     /// Sender is allowed to make this call, but the internal transaction failed
     error ModuleTransactionFailed();
 
+    /// Reentrant call detected
+    error Reentrancy();
+
     /*//////////////////////////////////////////////////////////////
                           AUTHORIZATION ERRORS
     //////////////////////////////////////////////////////////////*/
