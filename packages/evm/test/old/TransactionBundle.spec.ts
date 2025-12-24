@@ -9,8 +9,8 @@ import {
   encodeMultisendPayload,
   ExecutionOptions,
   PermissionCheckerStatus,
-} from "./utils";
-import { deployRolesMod } from "./setup";
+} from "../utils";
+import { deployRolesMod } from "../setup";
 
 enum Operation {
   Call = 0,

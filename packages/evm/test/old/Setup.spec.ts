@@ -2,7 +2,7 @@ import hre from "hardhat";
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import { deployRolesMod } from "./setup";
+import { deployRolesMod } from "../setup";
 
 const ROLE_KEY = hre.ethers.id("TEST_ROLE");
 const MAX_UINT64 = (1n << 64n) - 1n;

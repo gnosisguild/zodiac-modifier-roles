@@ -9,8 +9,8 @@ import {
   Operator,
   PermissionCheckerStatus,
   flattenCondition,
-} from "./utils";
-import { deployRolesMod } from "./setup";
+} from "../utils";
+import { deployRolesMod } from "../setup";
 
 const AddressOne = "0x0000000000000000000000000000000000000001";
 const ROLE_KEY =

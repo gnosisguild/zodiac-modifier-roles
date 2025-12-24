@@ -4,7 +4,7 @@ import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 import { BigNumberish, getAddress, solidityPacked } from "ethers";
-import { encodeMultisendPayload } from "../utils";
+import { encodeMultisendPayload } from "../../utils";
 
 const AddressOne = "0x0000000000000000000000000000000000000001";
 enum Operation {

@@ -9,8 +9,8 @@ import {
   ExecutionOptions,
   Operator,
   PermissionCheckerStatus,
-} from "../utils";
-import { deployRolesMod } from "../setup";
+} from "../../utils";
+import { deployRolesMod } from "../../setup";
 import { ConditionFlatStruct } from "../../typechain-types/contracts/Roles";
 
 const AddressOne = "0x0000000000000000000000000000000000000001";

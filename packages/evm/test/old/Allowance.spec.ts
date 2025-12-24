@@ -9,7 +9,7 @@ import {
   PermissionCheckerStatus,
   encodeMultisendPayload,
   flattenCondition,
-} from "./utils";
+} from "../utils";
 import {
   deployRolesMod,
   setupAvatarAndRoles,
@@ -17,7 +17,7 @@ import {
   setupOneParamArrayOfDynamicTuple,
   setupOneParamStaticTuple,
   setupTwoParamsStatic,
-} from "./setup";
+} from "../setup";
 
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 

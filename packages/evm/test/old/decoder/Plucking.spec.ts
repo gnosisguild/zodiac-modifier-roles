@@ -3,7 +3,7 @@ import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { AbiCoder, Interface } from "ethers";
 
-import { Encoding, flattenCondition, Operator } from "../utils";
+import { Encoding, flattenCondition, Operator } from "../../utils";
 
 const AddressOne = "0x0000000000000000000000000000000000000001";
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();

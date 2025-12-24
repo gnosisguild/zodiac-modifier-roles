@@ -8,8 +8,8 @@ import {
   ExecutionOptions,
   Operator,
   flattenCondition,
-} from "./utils";
-import { deployRolesMod } from "./setup";
+} from "../utils";
+import { deployRolesMod } from "../setup";
 
 const ROLE_KEY =
   "0x000000000000000000000000000000000000000000000000000000000000abcd";

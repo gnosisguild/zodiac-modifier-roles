@@ -3,7 +3,7 @@ import hre from "hardhat";
 import { AbiCoder, ZeroHash, solidityPacked } from "ethers";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import { Encoding, flattenCondition, Operator } from "./utils";
+import { Encoding, flattenCondition, Operator } from "../utils";
 import { ConditionFlatStruct } from "../typechain-types/contracts/Roles";
 
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();

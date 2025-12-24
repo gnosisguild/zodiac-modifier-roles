@@ -8,8 +8,8 @@ import {
   ExecutionOptions,
   Operator,
   PermissionCheckerStatus,
-} from "./utils";
-import { deployRolesMod } from "./setup";
+} from "../utils";
+import { deployRolesMod } from "../setup";
 
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 

@@ -12,8 +12,8 @@ import {
   ExecutionOptions,
   PermissionCheckerStatus,
   BYTES32_ZERO,
-} from "./utils";
-import { deployRolesMod } from "./setup";
+} from "../utils";
+import { deployRolesMod } from "../setup";
 
 describe("Operator", async () => {
   const ROLE_KEY =

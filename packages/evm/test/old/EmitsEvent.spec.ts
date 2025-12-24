@@ -2,8 +2,8 @@ import { expect } from "chai";
 import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import { Encoding, ExecutionOptions, Operator } from "./utils";
-import { deployRolesMod } from "./setup";
+import { Encoding, ExecutionOptions, Operator } from "../utils";
+import { deployRolesMod } from "../setup";
 
 const AddressOne = "0x0000000000000000000000000000000000000001";
 const ROLE_KEY =

@@ -4,9 +4,9 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 import { parseEther, ZeroHash } from "ethers";
 
-import { ExecutionOptions, PermissionCheckerStatus } from "./utils";
+import { ExecutionOptions, PermissionCheckerStatus } from "../utils";
 
-import { deployRolesMod } from "./setup";
+import { deployRolesMod } from "../setup";
 
 const ROLE_KEY =
   "0x000000000000000000000000000000000000000000000000000000000000000f";

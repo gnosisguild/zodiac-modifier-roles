@@ -4,7 +4,7 @@ import hre, { ethers } from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { AbiCoder } from "ethers";
 import { deployFactories, deployProxy } from "@gnosis-guild/zodiac-core";
-import { createEip1193 } from "./setup";
+import { createEip1193 } from "../setup";
 
 const AddressOne = "0x0000000000000000000000000000000000000001";
 const saltNonce = "0xfa";

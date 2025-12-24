@@ -1,7 +1,7 @@
 import hre from "hardhat";
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { Encoding, flattenCondition, Operator } from "./utils";
+import { Encoding, flattenCondition, Operator } from "../utils";
 
 describe("TypeTree", () => {
   async function setup() {

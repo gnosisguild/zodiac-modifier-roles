@@ -2,7 +2,7 @@ import hre from "hardhat";
 import { expect } from "chai";
 import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
 
-import { deployRolesMod } from "./setup";
+import { deployRolesMod } from "../setup";
 
 const ROLE_KEY = hre.ethers.id("TEST_ROLE");
 
