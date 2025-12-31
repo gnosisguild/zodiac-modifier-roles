@@ -6,7 +6,7 @@ import "./Storage.sol";
 import {Consumption} from "../types/Allowance.sol";
 
 /**
- * @title Settlement - Persists allowance and membership consumptions to storage.
+ * @title Settlement - Persists allowance consumption and membership updates to storage.
  *
  * @dev Called after successful execution. Reentrancy is prevented by the
  *      nonReentrant modifier in RolesStorage on execution entry points.
@@ -15,14 +15,14 @@ import {Consumption} from "../types/Allowance.sol";
  */
 abstract contract Settlement is RolesStorage {
     /**
-     * @dev Writes allowance and membership updates to storage after successful execution.
+     * @dev Persists allowance consumption and membership updates after a successful execution.
      *
      * @param sender The address that initiated the transaction
      * @param roleKey The role key used for execution
      * @param nextMembership Packed membership data. uint256.max skips membership update
      * @param consumptions Allowance consumption records to persist
      */
-    function _flush(
+    function _persist(
         address sender,
         bytes32 roleKey,
         uint256 nextMembership,
@@ -34,7 +34,7 @@ abstract contract Settlement is RolesStorage {
 
             assert(consumption.consumed <= consumption.balance);
 
-            uint128 updatedBalance = _commitConsumption(consumption);
+            uint128 updatedBalance = _persistConsumption(consumption);
 
             emit ConsumeAllowance(
                 consumption.allowanceKey,
@@ -61,7 +61,7 @@ abstract contract Settlement is RolesStorage {
     }
 
     /// @dev Writes consumption to allowance storage, returns new balance.
-    function _commitConsumption(
+    function _persistConsumption(
         Consumption memory consumption
     ) private returns (uint128 updatedBalance) {
         bytes32 allowanceKey = consumption.allowanceKey;

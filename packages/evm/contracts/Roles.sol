@@ -102,7 +102,7 @@ contract Roles is RolesStorage, Setup, Membership, Authorization, Settlement {
             revert ModuleTransactionFailed();
         }
         if (success) {
-            _flush(module, roleKey, nextMembership, consumptions);
+            _persist(module, roleKey, nextMembership, consumptions);
         }
     }
 
@@ -136,7 +136,7 @@ contract Roles is RolesStorage, Setup, Membership, Authorization, Settlement {
             revert ModuleTransactionFailed();
         }
         if (success) {
-            _flush(module, roleKey, nextMembership, consumptions);
+            _persist(module, roleKey, nextMembership, consumptions);
         }
     }
 }
