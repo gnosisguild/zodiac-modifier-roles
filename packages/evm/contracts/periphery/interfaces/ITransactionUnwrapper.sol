@@ -3,10 +3,6 @@ pragma solidity >=0.8.17 <0.9.0;
 
 import "@gnosis-guild/zodiac-core/contracts/core/Operation.sol";
 
-interface IMultiSend {
-    function multiSend(bytes memory transactions) external payable;
-}
-
 struct UnwrappedTransaction {
     Operation operation;
     address to;
