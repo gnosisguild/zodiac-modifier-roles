@@ -6,94 +6,70 @@ import "./Storage.sol";
 import {Consumption} from "../types/Allowance.sol";
 
 /**
- * @title Settlement - Persists allowance and membership consumptions to storage.
+ * @title Settlement - Persists allowance consumption and membership updates to storage.
  *
- * @dev Allowance balances are written before execution to prevent reentrancy.
- *      On failure, original balances are restored. Membership is written only
- *      on success.
+ * @dev Called after successful execution. Reentrancy is prevented by the
+ *      nonReentrant modifier in RolesStorage on execution entry points.
  *
  * @author gnosisguild
  */
 abstract contract Settlement is RolesStorage {
     /**
-     * @dev Writes new balances to storage before execution. Not final.
-     * @param consumptions Allowance consumption records to persist.
+     * @dev Persists allowance consumption and membership updates after a successful execution.
+     *
+     * @param sender The address that initiated the transaction
+     * @param roleKey The role key used for execution
+     * @param nextMembership Packed membership data. uint256.max skips membership update
+     * @param consumptions Allowance consumption records to persist
      */
-    function _flushPrepare(Consumption[] memory consumptions) internal {
+    function _persist(
+        address sender,
+        bytes32 roleKey,
+        uint256 nextMembership,
+        Consumption[] memory consumptions
+    ) internal {
         uint256 count = consumptions.length;
-
         for (uint256 i; i < count; ++i) {
             Consumption memory consumption = consumptions[i];
 
             assert(consumption.consumed <= consumption.balance);
 
-            _store(
+            uint128 updatedBalance = _persistConsumption(consumption);
+
+            emit ConsumeAllowance(
                 consumption.allowanceKey,
-                consumption.timestamp,
-                consumption.balance - consumption.consumed
+                consumption.consumed,
+                updatedBalance
             );
         }
-    }
 
-    /**
-     * @dev Commits all pending storage updates.
-     *
-     * Allowances: emits events on success, restores balances on failure.
-     * Membership: writes on success only.
-     *
-     * @param nextMembership Packed membership data: [start:64][end:64][usesLeft:128].
-     *        Use uint256.max for no-op (skip membership update).
-     */
-    function _flushCommit(
-        address sender,
-        bytes32 roleKey,
-        uint256 nextMembership,
-        Consumption[] memory consumptions,
-        bool success
-    ) internal {
-        uint256 count = consumptions.length;
-        for (uint256 i; i < count; ++i) {
-            Consumption memory consumption = consumptions[i];
-            if (success) {
-                emit ConsumeAllowance(
-                    consumption.allowanceKey,
-                    consumption.consumed,
-                    consumption.balance - consumption.consumed
-                );
-            } else {
-                _store(
-                    consumption.allowanceKey,
-                    consumption.timestamp,
-                    consumption.balance
-                );
-            }
-        }
+        // uint256.max == noop
+        if (nextMembership == type(uint256).max) return;
 
-        if (success && nextMembership != type(uint256).max) {
-            // uint256.max == noop
-            roles[roleKey].members[sender] = nextMembership;
-            if (nextMembership != 0) {
-                emit UpdateRole(
-                    roleKey,
-                    sender,
-                    uint64(nextMembership >> 192),
-                    uint64(nextMembership >> 128),
-                    uint128(nextMembership)
-                );
-            } else {
-                emit RevokeRole(roleKey, sender);
-            }
+        roles[roleKey].members[sender] = nextMembership;
+        if (nextMembership != 0) {
+            emit UpdateRole(
+                roleKey,
+                sender,
+                uint64(nextMembership >> 192),
+                uint64(nextMembership >> 128),
+                uint128(nextMembership)
+            );
+        } else {
+            emit RevokeRole(roleKey, sender);
         }
     }
 
-    /// @dev Stores allowance. Writes only word2, preserving period.
-    function _store(
-        bytes32 allowanceKey,
-        uint64 timestamp_,
-        uint128 balance_
-    ) private {
+    /// @dev Writes consumption to allowance storage, returns new balance.
+    function _persistConsumption(
+        Consumption memory consumption
+    ) private returns (uint128 updatedBalance) {
+        bytes32 allowanceKey = consumption.allowanceKey;
+        uint64 _timestamp = consumption.timestamp;
+        updatedBalance = consumption.balance - consumption.consumed;
+
         /*
-         * Storage Layout (2 words, 64 bytes, 512 bits):
+         * Allowance Storage Layout (2 words):
          * ┌────────────────────────────────┬────────────────────────────────┐
          * │           maxRefill            │             refill             │
          * │            128 bits            │            128 bits            │
@@ -102,7 +78,6 @@ abstract contract Settlement is RolesStorage {
          * │    64 bits     │           128 bits            │    64 bits     │
          * └────────────────┴───────────────────────────────┴────────────────┘
          */
-
         assembly {
             mstore(0x00, allowanceKey)
             mstore(0x20, allowances.slot)
@@ -112,8 +87,8 @@ abstract contract Settlement is RolesStorage {
             sstore(
                 slot,
                 or(
-                    or(shl(192, timestamp_), shl(64, balance_)),
-                    and(sload(slot), 0xffffffffffffffff) // mask period (lower 64 bits)
+                    or(shl(192, _timestamp), shl(64, updatedBalance)),
+                    and(sload(slot), 0xffffffffffffffff)
                 )
             )
         }

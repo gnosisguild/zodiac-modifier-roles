@@ -13,12 +13,23 @@ import "../types/Types.sol";
  *
  */
 abstract contract RolesStorage is Modifier, IRolesEvent, IRolesError {
+    string public constant VERSION = "3.0.0";
+
     mapping(bytes32 => Role) internal roles;
     mapping(bytes32 => Allowance) public allowances;
     mapping(bytes32 => address) public unwrappers;
     mapping(address => bytes32) public defaultRoles;
 
-    string public constant VERSION = "3.0.0";
+    bool private transient _reentrancyGuard;
+
+    modifier nonReentrant() {
+        if (_reentrancyGuard) {
+            revert Reentrancy();
+        }
+        _reentrancyGuard = true;
+        _;
+        _reentrancyGuard = false;
+    }
 
     function _key(
         address targetAddress,
