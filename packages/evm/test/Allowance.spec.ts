@@ -1,16 +1,15 @@
 import { expect } from "chai";
 import hre from "hardhat";
+import { AbiCoder, BigNumberish, ZeroHash } from "ethers";
+import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import {
   Encoding,
-  BYTES32_ZERO,
   ExecutionOptions,
   Operator,
   PermissionCheckerStatus,
   encodeMultisendPayload,
   flattenCondition,
 } from "./utils";
-import { AbiCoder, BigNumberish } from "ethers";
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import {
   deployRolesMod,
   setupAvatarAndRoles,
@@ -281,7 +280,7 @@ describe("Allowance", async () => {
 
     await expect(invoke([{ a: 100, b: "0xdeadbeef" }]))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.NoArrayElementPasses, BYTES32_ZERO);
+      .withArgs(PermissionCheckerStatus.NoArrayElementPasses, ZeroHash);
 
     expect((await roles.allowances(allowanceKey)).balance).to.equal(1000);
 
@@ -344,10 +343,7 @@ describe("Allowance", async () => {
 
     await expect(invoke([{ a: 100, b: "0xdeadbeef" }]))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(
-        PermissionCheckerStatus.NotEveryArrayElementPasses,
-        BYTES32_ZERO,
-      );
+      .withArgs(PermissionCheckerStatus.NotEveryArrayElementPasses, ZeroHash);
 
     expect((await roles.allowances(allowanceKey)).balance).to.equal(1000);
 
