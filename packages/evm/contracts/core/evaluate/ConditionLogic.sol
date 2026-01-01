@@ -22,7 +22,6 @@ library ConditionLogic {
         Consumption[] memory consumptions,
         Context memory context
     ) internal view returns (Result memory) {
-        Operator operator = condition.operator;
         if (payload.overflow) {
             return
                 Result({
@@ -31,6 +30,8 @@ library ConditionLogic {
                     info: bytes32(payload.location)
                 });
         }
+
+        Operator operator = condition.operator;
 
         if (operator < Operator.EqualTo) {
             if (operator == Operator.Pass) {
@@ -113,6 +114,17 @@ library ConditionLogic {
                         consumptions: consumptions,
                         info: 0
                     });
+            } else if (operator == Operator.Bitmask) {
+                return
+                    Result({
+                        status: BitmaskChecker.check(
+                            data,
+                            condition.compValue,
+                            payload
+                        ),
+                        consumptions: consumptions,
+                        info: 0
+                    });
             } else if (operator == Operator.WithinAllowance) {
                 return
                     __allowance(
@@ -129,17 +141,6 @@ library ConditionLogic {
                         Status.CallAllowanceExceeded,
                         consumptions
                     );
-            } else if (operator == Operator.Bitmask) {
-                return
-                    Result({
-                        status: BitmaskChecker.check(
-                            data,
-                            condition.compValue,
-                            payload
-                        ),
-                        consumptions: consumptions,
-                        info: 0
-                    });
             } else if (operator == Operator.WithinRatio) {
                 return
                     Result({
@@ -271,43 +272,6 @@ library ConditionLogic {
             });
     }
 
-    /*
-     * Slice creates a new Payload that points to a byte-range within the
-     * current payload, so the child transparently evaluates against that
-     * slice.
-     *
-     * The child will read the slice via __input, which right-aligns values
-     * <=32 bytes to match comparison compValue encoding.
-     */
-    function _slice(
-        bytes calldata data,
-        Condition memory condition,
-        Payload memory payload,
-        Consumption[] memory consumptions,
-        Context memory context
-    ) private view returns (Result memory) {
-        // compValue layout: | 2 bytes: shift | 1 byte: size (1-32)
-        uint16 shift = uint16(bytes2(condition.compValue));
-        uint8 size = uint8(condition.compValue[2]);
-
-        // Create sliced payload pointing to the slice range
-        Payload memory slicedPayload;
-        slicedPayload.location =
-            payload.location +
-            (payload.inlined ? 0 : 32) +
-            shift;
-        slicedPayload.size = size;
-
-        return
-            evaluate(
-                data,
-                condition.children[0],
-                slicedPayload,
-                consumptions,
-                context
-            );
-    }
-
     function _arraySome(
         bytes calldata data,
         Condition memory condition,
@@ -391,6 +355,43 @@ library ConditionLogic {
             }
         }
         return result;
+    }
+
+    /*
+     * Slice creates a new Payload that points to a byte-range within the
+     * current payload, so the child transparently evaluates against that
+     * slice.
+     *
+     * The child will read the slice via __input, which right-aligns values
+     * <=32 bytes to match comparison compValue encoding.
+     */
+    function _slice(
+        bytes calldata data,
+        Condition memory condition,
+        Payload memory payload,
+        Consumption[] memory consumptions,
+        Context memory context
+    ) private view returns (Result memory) {
+        // compValue layout: | 2 bytes: shift | 1 byte: size (1-32)
+        uint16 shift = uint16(bytes2(condition.compValue));
+        uint8 size = uint8(condition.compValue[2]);
+
+        // Create sliced payload pointing to the slice range
+        Payload memory slicedPayload;
+        slicedPayload.location =
+            payload.location +
+            (payload.inlined ? 0 : 32) +
+            shift;
+        slicedPayload.size = size;
+
+        return
+            evaluate(
+                data,
+                condition.children[0],
+                slicedPayload,
+                consumptions,
+                context
+            );
     }
 
     function _compare(

@@ -19,9 +19,6 @@ import {
 } from "../setup";
 import { Roles } from "../../typechain-types";
 
-const ROLE_KEY =
-  "0x0000000000000000000000000000000000000000000000000000000000000001";
-
 describe("Operator - WithinAllowance", async () => {
   function setAllowance(
     roles: Roles,

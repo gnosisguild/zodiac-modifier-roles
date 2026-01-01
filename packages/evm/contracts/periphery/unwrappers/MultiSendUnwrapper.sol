@@ -3,6 +3,10 @@ pragma solidity >=0.8.17 <0.9.0;
 
 import "../interfaces/ITransactionUnwrapper.sol";
 
+interface IMultiSend {
+    function multiSend(bytes memory transactions) external payable;
+}
+
 contract MultiSendUnwrapper is ITransactionUnwrapper {
     uint256 private constant OFFSET_START = 68;
 
