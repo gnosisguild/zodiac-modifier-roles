@@ -69,7 +69,7 @@
   },
   "dependencies": {
     "abitype": "^1.0.8",
-    "ethers": "^6.13.5",
+    "ethers": "^6.16.0",
     "zodiac-roles-deployments": "workspace:*"
   },
   "peerDependencies": {
