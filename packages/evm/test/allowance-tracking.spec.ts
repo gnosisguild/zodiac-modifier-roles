@@ -453,6 +453,25 @@ describe("AllowanceTracking", () => {
         expect(balance).to.equal(800); // 500 + 100 * 3
         expect(timestamp).to.equal(initialAllowance.timestamp + 1800n); // 3 full periods
       });
+
+      it("zero refill keeps balance unchanged, timestamp still advances", async () => {
+        const { roles, owner, ALLOWANCE_KEY } = await loadFixture(setupAccrual);
+
+        // refill = 0, but period > 0
+        await roles
+          .connect(owner)
+          .setAllowance(ALLOWANCE_KEY, 500, 10000, 0, 600, 0);
+
+        const initialAllowance = await roles.allowances(ALLOWANCE_KEY);
+
+        await time.increase(3000); // 5 periods
+
+        const { balance, timestamp } =
+          await roles.accruedAllowance(ALLOWANCE_KEY);
+
+        expect(balance).to.equal(500); // unchanged
+        expect(timestamp).to.equal(initialAllowance.timestamp + 3000n); // still advances
+      });
     });
 
     describe("maxRefill cap", () => {
@@ -501,6 +520,24 @@ describe("AllowanceTracking", () => {
 
         const { balance } = await roles.accruedAllowance(ALLOWANCE_KEY);
         expect(balance).to.equal(1000);
+      });
+
+      it("initial balance above maxRefill stays unchanged, timestamp advances", async () => {
+        const { roles, owner, ALLOWANCE_KEY } = await loadFixture(setupAccrual);
+
+        // Initial balance (1500) exceeds maxRefill (1000)
+        await roles
+          .connect(owner)
+          .setAllowance(ALLOWANCE_KEY, 1500, 1000, 100, 600, 0);
+
+        const initialAllowance = await roles.allowances(ALLOWANCE_KEY);
+
+        await time.increase(3000); // 5 periods
+
+        const { balance, timestamp } =
+          await roles.accruedAllowance(ALLOWANCE_KEY);
+        expect(balance).to.equal(1500); // unchanged, not capped down
+        expect(timestamp).to.equal(initialAllowance.timestamp + 3000n);
       });
     });
   });

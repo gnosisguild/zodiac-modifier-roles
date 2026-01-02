@@ -1,9 +1,17 @@
 import { expect } from "chai";
 import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { AbiCoder, ZeroHash } from "ethers";
 
-import { Encoding, Operator, ExecutionOptions } from "./utils";
+import {
+  Encoding,
+  Operator,
+  ExecutionOptions,
+  PermissionCheckerStatus,
+} from "./utils";
 import { deployRolesMod } from "./setup";
+
+const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
 /**
  * ConditionEvaluation tests cover infrastructure that is NOT tested by individual operators:
@@ -30,36 +38,112 @@ describe("ConditionEvaluation", () => {
       avatarAddress,
       avatarAddress,
     );
+    await roles.enableModule(member.address);
 
     const TestContract = await hre.ethers.getContractFactory("TestContract");
     const testContract = await TestContract.deploy();
+    const testContractAddress = await testContract.getAddress();
 
     const ROLE_KEY = hre.ethers.id("TEST_ROLE");
 
     await roles.connect(owner).grantRole(member.address, ROLE_KEY, 0, 0, 0);
     await roles.connect(owner).setDefaultRole(member.address, ROLE_KEY);
-    await roles
-      .connect(owner)
-      .scopeTarget(ROLE_KEY, await testContract.getAddress());
+    await roles.connect(owner).scopeTarget(ROLE_KEY, testContractAddress);
 
-    return { roles, owner, member, testContract, ROLE_KEY };
+    return {
+      roles,
+      owner,
+      member,
+      testContract,
+      testContractAddress,
+      ROLE_KEY,
+    };
   }
 
   describe("Payload overflow handling", () => {
-    it.skip("returns CalldataOverflow when payload.overflow is true");
+    it("returns CalldataOverflow when calldata is too short for condition", async () => {
+      const { roles, owner, member, testContractAddress, ROLE_KEY } =
+        await loadFixture(setup);
 
-    it.skip("includes overflow location in result info");
+      // Expect two static params, but send calldata for only one
+      const selector = "0x12345678";
+      await roles.connect(owner).allowFunction(
+        ROLE_KEY,
+        testContractAddress,
+        selector,
+        [
+          {
+            parent: 0,
+            paramType: Encoding.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: Encoding.Static,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: Encoding.Static,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+        ],
+        ExecutionOptions.None,
+      );
 
-    it.skip("checks overflow before evaluating operator");
-  });
+      // Send calldata with only one static param (32 bytes) instead of two
+      const calldataShort =
+        selector +
+        "0000000000000000000000000000000000000000000000000000000000000001";
 
-  describe("__input value extraction", () => {
-    it.skip("returns context.value when payload.size == 0 (EtherValue)");
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(testContractAddress, 0, calldataShort, 0),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.CalldataOverflow, ZeroHash);
+    });
 
-    it.skip("reads 32 bytes directly when payload.size == 32");
+    it("checks overflow before evaluating operator", async () => {
+      const { roles, owner, member, testContractAddress, ROLE_KEY } =
+        await loadFixture(setup);
 
-    it.skip("right-aligns when payload.size < 32");
+      const selector = "0x12345678";
+      await roles.connect(owner).allowFunction(
+        ROLE_KEY,
+        testContractAddress,
+        selector,
+        [
+          {
+            parent: 0,
+            paramType: Encoding.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: Encoding.Static,
+            operator: Operator.EqualTo,
+            compValue: defaultAbiCoder.encode(["uint256"], [123]),
+          },
+        ],
+        ExecutionOptions.None,
+      );
 
-    it.skip("returns keccak256 hash when payload.size > 32");
+      // Send empty calldata (just selector) - would match the value if not for overflow
+      const calldataEmpty = selector;
+
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(testContractAddress, 0, calldataEmpty, 0),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(PermissionCheckerStatus.CalldataOverflow, ZeroHash);
+    });
   });
 });
