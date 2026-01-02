@@ -76,18 +76,34 @@ Write-time validation (integrity checks) and runtime evaluation (condition logic
 - Validation/integrity tests → `serialization/` folder
 - Runtime evaluation tests → `condition-evaluation.spec.ts` + `operators/`
 
-### 3. Flat Structure with Descriptive Naming
+### 3. Operator Tests vs Core Behavior Tests
+
+**Important**: Core behavior files (`condition-evaluation.spec.ts`, `allowance-tracking.spec.ts`, etc.) should NOT duplicate tests that belong in operator-specific files (`operators/*.spec.ts`).
+
+**Operator tests** (`operators/`) should cover everything done in the operator's handler function in `ConditionLogic.sol`:
+- Success/failure conditions for the operator
+- Parameter extraction and comparison logic
+- Return status codes
+- Consumption tracking (for allowance operators)
+- Price conversion (for WithinAllowance)
+- Any operator-specific edge cases
+
+**Core behavior tests** should cover infrastructure that operators depend on:
+- `allowance-tracking.spec.ts`: setAllowance/updateAllowance APIs, accrual mechanics, settlement persistence
+- `condition-evaluation.spec.ts`: Tree traversal, payload handling, context propagation (not individual operator behavior)
+
+### 4. Flat Structure with Descriptive Naming
 
 - No nested subfolders except for **operators/**, **adapters/**, **decoder/**, and **serialization/**
 - File names are simple and descriptive (no phase prefixes)
 - Self-documenting: file names tell you exactly what's tested
 
-### 4. Split by Concern, Not by Size
+### 5. Split by Concern, Not by Size
 
 Large files covering **one concern thoroughly** stay together (e.g., Integrity tests).
 Files covering **multiple unrelated things** get split (e.g., Misc.spec.ts tests redistributed to appropriate domains).
 
-### 5. Subfolders for Specialized Test Categories
+### 6. Subfolders for Specialized Test Categories
 
 | Subfolder        | Rationale                                                                   |
 | ---------------- | --------------------------------------------------------------------------- |
@@ -96,7 +112,7 @@ Files covering **multiple unrelated things** get split (e.g., Misc.spec.ts tests
 | `decoder/`       | Technical implementation tests, not user-facing behavior                    |
 | `serialization/` | Condition serialization subsystem (integrity, type tree, topology, packing) |
 
-### 6. Error Testing Strategy
+### 7. Error Testing Strategy
 
 Error/revert cases are tested **implicitly within feature tests** - colocated with the functionality they test. Each feature file includes both success and failure scenarios. No dedicated error file.
 
