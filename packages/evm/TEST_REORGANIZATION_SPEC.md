@@ -5,6 +5,7 @@
 **Primary objective**: Maximize coverage visibility - make it easy to verify that all functionality has corresponding tests.
 
 **Coverage depth targets**:
+
 - Every public/external function has at least one test
 - Every error condition/revert path is explicitly tested
 - Every logical branch in complex functions is exercised
@@ -12,10 +13,7 @@
 
 ## Prerequisites
 
-Before reorganization, run a coverage audit using `solidity-coverage` to:
-1. Identify untested code paths
-2. Map existing tests to contract coverage
-3. Generate TODOs for gaps (see Appendix A)
+None. This reorganization starts from a **blank slate** - designing tests based on analyzing the codebase, not copying existing tests. Coverage audits happen after Phase 2 to identify remaining gaps.
 
 ## Target Structure
 
@@ -61,19 +59,20 @@ test/
 
 Tests are organized by **user-facing behavior**, not contract architecture. The 6 domains are:
 
-| Domain | Location | Covers |
-|--------|----------|--------|
-| Role/Member Management | `role-management.spec.ts` | granting/revoking roles, membership validity windows, usage limits, default roles |
-| Permission/Clearance Scoping | `scoping.spec.ts` | **Configuration APIs only**: allowTarget, allowFunction, revokeTarget, revokeFunction, clearance level setting. Permission **checking** during execution goes in `transaction-execution.spec.ts` |
-| Condition Evaluation | `condition-evaluation.spec.ts` | runtime condition tree evaluation, type matching, parameter constraint checking |
-| Allowance Tracking | `allowance-tracking.spec.ts` | consumption, accrual, refill periods, value/call limits, multi-entrypoint allowance |
-| Transaction Execution | `transaction-execution.spec.ts` | execTransactionFromModule, execTransactionWithRole, return data variants, reentrancy, bundle handling, ExecutionOptions (send/delegatecall), **permission checking during execution** (target allowed, function allowed, etc.) |
-| Serialization | `serialization/` folder | integrity validation, type tree inspection, topology validation, condition packing/unpacking round-trips |
-| Owner Access Control | `onlyOwner.spec.ts` | all owner-restricted function tests (self-contained with both success and failure cases) |
+| Domain                       | Location                        | Covers                                                                                                                                                                                                                         |
+| ---------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Role/Member Management       | `role-management.spec.ts`       | granting/revoking roles, membership validity windows, usage limits, default roles                                                                                                                                              |
+| Permission/Clearance Scoping | `scoping.spec.ts`               | **Configuration APIs only**: allowTarget, allowFunction, revokeTarget, revokeFunction, clearance level setting. Permission **checking** during execution goes in `transaction-execution.spec.ts`                               |
+| Condition Evaluation         | `condition-evaluation.spec.ts`  | runtime condition tree evaluation, type matching, parameter constraint checking                                                                                                                                                |
+| Allowance Tracking           | `allowance-tracking.spec.ts`    | consumption, accrual, refill periods, value/call limits, multi-entrypoint allowance                                                                                                                                            |
+| Transaction Execution        | `transaction-execution.spec.ts` | execTransactionFromModule, execTransactionWithRole, return data variants, reentrancy, bundle handling, ExecutionOptions (send/delegatecall), **permission checking during execution** (target allowed, function allowed, etc.) |
+| Serialization                | `serialization/` folder         | integrity validation, type tree inspection, topology validation, condition packing/unpacking round-trips                                                                                                                       |
+| Owner Access Control         | `onlyOwner.spec.ts`             | all owner-restricted function tests (self-contained with both success and failure cases)                                                                                                                                       |
 
 ### 2. Separation by Phase
 
 Write-time validation (integrity checks) and runtime evaluation (condition logic) are **separate concerns** kept in distinct locations:
+
 - Validation/integrity tests → `serialization/` folder
 - Runtime evaluation tests → `condition-evaluation.spec.ts` + `operators/`
 
@@ -90,11 +89,11 @@ Files covering **multiple unrelated things** get split (e.g., Misc.spec.ts tests
 
 ### 5. Subfolders for Specialized Test Categories
 
-| Subfolder | Rationale |
-|-----------|-----------|
-| `operators/` | 20+ files testing individual operators, numbered to match enum |
-| `adapters/` | Optional periphery extensions, separate from core |
-| `decoder/` | Technical implementation tests, not user-facing behavior |
+| Subfolder        | Rationale                                                                   |
+| ---------------- | --------------------------------------------------------------------------- |
+| `operators/`     | 20+ files testing individual operators, numbered to match enum              |
+| `adapters/`      | Optional periphery extensions, separate from core                           |
+| `decoder/`       | Technical implementation tests, not user-facing behavior                    |
 | `serialization/` | Condition serialization subsystem (integrity, type tree, topology, packing) |
 
 ### 6. Error Testing Strategy
@@ -105,31 +104,31 @@ Error/revert cases are tested **implicitly within feature tests** - colocated wi
 
 ### Tests to Redistribute
 
-| Old File | Target Location(s) |
-|----------|-------------------|
-| `Roles.spec.ts` | Split across: `role-management`, `transaction-execution` |
-| `Membership.spec.ts` | `role-management.spec.ts` |
-| `Clearance.spec.ts` | `scoping.spec.ts` |
-| `Allowance.spec.ts` | `allowance-tracking.spec.ts` (all sections including multiEntrypoint) |
-| `AllowanceAccrual.spec.ts` | `allowance-tracking.spec.ts` |
-| `ExecutionOptions.spec.ts` | `transaction-execution.spec.ts` |
-| `TransactionBundle.spec.ts` | `transaction-execution.spec.ts` |
-| `Operator.spec.ts` | Merge into `operators/` (dedupe with existing files) |
-| `Integrity.spec.ts` | `serialization/integrity.spec.ts` (keep cohesive) |
-| `TypeTree.spec.ts` | `serialization/type-tree.spec.ts` |
-| `Topology.spec.ts` | `serialization/topology.spec.ts` |
-| `PackerUnpacker.spec.ts` | `serialization/packer-unpacker.spec.ts` |
-| `MatchLeadingBytes.spec.ts` | `operators/05Matches.spec.ts` |
-| `AbiEncodedLeadingBytes.spec.ts` | `operators/05Matches.spec.ts` |
-| `Misc.spec.ts` | Redistribute all tests to appropriate domains (remains in old/) |
-| `OnlyOwner.spec.ts` | `onlyOwner.spec.ts` |
-| `EmitsEvent.spec.ts` | Colocate event assertions with each feature's tests |
-| `Setup.spec.ts` | **Skip** - no deployment testing (remains in old/) |
-| `FactoryFriendly.spec.ts` | **Skip** - no deployment testing (remains in old/) |
-| `Modifier.spec.ts` | **Skip** - no deployment testing (remains in old/) |
-| `decoder/Overflow.spec.ts` | `decoder/overflow.spec.ts` |
-| `decoder/Plucking.spec.ts` | `decoder/plucking.spec.ts` |
-| `adapters/*` | `adapters/` (rename to kebab-case) |
+| Old File                         | Target Location(s)                                                    |
+| -------------------------------- | --------------------------------------------------------------------- |
+| `Roles.spec.ts`                  | Split across: `role-management`, `transaction-execution`              |
+| `Membership.spec.ts`             | `role-management.spec.ts`                                             |
+| `Clearance.spec.ts`              | `scoping.spec.ts`                                                     |
+| `Allowance.spec.ts`              | `allowance-tracking.spec.ts` (all sections including multiEntrypoint) |
+| `AllowanceAccrual.spec.ts`       | `allowance-tracking.spec.ts`                                          |
+| `ExecutionOptions.spec.ts`       | `transaction-execution.spec.ts`                                       |
+| `TransactionBundle.spec.ts`      | `transaction-execution.spec.ts`                                       |
+| `Operator.spec.ts`               | Merge into `operators/` (dedupe with existing files)                  |
+| `Integrity.spec.ts`              | `serialization/integrity.spec.ts` (keep cohesive)                     |
+| `TypeTree.spec.ts`               | `serialization/type-tree.spec.ts`                                     |
+| `Topology.spec.ts`               | `serialization/topology.spec.ts`                                      |
+| `PackerUnpacker.spec.ts`         | `serialization/packer-unpacker.spec.ts`                               |
+| `MatchLeadingBytes.spec.ts`      | `operators/05Matches.spec.ts`                                         |
+| `AbiEncodedLeadingBytes.spec.ts` | `operators/05Matches.spec.ts`                                         |
+| `Misc.spec.ts`                   | Redistribute all tests to appropriate domains (remains in old/)       |
+| `OnlyOwner.spec.ts`              | `onlyOwner.spec.ts`                                                   |
+| `EmitsEvent.spec.ts`             | Colocate event assertions with each feature's tests                   |
+| `Setup.spec.ts`                  | **Skip** - no deployment testing (remains in old/)                    |
+| `FactoryFriendly.spec.ts`        | **Skip** - no deployment testing (remains in old/)                    |
+| `Modifier.spec.ts`               | **Skip** - no deployment testing (remains in old/)                    |
+| `decoder/Overflow.spec.ts`       | `decoder/overflow.spec.ts`                                            |
+| `decoder/Plucking.spec.ts`       | `decoder/plucking.spec.ts`                                            |
+| `adapters/*`                     | `adapters/` (rename to kebab-case)                                    |
 
 ### Operator Test Integration
 
@@ -140,74 +139,95 @@ Error/revert cases are tested **implicitly within feature tests** - colocated wi
 
 ## Implementation Phases
 
-### Phase 1: Scaffold Placeholder Structure
+### Phase 1: Design Test Structure from Scratch
 
-Create all destination files with placeholder test structure (empty `describe` and `it` blocks):
+**Approach**: Analyze the codebase to design the ideal test structure. This is a **blank slate** design process, not a copy-paste of existing test titles.
 
-1. Create new files/folders:
-   - `serialization/integrity.spec.ts`
-   - `serialization/type-tree.spec.ts`
-   - `serialization/topology.spec.ts`
-   - `serialization/packer-unpacker.spec.ts`
-   - `role-management.spec.ts`
-   - `scoping.spec.ts`
-   - `condition-evaluation.spec.ts`
-   - `allowance-tracking.spec.ts`
-   - `transaction-execution.spec.ts`
-   - `onlyOwner.spec.ts`
-   - `decoder/overflow.spec.ts`
-   - `decoder/plucking.spec.ts`
-   - `adapters/multisend-unwrapper.spec.ts`
-   - `adapters/avatar-erc721-owner.spec.ts`
+**Process for each target file**:
 
-2. Each file contains:
-   - Import statements
-   - `describe` blocks with **descriptive titles** matching the test structure from `old/`
-   - **All new `it` blocks use `it.todo()`** with descriptive titles as placeholders
-   - For tests merging into **existing files** (e.g., `operators/05Matches.spec.ts`), add new `describe` blocks and `it.todo()` placeholders
+1. **Analyze the code**: Read the relevant contracts/functions to understand what behaviors need testing
+2. **Design test cases**: Create `it.skip()` placeholders for every scenario that should be tested:
+   - Happy paths (expected usage)
+   - Error conditions (reverts, edge cases)
+   - Boundary conditions
+   - State transitions
+3. **Write clear descriptions**: Test titles should be self-documenting and describe the expected behavior
+4. **Reference old/ for inspiration**: The existing tests in `old/` can inform what was previously covered, but are not the source of truth
 
-   Example placeholder:
-   ```typescript
-   describe("Membership", () => {
-     describe("Validity window", () => {
-       it.todo("should reject if membership not yet valid");
-       it.todo("should reject if membership expired");
-     });
-   });
-   ```
+**Files to create**:
 
-3. **Commit**: "scaffold: add placeholder test structure"
+- `serialization/integrity.spec.ts`
+- `serialization/type-tree.spec.ts`
+- `serialization/topology.spec.ts`
+- `serialization/packer-unpacker.spec.ts`
+- `role-management.spec.ts`
+- `scoping.spec.ts`
+- `condition-evaluation.spec.ts`
+- `allowance-tracking.spec.ts`
+- `transaction-execution.spec.ts`
+- `onlyOwner.spec.ts`
+- `decoder/overflow.spec.ts`
+- `decoder/plucking.spec.ts`
+- `adapters/multisend-unwrapper.spec.ts`
+- `adapters/avatar-erc721-owner.spec.ts`
 
-### Phase 2: Migrate Tests File-by-File
+**Each file contains**:
 
-For each source file in `old/`, migrate its tests to the destination file(s):
+- Import statements
+- `describe` blocks organized by feature/behavior
+- `it.skip()` placeholders with **clear, descriptive titles**
+- For tests merging into **existing files** (e.g., `operators/05Matches.spec.ts`), add new `describe` blocks
 
-| Step | Source (old/) | Destination | Commit Message |
-|------|---------------|-------------|----------------|
-| 2.1 | `Membership.spec.ts` | `role-management.spec.ts` | "migrate: membership tests to role-management" |
-| 2.2 | `Roles.spec.ts` (role parts) | `role-management.spec.ts` | "migrate: role tests from Roles.spec" |
-| 2.3 | `Roles.spec.ts` (exec parts) | `transaction-execution.spec.ts` | "migrate: execution tests from Roles.spec" |
-| 2.4 | `Clearance.spec.ts` | `scoping.spec.ts` | "migrate: clearance tests to scoping" |
-| 2.5 | `Allowance.spec.ts` | `allowance-tracking.spec.ts` | "migrate: allowance tests" |
-| 2.6 | `AllowanceAccrual.spec.ts` | `allowance-tracking.spec.ts` | "migrate: allowance accrual tests" |
-| 2.7 | `ExecutionOptions.spec.ts` | `transaction-execution.spec.ts` | "migrate: execution options tests" |
-| 2.8 | `TransactionBundle.spec.ts` | `transaction-execution.spec.ts` | "migrate: transaction bundle tests" |
-| 2.9 | `Operator.spec.ts` | `operators/*` | "migrate: operator tests to individual files" |
-| 2.10 | `Integrity.spec.ts` | `serialization/integrity.spec.ts` | "migrate: integrity tests" |
-| 2.11 | `TypeTree.spec.ts` | `serialization/type-tree.spec.ts` | "migrate: type tree tests" |
-| 2.12 | `Topology.spec.ts` | `serialization/topology.spec.ts` | "migrate: topology tests" |
-| 2.13 | `PackerUnpacker.spec.ts` | `serialization/packer-unpacker.spec.ts` | "migrate: packer/unpacker tests" |
-| 2.14 | `MatchLeadingBytes.spec.ts` | `operators/05Matches.spec.ts` | "migrate: leading bytes tests to Matches operator" |
-| 2.15 | `AbiEncodedLeadingBytes.spec.ts` | `operators/05Matches.spec.ts` | "migrate: abi encoded leading bytes tests" |
-| 2.16 | `OnlyOwner.spec.ts` | `onlyOwner.spec.ts` | "migrate: onlyOwner tests" |
-| 2.17 | `EmitsEvent.spec.ts` | (distribute to features) | "migrate: event tests to feature files" |
-| 2.18 | `Misc.spec.ts` | (distribute to domains) | "migrate: misc tests to appropriate domains" |
-| 2.19 | `decoder/Overflow.spec.ts` | `decoder/overflow.spec.ts` | "migrate: decoder overflow tests" |
-| 2.20 | `decoder/Plucking.spec.ts` | `decoder/plucking.spec.ts` | "migrate: decoder plucking tests" |
-| 2.21 | `adapters/MultiSendUnwrapper.spec.ts` | `adapters/multisend-unwrapper.spec.ts` | "migrate: multisend unwrapper tests" |
-| 2.22 | `adapters/AvatarIsOwnerOfERC721.spec.ts` | `adapters/avatar-erc721-owner.spec.ts` | "migrate: avatar erc721 owner tests" |
+Example placeholder:
+
+```typescript
+describe("Membership", () => {
+  describe("Validity window", () => {
+    it.skip(
+      "reverts with MembershipNotYetValid when current time is before start",
+    );
+    it.skip("reverts with MembershipExpired when current time is after end");
+    it.skip("succeeds when current time is exactly at start boundary");
+    it.skip("succeeds when current time is exactly at end boundary");
+  });
+});
+```
+
+**Commit**: One commit per file created, e.g., "scaffold: design role-management test structure"
+
+### Phase 2: Implement Test Cases
+
+Implement the test cases designed in Phase 1. For each `it.skip()` placeholder, write the actual test implementation.
+
+**Process**:
+
+1. Reference `old/` tests for implementation patterns, fixtures, and assertions
+2. Adapt and improve implementations as needed (don't blindly copy)
+3. Remove `.skip` as each test is implemented
+4. Add any additional test cases discovered during implementation
+
+**Reference mapping** (old/ files to consult for each target):
+
+| Target File                             | Reference Files in old/                                                               |
+| --------------------------------------- | ------------------------------------------------------------------------------------- |
+| `role-management.spec.ts`               | `Membership.spec.ts`, `Roles.spec.ts` (role parts)                                    |
+| `transaction-execution.spec.ts`         | `Roles.spec.ts` (exec parts), `ExecutionOptions.spec.ts`, `TransactionBundle.spec.ts` |
+| `scoping.spec.ts`                       | `Clearance.spec.ts`                                                                   |
+| `allowance-tracking.spec.ts`            | `Allowance.spec.ts`, `AllowanceAccrual.spec.ts`                                       |
+| `condition-evaluation.spec.ts`          | `Misc.spec.ts` (condition parts)                                                      |
+| `onlyOwner.spec.ts`                     | `OnlyOwner.spec.ts`                                                                   |
+| `serialization/integrity.spec.ts`       | `Integrity.spec.ts`                                                                   |
+| `serialization/type-tree.spec.ts`       | `TypeTree.spec.ts`                                                                    |
+| `serialization/topology.spec.ts`        | `Topology.spec.ts`                                                                    |
+| `serialization/packer-unpacker.spec.ts` | `PackerUnpacker.spec.ts`                                                              |
+| `decoder/overflow.spec.ts`              | `decoder/Overflow.spec.ts`                                                            |
+| `decoder/plucking.spec.ts`              | `decoder/Plucking.spec.ts`                                                            |
+| `adapters/multisend-unwrapper.spec.ts`  | `adapters/MultiSendUnwrapper.spec.ts`                                                 |
+| `adapters/avatar-erc721-owner.spec.ts`  | `adapters/AvatarIsOwnerOfERC721.spec.ts`                                              |
+| `operators/05Matches.spec.ts`           | `MatchLeadingBytes.spec.ts`, `AbiEncodedLeadingBytes.spec.ts`                         |
 
 **Important**:
+
 - Do NOT delete, remove, or rename any files in `old/`. They remain for coverage comparison.
 - During migration, you may skip tests in `old/` (e.g., using `.skip` or test config) to avoid conflicts while asserting coverage on new tests.
 
@@ -221,27 +241,32 @@ For each source file in `old/`, migrate its tests to the destination file(s):
 ### Phase 4: Manual Cleanup
 
 **User manually deletes `old/` folder** after verifying:
+
 - All tests from `old/` are now covered in new structure
 - No coverage regression
 - All tests pass
 
 ## Refactoring Scope
 
-This is a **full refactor**, not just a move:
-- Consolidate duplicate test cases
-- Improve test descriptions for clarity
-- Modernize assertion patterns where beneficial
+This is a **fresh design**, not a migration:
+
+- Start from a blank slate analyzing what the code should test
+- Design comprehensive test coverage based on contract behavior
+- Write clear, self-documenting test descriptions
+- Add new test cases for gaps in existing coverage
+- Reference `old/` for implementation patterns, but don't copy blindly
 - Apply consistent fixture usage (loadFixture pattern)
-- Remove any dead/commented test code
+- Iterate on coverage gaps after initial implementation
 
 ## Appendix A: Coverage Audit TODOs
 
-*To be populated after running solidity-coverage*
+_To be populated after running solidity-coverage_
 
 ### Template for Gap Documentation
 
 ```markdown
 ### [Contract/Function Name]
+
 - **File**: `contracts/path/to/Contract.sol`
 - **Line(s)**: 42-56
 - **Branch/Path**: [Description of untested path]
