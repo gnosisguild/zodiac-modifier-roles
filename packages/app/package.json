@@ -26,7 +26,7 @@
     "eslint": "^8.53.0",
     "eslint-config-next": "15.2.4",
     "ethereum-blockies-base64": "^1.0.2",
-    "ethers": "^6.13.5",
+    "ethers": "^6.16.0",
     "next": "15.5.7",
     "openapi-backend": "^5.15.0",
     "openapi-types": "^12.1.3",
