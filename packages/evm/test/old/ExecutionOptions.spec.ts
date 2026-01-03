@@ -83,8 +83,8 @@ describe("ExecutionOptions", async () => {
               0,
             ),
         )
-          .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-          .withArgs(PermissionCheckerStatus.SendNotAllowed, ZeroHash);
+          .to.be.revertedWithCustomError(modifier, "SendNotAllowed")
+          .withArgs(testContractAddress);
       });
       it("ExecutionOptions.None - Fails sending eth to fallback", async () => {
         const { modifier, testContract, owner, invoker } =
@@ -106,8 +106,8 @@ describe("ExecutionOptions", async () => {
             .connect(invoker)
             .execTransactionFromModule(testContractAddress, value, "0x", 0),
         )
-          .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-          .withArgs(PermissionCheckerStatus.SendNotAllowed, ZeroHash);
+          .to.be.revertedWithCustomError(modifier, "SendNotAllowed")
+          .withArgs(testContractAddress);
       });
       it("ExecutionOptions.Send - OK sending eth to payable function", async () => {
         const { modifier, testContract, owner, invoker } =
@@ -191,8 +191,8 @@ describe("ExecutionOptions", async () => {
               0,
             ),
         )
-          .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-          .withArgs(PermissionCheckerStatus.SendNotAllowed, ZeroHash);
+          .to.be.revertedWithCustomError(modifier, "SendNotAllowed")
+          .withArgs(testContractAddress);
       });
       it("ExecutionOptions.DelegateCall - Fails sending ETH to fallback", async () => {
         const { modifier, testContract, owner, invoker } =
@@ -219,8 +219,8 @@ describe("ExecutionOptions", async () => {
               Operation.Call,
             ),
         )
-          .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-          .withArgs(PermissionCheckerStatus.SendNotAllowed, ZeroHash);
+          .to.be.revertedWithCustomError(modifier, "SendNotAllowed")
+          .withArgs(testContractAddress);
       });
       it("ExecutionOptions.Both - OK sending ETH to payable function", async () => {
         const { modifier, testContract, owner, invoker } =
@@ -324,8 +324,8 @@ describe("ExecutionOptions", async () => {
               Operation.Call,
             ),
         )
-          .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-          .withArgs(PermissionCheckerStatus.SendNotAllowed, ZeroHash);
+          .to.be.revertedWithCustomError(modifier, "SendNotAllowed")
+          .withArgs(testContractAddress);
       });
       it("ExecutionOptions.None - Fails sending eth to fallback", async () => {
         const { modifier, testContract, owner, invoker } =
@@ -337,12 +337,13 @@ describe("ExecutionOptions", async () => {
           .connect(owner)
           .scopeTarget(ROLE_KEY, testContractAddress);
 
+        const FALLBACK_SELECTOR = "0x00000000";
         await modifier
           .connect(owner)
           .allowFunction(
             ROLE_KEY,
             testContractAddress,
-            "0x00000000",
+            FALLBACK_SELECTOR,
             [],
             ExecutionOptions.None,
           );
@@ -352,8 +353,8 @@ describe("ExecutionOptions", async () => {
             .connect(invoker)
             .execTransactionFromModule(testContractAddress, value, "0x", 0),
         )
-          .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-          .withArgs(PermissionCheckerStatus.SendNotAllowed, ZeroHash);
+          .to.be.revertedWithCustomError(modifier, "SendNotAllowed")
+          .withArgs(testContractAddress);
       });
       it("ExecutionOptions.Send - OK sending eth to payable function", async () => {
         const { modifier, testContract, owner, invoker } =
@@ -459,8 +460,8 @@ describe("ExecutionOptions", async () => {
               Operation.Call,
             ),
         )
-          .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-          .withArgs(PermissionCheckerStatus.SendNotAllowed, ZeroHash);
+          .to.be.revertedWithCustomError(modifier, "SendNotAllowed")
+          .withArgs(testContractAddress);
       });
       it("ExecutionOptions.DelegateCall - Fails sending ETH to fallback", async () => {
         const { modifier, testContract, owner, invoker } =
@@ -472,12 +473,13 @@ describe("ExecutionOptions", async () => {
           .connect(owner)
           .scopeTarget(ROLE_KEY, testContractAddress);
 
+        const FALLBACK_SELECTOR = "0x00000000";
         await modifier
           .connect(owner)
           .allowFunction(
             ROLE_KEY,
             testContractAddress,
-            "0x00000000",
+            FALLBACK_SELECTOR,
             [],
             ExecutionOptions.DelegateCall,
           );
@@ -487,8 +489,8 @@ describe("ExecutionOptions", async () => {
             .connect(invoker)
             .execTransactionFromModule(testContractAddress, value, "0x", 0),
         )
-          .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-          .withArgs(PermissionCheckerStatus.SendNotAllowed, ZeroHash);
+          .to.be.revertedWithCustomError(modifier, "SendNotAllowed")
+          .withArgs(testContractAddress);
       });
       it("ExecutionOptions.Both - OK sending eth to payable function", async () => {
         const { modifier, testContract, owner, invoker } =
@@ -607,8 +609,8 @@ describe("ExecutionOptions", async () => {
             Operation.DelegateCall,
           ),
       )
-        .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.DelegateCallNotAllowed, ZeroHash);
+        .to.be.revertedWithCustomError(modifier, "DelegateCallNotAllowed")
+        .withArgs(testContractAddress);
     });
     it("Target Scoped - can delegatecall", async () => {
       const { modifier, testContract, owner, invoker } =
@@ -673,8 +675,8 @@ describe("ExecutionOptions", async () => {
             Operation.DelegateCall,
           ),
       )
-        .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.DelegateCallNotAllowed, ZeroHash);
+        .to.be.revertedWithCustomError(modifier, "DelegateCallNotAllowed")
+        .withArgs(testContractAddress);
     });
   });
 

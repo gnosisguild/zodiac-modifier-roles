@@ -7,18 +7,8 @@ import {Consumption} from "./Allowance.sol";
 
 enum Status {
     Ok,
-    /// Role not allowed to delegate call to target address
-    DelegateCallNotAllowed,
-    /// Role not allowed to call target address
-    TargetAddressNotAllowed,
-    /// Role not allowed to call this function on target address
-    FunctionNotAllowed,
-    /// Role not allowed to send to target address
-    SendNotAllowed,
     /// Or conition not met
     OrViolation,
-    /// @deprecated Nor operator has been removed
-    _DeprecatedNorViolation,
     /// Parameter value is not equal to allowed
     ParameterNotAllowed,
     /// Parameter value less than allowed
@@ -31,8 +21,6 @@ enum Status {
     NotEveryArrayElementPasses,
     /// Array elements do not meet allowed criteria for at least one element
     NoArrayElementPasses,
-    /// @deprecated ArraySubset operator has been removed
-    _DeprecatedParameterNotSubsetOfAllowed,
     /// Bitmask exceeded value length
     BitmaskOverflow,
     /// Bitmask not an allowed value
@@ -40,7 +28,6 @@ enum Status {
     CustomConditionViolation,
     AllowanceExceeded,
     CallAllowanceExceeded,
-    EtherAllowanceExceeded,
     CalldataOverflow,
     RatioBelowMin,
     RatioAboveMax,

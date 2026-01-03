@@ -57,8 +57,8 @@ describe("Clearance", async () => {
         .connect(invoker)
         .execTransactionFromModule(testContractAddress, 0, data as string, 0),
     )
-      .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.TargetAddressNotAllowed, ZeroHash);
+      .to.be.revertedWithCustomError(modifier, "TargetAddressNotAllowed")
+      .withArgs(testContractAddress);
 
     await modifier
       .connect(owner)
@@ -77,8 +77,8 @@ describe("Clearance", async () => {
         .connect(invoker)
         .execTransactionFromModule(testContractAddress, 0, data as string, 0),
     )
-      .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.TargetAddressNotAllowed, ZeroHash);
+      .to.be.revertedWithCustomError(modifier, "TargetAddressNotAllowed")
+      .withArgs(testContractAddress);
   });
 
   it("allowing a target does not allow other targets", async () => {
@@ -99,18 +99,19 @@ describe("Clearance", async () => {
         .execTransactionFromModule(testContractAddress, 0, data as string, 0),
     ).to.not.be.reverted;
 
+    const testContractCloneAddress = await testContractClone.getAddress();
     await expect(
       modifier
         .connect(invoker)
         .execTransactionFromModule(
-          await testContractClone.getAddress(),
+          testContractCloneAddress,
           0,
           data as string,
           0,
         ),
     )
-      .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.TargetAddressNotAllowed, ZeroHash);
+      .to.be.revertedWithCustomError(modifier, "TargetAddressNotAllowed")
+      .withArgs(testContractCloneAddress);
   });
 
   it("allows and then disallows a function", async () => {
@@ -147,11 +148,8 @@ describe("Clearance", async () => {
         .connect(invoker)
         .execTransactionFromModule(testContractAddress, 0, data as string, 0),
     )
-      .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-      .withArgs(
-        PermissionCheckerStatus.FunctionNotAllowed,
-        SELECTOR.padEnd(66, "0"),
-      );
+      .to.be.revertedWithCustomError(modifier, "FunctionNotAllowed")
+      .withArgs(testContractAddress, SELECTOR);
   });
   it("allowing function on a target does not allow same function on diff target", async () => {
     const { modifier, testContract, testContractClone, owner, invoker } =
@@ -181,18 +179,19 @@ describe("Clearance", async () => {
     ).to.not.be.reverted;
 
     // but fail on the clone
+    const testContractCloneAddress = await testContractClone.getAddress();
     await expect(
       modifier
         .connect(invoker)
         .execTransactionFromModule(
-          await testContractClone.getAddress(),
+          testContractCloneAddress,
           0,
           data as string,
           0,
         ),
     )
-      .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.TargetAddressNotAllowed, ZeroHash);
+      .to.be.revertedWithCustomError(modifier, "TargetAddressNotAllowed")
+      .withArgs(testContractCloneAddress);
   });
   it("allowing a function tightens a previously allowed target", async () => {
     const { modifier, testContract, owner, invoker } = await loadFixture(setup);
@@ -255,11 +254,8 @@ describe("Clearance", async () => {
           0,
         ),
     )
-      .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-      .withArgs(
-        PermissionCheckerStatus.FunctionNotAllowed,
-        selectorDoEvenLess.padEnd(66, "0"),
-      );
+      .to.be.revertedWithCustomError(modifier, "FunctionNotAllowed")
+      .withArgs(testContractAddress, selectorDoEvenLess);
   });
 
   it("allowing a target loosens a previously allowed function", async () => {
@@ -307,11 +303,8 @@ describe("Clearance", async () => {
           0,
         ),
     )
-      .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-      .withArgs(
-        PermissionCheckerStatus.FunctionNotAllowed,
-        SELECTOR2.padEnd(66, "0"),
-      );
+      .to.be.revertedWithCustomError(modifier, "FunctionNotAllowed")
+      .withArgs(testContractAddress, SELECTOR2);
 
     await modifier
       .connect(owner)
@@ -408,11 +401,8 @@ describe("Clearance", async () => {
           0,
         ),
     )
-      .to.be.revertedWithCustomError(modifier, "ConditionViolation")
-      .withArgs(
-        PermissionCheckerStatus.FunctionNotAllowed,
-        selector2.padEnd(66, "0"),
-      );
+      .to.be.revertedWithCustomError(modifier, "FunctionNotAllowed")
+      .withArgs(testContractAddress, selector2);
   });
 
   describe("Clearance.Target with conditions", () => {

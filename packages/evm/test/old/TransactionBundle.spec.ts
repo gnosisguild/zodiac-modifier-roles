@@ -189,11 +189,8 @@ describe("Transaction Bundle", async () => {
           Operation.DelegateCall,
         ),
     )
-      .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(
-        PermissionCheckerStatus.FunctionNotAllowed,
-        selector.padEnd(66, "0"),
-      );
+      .to.be.revertedWithCustomError(roles, "FunctionNotAllowed")
+      .withArgs(testContractAddress, selector);
     expect(await testContract.aStorageNumber()).to.equal(0);
   });
 
@@ -243,11 +240,8 @@ describe("Transaction Bundle", async () => {
           Operation.DelegateCall,
         ),
     )
-      .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(
-        PermissionCheckerStatus.FunctionNotAllowed,
-        selector.padEnd(66, "0"),
-      );
+      .to.be.revertedWithCustomError(roles, "FunctionNotAllowed")
+      .withArgs(testContractAddress, selector);
     expect(await testContract.aStorageNumber()).to.equal(0);
   });
 
@@ -298,10 +292,11 @@ describe("Transaction Bundle", async () => {
     expect(await testContract.aStorageNumber()).to.equal(NEXT_STORAGE_VALUE);
 
     // removing the unwrap adapter should result in address not Authorized
+    const multisendAddress = await multisend.getAddress();
     await roles
       .connect(owner)
       .setTransactionUnwrapper(
-        await multisend.getAddress(),
+        multisendAddress,
         "0x8d80ff0a",
         "0x0000000000000000000000000000000000000000",
       );
@@ -309,14 +304,14 @@ describe("Transaction Bundle", async () => {
       roles
         .connect(invoker)
         .execTransactionFromModule(
-          await multisend.getAddress(),
+          multisendAddress,
           0,
           multisendCallData,
           Operation.DelegateCall,
         ),
     )
-      .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.TargetAddressNotAllowed, BYTES32_ZERO);
+      .to.be.revertedWithCustomError(roles, "TargetAddressNotAllowed")
+      .withArgs(multisendAddress);
   });
 
   it("succeeds for multiple transactions", async () => {
