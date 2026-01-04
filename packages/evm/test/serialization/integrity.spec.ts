@@ -882,6 +882,24 @@ describe("Integrity", () => {
       );
     });
 
+    it("reverts UnsuitableCompValue when Pluck index > 254", async () => {
+      const { allowFunction } = await loadFixture(setup);
+
+      await expect(
+        allowFunction([
+          {
+            parent: 0,
+            paramType: Encoding.Static,
+            operator: Operator.Pluck,
+            compValue: "0xff", // index 255, max is 254
+          },
+        ]),
+      ).to.be.revertedWithCustomError(
+        await hre.ethers.getContractAt("Roles", hre.ethers.ZeroAddress),
+        "UnsuitableCompValue",
+      );
+    });
+
     it("succeeds when Pluck has Static encoding and 1-byte compValue", async () => {
       const { allowFunction } = await loadFixture(setup);
 

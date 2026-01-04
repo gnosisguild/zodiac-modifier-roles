@@ -135,8 +135,8 @@ library Integrity {
             if (!_isWordLike(encoding)) {
                 revert IRolesError.UnsuitableParameterType(index);
             }
-            // compValue is the index (1 byte, 0-255)
-            if (compValue.length != 1) {
+            // compValue is the index (1 byte, 0-254 to avoid overflow in count)
+            if (compValue.length != 1 || uint8(compValue[0]) > 254) {
                 revert IRolesError.UnsuitableCompValue(index);
             }
         } else if (operator == Operator.EqualToAvatar) {
