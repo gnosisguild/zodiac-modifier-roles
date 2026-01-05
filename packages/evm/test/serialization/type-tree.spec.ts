@@ -1,168 +1,540 @@
 import { expect } from "chai";
 import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-
-import { Encoding, Operator } from "../utils";
-import { deployRolesMod } from "../setup";
+import { Encoding, Operator, flattenCondition } from "../utils";
 
 describe("TypeTree", () => {
   async function setup() {
-    const [owner] = await hre.ethers.getSigners();
+    const MockTypeTree = await hre.ethers.getContractFactory("MockTypeTree");
+    const mockTypeTree = await MockTypeTree.deploy();
 
-    const Avatar = await hre.ethers.getContractFactory("TestAvatar");
-    const avatar = await Avatar.deploy();
-    const avatarAddress = await avatar.getAddress();
+    // Helper to inspect and format result for easier assertions
+    async function inspect(condition: Parameters<typeof flattenCondition>[0]) {
+      const result = await mockTypeTree.inspect(flattenCondition(condition));
+      return result.map((r) => ({
+        parent: Number(r.parent),
+        encoding: Number(r.encoding),
+        leadingBytes: Number(r.leadingBytes),
+        inlined: r.inlined,
+      }));
+    }
 
-    const roles = await deployRolesMod(
-      hre,
-      owner.address,
-      avatarAddress,
-      avatarAddress,
-    );
+    // Helper to get ID
+    async function getId(condition: Parameters<typeof flattenCondition>[0]) {
+      return mockTypeTree["id((uint8,uint8,uint8,bytes)[],uint256)"](
+        flattenCondition(condition),
+        0,
+      );
+    }
 
-    const ROLE_KEY = hre.ethers.id("TEST_ROLE");
-    const TARGET = "0x000000000000000000000000000000000000000f";
-    const SELECTOR = "0x12345678";
-
-    const allowFunction = (conditions: any[]) =>
-      roles
-        .connect(owner)
-        .allowFunction(ROLE_KEY, TARGET, SELECTOR, conditions, 0);
-
-    return { roles, owner, allowFunction };
+    return { mockTypeTree, inspect, getId };
   }
 
   describe("inspect", () => {
-    describe("basic encoding types", () => {
-      it.skip("returns Static encoding for Static parameter node");
+    describe("Primitives", () => {
+      it("returns the correct layout for leaf nodes (Static)", async () => {
+        const { inspect } = await loadFixture(setup);
+        const result = await inspect({
+          paramType: Encoding.Static,
+          operator: Operator.Pass,
+        });
+        expect(result).to.deep.equal([
+          {
+            parent: 0,
+            encoding: Encoding.Static,
+            leadingBytes: 0,
+            inlined: true,
+          },
+        ]);
+      });
 
-      it.skip("returns Dynamic encoding for Dynamic parameter node");
-
-      it.skip("returns Tuple encoding for Tuple parameter node");
-
-      it.skip("returns Array encoding for Array parameter node");
-
-      it.skip("returns AbiEncoded encoding for AbiEncoded parameter node");
-
-      it.skip("returns EtherValue encoding for EtherValue parameter node");
+      it("returns the correct layout for leaf nodes (Dynamic)", async () => {
+        const { inspect } = await loadFixture(setup);
+        const result = await inspect({
+          paramType: Encoding.Dynamic,
+          operator: Operator.Pass,
+        });
+        expect(result).to.deep.equal([
+          {
+            parent: 0,
+            encoding: Encoding.Dynamic,
+            leadingBytes: 0,
+            inlined: false,
+          },
+        ]);
+      });
     });
 
-    describe("logical nodes (And/Or)", () => {
-      it.skip("returns first child's type tree for non-variant And");
+    describe("Logical Nodes (And / Or)", () => {
+      describe("Non-variant (Transparent)", () => {
+        it("collapses an And node to its child's type if children are identical", async () => {
+          const { inspect } = await loadFixture(setup);
+          // And -> (Static, Static) => Static
+          const result = await inspect({
+            paramType: Encoding.None,
+            operator: Operator.And,
+            children: [
+              { paramType: Encoding.Static, operator: Operator.Pass },
+              { paramType: Encoding.Static, operator: Operator.Pass },
+            ],
+          });
+          expect(result).to.deep.equal([
+            {
+              parent: 0,
+              encoding: Encoding.Static,
+              leadingBytes: 0,
+              inlined: true,
+            },
+          ]);
+        });
 
-      it.skip("returns first child's type tree for non-variant Or");
+        it("collapses an Or node to its child's type if children are identical", async () => {
+          const { inspect } = await loadFixture(setup);
+          // Or -> (Dynamic, Dynamic) => Dynamic
+          const result = await inspect({
+            paramType: Encoding.None,
+            operator: Operator.Or,
+            children: [
+              { paramType: Encoding.Dynamic, operator: Operator.Pass },
+              { paramType: Encoding.Dynamic, operator: Operator.Pass },
+            ],
+          });
+          expect(result).to.deep.equal([
+            {
+              parent: 0,
+              encoding: Encoding.Dynamic,
+              leadingBytes: 0,
+              inlined: false,
+            },
+          ]);
+        });
 
-      it.skip(
-        "returns Dynamic encoding for variant And (children have different type trees)",
-      );
+        it("handles single-child logical nodes correctly", async () => {
+          const { inspect } = await loadFixture(setup);
+          const result = await inspect({
+            paramType: Encoding.None,
+            operator: Operator.Or,
+            children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+          });
+          expect(result).to.deep.equal([
+            {
+              parent: 0,
+              encoding: Encoding.Static,
+              leadingBytes: 0,
+              inlined: true,
+            },
+          ]);
+        });
+      });
 
-      it.skip(
-        "returns Dynamic encoding for variant Or (children have different type trees)",
-      );
+      describe("Variant", () => {
+        it("wraps heterogeneous children in a Dynamic variant (And)", async () => {
+          const { inspect } = await loadFixture(setup);
+          // And -> (Static, Dynamic) => Dynamic(Static, Dynamic)
+          const result = await inspect({
+            paramType: Encoding.None,
+            operator: Operator.And,
+            children: [
+              { paramType: Encoding.Static, operator: Operator.Pass },
+              { paramType: Encoding.Dynamic, operator: Operator.Pass },
+            ],
+          });
+          expect(result).to.deep.equal([
+            {
+              parent: 0,
+              encoding: Encoding.Dynamic,
+              leadingBytes: 0,
+              inlined: false,
+            },
+            {
+              parent: 0,
+              encoding: Encoding.Static,
+              leadingBytes: 0,
+              inlined: true,
+            },
+            {
+              parent: 0,
+              encoding: Encoding.Dynamic,
+              leadingBytes: 0,
+              inlined: false,
+            },
+          ]);
+        });
+
+        it("wraps heterogeneous children in a Dynamic variant (Or)", async () => {
+          const { inspect } = await loadFixture(setup);
+          // Or -> (Static, Tuple) => Dynamic(Static, Tuple)
+          const result = await inspect({
+            paramType: Encoding.None,
+            operator: Operator.Or,
+            children: [
+              { paramType: Encoding.Static, operator: Operator.Pass },
+              {
+                paramType: Encoding.Tuple,
+                operator: Operator.Matches,
+                children: [
+                  { paramType: Encoding.Static, operator: Operator.Pass },
+                ],
+              },
+            ],
+          });
+          expect(result[0]).to.deep.include({
+            encoding: Encoding.Dynamic,
+            inlined: true,
+          });
+          expect(result).to.have.lengthOf(4); // Root + Static + Tuple + Tuple's child
+        });
+
+        it("wraps children that are structurally different even if encodings match (deep diff)", async () => {
+          const { inspect } = await loadFixture(setup);
+          // Or -> (Tuple(Static), Tuple(Dynamic)) => Dynamic(...)
+          const result = await inspect({
+            paramType: Encoding.None,
+            operator: Operator.Or,
+            children: [
+              {
+                paramType: Encoding.Tuple,
+                operator: Operator.Matches,
+                children: [
+                  { paramType: Encoding.Static, operator: Operator.Pass },
+                ],
+              },
+              {
+                paramType: Encoding.Tuple,
+                operator: Operator.Matches,
+                children: [
+                  { paramType: Encoding.Dynamic, operator: Operator.Pass },
+                ],
+              },
+            ],
+          });
+          expect(result[0].encoding).to.equal(Encoding.Dynamic);
+          expect(result).to.have.lengthOf(5);
+        });
+      });
     });
 
-    describe("array type handling", () => {
-      it.skip("returns single child layout for non-variant Array");
+    describe("Arrays", () => {
+      it("uses the first child as a template for non-variant arrays", async () => {
+        const { inspect } = await loadFixture(setup);
+        // Array -> (Static, Static) => Array(Static) (length 2 children in result: Array + 1 child)
+        const result = await inspect({
+          paramType: Encoding.Array,
+          operator: Operator.Matches,
+          children: [
+            { paramType: Encoding.Static, operator: Operator.Pass },
+            { paramType: Encoding.Static, operator: Operator.Pass },
+          ],
+        });
+        expect(result).to.deep.equal([
+          {
+            parent: 0,
+            encoding: Encoding.Array,
+            leadingBytes: 0,
+            inlined: false,
+          },
+          {
+            parent: 0,
+            encoding: Encoding.Static,
+            leadingBytes: 0,
+            inlined: true,
+          },
+        ]);
+      });
 
-      it.skip("returns all children layouts for variant Array");
-
-      it.skip(
-        "uses first child as template when all Array children have same type tree",
-      );
+      it("includes all children for variant arrays (heterogeneous elements)", async () => {
+        const { inspect } = await loadFixture(setup);
+        // Array -> (Static, Dynamic) => Array(Static, Dynamic)
+        const result = await inspect({
+          paramType: Encoding.Array,
+          operator: Operator.Matches,
+          children: [
+            { paramType: Encoding.Static, operator: Operator.Pass },
+            { paramType: Encoding.Dynamic, operator: Operator.Pass },
+          ],
+        });
+        expect(result).to.deep.equal([
+          {
+            parent: 0,
+            encoding: Encoding.Array,
+            leadingBytes: 0,
+            inlined: false,
+          },
+          {
+            parent: 0,
+            encoding: Encoding.Static,
+            leadingBytes: 0,
+            inlined: true,
+          },
+          {
+            parent: 0,
+            encoding: Encoding.Dynamic,
+            leadingBytes: 0,
+            inlined: false,
+          },
+        ]);
+      });
     });
 
-    describe("AbiEncoded leadingBytes", () => {
-      it.skip("defaults leadingBytes to 4 when compValue is empty");
+    describe("AbiEncoded", () => {
+      it("extracts leadingBytes from compValue correctly", async () => {
+        const { inspect } = await loadFixture(setup);
+        const result = await inspect({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x1234ff",
+          children: [],
+        });
+        expect(result[0]).to.deep.include({
+          encoding: Encoding.AbiEncoded,
+          leadingBytes: 0x1234,
+        });
+      });
 
-      it.skip("extracts leadingBytes from first 2 bytes of compValue");
-
-      it.skip("handles leadingBytes = 0 correctly");
-
-      it.skip("handles large leadingBytes values (2-byte range)");
+      it("defaults leadingBytes to 4 if compValue is empty", async () => {
+        const { inspect } = await loadFixture(setup);
+        const result = await inspect({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+          children: [],
+        });
+        expect(result[0]).to.deep.include({
+          encoding: Encoding.AbiEncoded,
+          leadingBytes: 4,
+        });
+      });
     });
 
-    describe("inlined detection", () => {
-      it.skip("marks Static nodes as inlined");
+    describe("Inlined Flag", () => {
+      it("marks purely static trees as inlined", async () => {
+        const { inspect } = await loadFixture(setup);
+        const result = await inspect({
+          paramType: Encoding.Tuple,
+          operator: Operator.Matches,
+          children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+        });
+        expect(result[0].inlined).to.be.true;
+        expect(result[1].inlined).to.be.true;
+      });
 
-      it.skip("marks Tuple with all inlined children as inlined");
+      it("marks trees containing Dynamic as not inlined", async () => {
+        const { inspect } = await loadFixture(setup);
+        const result = await inspect({
+          paramType: Encoding.Tuple,
+          operator: Operator.Matches,
+          children: [{ paramType: Encoding.Dynamic, operator: Operator.Pass }],
+        });
+        expect(result[0].inlined).to.be.false;
+      });
 
-      it.skip("marks Dynamic nodes as not inlined");
+      it("marks trees containing Array as not inlined", async () => {
+        const { inspect } = await loadFixture(setup);
+        const result = await inspect({
+          paramType: Encoding.Tuple,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Array,
+              operator: Operator.Matches,
+              children: [
+                { paramType: Encoding.Static, operator: Operator.Pass },
+              ],
+            },
+          ],
+        });
+        expect(result[0].inlined).to.be.false;
+      });
 
-      it.skip("marks Array nodes as not inlined");
+      it("marks trees containing AbiEncoded as not inlined", async () => {
+        const { inspect } = await loadFixture(setup);
+        const result = await inspect({
+          paramType: Encoding.Tuple,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.AbiEncoded,
+              operator: Operator.Matches,
+              children: [],
+            },
+          ],
+        });
+        expect(result[0].inlined).to.be.false;
+      });
 
-      it.skip("marks AbiEncoded nodes as not inlined");
-
-      it.skip("marks parent as not inlined if any child is not inlined");
+      it("propagates non-inlined status from deep descendants", async () => {
+        const { inspect } = await loadFixture(setup);
+        // Tuple -> Tuple -> Dynamic
+        const result = await inspect({
+          paramType: Encoding.Tuple,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Tuple,
+              operator: Operator.Matches,
+              children: [
+                { paramType: Encoding.Dynamic, operator: Operator.Pass },
+              ],
+            },
+          ],
+        });
+        expect(result[0].inlined).to.be.false; // Root
+        expect(result[1].inlined).to.be.false; // Middle tuple
+      });
     });
 
-    describe("structural children only", () => {
-      it.skip("ignores non-structural children in type tree");
+    describe("Structural Filtering", () => {
+      it("excludes non-structural nodes (None, EtherValue) from the type tree", async () => {
+        const { inspect } = await loadFixture(setup);
+        // Tuple -> (Static, None, EtherValue) => Tuple(Static)
+        const result = await inspect({
+          paramType: Encoding.Tuple,
+          operator: Operator.Matches,
+          children: [
+            { paramType: Encoding.Static, operator: Operator.Pass },
+            { paramType: Encoding.None, operator: Operator.And, children: [] },
+            { paramType: Encoding.EtherValue, operator: Operator.Pass },
+          ],
+        });
+        expect(result).to.have.lengthOf(2); // Tuple + Static
+        expect(result[1].encoding).to.equal(Encoding.Static);
+      });
 
-      it.skip("counts only structural children for layout");
-
-      it.skip("handles mixed structural and non-structural children");
+      it("correctly handles mixed structural and non-structural siblings", async () => {
+        const { inspect } = await loadFixture(setup);
+        // Tuple -> (None -> Static, Static) => Tuple(Static, Static)
+        // Note: The None wrapper disappears, but its structural child remains
+        const result = await inspect({
+          paramType: Encoding.Tuple,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.None,
+              operator: Operator.And,
+              children: [
+                { paramType: Encoding.Static, operator: Operator.Pass },
+              ],
+            },
+            { paramType: Encoding.Static, operator: Operator.Pass },
+          ],
+        });
+        expect(result).to.have.lengthOf(3); // Tuple + Static + Static
+      });
     });
   });
 
   describe("id", () => {
-    describe("hash uniqueness", () => {
-      it.skip("returns same hash for identical type trees");
-
-      it.skip("returns different hash for different encodings");
-
-      it.skip("returns different hash for different child structures");
-
-      it.skip("returns different hash for different nesting depth");
-    });
-  });
-
-  describe("variant detection", () => {
-    describe("logical nodes", () => {
-      it.skip(
-        "detects And as variant when children have different type tree ids",
-      );
-
-      it.skip(
-        "detects Or as variant when children have different type tree ids",
-      );
-
-      it.skip(
-        "detects And as non-variant when all children have same type tree id",
-      );
-
-      it.skip(
-        "detects Or as non-variant when all children have same type tree id",
-      );
-
-      it.skip("treats single-child logical nodes as non-variant");
+    it("returns the same hash for structurally identical trees", async () => {
+      const { getId } = await loadFixture(setup);
+      const tree1 = {
+        paramType: Encoding.Tuple,
+        operator: Operator.Matches,
+        children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+      };
+      const tree2 = { ...tree1 };
+      expect(await getId(tree1)).to.equal(await getId(tree2));
     });
 
-    describe("array nodes", () => {
-      it.skip(
-        "detects Array as variant when structural children have different type tree ids",
-      );
-
-      it.skip(
-        "detects Array as non-variant when structural children have same type tree id",
-      );
-
-      it.skip("treats single-child Array as non-variant");
+    it("returns different hashes for different encodings", async () => {
+      const { getId } = await loadFixture(setup);
+      const staticTree = {
+        paramType: Encoding.Static,
+        operator: Operator.Pass,
+      };
+      const dynamicTree = {
+        paramType: Encoding.Dynamic,
+        operator: Operator.Pass,
+      };
+      expect(await getId(staticTree)).to.not.equal(await getId(dynamicTree));
     });
 
-    describe("non-variant containers", () => {
-      it.skip("Tuple is never treated as variant");
-
-      it.skip("AbiEncoded is never treated as variant");
-
-      it.skip("Static/Dynamic leaf nodes are never variant");
+    it("returns different hashes for variant vs non-variant structures", async () => {
+      const { getId } = await loadFixture(setup);
+      // Non-variant And (transparent) -> Static
+      const nonVariant = {
+        paramType: Encoding.None,
+        operator: Operator.And,
+        children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+      };
+      // Variant And -> Dynamic(Static, Dynamic)
+      const variant = {
+        paramType: Encoding.None,
+        operator: Operator.And,
+        children: [
+          { paramType: Encoding.Static, operator: Operator.Pass },
+          { paramType: Encoding.Dynamic, operator: Operator.Pass },
+        ],
+      };
+      expect(await getId(nonVariant)).to.not.equal(await getId(variant));
     });
-  });
 
-  describe("edge cases", () => {
-    it.skip("handles empty children array");
+    it("is sensitive to child order and count", async () => {
+      const { getId } = await loadFixture(setup);
+      const order1 = {
+        paramType: Encoding.Tuple,
+        operator: Operator.Matches,
+        children: [
+          { paramType: Encoding.Static, operator: Operator.Pass },
+          { paramType: Encoding.Dynamic, operator: Operator.Pass },
+        ],
+      };
+      const order2 = {
+        paramType: Encoding.Tuple,
+        operator: Operator.Matches,
+        children: [
+          { paramType: Encoding.Dynamic, operator: Operator.Pass },
+          { paramType: Encoding.Static, operator: Operator.Pass },
+        ],
+      };
+      expect(await getId(order1)).to.not.equal(await getId(order2));
+    });
 
-    it.skip("handles deeply nested type trees (10+ levels)");
+    it("hashes all children correctly, not just the first or last", async () => {
+      const { getId } = await loadFixture(setup);
+      // These differ only in the first child (same last child)
+      const tree1 = {
+        paramType: Encoding.Tuple,
+        operator: Operator.Matches,
+        children: [
+          { paramType: Encoding.Dynamic, operator: Operator.Pass },
+          { paramType: Encoding.Static, operator: Operator.Pass },
+        ],
+      };
+      const tree2 = {
+        paramType: Encoding.Tuple,
+        operator: Operator.Matches,
+        children: [
+          { paramType: Encoding.Static, operator: Operator.Pass },
+          { paramType: Encoding.Static, operator: Operator.Pass },
+        ],
+      };
+      expect(await getId(tree1)).to.not.equal(await getId(tree2));
 
-    it.skip("handles complex mixed structures");
+      // These differ only in the second child (same first child)
+      const tree3 = {
+        paramType: Encoding.Tuple,
+        operator: Operator.Matches,
+        children: [
+          { paramType: Encoding.Static, operator: Operator.Pass },
+          { paramType: Encoding.Dynamic, operator: Operator.Pass },
+        ],
+      };
+      expect(await getId(tree2)).to.not.equal(await getId(tree3));
+    });
+
+    it("returns different hashes for different parent encodings with same children", async () => {
+      const { getId } = await loadFixture(setup);
+      const arrayTree = {
+        paramType: Encoding.Array,
+        operator: Operator.Matches,
+        children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+      };
+      const tupleTree = {
+        paramType: Encoding.Tuple,
+        operator: Operator.Matches,
+        children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+      };
+      expect(await getId(arrayTree)).to.not.equal(await getId(tupleTree));
+    });
   });
 });
