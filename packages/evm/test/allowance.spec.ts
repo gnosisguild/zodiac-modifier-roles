@@ -66,44 +66,36 @@ describe("AllowanceTracking", () => {
   describe("setAllowance", () => {
     describe("basic configuration", () => {
       it("sets balance to specified value", async () => {
-        const { roles, owner, ALLOWANCE_KEY } = await loadFixture(setup);
+        const { roles, ALLOWANCE_KEY } = await loadFixture(setup);
 
-        await roles
-          .connect(owner)
-          .setAllowance(ALLOWANCE_KEY, 500, 1000, 100, 3600, 0);
+        await roles.setAllowance(ALLOWANCE_KEY, 500, 1000, 100, 3600, 0);
 
         const allowance = await roles.allowances(ALLOWANCE_KEY);
         expect(allowance.balance).to.equal(500);
       });
 
       it("sets refill to specified value", async () => {
-        const { roles, owner, ALLOWANCE_KEY } = await loadFixture(setup);
+        const { roles, ALLOWANCE_KEY } = await loadFixture(setup);
 
-        await roles
-          .connect(owner)
-          .setAllowance(ALLOWANCE_KEY, 500, 1000, 100, 3600, 0);
+        await roles.setAllowance(ALLOWANCE_KEY, 500, 1000, 100, 3600, 0);
 
         const allowance = await roles.allowances(ALLOWANCE_KEY);
         expect(allowance.refill).to.equal(100);
       });
 
       it("sets period to specified value", async () => {
-        const { roles, owner, ALLOWANCE_KEY } = await loadFixture(setup);
+        const { roles, ALLOWANCE_KEY } = await loadFixture(setup);
 
-        await roles
-          .connect(owner)
-          .setAllowance(ALLOWANCE_KEY, 500, 1000, 100, 3600, 0);
+        await roles.setAllowance(ALLOWANCE_KEY, 500, 1000, 100, 3600, 0);
 
         const allowance = await roles.allowances(ALLOWANCE_KEY);
         expect(allowance.period).to.equal(3600);
       });
 
       it("emits SetAllowance event with correct parameters", async () => {
-        const { roles, owner, ALLOWANCE_KEY } = await loadFixture(setup);
+        const { roles, ALLOWANCE_KEY } = await loadFixture(setup);
 
-        const tx = roles
-          .connect(owner)
-          .setAllowance(ALLOWANCE_KEY, 500, 1000, 100, 3600, 0);
+        const tx = roles.setAllowance(ALLOWANCE_KEY, 500, 1000, 100, 3600, 0);
 
         await expect(tx).to.emit(roles, "SetAllowance");
       });
@@ -111,11 +103,9 @@ describe("AllowanceTracking", () => {
 
     describe("default values", () => {
       it("sets maxRefill to max uint128 when passed 0", async () => {
-        const { roles, owner, ALLOWANCE_KEY } = await loadFixture(setup);
+        const { roles, ALLOWANCE_KEY } = await loadFixture(setup);
 
-        await roles
-          .connect(owner)
-          .setAllowance(ALLOWANCE_KEY, 500, 0, 100, 3600, 0);
+        await roles.setAllowance(ALLOWANCE_KEY, 500, 0, 100, 3600, 0);
 
         const allowance = await roles.allowances(ALLOWANCE_KEY);
         expect(allowance.maxRefill).to.equal(
@@ -124,11 +114,16 @@ describe("AllowanceTracking", () => {
       });
 
       it("sets timestamp to current block.timestamp when passed 0", async () => {
-        const { roles, owner, ALLOWANCE_KEY } = await loadFixture(setup);
+        const { roles, ALLOWANCE_KEY } = await loadFixture(setup);
 
-        const tx = await roles
-          .connect(owner)
-          .setAllowance(ALLOWANCE_KEY, 500, 1000, 100, 3600, 0);
+        const tx = await roles.setAllowance(
+          ALLOWANCE_KEY,
+          500,
+          1000,
+          100,
+          3600,
+          0,
+        );
 
         const receipt = await tx.wait();
         const block = await hre.ethers.provider.getBlock(receipt!.blockNumber);
@@ -140,15 +135,11 @@ describe("AllowanceTracking", () => {
 
     describe("overwriting", () => {
       it("overwrites all fields of existing allowance", async () => {
-        const { roles, owner, ALLOWANCE_KEY } = await loadFixture(setup);
+        const { roles, ALLOWANCE_KEY } = await loadFixture(setup);
 
-        await roles
-          .connect(owner)
-          .setAllowance(ALLOWANCE_KEY, 500, 1000, 100, 3600, 0);
+        await roles.setAllowance(ALLOWANCE_KEY, 500, 1000, 100, 3600, 0);
 
-        await roles
-          .connect(owner)
-          .setAllowance(ALLOWANCE_KEY, 999, 2000, 200, 7200, 0);
+        await roles.setAllowance(ALLOWANCE_KEY, 999, 2000, 200, 7200, 0);
 
         const allowance = await roles.allowances(ALLOWANCE_KEY);
         expect(allowance.balance).to.equal(999);
@@ -158,19 +149,22 @@ describe("AllowanceTracking", () => {
       });
 
       it("resets timestamp when overwriting", async () => {
-        const { roles, owner, ALLOWANCE_KEY } = await loadFixture(setup);
+        const { roles, ALLOWANCE_KEY } = await loadFixture(setup);
 
-        await roles
-          .connect(owner)
-          .setAllowance(ALLOWANCE_KEY, 500, 1000, 100, 3600, 0);
+        await roles.setAllowance(ALLOWANCE_KEY, 500, 1000, 100, 3600, 0);
 
         const initialAllowance = await roles.allowances(ALLOWANCE_KEY);
 
         await time.increase(1000);
 
-        const tx = await roles
-          .connect(owner)
-          .setAllowance(ALLOWANCE_KEY, 500, 1000, 100, 3600, 0);
+        const tx = await roles.setAllowance(
+          ALLOWANCE_KEY,
+          500,
+          1000,
+          100,
+          3600,
+          0,
+        );
 
         const receipt = await tx.wait();
         const block = await hre.ethers.provider.getBlock(receipt!.blockNumber);
@@ -184,15 +178,11 @@ describe("AllowanceTracking", () => {
 
   describe("updateAllowance", () => {
     it("updates refill parameters only", async () => {
-      const { roles, owner, ALLOWANCE_KEY } = await loadFixture(setup);
+      const { roles, ALLOWANCE_KEY } = await loadFixture(setup);
 
-      await roles
-        .connect(owner)
-        .setAllowance(ALLOWANCE_KEY, 500, 1000, 100, 3600, 0);
+      await roles.setAllowance(ALLOWANCE_KEY, 500, 1000, 100, 3600, 0);
 
-      await roles
-        .connect(owner)
-        .updateAllowance(ALLOWANCE_KEY, 2000, 200, 7200);
+      await roles.updateAllowance(ALLOWANCE_KEY, 2000, 200, 7200);
 
       const allowance = await roles.allowances(ALLOWANCE_KEY);
       expect(allowance.maxRefill).to.equal(2000);
@@ -201,47 +191,37 @@ describe("AllowanceTracking", () => {
     });
 
     it("preserves existing balance", async () => {
-      const { roles, owner, ALLOWANCE_KEY } = await loadFixture(setup);
+      const { roles, ALLOWANCE_KEY } = await loadFixture(setup);
 
-      await roles
-        .connect(owner)
-        .setAllowance(ALLOWANCE_KEY, 500, 1000, 100, 3600, 0);
+      await roles.setAllowance(ALLOWANCE_KEY, 500, 1000, 100, 3600, 0);
 
-      await roles
-        .connect(owner)
-        .updateAllowance(ALLOWANCE_KEY, 2000, 200, 7200);
+      await roles.updateAllowance(ALLOWANCE_KEY, 2000, 200, 7200);
 
       const allowance = await roles.allowances(ALLOWANCE_KEY);
       expect(allowance.balance).to.equal(500);
     });
 
     it("preserves existing timestamp", async () => {
-      const { roles, owner, ALLOWANCE_KEY } = await loadFixture(setup);
+      const { roles, ALLOWANCE_KEY } = await loadFixture(setup);
 
-      await roles
-        .connect(owner)
-        .setAllowance(ALLOWANCE_KEY, 500, 1000, 100, 3600, 0);
+      await roles.setAllowance(ALLOWANCE_KEY, 500, 1000, 100, 3600, 0);
 
       const initialAllowance = await roles.allowances(ALLOWANCE_KEY);
 
       await time.increase(1000);
 
-      await roles
-        .connect(owner)
-        .updateAllowance(ALLOWANCE_KEY, 2000, 200, 7200);
+      await roles.updateAllowance(ALLOWANCE_KEY, 2000, 200, 7200);
 
       const allowance = await roles.allowances(ALLOWANCE_KEY);
       expect(allowance.timestamp).to.equal(initialAllowance.timestamp);
     });
 
     it("sets maxRefill to max uint128 when passed 0", async () => {
-      const { roles, owner, ALLOWANCE_KEY } = await loadFixture(setup);
+      const { roles, ALLOWANCE_KEY } = await loadFixture(setup);
 
-      await roles
-        .connect(owner)
-        .setAllowance(ALLOWANCE_KEY, 500, 1000, 100, 3600, 0);
+      await roles.setAllowance(ALLOWANCE_KEY, 500, 1000, 100, 3600, 0);
 
-      await roles.connect(owner).updateAllowance(ALLOWANCE_KEY, 0, 200, 7200);
+      await roles.updateAllowance(ALLOWANCE_KEY, 0, 200, 7200);
 
       const allowance = await roles.allowances(ALLOWANCE_KEY);
       expect(allowance.maxRefill).to.equal(
@@ -250,17 +230,13 @@ describe("AllowanceTracking", () => {
     });
 
     it("emits SetAllowance event with preserved balance and timestamp", async () => {
-      const { roles, owner, ALLOWANCE_KEY } = await loadFixture(setup);
+      const { roles, ALLOWANCE_KEY } = await loadFixture(setup);
 
-      await roles
-        .connect(owner)
-        .setAllowance(ALLOWANCE_KEY, 500, 1000, 100, 3600, 0);
+      await roles.setAllowance(ALLOWANCE_KEY, 500, 1000, 100, 3600, 0);
 
       const initialAllowance = await roles.allowances(ALLOWANCE_KEY);
 
-      await expect(
-        roles.connect(owner).updateAllowance(ALLOWANCE_KEY, 2000, 200, 7200),
-      )
+      await expect(roles.updateAllowance(ALLOWANCE_KEY, 2000, 200, 7200))
         .to.emit(roles, "SetAllowance")
         .withArgs(
           ALLOWANCE_KEY,
@@ -290,17 +266,15 @@ describe("AllowanceTracking", () => {
 
       const ALLOWANCE_KEY = hre.ethers.id("ACCRUAL_TEST");
 
-      return { roles, owner, ALLOWANCE_KEY };
+      return { roles, ALLOWANCE_KEY };
     }
 
     describe("period = 0 (no refill)", () => {
       it("never refills when period is 0", async () => {
-        const { roles, owner, ALLOWANCE_KEY } = await loadFixture(setupAccrual);
+        const { roles, ALLOWANCE_KEY } = await loadFixture(setupAccrual);
 
         // Set allowance with period = 0 (no refill)
-        await roles
-          .connect(owner)
-          .setAllowance(ALLOWANCE_KEY, 500, 10000, 100, 0, 0);
+        await roles.setAllowance(ALLOWANCE_KEY, 500, 10000, 100, 0, 0);
 
         // Advance time significantly
         await time.increase(9000);
@@ -380,11 +354,9 @@ describe("AllowanceTracking", () => {
 
     describe("period-based accrual", () => {
       it("does not accrue when elapsed time < period, balance and timestamp unchanged", async () => {
-        const { roles, owner, ALLOWANCE_KEY } = await loadFixture(setupAccrual);
+        const { roles, ALLOWANCE_KEY } = await loadFixture(setupAccrual);
 
-        await roles
-          .connect(owner)
-          .setAllowance(ALLOWANCE_KEY, 500, 10000, 100, 600, 0);
+        await roles.setAllowance(ALLOWANCE_KEY, 500, 10000, 100, 600, 0);
 
         const initialAllowance = await roles.allowances(ALLOWANCE_KEY);
 
@@ -399,11 +371,9 @@ describe("AllowanceTracking", () => {
       });
 
       it("accrues one refill after exactly one period, updates timestamp", async () => {
-        const { roles, owner, ALLOWANCE_KEY } = await loadFixture(setupAccrual);
+        const { roles, ALLOWANCE_KEY } = await loadFixture(setupAccrual);
 
-        await roles
-          .connect(owner)
-          .setAllowance(ALLOWANCE_KEY, 500, 10000, 100, 600, 0);
+        await roles.setAllowance(ALLOWANCE_KEY, 500, 10000, 100, 600, 0);
 
         const initialAllowance = await roles.allowances(ALLOWANCE_KEY);
 
@@ -417,11 +387,9 @@ describe("AllowanceTracking", () => {
       });
 
       it("accrues multiple refills after several full periods", async () => {
-        const { roles, owner, ALLOWANCE_KEY } = await loadFixture(setupAccrual);
+        const { roles, ALLOWANCE_KEY } = await loadFixture(setupAccrual);
 
-        await roles
-          .connect(owner)
-          .setAllowance(ALLOWANCE_KEY, 500, 10000, 100, 600, 0);
+        await roles.setAllowance(ALLOWANCE_KEY, 500, 10000, 100, 600, 0);
 
         const initialAllowance = await roles.allowances(ALLOWANCE_KEY);
 
@@ -436,11 +404,9 @@ describe("AllowanceTracking", () => {
       });
 
       it("accrues only full periods, partial period ignored (3.5 periods)", async () => {
-        const { roles, owner, ALLOWANCE_KEY } = await loadFixture(setupAccrual);
+        const { roles, ALLOWANCE_KEY } = await loadFixture(setupAccrual);
 
-        await roles
-          .connect(owner)
-          .setAllowance(ALLOWANCE_KEY, 500, 10000, 100, 600, 0);
+        await roles.setAllowance(ALLOWANCE_KEY, 500, 10000, 100, 600, 0);
 
         const initialAllowance = await roles.allowances(ALLOWANCE_KEY);
 
@@ -455,12 +421,10 @@ describe("AllowanceTracking", () => {
       });
 
       it("zero refill keeps balance unchanged, timestamp still advances", async () => {
-        const { roles, owner, ALLOWANCE_KEY } = await loadFixture(setupAccrual);
+        const { roles, ALLOWANCE_KEY } = await loadFixture(setupAccrual);
 
         // refill = 0, but period > 0
-        await roles
-          .connect(owner)
-          .setAllowance(ALLOWANCE_KEY, 500, 10000, 0, 600, 0);
+        await roles.setAllowance(ALLOWANCE_KEY, 500, 10000, 0, 600, 0);
 
         const initialAllowance = await roles.allowances(ALLOWANCE_KEY);
 
@@ -476,11 +440,9 @@ describe("AllowanceTracking", () => {
 
     describe("maxRefill cap", () => {
       it("balance capped at maxRefill even after many periods", async () => {
-        const { roles, owner, ALLOWANCE_KEY } = await loadFixture(setupAccrual);
+        const { roles, ALLOWANCE_KEY } = await loadFixture(setupAccrual);
 
-        await roles
-          .connect(owner)
-          .setAllowance(ALLOWANCE_KEY, 500, 1000, 100, 600, 0);
+        await roles.setAllowance(ALLOWANCE_KEY, 500, 1000, 100, 600, 0);
 
         // Advance time by 10 periods - would be 1500 uncapped
         await time.increase(6000);
@@ -490,11 +452,9 @@ describe("AllowanceTracking", () => {
       });
 
       it("timestamp updates even when balance already at cap", async () => {
-        const { roles, owner, ALLOWANCE_KEY } = await loadFixture(setupAccrual);
+        const { roles, ALLOWANCE_KEY } = await loadFixture(setupAccrual);
 
-        await roles
-          .connect(owner)
-          .setAllowance(ALLOWANCE_KEY, 1000, 1000, 100, 600, 0);
+        await roles.setAllowance(ALLOWANCE_KEY, 1000, 1000, 100, 600, 0);
 
         const initialAllowance = await roles.allowances(ALLOWANCE_KEY);
 
@@ -508,13 +468,11 @@ describe("AllowanceTracking", () => {
       });
 
       it("partial refill reaching cap, excess discarded", async () => {
-        const { roles, owner, ALLOWANCE_KEY } = await loadFixture(setupAccrual);
+        const { roles, ALLOWANCE_KEY } = await loadFixture(setupAccrual);
 
         // Balance 900, maxRefill 1000, refill 100 per period
         // After 2 periods would be 1100, but caps at 1000
-        await roles
-          .connect(owner)
-          .setAllowance(ALLOWANCE_KEY, 900, 1000, 100, 600, 0);
+        await roles.setAllowance(ALLOWANCE_KEY, 900, 1000, 100, 600, 0);
 
         await time.increase(1200);
 
@@ -523,12 +481,10 @@ describe("AllowanceTracking", () => {
       });
 
       it("initial balance above maxRefill stays unchanged, timestamp advances", async () => {
-        const { roles, owner, ALLOWANCE_KEY } = await loadFixture(setupAccrual);
+        const { roles, ALLOWANCE_KEY } = await loadFixture(setupAccrual);
 
         // Initial balance (1500) exceeds maxRefill (1000)
-        await roles
-          .connect(owner)
-          .setAllowance(ALLOWANCE_KEY, 1500, 1000, 100, 600, 0);
+        await roles.setAllowance(ALLOWANCE_KEY, 1500, 1000, 100, 600, 0);
 
         const initialAllowance = await roles.allowances(ALLOWANCE_KEY);
 
@@ -1112,31 +1068,26 @@ describe("AllowanceTracking", () => {
 
   describe("Event emissions", () => {
     it("emits SetAllowance on setAllowance", async () => {
-      const { roles, owner, ALLOWANCE_KEY } = await loadFixture(setup);
+      const { roles, ALLOWANCE_KEY } = await loadFixture(setup);
 
       await expect(
-        roles
-          .connect(owner)
-          .setAllowance(ALLOWANCE_KEY, 500, 1000, 100, 3600, 0),
+        roles.setAllowance(ALLOWANCE_KEY, 500, 1000, 100, 3600, 0),
       ).to.emit(roles, "SetAllowance");
     });
 
     it("emits SetAllowance on updateAllowance", async () => {
-      const { roles, owner, ALLOWANCE_KEY } = await loadFixture(setup);
+      const { roles, ALLOWANCE_KEY } = await loadFixture(setup);
 
-      await roles
-        .connect(owner)
-        .setAllowance(ALLOWANCE_KEY, 500, 1000, 100, 3600, 0);
+      await roles.setAllowance(ALLOWANCE_KEY, 500, 1000, 100, 3600, 0);
 
       await expect(
-        roles.connect(owner).updateAllowance(ALLOWANCE_KEY, 2000, 200, 7200),
+        roles.updateAllowance(ALLOWANCE_KEY, 2000, 200, 7200),
       ).to.emit(roles, "SetAllowance");
     });
 
     it("emits ConsumeAllowance on successful consumption", async () => {
       const {
         roles,
-        owner,
         member,
         testContract,
         testContractAddress,
@@ -1144,11 +1095,11 @@ describe("AllowanceTracking", () => {
         ALLOWANCE_KEY,
       } = await loadFixture(setup);
 
-      await roles.connect(owner).setAllowance(ALLOWANCE_KEY, 1000, 0, 0, 0, 0);
+      await roles.setAllowance(ALLOWANCE_KEY, 1000, 0, 0, 0, 0);
 
       const selector =
         testContract.interface.getFunction("oneParamStatic").selector;
-      await roles.connect(owner).allowFunction(
+      await roles.allowFunction(
         ROLE_KEY,
         testContractAddress,
         selector,
@@ -1185,7 +1136,6 @@ describe("AllowanceTracking", () => {
     it("ConsumeAllowance includes consumed amount and new balance", async () => {
       const {
         roles,
-        owner,
         member,
         testContract,
         testContractAddress,
@@ -1193,11 +1143,11 @@ describe("AllowanceTracking", () => {
         ALLOWANCE_KEY,
       } = await loadFixture(setup);
 
-      await roles.connect(owner).setAllowance(ALLOWANCE_KEY, 500, 0, 0, 0, 0);
+      await roles.setAllowance(ALLOWANCE_KEY, 500, 0, 0, 0, 0);
 
       const selector =
         testContract.interface.getFunction("oneParamStatic").selector;
-      await roles.connect(owner).allowFunction(
+      await roles.allowFunction(
         ROLE_KEY,
         testContractAddress,
         selector,
