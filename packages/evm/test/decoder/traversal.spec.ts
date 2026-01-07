@@ -1,7 +1,7 @@
 import hre from "hardhat";
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { AbiCoder } from "ethers";
+import { AbiCoder, Interface } from "ethers";
 
 import { Encoding, flattenCondition, Operator } from "../utils";
 
@@ -260,6 +260,58 @@ describe("AbiDecoder - Traversal", () => {
 
         expect(arrayNode.size).to.equal(32);
         expect(arrayNode.children).to.have.length(0);
+      });
+
+      it("with embedded calldata elements (selector)", async () => {
+        const { decoder } = await loadFixture(setup);
+
+        const embedded1 = Interface.from([
+          "function embedded(uint256)",
+        ]).encodeFunctionData("embedded", [12345]);
+
+        const embedded2 = Interface.from([
+          "function embedded(uint256)",
+        ]).encodeFunctionData("embedded", [67890]);
+
+        const data = Interface.from([
+          "function test(bytes[])",
+        ]).encodeFunctionData("test", [[embedded1, embedded2]]);
+
+        const conditions = flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          children: [
+            {
+              paramType: Encoding.Array,
+              children: [
+                {
+                  paramType: Encoding.AbiEncoded,
+                  children: [{ paramType: Encoding.Static }],
+                },
+              ],
+            },
+          ],
+        });
+
+        const result = toTree(await decoder.inspectFlat(data, conditions));
+        const arrayNode = result.children[0];
+
+        expect(
+          await decoder.pluck(data, arrayNode.location, arrayNode.size),
+        ).to.equal(encode(["bytes[]"], [[embedded1, embedded2]], true));
+
+        // Pluck first embedded calldata entry and its parameter
+        const firstEntry = arrayNode.children[0];
+        const firstParam = firstEntry.children[0];
+        expect(
+          await decoder.pluck(data, firstParam.location, firstParam.size),
+        ).to.equal(defaultAbiCoder.encode(["uint256"], [12345]));
+
+        // Pluck second embedded calldata entry and its parameter
+        const secondEntry = arrayNode.children[1];
+        const secondParam = secondEntry.children[0];
+        expect(
+          await decoder.pluck(data, secondParam.location, secondParam.size),
+        ).to.equal(defaultAbiCoder.encode(["uint256"], [67890]));
       });
     });
 
@@ -695,6 +747,88 @@ describe("AbiDecoder - Traversal", () => {
       ).to.equal(defaultAbiCoder.encode(["uint256"], [val1]));
     });
 
+    it("Or - branches with different tuple layouts", async () => {
+      const { decoder } = await loadFixture(setup);
+
+      const AddressOne = "0x0000000000000000000000000000000000000001";
+
+      // Data encodes tuple(uint256, address) - matches branch 1 (static, static)
+      // Branch 2 expects tuple(bytes, address) which would overflow
+      const data = Interface.from(["function test(bytes)"]).encodeFunctionData(
+        "test",
+        [
+          defaultAbiCoder.encode(
+            ["tuple(uint256,address)"],
+            [[123, AddressOne]],
+          ),
+        ],
+      );
+
+      const conditions = flattenCondition({
+        paramType: Encoding.AbiEncoded,
+        children: [
+          {
+            paramType: Encoding.None,
+            operator: Operator.Or,
+            children: [
+              // Branch 1: tuple(uint256, address) - both static
+              {
+                paramType: Encoding.AbiEncoded,
+                compValue: "0x0000",
+                children: [
+                  {
+                    paramType: Encoding.Tuple,
+                    children: [
+                      { paramType: Encoding.Static },
+                      { paramType: Encoding.Static },
+                    ],
+                  },
+                ],
+              },
+              // Branch 2: tuple(bytes, address) - first dynamic
+              {
+                paramType: Encoding.AbiEncoded,
+                compValue: "0x0000",
+                children: [
+                  {
+                    paramType: Encoding.Tuple,
+                    children: [
+                      { paramType: Encoding.Dynamic },
+                      { paramType: Encoding.Static },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      });
+
+      const result = toTree(await decoder.inspectFlat(data, conditions));
+      const variantNode = result.children[0];
+
+      expect(variantNode.variant).to.equal(true);
+      expect(variantNode.children).to.have.length(2);
+
+      // Branch 1 succeeds (static tuple matches)
+      expect(variantNode.children[0].overflow).to.equal(false);
+
+      // Branch 2 fails (data doesn't match dynamic tuple layout)
+      expect(variantNode.children[1].overflow).to.equal(true);
+
+      // Verify we can pluck from the successful branch
+      const successfulTuple = variantNode.children[0].children[0];
+      expect(
+        await decoder.pluck(
+          data,
+          successfulTuple.location,
+          successfulTuple.size,
+        ),
+      ).to.equal(
+        defaultAbiCoder.encode(["tuple(uint256,address)"], [[123, AddressOne]]),
+      );
+    });
+
     it("Matches (indexed pattern)", async () => {
       const { decoder } = await loadFixture(setup);
       const value = [42, 100];
@@ -781,6 +915,88 @@ describe("AbiDecoder - Traversal", () => {
           ),
         ).to.equal(defaultAbiCoder.encode(["uint256"], [values[i]]));
       }
+    });
+
+    it("Matches with heterogeneous types (Dynamic, AbiEncoded)", async () => {
+      const { decoder } = await loadFixture(setup);
+
+      const AddressOne = "0x0000000000000000000000000000000000000001";
+
+      // Element 0: raw bytes (Dynamic)
+      // Element 1: AbiEncoded with selector (function call)
+      // Element 2: AbiEncoded without selector (raw tuple)
+      const rawBytes = "0xaabbccdd";
+      const embedded = Interface.from([
+        "function embedded(uint256)",
+      ]).encodeFunctionData("embedded", [12345]);
+      const tupleEncoded = defaultAbiCoder.encode(
+        ["tuple(uint256,address)"],
+        [[67890, AddressOne]],
+      );
+
+      const data = Interface.from([
+        "function test(bytes[])",
+      ]).encodeFunctionData("test", [[rawBytes, embedded, tupleEncoded]]);
+
+      const conditions = flattenCondition({
+        paramType: Encoding.AbiEncoded,
+        children: [
+          {
+            paramType: Encoding.Array,
+            operator: Operator.Matches,
+            children: [
+              { paramType: Encoding.Dynamic },
+              {
+                paramType: Encoding.AbiEncoded,
+                children: [{ paramType: Encoding.Static }],
+              },
+              {
+                paramType: Encoding.AbiEncoded,
+                compValue: "0x0000", // leadingBytes = 0 (no selector)
+                children: [
+                  {
+                    paramType: Encoding.Tuple,
+                    children: [
+                      { paramType: Encoding.Static },
+                      { paramType: Encoding.Static },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      });
+
+      const result = toTree(await decoder.inspectFlat(data, conditions));
+      const arrayNode = result.children[0];
+
+      expect(arrayNode.children).to.have.length(3);
+
+      // Element 0: Dynamic (raw bytes) - no children
+      const dynamicElement = arrayNode.children[0];
+      expect(dynamicElement.children).to.have.length(0);
+
+      // Element 1: AbiEncoded with selector - has static param child
+      const abiEncodedWithSelector = arrayNode.children[1];
+      expect(abiEncodedWithSelector.children).to.have.length(1);
+      const staticParam = abiEncodedWithSelector.children[0];
+      expect(
+        await decoder.pluck(data, staticParam.location, staticParam.size),
+      ).to.equal(defaultAbiCoder.encode(["uint256"], [12345]));
+
+      // Element 2: AbiEncoded without selector - has tuple child
+      const abiEncodedNoSelector = arrayNode.children[2];
+      expect(abiEncodedNoSelector.children).to.have.length(1);
+      const tupleNode = abiEncodedNoSelector.children[0];
+      expect(
+        await decoder.pluck(data, tupleNode.location, tupleNode.size),
+      ).to.equal(
+        defaultAbiCoder.encode(
+          ["tuple(uint256,address)"],
+          [[67890, AddressOne]],
+        ),
+      );
     });
 
     it("direct location/size verification", async () => {
