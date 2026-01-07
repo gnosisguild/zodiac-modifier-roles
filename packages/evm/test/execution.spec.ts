@@ -7,18 +7,14 @@ import { deployRolesMod } from "./setup";
 /**
  * Execution Mechanics tests
  *
- * Scope:
- * - Covers all 4 execution entry points:
- *   1. execTransactionFromModule
- *   2. execTransactionFromModuleReturnData
- *   3. execTransactionWithRole
- *   4. execTransactionWithRoleReturnData
+ * Scope: Transaction Execution Lifecycle.
  *
- * Purpose:
- * - Verify the return values (success boolean, return data) for each entry point.
- * - Verify the revert behavior (whether it bubbles up or returns success=false).
- * - Verify state persistence: ensuring side effects (like allowance consumption)
- *   are committed on success and rolled back on failure.
+ * This file verifies the behavior of the module's execution entry points:
+ * - Return Values: Ensuring success/failure flags and return data are propagated correctly.
+ * - Error Handling: Verifying that failed inner transactions result in the expected outcome (revert vs. success=false).
+ * - State Persistence: Confirming that side-effects (e.g., allowance consumption) are committed on success and discarded on failure.
+ *
+ * Covers `execTransactionFromModule`, `execTransactionWithRole`, and their `ReturnData` variants.
  */
 
 describe("Execution Mechanics", () => {

@@ -10,12 +10,17 @@ const maxUint64 = 2n ** 64n - 1n;
 const maxUint128 = 2n ** 128n - 1n;
 
 /**
- * Setup tests cover the Setup.sol configuration API functions:
- * - Role membership: grantRole, revokeRole, renounceRole, assignRoles, setDefaultRole
- * - Target permissions: allowTarget, scopeTarget, revokeTarget
- * - Function permissions: allowFunction, revokeFunction
- * - Allowances: setAllowance, updateAllowance
- * - Adapters: setTransactionUnwrapper
+ * Setup tests
+ *
+ * Scope: Configuration API.
+ *
+ * This file verifies the functionality of the module's configuration interface:
+ * - Role Management: Granting, revoking, and assigning roles.
+ * - Permission Management: Defining and managing permissions for targets and functions.
+ * - Allowance Configuration: Setting and updating allowance parameters.
+ * - Adapter Management: Registering and removing transaction unwrappers.
+ *
+ * It ensures that configuration changes are correctly applied to storage and that relevant events are emitted.
  */
 
 describe("Setup", () => {
@@ -628,7 +633,7 @@ describe("Setup", () => {
             (await testContract.doNothing.populateTransaction()).data as string,
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.emit(testContract, "DoNothing");
     });
 
     it("succeeds even if target was not allowed", async () => {
@@ -671,7 +676,7 @@ describe("Setup", () => {
             (await testContract.doNothing.populateTransaction()).data as string,
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.emit(testContract, "DoNothing");
     });
 
     it("stores and enforces provided conditions", async () => {
@@ -903,7 +908,7 @@ describe("Setup", () => {
             (await testContract.doNothing.populateTransaction()).data as string,
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.emit(testContract, "DoNothing");
 
       await roles.revokeFunction(ROLE_KEY, testContractAddress, selector);
 
@@ -1329,7 +1334,7 @@ describe("Setup", () => {
             (await testContract.doNothing.populateTransaction()).data as string,
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.emit(testContract, "DoNothing");
 
       // selector2 is NOT allowed
       await expect(
@@ -1377,7 +1382,7 @@ describe("Setup", () => {
             (await testContract.doNothing.populateTransaction()).data as string,
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.emit(testContract, "DoNothing");
 
       // Same function on testContract2Address is NOT allowed
       await expect(
@@ -1440,7 +1445,7 @@ describe("Setup", () => {
             (await testContract.doNothing.populateTransaction()).data as string,
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.emit(testContract, "DoNothing");
 
       await expect(
         roles

@@ -12,18 +12,17 @@ import {
 import { deployRolesMod } from "./setup";
 
 /**
- * AllowanceTracking tests cover the allowance setup:
- * - setAllowance/updateAllowance APIs
- * - Accrual (refill) mechanics
- * - Settlement (persistence after execution)
- * - Multi-entrypoint consumption accumulation
+ * AllowanceTracking tests
  *
- * NOTE: Operator-specific behavior (WithinAllowance, CallWithinAllowance) is tested
- * in the corresponding operator test files (operators/28WithinAllowance.spec.ts,
- * operators/30CallWithinAllowance.spec.ts). This includes:
- * - Success/failure conditions for the operators
- * - Price conversion logic
- * - Consumption entry creation
+ * Scope: Allowance Accounting.
+ *
+ * This file verifies the state management for allowances:
+ * - Configuration of allowance parameters (balance, refill rate, period).
+ * - Correct calculation of accrued refill over time.
+ * - Deduction of balance upon consumption.
+ * - Enforcement of allowance limits (reverting when funds are insufficient).
+ *
+ * Note: Operator-specific logic (e.g., `WithinAllowance` pricing) is tested in `operators/`.
  */
 describe("AllowanceTracking", () => {
   async function setup() {

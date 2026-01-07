@@ -5,7 +5,19 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { ExecutionOptions } from "./utils";
 import { deployRolesMod } from "./setup";
 
-describe("OnlyOwner", () => {
+/**
+ * onlyOwner tests
+ *
+ * Scope: Administration Access Control.
+ *
+ * This file verifies that administrative configuration functions are strictly restricted to the contract owner.
+ * It tests that calls from non-owner accounts revert for critical functions such as:
+ * - Role management (granting/revoking).
+ * - Permission configuration (allowing targets/functions).
+ * - Allowance configuration.
+ */
+
+describe("onlyOwner", () => {
   async function setup() {
     const [owner, nonOwner] = await hre.ethers.getSigners();
 

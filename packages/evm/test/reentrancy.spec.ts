@@ -4,6 +4,15 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { ExecutionOptions } from "./utils";
 import { deployRolesMod } from "./setup";
 
+/**
+ * Reentrancy tests
+ *
+ * Scope: Reentrancy Protection.
+ *
+ * This file verifies that every execution entry point in the module is non-reentrant.
+ * It ensures that the module prevents nested calls back into itself during an active transaction, protecting against reentrancy attacks.
+ */
+
 describe("Reentrancy", () => {
   async function setup() {
     const [owner, invoker] = await hre.ethers.getSigners();

@@ -7,6 +7,16 @@ import { createEip1193 } from "./setup";
 
 const AddressOne = "0x0000000000000000000000000000000000000001";
 
+/**
+ * Factory tests
+ *
+ * Scope: Module Deployment & Initialization.
+ *
+ * This file verifies the deployment process via the ModuleProxyFactory:
+ * - Master Copy Safety: Ensuring the master copy is initialized and cannot be taken over.
+ * - Proxy Deployment: Verifying that new module proxies are correctly deployed and initialized with the specified parameters.
+ */
+
 describe("Module works with factory", () => {
   const paramsTypes = ["address", "address", "address"];
 

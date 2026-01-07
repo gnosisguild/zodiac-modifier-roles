@@ -13,12 +13,15 @@ import {
 import { deployRolesMod } from "./setup";
 
 /**
- * Authorization tests cover the Authorization.sol contract logic:
- * - Clearance validation (None, Target, Function levels)
- * - Calldata length validation
- * - ExecutionOptions enforcement (Send, DelegateCall)
- * - Transaction unwrapping via adapters
- * - Consumption tracking
+ * Authorization tests
+ *
+ * Scope: Transaction Permission Validation.
+ *
+ * This file tests the logic that determines if a transaction is permissible:
+ * - Clearance Levels: Verifying access at Target and Function levels.
+ * - Condition Enforcement: Validating transaction parameters against defined constraints.
+ * - Execution Options: Enforcing restrictions on Call, DelegateCall, and Send operations.
+ * - Transaction Unwrapping: Validating nested transactions via adapters (e.g., MultiSend).
  */
 
 describe("Authorization", () => {
@@ -102,7 +105,7 @@ describe("Authorization", () => {
               testContract.interface.encodeFunctionData("doNothing"),
               0,
             ),
-        ).to.not.be.reverted;
+        ).to.emit(testContract, "DoNothing");
 
         // Can call any function - oneParamStatic
         await expect(
@@ -240,7 +243,7 @@ describe("Authorization", () => {
               testContract.interface.encodeFunctionData("doNothing"),
               0,
             ),
-        ).to.not.be.reverted;
+        ).to.emit(testContract, "DoNothing");
       });
 
       it("reverts with FunctionNotAllowed for unpermitted selector", async () => {
@@ -272,7 +275,7 @@ describe("Authorization", () => {
               testContract.interface.encodeFunctionData("doNothing"),
               0,
             ),
-        ).to.not.be.reverted;
+        ).to.emit(testContract, "DoNothing");
 
         // oneParamStatic is NOT allowed
         const oneParamStaticSelector =
@@ -382,7 +385,7 @@ describe("Authorization", () => {
               testContract.interface.encodeFunctionData("doNothing"),
               0,
             ),
-        ).to.not.be.reverted;
+        ).to.emit(testContract, "DoNothing");
 
         await expect(
           roles
@@ -419,7 +422,7 @@ describe("Authorization", () => {
               testContract.interface.encodeFunctionData("doNothing"),
               0,
             ),
-        ).to.not.be.reverted;
+        ).to.emit(testContract, "DoNothing");
 
         // oneParamStatic no longer works
         await expect(
@@ -515,7 +518,7 @@ describe("Authorization", () => {
               testContract.interface.encodeFunctionData("doNothing"),
               0,
             ),
-        ).to.not.be.reverted;
+        ).to.emit(testContract, "DoNothing");
 
         // Revoke target
         await roles.revokeTarget(ROLE_KEY, testContractAddress);

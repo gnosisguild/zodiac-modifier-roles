@@ -5,14 +5,15 @@ import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
 import { deployRolesMod } from "./setup";
 
 /**
- * Membership.sol tests - the authentication layer that validates module
- * membership before authorizing transactions.
+ * Membership tests
  *
- * This file tests the _authenticate() internal function behavior, which:
- * - Validates the role key isn't zero
- * - Checks membership exists
- * - Validates validity window (start/end timestamps)
- * - Handles usage accounting (unlimited vs finite, decrement logic)
+ * Scope: Module Authentication & Access Control.
+ *
+ * This file verifies the mechanism for validating a module's role membership:
+ * - Role Assignment: confirming the module holds the specified role.
+ * - Validity Window: Enforcing start and end timestamps for the role.
+ * - Usage Accounting: Decrementing usage counters for finite roles and handling expiration.
+ * - State Updates: Verifying that usage state is correctly updated in storage.
  */
 
 const maxUint64 = 2n ** 64n - 1n;
