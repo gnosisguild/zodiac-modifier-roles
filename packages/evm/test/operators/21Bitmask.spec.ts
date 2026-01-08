@@ -1,16 +1,18 @@
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { Interface, ZeroHash } from "ethers";
 
-import { Encoding, Operator, PermissionCheckerStatus } from "../utils";
+import { setupFallbacker } from "../setup";
 import {
-  setupOneParamBytes,
-  setupOneParamStatic,
-  setupTwoParamsStatic,
-} from "../setup";
-import { ZeroHash } from "ethers";
+  Encoding,
+  Operator,
+  ExecutionOptions,
+  ConditionViolationStatus,
+  flattenCondition,
+} from "../utils";
 
 // Helper: compValue = [shift (2 bytes)][mask (N bytes)][expected (N bytes)]
-function bitmaskCompValue(
+function encodeCompValue(
   shift: number,
   mask: string,
   expected: string,
@@ -23,350 +25,394 @@ function bitmaskCompValue(
 }
 
 describe("Operator - Bitmask", () => {
-  it("overflows on static param by going over calldata limit", async () => {
-    const { roles, allowFunction, invoke } =
-      await loadFixture(setupOneParamStatic);
+  describe("parsing and bounds", () => {
+    it("extracts shift and derives mask length correctly", async () => {
+      const iface = new Interface(["function fn(bytes)"]);
+      const fn = iface.getFunction("fn")!;
+      const { roles, member, fallbackerAddress, roleKey } =
+        await loadFixture(setupFallbacker);
 
-    // shift 30 + 4 byte mask = 34 bytes needed, but only 32 bytes in calldata
-    const compValue = bitmaskCompValue(30, "ffffffff", "00000000");
+      // shift=3, mask=2 bytes -> reads bytes[3:5]
+      await roles.allowFunction(
+        roleKey,
+        fallbackerAddress,
+        fn.selector,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Dynamic,
+              operator: Operator.Bitmask,
+              compValue: encodeCompValue(3, "ffff", "aabb"),
+            },
+          ],
+        }),
+        ExecutionOptions.None,
+      );
 
-    await allowFunction([
-      {
-        parent: 0,
-        paramType: Encoding.AbiEncoded,
-        operator: Operator.Matches,
-        compValue: "0x",
-      },
-      {
-        parent: 0,
-        paramType: Encoding.Static,
-        operator: Operator.Bitmask,
-        compValue,
-      },
-    ]);
+      // bytes[3:5] = 0xaabb -> passes
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            fallbackerAddress,
+            0,
+            iface.encodeFunctionData(fn, ["0x000000aabb"]),
+            0,
+          ),
+      ).to.not.be.reverted;
 
-    await expect(invoke(BigInt(0)))
-      .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.BitmaskOverflow, ZeroHash);
+      // bytes[3:5] = 0xccdd -> fails
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            fallbackerAddress,
+            0,
+            iface.encodeFunctionData(fn, ["0x000000ccdd"]),
+            0,
+          ),
+      ).to.be.reverted;
+    });
+
+    it("fails with BitmaskOverflow when shift + length exceeds data size", async () => {
+      const iface = new Interface(["function fn(bytes)"]);
+      const fn = iface.getFunction("fn")!;
+      const { roles, member, fallbackerAddress, roleKey } =
+        await loadFixture(setupFallbacker);
+
+      // 33-byte mask requires 33 bytes (crosses word boundary)
+      await roles.allowFunction(
+        roleKey,
+        fallbackerAddress,
+        fn.selector,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Dynamic,
+              operator: Operator.Bitmask,
+              compValue: encodeCompValue(0, "ff".repeat(33), "ab".repeat(33)),
+            },
+          ],
+        }),
+        ExecutionOptions.None,
+      );
+
+      // 33 bytes -> passes
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            fallbackerAddress,
+            0,
+            iface.encodeFunctionData(fn, ["0x" + "ab".repeat(33)]),
+            0,
+          ),
+      ).to.not.be.reverted;
+
+      // 32 bytes -> fails (crosses into second word but data only has one word)
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            fallbackerAddress,
+            0,
+            iface.encodeFunctionData(fn, ["0x" + "ab".repeat(32)]),
+            0,
+          ),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.BitmaskOverflow, ZeroHash);
+    });
   });
 
-  it("overflows on dynamic param by going over param size", async () => {
-    const { roles, allowFunction, invoke } =
-      await loadFixture(setupOneParamBytes);
+  describe("logic (single word)", () => {
+    it("passes when (data & mask) == expected", async () => {
+      const iface = new Interface(["function fn(bytes)"]);
+      const fn = iface.getFunction("fn")!;
+      const { roles, member, fallbackerAddress, roleKey } =
+        await loadFixture(setupFallbacker);
 
-    // 64-byte mask but value is only 5 bytes (padded to 32)
-    const compValue = bitmaskCompValue(0, "ff".repeat(64), "00".repeat(64));
+      await roles.allowFunction(
+        roleKey,
+        fallbackerAddress,
+        fn.selector,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Dynamic,
+              operator: Operator.Bitmask,
+              compValue: encodeCompValue(0, "ffff", "aabb"),
+            },
+          ],
+        }),
+        ExecutionOptions.None,
+      );
 
-    await allowFunction([
-      {
-        parent: 0,
-        paramType: Encoding.AbiEncoded,
-        operator: Operator.Matches,
-        compValue: "0x",
-      },
-      {
-        parent: 0,
-        paramType: Encoding.Dynamic,
-        operator: Operator.Bitmask,
-        compValue,
-      },
-    ]);
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            fallbackerAddress,
+            0,
+            iface.encodeFunctionData(fn, ["0xaabb"]),
+            0,
+          ),
+      ).to.not.be.reverted;
+    });
 
-    await expect(invoke("0x" + "aa".repeat(5)))
-      .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.BitmaskOverflow, ZeroHash);
+    it("fails when (data & mask) != expected", async () => {
+      const iface = new Interface(["function fn(bytes)"]);
+      const fn = iface.getFunction("fn")!;
+      const { roles, member, fallbackerAddress, roleKey } =
+        await loadFixture(setupFallbacker);
+
+      await roles.allowFunction(
+        roleKey,
+        fallbackerAddress,
+        fn.selector,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Dynamic,
+              operator: Operator.Bitmask,
+              compValue: encodeCompValue(0, "ffff", "aabb"),
+            },
+          ],
+        }),
+        ExecutionOptions.None,
+      );
+
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            fallbackerAddress,
+            0,
+            iface.encodeFunctionData(fn, ["0xaacc"]),
+            0,
+          ),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.BitmaskNotAllowed, ZeroHash);
+    });
+
+    it("ignores bits outside the mask and rinses trailing garbage", async () => {
+      const iface = new Interface(["function fn(bytes)"]);
+      const fn = iface.getFunction("fn")!;
+      const { roles, member, fallbackerAddress, roleKey } =
+        await loadFixture(setupFallbacker);
+
+      // mask 0xf0 checks only high nibble, expected 0xa0
+      await roles.allowFunction(
+        roleKey,
+        fallbackerAddress,
+        fn.selector,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Dynamic,
+              operator: Operator.Bitmask,
+              compValue: encodeCompValue(0, "f0", "a0"),
+            },
+          ],
+        }),
+        ExecutionOptions.None,
+      );
+
+      // 0xab & 0xf0 = 0xa0 -> passes (low nibble 0xb ignored)
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            fallbackerAddress,
+            0,
+            iface.encodeFunctionData(fn, ["0xab7777"]),
+            0,
+          ),
+      ).to.not.be.reverted;
+
+      // 0xaf & 0xf0 = 0xa0 -> passes (low nibble 0xf ignored)
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            fallbackerAddress,
+            0,
+            iface.encodeFunctionData(fn, ["0xaf8888888888"]),
+            0,
+          ),
+      ).to.not.be.reverted;
+
+      // 0xbb & 0xf0 = 0xb0 != 0xa0 -> fails
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            fallbackerAddress,
+            0,
+            iface.encodeFunctionData(fn, ["0xbb"]),
+            0,
+          ),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.BitmaskNotAllowed, ZeroHash);
+    });
   });
 
-  it("works on dynamic", async () => {
-    const { roles, allowFunction, invoke } =
-      await loadFixture(setupOneParamBytes);
+  describe("logic (multi-word)", () => {
+    it("iterates chunks and passes when all match", async () => {
+      const iface = new Interface(["function fn(bytes)"]);
+      const fn = iface.getFunction("fn")!;
+      const { roles, member, fallbackerAddress, roleKey } =
+        await loadFixture(setupFallbacker);
 
-    const compValue = bitmaskCompValue(0, "ffff", "aabb");
+      // 64-byte mask spanning 2 words
+      await roles.allowFunction(
+        roleKey,
+        fallbackerAddress,
+        fn.selector,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Dynamic,
+              operator: Operator.Bitmask,
+              compValue: encodeCompValue(0, "ff".repeat(64), "ab".repeat(64)),
+            },
+          ],
+        }),
+        ExecutionOptions.None,
+      );
 
-    await allowFunction([
-      {
-        parent: 0,
-        paramType: Encoding.AbiEncoded,
-        operator: Operator.Matches,
-        compValue: "0x",
-      },
-      {
-        parent: 0,
-        paramType: Encoding.Dynamic,
-        operator: Operator.Bitmask,
-        compValue,
-      },
-    ]);
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            fallbackerAddress,
+            0,
+            iface.encodeFunctionData(fn, ["0x" + "ab".repeat(64)]),
+            0,
+          ),
+      ).to.not.be.reverted;
+    });
 
-    await expect(invoke("0xaabb")).to.not.be.reverted;
+    it("fails on mismatch in any chunk (first or subsequent)", async () => {
+      const iface = new Interface(["function fn(bytes)"]);
+      const fn = iface.getFunction("fn")!;
+      const { roles, member, fallbackerAddress, roleKey } =
+        await loadFixture(setupFallbacker);
 
-    await expect(invoke("0xaacc"))
-      .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.BitmaskNotAllowed, ZeroHash);
+      // 64-byte mask spanning 2 words
+      await roles.allowFunction(
+        roleKey,
+        fallbackerAddress,
+        fn.selector,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Dynamic,
+              operator: Operator.Bitmask,
+              compValue: encodeCompValue(0, "ff".repeat(64), "ab".repeat(64)),
+            },
+          ],
+        }),
+        ExecutionOptions.None,
+      );
+
+      // First byte wrong (first chunk mismatch)
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            fallbackerAddress,
+            0,
+            iface.encodeFunctionData(fn, ["0xcd" + "ab".repeat(63)]),
+            0,
+          ),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.BitmaskNotAllowed, ZeroHash);
+
+      // Last byte wrong (second chunk mismatch)
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            fallbackerAddress,
+            0,
+            iface.encodeFunctionData(fn, ["0x" + "ab".repeat(63) + "cd"]),
+            0,
+          ),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.BitmaskNotAllowed, ZeroHash);
+    });
   });
 
-  it("works on static", async () => {
-    const { roles, allowFunction, invoke } =
-      await loadFixture(setupOneParamStatic);
+  describe("shift offset", () => {
+    it("applies shift correctly before reading data", async () => {
+      const iface = new Interface(["function fn(bytes)"]);
+      const fn = iface.getFunction("fn")!;
+      const { roles, member, fallbackerAddress, roleKey } =
+        await loadFixture(setupFallbacker);
 
-    const compValue = bitmaskCompValue(0, "ffff", "aabb");
+      // shift 5 bytes, then check 1 byte
+      await roles.allowFunction(
+        roleKey,
+        fallbackerAddress,
+        fn.selector,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Dynamic,
+              operator: Operator.Bitmask,
+              compValue: encodeCompValue(5, "ff", "cd"),
+            },
+          ],
+        }),
+        ExecutionOptions.None,
+      );
 
-    await allowFunction([
-      {
-        parent: 0,
-        paramType: Encoding.AbiEncoded,
-        operator: Operator.Matches,
-        compValue: "0x",
-      },
-      {
-        parent: 0,
-        paramType: Encoding.Static,
-        operator: Operator.Bitmask,
-        compValue,
-      },
-    ]);
+      // byte[5] = 0xcd -> passes
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            fallbackerAddress,
+            0,
+            iface.encodeFunctionData(fn, ["0x0000000000cd4444444444"]),
+            0,
+          ),
+      ).to.not.be.reverted;
 
-    await expect(
-      invoke(
-        BigInt(
-          "0xaabb000000000000000000000000000000000000000000000000000000000000",
-        ),
-      ),
-    ).to.not.be.reverted;
-
-    await expect(
-      invoke(
-        BigInt(
-          "0xaacc000000000000000000000000000000000000000000000000000000000000",
-        ),
-      ),
-    )
-      .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.BitmaskNotAllowed, ZeroHash);
-  });
-
-  it("shift works on dynamic", async () => {
-    const { roles, allowFunction, invoke } =
-      await loadFixture(setupOneParamBytes);
-
-    // shift 5, check 1 byte
-    const compValue = bitmaskCompValue(5, "ff", "cd");
-
-    await allowFunction([
-      {
-        parent: 0,
-        paramType: Encoding.AbiEncoded,
-        operator: Operator.Matches,
-        compValue: "0x",
-      },
-      {
-        parent: 0,
-        paramType: Encoding.Dynamic,
-        operator: Operator.Bitmask,
-        compValue,
-      },
-    ]);
-
-    await expect(invoke("0x0000000000cd")).to.not.be.reverted;
-
-    await expect(invoke("0x0000000000ab"))
-      .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.BitmaskNotAllowed, ZeroHash);
-  });
-
-  it("shift works on static", async () => {
-    const { roles, allowFunction, invoke } =
-      await loadFixture(setupOneParamStatic);
-
-    // shift 15, check 1 byte
-    const compValue = bitmaskCompValue(15, "ff", "ab");
-
-    await allowFunction([
-      {
-        parent: 0,
-        paramType: Encoding.AbiEncoded,
-        operator: Operator.Matches,
-        compValue: "0x",
-      },
-      {
-        parent: 0,
-        paramType: Encoding.Static,
-        operator: Operator.Bitmask,
-        compValue,
-      },
-    ]);
-
-    // byte at position 15 is 0xab
-    await expect(
-      invoke(
-        BigInt(
-          "0x000000000000000000000000000000ab00000000000000000000000000000000",
-        ),
-      ),
-    ).to.not.be.reverted;
-
-    await expect(
-      invoke(
-        BigInt(
-          "0x000000000000000000000000000000cd00000000000000000000000000000000",
-        ),
-      ),
-    )
-      .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.BitmaskNotAllowed, ZeroHash);
-  });
-
-  it("multiword works on dynamic", async () => {
-    const { roles, allowFunction, invoke } =
-      await loadFixture(setupOneParamBytes);
-
-    // 64-byte mask spanning 2 words
-    const compValue = bitmaskCompValue(0, "ff".repeat(64), "ab".repeat(64));
-
-    await allowFunction([
-      {
-        parent: 0,
-        paramType: Encoding.AbiEncoded,
-        operator: Operator.Matches,
-        compValue: "0x",
-      },
-      {
-        parent: 0,
-        paramType: Encoding.Dynamic,
-        operator: Operator.Bitmask,
-        compValue,
-      },
-    ]);
-
-    await expect(invoke("0x" + "ab".repeat(64))).to.not.be.reverted;
-
-    // last byte differs
-    await expect(invoke("0x" + "ab".repeat(63) + "cd"))
-      .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.BitmaskNotAllowed, ZeroHash);
-  });
-
-  it("multiword works on static (crosses into next param)", async () => {
-    const { roles, allowFunction, invoke } =
-      await loadFixture(setupTwoParamsStatic);
-
-    // 64-byte mask reads both params entirely
-    const compValue = bitmaskCompValue(0, "ff".repeat(64), "00".repeat(64));
-
-    await allowFunction([
-      {
-        parent: 0,
-        paramType: Encoding.AbiEncoded,
-        operator: Operator.Matches,
-        compValue: "0x",
-      },
-      {
-        parent: 0,
-        paramType: Encoding.Static,
-        operator: Operator.Bitmask,
-        compValue,
-      },
-    ]);
-
-    // both params zero - passes
-    await expect(invoke(BigInt(0), BigInt(0))).to.not.be.reverted;
-
-    // second param non-zero - fails
-    await expect(invoke(BigInt(0), BigInt(1)))
-      .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.BitmaskNotAllowed, ZeroHash);
-  });
-
-  it("elaborate mask patterns work - only activated bits are considered", async () => {
-    const { roles, allowFunction, invoke } =
-      await loadFixture(setupOneParamStatic);
-
-    // mask 0xf0 checks only high nibble, expected 0xa0
-    const compValue = bitmaskCompValue(0, "f0", "a0");
-
-    await allowFunction([
-      {
-        parent: 0,
-        paramType: Encoding.AbiEncoded,
-        operator: Operator.Matches,
-        compValue: "0x",
-      },
-      {
-        parent: 0,
-        paramType: Encoding.Static,
-        operator: Operator.Bitmask,
-        compValue,
-      },
-    ]);
-
-    // 0xab & 0xf0 = 0xa0 - passes (low nibble 0xb ignored)
-    await expect(
-      invoke(
-        BigInt(
-          "0xab00000000000000000000000000000000000000000000000000000000000000",
-        ),
-      ),
-    ).to.not.be.reverted;
-
-    // 0xaf & 0xf0 = 0xa0 - passes (low nibble 0xf ignored)
-    await expect(
-      invoke(
-        BigInt(
-          "0xaf00000000000000000000000000000000000000000000000000000000000000",
-        ),
-      ),
-    ).to.not.be.reverted;
-
-    // 0xbb & 0xf0 = 0xb0 != 0xa0 - fails
-    await expect(
-      invoke(
-        BigInt(
-          "0xbb00000000000000000000000000000000000000000000000000000000000000",
-        ),
-      ),
-    )
-      .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.BitmaskNotAllowed, ZeroHash);
-  });
-
-  it("works on static crossing parameter boundary", async () => {
-    const { roles, allowFunction, invoke } =
-      await loadFixture(setupTwoParamsStatic);
-
-    // shift 26, mask 10 bytes = reads 6 bytes from param1, 4 bytes from param2
-    const compValue = bitmaskCompValue(26, "ff".repeat(10), "aa".repeat(10));
-
-    await allowFunction([
-      {
-        parent: 0,
-        paramType: Encoding.AbiEncoded,
-        operator: Operator.Matches,
-        compValue: "0x",
-      },
-      {
-        parent: 0,
-        paramType: Encoding.Static,
-        operator: Operator.Bitmask,
-        compValue,
-      },
-    ]);
-
-    // param1 ends with 6 bytes of 0xaa, param2 starts with 4 bytes of 0xaa
-    const param1 = BigInt(
-      "0x000000000000000000000000000000000000000000000000000000aaaaaaaaaaaaa",
-    );
-    const param2 = BigInt(
-      "0xaaaaaaaa00000000000000000000000000000000000000000000000000000000",
-    );
-
-    await expect(invoke(param1, param2)).to.not.be.reverted;
-
-    // param2 first byte wrong
-    const param2Wrong = BigInt(
-      "0xbbaaaaaaaa000000000000000000000000000000000000000000000000000000",
-    );
-    await expect(invoke(param1, param2Wrong))
-      .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.BitmaskNotAllowed, ZeroHash);
+      // byte[5] = 0xab -> fails
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            fallbackerAddress,
+            0,
+            iface.encodeFunctionData(fn, ["0x0000000000ab"]),
+            0,
+          ),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.BitmaskNotAllowed, ZeroHash);
+    });
   });
 });
