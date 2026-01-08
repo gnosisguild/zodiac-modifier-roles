@@ -193,10 +193,7 @@ library ConditionLogic {
         }
 
         uint256 sChildCount = condition.sChildCount;
-        if (sChildCount != payload.children.length) {
-            result.status = Status.ParameterNotAMatch;
-            return result;
-        }
+        assert(sChildCount == payload.children.length);
 
         Payload memory emptyPayload;
         result.consumptions = consumptions;
