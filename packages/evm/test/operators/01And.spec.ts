@@ -1,254 +1,488 @@
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { AbiCoder, ZeroHash } from "ethers";
+import { AbiCoder, Interface, ZeroHash } from "ethers";
 
+import { setupFallbacker } from "../setup";
 import {
   Encoding,
-  flattenCondition,
   Operator,
-  PermissionCheckerStatus,
+  ExecutionOptions,
+  ConditionViolationStatus,
+  flattenCondition,
 } from "../utils";
-import { setupOneParamStatic, setupTwoParamsStaticDynamic } from "../setup";
-import { ConditionFlatStruct } from "../../typechain-types/contracts/Roles";
 
-const defaultAbiCoder = AbiCoder.defaultAbiCoder();
+const abiCoder = AbiCoder.defaultAbiCoder();
 
-describe("Operator - And", async () => {
-  it("evaluates operator And with a single child", async () => {
-    const { roles, invoke, allowFunction } =
-      await loadFixture(setupOneParamStatic);
+describe("Operator - And", () => {
+  describe("boolean logic", () => {
+    const iface = new Interface(["function fn(uint256)"]);
+    const fn = iface.getFunction("fn")!;
 
-    const conditions = [
-      {
-        parent: 0,
-        paramType: Encoding.AbiEncoded,
-        operator: Operator.Matches,
-        compValue: "0x",
-      },
-      {
-        parent: 0,
-        paramType: Encoding.None,
-        operator: Operator.And,
-        compValue: "0x",
-      },
-      {
-        parent: 1,
-        paramType: Encoding.Static,
-        operator: Operator.EqualTo,
-        compValue: defaultAbiCoder.encode(["uint256"], [1]),
-      },
-    ];
+    it("passes when all children pass", async () => {
+      const { roles, member, fallbackerAddress, roleKey } =
+        await loadFixture(setupFallbacker);
 
-    await allowFunction(conditions);
-
-    await expect(invoke(2))
-      .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterNotAllowed, ZeroHash);
-  });
-  it("evaluates operator And with multiple children", async () => {
-    const { roles, allowFunction, invoke } =
-      await loadFixture(setupOneParamStatic);
-
-    const conditions = [
-      {
-        parent: 0,
-        paramType: Encoding.AbiEncoded,
-        operator: Operator.Matches,
-        compValue: "0x",
-      },
-      {
-        parent: 0,
-        paramType: Encoding.None,
-        operator: Operator.And,
-        compValue: "0x",
-      },
-      {
-        parent: 1,
-        paramType: Encoding.Static,
-        operator: Operator.GreaterThan,
-        compValue: defaultAbiCoder.encode(["uint256"], [15]),
-      },
-      {
-        parent: 1,
-        paramType: Encoding.Static,
-        operator: Operator.LessThan,
-        compValue: defaultAbiCoder.encode(["uint256"], [30]),
-      },
-    ];
-    await allowFunction(conditions);
-
-    await expect(invoke(1))
-      .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed, ZeroHash);
-    await expect(invoke(15))
-      .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed, ZeroHash);
-
-    await expect(invoke(30))
-      .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterGreaterThanAllowed, ZeroHash);
-
-    await expect(invoke(100))
-      .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterGreaterThanAllowed, ZeroHash);
-
-    await expect(invoke(20)).to.not.be.reverted;
-  });
-  it("evaluates operator And, with type equivalent siblings children", async () => {
-    const {
-      roles,
-      allowFunction,
-      invoke: _invoke,
-    } = await loadFixture(setupTwoParamsStaticDynamic);
-
-    const conditions = flattenCondition({
-      paramType: Encoding.AbiEncoded,
-      operator: Operator.Matches,
-      children: [
-        {
-          paramType: Encoding.Static,
-          operator: Operator.EqualTo,
-          compValue: defaultAbiCoder.encode(["uint256"], [987]),
-        },
-        {
-          paramType: Encoding.None,
-          operator: Operator.And,
+      // And: GreaterThan(10) AND LessThan(20)
+      await roles.allowFunction(
+        roleKey,
+        fallbackerAddress,
+        fn.selector,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
           children: [
             {
-              paramType: Encoding.AbiEncoded,
-              operator: Operator.Matches,
-              compValue: "0x0000", // leadingBytes = 0 (no selector)
+              paramType: Encoding.None,
+              operator: Operator.And,
               children: [
                 {
                   paramType: Encoding.Static,
                   operator: Operator.GreaterThan,
-                  compValue: defaultAbiCoder.encode(["uint256"], [10]),
+                  compValue: abiCoder.encode(["uint256"], [10]),
                 },
-              ],
-            },
-            {
-              paramType: Encoding.AbiEncoded,
-              operator: Operator.Matches,
-              compValue: "0x0000", // leadingBytes = 0 (no selector)
-              children: [
                 {
                   paramType: Encoding.Static,
                   operator: Operator.LessThan,
-                  compValue: defaultAbiCoder.encode(["uint256"], [20]),
+                  compValue: abiCoder.encode(["uint256"], [20]),
                 },
               ],
             },
           ],
-        },
-      ],
-    }) as ConditionFlatStruct[];
+        }),
+        ExecutionOptions.Both,
+      );
 
-    await allowFunction(conditions);
+      // 15 satisfies both: >10 AND <20
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            fallbackerAddress,
+            0,
+            iface.encodeFunctionData(fn, [15]),
+            0,
+          ),
+      ).to.not.be.reverted;
+    });
 
-    const invoke = (a: number, b: number) => {
-      const embedded = defaultAbiCoder.encode(["uint256"], [b]);
-      return _invoke(a, embedded);
-    };
+    it("fails on first child and short-circuits", async () => {
+      const { roles, member, fallbackerAddress, roleKey } =
+        await loadFixture(setupFallbacker);
 
-    await expect(invoke(987, 11)).to.not.be.reverted;
-    await expect(invoke(987, 19)).to.not.be.reverted;
-
-    await expect(invoke(987, 10))
-      .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed, ZeroHash);
-    await expect(invoke(987, 20))
-      .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterGreaterThanAllowed, ZeroHash);
-  });
-  it("evaluates operator And, with variant children", async () => {
-    const {
-      roles,
-      allowFunction,
-      invoke: _invoke,
-    } = await loadFixture(setupTwoParamsStaticDynamic);
-
-    const conditions = flattenCondition({
-      paramType: Encoding.AbiEncoded,
-      operator: Operator.Matches,
-      children: [
-        {
-          paramType: Encoding.Static,
-          operator: Operator.EqualTo,
-          compValue: defaultAbiCoder.encode(["uint256"], [987]),
-        },
-        {
-          paramType: Encoding.None,
-          operator: Operator.And,
+      // And: GreaterThan(10) AND LessThan(20)
+      await roles.allowFunction(
+        roleKey,
+        fallbackerAddress,
+        fn.selector,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
           children: [
             {
-              paramType: Encoding.AbiEncoded,
-              operator: Operator.Matches,
-              compValue: "0x0000", // leadingBytes = 0 (no selector)
+              paramType: Encoding.None,
+              operator: Operator.And,
               children: [
                 {
                   paramType: Encoding.Static,
-                  operator: Operator.EqualTo,
-                  compValue: defaultAbiCoder.encode(["uint256"], [1]),
+                  operator: Operator.GreaterThan,
+                  compValue: abiCoder.encode(["uint256"], [10]),
                 },
                 {
                   paramType: Encoding.Static,
-                  operator: Operator.EqualTo,
-                  compValue: defaultAbiCoder.encode(["uint256"], [2]),
-                },
-              ],
-            },
-            {
-              paramType: Encoding.AbiEncoded,
-              operator: Operator.Matches,
-              compValue: "0x0000", // leadingBytes = 0 (no selector)
-              children: [
-                {
-                  paramType: Encoding.Static,
-                  operator: Operator.EqualTo,
-                  compValue: defaultAbiCoder.encode(["uint256"], [1]),
-                },
-                {
-                  paramType: Encoding.Static,
-                  operator: Operator.EqualTo,
-                  compValue: defaultAbiCoder.encode(["uint256"], [2]),
-                },
-                {
-                  paramType: Encoding.Static,
-                  operator: Operator.EqualTo,
-                  compValue: defaultAbiCoder.encode(["uint256"], [3]),
+                  operator: Operator.LessThan,
+                  compValue: abiCoder.encode(["uint256"], [20]),
                 },
               ],
             },
           ],
-        },
-      ],
-    }) as ConditionFlatStruct[];
-
-    await allowFunction(conditions);
-
-    const invoke = (a: number, b: number[]) => {
-      const embedded =
-        b.length > 2
-          ? defaultAbiCoder.encode(
-              ["uint256", "uint256", "uint256"],
-              [b[0], b[1], b[2]],
-            )
-          : defaultAbiCoder.encode(["uint256", "uint256"], [b[0], b[1]]);
-      return _invoke(a, embedded);
-    };
-
-    await expect(invoke(987, [1, 2, 3])).to.not.be.reverted;
-    await expect(invoke(999, [1, 2, 3])).to.be.reverted;
-    await expect(invoke(987, [1, 2]))
-      .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(
-        PermissionCheckerStatus.CalldataOverflow,
-        "0x0000000000000000000000000000000000000000000000000000000000000064",
+        }),
+        ExecutionOptions.Both,
       );
-    await expect(invoke(999, [1, 2, 5]))
-      .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterNotAllowed, ZeroHash);
+
+      // 5 fails first child (GreaterThan 10), never evaluates second
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            fallbackerAddress,
+            0,
+            iface.encodeFunctionData(fn, [5]),
+            0,
+          ),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.ParameterLessThanAllowed, ZeroHash);
+    });
+
+    it("fails on second child after first passes", async () => {
+      const { roles, member, fallbackerAddress, roleKey } =
+        await loadFixture(setupFallbacker);
+
+      // And: GreaterThan(10) AND LessThan(20)
+      await roles.allowFunction(
+        roleKey,
+        fallbackerAddress,
+        fn.selector,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.None,
+              operator: Operator.And,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.GreaterThan,
+                  compValue: abiCoder.encode(["uint256"], [10]),
+                },
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.LessThan,
+                  compValue: abiCoder.encode(["uint256"], [20]),
+                },
+              ],
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
+      );
+
+      // 25 passes first child (>10) but fails second (<20)
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            fallbackerAddress,
+            0,
+            iface.encodeFunctionData(fn, [25]),
+            0,
+          ),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.ParameterGreaterThanAllowed,
+          ZeroHash,
+        );
+    });
   });
 
-  it.skip("Tracks the resulting consumption");
+  describe("payload routing", () => {
+    it("passes same payload to structural children when non-variant", async () => {
+      const iface = new Interface(["function fn(uint256)"]);
+      const fn = iface.getFunction("fn")!;
+      const { roles, member, fallbackerAddress, roleKey } =
+        await loadFixture(setupFallbacker);
+
+      // Both children check the same parameter (non-variant: same payload to all)
+      await roles.allowFunction(
+        roleKey,
+        fallbackerAddress,
+        fn.selector,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.None,
+              operator: Operator.And,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.GreaterThan,
+                  compValue: abiCoder.encode(["uint256"], [10]),
+                },
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.LessThan,
+                  compValue: abiCoder.encode(["uint256"], [100]),
+                },
+              ],
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
+      );
+
+      // 50 satisfies both conditions on same payload
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            fallbackerAddress,
+            0,
+            iface.encodeFunctionData(fn, [50]),
+            0,
+          ),
+      ).to.not.be.reverted;
+    });
+
+    it("passes individual child payloads when variant", async () => {
+      const iface = new Interface(["function fn(bytes)"]);
+      const fn = iface.getFunction("fn")!;
+      const { roles, member, fallbackerAddress, roleKey } =
+        await loadFixture(setupFallbacker);
+
+      // And has two variant children that interpret the bytes param differently:
+      // - Child 1: AbiEncoded with one Dynamic (checks first bytes)
+      // - Child 2: AbiEncoded with two Dynamics (checks both bytes)
+      await roles.allowFunction(
+        roleKey,
+        fallbackerAddress,
+        fn.selector,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.None,
+              operator: Operator.And,
+              children: [
+                // Child 1: interpret as (bytes) - one dynamic
+                {
+                  paramType: Encoding.AbiEncoded,
+                  operator: Operator.Matches,
+                  compValue: "0x0000",
+                  children: [
+                    {
+                      paramType: Encoding.Dynamic,
+                      operator: Operator.EqualTo,
+                      compValue: abiCoder.encode(["bytes"], ["0xaabbccdd"]),
+                    },
+                  ],
+                },
+                // Child 2: interpret as (bytes, bytes) - two dynamics
+                {
+                  paramType: Encoding.AbiEncoded,
+                  operator: Operator.Matches,
+                  compValue: "0x0000",
+                  children: [
+                    {
+                      paramType: Encoding.Dynamic,
+                      operator: Operator.EqualTo,
+                      compValue: abiCoder.encode(["bytes"], ["0xaabbccdd"]),
+                    },
+                    {
+                      paramType: Encoding.Dynamic,
+                      operator: Operator.EqualTo,
+                      compValue: abiCoder.encode(["bytes"], ["0x11223344"]),
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
+      );
+
+      // Embedded bytes contains abi.encode(bytes, bytes)
+      const embedded = abiCoder.encode(
+        ["bytes", "bytes"],
+        ["0xaabbccdd", "0x11223344"],
+      );
+
+      // Passes both children
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            fallbackerAddress,
+            0,
+            iface.encodeFunctionData(fn, [embedded]),
+            0,
+          ),
+      ).to.not.be.reverted;
+
+      // Wrong first bytes - fails both children
+      const wrongFirst = abiCoder.encode(
+        ["bytes", "bytes"],
+        ["0xffffffff", "0x11223344"],
+      );
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            fallbackerAddress,
+            0,
+            iface.encodeFunctionData(fn, [wrongFirst]),
+            0,
+          ),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
+
+      // Wrong second bytes - fails child 2
+      const wrongSecond = abiCoder.encode(
+        ["bytes", "bytes"],
+        ["0xaabbccdd", "0xffffffff"],
+      );
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            fallbackerAddress,
+            0,
+            iface.encodeFunctionData(fn, [wrongSecond]),
+            0,
+          ),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
+    });
+
+    it("passes empty payload to non-structural children", async () => {
+      const iface = new Interface(["function fn(uint256)"]);
+      const fn = iface.getFunction("fn")!;
+      const { roles, member, fallbackerAddress, roleKey } =
+        await loadFixture(setupFallbacker);
+
+      // And with: structural child (checks param) + non-structural (checks ether value)
+      await roles.allowFunction(
+        roleKey,
+        fallbackerAddress,
+        fn.selector,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.None,
+              operator: Operator.And,
+              children: [
+                // Structural: param must equal 42
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [42]),
+                },
+                // Non-structural: ether value must equal 123 (EtherValue -> empty payload)
+                {
+                  paramType: Encoding.EtherValue,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [123]),
+                },
+              ],
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
+      );
+
+      // Correct param + correct ether value
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            fallbackerAddress,
+            123,
+            iface.encodeFunctionData(fn, [42]),
+            0,
+          ),
+      ).to.not.be.reverted;
+
+      // Wrong param value
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            fallbackerAddress,
+            123,
+            iface.encodeFunctionData(fn, [99]),
+            0,
+          ),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
+
+      // Wrong ether value
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            fallbackerAddress,
+            999,
+            iface.encodeFunctionData(fn, [42]),
+            0,
+          ),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
+    });
+  });
+
+  describe("consumption propagation", () => {
+    it("accumulates consumptions across children", async () => {
+      const iface = new Interface(["function fn(uint256,uint256)"]);
+      const fn = iface.getFunction("fn")!;
+      const { roles, member, fallbackerAddress, roleKey } =
+        await loadFixture(setupFallbacker);
+
+      const allowanceKey =
+        "0x000000000000000000000000000000000000000000000000000000000000abcd";
+
+      // Set up allowance of 100
+      await roles.setAllowance(allowanceKey, 100, 0, 0, 0, 0);
+
+      // And with two WithinAllowance children consuming from same allowance
+      await roles.allowFunction(
+        roleKey,
+        fallbackerAddress,
+        fn.selector,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.None,
+              operator: Operator.And,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.WithinAllowance,
+                  compValue: allowanceKey,
+                },
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.WithinAllowance,
+                  compValue: allowanceKey,
+                },
+              ],
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
+      );
+
+      // First call: 30 + 20 = 50 consumed, 50 remaining
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            fallbackerAddress,
+            0,
+            iface.encodeFunctionData(fn, [30, 20]),
+            0,
+          ),
+      ).to.not.be.reverted;
+
+      // Verify consumption was accumulated across both children
+      const { balance } = await roles.accruedAllowance(allowanceKey);
+      expect(balance).to.equal(50);
+
+      // Second call: 30 + 30 = 60, but only 50 remaining
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            fallbackerAddress,
+            0,
+            iface.encodeFunctionData(fn, [30, 30]),
+            0,
+          ),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
+    });
+  });
 });
