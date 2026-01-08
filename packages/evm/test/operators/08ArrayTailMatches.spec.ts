@@ -365,7 +365,10 @@ describe("Operator - ArrayTailMatches", () => {
           ),
       )
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.ParameterGreaterThanAllowed, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.ParameterGreaterThanAllowed,
+          ZeroHash,
+        );
     });
 
     it("accumulates consumptions from all tail matches", async () => {
