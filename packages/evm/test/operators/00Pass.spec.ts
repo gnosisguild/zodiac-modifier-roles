@@ -1,50 +1,62 @@
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import { setupAvatarAndRoles } from "../setup";
+import { setup } from "../setup";
+import {
+  Operator,
+  Encoding,
+  ExecutionOptions,
+  flattenCondition,
+} from "../utils";
 
-import { ExecutionOptions, Operator, Encoding } from "../utils";
+describe("Operator - Pass", () => {
+  describe("core behavior", () => {
+    it("allows any parameter value", async () => {
+      const { roles, member, testContract, roleKey } = await loadFixture(setup);
 
-describe("Operator - Pass", async () => {
-  it("evaluates a Pass", async () => {
-    const { owner, member, roles, roleKey, testContract } =
-      await loadFixture(setupAvatarAndRoles);
+      const address = await testContract.getAddress();
+      const selector =
+        testContract.interface.getFunction("oneParamStatic").selector;
 
-    const conditions = [
-      {
-        parent: 0,
-        paramType: Encoding.AbiEncoded,
-        operator: Operator.Matches,
-        compValue: "0x",
-      },
-      {
-        parent: 0,
-        paramType: Encoding.Static,
-        operator: Operator.Pass,
-        compValue: "0x",
-      },
-    ];
-
-    await roles
-      .connect(owner)
-      .allowFunction(
+      await roles.allowFunction(
         roleKey,
-        await testContract.getAddress(),
-        testContract.interface.getFunction("oneParamStatic").selector,
-        conditions,
+        address,
+        selector,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Static,
+              operator: Operator.Pass,
+            },
+          ],
+        }),
         ExecutionOptions.Both,
       );
 
-    const invoke = async () =>
-      roles
-        .connect(member)
-        .execTransactionFromModule(
-          await testContract.getAddress(),
-          0,
-          (await testContract.oneParamStatic.populateTransaction(0)).data,
-          0,
-        );
+      // Any value passes - the operator performs no validation
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            address,
+            0,
+            (await testContract.oneParamStatic.populateTransaction(0)).data,
+            0,
+          ),
+      ).to.not.be.reverted;
 
-    await expect(invoke()).to.not.be.reverted;
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            address,
+            0,
+            (await testContract.oneParamStatic.populateTransaction(999)).data,
+            0,
+          ),
+      ).to.not.be.reverted;
+    });
   });
 });
