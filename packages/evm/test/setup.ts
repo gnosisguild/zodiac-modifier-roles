@@ -16,6 +16,79 @@ import { TestContract } from "../typechain-types/contracts/__test__/fixtures/Tes
 const DEFAULT_ROLE_KEY =
   "0x000000000000000000000000000000000000000000000000000000000aabbcc1";
 
+/**
+ * Minimal setup for operator tests.
+ * Returns pre-connected owner and member for cleaner test code.
+ */
+export async function setup(roleKey = DEFAULT_ROLE_KEY) {
+  const [owner, member] = await hre.ethers.getSigners();
+
+  const Avatar = await hre.ethers.getContractFactory("TestAvatar");
+  const avatar = await Avatar.deploy();
+
+  const TestContract = await hre.ethers.getContractFactory("TestContract");
+  const testContract = await TestContract.deploy();
+
+  const avatarAddress = await avatar.getAddress();
+  const roles = await deployRolesMod(
+    hre,
+    owner.address,
+    avatarAddress,
+    avatarAddress,
+  );
+
+  await roles.connect(owner).enableModule(member.address);
+  await roles.connect(owner).grantRole(member.address, roleKey, 0, 0, 0);
+  await roles.connect(owner).setDefaultRole(member.address, roleKey);
+  await roles
+    .connect(owner)
+    .scopeTarget(roleKey, await testContract.getAddress());
+
+  return {
+    roles: roles.connect(owner),
+    member,
+    testContract,
+    roleKey,
+  };
+}
+
+/**
+ * Setup with Fallbacker contract for flexible calldata testing.
+ * Allows crafting arbitrary calldata with AbiCoder.
+ */
+export async function setupFallbacker(roleKey = DEFAULT_ROLE_KEY) {
+  const [owner, member] = await hre.ethers.getSigners();
+
+  const Avatar = await hre.ethers.getContractFactory("TestAvatar");
+  const avatar = await Avatar.deploy();
+
+  const Fallbacker = await hre.ethers.getContractFactory("Fallbacker");
+  const fallbacker = await Fallbacker.deploy();
+
+  const avatarAddress = await avatar.getAddress();
+  const roles = await deployRolesMod(
+    hre,
+    owner.address,
+    avatarAddress,
+    avatarAddress,
+  );
+
+  const fallbackerAddress = await fallbacker.getAddress();
+
+  await roles.connect(owner).enableModule(member.address);
+  await roles.connect(owner).grantRole(member.address, roleKey, 0, 0, 0);
+  await roles.connect(owner).setDefaultRole(member.address, roleKey);
+  await roles.connect(owner).scopeTarget(roleKey, fallbackerAddress);
+
+  return {
+    roles: roles.connect(owner),
+    member,
+    fallbacker,
+    fallbackerAddress,
+    roleKey,
+  };
+}
+
 export function createEip1193(
   provider: EthereumProvider,
   signer: HardhatEthersSigner,

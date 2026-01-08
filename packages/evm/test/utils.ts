@@ -114,7 +114,7 @@ export enum ExecutionOptions {
   Both,
 }
 
-export enum PermissionCheckerStatus {
+export enum ConditionViolationStatus {
   Ok,
   /// Or condition not met
   OrViolation,
