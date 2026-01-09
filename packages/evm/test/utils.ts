@@ -138,6 +138,10 @@ export enum ConditionViolationStatus {
   CustomConditionNotAContract,
   CustomConditionReverted,
   CustomConditionInvalidResult,
+  PricingAdapterNotAContract,
+  PricingAdapterReverted,
+  PricingAdapterInvalidResult,
+  PricingAdapterZeroPrice,
   AllowanceExceeded,
   CallAllowanceExceeded,
   // A Payload overflow was found by the Checker flow

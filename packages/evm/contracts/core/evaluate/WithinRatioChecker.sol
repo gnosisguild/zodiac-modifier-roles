@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "../../periphery/interfaces/IPricing.sol";
+import "./Adapter.sol";
 
 import "../../types/Types.sol";
 
@@ -26,10 +26,15 @@ library WithinRatioChecker {
     ) internal view returns (Status) {
         CompValue memory unpacked = _unpack(compValue);
 
-        (uint256 referenceAmount, uint256 relativeAmount) = _scaleAndConvert(
-            unpacked,
-            pluckedValues
-        );
+        (
+            Status status,
+            uint256 referenceAmount,
+            uint256 relativeAmount
+        ) = _scaleAndConvert(unpacked, pluckedValues);
+
+        if (status != Status.Ok) {
+            return status;
+        }
 
         /*
          *                 relativeAmount × priceRel
@@ -55,6 +60,7 @@ library WithinRatioChecker {
         private
         view
         returns (
+            Status status,
             uint256 convertedReferenceAmount,
             uint256 convertedRelativeAmount
         )
@@ -85,13 +91,32 @@ library WithinRatioChecker {
          *       refAdapter = 0, relAdapter = WBTC/ETH
          */
         uint256 priceScale = 10 ** (precision - 18);
-        uint256 priceReference = unpacked.referenceAdapter != address(0)
-            ? IPricing(unpacked.referenceAdapter).getPrice() * priceScale
-            : (10 ** precision);
+        uint256 priceReference;
+        uint256 priceRelative;
 
-        uint256 priceRelative = unpacked.relativeAdapter != address(0)
-            ? IPricing(unpacked.relativeAdapter).getPrice() * priceScale
-            : (10 ** precision);
+        if (unpacked.referenceAdapter != address(0)) {
+            (status, priceReference) = Adapter.getPrice(
+                unpacked.referenceAdapter
+            );
+            if (status != Status.Ok) {
+                return (status, 0, 0);
+            }
+            priceReference *= priceScale;
+        } else {
+            priceReference = 10 ** precision;
+        }
+
+        if (unpacked.relativeAdapter != address(0)) {
+            (status, priceRelative) = Adapter.getPrice(
+                unpacked.relativeAdapter
+            );
+            if (status != Status.Ok) {
+                return (status, 0, 0);
+            }
+            priceRelative *= priceScale;
+        } else {
+            priceRelative = 10 ** precision;
+        }
 
         // Convert to common base
         uint256 denominator = 10 ** precision;
@@ -101,6 +126,8 @@ library WithinRatioChecker {
         convertedRelativeAmount =
             (relativeAmount * priceRelative) /
             denominator;
+
+        return (Status.Ok, convertedReferenceAmount, convertedRelativeAmount);
     }
 
     function _unpack(
