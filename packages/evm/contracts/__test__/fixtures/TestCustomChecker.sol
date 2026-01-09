@@ -27,3 +27,39 @@ contract TestCustomChecker is ICustomCondition {
         }
     }
 }
+
+contract TestCustomCheckerNoInterface {
+    function dummy() external pure returns (uint256) {
+        return 42;
+    }
+}
+
+contract TestCustomCheckerReverting is ICustomCondition {
+    function check(
+        address,
+        uint256,
+        bytes calldata,
+        Operation,
+        uint256,
+        uint256,
+        bytes calldata,
+        bytes32[] memory
+    ) public pure returns (bool, bytes32) {
+        revert("CustomChecker: intentional revert");
+    }
+}
+
+contract TestCustomCheckerWrongReturn {
+    function check(
+        address,
+        uint256,
+        bytes calldata,
+        uint8,
+        uint256,
+        uint256,
+        bytes calldata,
+        bytes32[] memory
+    ) public pure returns (uint256) {
+        return 999;
+    }
+}

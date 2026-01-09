@@ -26,6 +26,9 @@ enum Status {
     /// Bitmask not an allowed value
     BitmaskNotAllowed,
     CustomConditionViolation,
+    CustomConditionNotAContract,
+    CustomConditionReverted,
+    CustomConditionInvalidResult,
     AllowanceExceeded,
     CallAllowanceExceeded,
     CalldataOverflow,

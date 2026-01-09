@@ -1,189 +1,478 @@
-import hre from "hardhat";
-
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
+import hre from "hardhat";
+import { Interface, ZeroHash } from "ethers";
+import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+
+import { setupFallbacker } from "../setup";
 import {
   Encoding,
-  BYTES32_ZERO,
-  ExecutionOptions,
   Operator,
-  PermissionCheckerStatus,
+  ExecutionOptions,
+  ConditionViolationStatus,
+  flattenCondition,
 } from "../utils";
-import { setupOneParamStatic } from "../setup";
 
-const AddressOne = "0x0000000000000000000000000000000000000001";
-
-describe("Operator - Custom", async () => {
-  async function setup() {
-    const { roles, allowFunction, invoke } =
-      await loadFixture(setupOneParamStatic);
-
+describe("Operator - Custom", () => {
+  async function setupWithChecker() {
+    const base = await setupFallbacker();
     const CustomChecker =
       await hre.ethers.getContractFactory("TestCustomChecker");
     const customChecker = await CustomChecker.deploy();
-
-    return { roles, customChecker, allowFunction, invoke };
+    return {
+      ...base,
+      customChecker,
+      customCheckerAddress: await customChecker.getAddress(),
+    };
   }
-  it("evaluates operator Custom - result is check pass", async () => {
-    const { customChecker, allowFunction, invoke } = await loadFixture(setup);
-    const customerCheckerAddress = await customChecker.getAddress();
-    const extra = "aabbccddeeff112233445566";
-    await allowFunction([
-      {
-        parent: 0,
-        paramType: Encoding.AbiEncoded,
-        operator: Operator.Matches,
-        compValue: "0x",
-      },
-      {
-        parent: 0,
-        paramType: Encoding.Static,
-        operator: Operator.Custom,
-        compValue: `${customerCheckerAddress}${extra}`,
-      },
-    ]);
 
-    // above 101 is accepted
-    await expect(invoke(101)).to.not.be.reverted;
-  });
-  it("evaluates operator Custom - result is check fail", async () => {
-    const { roles, customChecker, allowFunction, invoke } =
-      await loadFixture(setup);
-    const customerCheckerAddress = await customChecker.getAddress();
-    const extra = "aabbccddeeff112233445566";
-    await allowFunction([
-      {
-        parent: 0,
-        paramType: Encoding.AbiEncoded,
-        operator: Operator.Matches,
-        compValue: "0x",
-      },
-      {
-        parent: 0,
-        paramType: Encoding.Static,
-        operator: Operator.Custom,
-        compValue: `${customerCheckerAddress}${extra}`,
-      },
-    ]);
+  describe("execution logic", () => {
+    it("delegates execution to the configured adapter address", async () => {
+      const {
+        roles,
+        member,
+        fallbackerAddress,
+        roleKey,
+        customCheckerAddress,
+      } = await loadFixture(setupWithChecker);
+      const iface = new Interface(["function fn(uint256)"]);
+      const fn = iface.getFunction("fn")!;
 
-    // above 101 is accepted
-    await expect(invoke(99))
-      .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(
-        PermissionCheckerStatus.CustomConditionViolation,
-        `0xaabbccddeeff1122334455660000000000000000000000000000000000000000`,
-      );
-  });
-  it("evaluates operator Custom - result is check fail due to operation", async () => {
-    const { roles, customChecker, allowFunction, invoke } =
-      await loadFixture(setup);
-    const customerCheckerAddress = await customChecker.getAddress();
-    const extra = "aabbccddeeff112233445566";
-    await allowFunction(
-      [
-        {
-          parent: 0,
+      // Custom condition: param > 100
+      await roles.allowFunction(
+        roleKey,
+        fallbackerAddress,
+        fn.selector,
+        flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
-          compValue: "0x",
-        },
-        {
-          parent: 0,
-          paramType: Encoding.Static,
-          operator: Operator.Custom,
-          compValue: `${customerCheckerAddress}${extra}`,
-        },
-      ],
-      ExecutionOptions.Both,
-    );
-
-    await expect(invoke(101, 1))
-      .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(
-        PermissionCheckerStatus.CustomConditionViolation,
-        `0x0000000000000000000000000000000000000000000000000000000000000000`,
+          children: [
+            {
+              paramType: Encoding.Static,
+              operator: Operator.Custom,
+              compValue: customCheckerAddress,
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
       );
-  });
 
-  it("supports unlimited extra bytes (more than 12 bytes)", async () => {
-    const { roles, customChecker, allowFunction, invoke } =
-      await loadFixture(setup);
-    const customerCheckerAddress = await customChecker.getAddress();
-    // 64 bytes of extra data (well beyond the old 12-byte limit)
-    const extra =
-      "0102030405060708091011121314151617181920212223242526272829303132" +
-      "3334353637383940414243444546474849505152535455565758596061626364";
-    await allowFunction([
-      {
-        parent: 0,
-        paramType: Encoding.AbiEncoded,
-        operator: Operator.Matches,
-        compValue: "0x",
-      },
-      {
-        parent: 0,
-        paramType: Encoding.Static,
-        operator: Operator.Custom,
-        compValue: `${customerCheckerAddress}${extra}`,
-      },
-    ]);
+      // 101 > 100 passes
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            fallbackerAddress,
+            0,
+            iface.encodeFunctionData(fn, [101]),
+            0,
+          ),
+      ).to.not.be.reverted;
+    });
 
-    // above 100 is accepted
-    await expect(invoke(101)).to.not.be.reverted;
+    it("passes correct context (operation type) to adapter", async () => {
+      const {
+        roles,
+        member,
+        fallbackerAddress,
+        roleKey,
+        customCheckerAddress,
+      } = await loadFixture(setupWithChecker);
+      const iface = new Interface(["function fn(uint256)"]);
+      const fn = iface.getFunction("fn")!;
 
-    // below 100 fails, and the first 32 bytes of extra are returned as reason
-    await expect(invoke(99))
-      .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(
-        PermissionCheckerStatus.CustomConditionViolation,
-        `0x0102030405060708091011121314151617181920212223242526272829303132`,
+      // Adapter fails if operation != Call (0)
+      await roles.allowFunction(
+        roleKey,
+        fallbackerAddress,
+        fn.selector,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Static,
+              operator: Operator.Custom,
+              compValue: customCheckerAddress,
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
       );
+
+      // Call operation (0) passes
+      await expect(
+        roles.connect(member).execTransactionFromModule(
+          fallbackerAddress,
+          0,
+          iface.encodeFunctionData(fn, [101]),
+          0, // Operation.Call
+        ),
+      ).to.not.be.reverted;
+
+      // DelegateCall operation (1) fails (adapter returns false)
+      await expect(
+        roles.connect(member).execTransactionFromModule(
+          fallbackerAddress,
+          0,
+          iface.encodeFunctionData(fn, [101]),
+          1, // Operation.DelegateCall
+        ),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.CustomConditionViolation, ZeroHash);
+    });
+
+    it("extracts and passes extra data (from compValue) to adapter", async () => {
+      const {
+        roles,
+        member,
+        fallbackerAddress,
+        roleKey,
+        customCheckerAddress,
+      } = await loadFixture(setupWithChecker);
+      const iface = new Interface(["function fn(uint256)"]);
+      const fn = iface.getFunction("fn")!;
+
+      const extraData = "aabbccddeeff112233445566";
+      const compValue = customCheckerAddress + extraData;
+
+      await roles.allowFunction(
+        roleKey,
+        fallbackerAddress,
+        fn.selector,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Static,
+              operator: Operator.Custom,
+              compValue,
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
+      );
+
+      // Fail condition: param <= 100.
+      // Adapter should return false + extraData as error info.
+      // Note: returned info is bytes32, so extraData is padded/truncated to 32 bytes
+      const expectedInfo = "0x" + extraData.padEnd(64, "0");
+
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            fallbackerAddress,
+            0,
+            iface.encodeFunctionData(fn, [99]),
+            0,
+          ),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.CustomConditionViolation,
+          expectedInfo,
+        );
+    });
   });
 
-  it("supports empty extra bytes", async () => {
-    const { customChecker, allowFunction, invoke } = await loadFixture(setup);
-    const customerCheckerAddress = await customChecker.getAddress();
-    // No extra bytes - just the address
-    await allowFunction([
-      {
-        parent: 0,
-        paramType: Encoding.AbiEncoded,
-        operator: Operator.Matches,
-        compValue: "0x",
-      },
-      {
-        parent: 0,
-        paramType: Encoding.Static,
-        operator: Operator.Custom,
-        compValue: customerCheckerAddress,
-      },
-    ]);
+  describe("result handling", () => {
+    it("passes when adapter returns true", async () => {
+      const {
+        roles,
+        member,
+        fallbackerAddress,
+        roleKey,
+        customCheckerAddress,
+      } = await loadFixture(setupWithChecker);
+      const iface = new Interface(["function fn(uint256)"]);
+      const fn = iface.getFunction("fn")!;
 
-    // above 100 is accepted
-    await expect(invoke(101)).to.not.be.reverted;
+      await roles.allowFunction(
+        roleKey,
+        fallbackerAddress,
+        fn.selector,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Static,
+              operator: Operator.Custom,
+              compValue: customCheckerAddress,
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
+      );
+
+      // Adapter returns true for > 100
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            fallbackerAddress,
+            0,
+            iface.encodeFunctionData(fn, [101]),
+            0,
+          ),
+      ).to.not.be.reverted;
+    });
+
+    it("fails when adapter returns false (propagates error info)", async () => {
+      const {
+        roles,
+        member,
+        fallbackerAddress,
+        roleKey,
+        customCheckerAddress,
+      } = await loadFixture(setupWithChecker);
+      const iface = new Interface(["function fn(uint256)"]);
+      const fn = iface.getFunction("fn")!;
+
+      const extraData = "1234"; // "reason" code
+      const compValue = customCheckerAddress + extraData;
+
+      await roles.allowFunction(
+        roleKey,
+        fallbackerAddress,
+        fn.selector,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Static,
+              operator: Operator.Custom,
+              compValue,
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
+      );
+
+      // Adapter returns false for <= 100, info = extraData
+      const expectedInfo = "0x" + extraData.padEnd(64, "0");
+
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            fallbackerAddress,
+            0,
+            iface.encodeFunctionData(fn, [99]),
+            0,
+          ),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.CustomConditionViolation,
+          expectedInfo,
+        );
+    });
   });
 
-  it.skip("adapter does not implement ICustomChecker", async () => {
-    const { roles, allowFunction, invoke } = await loadFixture(setup);
+  describe("adapter call safety", () => {
+    // Helper to set up a custom condition with a given adapter address
+    async function allowWithCustomCondition(
+      roles: Awaited<ReturnType<typeof setupWithChecker>>["roles"],
+      roleKey: string,
+      fallbackerAddress: string,
+      selector: string,
+      adapterAddress: string,
+    ) {
+      await roles.allowFunction(
+        roleKey,
+        fallbackerAddress,
+        selector,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Static,
+              operator: Operator.Custom,
+              compValue: adapterAddress,
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
+      );
+    }
 
-    await allowFunction([
-      {
-        parent: 0,
-        paramType: Encoding.AbiEncoded,
-        operator: Operator.Matches,
-        compValue: "0x",
-      },
-      {
-        parent: 0,
-        paramType: Encoding.Static,
-        operator: Operator.Custom,
-        compValue: AddressOne.padEnd(66, "0"),
-      },
-    ]);
+    it("no code at address: reverts", async () => {
+      const { roles, member, fallbackerAddress, roleKey } =
+        await loadFixture(setupWithChecker);
+      const iface = new Interface(["function fn(uint256)"]);
+      const fn = iface.getFunction("fn")!;
 
-    // above 101 is accepted
-    await expect(invoke(99))
-      .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.CustomConditionViolation, BYTES32_ZERO);
+      const randomEOA = "0x1234567890123456789012345678901234567890";
+      await allowWithCustomCondition(
+        roles,
+        roleKey,
+        fallbackerAddress,
+        fn.selector,
+        randomEOA,
+      );
+
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            fallbackerAddress,
+            0,
+            iface.encodeFunctionData(fn, [101]),
+            0,
+          ),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.CustomConditionNotAContract,
+          ZeroHash,
+        );
+    });
+
+    it("wrong interface: reverts", async () => {
+      const { roles, member, fallbackerAddress, roleKey } =
+        await loadFixture(setupWithChecker);
+      const iface = new Interface(["function fn(uint256)"]);
+      const fn = iface.getFunction("fn")!;
+
+      // Deploy contract with code but no check() function and no fallback
+      const NoInterfaceChecker = await hre.ethers.getContractFactory(
+        "TestCustomCheckerNoInterface",
+      );
+      const noInterfaceChecker = await NoInterfaceChecker.deploy();
+      const noInterfaceCheckerAddress = await noInterfaceChecker.getAddress();
+
+      await allowWithCustomCondition(
+        roles,
+        roleKey,
+        fallbackerAddress,
+        fn.selector,
+        noInterfaceCheckerAddress,
+      );
+
+      // Function selector not found, no fallback -> staticcall fails
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            fallbackerAddress,
+            0,
+            iface.encodeFunctionData(fn, [101]),
+            0,
+          ),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.CustomConditionReverted, ZeroHash);
+    });
+
+    it("function reverts: reverts", async () => {
+      const { roles, member, fallbackerAddress, roleKey } =
+        await loadFixture(setupWithChecker);
+      const iface = new Interface(["function fn(uint256)"]);
+      const fn = iface.getFunction("fn")!;
+
+      const RevertingChecker = await hre.ethers.getContractFactory(
+        "TestCustomCheckerReverting",
+      );
+      const revertingChecker = await RevertingChecker.deploy();
+      const revertingCheckerAddress = await revertingChecker.getAddress();
+
+      await allowWithCustomCondition(
+        roles,
+        roleKey,
+        fallbackerAddress,
+        fn.selector,
+        revertingCheckerAddress,
+      );
+
+      // Adapter reverts -> staticcall fails
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            fallbackerAddress,
+            0,
+            iface.encodeFunctionData(fn, [101]),
+            0,
+          ),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.CustomConditionReverted, ZeroHash);
+    });
+
+    it("returns wrong type: reverts", async () => {
+      const { roles, member, fallbackerAddress, roleKey } =
+        await loadFixture(setupWithChecker);
+      const iface = new Interface(["function fn(uint256)"]);
+      const fn = iface.getFunction("fn")!;
+
+      // Deploy contract that returns uint256 instead of (bool, bytes32)
+      const WrongReturnChecker = await hre.ethers.getContractFactory(
+        "TestCustomCheckerWrongReturn",
+      );
+      const wrongReturnChecker = await WrongReturnChecker.deploy();
+      const wrongReturnCheckerAddress = await wrongReturnChecker.getAddress();
+
+      await allowWithCustomCondition(
+        roles,
+        roleKey,
+        fallbackerAddress,
+        fn.selector,
+        wrongReturnCheckerAddress,
+      );
+
+      // Return data length != 64 bytes
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            fallbackerAddress,
+            0,
+            iface.encodeFunctionData(fn, [101]),
+            0,
+          ),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.CustomConditionInvalidResult,
+          ZeroHash,
+        );
+    });
+
+    it("returns expected: succeeds", async () => {
+      const {
+        roles,
+        member,
+        fallbackerAddress,
+        roleKey,
+        customCheckerAddress,
+      } = await loadFixture(setupWithChecker);
+      const iface = new Interface(["function fn(uint256)"]);
+      const fn = iface.getFunction("fn")!;
+
+      await allowWithCustomCondition(
+        roles,
+        roleKey,
+        fallbackerAddress,
+        fn.selector,
+        customCheckerAddress,
+      );
+
+      // Valid adapter returns (true, bytes32) -> passes
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            fallbackerAddress,
+            0,
+            iface.encodeFunctionData(fn, [101]),
+            0,
+          ),
+      ).to.not.be.reverted;
+    });
   });
 });

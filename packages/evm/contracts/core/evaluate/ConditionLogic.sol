@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
+import "./Adapter.sol";
 import "./BitmaskChecker.sol";
 import "./WithinAllowanceChecker.sol";
 import "./WithinRatioChecker.sol";
-
-import "../../periphery/interfaces/ICustomCondition.sol";
 
 import "../../types/Types.sol";
 
@@ -442,9 +441,7 @@ library ConditionLogic {
         Context memory context
     ) private view returns (Result memory) {
         // first 20 bytes: adapter address
-        ICustomCondition adapter = ICustomCondition(
-            address(bytes20(condition.compValue))
-        );
+        address adapter = address(bytes20(condition.compValue));
 
         bytes memory extra;
         if (condition.compValue.length > 20) {
@@ -458,7 +455,8 @@ library ConditionLogic {
             }
         }
 
-        (bool success, bytes32 info) = adapter.check(
+        (Status status, bytes32 info) = Adapter.check(
+            adapter,
             context.to,
             context.value,
             data,
@@ -468,12 +466,8 @@ library ConditionLogic {
             extra,
             context.pluckedValues
         );
-        return
-            Result({
-                status: success ? Status.Ok : Status.CustomConditionViolation,
-                consumptions: consumptions,
-                info: info
-            });
+
+        return Result({status: status, consumptions: consumptions, info: info});
     }
 
     function __allowance(

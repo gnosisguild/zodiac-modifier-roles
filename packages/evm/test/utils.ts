@@ -135,6 +135,9 @@ export enum ConditionViolationStatus {
   /// Bitmask not an allowed value
   BitmaskNotAllowed,
   CustomConditionViolation,
+  CustomConditionNotAContract,
+  CustomConditionReverted,
+  CustomConditionInvalidResult,
   AllowanceExceeded,
   CallAllowanceExceeded,
   // A Payload overflow was found by the Checker flow
