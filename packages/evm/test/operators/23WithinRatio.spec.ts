@@ -1250,6 +1250,63 @@ describe("Operator - WithinRatio", () => {
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(ConditionViolationStatus.RatioAboveMax, ZeroHash);
     });
+    it("handles WBTC (8 decimals) vs FunkyToken (27 decimals) both with adapters", async () => {
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupTwoParams);
+
+      // Reference: WBTC (8 decimals), price = $100,000
+      // Relative: FunkyToken (27 decimals), price = $2
+      const MockPricing = await hre.ethers.getContractFactory("MockPricing");
+      const wbtcAdapter = await MockPricing.deploy(100000n * 10n ** 18n);
+      const funkyAdapter = await MockPricing.deploy(2n * 10n ** 18n);
+
+      const compValue = encodeWithinRatioCompValue({
+        referenceAdapter: await wbtcAdapter.getAddress(),
+        relativeAdapter: await funkyAdapter.getAddress(),
+        referenceIndex: 3,
+        referenceDecimals: 8,
+        relativeIndex: 7,
+        relativeDecimals: 27,
+        minRatio: 9900,
+        maxRatio: 10100,
+      });
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            pluck(3),
+            pluck(7),
+            {
+              paramType: Encoding.None,
+              operator: Operator.WithinRatio,
+              compValue,
+            },
+          ],
+        }),
+      );
+
+      // Reference: 1 WBTC × $100,000 = $100,000
+      // Relative: 50,000 FunkyToken × $2 = $100,000
+      // Ratio = 100%
+      await expect(invoke(1n * 10n ** 8n, 50000n * 10n ** 27n)).to.not.be
+        .reverted;
+
+      // Relative: 49,500 FunkyToken × $2 = $99,000 → 99%
+      await expect(invoke(1n * 10n ** 8n, 49500n * 10n ** 27n)).to.not.be
+        .reverted;
+
+      // Relative: 49,400 FunkyToken × $2 = $98,800 → 98.8% < 99%
+      await expect(invoke(1n * 10n ** 8n, 49400n * 10n ** 27n))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.RatioBelowMin, ZeroHash);
+
+      // Relative: 50,600 FunkyToken × $2 = $101,200 → 101.2% > 101%
+      await expect(invoke(1n * 10n ** 8n, 50600n * 10n ** 27n))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.RatioAboveMax, ZeroHash);
+    });
   });
 
   describe("Parameter Extraction", () => {
