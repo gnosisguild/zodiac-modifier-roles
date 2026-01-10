@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { AbiCoder, Interface, randomBytes, ZeroHash } from "ethers";
+import { AbiCoder, hexlify, Interface, randomBytes, ZeroHash } from "ethers";
 
 import { setupFallbacker } from "../setup";
 import {
@@ -418,38 +418,44 @@ describe("Operator - And", () => {
       const { roles, member, fallbackerAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
-      const allowanceKey = randomBytes(32);
-
+      const allowanceKey = hexlify(randomBytes(32));
       // Set up allowance of 100
       await roles.setAllowance(allowanceKey, 100, 0, 0, 0, 0);
 
-      // Structure: Matches(AbiEncoded)
-      //    -> Child 0: And -> [WithinAllowance(Key)]
-      //    -> Child 1: And -> [WithinAllowance(Key)]
-      // This verifies that AND propagates consumption for each parameter.
+      // Top-level AND combining two structural checks on the same payload
+      // Child 1: Matches(arg0) -> WithinAllowance
+      // Child 2: Matches(arg1) -> WithinAllowance
       await roles.allowFunction(
         roleKey,
         fallbackerAddress,
         fn.selector,
         flattenCondition({
-          paramType: Encoding.AbiEncoded,
-          operator: Operator.Matches,
+          paramType: Encoding.None, // Top-level AND must be None
+          operator: Operator.And,
           children: [
             {
-              paramType: Encoding.None,
-              operator: Operator.And,
+              paramType: Encoding.AbiEncoded,
+              operator: Operator.Matches,
               children: [
                 {
                   paramType: Encoding.Static,
                   operator: Operator.WithinAllowance,
                   compValue: allowanceKey,
                 },
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.Pass,
+                },
               ],
             },
             {
-              paramType: Encoding.None,
-              operator: Operator.And,
+              paramType: Encoding.AbiEncoded,
+              operator: Operator.Matches,
               children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.Pass,
+                },
                 {
                   paramType: Encoding.Static,
                   operator: Operator.WithinAllowance,
@@ -463,8 +469,8 @@ describe("Operator - And", () => {
       );
 
       // Execute transaction with [30, 20].
-      // Child 0 (And) consumes 30.
-      // Child 1 (And) consumes 20.
+      // Child 1 (Matches) consumes 30.
+      // Child 2 (Matches) consumes 20.
       // Total consumption: 50.
       await expect(
         roles
