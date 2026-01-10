@@ -11,7 +11,7 @@ import {
   ExecutionOptions,
   Operator,
   Encoding,
-  PermissionCheckerStatus,
+  ConditionViolationStatus,
   flattenCondition,
 } from "../utils";
 
@@ -116,7 +116,7 @@ describe("AbiEncoded Match Leading Bytes", () => {
           .execTransactionFromModule(targetAddress, 0, badLeadingBytes, 0),
       )
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.LeadingBytesNotAMatch, ZeroHash);
+        .withArgs(ConditionViolationStatus.LeadingBytesNotAMatch, ZeroHash);
 
       await expect(
         roles
@@ -124,7 +124,7 @@ describe("AbiEncoded Match Leading Bytes", () => {
           .execTransactionFromModule(targetAddress, 0, badParam, 0),
       )
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.ParameterNotAllowed, ZeroHash);
+        .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
     });
 
     it("matches with multiple children", async () => {
@@ -227,7 +227,7 @@ describe("AbiEncoded Match Leading Bytes", () => {
           .execTransactionFromModule(targetAddress, 0, badLeadingBytes, 0),
       )
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.LeadingBytesNotAMatch, ZeroHash);
+        .withArgs(ConditionViolationStatus.LeadingBytesNotAMatch, ZeroHash);
 
       await expect(
         roles
@@ -235,7 +235,7 @@ describe("AbiEncoded Match Leading Bytes", () => {
           .execTransactionFromModule(targetAddress, 0, badParam, 0),
       )
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.ParameterNotAllowed, ZeroHash);
+        .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
     });
 
     it("matches with multiple children", async () => {
@@ -366,7 +366,7 @@ describe("AbiEncoded Match Leading Bytes", () => {
           ),
       )
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.LeadingBytesNotAMatch, ZeroHash);
+        .withArgs(ConditionViolationStatus.LeadingBytesNotAMatch, ZeroHash);
 
       await expect(
         roles
@@ -374,7 +374,7 @@ describe("AbiEncoded Match Leading Bytes", () => {
           .execTransactionFromModule(targetAddress, 0, badParamCalldata, 0),
       )
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.ParameterNotAllowed, ZeroHash);
+        .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
     });
 
     it("dynamic bytes interpreted as AbiEncoded, leadingBytes=32", async () => {
@@ -459,7 +459,7 @@ describe("AbiEncoded Match Leading Bytes", () => {
           ),
       )
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.LeadingBytesNotAMatch, ZeroHash);
+        .withArgs(ConditionViolationStatus.LeadingBytesNotAMatch, ZeroHash);
 
       await expect(
         roles
@@ -467,7 +467,7 @@ describe("AbiEncoded Match Leading Bytes", () => {
           .execTransactionFromModule(targetAddress, 0, badParamCalldata, 0),
       )
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.ParameterNotAllowed, ZeroHash);
+        .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
     });
   });
 });

@@ -6,7 +6,7 @@ import {
   Encoding,
   ExecutionOptions,
   Operator,
-  PermissionCheckerStatus,
+  ConditionViolationStatus,
   encodeMultisendPayload,
 } from "./utils";
 import { deployRolesMod } from "./setup";
@@ -704,7 +704,7 @@ describe("AllowanceTracking", () => {
           .execTransactionFromModule(multisendAddress, 0, multisendCalldata, 1),
       )
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.AllowanceExceeded, ALLOWANCE_KEY);
+        .withArgs(ConditionViolationStatus.AllowanceExceeded, ALLOWANCE_KEY);
 
       // Balance unchanged
       const { balance } = await roles.accruedAllowance(ALLOWANCE_KEY);

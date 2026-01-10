@@ -10,7 +10,7 @@ import {
   Encoding,
   Operator,
   ExecutionOptions,
-  PermissionCheckerStatus,
+  ConditionViolationStatus,
   flattenCondition,
 } from "../utils";
 import { deployRolesMod } from "../setup";
@@ -129,7 +129,7 @@ describe("Operator - CallWithinAllowance", async () => {
 
       await expect(invoke())
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(PermissionCheckerStatus.CallAllowanceExceeded, allowanceKey);
+        .withArgs(ConditionViolationStatus.CallAllowanceExceeded, allowanceKey);
     });
     it("success - multiple checks from existing balance", async () => {
       const { roles, allowanceKey, setAllowance, invoke } =
@@ -155,7 +155,7 @@ describe("Operator - CallWithinAllowance", async () => {
 
       await expect(invoke())
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(PermissionCheckerStatus.CallAllowanceExceeded, allowanceKey);
+        .withArgs(ConditionViolationStatus.CallAllowanceExceeded, allowanceKey);
     });
     it("success - from balance 0 but enough refill pending", async () => {
       const { roles, allowanceKey, setAllowance, invoke } =
@@ -173,7 +173,7 @@ describe("Operator - CallWithinAllowance", async () => {
       await expect(invoke()).to.not.be.reverted;
       await expect(invoke())
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(PermissionCheckerStatus.CallAllowanceExceeded, allowanceKey);
+        .withArgs(ConditionViolationStatus.CallAllowanceExceeded, allowanceKey);
     });
     it("fail - insufficient balance and not enough elapsed for next refill", async () => {
       const { roles, allowanceKey, setAllowance, invoke } =
@@ -190,7 +190,7 @@ describe("Operator - CallWithinAllowance", async () => {
 
       await expect(invoke())
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(PermissionCheckerStatus.CallAllowanceExceeded, allowanceKey);
+        .withArgs(ConditionViolationStatus.CallAllowanceExceeded, allowanceKey);
     });
   });
 
@@ -291,16 +291,16 @@ describe("Operator - CallWithinAllowance", async () => {
 
       await expect(invoke(valueOther))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.OrViolation, ZeroHash);
+        .withArgs(ConditionViolationStatus.OrViolation, ZeroHash);
 
       await expect(invoke(value1))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.OrViolation, ZeroHash);
+        .withArgs(ConditionViolationStatus.OrViolation, ZeroHash);
 
       await expect(invoke(value2)).not.to.be.reverted;
       await expect(invoke(value2))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.OrViolation, ZeroHash);
+        .withArgs(ConditionViolationStatus.OrViolation, ZeroHash);
     });
   });
 
@@ -384,7 +384,7 @@ describe("Operator - CallWithinAllowance", async () => {
       // Wrong param value - should fail
       await expect(invoke(999))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.ParameterNotAllowed, ZeroHash);
+        .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
 
       // Correct param - should succeed (3 times)
       await expect(invoke(allowedValue)).to.not.be.reverted;
@@ -399,7 +399,7 @@ describe("Operator - CallWithinAllowance", async () => {
       // Now should fail due to exhausted allowance
       await expect(invoke(allowedValue))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.CallAllowanceExceeded, allowanceKey);
+        .withArgs(ConditionViolationStatus.CallAllowanceExceeded, allowanceKey);
     });
 
     it("AND(CallWithinAllowance, OR(ParamA, ParamB))", async () => {
@@ -496,7 +496,7 @@ describe("Operator - CallWithinAllowance", async () => {
       // Wrong param value (not A or B) - should fail
       await expect(invoke(999))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.OrViolation, ZeroHash);
+        .withArgs(ConditionViolationStatus.OrViolation, ZeroHash);
 
       // Allowed value A - should succeed
       await expect(invoke(allowedValueA)).to.not.be.reverted;
@@ -517,10 +517,10 @@ describe("Operator - CallWithinAllowance", async () => {
       // Both values should now fail due to exhausted allowance
       await expect(invoke(allowedValueA))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.CallAllowanceExceeded, allowanceKey);
+        .withArgs(ConditionViolationStatus.CallAllowanceExceeded, allowanceKey);
       await expect(invoke(allowedValueB))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.CallAllowanceExceeded, allowanceKey);
+        .withArgs(ConditionViolationStatus.CallAllowanceExceeded, allowanceKey);
     });
   });
 
@@ -593,7 +593,7 @@ describe("Operator - CallWithinAllowance", async () => {
           ),
       )
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.CallAllowanceExceeded, allowanceKey);
+        .withArgs(ConditionViolationStatus.CallAllowanceExceeded, allowanceKey);
     });
   });
 });

@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { AbiCoder, Interface, ZeroHash } from "ethers";
+import { AbiCoder, Interface, randomBytes, ZeroHash } from "ethers";
 
 import { setupFallbacker } from "../setup";
 import {
@@ -412,19 +412,21 @@ describe("Operator - And", () => {
   });
 
   describe("consumption propagation", () => {
-    it("accumulates consumptions across children", async () => {
+    it("accumulates consumptions from multiple children in AND operator", async () => {
       const iface = new Interface(["function fn(uint256,uint256)"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, fallbackerAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
-      const allowanceKey =
-        "0x000000000000000000000000000000000000000000000000000000000000abcd";
+      const allowanceKey = randomBytes(32);
 
       // Set up allowance of 100
       await roles.setAllowance(allowanceKey, 100, 0, 0, 0, 0);
 
-      // And with two WithinAllowance children consuming from same allowance
+      // Structure: Matches(AbiEncoded)
+      //    -> Child 0: And -> [WithinAllowance(Key)]
+      //    -> Child 1: And -> [WithinAllowance(Key)]
+      // This verifies that AND propagates consumption for each parameter.
       await roles.allowFunction(
         roleKey,
         fallbackerAddress,
@@ -442,6 +444,12 @@ describe("Operator - And", () => {
                   operator: Operator.WithinAllowance,
                   compValue: allowanceKey,
                 },
+              ],
+            },
+            {
+              paramType: Encoding.None,
+              operator: Operator.And,
+              children: [
                 {
                   paramType: Encoding.Static,
                   operator: Operator.WithinAllowance,
@@ -454,7 +462,10 @@ describe("Operator - And", () => {
         ExecutionOptions.Both,
       );
 
-      // First call: 30 + 20 = 50 consumed, 50 remaining
+      // Execute transaction with [30, 20].
+      // Child 0 (And) consumes 30.
+      // Child 1 (And) consumes 20.
+      // Total consumption: 50.
       await expect(
         roles
           .connect(member)
@@ -466,11 +477,13 @@ describe("Operator - And", () => {
           ),
       ).to.not.be.reverted;
 
-      // Verify consumption was accumulated across both children
+      // Verify balance: 100 - 50 = 50
       const { balance } = await roles.accruedAllowance(allowanceKey);
       expect(balance).to.equal(50);
 
-      // Second call: 30 + 30 = 60, but only 50 remaining
+      // Try to consume 30 + 30 = 60.
+      // Available: 50.
+      // Should fail.
       await expect(
         roles
           .connect(member)

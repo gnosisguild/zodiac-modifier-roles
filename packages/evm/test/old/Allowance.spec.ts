@@ -6,7 +6,7 @@ import {
   Encoding,
   ExecutionOptions,
   Operator,
-  PermissionCheckerStatus,
+  ConditionViolationStatus,
   encodeMultisendPayload,
   flattenCondition,
 } from "../utils";
@@ -52,7 +52,7 @@ describe("Allowance", async () => {
 
     await expect(invoke(100, 100))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
+      .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
   });
   it("raises ConsumeAllowance event", async () => {
     const { roles, allowFunction, invoke, owner } = await loadFixture(
@@ -165,7 +165,7 @@ describe("Allowance", async () => {
     expect((await roles.allowances(allowanceKey)).balance).to.equal(100);
     await expect(invoke(100, 1))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
+      .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
 
     expect((await roles.allowances(allowanceKey)).balance).to.equal(100);
   });
@@ -280,7 +280,7 @@ describe("Allowance", async () => {
 
     await expect(invoke([{ a: 100, b: "0xdeadbeef" }]))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.NoArrayElementPasses, ZeroHash);
+      .withArgs(ConditionViolationStatus.NoArrayElementPasses, ZeroHash);
 
     expect((await roles.allowances(allowanceKey)).balance).to.equal(1000);
 
@@ -343,7 +343,7 @@ describe("Allowance", async () => {
 
     await expect(invoke([{ a: 100, b: "0xdeadbeef" }]))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.NotEveryArrayElementPasses, ZeroHash);
+      .withArgs(ConditionViolationStatus.NotEveryArrayElementPasses, ZeroHash);
 
     expect((await roles.allowances(allowanceKey)).balance).to.equal(1000);
 
@@ -1032,7 +1032,7 @@ describe("Allowance", async () => {
           ),
       )
         .to.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
 
       expect((await roles.allowances(allowanceKey)).balance).to.equal(balance);
     });

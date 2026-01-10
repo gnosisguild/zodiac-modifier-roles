@@ -8,7 +8,7 @@ import {
   Encoding,
   ExecutionOptions,
   Operator,
-  PermissionCheckerStatus,
+  ConditionViolationStatus,
 } from "./utils";
 import { deployRolesMod } from "./setup";
 
@@ -178,7 +178,7 @@ describe("Authorization", () => {
             ),
         )
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
-          .withArgs(PermissionCheckerStatus.ParameterNotAllowed, ZeroHash);
+          .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
 
         // twoParamsStatic with first param 100 - should pass
         await expect(
@@ -209,7 +209,7 @@ describe("Authorization", () => {
             ),
         )
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
-          .withArgs(PermissionCheckerStatus.ParameterNotAllowed, ZeroHash);
+          .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
       });
     });
 
@@ -355,7 +355,7 @@ describe("Authorization", () => {
             ),
         )
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
-          .withArgs(PermissionCheckerStatus.ParameterNotAllowed, ZeroHash);
+          .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
       });
     });
 

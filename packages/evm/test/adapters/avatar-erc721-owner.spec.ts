@@ -7,7 +7,7 @@ import {
   Encoding,
   ExecutionOptions,
   Operator,
-  PermissionCheckerStatus,
+  ConditionViolationStatus,
 } from "../utils";
 import { deployRolesMod } from "../setup";
 
@@ -120,6 +120,6 @@ describe("AvatarIsOwnerOfERC721", () => {
 
     await expect(invoke(tokenId, someParam))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.CustomConditionViolation, ZeroHash);
+      .withArgs(ConditionViolationStatus.CustomConditionViolation, ZeroHash);
   });
 });
