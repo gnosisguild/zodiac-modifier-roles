@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "./Adapter.sol";
 import "./BitmaskChecker.sol";
+import "./CustomConditionChecker.sol";
 import "./WithinAllowanceChecker.sol";
 import "./WithinRatioChecker.sol";
 
@@ -440,30 +440,14 @@ library ConditionLogic {
         Consumption[] memory consumptions,
         Context memory context
     ) private view returns (Result memory) {
-        // first 20 bytes: adapter address
-        address adapter = address(bytes20(condition.compValue));
-
-        bytes memory extra;
-        if (condition.compValue.length > 20) {
-            bytes memory compValue = condition.compValue;
-            assembly {
-                let len := sub(mload(compValue), 20)
-                extra := mload(0x40)
-                mstore(0x40, add(extra, add(0x40, len)))
-                mstore(extra, len)
-                mcopy(add(extra, 0x20), add(compValue, 0x34), len)
-            }
-        }
-
-        (Status status, bytes32 info) = Adapter.check(
-            adapter,
+        (Status status, bytes32 info) = CustomConditionChecker.check(
+            condition.compValue,
             context.to,
             context.value,
             data,
             context.operation,
             payload.location,
             payload.size,
-            extra,
             context.pluckedValues
         );
 
