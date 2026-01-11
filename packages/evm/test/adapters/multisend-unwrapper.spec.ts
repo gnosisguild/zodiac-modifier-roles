@@ -3,7 +3,7 @@ import { expect } from "chai";
 import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import { BigNumberish, getAddress, solidityPacked } from "ethers";
+import { BigNumberish, getAddress, Interface, solidityPacked } from "ethers";
 import { encodeMultisendPayload } from "../utils";
 
 const AddressOne = "0x0000000000000000000000000000000000000001";
@@ -13,13 +13,15 @@ enum Operation {
   DelegateCall = 1,
 }
 
+const iface = new Interface([
+  "function simple(uint256)",
+  "function staticDynamicDynamic32(address, bytes, uint32[])",
+]);
+
 describe("MultiSendUnwrapper", () => {
   async function setup() {
     const MultiSend = await hre.ethers.getContractFactory("MultiSend");
     const multisend = await MultiSend.deploy();
-
-    const TestEncoder = await hre.ethers.getContractFactory("TestEncoder");
-    const testEncoder = await TestEncoder.deploy();
 
     const MultiSendUnwrapper =
       await hre.ethers.getContractFactory("MultiSendUnwrapper");
@@ -27,16 +29,14 @@ describe("MultiSendUnwrapper", () => {
 
     return {
       multisend,
-      testEncoder,
       unwrapper,
     };
   }
 
   it("reverts if wrong selector used", async () => {
-    const { unwrapper, multisend, testEncoder } = await loadFixture(setup);
+    const { unwrapper, multisend } = await loadFixture(setup);
 
-    const { data: simpleCalldata } =
-      await testEncoder.simple.populateTransaction(1);
+    const simpleCalldata = iface.encodeFunctionData("simple", [1]);
 
     const { data } = await multisend.multiSend.populateTransaction(
       encodeMultisendPayload([
@@ -44,7 +44,7 @@ describe("MultiSendUnwrapper", () => {
           to: AddressOne,
           value: 0,
           operation: Operation.Call,
-          data: simpleCalldata as string,
+          data: simpleCalldata,
         },
       ]),
     );
@@ -73,10 +73,9 @@ describe("MultiSendUnwrapper", () => {
   });
 
   it("reverts if header offset incorrect", async () => {
-    const { unwrapper, multisend, testEncoder } = await loadFixture(setup);
+    const { unwrapper, multisend } = await loadFixture(setup);
 
-    const { data: simpleCalldata } =
-      await testEncoder.simple.populateTransaction(1);
+    const simpleCalldata = iface.encodeFunctionData("simple", [1]);
 
     const { data } = await multisend.multiSend.populateTransaction(
       encodeMultisendPayload([
@@ -84,7 +83,7 @@ describe("MultiSendUnwrapper", () => {
           to: AddressOne,
           value: 0,
           operation: Operation.DelegateCall,
-          data: simpleCalldata as string,
+          data: simpleCalldata,
         },
       ]),
     );
@@ -115,10 +114,9 @@ describe("MultiSendUnwrapper", () => {
   });
 
   it("reverts if calldata length incorrect", async () => {
-    const { unwrapper, multisend, testEncoder } = await loadFixture(setup);
+    const { unwrapper, multisend } = await loadFixture(setup);
 
-    const { data: simpleCalldata } =
-      await testEncoder.simple.populateTransaction(1);
+    const simpleCalldata = iface.encodeFunctionData("simple", [1]);
 
     const { data } = await multisend.multiSend.populateTransaction(
       encodeMultisendPayload([
@@ -126,7 +124,7 @@ describe("MultiSendUnwrapper", () => {
           to: AddressOne,
           value: 0,
           operation: Operation.DelegateCall,
-          data: simpleCalldata as string,
+          data: simpleCalldata,
         },
       ]),
     );
@@ -149,10 +147,9 @@ describe("MultiSendUnwrapper", () => {
   });
 
   it("reverts if value not zero", async () => {
-    const { unwrapper, multisend, testEncoder } = await loadFixture(setup);
+    const { unwrapper, multisend } = await loadFixture(setup);
 
-    const { data: txData } = await testEncoder.simple.populateTransaction(1);
-    assert(txData);
+    const txData = iface.encodeFunctionData("simple", [1]);
 
     const { data } = await multisend.multiSend.populateTransaction(
       encodeMultisendPayload([
@@ -173,10 +170,9 @@ describe("MultiSendUnwrapper", () => {
   });
 
   it("reverts if operation not delegate call", async () => {
-    const { unwrapper, multisend, testEncoder } = await loadFixture(setup);
+    const { unwrapper, multisend } = await loadFixture(setup);
 
-    const { data: txData } = await testEncoder.simple.populateTransaction(1);
-    assert(txData);
+    const txData = iface.encodeFunctionData("simple", [1]);
 
     const { data } = await multisend.multiSend.populateTransaction(
       encodeMultisendPayload([
@@ -207,10 +203,9 @@ describe("MultiSendUnwrapper", () => {
   });
 
   it("reverts if single transaction length wrong", async () => {
-    const { unwrapper, multisend, testEncoder } = await loadFixture(setup);
+    const { unwrapper, multisend } = await loadFixture(setup);
 
-    const { data: simpleCalldata } =
-      await testEncoder.simple.populateTransaction(1);
+    const simpleCalldata = iface.encodeFunctionData("simple", [1]);
 
     const { data } = await multisend.multiSend.populateTransaction(
       encodeMultisendWrongLength([
@@ -218,7 +213,7 @@ describe("MultiSendUnwrapper", () => {
           to: AddressOne,
           value: 0,
           operation: Operation.DelegateCall,
-          data: simpleCalldata as string,
+          data: simpleCalldata,
         },
       ]),
     );
@@ -229,10 +224,9 @@ describe("MultiSendUnwrapper", () => {
   });
 
   it("unwraps a single transaction", async () => {
-    const { unwrapper, multisend, testEncoder } = await loadFixture(setup);
+    const { unwrapper, multisend } = await loadFixture(setup);
 
-    const { data: txData } = await testEncoder.simple.populateTransaction(1);
-    assert(txData);
+    const txData = iface.encodeFunctionData("simple", [1]);
 
     const { data } = await multisend.multiSend.populateTransaction(
       encodeMultisendPayload([
@@ -264,16 +258,14 @@ describe("MultiSendUnwrapper", () => {
   });
 
   it("unwraps multiple transactions", async () => {
-    const { unwrapper, multisend, testEncoder } = await loadFixture(setup);
+    const { unwrapper, multisend } = await loadFixture(setup);
 
-    const { data: txData1 } = await testEncoder.simple.populateTransaction(1);
-    const { data: txData2 } = await testEncoder.staticDynamicDynamic32(
+    const txData1 = iface.encodeFunctionData("simple", [1]);
+    const txData2 = iface.encodeFunctionData("staticDynamicDynamic32", [
       AddressOne,
       "0xaabbcc",
       [1, 2, 3],
-    );
-    assert(txData1);
-    assert(txData2);
+    ]);
 
     const { data } = await multisend.multiSend.populateTransaction(
       encodeMultisendPayload([
@@ -316,10 +308,9 @@ describe("MultiSendUnwrapper", () => {
   });
 
   it("reverts if inner transaction operation incorrect", async () => {
-    const { unwrapper, multisend, testEncoder } = await loadFixture(setup);
+    const { unwrapper, multisend } = await loadFixture(setup);
 
-    const { data: txData } = await testEncoder.simple.populateTransaction(1);
-    assert(txData);
+    const txData = iface.encodeFunctionData("simple", [1]);
 
     // operation = 2 is invalid
     let { data } = await multisend.multiSend.populateTransaction(

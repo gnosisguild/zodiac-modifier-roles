@@ -10,7 +10,7 @@ import {
   ZeroHash,
 } from "ethers";
 
-import { setupFallbacker, deployRolesMod } from "../setup";
+import { setupFallbacker } from "../setup";
 import {
   Encoding,
   flattenCondition,
@@ -1310,58 +1310,13 @@ describe("Operator - WithinRatio", () => {
   });
 
   describe("Parameter Extraction", () => {
-    async function setupWithEncoder() {
-      const [owner, member] = await hre.ethers.getSigners();
-
-      const Avatar = await hre.ethers.getContractFactory("TestAvatar");
-      const avatar = await Avatar.deploy();
-      const avatarAddress = await avatar.getAddress();
-
-      const TestContract = await hre.ethers.getContractFactory("TestEncoder");
-      const testContract = await TestContract.deploy();
-      const testContractAddress = await testContract.getAddress();
-
-      const roles = await deployRolesMod(
-        hre,
-        owner.address,
-        avatarAddress,
-        avatarAddress,
-      );
-
-      await roles.connect(owner).enableModule(member.address);
-
-      const roleKey =
-        "0x0000000000000000000000000000000000000000000000000000000000000001";
-      await roles.connect(owner).grantRole(member.address, roleKey, 0, 0, 0);
-      await roles.connect(owner).setDefaultRole(member.address, roleKey);
-      await roles.connect(owner).scopeTarget(roleKey, testContractAddress);
-
-      const allowFunction = (
-        selector: string,
-        conditions: ConditionFlatStruct[],
-        options?: number,
-      ) =>
-        roles
-          .connect(owner)
-          .allowFunction(
-            roleKey,
-            testContractAddress,
-            selector,
-            conditions,
-            options || 0,
-          );
-
-      const execTransactionFromModule = async (data: string) =>
-        roles
-          .connect(member)
-          .execTransactionFromModule(testContractAddress, 0, data, 0);
-
-      return { roles, testContract, allowFunction, execTransactionFromModule };
-    }
-
     it("extracts values from AbiEncoded params", async () => {
-      const { roles, testContract, allowFunction, execTransactionFromModule } =
-        await loadFixture(setupWithEncoder);
+      const iface = new Interface([
+        "function mixedParams(uint256, bytes, uint256)",
+      ]);
+      const fn = iface.getFunction("mixedParams")!;
+      const { roles, member, fallbackerAddress, roleKey } =
+        await loadFixture(setupFallbacker);
 
       const compValue = encodeWithinRatioCompValue({
         referenceIndex: 0,
@@ -1372,8 +1327,10 @@ describe("Operator - WithinRatio", () => {
         maxRatio: 12000, // 120%
       });
 
-      await allowFunction(
-        testContract.interface.getFunction("mixedParams").selector,
+      await roles.allowFunction(
+        roleKey,
+        fallbackerAddress,
+        fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -1388,41 +1345,33 @@ describe("Operator - WithinRatio", () => {
             },
           ],
         }),
-        0,
+        ExecutionOptions.None,
       );
 
+      const invoke = (a: number, b: number) =>
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            fallbackerAddress,
+            0,
+            iface.encodeFunctionData(fn, [a, "0xaabbcc", b]),
+            0,
+          );
+
       // 1200 / 1000 = 120% → pass
-      await expect(
-        execTransactionFromModule(
-          (
-            await testContract.mixedParams.populateTransaction(
-              1000,
-              "0xaabbcc",
-              1200,
-            )
-          ).data!,
-        ),
-      ).to.not.be.reverted;
+      await expect(invoke(1000, 1200)).to.not.be.reverted;
 
       // 1201 / 1000 = 120.1% > 120% → fail
-      await expect(
-        execTransactionFromModule(
-          (
-            await testContract.mixedParams.populateTransaction(
-              1000,
-              "0xaabbcc",
-              1201,
-            )
-          ).data!,
-        ),
-      )
+      await expect(invoke(1000, 1201))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(ConditionViolationStatus.RatioAboveMax, ZeroHash);
     });
 
     it("extracts values from nested AbiEncoded", async () => {
-      const { roles, testContract, allowFunction, execTransactionFromModule } =
-        await loadFixture(setupWithEncoder);
+      const iface = new Interface(["function dynamic(bytes)"]);
+      const fn = iface.getFunction("dynamic")!;
+      const { roles, member, fallbackerAddress, roleKey } =
+        await loadFixture(setupFallbacker);
 
       const compValue = encodeWithinRatioCompValue({
         referenceIndex: 0,
@@ -1433,8 +1382,10 @@ describe("Operator - WithinRatio", () => {
         maxRatio: 8000, // 80%
       });
 
-      await allowFunction(
-        testContract.interface.getFunction("dynamicStatic").selector,
+      await roles.allowFunction(
+        roleKey,
+        fallbackerAddress,
+        fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -1456,40 +1407,45 @@ describe("Operator - WithinRatio", () => {
             },
           ],
         }),
-        0,
+        ExecutionOptions.None,
       );
 
       const abiCoder = AbiCoder.defaultAbiCoder();
+
+      const invoke = (encoded: string) =>
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            fallbackerAddress,
+            0,
+            iface.encodeFunctionData(fn, [encoded]),
+            0,
+          );
 
       // 800 / 1000 = 80% → pass
       const encoded = abiCoder.encode(
         ["uint256", "uint256", "uint256"],
         [1000, 500, 800],
       );
-      await expect(
-        execTransactionFromModule(
-          (await testContract.dynamicStatic.populateTransaction(encoded)).data!,
-        ),
-      ).to.not.be.reverted;
+      await expect(invoke(encoded)).to.not.be.reverted;
 
       // 801 / 1000 = 80.1% > 80% → fail
       const encodedFail = abiCoder.encode(
         ["uint256", "uint256", "uint256"],
         [1000, 500, 801],
       );
-      await expect(
-        execTransactionFromModule(
-          (await testContract.dynamicStatic.populateTransaction(encodedFail))
-            .data!,
-        ),
-      )
+      await expect(invoke(encodedFail))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(ConditionViolationStatus.RatioAboveMax, ZeroHash);
     });
 
     it("extracts values from Tuple", async () => {
-      const { roles, testContract, allowFunction, execTransactionFromModule } =
-        await loadFixture(setupWithEncoder);
+      const iface = new Interface([
+        "function mixedTuple((uint256 amount, uint256 second, uint256 limit, uint256 fourth))",
+      ]);
+      const fn = iface.getFunction("mixedTuple")!;
+      const { roles, member, fallbackerAddress, roleKey } =
+        await loadFixture(setupFallbacker);
 
       const compValue = encodeWithinRatioCompValue({
         referenceIndex: 0,
@@ -1500,8 +1456,10 @@ describe("Operator - WithinRatio", () => {
         maxRatio: 15000, // 150%
       });
 
-      await allowFunction(
-        testContract.interface.getFunction("mixedTuple").selector,
+      await roles.allowFunction(
+        roleKey,
+        fallbackerAddress,
+        fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -1523,43 +1481,38 @@ describe("Operator - WithinRatio", () => {
             },
           ],
         }),
-        0,
+        ExecutionOptions.None,
       );
 
+      const invoke = (
+        amount: number,
+        second: number,
+        limit: number,
+        fourth: number,
+      ) =>
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            fallbackerAddress,
+            0,
+            iface.encodeFunctionData(fn, [[amount, second, limit, fourth]]),
+            0,
+          );
+
       // 1500 / 1000 = 150% → pass
-      await expect(
-        execTransactionFromModule(
-          (
-            await testContract.mixedTuple.populateTransaction({
-              amount: 500,
-              second: 1000,
-              limit: 800,
-              fourth: 1500,
-            })
-          ).data!,
-        ),
-      ).to.not.be.reverted;
+      await expect(invoke(500, 1000, 800, 1500)).to.not.be.reverted;
 
       // 1501 / 1000 = 150.1% > 150% → fail
-      await expect(
-        execTransactionFromModule(
-          (
-            await testContract.mixedTuple.populateTransaction({
-              amount: 500,
-              second: 1000,
-              limit: 800,
-              fourth: 1501,
-            })
-          ).data!,
-        ),
-      )
+      await expect(invoke(500, 1000, 800, 1501))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(ConditionViolationStatus.RatioAboveMax, ZeroHash);
     });
 
     it("extracts values from Array", async () => {
-      const { roles, testContract, allowFunction, execTransactionFromModule } =
-        await loadFixture(setupWithEncoder);
+      const iface = new Interface(["function uint256ArrayStatic(uint256[])"]);
+      const fn = iface.getFunction("uint256ArrayStatic")!;
+      const { roles, member, fallbackerAddress, roleKey } =
+        await loadFixture(setupFallbacker);
 
       const compValue = encodeWithinRatioCompValue({
         referenceIndex: 0,
@@ -1570,8 +1523,10 @@ describe("Operator - WithinRatio", () => {
         maxRatio: 12000, // 120%
       });
 
-      await allowFunction(
-        testContract.interface.getFunction("uint256ArrayStatic").selector,
+      await roles.allowFunction(
+        roleKey,
+        fallbackerAddress,
+        fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -1592,30 +1547,24 @@ describe("Operator - WithinRatio", () => {
             },
           ],
         }),
-        0,
+        ExecutionOptions.None,
       );
 
+      const invoke = (arr: number[]) =>
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            fallbackerAddress,
+            0,
+            iface.encodeFunctionData(fn, [arr]),
+            0,
+          );
+
       // 1200 / 1000 = 120% → pass
-      await expect(
-        execTransactionFromModule(
-          (
-            await testContract.uint256ArrayStatic.populateTransaction([
-              1000, 500, 1200,
-            ])
-          ).data!,
-        ),
-      ).to.not.be.reverted;
+      await expect(invoke([1000, 500, 1200])).to.not.be.reverted;
 
       // 1201 / 1000 = 120.1% > 120% → fail
-      await expect(
-        execTransactionFromModule(
-          (
-            await testContract.uint256ArrayStatic.populateTransaction([
-              1000, 500, 1201,
-            ])
-          ).data!,
-        ),
-      )
+      await expect(invoke([1000, 500, 1201]))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(ConditionViolationStatus.RatioAboveMax, ZeroHash);
     });

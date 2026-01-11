@@ -501,14 +501,6 @@ describe("AllowanceTracking", () => {
     async function setupMultisend() {
       const base = await setup();
 
-      const TestEncoder = await hre.ethers.getContractFactory("TestEncoder");
-      const testEncoder = await TestEncoder.deploy();
-      const testEncoderAddress = await testEncoder.getAddress();
-
-      await base.roles
-        .connect(base.owner)
-        .scopeTarget(base.ROLE_KEY, testEncoderAddress);
-
       const MultiSend = await hre.ethers.getContractFactory("MultiSend");
       const multisend = await MultiSend.deploy();
       const multisendAddress = await multisend.getAddress();
@@ -528,8 +520,6 @@ describe("AllowanceTracking", () => {
 
       return {
         ...base,
-        testEncoder,
-        testEncoderAddress,
         multisend,
         multisendAddress,
       };
