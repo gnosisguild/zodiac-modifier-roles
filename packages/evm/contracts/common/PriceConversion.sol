@@ -6,57 +6,35 @@ import "../types/Types.sol";
 
 /**
  * @title PriceConversion
- * @notice Library for decimal normalization and exchange rate conversion.
+ * @notice Library for applying exchange rate conversion via IPricing adapters.
  *
- * @dev Converts amounts between decimal precisions. If a pricing adapter
- *      is provided, it is safely invoked via staticcall to obtain the exchange
- *      rate.
+ * @dev Converts amounts using an external pricing adapter. The adapter returns
+ *      a price with 18 decimals precision. Decimal scaling should be handled
+ *      by the caller.
  *
  * @author gnosisguild
  */
 library PriceConversion {
-    uint256 internal constant PRICE_DECIMALS = 18;
+    uint256 private constant PRICE_DECIMALS = 18;
+    uint256 private constant ONE = 10 ** PRICE_DECIMALS;
 
     /**
-     * @notice Converts amount from source to target decimals, applying price if adapter provided.
-     * @param amount Raw amount in source decimals
-     * @param sourceDecimals Decimals of the input amount
-     * @param targetDecimals Decimals of the output amount
-     * @param adapter Price adapter address (address(0) for no price conversion)
+     * @notice Applies exchange rate conversion to an amount.
+     * @param amount The amount to convert
+     * @param adapter Price adapter address
      * @return status Ok or error status from adapter
-     * @return result Converted amount in target decimals
+     * @return result Amount multiplied by price and divided by 10^18
      */
     function convert(
         uint256 amount,
-        uint256 sourceDecimals,
-        uint256 targetDecimals,
         address adapter
-    ) internal view returns (Status, uint256 result) {
-        bool scaleUp = targetDecimals >= sourceDecimals;
-        uint256 delta = scaleUp
-            ? targetDecimals - sourceDecimals
-            : sourceDecimals - targetDecimals;
-
-        // No price conversion needed
-        if (adapter == address(0)) {
-            result = scaleUp ? amount * (10 ** delta) : amount / (10 ** delta);
-            return (Status.Ok, result);
-        }
-
-        // Apply price conversion
+    ) internal view returns (Status, uint256) {
         (Status status, uint256 price) = _getPrice(adapter);
         if (status != Status.Ok) {
             return (status, 0);
         }
 
-        // Multiply first, divide after to preserve precision
-        if (scaleUp) {
-            result = (amount * (10 ** delta) * price) / (10 ** PRICE_DECIMALS);
-        } else {
-            result = (amount * price) / (10 ** (PRICE_DECIMALS + delta));
-        }
-
-        return (Status.Ok, result);
+        return (Status.Ok, (amount * price) / ONE);
     }
 
     /**
@@ -72,7 +50,12 @@ library PriceConversion {
      *  | Returns zero price    | (true, <32 bytes>)    | price == 0                    | PricingAdapterZeroPrice         |
      *
      */
+
     function _getPrice(address adapter) private view returns (Status, uint256) {
+        if (adapter == address(0)) {
+            return (Status.Ok, ONE);
+        }
+
         uint256 size;
         assembly {
             size := extcodesize(adapter)

@@ -48,9 +48,9 @@ library WithinAllowanceChecker {
     /**
      * @dev Normalizes a value to the allowance's base denomination.
      *
-     *      Calculates the final amount via decimal scaling and optionally
-     *      an exchange rate (via price adapter). Scaling is possible without
-     *      an adapter by providing both base and param decimals.
+     *      Converts via decimal scaling and optionally an exchange rate
+     *      (via price adapter). Scaling is possible without an adapter by
+     *      providing both base and param decimals.
      *
      * @param value The raw amount to be converted.
      * @param compValue Configuration bytes containing decimals and adapter.
@@ -71,12 +71,22 @@ library WithinAllowanceChecker {
          * └─────────────────────────┴──────────┴──────────┴─────────────────────┘
          *                           └── optional ─────────┴───── optional ──────┘
          *
-         * baseDecimals: decimals of the allowance unit (how it accrues)
+         * baseDecimals: decimals of the allowance unit  (how it's accounted)
          * paramDecimals: decimals of the parameter value (from calldata)
          */
 
         if (compValue.length == 32) {
             return (Status.Ok, value);
+        }
+
+        uint256 baseDecimals = uint8(compValue[32]);
+        uint256 paramDecimals = uint8(compValue[33]);
+
+        // Scale decimals
+        if (baseDecimals >= paramDecimals) {
+            value = value * (10 ** (baseDecimals - paramDecimals));
+        } else {
+            value = value / (10 ** (paramDecimals - baseDecimals));
         }
 
         address adapter;
@@ -86,21 +96,7 @@ library WithinAllowanceChecker {
             }
         }
 
-        /*
-         * sourceDecimals -> paramDecimals
-         * targetDecimals -> baseDecimals
-         */
-        (Status status, uint256 converted) = PriceConversion.convert(
-            value,
-            uint8(compValue[33]),
-            uint8(compValue[32]),
-            adapter
-        );
-        if (status != Status.Ok) {
-            return (status, 0);
-        }
-
-        return (Status.Ok, converted);
+        return PriceConversion.convert(value, adapter);
     }
 
     /**

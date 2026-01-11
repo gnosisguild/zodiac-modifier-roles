@@ -89,29 +89,38 @@ library WithinRatioChecker {
         view
         returns (Status status, uint256 referenceAmount, uint256 relativeAmount)
     {
-        uint8 targetDecimals = config.referenceDecimals >
-            config.relativeDecimals
+        uint256 precision = config.referenceDecimals > config.relativeDecimals
             ? config.referenceDecimals
             : config.relativeDecimals;
 
-        (status, referenceAmount) = PriceConversion.convert(
-            uint256(pluckedValues[config.referenceIndex]),
-            config.referenceDecimals,
-            targetDecimals,
-            config.referenceAdapter
-        );
-        if (status != Status.Ok) {
-            return (status, 0, 0);
+        {
+            // scale up or down to common precision
+            referenceAmount =
+                uint256(pluckedValues[config.referenceIndex]) *
+                (10 ** (precision - config.referenceDecimals));
+            // apply optional exchange rate
+            (status, referenceAmount) = PriceConversion.convert(
+                referenceAmount,
+                config.referenceAdapter
+            );
+            if (status != Status.Ok) {
+                return (status, 0, 0);
+            }
         }
 
-        (status, relativeAmount) = PriceConversion.convert(
-            uint256(pluckedValues[config.relativeIndex]),
-            config.relativeDecimals,
-            targetDecimals,
-            config.relativeAdapter
-        );
-        if (status != Status.Ok) {
-            return (status, 0, 0);
+        {
+            // scale up or down to common precision
+            relativeAmount =
+                uint256(pluckedValues[config.relativeIndex]) *
+                (10 ** (precision - config.relativeDecimals));
+            // apply optional exchange rate
+            (status, relativeAmount) = PriceConversion.convert(
+                relativeAmount,
+                config.relativeAdapter
+            );
+            if (status != Status.Ok) {
+                return (status, 0, 0);
+            }
         }
     }
 
