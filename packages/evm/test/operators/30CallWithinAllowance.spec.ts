@@ -247,7 +247,10 @@ describe("Operator - CallWithinAllowance", async () => {
                 {
                   paramType: Encoding.None,
                   operator: Operator.CallWithinAllowance,
-                  compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey1]),
+                  compValue: defaultAbiCoder.encode(
+                    ["bytes32"],
+                    [allowanceKey1],
+                  ),
                 },
               ],
             },
@@ -263,7 +266,10 @@ describe("Operator - CallWithinAllowance", async () => {
                 {
                   paramType: Encoding.None,
                   operator: Operator.CallWithinAllowance,
-                  compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey2]),
+                  compValue: defaultAbiCoder.encode(
+                    ["bytes32"],
+                    [allowanceKey2],
+                  ),
                 },
               ],
             },
