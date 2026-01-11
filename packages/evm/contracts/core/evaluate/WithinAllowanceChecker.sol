@@ -2,6 +2,7 @@
 pragma solidity >=0.8.17 <0.9.0;
 
 import "../../common/AllowanceLoader.sol";
+import "../../common/ConsumptionList.sol";
 import "../../common/PriceConversion.sol";
 import "../../types/Types.sol";
 
@@ -13,7 +14,10 @@ import {Consumption} from "../../types/Allowance.sol";
  *
  * @dev Checks if a value is within an allowance and consumes it. The value is
  *      normalized to the allowance's base denomination via decimal scaling
- *      and exchange rate conversion, both optional.
+ *      and/or exchange rate conversion.
+ *
+ *      The `consumptions` array is treated as immutable. If consumption occurs,
+ *      a new array is allocated and returned (Copy-on-Write).
  *
  * @author gnosisguild
  */
@@ -23,34 +27,63 @@ library WithinAllowanceChecker {
         uint256 value,
         bytes memory compValue
     ) internal view returns (Status status, Consumption[] memory) {
+        bytes32 allowanceKey = bytes32(compValue);
+
+        // 1. Convert value to base denomination
         (status, value) = _convert(value, compValue);
         if (status != Status.Ok) {
             return (status, consumptions);
         }
 
-        (Consumption memory entry, uint256 index) = _lookup(
-            consumptions,
-            bytes32(compValue)
-        );
+        // 2. Find in list
+        uint256 index;
+        for (; index < consumptions.length; ++index) {
+            if (consumptions[index].allowanceKey == allowanceKey) break;
+        }
 
-        if (entry.consumed + value > type(uint128).max) {
+        // 3. Copy existing or load from storage
+        Consumption memory consumption;
+        if (index < consumptions.length) {
+            consumption = Consumption(
+                allowanceKey,
+                consumptions[index].balance,
+                consumptions[index].consumed,
+                consumptions[index].timestamp
+            );
+        } else {
+            (uint128 balance, uint64 timestamp) = AllowanceLoader.accrue(
+                allowanceKey,
+                uint64(block.timestamp)
+            );
+            consumption = Consumption(allowanceKey, balance, 0, timestamp);
+        }
+
+        // 4. Check overflow before consuming
+        if (consumption.consumed + value > type(uint128).max) {
             return (Status.AllowanceValueOverflow, consumptions);
         }
 
-        entry.consumed += uint128(value);
-        if (entry.consumed <= entry.balance) {
-            return (Status.Ok, _put(consumptions, index, entry));
-        } else {
+        // 5. Consume
+        consumption.consumed += uint128(value);
+
+        // 6. Check balance
+        if (consumption.consumed > consumption.balance) {
             return (Status.AllowanceExceeded, consumptions);
         }
+
+        // 7. Return updated list
+        return (
+            Status.Ok,
+            ConsumptionList.copyOnWrite(consumptions, consumption, index)
+        );
     }
 
     /**
      * @dev Normalizes a value to the allowance's base denomination.
      *
-     *      Converts via decimal scaling and optionally an exchange rate
-     *      (via price adapter). Scaling is possible without an adapter by
-     *      providing both base and param decimals.
+     *      Calculates the final amount via decimal scaling and optionally
+     *      an exchange rate (via price adapter). Scaling is possible without
+     *      an adapter by providing both base and param decimals.
      *
      * @param value The raw amount to be converted.
      * @param compValue Configuration bytes containing decimals and adapter.
@@ -97,64 +130,5 @@ library WithinAllowanceChecker {
         }
 
         return PriceConversion.convert(value, adapter);
-    }
-
-    /**
-     * @dev Finds consumption in array by key, or loads from storage if not
-     *      present. Always returns a copy
-     */
-    function _lookup(
-        Consumption[] memory consumptions,
-        bytes32 allowanceKey
-    ) private view returns (Consumption memory consumption, uint256 index) {
-        uint256 length = consumptions.length;
-
-        for (; index < length; ++index) {
-            if (consumptions[index].allowanceKey == allowanceKey) break;
-        }
-
-        if (index < length) {
-            consumption = Consumption(
-                allowanceKey,
-                consumptions[index].balance,
-                consumptions[index].consumed,
-                consumptions[index].timestamp
-            );
-        } else {
-            (uint128 balance, uint64 timestamp) = AllowanceLoader.accrue(
-                allowanceKey,
-                uint64(block.timestamp)
-            );
-            consumption = Consumption(allowanceKey, balance, 0, timestamp);
-        }
-    }
-
-    /// @dev Shallow copies array, and writes entry at index.
-    function _put(
-        Consumption[] memory consumptions,
-        uint256 index,
-        Consumption memory entry
-    ) private pure returns (Consumption[] memory result) {
-        uint256 prevLength = consumptions.length;
-        uint256 length = prevLength + (index == prevLength ? 1 : 0);
-
-        assembly {
-            // Load the free memory pointer
-            result := mload(0x40)
-
-            // allocate array, by advancing free memory pointer
-            mstore(0x40, add(result, mul(add(length, 1), 0x20)))
-
-            // Store the new array length
-            mstore(result, length)
-
-            // Copy the previous elements (shallow copy of pointers)
-            let dst := add(result, 0x20)
-            let src := add(consumptions, 0x20)
-            let size := mul(prevLength, 0x20)
-            mcopy(dst, src, size)
-        }
-
-        result[index] = entry;
     }
 }

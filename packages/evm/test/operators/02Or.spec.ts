@@ -550,5 +550,94 @@ describe("Operator - Or", () => {
       expect(balanceA2).to.equal(70); // unchanged
       expect(balanceB2).to.equal(40); // 100 - 60
     });
+
+    it("rolls back consumptions if a branch fails after consumption", async () => {
+      const iface = new Interface(["function fn(uint256)"]);
+      const fn = iface.getFunction("fn")!;
+      const { roles, member, fallbackerAddress, roleKey } =
+        await loadFixture(setupFallbacker);
+
+      const allowanceKeyA =
+        "0x000000000000000000000000000000000000000000000000000000000000000a";
+      const allowanceKeyB =
+        "0x000000000000000000000000000000000000000000000000000000000000000b";
+
+      await roles.setAllowance(allowanceKeyA, 100, 0, 0, 0, 0);
+      await roles.setAllowance(allowanceKeyB, 100, 0, 0, 0, 0);
+
+      // OR structure:
+      // Branch 1: Consume 10 from A AND Fail (value > 999) -> Should rollback A
+      // Branch 2: Consume 10 from B AND Pass (value > 0) -> Should commit B
+      await roles.allowFunction(
+        roleKey,
+        fallbackerAddress,
+        fn.selector,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.None,
+              operator: Operator.Or,
+              children: [
+                {
+                  paramType: Encoding.None,
+                  operator: Operator.And,
+                  children: [
+                    {
+                      paramType: Encoding.Static,
+                      operator: Operator.WithinAllowance,
+                      compValue: allowanceKeyA,
+                    },
+                    {
+                      paramType: Encoding.Static,
+                      operator: Operator.GreaterThan,
+                      compValue: abiCoder.encode(["uint256"], [999]),
+                    },
+                  ],
+                },
+                {
+                  paramType: Encoding.None,
+                  operator: Operator.And,
+                  children: [
+                    {
+                      paramType: Encoding.Static,
+                      operator: Operator.WithinAllowance,
+                      compValue: allowanceKeyB,
+                    },
+                    {
+                      paramType: Encoding.Static,
+                      operator: Operator.GreaterThan,
+                      compValue: abiCoder.encode(["uint256"], [0]),
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
+      );
+
+      // Call with value 10
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            fallbackerAddress,
+            0,
+            iface.encodeFunctionData(fn, [10]),
+            0,
+          ),
+      ).to.not.be.reverted;
+
+      // Allowance A should be untouched (rolled back)
+      const { balance: balanceA } = await roles.accruedAllowance(allowanceKeyA);
+      expect(balanceA).to.equal(100);
+
+      // Allowance B should be consumed
+      const { balance: balanceB } = await roles.accruedAllowance(allowanceKeyB);
+      expect(balanceB).to.equal(90);
+    });
   });
 });
