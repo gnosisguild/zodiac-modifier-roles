@@ -6,10 +6,11 @@ import "../types/Types.sol";
 
 /**
  * @title PriceConversion
- * @notice Library for decimal normalization and price conversion.
+ * @notice Library for decimal normalization and exchange rate conversion.
  *
- * @dev Converts amounts between decimal precisions. If a pricing adapter is provided,
- *      it is safely invoked via staticcall to apply an exchange rate.
+ * @dev Converts amounts between decimal precisions. If a pricing adapter
+ *      is provided, it is safely invoked via staticcall to obtain the exchange
+ *      rate.
  *
  * @author gnosisguild
  */

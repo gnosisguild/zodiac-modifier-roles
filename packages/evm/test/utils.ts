@@ -143,6 +143,7 @@ export enum ConditionViolationStatus {
   PricingAdapterInvalidResult,
   PricingAdapterZeroPrice,
   AllowanceExceeded,
+  AllowanceValueOverflow,
   // A Payload overflow was found by the Checker flow
   CalldataOverflow,
   RatioBelowMin,

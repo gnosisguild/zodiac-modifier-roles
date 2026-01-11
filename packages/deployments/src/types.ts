@@ -103,6 +103,7 @@ export enum Status {
   BitmaskNotAllowed,
   CustomConditionViolation,
   AllowanceExceeded,
+  AllowanceValueOverflow,
   /** Payload overflow found by Checker */
   CalldataOverflow,
   RatioBelowMin,

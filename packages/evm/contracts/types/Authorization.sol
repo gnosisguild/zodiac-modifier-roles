@@ -34,6 +34,8 @@ enum Status {
     PricingAdapterInvalidResult,
     PricingAdapterZeroPrice,
     AllowanceExceeded,
+    /// Converted allowance value exceeds uint128 max
+    AllowanceValueOverflow,
     CalldataOverflow,
     RatioBelowMin,
     RatioAboveMax,

@@ -9,10 +9,11 @@ import {Consumption} from "../../types/Allowance.sol";
 
 /**
  * @title WithinAllowanceChecker
- * @notice Validates allowance consumption with optional price conversion.
+ * @notice Validates allowance consumption with optional amount conversion.
  *
- * @dev Checks if a value is within an allowance. If a pricing adapter is
- *      provided, the value is converted to the allowance's base denomination.
+ * @dev Checks if a value is within an allowance and consumes it. The value is
+ *      normalized to the allowance's base denomination via decimal scaling
+ *      and exchange rate conversion, both optional.
  *
  * @author gnosisguild
  */
@@ -21,11 +22,8 @@ library WithinAllowanceChecker {
         Consumption[] memory consumptions,
         uint256 value,
         bytes memory compValue
-    ) internal view returns (Status, Consumption[] memory) {
-        (Status status, uint128 converted) = _toBaseDenomination(
-            value,
-            compValue
-        );
+    ) internal view returns (Status status, Consumption[] memory) {
+        (status, value) = _convert(value, compValue);
         if (status != Status.Ok) {
             return (status, consumptions);
         }
@@ -35,8 +33,11 @@ library WithinAllowanceChecker {
             bytes32(compValue)
         );
 
-        entry.consumed += converted;
+        if (entry.consumed + value > type(uint128).max) {
+            return (Status.AllowanceValueOverflow, consumptions);
+        }
 
+        entry.consumed += uint128(value);
         if (entry.consumed <= entry.balance) {
             return (Status.Ok, _put(consumptions, index, entry));
         } else {
@@ -45,21 +46,21 @@ library WithinAllowanceChecker {
     }
 
     /**
-     * @dev Normalizes a value to the allowance's base denomination via decimal
-     *      scaling and applying an exchange rate (via price adapter).
+     * @dev Normalizes a value to the allowance's base denomination.
      *
-     * It is possible to scale decimals without price conversion by providing
-     * `baseDecimals` and `paramDecimals` but no price adapter.
+     *      Calculates the final amount via decimal scaling and optionally
+     *      an exchange rate (via price adapter). Scaling is possible without
+     *      an adapter by providing both base and param decimals.
      *
      * @param value The raw amount to be converted.
-     * @param compValue Configuration containing decimals and adapter address.
-     * @return status Ok if no error ocurred
-     * @return converted The converted amount in base denomination
+     * @param compValue Configuration bytes containing decimals and adapter.
+     * @return status Result of the conversion (Ok or price adapter error).
+     * @return converted Normalized amount in the allowance's base decimals.
      */
-    function _toBaseDenomination(
+    function _convert(
         uint256 value,
         bytes memory compValue
-    ) private view returns (Status, uint128) {
+    ) private view returns (Status, uint256) {
         /**
          * CompValue Layout (32, 34, or 54 bytes):
          * ┌─────────────────────────┬──────────┬──────────┬─────────────────────┐
@@ -73,23 +74,21 @@ library WithinAllowanceChecker {
          * baseDecimals: decimals of the allowance unit (how it accrues)
          * paramDecimals: decimals of the parameter value (from calldata)
          */
-        uint256 length = compValue.length;
 
-        // No conversion
-        if (length == 32) {
-            return (Status.Ok, uint128(value));
+        if (compValue.length == 32) {
+            return (Status.Ok, value);
         }
 
         address adapter;
-        if (length > 34) {
+        if (compValue.length > 34) {
             assembly {
                 adapter := shr(96, mload(add(compValue, 0x42)))
             }
         }
 
         /*
-         * source: paramDecimals
-         * target: baseDecimals
+         * sourceDecimals -> paramDecimals
+         * targetDecimals -> baseDecimals
          */
         (Status status, uint256 converted) = PriceConversion.convert(
             value,
@@ -100,11 +99,14 @@ library WithinAllowanceChecker {
         if (status != Status.Ok) {
             return (status, 0);
         }
-        return (Status.Ok, uint128(converted));
+
+        return (Status.Ok, converted);
     }
 
-    /// @dev Finds consumption in array by key, or loads from storage if not
-    ///      present. Returns a copy
+    /**
+     * @dev Finds consumption in array by key, or loads from storage if not
+     *      present. Always returns a copy
+     */
     function _lookup(
         Consumption[] memory consumptions,
         bytes32 allowanceKey
