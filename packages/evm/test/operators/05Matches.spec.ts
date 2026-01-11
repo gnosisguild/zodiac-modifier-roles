@@ -20,29 +20,75 @@ import {
 
 const abiCoder = AbiCoder.defaultAbiCoder();
 
-/**
- * Tests for Operator.Matches handler in ConditionLogic.
- *
- * This test suite verifies the execution logic of the Matches operator, focusing on:
- * 1. Prefix/Header validation for ABI-encoded payloads (e.g., function selectors).
- * 2. Parameter decomposition and routing to structural children.
- * 3. Accumulation of side-effects (consumptions) across multiple parameters.
- *
- * Test Structure:
- * - Operator - Matches
- *   - prefix / header validation
- *     - matches a standard 4-byte selector
- *     - matches a short 2-byte prefix
- *     - matches a full 32-byte word
- *     - fails when data does not match expected prefix
- *     - skips validation when expected prefix is empty
- *   - parameter routing
- *     - routes decoded parameters to corresponding children
- *     - passes empty payload to non-structural children
- *     - accumulates consumptions across children
- */
-
 describe("Operator - Matches", () => {
+  describe("prefix skipping", () => {
+    it("skips 10 bytes offset before decoding child", async () => {
+      const iface = new Interface(["function fn(bytes)"]);
+      const fn = iface.getFunction("fn")!;
+      const { roles, member, fallbackerAddress, roleKey } =
+        await loadFixture(setupFallbacker);
+
+      // Matches with AbiEncoded that skips 10 bytes (0x000a) but does NOT match them
+      // compValue length is 2 => only configuration, no match bytes
+      await roles.allowFunction(
+        roleKey,
+        fallbackerAddress,
+        fn.selector,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.AbiEncoded,
+              operator: Operator.Matches,
+              compValue: "0x000a", // 10 bytes offset
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [42]),
+                },
+              ],
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
+      );
+
+      // Send payload with 10 bytes of random junk + encoded param
+      // The junk should be skipped, not matched.
+      const junkHeader = hexlify(randomBytes(10));
+      const paramData = abiCoder.encode(["uint256"], [42]).slice(2); // remove 0x
+      const correctPayload = junkHeader + paramData;
+
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            fallbackerAddress,
+            0,
+            iface.encodeFunctionData(fn, [correctPayload]),
+            0,
+          ),
+      ).to.not.be.reverted;
+
+      // Ensure that actual logic checks the param (42)
+      const wrongParamPayload =
+        junkHeader + abiCoder.encode(["uint256"], [99]).slice(2);
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            fallbackerAddress,
+            0,
+            iface.encodeFunctionData(fn, [wrongParamPayload]),
+            0,
+          ),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
+    });
+  });
   describe("prefix validation", () => {
     it("validates 4-byte prefix (shift 4)", async () => {
       const iface = new Interface(["function fn(bytes)"]);
