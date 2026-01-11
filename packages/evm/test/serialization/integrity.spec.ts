@@ -1263,7 +1263,7 @@ describe("Integrity", () => {
       );
     });
 
-    it("reverts UnsuitableCompValue when compValue length is not 32 or 54", async () => {
+    it("reverts UnsuitableCompValue when compValue length is not 32, 34, or 54", async () => {
       const { allowFunction } = await loadFixture(setup);
 
       await expect(
@@ -1299,11 +1299,11 @@ describe("Integrity", () => {
     it("reverts AllowanceDecimalsExceedMax when decimals > 18", async () => {
       const { allowFunction } = await loadFixture(setup);
 
-      // 54 bytes = 32 (key) + 20 (token) + 1 (decimals) + 1 (offset)
+      // 54 bytes = 32 (key) + 1 (targetDecimals) + 1 (sourceDecimals) + 20 (adapter)
       const key = hre.ethers.id("ALLOWANCE_KEY").slice(2); // 32 bytes
-      const token = "0000000000000000000000000000000000000001"; // 20 bytes
-      const decimals = "13"; // 19 decimals - exceeds max of 18
-      const offset = "00";
+      const targetDecimals = "13"; // 19 decimals - exceeds max of 18
+      const sourceDecimals = "00";
+      const adapter = "0000000000000000000000000000000000000001"; // 20 bytes
 
       await expect(
         allowFunction([
@@ -1311,7 +1311,7 @@ describe("Integrity", () => {
             parent: 0,
             paramType: Encoding.Static,
             operator: Operator.WithinAllowance,
-            compValue: `0x${key}${token}${decimals}${offset}`,
+            compValue: `0x${key}${targetDecimals}${sourceDecimals}${adapter}`,
           },
         ]),
       ).to.be.revertedWithCustomError(
@@ -1323,11 +1323,11 @@ describe("Integrity", () => {
     it("succeeds when compValue is 54 bytes with valid decimals", async () => {
       const { allowFunction } = await loadFixture(setup);
 
-      // 54 bytes = 32 (key) + 20 (token) + 1 (decimals) + 1 (offset)
+      // 54 bytes = 32 (key) + 1 (targetDecimals) + 1 (sourceDecimals) + 20 (adapter)
       const key = hre.ethers.id("ALLOWANCE_KEY").slice(2); // 32 bytes
-      const token = "0000000000000000000000000000000000000001"; // 20 bytes
-      const decimals = "12"; // 18 decimals - max allowed
-      const offset = "00";
+      const targetDecimals = "12"; // 18 decimals - max allowed
+      const sourceDecimals = "00";
+      const adapter = "0000000000000000000000000000000000000001"; // 20 bytes
 
       await expect(
         allowFunction([
@@ -1335,7 +1335,7 @@ describe("Integrity", () => {
             parent: 0,
             paramType: Encoding.Static,
             operator: Operator.WithinAllowance,
-            compValue: `0x${key}${token}${decimals}${offset}`,
+            compValue: `0x${key}${targetDecimals}${sourceDecimals}${adapter}`,
           },
         ]),
       ).to.not.be.reverted;

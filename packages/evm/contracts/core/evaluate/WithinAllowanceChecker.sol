@@ -22,15 +22,18 @@ library WithinAllowanceChecker {
         uint256 value,
         bytes memory compValue
     ) internal view returns (Status, Consumption[] memory) {
+        (Status status, uint128 converted) = _toBaseDenomination(
+            value,
+            compValue
+        );
+        if (status != Status.Ok) {
+            return (status, consumptions);
+        }
+
         (Consumption memory entry, uint256 index) = _lookup(
             consumptions,
             bytes32(compValue)
         );
-
-        (Status status, uint128 converted) = _convert(value, compValue);
-        if (status != Status.Ok) {
-            return (status, consumptions);
-        }
 
         entry.consumed += converted;
 
@@ -41,46 +44,63 @@ library WithinAllowanceChecker {
         }
     }
 
-    /// @dev Converts value to base denomination via pricing contract encoded in
-    ///      compValue. Returns value unchanged if no pricing configured.
-    function _convert(
+    /**
+     * @dev Normalizes a value to the allowance's base denomination via decimal
+     *      scaling and applying an exchange rate (via price adapter).
+     *
+     * It is possible to scale decimals without price conversion by providing
+     * `baseDecimals` and `paramDecimals` but no price adapter.
+     *
+     * @param value The raw amount to be converted.
+     * @param compValue Configuration containing decimals and adapter address.
+     * @return status Ok if no error ocurred
+     * @return converted The converted amount in base denomination
+     */
+    function _toBaseDenomination(
         uint256 value,
         bytes memory compValue
     ) private view returns (Status, uint128) {
         /**
-         * CompValue Layout (32 or 54 bytes):
-         * ┌─────────────────────────┬─────────────────────┬──────────┬──────────┐
-         * │      allowanceKey       │       adapter       │  target  │  source  │
-         * │        (bytes32)        │      (address)      │ decimals │ decimals │
-         * ├─────────────────────────┼─────────────────────┼──────────┼──────────┤
-         * │         0 - 31          │       32 - 51       │    52    │    53    │
-         * └─────────────────────────┴─────────────────────┴──────────┴──────────┘
-         *                           └─────────────── optional ─────────────────┘
+         * CompValue Layout (32, 34, or 54 bytes):
+         * ┌─────────────────────────┬──────────┬──────────┬─────────────────────┐
+         * │      allowanceKey       │   base   │  param   │       adapter       │
+         * │        (bytes32)        │ decimals │ decimals │      (address)      │
+         * ├─────────────────────────┼──────────┼──────────┼─────────────────────┤
+         * │         0 - 31          │    32    │    33    │       34 - 53       │
+         * └─────────────────────────┴──────────┴──────────┴─────────────────────┘
+         *                           └── optional ─────────┴───── optional ──────┘
          *
-         * targetDecimals: decimals of the allowance's base unit
-         * sourceDecimals: decimals of the asset being spent
+         * baseDecimals: decimals of the allowance unit (how it accrues)
+         * paramDecimals: decimals of the parameter value (from calldata)
          */
-        if (compValue.length > 32) {
-            address adapter;
-            assembly {
-                adapter := shr(96, mload(add(compValue, 0x40)))
-            }
-            uint256 targetDecimals = uint8(compValue[52]);
-            uint256 sourceDecimals = uint8(compValue[53]);
+        uint256 length = compValue.length;
 
-            (Status status, uint256 converted) = PriceConversion.convert(
-                value,
-                sourceDecimals,
-                targetDecimals,
-                adapter
-            );
-            if (status != Status.Ok) {
-                return (status, 0);
-            }
-            return (Status.Ok, uint128(converted));
+        // No conversion
+        if (length == 32) {
+            return (Status.Ok, uint128(value));
         }
 
-        return (Status.Ok, uint128(value));
+        address adapter;
+        if (length > 34) {
+            assembly {
+                adapter := shr(96, mload(add(compValue, 0x42)))
+            }
+        }
+
+        /*
+         * source: paramDecimals
+         * target: baseDecimals
+         */
+        (Status status, uint256 converted) = PriceConversion.convert(
+            value,
+            uint8(compValue[33]),
+            uint8(compValue[32]),
+            adapter
+        );
+        if (status != Status.Ok) {
+            return (status, 0);
+        }
+        return (Status.Ok, uint128(converted));
     }
 
     /// @dev Finds consumption in array by key, or loads from storage if not
