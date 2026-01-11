@@ -1,7 +1,8 @@
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { Interface } from "ethers";
 
-import { setup } from "../setup";
+import { setupFallbacker } from "../setup";
 import {
   Operator,
   Encoding,
@@ -10,18 +11,34 @@ import {
 } from "../utils";
 
 describe("Operator - Pass", () => {
+  async function setup() {
+    const iface = new Interface(["function fn(uint256)"]);
+    const fn = iface.getFunction("fn")!;
+    const { roles, member, fallbackerAddress, roleKey } =
+      await setupFallbacker();
+
+    const invoke = (a: bigint | number) =>
+      roles
+        .connect(member)
+        .execTransactionFromModule(
+          fallbackerAddress,
+          0,
+          iface.encodeFunctionData(fn, [a]),
+          0,
+        );
+
+    return { roles, member, fallbackerAddress, roleKey, fn, invoke };
+  }
+
   describe("core behavior", () => {
     it("allows any parameter value", async () => {
-      const { roles, member, testContract, roleKey } = await loadFixture(setup);
-
-      const address = await testContract.getAddress();
-      const selector =
-        testContract.interface.getFunction("oneParamStatic").selector;
+      const { roles, fallbackerAddress, roleKey, fn, invoke } =
+        await loadFixture(setup);
 
       await roles.allowFunction(
         roleKey,
-        address,
-        selector,
+        fallbackerAddress,
+        fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -36,27 +53,8 @@ describe("Operator - Pass", () => {
       );
 
       // Any value passes - the operator performs no validation
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            address,
-            0,
-            (await testContract.oneParamStatic.populateTransaction(0)).data,
-            0,
-          ),
-      ).to.not.be.reverted;
-
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            address,
-            0,
-            (await testContract.oneParamStatic.populateTransaction(999)).data,
-            0,
-          ),
-      ).to.not.be.reverted;
+      await expect(invoke(0)).to.not.be.reverted;
+      await expect(invoke(999)).to.not.be.reverted;
     });
   });
 });

@@ -1,8 +1,14 @@
 import { expect } from "chai";
-import hre from "hardhat";
 import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
 
-import { AbiCoder, BigNumberish, ZeroHash } from "ethers";
+import {
+  AbiCoder,
+  BigNumberish,
+  hexlify,
+  Interface,
+  randomBytes,
+  ZeroHash,
+} from "ethers";
 
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
@@ -13,28 +19,15 @@ import {
   ConditionViolationStatus,
   flattenCondition,
 } from "../utils";
-import { deployRolesMod } from "../setup";
-
-const ROLE_KEY =
-  "0x0000000000000000000000000000000000000000000000000000000000000001";
+import { setupFallbacker } from "../setup";
 
 describe("Operator - CallWithinAllowance", async () => {
   async function setup() {
-    const Avatar = await hre.ethers.getContractFactory("TestAvatar");
-    const avatar = await Avatar.deploy();
+    const iface = new Interface(["function doNothing()"]);
+    const fn = iface.getFunction("doNothing")!;
 
-    const TestContract = await hre.ethers.getContractFactory("TestContract");
-    const testContract = await TestContract.deploy();
-
-    const [owner, invoker] = await hre.ethers.getSigners();
-    const avatarAddress = await avatar.getAddress();
-    const roles = await deployRolesMod(
-      hre,
-      owner.address,
-      avatarAddress,
-      avatarAddress,
-    );
-    await roles.enableModule(invoker.address);
+    const { roles, member, fallbackerAddress, roleKey } =
+      await setupFallbacker();
 
     async function setAllowance({
       key,
@@ -51,55 +44,52 @@ describe("Operator - CallWithinAllowance", async () => {
       period: BigNumberish;
       timestamp: BigNumberish;
     }) {
-      await roles
-        .connect(owner)
-        .setAllowance(key, balance, maxRefill || 0, refill, period, timestamp);
+      await roles.setAllowance(
+        key,
+        balance,
+        maxRefill || 0,
+        refill,
+        period,
+        timestamp,
+      );
     }
-    const testContractAddress = await testContract.getAddress();
-    await roles.connect(owner).grantRole(invoker.address, ROLE_KEY, 0, 0, 0);
-    await roles.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
-    await roles.connect(owner).scopeTarget(ROLE_KEY, testContractAddress);
 
-    const SELECTOR = testContract.interface.getFunction("doNothing").selector;
-    const allowanceKey =
-      "0x0000000000000000000000000000000000000000000000000000000000000001";
-    await roles.connect(owner).allowFunction(
-      ROLE_KEY,
-      testContractAddress,
-      SELECTOR,
-      [
-        {
-          parent: 0,
-          paramType: Encoding.AbiEncoded,
-          operator: Operator.Matches,
-          compValue: "0x",
-        },
-        {
-          parent: 0,
-          paramType: Encoding.None,
-          operator: Operator.CallWithinAllowance,
-          compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
-        },
-      ],
+    const allowanceKey = hexlify(randomBytes(32));
+
+    await roles.allowFunction(
+      roleKey,
+      fallbackerAddress,
+      fn.selector,
+      flattenCondition({
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        children: [
+          {
+            paramType: Encoding.None,
+            operator: Operator.CallWithinAllowance,
+            compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
+          },
+        ],
+      }),
       ExecutionOptions.None,
     );
 
     async function invoke() {
       return roles
-        .connect(invoker)
+        .connect(member)
         .execTransactionFromModule(
-          testContractAddress,
+          fallbackerAddress,
           0,
-          (await testContract.doNothing.populateTransaction()).data as string,
+          iface.encodeFunctionData(fn, []),
           0,
         );
     }
 
     return {
-      owner,
-      invoker,
+      member,
       roles,
-      testContract,
+      fallbackerAddress,
+      roleKey,
       allowanceKey,
       setAllowance,
       invoke,
@@ -196,11 +186,12 @@ describe("Operator - CallWithinAllowance", async () => {
 
   describe("CallWithinAllowance - Variants", () => {
     it("enforces different call allowances per variant", async () => {
-      const { owner, invoker, roles, testContract, setAllowance } =
+      const { member, roles, fallbackerAddress, roleKey, setAllowance } =
         await loadFixture(setup);
-      const testContractAddress = await testContract.getAddress();
-      const SELECTOR =
-        testContract.interface.getFunction("oneParamStatic").selector;
+
+      const iface = new Interface(["function oneParamStatic(uint256)"]);
+      const fn = iface.getFunction("oneParamStatic")!;
+
       const allowanceKey1 =
         "0x1000000000000000000000000000000000000000000000000000000000000001";
       const allowanceKey2 =
@@ -209,7 +200,6 @@ describe("Operator - CallWithinAllowance", async () => {
       const value2 = 200;
       const valueOther = 9999;
 
-      await roles.connect(owner).scopeTarget(ROLE_KEY, testContractAddress);
       await setAllowance({
         key: allowanceKey1,
         balance: 0,
@@ -228,64 +218,57 @@ describe("Operator - CallWithinAllowance", async () => {
 
       async function invoke(p: BigNumberish) {
         return roles
-          .connect(invoker)
+          .connect(member)
           .execTransactionFromModule(
-            testContractAddress,
+            fallbackerAddress,
             0,
-            (await testContract.oneParamStatic.populateTransaction(p))
-              .data as string,
+            iface.encodeFunctionData(fn, [p]),
             0,
           );
       }
 
-      await roles.connect(owner).allowFunction(
-        ROLE_KEY,
-        testContractAddress,
-        SELECTOR,
-        [
-          {
-            parent: 0,
-            paramType: Encoding.None,
-            operator: Operator.Or,
-            compValue: "0x",
-          },
-          {
-            parent: 0,
-            paramType: Encoding.AbiEncoded,
-            operator: Operator.Matches,
-            compValue: "0x",
-          },
-          {
-            parent: 0,
-            paramType: Encoding.AbiEncoded,
-            operator: Operator.Matches,
-            compValue: "0x",
-          },
-          {
-            parent: 1,
-            paramType: Encoding.Static,
-            operator: Operator.EqualTo,
-            compValue: defaultAbiCoder.encode(["uint256"], [value1]),
-          },
-          {
-            parent: 1,
-            paramType: Encoding.None,
-            operator: Operator.CallWithinAllowance,
-            compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey1]),
-          },
-          {
-            parent: 2,
-            paramType: Encoding.Static,
-            operator: Operator.EqualTo,
-            compValue: defaultAbiCoder.encode(["uint256"], [value2]),
-          },
-          {
-            parent: 2,
-            paramType: Encoding.None,
-            operator: Operator.CallWithinAllowance,
-            compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey2]),
-          },
-        ],
+      await roles.allowFunction(
+        roleKey,
+        fallbackerAddress,
+        fn.selector,
+        flattenCondition({
+          paramType: Encoding.None,
+          operator: Operator.Or,
+          children: [
+            {
+              paramType: Encoding.AbiEncoded,
+              operator: Operator.Matches,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: defaultAbiCoder.encode(["uint256"], [value1]),
+                },
+                {
+                  paramType: Encoding.None,
+                  operator: Operator.CallWithinAllowance,
+                  compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey1]),
+                },
+              ],
+            },
+            {
+              paramType: Encoding.AbiEncoded,
+              operator: Operator.Matches,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: defaultAbiCoder.encode(["uint256"], [value2]),
+                },
+                {
+                  paramType: Encoding.None,
+                  operator: Operator.CallWithinAllowance,
+                  compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey2]),
+                },
+              ],
+            },
+          ],
+        }),
         ExecutionOptions.None,
       );
 
@@ -306,41 +289,23 @@ describe("Operator - CallWithinAllowance", async () => {
 
   describe("CallWithinAllowance - Logical Combinations", () => {
     it("AND(CallWithinAllowance, SomeParamComparison)", async () => {
-      const Avatar = await hre.ethers.getContractFactory("TestAvatar");
-      const avatar = await Avatar.deploy();
+      const { roles, member, fallbackerAddress, roleKey } =
+        await setupFallbacker();
 
-      const TestContract = await hre.ethers.getContractFactory("TestContract");
-      const testContract = await TestContract.deploy();
-
-      const [owner, invoker] = await hre.ethers.getSigners();
-      const testAddress = await testContract.getAddress();
-      const avatarAddress = await avatar.getAddress();
-
-      const roles = await deployRolesMod(
-        hre,
-        owner.address,
-        avatarAddress,
-        avatarAddress,
-      );
-      await roles.enableModule(invoker.address);
-      await roles.connect(owner).grantRole(invoker.address, ROLE_KEY, 0, 0, 0);
-      await roles.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
-      await roles.connect(owner).scopeTarget(ROLE_KEY, testAddress);
+      const iface = new Interface(["function oneParamStatic(uint256)"]);
+      const fn = iface.getFunction("oneParamStatic")!;
 
       const allowanceKey =
         "0x0000000000000000000000000000000000000000000000000000000000000001";
       const allowedValue = 42;
 
-      await roles.connect(owner).setAllowance(allowanceKey, 3, 0, 0, 0, 0);
-
-      const SELECTOR =
-        testContract.interface.getFunction("oneParamStatic").selector;
+      await roles.setAllowance(allowanceKey, 3, 0, 0, 0, 0);
 
       // Structure: And -> [Calldata -> Static, CallWithinAllowance] (CallWithinAllowance sibling of Calldata)
-      await roles.connect(owner).allowFunction(
-        ROLE_KEY,
-        testAddress,
-        SELECTOR,
+      await roles.allowFunction(
+        roleKey,
+        fallbackerAddress,
+        fn.selector,
         flattenCondition({
           paramType: Encoding.None,
           operator: Operator.And,
@@ -371,12 +336,11 @@ describe("Operator - CallWithinAllowance", async () => {
 
       async function invoke(p: BigNumberish) {
         return roles
-          .connect(invoker)
+          .connect(member)
           .execTransactionFromModule(
-            testAddress,
+            fallbackerAddress,
             0,
-            (await testContract.oneParamStatic.populateTransaction(p))
-              .data as string,
+            iface.encodeFunctionData(fn, [p]),
             0,
           );
       }
@@ -403,42 +367,24 @@ describe("Operator - CallWithinAllowance", async () => {
     });
 
     it("AND(CallWithinAllowance, OR(ParamA, ParamB))", async () => {
-      const Avatar = await hre.ethers.getContractFactory("TestAvatar");
-      const avatar = await Avatar.deploy();
+      const { roles, member, fallbackerAddress, roleKey } =
+        await setupFallbacker();
 
-      const TestContract = await hre.ethers.getContractFactory("TestContract");
-      const testContract = await TestContract.deploy();
-
-      const [owner, invoker] = await hre.ethers.getSigners();
-      const testAddress = await testContract.getAddress();
-      const avatarAddress = await avatar.getAddress();
-
-      const roles = await deployRolesMod(
-        hre,
-        owner.address,
-        avatarAddress,
-        avatarAddress,
-      );
-      await roles.enableModule(invoker.address);
-      await roles.connect(owner).grantRole(invoker.address, ROLE_KEY, 0, 0, 0);
-      await roles.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
-      await roles.connect(owner).scopeTarget(ROLE_KEY, testAddress);
+      const iface = new Interface(["function oneParamStatic(uint256)"]);
+      const fn = iface.getFunction("oneParamStatic")!;
 
       const allowanceKey =
         "0x0000000000000000000000000000000000000000000000000000000000000001";
       const allowedValueA = 100;
       const allowedValueB = 200;
 
-      await roles.connect(owner).setAllowance(allowanceKey, 4, 0, 0, 0, 0);
-
-      const SELECTOR =
-        testContract.interface.getFunction("oneParamStatic").selector;
+      await roles.setAllowance(allowanceKey, 4, 0, 0, 0, 0);
 
       // Structure: And -> [Calldata -> Or, CallWithinAllowance] (CallWithinAllowance sibling of Calldata)
-      await roles.connect(owner).allowFunction(
-        ROLE_KEY,
-        testAddress,
-        SELECTOR,
+      await roles.allowFunction(
+        roleKey,
+        fallbackerAddress,
+        fn.selector,
         flattenCondition({
           paramType: Encoding.None,
           operator: Operator.And,
@@ -483,12 +429,11 @@ describe("Operator - CallWithinAllowance", async () => {
 
       async function invoke(p: BigNumberish) {
         return roles
-          .connect(invoker)
+          .connect(member)
           .execTransactionFromModule(
-            testAddress,
+            fallbackerAddress,
             0,
-            (await testContract.oneParamStatic.populateTransaction(p))
-              .data as string,
+            iface.encodeFunctionData(fn, [p]),
             0,
           );
       }
@@ -526,18 +471,23 @@ describe("Operator - CallWithinAllowance", async () => {
 
   describe("CallWithinAllowance - Standalone Root", () => {
     it("works as standalone root condition with allowTarget", async () => {
-      const { owner, invoker, roles, testContract } = await loadFixture(setup);
+      const { member, roles, fallbackerAddress, roleKey } =
+        await loadFixture(setup);
 
-      const testContractAddress = await testContract.getAddress();
+      const iface = new Interface([
+        "function doNothing()",
+        "function doEvenLess()",
+      ]);
+
       const allowanceKey =
         "0x0000000000000000000000000000000000000000000000000000000000000002";
 
       // Allowance of 2 calls
-      await roles.connect(owner).setAllowance(allowanceKey, 2, 0, 0, 0, 0);
+      await roles.setAllowance(allowanceKey, 2, 0, 0, 0, 0);
 
-      await roles.connect(owner).allowTarget(
-        ROLE_KEY,
-        testContractAddress,
+      await roles.allowTarget(
+        roleKey,
+        fallbackerAddress,
         flattenCondition({
           paramType: Encoding.None,
           operator: Operator.CallWithinAllowance,
@@ -546,21 +496,19 @@ describe("Operator - CallWithinAllowance", async () => {
         ExecutionOptions.Both,
       );
 
-      const doNothingData =
-        testContract.interface.encodeFunctionData("doNothing");
-      const doEvenLessData =
-        testContract.interface.encodeFunctionData("doEvenLess");
+      const doNothingData = iface.encodeFunctionData("doNothing", []);
+      const doEvenLessData = iface.encodeFunctionData("doEvenLess", []);
 
       // First call passes (allowance: 2 -> 1)
       await expect(
         roles
-          .connect(invoker)
+          .connect(member)
           .execTransactionWithRole(
-            testContractAddress,
+            fallbackerAddress,
             0,
             doNothingData,
             0,
-            ROLE_KEY,
+            roleKey,
             true,
           ),
       ).to.not.be.reverted;
@@ -568,13 +516,13 @@ describe("Operator - CallWithinAllowance", async () => {
       // Second call passes (allowance: 1 -> 0)
       await expect(
         roles
-          .connect(invoker)
+          .connect(member)
           .execTransactionWithRole(
-            testContractAddress,
+            fallbackerAddress,
             0,
             doEvenLessData,
             0,
-            ROLE_KEY,
+            roleKey,
             true,
           ),
       ).to.not.be.reverted;
@@ -582,13 +530,13 @@ describe("Operator - CallWithinAllowance", async () => {
       // Third call fails (allowance exhausted)
       await expect(
         roles
-          .connect(invoker)
+          .connect(member)
           .execTransactionWithRole(
-            testContractAddress,
+            fallbackerAddress,
             0,
             doNothingData,
             0,
-            ROLE_KEY,
+            roleKey,
             true,
           ),
       )

@@ -1,4 +1,4 @@
-import { BigNumberish, ZeroHash } from "ethers";
+import { BigNumberish, hexlify, randomBytes, ZeroHash } from "ethers";
 import hre from "hardhat";
 import { EthereumProvider, HardhatRuntimeEnvironment } from "hardhat/types";
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
@@ -56,7 +56,7 @@ export async function setup(roleKey = DEFAULT_ROLE_KEY) {
  * Setup with Fallbacker contract for flexible calldata testing.
  * Allows crafting arbitrary calldata with AbiCoder.
  */
-export async function setupFallbacker(roleKey = DEFAULT_ROLE_KEY) {
+export async function setupFallbacker() {
   const [owner, member] = await hre.ethers.getSigners();
 
   const Avatar = await hre.ethers.getContractFactory("TestAvatar");
@@ -74,6 +74,7 @@ export async function setupFallbacker(roleKey = DEFAULT_ROLE_KEY) {
   );
 
   const fallbackerAddress = await fallbacker.getAddress();
+  const roleKey = hexlify(randomBytes(32));
 
   await roles.connect(owner).enableModule(member.address);
   await roles.connect(owner).grantRole(member.address, roleKey, 0, 0, 0);
