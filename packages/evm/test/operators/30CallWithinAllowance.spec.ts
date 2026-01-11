@@ -129,7 +129,7 @@ describe("Operator - CallWithinAllowance", async () => {
 
       await expect(invoke())
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(ConditionViolationStatus.CallAllowanceExceeded, allowanceKey);
+        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
     });
     it("success - multiple checks from existing balance", async () => {
       const { roles, allowanceKey, setAllowance, invoke } =
@@ -155,7 +155,7 @@ describe("Operator - CallWithinAllowance", async () => {
 
       await expect(invoke())
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(ConditionViolationStatus.CallAllowanceExceeded, allowanceKey);
+        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
     });
     it("success - from balance 0 but enough refill pending", async () => {
       const { roles, allowanceKey, setAllowance, invoke } =
@@ -173,7 +173,7 @@ describe("Operator - CallWithinAllowance", async () => {
       await expect(invoke()).to.not.be.reverted;
       await expect(invoke())
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(ConditionViolationStatus.CallAllowanceExceeded, allowanceKey);
+        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
     });
     it("fail - insufficient balance and not enough elapsed for next refill", async () => {
       const { roles, allowanceKey, setAllowance, invoke } =
@@ -190,7 +190,7 @@ describe("Operator - CallWithinAllowance", async () => {
 
       await expect(invoke())
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(ConditionViolationStatus.CallAllowanceExceeded, allowanceKey);
+        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
     });
   });
 
@@ -399,7 +399,7 @@ describe("Operator - CallWithinAllowance", async () => {
       // Now should fail due to exhausted allowance
       await expect(invoke(allowedValue))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.CallAllowanceExceeded, allowanceKey);
+        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
     });
 
     it("AND(CallWithinAllowance, OR(ParamA, ParamB))", async () => {
@@ -517,10 +517,10 @@ describe("Operator - CallWithinAllowance", async () => {
       // Both values should now fail due to exhausted allowance
       await expect(invoke(allowedValueA))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.CallAllowanceExceeded, allowanceKey);
+        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
       await expect(invoke(allowedValueB))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.CallAllowanceExceeded, allowanceKey);
+        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
     });
   });
 
@@ -593,7 +593,7 @@ describe("Operator - CallWithinAllowance", async () => {
           ),
       )
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.CallAllowanceExceeded, allowanceKey);
+        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
     });
   });
 });

@@ -129,17 +129,10 @@ library ConditionLogic {
                     __allowance(
                         uint256(__input(data, payload, context)),
                         condition.compValue,
-                        Status.AllowanceExceeded,
                         consumptions
                     );
             } else if (operator == Operator.CallWithinAllowance) {
-                return
-                    __allowance(
-                        1,
-                        condition.compValue,
-                        Status.CallAllowanceExceeded,
-                        consumptions
-                    );
+                return __allowance(1, condition.compValue, consumptions);
             } else if (operator == Operator.WithinRatio) {
                 return
                     Result({
@@ -457,17 +450,16 @@ library ConditionLogic {
     function __allowance(
         uint256 value,
         bytes memory compValue,
-        Status failureStatus,
         Consumption[] memory consumptions
     ) private view returns (Result memory) {
         (
-            bool success,
+            Status status,
             Consumption[] memory nextConsumptions
         ) = WithinAllowanceChecker.check(consumptions, value, compValue);
 
         return
             Result({
-                status: success ? Status.Ok : failureStatus,
+                status: status,
                 consumptions: nextConsumptions,
                 info: bytes32(compValue)
             });

@@ -2,7 +2,8 @@
 pragma solidity >=0.8.17 <0.9.0;
 
 import "../../common/AllowanceLoader.sol";
-import "../../periphery/interfaces/IPricing.sol";
+import "../../common/PriceConversion.sol";
+import "../../types/Types.sol";
 
 import {Consumption} from "../../types/Allowance.sol";
 
@@ -10,15 +11,8 @@ import {Consumption} from "../../types/Allowance.sol";
  * @title WithinAllowanceChecker
  * @notice Validates allowance consumption with optional price conversion.
  *
- * @dev When a price adapter is used, the spent amount is converted into the
- *      allowance's base denomination. This conversion accounts for two
- *      distinct decimal domains:
- *
- *      • accrueDecimals — decimals of the allowance's base unit
- *      • paramDecimals  — decimals of the asset being spent
- *
- *      This allows multiple assets with different decimal formats to be
- *      aggregated under a single allowance.
+ * @dev Checks if a value is within an allowance. If a pricing adapter is
+ *      provided, the value is converted to the allowance's base denomination.
  *
  * @author gnosisguild
  */
@@ -27,18 +21,23 @@ library WithinAllowanceChecker {
         Consumption[] memory consumptions,
         uint256 value,
         bytes memory compValue
-    ) internal view returns (bool success, Consumption[] memory) {
+    ) internal view returns (Status, Consumption[] memory) {
         (Consumption memory entry, uint256 index) = _lookup(
             consumptions,
             bytes32(compValue)
         );
 
-        entry.consumed += _convert(value, compValue);
+        (Status status, uint128 converted) = _convert(value, compValue);
+        if (status != Status.Ok) {
+            return (status, consumptions);
+        }
+
+        entry.consumed += converted;
 
         if (entry.consumed <= entry.balance) {
-            return (true, _put(consumptions, index, entry));
+            return (Status.Ok, _put(consumptions, index, entry));
         } else {
-            return (false, consumptions);
+            return (Status.AllowanceExceeded, consumptions);
         }
     }
 
@@ -47,38 +46,41 @@ library WithinAllowanceChecker {
     function _convert(
         uint256 value,
         bytes memory compValue
-    ) private view returns (uint128) {
+    ) private view returns (Status, uint128) {
         /**
          * CompValue Layout (32 or 54 bytes):
          * ┌─────────────────────────┬─────────────────────┬──────────┬──────────┐
-         * │      allowanceKey       │       adapter       │  accrue  │  param   │
+         * │      allowanceKey       │       adapter       │  target  │  source  │
          * │        (bytes32)        │      (address)      │ decimals │ decimals │
          * ├─────────────────────────┼─────────────────────┼──────────┼──────────┤
          * │         0 - 31          │       32 - 51       │    52    │    53    │
          * └─────────────────────────┴─────────────────────┴──────────┴──────────┘
          *                           └─────────────── optional ─────────────────┘
+         *
+         * targetDecimals: decimals of the allowance's base unit
+         * sourceDecimals: decimals of the asset being spent
          */
         if (compValue.length > 32) {
             address adapter;
             assembly {
                 adapter := shr(96, mload(add(compValue, 0x40)))
             }
-            uint8 accrueDecimals = uint8(compValue[52]);
-            uint8 paramDecimals = uint8(compValue[53]);
+            uint256 targetDecimals = uint8(compValue[52]);
+            uint256 sourceDecimals = uint8(compValue[53]);
 
-            uint256 price = IPricing(adapter).getPrice();
-
-            /*
-             *             value × price     10^accrueDecimals
-             *   result = ─────────────── × ───────────────────
-             *                 10^18          10^paramDecimals
-             */
-            value =
-                (value * price * (10 ** accrueDecimals)) /
-                (10 ** (18 + paramDecimals));
+            (Status status, uint256 converted) = PriceConversion.convert(
+                value,
+                sourceDecimals,
+                targetDecimals,
+                adapter
+            );
+            if (status != Status.Ok) {
+                return (status, 0);
+            }
+            return (Status.Ok, uint128(converted));
         }
 
-        return uint128(value);
+        return (Status.Ok, uint128(value));
     }
 
     /// @dev Finds consumption in array by key, or loads from storage if not

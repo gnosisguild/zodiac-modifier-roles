@@ -34,7 +34,6 @@ enum Status {
     PricingAdapterInvalidResult,
     PricingAdapterZeroPrice,
     AllowanceExceeded,
-    CallAllowanceExceeded,
     CalldataOverflow,
     RatioBelowMin,
     RatioAboveMax,

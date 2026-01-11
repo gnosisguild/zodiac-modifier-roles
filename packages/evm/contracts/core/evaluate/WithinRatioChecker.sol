@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "./Adapter.sol";
+import "../../common/PriceConversion.sol";
 import "../../types/Types.sol";
 
 /**
@@ -40,7 +40,6 @@ library WithinRatioChecker {
     }
 
     uint256 private constant BPS = 10000;
-    uint256 private constant PRICE_DECIMALS = 18;
 
     /**
      * @notice Checks if ratio of relative to reference amount is within bounds.
@@ -90,53 +89,30 @@ library WithinRatioChecker {
         view
         returns (Status status, uint256 referenceAmount, uint256 relativeAmount)
     {
-        uint256 precision = _max(
-            _max(config.referenceDecimals, config.relativeDecimals),
-            PRICE_DECIMALS
-        );
+        uint8 targetDecimals = config.referenceDecimals >
+            config.relativeDecimals
+            ? config.referenceDecimals
+            : config.relativeDecimals;
 
-        (status, referenceAmount) = _applyPrice(
+        (status, referenceAmount) = PriceConversion.convert(
             uint256(pluckedValues[config.referenceIndex]),
             config.referenceDecimals,
-            config.referenceAdapter,
-            precision
+            targetDecimals,
+            config.referenceAdapter
         );
         if (status != Status.Ok) {
             return (status, 0, 0);
         }
 
-        (status, relativeAmount) = _applyPrice(
+        (status, relativeAmount) = PriceConversion.convert(
             uint256(pluckedValues[config.relativeIndex]),
             config.relativeDecimals,
-            config.relativeAdapter,
-            precision
+            targetDecimals,
+            config.relativeAdapter
         );
         if (status != Status.Ok) {
             return (status, 0, 0);
         }
-    }
-
-    /**
-     * @dev Scales amount to target precision and applies price conversion.
-     */
-    function _applyPrice(
-        uint256 amount,
-        uint8 decimals,
-        address adapter,
-        uint256 precision
-    ) private view returns (Status, uint256) {
-        uint256 scaledUp = amount * (10 ** (precision - decimals));
-
-        if (adapter == address(0)) {
-            return (Status.Ok, scaledUp);
-        }
-
-        (Status status, uint256 price) = Adapter.getPrice(adapter);
-        if (status != Status.Ok) {
-            return (status, 0);
-        }
-
-        return (Status.Ok, (scaledUp * price) / (10 ** PRICE_DECIMALS));
     }
 
     function _unpack(
@@ -157,9 +133,5 @@ library WithinRatioChecker {
                 mstore(add(config, 0xe0), shr(96, mload(add(compValue, 0x40))))
             }
         }
-    }
-
-    function _max(uint256 a, uint256 b) private pure returns (uint256) {
-        return a > b ? a : b;
     }
 }
