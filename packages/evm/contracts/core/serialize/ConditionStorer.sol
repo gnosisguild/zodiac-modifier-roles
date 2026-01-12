@@ -13,7 +13,7 @@ import "../../types/Types.sol";
 
 /**
  * @title ConditionStorer
- * @notice Validates, transforms, and stores condition trees into immutable
+ * @notice Validates, transforms, and stores condition trees in immutable
  *         storage.
  *
  * @author gnosisguild
