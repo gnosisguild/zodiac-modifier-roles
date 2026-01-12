@@ -8,9 +8,6 @@ import {
   EIP1193Provider,
 } from "@gnosis-guild/zodiac-core";
 
-import { ExecutionOptions } from "./utils";
-import { ConditionFlatStruct } from "../typechain-types/contracts/core/Membership";
-
 export async function setupTestContract() {
   const [owner, member] = await hre.ethers.getSigners();
 
@@ -38,6 +35,7 @@ export async function setupTestContract() {
 
   return {
     roles: roles.connect(owner),
+    owner,
     member,
     testContract,
     testContractAddress,
@@ -89,58 +87,4 @@ export async function deployRolesMod(
   const modifier = await Modifier.deploy(owner, avatar, target);
   await modifier.waitForDeployment();
   return modifier;
-}
-
-export async function setupAvatarAndRoles(
-  roleKey = "0x000000000000000000000000000000000000000000000000000000000aabbcc1",
-) {
-  const [owner, member, relayer] = await hre.ethers.getSigners();
-
-  const Avatar = await hre.ethers.getContractFactory("TestAvatar");
-  const avatar = await Avatar.deploy();
-
-  const TestContract = await hre.ethers.getContractFactory("TestContract");
-  const testContract = await TestContract.deploy();
-  const avatarAddress = await avatar.getAddress();
-  const roles = await deployRolesMod(
-    hre,
-    owner.address,
-    avatarAddress,
-    avatarAddress,
-  );
-  await roles.connect(owner).enableModule(member.address);
-  await roles.connect(owner).grantRole(member.address, roleKey, 0, 0, 0);
-  await roles.connect(owner).setDefaultRole(member.address, roleKey);
-
-  await roles
-    .connect(owner)
-    .scopeTarget(roleKey, await testContract.getAddress());
-
-  const testContractAddress = await testContract.getAddress();
-
-  const allowFunction = (
-    selector: string,
-    conditions: ConditionFlatStruct[],
-    options?: ExecutionOptions,
-  ) =>
-    roles
-      .connect(owner)
-      .allowFunction(
-        roleKey,
-        testContractAddress,
-        selector,
-        conditions,
-        options || ExecutionOptions.Both,
-      );
-
-  return {
-    owner,
-    member,
-    relayer,
-    avatar,
-    roles,
-    roleKey,
-    testContract,
-    allowFunction,
-  };
 }

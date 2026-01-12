@@ -20,7 +20,8 @@ import {
   Operator,
   ConditionViolationStatus,
 } from "../utils";
-import { setupTestContract, setupAvatarAndRoles } from "../setup";
+import { setupTestContract } from "../setup";
+
 import { Roles } from "../../typechain-types";
 import { ConditionFlatStruct } from "../../typechain-types/contracts/Roles";
 
@@ -1378,8 +1379,8 @@ describe("Operator - WithinAllowance", async () => {
 
   describe("WithinAllowance - from EtherValue", () => {
     it("enforces ether allowance from transaction.value", async () => {
-      const { owner, member, roles, testContract, allowFunction } =
-        await loadFixture(setupAvatarAndRoles);
+      const { roleKey, owner, member, roles, testContract } =
+        await loadFixture(setupTestContract);
 
       // Fund the avatar
       const avatarAddress = await roles.avatar();
@@ -1402,7 +1403,9 @@ describe("Operator - WithinAllowance", async () => {
       const selector = iface.getFunction("oneParamStatic")!.selector;
 
       // Static param passes, EtherValue checks allowance
-      await allowFunction(
+      await roles.allowFunction(
+        roleKey,
+        await testContract.getAddress(),
         selector,
         [
           {
