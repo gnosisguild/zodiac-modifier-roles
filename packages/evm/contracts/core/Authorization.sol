@@ -9,8 +9,15 @@ import "./serialize/ConditionUnpacker.sol";
 import "./Storage.sol";
 
 /**
- * @title Authorization - Authorizes transactions based on target clearance
- *        and function scope rules.
+ * @title Authorization
+ * @notice Authorizes transactions against role permissions.
+ *
+ *         For each transaction, it evaluates:
+ *         1. Target Clearance
+ *         2. ExecutionOptions
+ *         3. Condition rules
+ *
+ *         Handles unwrapping of transaction bundles if an adapter is registered.
  *
  * @author gnosisguild
  */
@@ -22,47 +29,29 @@ abstract contract Authorization is RolesStorage {
         bytes calldata data,
         Operation operation
     ) internal view returns (Consumption[] memory consumptions) {
-        Transaction memory transaction = Transaction(to, value, operation);
-
         address adapter = unwrappers[_key(to, bytes4(data))];
         if (adapter == address(0)) {
-            consumptions = _transaction(
-                roleKey,
-                data,
-                consumptions,
-                transaction
-            );
-        } else {
-            consumptions = _transactionBundle(
-                adapter,
-                roleKey,
-                data,
-                transaction
-            );
+            return
+                _transaction(
+                    roleKey,
+                    data,
+                    consumptions,
+                    Transaction(to, value, operation)
+                );
         }
-    }
 
-    function _transactionBundle(
-        address adapter,
-        bytes32 roleKey,
-        bytes calldata data,
-        Transaction memory transaction
-    ) private view returns (Consumption[] memory consumptions) {
+        /*
+         * Transaction Bundle
+         */
         try
-            ITransactionUnwrapper(adapter).unwrap(
-                transaction.to,
-                transaction.value,
-                data,
-                transaction.operation
-            )
+            ITransactionUnwrapper(adapter).unwrap(to, value, data, operation)
         returns (UnwrappedTransaction[] memory unwrapped) {
             for (uint256 i; i < unwrapped.length; ++i) {
                 UnwrappedTransaction memory entry = unwrapped[i];
-                uint256 left = entry.dataLocation;
-                uint256 right = left + entry.dataSize;
                 consumptions = _transaction(
                     roleKey,
-                    data[left:right],
+                    data[entry.dataLocation:entry.dataLocation +
+                        entry.dataSize],
                     consumptions,
                     Transaction(entry.to, entry.value, entry.operation)
                 );
@@ -93,7 +82,7 @@ abstract contract Authorization is RolesStorage {
         }
 
         /*
-         * Check Function/Default Rules defined
+         * Check that some Condition is defined
          */
         uint256 scopeConfig;
         {
@@ -124,7 +113,7 @@ abstract contract Authorization is RolesStorage {
         }
 
         /*
-         * Load Function/Default Rules
+         * Load Condition
          */
         (
             Condition memory condition,
@@ -133,7 +122,7 @@ abstract contract Authorization is RolesStorage {
         ) = _unpackScopeConfig(scopeConfig, data, transaction);
 
         /*
-         * Evaluate Rules
+         * Evaluate Condition
          */
         Result memory result = ConditionLogic.evaluate(
             data,
