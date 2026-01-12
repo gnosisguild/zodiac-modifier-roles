@@ -1,102 +1,149 @@
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { AbiCoder, Interface, solidityPacked, ZeroHash } from "ethers";
 
-import { AbiCoder, ZeroHash } from "ethers";
-
-const defaultAbiCoder = AbiCoder.defaultAbiCoder();
-
-import { Encoding, Operator, PermissionCheckerStatus } from "../utils";
+import { setupTestContract, setupOneParam, setupDynamicParam } from "../setup";
 import {
-  setupOneParamAddress,
-  setupOneParamUintSmall,
-  setupOneParamUintWord,
-} from "../setup";
+  Encoding,
+  Operator,
+  ExecutionOptions,
+  ConditionViolationStatus,
+  flattenCondition,
+} from "../utils";
 
-describe("Operator - GreaterThan", async () => {
-  it("evaluates operator GreaterThan - uint full word", async () => {
-    const { roles, allowFunction, invoke } = await loadFixture(
-      setupOneParamUintWord,
-    );
+const abiCoder = AbiCoder.defaultAbiCoder();
 
-    await allowFunction([
-      {
-        parent: 0,
+describe("Operator - GreaterThan", () => {
+  it("passes when value > compValue", async () => {
+    const { allowFunction, invoke } = await loadFixture(setupOneParam);
+
+    await allowFunction(
+      flattenCondition({
         paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
-        compValue: "0x",
-      },
-      {
-        parent: 0,
-        paramType: Encoding.Static,
-        operator: Operator.GreaterThan,
-        compValue: defaultAbiCoder.encode(["uint256"], [1000]),
-      },
-    ]);
-
-    await expect(invoke(1000))
-      .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed, ZeroHash);
-    await expect(invoke(999))
-      .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed, ZeroHash);
-    await expect(invoke(1001)).to.not.be.reverted;
-  });
-  it("evaluates operator GreaterThan - uint smaller than word", async () => {
-    const { roles, allowFunction, invoke } = await loadFixture(
-      setupOneParamUintSmall,
+        children: [
+          {
+            paramType: Encoding.Static,
+            operator: Operator.GreaterThan,
+            compValue: abiCoder.encode(["uint256"], [100]),
+          },
+        ],
+      }),
+      ExecutionOptions.None,
     );
 
-    await allowFunction([
-      {
-        parent: 0,
+    // 101 > 100 passes
+    await expect(invoke(101)).to.not.be.reverted;
+  });
+
+  it("fails when value <= compValue", async () => {
+    const { roles, allowFunction, invoke } = await loadFixture(setupOneParam);
+
+    await allowFunction(
+      flattenCondition({
         paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
-        compValue: "0x",
-      },
-      {
-        parent: 0,
-        paramType: Encoding.Static,
-        operator: Operator.GreaterThan,
-        compValue: defaultAbiCoder.encode(["uint8"], [50]),
-      },
-    ]);
+        children: [
+          {
+            paramType: Encoding.Static,
+            operator: Operator.GreaterThan,
+            compValue: abiCoder.encode(["uint256"], [100]),
+          },
+        ],
+      }),
+      ExecutionOptions.None,
+    );
 
-    await expect(invoke(50))
+    // 100 == 100 fails
+    await expect(invoke(100))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed, ZeroHash);
-    await expect(invoke(49))
+      .withArgs(ConditionViolationStatus.ParameterLessThanAllowed, ZeroHash);
+
+    // 99 < 100 fails
+    await expect(invoke(99))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed, ZeroHash);
-    await expect(invoke(51)).to.not.be.reverted;
+      .withArgs(ConditionViolationStatus.ParameterLessThanAllowed, ZeroHash);
   });
-  it("evaluates operator GreaterThan - address", async () => {
+
+  it("integrates with Slice operator", async () => {
     const { roles, allowFunction, invoke } =
-      await loadFixture(setupOneParamAddress);
+      await loadFixture(setupDynamicParam);
 
-    const address = "0x000000000000000000000000000000000000000f";
-
-    await allowFunction([
-      {
-        parent: 0,
+    // Slice 4 bytes at offset 0, then GreaterThan comparison
+    await allowFunction(
+      flattenCondition({
         paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
-        compValue: "0x",
-      },
-      {
-        parent: 0,
-        paramType: Encoding.Static,
-        operator: Operator.GreaterThan,
-        compValue: defaultAbiCoder.encode(["address"], [address]),
-      },
-    ]);
+        children: [
+          {
+            paramType: Encoding.Dynamic,
+            operator: Operator.Slice,
+            compValue: solidityPacked(["uint16", "uint8"], [0, 4]), // shift=0, size=4
+            children: [
+              {
+                paramType: Encoding.Static,
+                operator: Operator.GreaterThan,
+                compValue: abiCoder.encode(["uint256"], [100]),
+              },
+            ],
+          },
+        ],
+      }),
+      ExecutionOptions.None,
+    );
 
-    await expect(invoke(address))
+    // 0x00000065 = 101 > 100 passes
+    await expect(invoke("0x00000065")).to.not.be.reverted;
+
+    // 0x00000064 = 100 <= 100 fails
+    await expect(invoke("0x00000064"))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed, ZeroHash);
-    await expect(invoke("0x000000000000000000000000000000000000000e"))
+      .withArgs(ConditionViolationStatus.ParameterLessThanAllowed, ZeroHash);
+  });
+
+  it("compares ether value (msg.value)", async () => {
+    const iface = new Interface(["function fn()"]);
+    const fn = iface.getFunction("fn")!;
+    const { roles, member, testContractAddress, roleKey } =
+      await loadFixture(setupTestContract);
+
+    // GreaterThan on EtherValue: msg.value must be > 1000 wei
+    await roles.allowFunction(
+      roleKey,
+      testContractAddress,
+      fn.selector,
+      flattenCondition({
+        paramType: Encoding.EtherValue,
+        operator: Operator.GreaterThan,
+        compValue: abiCoder.encode(["uint256"], [1000]),
+      }),
+      ExecutionOptions.Send,
+    );
+
+    // 1001 > 1000 passes
+    await expect(
+      roles
+        .connect(member)
+        .execTransactionFromModule(
+          testContractAddress,
+          1001,
+          iface.encodeFunctionData(fn),
+          0,
+        ),
+    ).to.not.be.reverted;
+
+    // 1000 <= 1000 fails
+    await expect(
+      roles
+        .connect(member)
+        .execTransactionFromModule(
+          testContractAddress,
+          1000,
+          iface.encodeFunctionData(fn),
+          0,
+        ),
+    )
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterLessThanAllowed, ZeroHash);
-    await expect(invoke("0x000000000000000000000000000000000000001f")).to.not.be
-      .reverted;
+      .withArgs(ConditionViolationStatus.ParameterLessThanAllowed, ZeroHash);
   });
 });

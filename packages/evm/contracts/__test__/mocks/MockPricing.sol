@@ -12,3 +12,24 @@ contract MockPricing {
         return _price;
     }
 }
+
+/// @dev Contract with code but no getPrice() and no fallback
+contract MockPricingNoInterface {
+    function dummy() external pure returns (uint256) {
+        return 42;
+    }
+}
+
+/// @dev Contract that implements IPricing but always reverts
+contract MockPricingReverting {
+    function getPrice() external pure returns (uint256) {
+        revert("MockPricing: intentional revert");
+    }
+}
+
+/// @dev Contract with matching selector but wrong return type
+contract MockPricingWrongReturn {
+    function getPrice() external pure returns (uint256, uint256) {
+        return (123, 456);
+    }
+}
