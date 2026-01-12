@@ -41,6 +41,18 @@ interface IRolesError {
     /// Authorization check failed with specified status and info
     error ConditionViolation(Status status, bytes32 info);
 
+    /// Target address is not allowed for this role
+    error TargetAddressNotAllowed(address target);
+
+    /// Function selector is not allowed for this role on the target
+    error FunctionNotAllowed(address target, bytes4 selector);
+
+    /// Sending value is not allowed
+    error SendNotAllowed(address target);
+
+    /// Delegate call is not allowed
+    error DelegateCallNotAllowed(address target);
+
     /*//////////////////////////////////////////////////////////////
                             DECODING ERRORS
     //////////////////////////////////////////////////////////////*/

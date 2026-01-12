@@ -62,12 +62,13 @@ library Topology {
 
         // Check all direct children
         for (uint256 i = index + 1; i < conditions.length; ++i) {
-            if (conditions[i].parent == index) {
+            uint256 parent = conditions[i].parent;
+            if (parent == index) {
                 // Recursively check if child is structural
                 if (isStructural(conditions, i)) {
                     return true;
                 }
-            } else if (conditions[i].parent > index) {
+            } else if (parent > index) {
                 break;
             }
         }

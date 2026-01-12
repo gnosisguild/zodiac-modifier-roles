@@ -114,20 +114,10 @@ export enum ExecutionOptions {
   Both,
 }
 
-export enum PermissionCheckerStatus {
+export enum ConditionViolationStatus {
   Ok,
-  /// Role not allowed to delegate call to target address
-  DelegateCallNotAllowed,
-  /// Role not allowed to call target address
-  TargetAddressNotAllowed,
-  /// Role not allowed to call this function on target address
-  FunctionNotAllowed,
-  /// Role not allowed to send to target address
-  SendNotAllowed,
   /// Or condition not met
   OrViolation,
-  /// Nor condition not met
-  NorViolation,
   /// Parameter value is not equal to allowed
   ParameterNotAllowed,
   /// Parameter value less than allowed
@@ -140,19 +130,20 @@ export enum PermissionCheckerStatus {
   NotEveryArrayElementPasses,
   /// Array elements do not meet allowed criteria for at least one element
   NoArrayElementPasses,
-  /// Parameter value not a subset of allowed
-  ParameterNotSubsetOfAllowed,
   /// Bitmask exceeded value length
   BitmaskOverflow,
   /// Bitmask not an allowed value
   BitmaskNotAllowed,
   CustomConditionViolation,
-  /// TODO
+  CustomConditionNotAContract,
+  CustomConditionReverted,
+  CustomConditionInvalidResult,
+  PricingAdapterNotAContract,
+  PricingAdapterReverted,
+  PricingAdapterInvalidResult,
+  PricingAdapterZeroPrice,
   AllowanceExceeded,
-  /// TODO
-  CallAllowanceExceeded,
-  /// TODO
-  EtherAllowanceExceeded,
+  AllowanceValueOverflow,
   // A Payload overflow was found by the Checker flow
   CalldataOverflow,
   RatioBelowMin,

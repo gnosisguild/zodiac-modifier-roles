@@ -1,21 +1,19 @@
-import hre from "hardhat";
-
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
+import hre from "hardhat";
+import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { ZeroHash } from "ethers";
 
 import {
   Encoding,
-  BYTES32_ZERO,
   ExecutionOptions,
   Operator,
-  PermissionCheckerStatus,
+  ConditionViolationStatus,
 } from "../utils";
 import { deployRolesMod } from "../setup";
-import { ConditionFlatStruct } from "../../typechain-types/contracts/Roles";
 
 const AddressOne = "0x0000000000000000000000000000000000000001";
 
-describe("AvatarIsOwnerOfERC721", async () => {
+describe("AvatarIsOwnerOfERC721", () => {
   async function setup() {
     const ROLE_KEY =
       "0x0000000000000000000000000000000000000000000000000000000000000001";
@@ -48,21 +46,37 @@ describe("AvatarIsOwnerOfERC721", async () => {
       "AvatarIsOwnerOfERC721",
     );
     const customChecker = await CustomChecker.deploy();
+    const customCheckerAddress = await customChecker.getAddress();
 
-    async function allowFunction(
-      conditions: ConditionFlatStruct[],
-      options: ExecutionOptions = ExecutionOptions.None,
-    ) {
-      await roles
-        .connect(owner)
-        .allowFunction(
-          ROLE_KEY,
-          mockERC721Address,
-          SELECTOR,
-          conditions,
-          options,
-        );
-    }
+    // Extra bytes (padding) for the custom checker address in compValue
+    const extra = "000000000000000000000000";
+
+    await roles.connect(owner).allowFunction(
+      ROLE_KEY,
+      mockERC721Address,
+      SELECTOR,
+      [
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.Custom,
+          compValue: `${customCheckerAddress}${extra}`,
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.Pass,
+          compValue: "0x",
+        },
+      ],
+      ExecutionOptions.None,
+    );
 
     async function invoke(tokenId: number, someParam: number) {
       return roles
@@ -77,55 +91,35 @@ describe("AvatarIsOwnerOfERC721", async () => {
     }
 
     return {
-      owner,
-      invoker,
-      avatar,
       roles,
+      avatar,
       mockERC721,
-      customChecker,
-      allowFunction,
       invoke,
     };
   }
 
-  it("passes a comparison", async () => {
-    const { roles, avatar, mockERC721, customChecker, allowFunction, invoke } =
-      await loadFixture(setup);
+  it("passes when avatar owns the token", async () => {
+    const { avatar, mockERC721, invoke } = await loadFixture(setup);
     const avatarAddress = await avatar.getAddress();
-    const customCheckerAddress = await customChecker.getAddress();
-    const extra = "000000000000000000000000";
-    await allowFunction([
-      {
-        parent: 0,
-        paramType: Encoding.AbiEncoded,
-        operator: Operator.Matches,
-        compValue: "0x",
-      },
-      {
-        parent: 0,
-        paramType: Encoding.Static,
-        operator: Operator.Custom,
-        compValue: `${customCheckerAddress}${extra}`,
-      },
-      {
-        parent: 0,
-        paramType: Encoding.Static,
-        operator: Operator.Pass,
-        compValue: `0x`,
-      },
-    ]);
 
-    const notOwnedByAvatar = 12345;
-    const ownedByAvatar = 6789;
+    const tokenId = 6789;
     const someParam = 123;
 
-    await mockERC721.mint(AddressOne, notOwnedByAvatar);
-    await mockERC721.mint(avatarAddress, ownedByAvatar);
+    await mockERC721.mint(avatarAddress, tokenId);
 
-    await expect(invoke(notOwnedByAvatar, someParam))
+    await expect(invoke(tokenId, someParam)).to.not.be.reverted;
+  });
+
+  it("fails when avatar does not own the token", async () => {
+    const { roles, mockERC721, invoke } = await loadFixture(setup);
+
+    const tokenId = 12345;
+    const someParam = 123;
+
+    await mockERC721.mint(AddressOne, tokenId);
+
+    await expect(invoke(tokenId, someParam))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.CustomConditionViolation, BYTES32_ZERO);
-
-    await expect(invoke(ownedByAvatar, someParam)).to.not.be.reverted;
+      .withArgs(ConditionViolationStatus.CustomConditionViolation, ZeroHash);
   });
 });

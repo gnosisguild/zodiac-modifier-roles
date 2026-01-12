@@ -132,8 +132,11 @@ library TypeTree {
         }
 
         for (uint256 i = index + 1; i < conditions.length; ++i) {
-            if (conditions[i].parent == index && !_isInlined(conditions, i)) {
+            uint256 parent = conditions[i].parent;
+            if (parent == index && !_isInlined(conditions, i)) {
                 return false;
+            } else if (parent > index) {
+                break;
             }
         }
         return true;
