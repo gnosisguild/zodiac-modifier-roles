@@ -45,7 +45,7 @@ describe("AbiDecoder - Security & Bounds", () => {
         children: [{ paramType: Encoding.Static }],
       });
 
-      const result = toTree(await decoder.inspectFlat(data, conditions));
+      const result = toTree(await decoder.inspect(data, conditions));
 
       expect(result.overflow).to.equal(true);
       expect(result.children.length).to.equal(0);
@@ -62,7 +62,7 @@ describe("AbiDecoder - Security & Bounds", () => {
         children: [{ paramType: Encoding.Dynamic }],
       });
 
-      const result = toTree(await decoder.inspectFlat(data, conditions));
+      const result = toTree(await decoder.inspect(data, conditions));
 
       expect(result.overflow).to.equal(true);
       expect(result.children.length).to.equal(0);
@@ -79,7 +79,7 @@ describe("AbiDecoder - Security & Bounds", () => {
         children: [{ paramType: Encoding.Static }],
       });
 
-      const result = toTree(await decoder.inspectFlat(data, conditions));
+      const result = toTree(await decoder.inspect(data, conditions));
 
       expect(result.overflow).to.equal(false);
       expect(result.children.length).to.equal(1);
@@ -105,7 +105,7 @@ describe("AbiDecoder - Security & Bounds", () => {
         ],
       });
 
-      const result = toTree(await decoder.inspectFlat(data, conditions));
+      const result = toTree(await decoder.inspect(data, conditions));
 
       expect(result.overflow).to.equal(true);
     });
@@ -125,7 +125,7 @@ describe("AbiDecoder - Security & Bounds", () => {
         ],
       });
 
-      const result = toTree(await decoder.inspectFlat(data, conditions));
+      const result = toTree(await decoder.inspect(data, conditions));
 
       expect(result.overflow).to.equal(true);
     });
@@ -147,7 +147,7 @@ describe("AbiDecoder - Security & Bounds", () => {
         children: [{ paramType: Encoding.Dynamic }],
       });
 
-      const result = toTree(await decoder.inspectFlat(data, conditions));
+      const result = toTree(await decoder.inspect(data, conditions));
 
       expect(result.overflow).to.equal(true);
     });
@@ -167,7 +167,7 @@ describe("AbiDecoder - Security & Bounds", () => {
         children: [{ paramType: Encoding.Dynamic }],
       });
 
-      const result = toTree(await decoder.inspectFlat(data, conditions));
+      const result = toTree(await decoder.inspect(data, conditions));
 
       expect(result.overflow).to.equal(true);
     });
@@ -187,7 +187,7 @@ describe("AbiDecoder - Security & Bounds", () => {
         children: [{ paramType: Encoding.Dynamic }],
       });
 
-      const result = toTree(await decoder.inspectFlat(data, conditions));
+      const result = toTree(await decoder.inspect(data, conditions));
 
       expect(result.overflow).to.equal(true);
     });
@@ -207,7 +207,7 @@ describe("AbiDecoder - Security & Bounds", () => {
         children: [{ paramType: Encoding.Dynamic }],
       });
 
-      const result = toTree(await decoder.inspectFlat(data, conditions));
+      const result = toTree(await decoder.inspect(data, conditions));
 
       expect(result.overflow).to.equal(false);
       expect(result.children.length).to.equal(1);
@@ -227,7 +227,7 @@ describe("AbiDecoder - Security & Bounds", () => {
         children: [{ paramType: Encoding.Dynamic }],
       });
 
-      const result = toTree(await decoder.inspectFlat(data, conditions));
+      const result = toTree(await decoder.inspect(data, conditions));
 
       expect(result.overflow).to.equal(true);
     });
@@ -257,7 +257,7 @@ describe("AbiDecoder - Security & Bounds", () => {
         ],
       });
 
-      const result = toTree(await decoder.inspectFlat(data, conditions));
+      const result = toTree(await decoder.inspect(data, conditions));
 
       expect(result.overflow).to.equal(true);
     });
@@ -276,7 +276,7 @@ describe("AbiDecoder - Security & Bounds", () => {
         children: [{ paramType: Encoding.Dynamic }],
       });
 
-      const result = toTree(await decoder.inspectFlat(data, conditions));
+      const result = toTree(await decoder.inspect(data, conditions));
 
       expect(result.overflow).to.equal(true);
     });
@@ -296,7 +296,7 @@ describe("AbiDecoder - Security & Bounds", () => {
         children: [{ paramType: Encoding.Dynamic }],
       });
 
-      await expect(decoder.inspectFlat(data, conditions)).to.be.reverted;
+      await expect(decoder.inspect(data, conditions)).to.be.reverted;
     });
 
     it("accepts minimal forward pointer (tail == head + 32)", async () => {
@@ -314,7 +314,7 @@ describe("AbiDecoder - Security & Bounds", () => {
         children: [{ paramType: Encoding.Dynamic }],
       });
 
-      const result = toTree(await decoder.inspectFlat(data, conditions));
+      const result = toTree(await decoder.inspect(data, conditions));
 
       expect(result.overflow).to.equal(false);
       expect(result.children.length).to.equal(1);
@@ -343,7 +343,7 @@ describe("AbiDecoder - Security & Bounds", () => {
         ],
       });
 
-      const result = toTree(await decoder.inspectFlat(data, conditions));
+      const result = toTree(await decoder.inspect(data, conditions));
 
       expect(result.overflow).to.equal(true);
     });
@@ -368,7 +368,7 @@ describe("AbiDecoder - Security & Bounds", () => {
         ],
       });
 
-      const result = toTree(await decoder.inspectFlat(data, conditions));
+      const result = toTree(await decoder.inspect(data, conditions));
 
       expect(result.overflow).to.equal(true);
     });
@@ -410,7 +410,7 @@ describe("AbiDecoder - Security & Bounds", () => {
         ],
       });
 
-      const result = toTree(await decoder.inspectFlat(data, conditions));
+      const result = toTree(await decoder.inspect(data, conditions));
 
       expect(result.overflow).to.equal(false);
       const variant = result.children[0];
@@ -456,7 +456,7 @@ describe("AbiDecoder - Security & Bounds", () => {
         ],
       });
 
-      const result = toTree(await decoder.inspectFlat(data, conditions));
+      const result = toTree(await decoder.inspect(data, conditions));
 
       expect(result.overflow).to.equal(true);
     });
@@ -472,7 +472,7 @@ describe("AbiDecoder - Security & Bounds", () => {
         children: [{ paramType: Encoding.Static }],
       });
 
-      const result = toTree(await decoder.inspectFlat(data, conditions));
+      const result = toTree(await decoder.inspect(data, conditions));
 
       expect(result.overflow).to.equal(true);
       // When overflow occurs, no children should be populated
@@ -494,7 +494,7 @@ describe("AbiDecoder - Security & Bounds", () => {
         children: [{ paramType: Encoding.Static }],
       });
 
-      const result = toTree(await decoder.inspectFlat(data, conditions));
+      const result = toTree(await decoder.inspect(data, conditions));
 
       expect(result.overflow).to.equal(true);
     });
@@ -527,7 +527,7 @@ describe("AbiDecoder - Security & Bounds", () => {
         ],
       });
 
-      const result = toTree(await decoder.inspectFlat(data, conditions));
+      const result = toTree(await decoder.inspect(data, conditions));
 
       expect(result.overflow).to.equal(true);
     });
@@ -555,7 +555,7 @@ describe("AbiDecoder - Security & Bounds", () => {
         ],
       });
 
-      const result = toTree(await decoder.inspectFlat(data, conditions));
+      const result = toTree(await decoder.inspect(data, conditions));
 
       expect(result.overflow).to.equal(false);
       expect(result.children.length).to.equal(1);
@@ -573,7 +573,7 @@ describe("AbiDecoder - Security & Bounds", () => {
         children: [],
       });
 
-      const result = toTree(await decoder.inspectFlat(data, conditions));
+      const result = toTree(await decoder.inspect(data, conditions));
 
       expect(result.overflow).to.equal(false);
     });
@@ -599,7 +599,7 @@ describe("AbiDecoder - Security & Bounds", () => {
         ],
       });
 
-      const result = toTree(await decoder.inspectFlat(data, conditions));
+      const result = toTree(await decoder.inspect(data, conditions));
 
       // Should overflow because claimed elements don't exist
       expect(result.overflow).to.equal(true);
@@ -616,7 +616,7 @@ describe("AbiDecoder - Security & Bounds", () => {
         children: [{ paramType: Encoding.Static }],
       });
 
-      const result = toTree(await decoder.inspectFlat(data, conditions));
+      const result = toTree(await decoder.inspect(data, conditions));
 
       // Root size should equal total calldata length (36 bytes)
       // data is hex string: "0x" + 2 chars per byte, so (data.length - 2) / 2

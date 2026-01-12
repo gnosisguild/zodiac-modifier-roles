@@ -25,7 +25,7 @@ describe("AbiDecoder - Traversal", () => {
         children: [{ paramType: Encoding.Static }],
       });
 
-      const result = toTree(await decoder.inspectFlat(data, conditions));
+      const result = toTree(await decoder.inspect(data, conditions));
       const node = result.children[0];
 
       expect(node.inlined).to.equal(true);
@@ -44,7 +44,7 @@ describe("AbiDecoder - Traversal", () => {
         children: [{ paramType: Encoding.Dynamic }],
       });
 
-      const result = toTree(await decoder.inspectFlat(data, conditions));
+      const result = toTree(await decoder.inspect(data, conditions));
       const node = result.children[0];
 
       expect(node.inlined).to.equal(false);
@@ -63,7 +63,7 @@ describe("AbiDecoder - Traversal", () => {
         children: [{ paramType: Encoding.Dynamic }],
       });
 
-      const result = toTree(await decoder.inspectFlat(data, conditions));
+      const result = toTree(await decoder.inspect(data, conditions));
       const node = result.children[0];
 
       expect(await decoder.pluck(data, node.location, node.size)).to.equal(
@@ -80,7 +80,7 @@ describe("AbiDecoder - Traversal", () => {
         children: [{ paramType: Encoding.Dynamic }],
       });
 
-      const result = toTree(await decoder.inspectFlat(data, conditions));
+      const result = toTree(await decoder.inspect(data, conditions));
       const node = result.children[0];
 
       expect(node.size).to.equal(32);
@@ -113,7 +113,7 @@ describe("AbiDecoder - Traversal", () => {
           ],
         });
 
-        const result = toTree(await decoder.inspectFlat(data, conditions));
+        const result = toTree(await decoder.inspect(data, conditions));
         const tupleNode = result.children[0];
 
         expect(tupleNode.inlined).to.equal(true);
@@ -155,7 +155,7 @@ describe("AbiDecoder - Traversal", () => {
           ],
         });
 
-        const result = toTree(await decoder.inspectFlat(data, conditions));
+        const result = toTree(await decoder.inspect(data, conditions));
         const tupleNode = result.children[0];
 
         expect(tupleNode.inlined).to.equal(false);
@@ -187,7 +187,7 @@ describe("AbiDecoder - Traversal", () => {
           ],
         });
 
-        const result = toTree(await decoder.inspectFlat(data, conditions));
+        const result = toTree(await decoder.inspect(data, conditions));
         const arrayNode = result.children[0];
 
         expect(arrayNode.inlined).to.equal(false);
@@ -222,7 +222,7 @@ describe("AbiDecoder - Traversal", () => {
           ],
         });
 
-        const result = toTree(await decoder.inspectFlat(data, conditions));
+        const result = toTree(await decoder.inspect(data, conditions));
         const arrayNode = result.children[0];
 
         expect(
@@ -255,7 +255,7 @@ describe("AbiDecoder - Traversal", () => {
           ],
         });
 
-        const result = toTree(await decoder.inspectFlat(data, conditions));
+        const result = toTree(await decoder.inspect(data, conditions));
         const arrayNode = result.children[0];
 
         expect(arrayNode.size).to.equal(32);
@@ -292,7 +292,7 @@ describe("AbiDecoder - Traversal", () => {
           ],
         });
 
-        const result = toTree(await decoder.inspectFlat(data, conditions));
+        const result = toTree(await decoder.inspect(data, conditions));
         const arrayNode = result.children[0];
 
         expect(
@@ -334,7 +334,7 @@ describe("AbiDecoder - Traversal", () => {
           ],
         });
 
-        const result = toTree(await decoder.inspectFlat(data, conditions));
+        const result = toTree(await decoder.inspect(data, conditions));
         const innerNode = result.children[0].children[0];
 
         expect(
@@ -361,7 +361,7 @@ describe("AbiDecoder - Traversal", () => {
           ],
         });
 
-        const result = toTree(await decoder.inspectFlat(data, conditions));
+        const result = toTree(await decoder.inspect(data, conditions));
         const innerNode = result.children[0].children[0];
 
         expect(
@@ -389,7 +389,7 @@ describe("AbiDecoder - Traversal", () => {
           ],
         });
 
-        const result = toTree(await decoder.inspectFlat(data, conditions));
+        const result = toTree(await decoder.inspect(data, conditions));
         const staticNode = result.children[0].children[0];
 
         expect(
@@ -421,7 +421,7 @@ describe("AbiDecoder - Traversal", () => {
         ],
       });
 
-      const result = toTree(await decoder.inspectFlat(data, conditions));
+      const result = toTree(await decoder.inspect(data, conditions));
       const tupleNode = result.children[0];
       const arrayNode = tupleNode.children[0];
 
@@ -476,7 +476,7 @@ describe("AbiDecoder - Traversal", () => {
         ],
       });
 
-      const result = toTree(await decoder.inspectFlat(data, conditions));
+      const result = toTree(await decoder.inspect(data, conditions));
       const arrayNode = result.children[0];
 
       expect(
@@ -534,7 +534,7 @@ describe("AbiDecoder - Traversal", () => {
         ],
       });
 
-      const result = toTree(await decoder.inspectFlat(data, conditions));
+      const result = toTree(await decoder.inspect(data, conditions));
       const arrayNode = result.children[0];
       const innerNode = arrayNode.children[0].children[0];
 
@@ -588,7 +588,7 @@ describe("AbiDecoder - Traversal", () => {
         ],
       });
 
-      const result = toTree(await decoder.inspectFlat(data, conditions));
+      const result = toTree(await decoder.inspect(data, conditions));
       const tupleNode = result.children[0];
       const abiEncodedNode = tupleNode.children[0];
       const deepArrayNode = abiEncodedNode.children[0];
@@ -649,7 +649,7 @@ describe("AbiDecoder - Traversal", () => {
         ],
       });
 
-      const result = toTree(await decoder.inspectFlat(data, conditions));
+      const result = toTree(await decoder.inspect(data, conditions));
       const variantNode = result.children[0];
 
       expect(variantNode.variant).to.equal(true);
@@ -687,7 +687,7 @@ describe("AbiDecoder - Traversal", () => {
         ],
       });
 
-      const result = toTree(await decoder.inspectFlat(data, conditions));
+      const result = toTree(await decoder.inspect(data, conditions));
       const variantNode = result.children[0];
 
       expect(variantNode.children[0].overflow).to.equal(false);
@@ -731,7 +731,7 @@ describe("AbiDecoder - Traversal", () => {
         ],
       });
 
-      const result = toTree(await decoder.inspectFlat(data, conditions));
+      const result = toTree(await decoder.inspect(data, conditions));
       const variantNode = result.children[0];
 
       expect(variantNode.variant).to.equal(true);
@@ -804,7 +804,7 @@ describe("AbiDecoder - Traversal", () => {
         ],
       });
 
-      const result = toTree(await decoder.inspectFlat(data, conditions));
+      const result = toTree(await decoder.inspect(data, conditions));
       const variantNode = result.children[0];
 
       expect(variantNode.variant).to.equal(true);
@@ -849,7 +849,7 @@ describe("AbiDecoder - Traversal", () => {
         ],
       });
 
-      const result = toTree(await decoder.inspectFlat(data, conditions));
+      const result = toTree(await decoder.inspect(data, conditions));
       const arrayNode = result.children[0];
 
       expect(arrayNode.children).to.have.length(2);
@@ -892,7 +892,7 @@ describe("AbiDecoder - Traversal", () => {
         ],
       });
 
-      const result = toTree(await decoder.inspectFlat(data, conditions));
+      const result = toTree(await decoder.inspect(data, conditions));
       const arrayNode = result.children[0];
       const values = [10, 20, 30, 40, 50];
 
@@ -968,7 +968,7 @@ describe("AbiDecoder - Traversal", () => {
         ],
       });
 
-      const result = toTree(await decoder.inspectFlat(data, conditions));
+      const result = toTree(await decoder.inspect(data, conditions));
       const arrayNode = result.children[0];
 
       expect(arrayNode.children).to.have.length(3);
@@ -1014,7 +1014,7 @@ describe("AbiDecoder - Traversal", () => {
         ],
       });
 
-      const result = toTree(await decoder.inspectFlat(data, conditions));
+      const result = toTree(await decoder.inspect(data, conditions));
       const arrayNode = result.children[0];
 
       expect(arrayNode.location).to.equal(32);
@@ -1055,7 +1055,7 @@ describe("AbiDecoder - Traversal", () => {
         ],
       });
 
-      const result = toTree(await decoder.inspectFlat(data, conditions));
+      const result = toTree(await decoder.inspect(data, conditions));
 
       expect(
         await decoder.pluck(
@@ -1097,7 +1097,7 @@ describe("AbiDecoder - Traversal", () => {
         ],
       });
 
-      const result = toTree(await decoder.inspectFlat(data, conditions));
+      const result = toTree(await decoder.inspect(data, conditions));
 
       expect(
         await decoder.pluck(
@@ -1153,7 +1153,7 @@ function toTree(
     size: bigint;
     parent: bigint;
     inlined: boolean;
-    variant: bigint;
+    variant: boolean;
     overflow: boolean;
   }[],
 ): Payload {
@@ -1162,7 +1162,7 @@ function toTree(
     size: Number(item.size),
     children: [] as Payload[],
     inlined: item.inlined,
-    variant: !!item.variant,
+    variant: item.variant,
     overflow: item.overflow,
   }));
 
