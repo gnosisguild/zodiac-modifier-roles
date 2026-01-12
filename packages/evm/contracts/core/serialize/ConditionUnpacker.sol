@@ -73,6 +73,7 @@ library ConditionUnpacker {
              */
 
             Condition memory node = nodes[i];
+            node.nodeIndex = i;
             node.operator = Operator((packed >> 35) & 0x1F);
             uint256 childCount = (packed >> 24) & 0xFF;
             node.sChildCount = (packed >> 16) & 0xFF;

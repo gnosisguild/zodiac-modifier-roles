@@ -1,4 +1,5 @@
 import { expect } from "chai";
+import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { ZeroHash } from "ethers";
@@ -120,6 +121,11 @@ describe("AvatarIsOwnerOfERC721", () => {
 
     await expect(invoke(tokenId, someParam))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(ConditionViolationStatus.CustomConditionViolation, ZeroHash);
+      .withArgs(
+        ConditionViolationStatus.CustomConditionViolation,
+        1, // Custom node
+        anyValue,
+        anyValue,
+      );
   });
 });

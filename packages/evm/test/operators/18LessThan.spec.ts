@@ -1,4 +1,5 @@
 import { expect } from "chai";
+import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { AbiCoder, Interface, solidityPacked, ZeroHash } from "ethers";
 
@@ -57,12 +58,22 @@ describe("Operator - LessThan", () => {
     // 100 == 100 fails
     await expect(invoke(100))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(ConditionViolationStatus.ParameterGreaterThanAllowed, ZeroHash);
+      .withArgs(
+        ConditionViolationStatus.ParameterGreaterThanAllowed,
+        1,
+        anyValue,
+        anyValue,
+      );
 
     // 101 > 100 fails
     await expect(invoke(101))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(ConditionViolationStatus.ParameterGreaterThanAllowed, ZeroHash);
+      .withArgs(
+        ConditionViolationStatus.ParameterGreaterThanAllowed,
+        1,
+        anyValue,
+        anyValue,
+      );
   });
 
   it("integrates with Slice operator", async () => {
@@ -98,7 +109,12 @@ describe("Operator - LessThan", () => {
     // 0x00000064 = 100 >= 100 fails
     await expect(invoke("0x00000064"))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(ConditionViolationStatus.ParameterGreaterThanAllowed, ZeroHash);
+      .withArgs(
+        ConditionViolationStatus.ParameterGreaterThanAllowed,
+        2,
+        anyValue,
+        anyValue,
+      );
   });
 
   it("compares ether value (msg.value)", async () => {
@@ -144,6 +160,69 @@ describe("Operator - LessThan", () => {
         ),
     )
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(ConditionViolationStatus.ParameterGreaterThanAllowed, ZeroHash);
+      .withArgs(
+        ConditionViolationStatus.ParameterGreaterThanAllowed,
+        0,
+        anyValue,
+        anyValue,
+      );
+  });
+
+  describe("violation context", () => {
+    it("reports the violating node index", async () => {
+      const { roles, allowFunction, invoke } = await loadFixture(setupOneParam);
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Static,
+              operator: Operator.LessThan,
+              compValue: abiCoder.encode(["uint256"], [100]),
+            },
+          ],
+        }),
+        ExecutionOptions.None,
+      );
+
+      await expect(invoke(150))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.ParameterGreaterThanAllowed,
+          1, // LessThan node at BFS index 1
+          anyValue,
+          anyValue,
+        );
+    });
+
+    it("reports the calldata range of the violation", async () => {
+      const { roles, allowFunction, invoke } = await loadFixture(setupOneParam);
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Static,
+              operator: Operator.LessThan,
+              compValue: abiCoder.encode(["uint256"], [100]),
+            },
+          ],
+        }),
+        ExecutionOptions.None,
+      );
+
+      await expect(invoke(150))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.ParameterGreaterThanAllowed,
+          anyValue,
+          4, // payloadLocation: parameter starts at byte 4
+          32, // payloadSize: uint256 is 32 bytes
+        );
+    });
   });
 });
