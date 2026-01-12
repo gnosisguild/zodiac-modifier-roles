@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { Interface, ZeroHash } from "ethers";
+import { hexlify, Interface, randomBytes, ZeroHash } from "ethers";
 
 import { setupTestContract } from "../setup";
 import {
@@ -77,7 +77,7 @@ describe("Operator - EqualToAvatar", () => {
       );
 
       // Random address fails
-      const randomAddress = "0x1234567890123456789012345678901234567890";
+      const randomAddress = hexlify(randomBytes(20));
       await expect(
         roles
           .connect(member)

@@ -1,8 +1,8 @@
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { AbiCoder, Interface, ZeroHash } from "ethers";
+import { AbiCoder, hexlify, randomBytes, ZeroHash } from "ethers";
 
-import { setupTestContract } from "../setup";
+import { setupArrayParam } from "../setup";
 import {
   Encoding,
   Operator,
@@ -16,16 +16,10 @@ const abiCoder = AbiCoder.defaultAbiCoder();
 describe("Operator - ArrayTailMatches", () => {
   describe("matching logic", () => {
     it("matches when tail elements align with conditions", async () => {
-      const iface = new Interface(["function fn(uint256[])"]);
-      const fn = iface.getFunction("fn")!;
-      const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { allowFunction, invoke } = await loadFixture(setupArrayParam);
 
       // ArrayTailMatches: last 2 elements must be 100, 200
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
+      await allowFunction(
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -52,41 +46,18 @@ describe("Operator - ArrayTailMatches", () => {
       );
 
       // Exact tail match passes
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [[100, 200]]),
-            0,
-          ),
-      ).to.not.be.reverted;
+      await expect(invoke([100, 200])).to.not.be.reverted;
 
       // Longer array with matching tail passes
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [[1, 2, 3, 100, 200]]),
-            0,
-          ),
-      ).to.not.be.reverted;
+      await expect(invoke([1, 2, 3, 100, 200])).to.not.be.reverted;
     });
 
     it("fails when tail elements do not match", async () => {
-      const iface = new Interface(["function fn(uint256[])"]);
-      const fn = iface.getFunction("fn")!;
-      const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupArrayParam);
 
       // ArrayTailMatches: last 2 elements must be 100, 200
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
+      await allowFunction(
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -113,45 +84,22 @@ describe("Operator - ArrayTailMatches", () => {
       );
 
       // Last element wrong
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [[100, 999]]),
-            0,
-          ),
-      )
+      await expect(invoke([100, 999]))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
 
       // Second-to-last element wrong
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [[999, 200]]),
-            0,
-          ),
-      )
+      await expect(invoke([999, 200]))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
     });
 
     it("fails when array length is less than number of conditions", async () => {
-      const iface = new Interface(["function fn(uint256[])"]);
-      const fn = iface.getFunction("fn")!;
-      const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupArrayParam);
 
       // ArrayTailMatches: requires 2 tail elements
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
+      await allowFunction(
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -178,45 +126,21 @@ describe("Operator - ArrayTailMatches", () => {
       );
 
       // Only 1 element - not enough for 2 conditions
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [[100]]),
-            0,
-          ),
-      )
+      await expect(invoke([100]))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(ConditionViolationStatus.ParameterNotAMatch, ZeroHash);
 
       // Empty array
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [[]]),
-            0,
-          ),
-      )
+      await expect(invoke([]))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(ConditionViolationStatus.ParameterNotAMatch, ZeroHash);
     });
 
     it("ignores elements before the tail (prefix insensitive)", async () => {
-      const iface = new Interface(["function fn(uint256[])"]);
-      const fn = iface.getFunction("fn")!;
-      const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { allowFunction, invoke } = await loadFixture(setupArrayParam);
 
       // ArrayTailMatches: only checks last element
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
+      await allowFunction(
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -238,47 +162,24 @@ describe("Operator - ArrayTailMatches", () => {
       );
 
       // Any prefix values are ignored - only tail (42) matters
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [[999, 888, 777, 42]]),
-            0,
-          ),
-      ).to.not.be.reverted;
+      await expect(invoke([999, 888, 777, 42])).to.not.be.reverted;
 
       // Different prefix, same tail - still passes
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [[1, 2, 3, 4, 5, 42]]),
-            0,
-          ),
-      ).to.not.be.reverted;
+      await expect(invoke([1, 2, 3, 4, 5, 42])).to.not.be.reverted;
     });
   });
 
   describe("routing & consumption", () => {
     it("routes correct tail element to corresponding child condition", async () => {
-      const iface = new Interface(["function fn(uint256[])"]);
-      const fn = iface.getFunction("fn")!;
-      const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupArrayParam);
 
       // ArrayTailMatches with 3 conditions: [>10, ==50, <100]
       // For array [a, b, c, d, e] with 3 conditions:
       // - condition[0] (>10) matches element[2] (c)
       // - condition[1] (==50) matches element[3] (d)
       // - condition[2] (<100) matches element[4] (e)
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
+      await allowFunction(
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -311,59 +212,23 @@ describe("Operator - ArrayTailMatches", () => {
 
       // Array [1, 2, 20, 50, 80] - tail is [20, 50, 80]
       // 20 > 10 ✓, 50 == 50 ✓, 80 < 100 ✓
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [[1, 2, 20, 50, 80]]),
-            0,
-          ),
-      ).to.not.be.reverted;
+      await expect(invoke([1, 2, 20, 50, 80])).to.not.be.reverted;
 
       // Array [5, 50, 80] - swapped first condition value
       // 5 > 10 ✗ - fails on first tail element
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [[5, 50, 80]]),
-            0,
-          ),
-      )
+      await expect(invoke([5, 50, 80]))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(ConditionViolationStatus.ParameterLessThanAllowed, ZeroHash);
 
       // Array [20, 99, 80] - wrong middle element
       // 20 > 10 ✓, 99 == 50 ✗
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [[20, 99, 80]]),
-            0,
-          ),
-      )
+      await expect(invoke([20, 99, 80]))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
 
       // Array [20, 50, 150] - last element too big
       // 20 > 10 ✓, 50 == 50 ✓, 150 < 100 ✗
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [[20, 50, 150]]),
-            0,
-          ),
-      )
+      await expect(invoke([20, 50, 150]))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.ParameterGreaterThanAllowed,
@@ -372,22 +237,16 @@ describe("Operator - ArrayTailMatches", () => {
     });
 
     it("accumulates consumptions from all tail matches", async () => {
-      const iface = new Interface(["function fn(uint256[])"]);
-      const fn = iface.getFunction("fn")!;
-      const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupArrayParam);
 
-      const allowanceKey =
-        "0x000000000000000000000000000000000000000000000000000000000000abcd";
+      const allowanceKey = hexlify(randomBytes(32));
 
       // Set up allowance of 100
       await roles.setAllowance(allowanceKey, 100, 0, 0, 0, 0);
 
       // ArrayTailMatches with 2 WithinAllowance conditions
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
+      await allowFunction(
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -414,16 +273,7 @@ describe("Operator - ArrayTailMatches", () => {
       );
 
       // Array [999, 20, 30] - prefix ignored, tail [20, 30] consumed (50 total)
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [[999, 20, 30]]),
-            0,
-          ),
-      ).to.not.be.reverted;
+      await expect(invoke([999, 20, 30])).to.not.be.reverted;
 
       // Both tail elements consumed - remaining is 50
       const { balance } = await roles.accruedAllowance(allowanceKey);

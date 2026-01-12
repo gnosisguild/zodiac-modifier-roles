@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { AbiCoder, Interface, ZeroHash } from "ethers";
 
-import { setupTestContract } from "../setup";
+import { setupTestContract, setupOneParam, setupDynamicParam } from "../setup";
 import {
   Encoding,
   Operator,
@@ -37,18 +37,11 @@ const abiCoder = AbiCoder.defaultAbiCoder();
 
 describe("Operator - Or", () => {
   describe("boolean logic", () => {
-    const iface = new Interface(["function fn(uint256)"]);
-    const fn = iface.getFunction("fn")!;
-
     it("passes when first child passes", async () => {
-      const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { allowFunction, invoke } = await loadFixture(setupOneParam);
 
       // Or: EqualTo(10) OR EqualTo(20)
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
+      await allowFunction(
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -75,27 +68,14 @@ describe("Operator - Or", () => {
       );
 
       // 10 matches first child - passes immediately
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [10]),
-            0,
-          ),
-      ).to.not.be.reverted;
+      await expect(invoke(10)).to.not.be.reverted;
     });
 
     it("passes when second child passes after first fails", async () => {
-      const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { allowFunction, invoke } = await loadFixture(setupOneParam);
 
       // Or: EqualTo(10) OR EqualTo(20)
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
+      await allowFunction(
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -122,27 +102,14 @@ describe("Operator - Or", () => {
       );
 
       // 20 fails first child, passes second child
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [20]),
-            0,
-          ),
-      ).to.not.be.reverted;
+      await expect(invoke(20)).to.not.be.reverted;
     });
 
     it("fails with OrViolation when all children fail", async () => {
-      const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { roles, allowFunction, invoke } = await loadFixture(setupOneParam);
 
       // Or: EqualTo(10) OR EqualTo(20)
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
+      await allowFunction(
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -169,16 +136,7 @@ describe("Operator - Or", () => {
       );
 
       // 99 fails all children
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [99]),
-            0,
-          ),
-      )
+      await expect(invoke(99))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(ConditionViolationStatus.OrViolation, ZeroHash);
     });
@@ -186,17 +144,11 @@ describe("Operator - Or", () => {
 
   describe("payload routing", () => {
     it("passes same payload to structural children when non-variant", async () => {
-      const iface = new Interface(["function fn(uint256)"]);
-      const fn = iface.getFunction("fn")!;
-      const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { roles, allowFunction, invoke } = await loadFixture(setupOneParam);
 
       // Both children check the same parameter (non-variant: same payload to all)
       // Or: LessThan(10) OR GreaterThan(100)
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
+      await allowFunction(
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -223,57 +175,25 @@ describe("Operator - Or", () => {
       );
 
       // 5 passes first child (<10)
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [5]),
-            0,
-          ),
-      ).to.not.be.reverted;
+      await expect(invoke(5)).to.not.be.reverted;
 
       // 150 passes second child (>100)
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [150]),
-            0,
-          ),
-      ).to.not.be.reverted;
+      await expect(invoke(150)).to.not.be.reverted;
 
       // 50 fails both (not <10 and not >100)
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [50]),
-            0,
-          ),
-      )
+      await expect(invoke(50))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(ConditionViolationStatus.OrViolation, ZeroHash);
     });
 
     it("passes individual child payloads when variant", async () => {
-      const iface = new Interface(["function fn(bytes)"]);
-      const fn = iface.getFunction("fn")!;
-      const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupDynamicParam);
 
       // Or has two variant children that interpret the bytes param differently:
       // - Child 1: AbiEncoded with one Dynamic (checks bytes == 0xaabbccdd)
       // - Child 2: AbiEncoded with two Dynamics (checks first == 0x11111111)
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
+      await allowFunction(
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -321,60 +241,27 @@ describe("Operator - Or", () => {
 
       // Matches child 1: single bytes = 0xaabbccdd
       const matchChild1 = abiCoder.encode(["bytes"], ["0xaabbccdd"]);
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [matchChild1]),
-            0,
-          ),
-      ).to.not.be.reverted;
+      await expect(invoke(matchChild1)).to.not.be.reverted;
 
       // Matches child 2: two bytes where first = 0x11111111
       const matchChild2 = abiCoder.encode(
         ["bytes", "bytes"],
         ["0x11111111", "0xffffffff"],
       );
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [matchChild2]),
-            0,
-          ),
-      ).to.not.be.reverted;
+      await expect(invoke(matchChild2)).to.not.be.reverted;
 
       // Matches neither
       const matchNeither = abiCoder.encode(["bytes"], ["0xdeadbeef"]);
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [matchNeither]),
-            0,
-          ),
-      )
+      await expect(invoke(matchNeither))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(ConditionViolationStatus.OrViolation, ZeroHash);
     });
 
     it("passes empty payload to non-structural children", async () => {
-      const iface = new Interface(["function fn(uint256)"]);
-      const fn = iface.getFunction("fn")!;
-      const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { roles, allowFunction, invoke } = await loadFixture(setupOneParam);
 
       // Or with: structural child (checks param) OR non-structural (checks ether value)
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
+      await allowFunction(
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -403,40 +290,13 @@ describe("Operator - Or", () => {
       );
 
       // Correct param, any ether - passes via first child
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [42]),
-            0,
-          ),
-      ).to.not.be.reverted;
+      await expect(invoke(42)).to.not.be.reverted;
 
       // Wrong param, correct ether - passes via second child
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            123,
-            iface.encodeFunctionData(fn, [99]),
-            0,
-          ),
-      ).to.not.be.reverted;
+      await expect(invoke(99, { value: 123 })).to.not.be.reverted;
 
       // Wrong param, wrong ether - fails both
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            999,
-            iface.encodeFunctionData(fn, [99]),
-            0,
-          ),
-      )
+      await expect(invoke(99, { value: 999 }))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(ConditionViolationStatus.OrViolation, ZeroHash);
     });
@@ -444,10 +304,7 @@ describe("Operator - Or", () => {
 
   describe("consumption handling", () => {
     it("returns consumptions only from the passing branch", async () => {
-      const iface = new Interface(["function fn(uint256)"]);
-      const fn = iface.getFunction("fn")!;
-      const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { roles, allowFunction, invoke } = await loadFixture(setupOneParam);
 
       const allowanceKeyA =
         "0x000000000000000000000000000000000000000000000000000000000000000a";
@@ -461,10 +318,7 @@ describe("Operator - Or", () => {
       // Or with two branches, each consuming from different allowance
       // Child 1: value < 50 AND consume from allowanceA
       // Child 2: value >= 50 AND consume from allowanceB
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
+      await allowFunction(
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -513,16 +367,7 @@ describe("Operator - Or", () => {
       );
 
       // Call with value 30 - takes first branch, consumes from allowanceA
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [30]),
-            0,
-          ),
-      ).to.not.be.reverted;
+      await expect(invoke(30)).to.not.be.reverted;
 
       // Verify only allowanceA was consumed
       const { balance: balanceA } = await roles.accruedAllowance(allowanceKeyA);
@@ -531,16 +376,7 @@ describe("Operator - Or", () => {
       expect(balanceB).to.equal(100); // unchanged
 
       // Call with value 60 - takes second branch, consumes from allowanceB
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [60]),
-            0,
-          ),
-      ).to.not.be.reverted;
+      await expect(invoke(60)).to.not.be.reverted;
 
       // Verify only allowanceB was consumed this time
       const { balance: balanceA2 } =
@@ -552,10 +388,7 @@ describe("Operator - Or", () => {
     });
 
     it("rolls back consumptions if a branch fails after consumption", async () => {
-      const iface = new Interface(["function fn(uint256)"]);
-      const fn = iface.getFunction("fn")!;
-      const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { roles, allowFunction, invoke } = await loadFixture(setupOneParam);
 
       const allowanceKeyA =
         "0x000000000000000000000000000000000000000000000000000000000000000a";
@@ -568,10 +401,7 @@ describe("Operator - Or", () => {
       // OR structure:
       // Branch 1: Consume 10 from A AND Fail (value > 999) -> Should rollback A
       // Branch 2: Consume 10 from B AND Pass (value > 0) -> Should commit B
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
+      await allowFunction(
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -620,16 +450,7 @@ describe("Operator - Or", () => {
       );
 
       // Call with value 10
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [10]),
-            0,
-          ),
-      ).to.not.be.reverted;
+      await expect(invoke(10)).to.not.be.reverted;
 
       // Allowance A should be untouched (rolled back)
       const { balance: balanceA } = await roles.accruedAllowance(allowanceKeyA);

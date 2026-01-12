@@ -1,8 +1,7 @@
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { Interface } from "ethers";
 
-import { setupTestContract } from "../setup";
+import { setupOneParam } from "../setup";
 import {
   Operator,
   Encoding,
@@ -11,34 +10,11 @@ import {
 } from "../utils";
 
 describe("Operator - Pass", () => {
-  async function setup() {
-    const iface = new Interface(["function fn(uint256)"]);
-    const fn = iface.getFunction("fn")!;
-    const { roles, member, testContractAddress, roleKey } =
-      await setupTestContract();
-
-    const invoke = (a: bigint | number) =>
-      roles
-        .connect(member)
-        .execTransactionFromModule(
-          testContractAddress,
-          0,
-          iface.encodeFunctionData(fn, [a]),
-          0,
-        );
-
-    return { roles, member, testContractAddress, roleKey, fn, invoke };
-  }
-
   describe("core behavior", () => {
     it("allows any parameter value", async () => {
-      const { roles, testContractAddress, roleKey, fn, invoke } =
-        await loadFixture(setup);
+      const { allowFunction, invoke } = await loadFixture(setupOneParam);
 
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
+      await allowFunction(
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,

@@ -9,7 +9,12 @@ import {
   concat,
 } from "ethers";
 
-import { setupTestContract } from "../setup";
+import {
+  setupTestContract,
+  setupOneParam,
+  setupTwoParams,
+  setupDynamicParam,
+} from "../setup";
 import {
   Encoding,
   Operator,
@@ -23,17 +28,12 @@ const abiCoder = AbiCoder.defaultAbiCoder();
 describe("Operator - Matches", () => {
   describe("prefix skipping", () => {
     it("skips 10 bytes offset before decoding child", async () => {
-      const iface = new Interface(["function fn(bytes)"]);
-      const fn = iface.getFunction("fn")!;
-      const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupDynamicParam);
 
       // Matches with AbiEncoded that skips 10 bytes (0x000a) but does NOT match them
       // compValue length is 2 => only configuration, no match bytes
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
+      await allowFunction(
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -61,46 +61,23 @@ describe("Operator - Matches", () => {
       const paramData = abiCoder.encode(["uint256"], [42]).slice(2); // remove 0x
       const correctPayload = junkHeader + paramData;
 
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [correctPayload]),
-            0,
-          ),
-      ).to.not.be.reverted;
+      await expect(invoke(correctPayload)).to.not.be.reverted;
 
       // Ensure that actual logic checks the param (42)
       const wrongParamPayload =
         junkHeader + abiCoder.encode(["uint256"], [99]).slice(2);
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [wrongParamPayload]),
-            0,
-          ),
-      )
+      await expect(invoke(wrongParamPayload))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
     });
   });
   describe("prefix validation", () => {
     it("validates 4-byte prefix (shift 4)", async () => {
-      const iface = new Interface(["function fn(bytes)"]);
-      const fn = iface.getFunction("fn")!;
-      const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupDynamicParam);
 
       // Matches with 4-byte prefix (common selector size)
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
+      await allowFunction(
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -125,45 +102,22 @@ describe("Operator - Matches", () => {
       // Correct 4-byte prefix + valid param passes
       const correctPayload =
         "0xdeadbeef" + abiCoder.encode(["uint256"], [42]).slice(2);
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [correctPayload]),
-            0,
-          ),
-      ).to.not.be.reverted;
+      await expect(invoke(correctPayload)).to.not.be.reverted;
 
       // Wrong 4-byte prefix fails
       const wrongPayload =
         "0xcafebabe" + abiCoder.encode(["uint256"], [42]).slice(2);
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [wrongPayload]),
-            0,
-          ),
-      )
+      await expect(invoke(wrongPayload))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(ConditionViolationStatus.LeadingBytesNotAMatch, ZeroHash);
     });
 
     it("skips prefix check when compValue is empty (shift 0)", async () => {
-      const iface = new Interface(["function fn(bytes)"]);
-      const fn = iface.getFunction("fn")!;
-      const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupDynamicParam);
 
       // Matches with empty compValue - no prefix check
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
+      await allowFunction(
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -187,33 +141,19 @@ describe("Operator - Matches", () => {
 
       // Wrong param value fails with ParameterNotAllowed, not LeadingBytesNotAMatch
       const payload = abiCoder.encode(["uint256"], [999]);
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [payload]),
-            0,
-          ),
-      )
+      await expect(invoke(payload))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
     });
 
     it("validates 10-byte prefix (shift 10)", async () => {
-      const iface = new Interface(["function fn(bytes)"]);
-      const fn = iface.getFunction("fn")!;
-      const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupDynamicParam);
 
       const prefix10 = hexlify(randomBytes(10));
 
       // Matches with 10-byte prefix
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
+      await allowFunction(
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -238,64 +178,32 @@ describe("Operator - Matches", () => {
       // Correct 10-byte prefix + valid param passes
       const correctPayload =
         prefix10 + abiCoder.encode(["uint256"], [123]).slice(2);
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [correctPayload]),
-            0,
-          ),
-      ).to.not.be.reverted;
+      await expect(invoke(correctPayload)).to.not.be.reverted;
 
       // Wrong 10-byte prefix fails with LeadingBytesNotAMatch
       const wrongPrefix10 = hexlify(randomBytes(10));
       const wrongPrefixPayload =
         wrongPrefix10 + abiCoder.encode(["uint256"], [123]).slice(2);
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [wrongPrefixPayload]),
-            0,
-          ),
-      )
+      await expect(invoke(wrongPrefixPayload))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(ConditionViolationStatus.LeadingBytesNotAMatch, ZeroHash);
 
       // Correct prefix + wrong param fails with ParameterNotAllowed
       const wrongParamPayload =
         prefix10 + abiCoder.encode(["uint256"], [999]).slice(2);
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [wrongParamPayload]),
-            0,
-          ),
-      )
+      await expect(invoke(wrongParamPayload))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
     });
 
     it("validates 31-byte prefix (shift 31)", async () => {
-      const iface = new Interface(["function fn(bytes)"]);
-      const fn = iface.getFunction("fn")!;
-      const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupDynamicParam);
 
       const prefix31 = hexlify(randomBytes(31));
 
       // Matches with 31-byte prefix
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
+      await allowFunction(
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -320,31 +228,13 @@ describe("Operator - Matches", () => {
       // Correct 31-byte prefix + valid param passes
       const correctPayload =
         prefix31 + abiCoder.encode(["uint256"], [456]).slice(2);
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [correctPayload]),
-            0,
-          ),
-      ).to.not.be.reverted;
+      await expect(invoke(correctPayload)).to.not.be.reverted;
 
       // Wrong 31-byte prefix fails
       const wrongPrefix31 = hexlify(randomBytes(31));
       const wrongPayload =
         wrongPrefix31 + abiCoder.encode(["uint256"], [456]).slice(2);
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [wrongPayload]),
-            0,
-          ),
-      )
+      await expect(invoke(wrongPayload))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(ConditionViolationStatus.LeadingBytesNotAMatch, ZeroHash);
     });
@@ -442,16 +332,10 @@ describe("Operator - Matches", () => {
     });
 
     it("passes empty payload to non-structural children", async () => {
-      const iface = new Interface(["function fn(uint256)"]);
-      const fn = iface.getFunction("fn")!;
-      const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { roles, allowFunction, invoke } = await loadFixture(setupOneParam);
 
       // Matches with structural child (param) + non-structural child (ether value)
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
+      await allowFunction(
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -474,37 +358,17 @@ describe("Operator - Matches", () => {
       );
 
       // Correct param + correct ether
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            100,
-            iface.encodeFunctionData(fn, [42]),
-            0,
-          ),
-      ).to.not.be.reverted;
+      await expect(invoke(42, { value: 100 })).to.not.be.reverted;
 
       // Correct param + wrong ether
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            999,
-            iface.encodeFunctionData(fn, [42]),
-            0,
-          ),
-      )
+      await expect(invoke(42, { value: 999 }))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
     });
 
     it("accumulates consumptions across children", async () => {
-      const iface = new Interface(["function fn(uint256,uint256)"]);
-      const fn = iface.getFunction("fn")!;
-      const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupTwoParams);
 
       const allowanceKey =
         "0x000000000000000000000000000000000000000000000000000000000000abcd";
@@ -513,10 +377,7 @@ describe("Operator - Matches", () => {
       await roles.setAllowance(allowanceKey, 100, 0, 0, 0, 0);
 
       // Matches with two children consuming from same allowance
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
+      await allowFunction(
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -537,32 +398,14 @@ describe("Operator - Matches", () => {
       );
 
       // First call: 30 + 20 = 50 consumed
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [30, 20]),
-            0,
-          ),
-      ).to.not.be.reverted;
+      await expect(invoke(30, 20)).to.not.be.reverted;
 
       // Verify consumption was accumulated
       const { balance } = await roles.accruedAllowance(allowanceKey);
       expect(balance).to.equal(50);
 
       // Second call: 30 + 30 = 60, but only 50 remaining
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [30, 30]),
-            0,
-          ),
-      )
+      await expect(invoke(30, 30))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
     });

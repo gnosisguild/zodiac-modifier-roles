@@ -1,4 +1,7 @@
-import { hexlify, randomBytes, ZeroHash } from "ethers";
+import { hexlify, Interface, randomBytes, ZeroHash } from "ethers";
+
+import { ExecutionOptions } from "./utils";
+import { ConditionFlatStruct } from "../typechain-types/contracts/Roles";
 import hre from "hardhat";
 import { EthereumProvider, HardhatRuntimeEnvironment } from "hardhat/types";
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
@@ -87,4 +90,220 @@ export async function deployRolesMod(
   const modifier = await Modifier.deploy(owner, avatar, target);
   await modifier.waitForDeployment();
   return modifier;
+}
+
+export async function setupOneParam() {
+  const iface = new Interface(["function fn(uint256)"]);
+  const fn = iface.getFunction("fn")!;
+  const { owner, roles, member, testContractAddress, roleKey } =
+    await setupTestContract();
+
+  const allowFunction = (
+    conditions: ConditionFlatStruct[],
+    options = ExecutionOptions.None,
+  ) =>
+    roles.allowFunction(
+      roleKey,
+      testContractAddress,
+      fn.selector,
+      conditions,
+      options,
+    );
+
+  const invoke = (
+    a: bigint | number,
+    options?: { value?: bigint | number; operation?: number },
+  ) =>
+    roles
+      .connect(member)
+      .execTransactionFromModule(
+        testContractAddress,
+        options?.value ?? 0,
+        iface.encodeFunctionData(fn, [a]),
+        options?.operation ?? 0,
+      );
+
+  return {
+    owner,
+    roles,
+    member,
+    testContractAddress,
+    roleKey,
+    fn,
+    allowFunction,
+    invoke,
+  };
+}
+
+export async function setupOneParamSigned() {
+  const iface = new Interface(["function fn(int256)"]);
+  const fn = iface.getFunction("fn")!;
+  const { owner, roles, member, testContractAddress, roleKey } =
+    await setupTestContract();
+
+  const allowFunction = (
+    conditions: ConditionFlatStruct[],
+    options = ExecutionOptions.None,
+  ) =>
+    roles.allowFunction(
+      roleKey,
+      testContractAddress,
+      fn.selector,
+      conditions,
+      options,
+    );
+
+  const invoke = (
+    a: bigint | number,
+    options?: { value?: bigint | number; operation?: number },
+  ) =>
+    roles
+      .connect(member)
+      .execTransactionFromModule(
+        testContractAddress,
+        options?.value ?? 0,
+        iface.encodeFunctionData(fn, [a]),
+        options?.operation ?? 0,
+      );
+
+  return {
+    owner,
+    roles,
+    member,
+    testContractAddress,
+    roleKey,
+    fn,
+    allowFunction,
+    invoke,
+  };
+}
+
+export async function setupTwoParams() {
+  const iface = new Interface(["function fn(uint256, uint256)"]);
+  const fn = iface.getFunction("fn")!;
+  const { owner, roles, member, testContractAddress, roleKey } =
+    await setupTestContract();
+
+  const allowFunction = (
+    conditions: ConditionFlatStruct[],
+    options = ExecutionOptions.None,
+  ) =>
+    roles.allowFunction(
+      roleKey,
+      testContractAddress,
+      fn.selector,
+      conditions,
+      options,
+    );
+
+  const invoke = (
+    a: bigint | number,
+    b: bigint | number,
+    options?: { value?: bigint | number; operation?: number },
+  ) =>
+    roles
+      .connect(member)
+      .execTransactionFromModule(
+        testContractAddress,
+        options?.value ?? 0,
+        iface.encodeFunctionData(fn, [a, b]),
+        options?.operation ?? 0,
+      );
+
+  return {
+    owner,
+    roles,
+    member,
+    testContractAddress,
+    roleKey,
+    fn,
+    allowFunction,
+    invoke,
+  };
+}
+
+export async function setupDynamicParam() {
+  const iface = new Interface(["function fn(bytes)"]);
+  const fn = iface.getFunction("fn")!;
+  const { owner, roles, member, testContractAddress, roleKey } =
+    await setupTestContract();
+
+  const allowFunction = (
+    conditions: ConditionFlatStruct[],
+    options = ExecutionOptions.None,
+  ) =>
+    roles.allowFunction(
+      roleKey,
+      testContractAddress,
+      fn.selector,
+      conditions,
+      options,
+    );
+
+  const invoke = (
+    data: string,
+    options?: { value?: bigint | number; operation?: number },
+  ) =>
+    roles
+      .connect(member)
+      .execTransactionFromModule(
+        testContractAddress,
+        options?.value ?? 0,
+        iface.encodeFunctionData(fn, [data]),
+        options?.operation ?? 0,
+      );
+
+  return {
+    owner,
+    roles,
+    member,
+    testContractAddress,
+    roleKey,
+    fn,
+    allowFunction,
+    invoke,
+  };
+}
+
+export async function setupArrayParam() {
+  const iface = new Interface(["function fn(uint256[])"]);
+  const fn = iface.getFunction("fn")!;
+  const { owner, roles, member, testContractAddress, roleKey } =
+    await setupTestContract();
+
+  const allowFunction = (
+    conditions: ConditionFlatStruct[],
+    options = ExecutionOptions.None,
+  ) =>
+    roles.allowFunction(
+      roleKey,
+      testContractAddress,
+      fn.selector,
+      conditions,
+      options,
+    );
+
+  const invoke = (
+    arr: (bigint | number)[],
+    options?: { value?: bigint | number; operation?: number },
+  ) =>
+    roles
+      .connect(member)
+      .execTransactionFromModule(
+        testContractAddress,
+        options?.value ?? 0,
+        iface.encodeFunctionData(fn, [arr]),
+        options?.operation ?? 0,
+      );
+
+  return {
+    roles,
+    owner,
+    member,
+    testContractAddress,
+    roleKey,
+    fn,
+    allowFunction,
+    invoke,
+  };
 }

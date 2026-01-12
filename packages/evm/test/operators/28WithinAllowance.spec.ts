@@ -20,10 +20,9 @@ import {
   Operator,
   ConditionViolationStatus,
 } from "../utils";
-import { setupTestContract } from "../setup";
+import { setupTestContract, setupOneParam, setupTwoParams } from "../setup";
 
 import { Roles } from "../../typechain-types";
-import { ConditionFlatStruct } from "../../typechain-types/contracts/Roles";
 
 describe("Operator - WithinAllowance", async () => {
   function setAllowance(
@@ -51,84 +50,6 @@ describe("Operator - WithinAllowance", async () => {
       period,
       timestamp,
     );
-  }
-
-  async function setupOneParam() {
-    const iface = new Interface(["function fn(uint256)"]);
-    const fn = iface.getFunction("fn")!;
-    const { roles, member, testContractAddress, roleKey } =
-      await setupTestContract();
-
-    const allowFunction = (
-      conditions: ConditionFlatStruct[],
-      options = ExecutionOptions.None,
-    ) =>
-      roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
-        conditions,
-        options,
-      );
-
-    const invoke = (a: bigint | number) =>
-      roles
-        .connect(member)
-        .execTransactionFromModule(
-          testContractAddress,
-          0,
-          iface.encodeFunctionData(fn, [a]),
-          0,
-        );
-
-    return {
-      owner: (await hre.ethers.getSigners())[0],
-      roles,
-      member,
-      testContractAddress,
-      roleKey,
-      allowFunction,
-      invoke,
-    };
-  }
-
-  async function setupTwoParams() {
-    const iface = new Interface(["function fn(uint256, uint256)"]);
-    const fn = iface.getFunction("fn")!;
-    const { roles, member, testContractAddress, roleKey } =
-      await setupTestContract();
-
-    const allowFunction = (
-      conditions: ConditionFlatStruct[],
-      options = ExecutionOptions.None,
-    ) =>
-      roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
-        conditions,
-        options,
-      );
-
-    const invoke = (a: bigint | number, b: bigint | number) =>
-      roles
-        .connect(member)
-        .execTransactionFromModule(
-          testContractAddress,
-          0,
-          iface.encodeFunctionData(fn, [a, b]),
-          0,
-        );
-
-    return {
-      owner: (await hre.ethers.getSigners())[0],
-      roles,
-      member,
-      testContractAddress,
-      roleKey,
-      allowFunction,
-      invoke,
-    };
   }
 
   describe("WithinAllowance - Check", () => {

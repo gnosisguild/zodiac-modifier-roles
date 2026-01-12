@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { AbiCoder, Interface, solidityPacked, ZeroHash } from "ethers";
 
-import { setupTestContract } from "../setup";
+import { setupTestContract, setupOneParam, setupDynamicParam } from "../setup";
 import {
   Encoding,
   Operator,
@@ -15,15 +15,9 @@ const abiCoder = AbiCoder.defaultAbiCoder();
 
 describe("Operator - GreaterThan", () => {
   it("passes when value > compValue", async () => {
-    const iface = new Interface(["function fn(uint256)"]);
-    const fn = iface.getFunction("fn")!;
-    const { roles, member, testContractAddress, roleKey } =
-      await loadFixture(setupTestContract);
+    const { allowFunction, invoke } = await loadFixture(setupOneParam);
 
-    await roles.allowFunction(
-      roleKey,
-      testContractAddress,
-      fn.selector,
+    await allowFunction(
       flattenCondition({
         paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
@@ -39,28 +33,13 @@ describe("Operator - GreaterThan", () => {
     );
 
     // 101 > 100 passes
-    await expect(
-      roles
-        .connect(member)
-        .execTransactionFromModule(
-          testContractAddress,
-          0,
-          iface.encodeFunctionData(fn, [101]),
-          0,
-        ),
-    ).to.not.be.reverted;
+    await expect(invoke(101)).to.not.be.reverted;
   });
 
   it("fails when value <= compValue", async () => {
-    const iface = new Interface(["function fn(uint256)"]);
-    const fn = iface.getFunction("fn")!;
-    const { roles, member, testContractAddress, roleKey } =
-      await loadFixture(setupTestContract);
+    const { roles, allowFunction, invoke } = await loadFixture(setupOneParam);
 
-    await roles.allowFunction(
-      roleKey,
-      testContractAddress,
-      fn.selector,
+    await allowFunction(
       flattenCondition({
         paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
@@ -76,45 +55,22 @@ describe("Operator - GreaterThan", () => {
     );
 
     // 100 == 100 fails
-    await expect(
-      roles
-        .connect(member)
-        .execTransactionFromModule(
-          testContractAddress,
-          0,
-          iface.encodeFunctionData(fn, [100]),
-          0,
-        ),
-    )
+    await expect(invoke(100))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(ConditionViolationStatus.ParameterLessThanAllowed, ZeroHash);
 
     // 99 < 100 fails
-    await expect(
-      roles
-        .connect(member)
-        .execTransactionFromModule(
-          testContractAddress,
-          0,
-          iface.encodeFunctionData(fn, [99]),
-          0,
-        ),
-    )
+    await expect(invoke(99))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(ConditionViolationStatus.ParameterLessThanAllowed, ZeroHash);
   });
 
   it("integrates with Slice operator", async () => {
-    const iface = new Interface(["function fn(bytes)"]);
-    const fn = iface.getFunction("fn")!;
-    const { roles, member, testContractAddress, roleKey } =
-      await loadFixture(setupTestContract);
+    const { roles, allowFunction, invoke } =
+      await loadFixture(setupDynamicParam);
 
     // Slice 4 bytes at offset 0, then GreaterThan comparison
-    await roles.allowFunction(
-      roleKey,
-      testContractAddress,
-      fn.selector,
+    await allowFunction(
       flattenCondition({
         paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
@@ -137,28 +93,10 @@ describe("Operator - GreaterThan", () => {
     );
 
     // 0x00000065 = 101 > 100 passes
-    await expect(
-      roles
-        .connect(member)
-        .execTransactionFromModule(
-          testContractAddress,
-          0,
-          iface.encodeFunctionData(fn, ["0x00000065"]),
-          0,
-        ),
-    ).to.not.be.reverted;
+    await expect(invoke("0x00000065")).to.not.be.reverted;
 
     // 0x00000064 = 100 <= 100 fails
-    await expect(
-      roles
-        .connect(member)
-        .execTransactionFromModule(
-          testContractAddress,
-          0,
-          iface.encodeFunctionData(fn, ["0x00000064"]),
-          0,
-        ),
-    )
+    await expect(invoke("0x00000064"))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(ConditionViolationStatus.ParameterLessThanAllowed, ZeroHash);
   });

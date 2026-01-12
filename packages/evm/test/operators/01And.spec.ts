@@ -2,7 +2,12 @@ import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { AbiCoder, hexlify, Interface, randomBytes, ZeroHash } from "ethers";
 
-import { setupTestContract } from "../setup";
+import {
+  setupTestContract,
+  setupOneParam,
+  setupTwoParams,
+  setupDynamicParam,
+} from "../setup";
 import {
   Encoding,
   Operator,
@@ -15,18 +20,11 @@ const abiCoder = AbiCoder.defaultAbiCoder();
 
 describe("Operator - And", () => {
   describe("boolean logic", () => {
-    const iface = new Interface(["function fn(uint256)"]);
-    const fn = iface.getFunction("fn")!;
-
     it("passes when all children pass", async () => {
-      const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { allowFunction, invoke } = await loadFixture(setupOneParam);
 
       // And: GreaterThan(10) AND LessThan(20)
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
+      await allowFunction(
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -53,27 +51,14 @@ describe("Operator - And", () => {
       );
 
       // 15 satisfies both: >10 AND <20
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [15]),
-            0,
-          ),
-      ).to.not.be.reverted;
+      await expect(invoke(15)).to.not.be.reverted;
     });
 
     it("fails on first child and short-circuits", async () => {
-      const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { roles, allowFunction, invoke } = await loadFixture(setupOneParam);
 
       // And: GreaterThan(10) AND LessThan(20)
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
+      await allowFunction(
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -100,29 +85,16 @@ describe("Operator - And", () => {
       );
 
       // 5 fails first child (GreaterThan 10), never evaluates second
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [5]),
-            0,
-          ),
-      )
+      await expect(invoke(5))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(ConditionViolationStatus.ParameterLessThanAllowed, ZeroHash);
     });
 
     it("fails on second child after first passes", async () => {
-      const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { roles, allowFunction, invoke } = await loadFixture(setupOneParam);
 
       // And: GreaterThan(10) AND LessThan(20)
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
+      await allowFunction(
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -149,16 +121,7 @@ describe("Operator - And", () => {
       );
 
       // 25 passes first child (>10) but fails second (<20)
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [25]),
-            0,
-          ),
-      )
+      await expect(invoke(25))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.ParameterGreaterThanAllowed,
@@ -169,16 +132,10 @@ describe("Operator - And", () => {
 
   describe("payload routing", () => {
     it("passes same payload to structural children when non-variant", async () => {
-      const iface = new Interface(["function fn(uint256)"]);
-      const fn = iface.getFunction("fn")!;
-      const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { allowFunction, invoke } = await loadFixture(setupOneParam);
 
       // Both children check the same parameter (non-variant: same payload to all)
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
+      await allowFunction(
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -205,31 +162,17 @@ describe("Operator - And", () => {
       );
 
       // 50 satisfies both conditions on same payload
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [50]),
-            0,
-          ),
-      ).to.not.be.reverted;
+      await expect(invoke(50)).to.not.be.reverted;
     });
 
     it("passes individual child payloads when variant", async () => {
-      const iface = new Interface(["function fn(bytes)"]);
-      const fn = iface.getFunction("fn")!;
-      const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupDynamicParam);
 
       // And has two variant children that interpret the bytes param differently:
       // - Child 1: AbiEncoded with one Dynamic (checks first bytes)
       // - Child 2: AbiEncoded with two Dynamics (checks both bytes)
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
+      await allowFunction(
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -283,32 +226,14 @@ describe("Operator - And", () => {
       );
 
       // Passes both children
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [embedded]),
-            0,
-          ),
-      ).to.not.be.reverted;
+      await expect(invoke(embedded)).to.not.be.reverted;
 
       // Wrong first bytes - fails both children
       const wrongFirst = abiCoder.encode(
         ["bytes", "bytes"],
         ["0xffffffff", "0x11223344"],
       );
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [wrongFirst]),
-            0,
-          ),
-      )
+      await expect(invoke(wrongFirst))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
 
@@ -317,31 +242,16 @@ describe("Operator - And", () => {
         ["bytes", "bytes"],
         ["0xaabbccdd", "0xffffffff"],
       );
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [wrongSecond]),
-            0,
-          ),
-      )
+      await expect(invoke(wrongSecond))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
     });
 
     it("passes empty payload to non-structural children", async () => {
-      const iface = new Interface(["function fn(uint256)"]);
-      const fn = iface.getFunction("fn")!;
-      const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { roles, allowFunction, invoke } = await loadFixture(setupOneParam);
 
       // And with: structural child (checks param) + non-structural (checks ether value)
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
+      await allowFunction(
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -370,42 +280,15 @@ describe("Operator - And", () => {
       );
 
       // Correct param + correct ether value
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            123,
-            iface.encodeFunctionData(fn, [42]),
-            0,
-          ),
-      ).to.not.be.reverted;
+      await expect(invoke(42, { value: 123 })).to.not.be.reverted;
 
       // Wrong param value
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            123,
-            iface.encodeFunctionData(fn, [99]),
-            0,
-          ),
-      )
+      await expect(invoke(99, { value: 123 }))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
 
       // Wrong ether value
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            999,
-            iface.encodeFunctionData(fn, [42]),
-            0,
-          ),
-      )
+      await expect(invoke(42, { value: 999 }))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
     });
@@ -413,10 +296,8 @@ describe("Operator - And", () => {
 
   describe("consumption propagation", () => {
     it("accumulates consumptions from multiple children in AND operator", async () => {
-      const iface = new Interface(["function fn(uint256,uint256)"]);
-      const fn = iface.getFunction("fn")!;
-      const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupTwoParams);
 
       const allowanceKey = hexlify(randomBytes(32));
       // Set up allowance of 100
@@ -425,10 +306,7 @@ describe("Operator - And", () => {
       // Top-level AND combining two structural checks on the same payload
       // Child 1: Matches(arg0) -> WithinAllowance
       // Child 2: Matches(arg1) -> WithinAllowance
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
+      await allowFunction(
         flattenCondition({
           paramType: Encoding.None, // Top-level AND must be None
           operator: Operator.And,
@@ -472,16 +350,7 @@ describe("Operator - And", () => {
       // Child 1 (Matches) consumes 30.
       // Child 2 (Matches) consumes 20.
       // Total consumption: 50.
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [30, 20]),
-            0,
-          ),
-      ).to.not.be.reverted;
+      await expect(invoke(30, 20)).to.not.be.reverted;
 
       // Verify balance: 100 - 50 = 50
       const { balance } = await roles.accruedAllowance(allowanceKey);
@@ -490,16 +359,7 @@ describe("Operator - And", () => {
       // Try to consume 30 + 30 = 60.
       // Available: 50.
       // Should fail.
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [30, 30]),
-            0,
-          ),
-      )
+      await expect(invoke(30, 30))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
     });

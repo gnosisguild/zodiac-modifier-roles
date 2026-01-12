@@ -10,16 +10,39 @@ import {
   ConditionViolationStatus,
   flattenCondition,
 } from "../utils";
+import { ConditionFlatStruct } from "../../typechain-types/contracts/Roles";
 
 describe("Operator - Empty", () => {
+  async function setup() {
+    const { roles, member, testContractAddress, roleKey } =
+      await setupTestContract();
+
+    const allowTarget = (
+      conditions: ConditionFlatStruct[],
+      options = ExecutionOptions.None,
+    ) => roles.allowTarget(roleKey, testContractAddress, conditions, options);
+
+    const invoke = (
+      data: string,
+      options?: { value?: bigint | number; operation?: number },
+    ) =>
+      roles
+        .connect(member)
+        .execTransactionFromModule(
+          testContractAddress,
+          options?.value ?? 0,
+          data,
+          options?.operation ?? 0,
+        );
+
+    return { roles, allowTarget, invoke };
+  }
+
   describe("core behavior", () => {
     it("passes when calldata is empty", async () => {
-      const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { allowTarget, invoke } = await loadFixture(setup);
 
-      await roles.allowTarget(
-        roleKey,
-        testContractAddress,
+      await allowTarget(
         flattenCondition({
           paramType: Encoding.None,
           operator: Operator.Empty,
@@ -27,20 +50,13 @@ describe("Operator - Empty", () => {
         ExecutionOptions.Both,
       );
 
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(testContractAddress, 0, "0x", 0),
-      ).to.not.be.reverted;
+      await expect(invoke("0x")).to.not.be.reverted;
     });
 
     it("fails when calldata is not empty", async () => {
-      const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { roles, allowTarget, invoke } = await loadFixture(setup);
 
-      await roles.allowTarget(
-        roleKey,
-        testContractAddress,
+      await allowTarget(
         flattenCondition({
           paramType: Encoding.None,
           operator: Operator.Empty,
@@ -48,11 +64,7 @@ describe("Operator - Empty", () => {
         ExecutionOptions.Both,
       );
 
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(testContractAddress, 0, "0xdeadbeef", 0),
-      )
+      await expect(invoke("0xdeadbeef"))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(ConditionViolationStatus.CalldataNotEmpty, ZeroHash);
     });

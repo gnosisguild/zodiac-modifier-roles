@@ -1,8 +1,14 @@
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { AbiCoder, Interface, solidityPacked, ZeroHash } from "ethers";
+import {
+  AbiCoder,
+  hexlify,
+  randomBytes,
+  solidityPacked,
+  ZeroHash,
+} from "ethers";
 
-import { setupTestContract } from "../setup";
+import { setupDynamicParam } from "../setup";
 import {
   Encoding,
   Operator,
@@ -20,16 +26,11 @@ const encodeCompValue = (shift: number, size: number) =>
 describe("Operator - Slice", () => {
   describe("extraction", () => {
     it("extracts 2-byte shift from compValue", async () => {
-      const iface = new Interface(["function fn(bytes)"]);
-      const fn = iface.getFunction("fn")!;
-      const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupDynamicParam);
 
       // Slice 4 bytes at shift 4 (skip first 4 bytes)
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
+      await allowFunction(
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -53,60 +54,25 @@ describe("Operator - Slice", () => {
 
       // bytes: [4 bytes prefix][0xdeadbeef][suffix]
       // Slice extracts bytes 4-7 which should equal 0xdeadbeef
-      const correctPayload = "0x00000000deadbeef00000000";
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [correctPayload]),
-            0,
-          ),
-      ).to.not.be.reverted;
+      await expect(invoke("0x00000000deadbeef00000000")).to.not.be.reverted;
 
       // Wrong value at the slice position
-      const wrongPayload = "0x00000000cafebabe00000000";
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [wrongPayload]),
-            0,
-          ),
-      )
+      await expect(invoke("0x00000000cafebabe00000000"))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
 
       // Value at wrong position (shift 0 instead of 4) - fails
-      const wrongPositionPayload = "0xdeadbeef0000000000000000";
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [wrongPositionPayload]),
-            0,
-          ),
-      )
+      await expect(invoke("0xdeadbeef0000000000000000"))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
     });
 
     it("extracts 1-byte size from compValue (size 1)", async () => {
-      const iface = new Interface(["function fn(bytes)"]);
-      const fn = iface.getFunction("fn")!;
-      const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupDynamicParam);
 
       // Slice 1 byte at shift 0
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
+      await allowFunction(
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -130,45 +96,20 @@ describe("Operator - Slice", () => {
       );
 
       // bytes starting with 0xab - passes
-      const correctPayload = "0xab00000000000000";
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [correctPayload]),
-            0,
-          ),
-      ).to.not.be.reverted;
+      await expect(invoke("0xab00000000000000")).to.not.be.reverted;
 
       // bytes starting with 0xcd - fails
-      const wrongPayload = "0xcd00000000000000";
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [wrongPayload]),
-            0,
-          ),
-      )
+      await expect(invoke("0xcd00000000000000"))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
     });
 
     it("extracts 1-byte size from compValue (size 32)", async () => {
-      const iface = new Interface(["function fn(bytes)"]);
-      const fn = iface.getFunction("fn")!;
-      const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupDynamicParam);
 
       // Slice 32 bytes at shift 0 (full word)
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
+      await allowFunction(
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -191,30 +132,11 @@ describe("Operator - Slice", () => {
       );
 
       // 32 bytes encoding 12345 - passes
-      const correctPayload = abiCoder.encode(["uint256"], [12345]);
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [correctPayload]),
-            0,
-          ),
-      ).to.not.be.reverted;
+      await expect(invoke(abiCoder.encode(["uint256"], [12345]))).to.not.be
+        .reverted;
 
       // 32 bytes encoding different value - fails
-      const wrongPayload = abiCoder.encode(["uint256"], [12346]);
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [wrongPayload]),
-            0,
-          ),
-      )
+      await expect(invoke(abiCoder.encode(["uint256"], [12346])))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
     });
@@ -222,16 +144,11 @@ describe("Operator - Slice", () => {
 
   describe("propagation", () => {
     it("propagates result from child", async () => {
-      const iface = new Interface(["function fn(bytes)"]);
-      const fn = iface.getFunction("fn")!;
-      const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupDynamicParam);
 
       // Slice 4 bytes, child checks GreaterThan 100
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
+      await allowFunction(
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -254,51 +171,25 @@ describe("Operator - Slice", () => {
       );
 
       // Value 101 > 100 - child passes, Slice propagates success
-      const passPayload = "0x00000065"; // 101 in 4 bytes
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [passPayload]),
-            0,
-          ),
-      ).to.not.be.reverted;
+      await expect(invoke("0x00000065")).to.not.be.reverted; // 101 in 4 bytes
 
       // Value 100 not > 100 - child fails with ParameterLessThanAllowed, Slice propagates
-      const failPayload = "0x00000064"; // 100 in 4 bytes
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [failPayload]),
-            0,
-          ),
-      )
+      await expect(invoke("0x00000064")) // 100 in 4 bytes
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(ConditionViolationStatus.ParameterLessThanAllowed, ZeroHash);
     });
 
     it("propagates consumption from child", async () => {
-      const iface = new Interface(["function fn(bytes)"]);
-      const fn = iface.getFunction("fn")!;
-      const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupDynamicParam);
 
-      const allowanceKey =
-        "0x000000000000000000000000000000000000000000000000000000000000abcd";
+      const allowanceKey = hexlify(randomBytes(32));
 
       // Set up allowance of 100
       await roles.setAllowance(allowanceKey, 100, 0, 0, 0, 0);
 
       // Slice 32 bytes, child consumes via WithinAllowance
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
+      await allowFunction(
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -321,17 +212,8 @@ describe("Operator - Slice", () => {
       );
 
       // Consume 30 from sliced value
-      const payload30 = abiCoder.encode(["uint256"], [30]);
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [payload30]),
-            0,
-          ),
-      ).to.not.be.reverted;
+      await expect(invoke(abiCoder.encode(["uint256"], [30]))).to.not.be
+        .reverted;
 
       // Consumption propagated through Slice - remaining is 70
       const { balance } = await roles.accruedAllowance(allowanceKey);

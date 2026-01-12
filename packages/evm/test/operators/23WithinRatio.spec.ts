@@ -10,7 +10,7 @@ import {
   ZeroHash,
 } from "ethers";
 
-import { setupTestContract } from "../setup";
+import { setupTestContract, setupTwoParams } from "../setup";
 import {
   Encoding,
   flattenCondition,
@@ -18,51 +18,11 @@ import {
   ExecutionOptions,
   ConditionViolationStatus,
 } from "../utils";
-import { ConditionFlatStruct } from "../../typechain-types/contracts/Roles";
-
 function pluck(index: number) {
   return {
     paramType: Encoding.Static,
     operator: Operator.Pluck,
     compValue: "0x" + index.toString(16).padStart(2, "0"),
-  };
-}
-
-async function setupTwoParams() {
-  const iface = new Interface(["function fn(uint256, uint256)"]);
-  const fn = iface.getFunction("fn")!;
-  const { roles, member, testContractAddress, roleKey } =
-    await setupTestContract();
-
-  const allowFunction = (
-    conditions: ConditionFlatStruct[],
-    options = ExecutionOptions.None,
-  ) =>
-    roles.allowFunction(
-      roleKey,
-      testContractAddress,
-      fn.selector,
-      conditions,
-      options,
-    );
-
-  const invoke = (a: bigint | number, b: bigint | number) =>
-    roles
-      .connect(member)
-      .execTransactionFromModule(
-        testContractAddress,
-        0,
-        iface.encodeFunctionData(fn, [a, b]),
-        0,
-      );
-
-  return {
-    roles,
-    member,
-    testContractAddress,
-    roleKey,
-    allowFunction,
-    invoke,
   };
 }
 

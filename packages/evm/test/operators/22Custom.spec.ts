@@ -1,9 +1,9 @@
 import { expect } from "chai";
 import hre from "hardhat";
-import { Interface, ZeroHash } from "ethers";
+import { hexlify, Interface, randomBytes, ZeroHash } from "ethers";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import { setupTestContract } from "../setup";
+import { setupOneParam } from "../setup";
 import {
   Encoding,
   Operator,
@@ -14,7 +14,7 @@ import {
 
 describe("Operator - Custom", () => {
   async function setupWithChecker() {
-    const base = await setupTestContract();
+    const base = await setupOneParam();
     const CustomChecker =
       await hre.ethers.getContractFactory("TestCustomChecker");
     const customChecker = await CustomChecker.deploy();
@@ -27,21 +27,11 @@ describe("Operator - Custom", () => {
 
   describe("execution logic", () => {
     it("delegates execution to the configured adapter address", async () => {
-      const {
-        roles,
-        member,
-        testContractAddress,
-        roleKey,
-        customCheckerAddress,
-      } = await loadFixture(setupWithChecker);
-      const iface = new Interface(["function fn(uint256)"]);
-      const fn = iface.getFunction("fn")!;
+      const { allowFunction, invoke, customCheckerAddress } =
+        await loadFixture(setupWithChecker);
 
       // Custom condition: param > 100
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
+      await allowFunction(
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -57,16 +47,7 @@ describe("Operator - Custom", () => {
       );
 
       // 101 > 100 passes
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [101]),
-            0,
-          ),
-      ).to.not.be.reverted;
+      await expect(invoke(101)).to.not.be.reverted;
     });
 
     it("passes correct context (operation type) to adapter", async () => {
@@ -74,17 +55,14 @@ describe("Operator - Custom", () => {
         roles,
         member,
         testContractAddress,
-        roleKey,
+        fn,
+        allowFunction,
         customCheckerAddress,
       } = await loadFixture(setupWithChecker);
       const iface = new Interface(["function fn(uint256)"]);
-      const fn = iface.getFunction("fn")!;
 
       // Adapter fails if operation != Call (0)
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
+      await allowFunction(
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -123,23 +101,13 @@ describe("Operator - Custom", () => {
     });
 
     it("extracts and passes extra data (from compValue) to adapter", async () => {
-      const {
-        roles,
-        member,
-        testContractAddress,
-        roleKey,
-        customCheckerAddress,
-      } = await loadFixture(setupWithChecker);
-      const iface = new Interface(["function fn(uint256)"]);
-      const fn = iface.getFunction("fn")!;
+      const { roles, allowFunction, invoke, customCheckerAddress } =
+        await loadFixture(setupWithChecker);
 
       const extraData = "aabbccddeeff112233445566";
       const compValue = customCheckerAddress + extraData;
 
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
+      await allowFunction(
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -159,16 +127,7 @@ describe("Operator - Custom", () => {
       // Note: returned info is bytes32, so extraData is padded/truncated to 32 bytes
       const expectedInfo = "0x" + extraData.padEnd(64, "0");
 
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [99]),
-            0,
-          ),
-      )
+      await expect(invoke(99))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.CustomConditionViolation,
@@ -179,20 +138,10 @@ describe("Operator - Custom", () => {
 
   describe("result handling", () => {
     it("passes when adapter returns true", async () => {
-      const {
-        roles,
-        member,
-        testContractAddress,
-        roleKey,
-        customCheckerAddress,
-      } = await loadFixture(setupWithChecker);
-      const iface = new Interface(["function fn(uint256)"]);
-      const fn = iface.getFunction("fn")!;
+      const { allowFunction, invoke, customCheckerAddress } =
+        await loadFixture(setupWithChecker);
 
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
+      await allowFunction(
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -208,36 +157,17 @@ describe("Operator - Custom", () => {
       );
 
       // Adapter returns true for > 100
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [101]),
-            0,
-          ),
-      ).to.not.be.reverted;
+      await expect(invoke(101)).to.not.be.reverted;
     });
 
     it("fails when adapter returns false (propagates error info)", async () => {
-      const {
-        roles,
-        member,
-        testContractAddress,
-        roleKey,
-        customCheckerAddress,
-      } = await loadFixture(setupWithChecker);
-      const iface = new Interface(["function fn(uint256)"]);
-      const fn = iface.getFunction("fn")!;
+      const { roles, allowFunction, invoke, customCheckerAddress } =
+        await loadFixture(setupWithChecker);
 
       const extraData = "1234"; // "reason" code
       const compValue = customCheckerAddress + extraData;
 
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
+      await allowFunction(
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -255,16 +185,7 @@ describe("Operator - Custom", () => {
       // Adapter returns false for <= 100, info = extraData
       const expectedInfo = "0x" + extraData.padEnd(64, "0");
 
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [99]),
-            0,
-          ),
-      )
+      await expect(invoke(99))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.CustomConditionViolation,
@@ -274,18 +195,12 @@ describe("Operator - Custom", () => {
   });
 
   describe("adapter call safety", () => {
-    // Helper to set up a custom condition with a given adapter address
-    async function allowWithCustomCondition(
-      roles: Awaited<ReturnType<typeof setupWithChecker>>["roles"],
-      roleKey: string,
-      testContractAddress: string,
-      selector: string,
-      adapterAddress: string,
-    ) {
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        selector,
+    it("no code at address: reverts", async () => {
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupWithChecker);
+
+      const randomAddress = hexlify(randomBytes(20));
+      await allowFunction(
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -293,39 +208,14 @@ describe("Operator - Custom", () => {
             {
               paramType: Encoding.Static,
               operator: Operator.Custom,
-              compValue: adapterAddress,
+              compValue: randomAddress,
             },
           ],
         }),
         ExecutionOptions.Both,
       );
-    }
 
-    it("no code at address: reverts", async () => {
-      const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupWithChecker);
-      const iface = new Interface(["function fn(uint256)"]);
-      const fn = iface.getFunction("fn")!;
-
-      const randomEOA = "0x1234567890123456789012345678901234567890";
-      await allowWithCustomCondition(
-        roles,
-        roleKey,
-        testContractAddress,
-        fn.selector,
-        randomEOA,
-      );
-
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [101]),
-            0,
-          ),
-      )
+      await expect(invoke(101))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.CustomConditionNotAContract,
@@ -334,10 +224,8 @@ describe("Operator - Custom", () => {
     });
 
     it("wrong interface: reverts", async () => {
-      const { roles, member, testContractAddress, roleKey } =
+      const { roles, allowFunction, invoke } =
         await loadFixture(setupWithChecker);
-      const iface = new Interface(["function fn(uint256)"]);
-      const fn = iface.getFunction("fn")!;
 
       // Deploy contract with code but no check() function and no fallback
       const NoInterfaceChecker = await hre.ethers.getContractFactory(
@@ -346,34 +234,30 @@ describe("Operator - Custom", () => {
       const noInterfaceChecker = await NoInterfaceChecker.deploy();
       const noInterfaceCheckerAddress = await noInterfaceChecker.getAddress();
 
-      await allowWithCustomCondition(
-        roles,
-        roleKey,
-        testContractAddress,
-        fn.selector,
-        noInterfaceCheckerAddress,
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Static,
+              operator: Operator.Custom,
+              compValue: noInterfaceCheckerAddress,
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
       );
 
       // Function selector not found, no fallback -> staticcall fails
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [101]),
-            0,
-          ),
-      )
+      await expect(invoke(101))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(ConditionViolationStatus.CustomConditionReverted, ZeroHash);
     });
 
     it("function reverts: reverts", async () => {
-      const { roles, member, testContractAddress, roleKey } =
+      const { roles, allowFunction, invoke } =
         await loadFixture(setupWithChecker);
-      const iface = new Interface(["function fn(uint256)"]);
-      const fn = iface.getFunction("fn")!;
 
       const RevertingChecker = await hre.ethers.getContractFactory(
         "TestCustomCheckerReverting",
@@ -381,34 +265,30 @@ describe("Operator - Custom", () => {
       const revertingChecker = await RevertingChecker.deploy();
       const revertingCheckerAddress = await revertingChecker.getAddress();
 
-      await allowWithCustomCondition(
-        roles,
-        roleKey,
-        testContractAddress,
-        fn.selector,
-        revertingCheckerAddress,
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Static,
+              operator: Operator.Custom,
+              compValue: revertingCheckerAddress,
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
       );
 
       // Adapter reverts -> staticcall fails
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [101]),
-            0,
-          ),
-      )
+      await expect(invoke(101))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(ConditionViolationStatus.CustomConditionReverted, ZeroHash);
     });
 
     it("returns wrong type: reverts", async () => {
-      const { roles, member, testContractAddress, roleKey } =
+      const { roles, allowFunction, invoke } =
         await loadFixture(setupWithChecker);
-      const iface = new Interface(["function fn(uint256)"]);
-      const fn = iface.getFunction("fn")!;
 
       // Deploy contract that returns uint256 instead of (bool, bytes32)
       const WrongReturnChecker = await hre.ethers.getContractFactory(
@@ -417,25 +297,23 @@ describe("Operator - Custom", () => {
       const wrongReturnChecker = await WrongReturnChecker.deploy();
       const wrongReturnCheckerAddress = await wrongReturnChecker.getAddress();
 
-      await allowWithCustomCondition(
-        roles,
-        roleKey,
-        testContractAddress,
-        fn.selector,
-        wrongReturnCheckerAddress,
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Static,
+              operator: Operator.Custom,
+              compValue: wrongReturnCheckerAddress,
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
       );
 
       // Return data length != 64 bytes
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [101]),
-            0,
-          ),
-      )
+      await expect(invoke(101))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.CustomConditionInvalidResult,
@@ -444,35 +322,26 @@ describe("Operator - Custom", () => {
     });
 
     it("returns expected: succeeds", async () => {
-      const {
-        roles,
-        member,
-        testContractAddress,
-        roleKey,
-        customCheckerAddress,
-      } = await loadFixture(setupWithChecker);
-      const iface = new Interface(["function fn(uint256)"]);
-      const fn = iface.getFunction("fn")!;
+      const { allowFunction, invoke, customCheckerAddress } =
+        await loadFixture(setupWithChecker);
 
-      await allowWithCustomCondition(
-        roles,
-        roleKey,
-        testContractAddress,
-        fn.selector,
-        customCheckerAddress,
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Static,
+              operator: Operator.Custom,
+              compValue: customCheckerAddress,
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
       );
 
       // Valid adapter returns (true, bytes32) -> passes
-      await expect(
-        roles
-          .connect(member)
-          .execTransactionFromModule(
-            testContractAddress,
-            0,
-            iface.encodeFunctionData(fn, [101]),
-            0,
-          ),
-      ).to.not.be.reverted;
+      await expect(invoke(101)).to.not.be.reverted;
     });
   });
 });
