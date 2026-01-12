@@ -368,4 +368,63 @@ describe("Operator - Custom", () => {
       await expect(invoke(101)).to.not.be.reverted;
     });
   });
+
+  describe("violation context", () => {
+    it("reports the violating node index", async () => {
+      const { roles, allowFunction, invoke, customCheckerAddress } =
+        await loadFixture(setupWithChecker);
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Static,
+              operator: Operator.Custom,
+              compValue: customCheckerAddress,
+            },
+          ],
+        }),
+      );
+
+      // Value <= 100 triggers custom checker failure
+      await expect(invoke(50))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.CustomConditionViolation,
+          1, // Custom node at BFS index 1
+          anyValue,
+          anyValue,
+        );
+    });
+
+    it("reports the calldata range of the violation", async () => {
+      const { roles, allowFunction, invoke, customCheckerAddress } =
+        await loadFixture(setupWithChecker);
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Static,
+              operator: Operator.Custom,
+              compValue: customCheckerAddress,
+            },
+          ],
+        }),
+      );
+
+      await expect(invoke(50))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.CustomConditionViolation,
+          anyValue,
+          4, // payloadLocation: parameter starts at byte 4
+          32, // payloadSize: uint256 is 32 bytes
+        );
+    });
+  });
 });

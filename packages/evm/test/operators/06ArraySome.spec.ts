@@ -218,4 +218,74 @@ describe("Operator - ArraySome", () => {
       expect(balance).to.equal(30);
     });
   });
+
+  describe("violation context", () => {
+    it("reports the violating node index", async () => {
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupArrayParam);
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Array,
+              operator: Operator.ArraySome,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [42]),
+                },
+              ],
+            },
+          ],
+        }),
+      );
+
+      await expect(invoke([1, 2, 3]))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.NoArrayElementPasses,
+          1, // ArraySome node at BFS index 1
+          anyValue,
+          anyValue,
+        );
+    });
+
+    it("reports the calldata range of the violation", async () => {
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupArrayParam);
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Array,
+              operator: Operator.ArraySome,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [42]),
+                },
+              ],
+            },
+          ],
+        }),
+      );
+
+      await expect(invoke([1, 2, 3]))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.NoArrayElementPasses,
+          anyValue,
+          36, // payloadLocation: array data starts at byte 36
+          128, // payloadSize: 32 (length) + 3*32 (elements) = 128
+        );
+    });
+  });
 });

@@ -459,4 +459,70 @@ describe("Operator - Matches", () => {
         );
     });
   });
+
+  describe("violation context", () => {
+    it("reports the violating node index", async () => {
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupTwoParams);
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Static,
+              operator: Operator.Pass,
+            },
+            {
+              paramType: Encoding.Static,
+              operator: Operator.EqualTo,
+              compValue: abiCoder.encode(["uint256"], [42]),
+            },
+          ],
+        }),
+      );
+
+      await expect(invoke(100, 99))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          2, // EqualTo child node at BFS index 2
+          anyValue,
+          anyValue,
+        );
+    });
+
+    it("reports the calldata range of the violation", async () => {
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupTwoParams);
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Static,
+              operator: Operator.Pass,
+            },
+            {
+              paramType: Encoding.Static,
+              operator: Operator.EqualTo,
+              compValue: abiCoder.encode(["uint256"], [42]),
+            },
+          ],
+        }),
+      );
+
+      await expect(invoke(100, 99))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          anyValue,
+          36, // payloadLocation: second param starts at byte 36 (4 + 32)
+          32, // payloadSize: uint256 is 32 bytes
+        );
+    });
+  });
 });

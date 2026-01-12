@@ -213,4 +213,74 @@ describe("Operator - ArrayEvery", () => {
       expect(balance).to.equal(40);
     });
   });
+
+  describe("violation context", () => {
+    it("reports the violating node index", async () => {
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupArrayParam);
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Array,
+              operator: Operator.ArrayEvery,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [42]),
+                },
+              ],
+            },
+          ],
+        }),
+      );
+
+      await expect(invoke([42, 99, 42]))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.NotEveryArrayElementPasses,
+          2, // EqualTo node at BFS index 2
+          anyValue,
+          anyValue,
+        );
+    });
+
+    it("reports the calldata range of the violation", async () => {
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupArrayParam);
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Array,
+              operator: Operator.ArrayEvery,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [42]),
+                },
+              ],
+            },
+          ],
+        }),
+      );
+
+      await expect(invoke([1, 2, 3]))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.NotEveryArrayElementPasses,
+          anyValue,
+          68, // payloadLocation: first element at byte 68 (4 + 32 + 32)
+          32, // payloadSize: uint256 element is 32 bytes
+        );
+    });
+  });
 });

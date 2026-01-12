@@ -509,4 +509,100 @@ describe("Operator - CallWithinAllowance", async () => {
         );
     });
   });
+
+  describe("violation context", () => {
+    it("reports the violating node index", async () => {
+      const { roles, member, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      const iface = new Interface(["function doNothing()"]);
+      const fn = iface.getFunction("doNothing")!;
+      const allowanceKey = hexlify(randomBytes(32));
+
+      await setAllowance(roles, allowanceKey, 0); // No balance
+
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.None,
+              operator: Operator.CallWithinAllowance,
+              compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
+            },
+          ],
+        }),
+        ExecutionOptions.None,
+      );
+
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            testContractAddress,
+            0,
+            iface.encodeFunctionData(fn, []),
+            0,
+          ),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.AllowanceExceeded,
+          1, // CallWithinAllowance node at BFS index 1
+          anyValue,
+          anyValue,
+        );
+    });
+
+    it("reports the calldata range of the violation", async () => {
+      const { roles, member, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      const iface = new Interface(["function doNothing()"]);
+      const fn = iface.getFunction("doNothing")!;
+      const allowanceKey = hexlify(randomBytes(32));
+
+      await setAllowance(roles, allowanceKey, 0); // No balance
+
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.None,
+              operator: Operator.CallWithinAllowance,
+              compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
+            },
+          ],
+        }),
+        ExecutionOptions.None,
+      );
+
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            testContractAddress,
+            0,
+            iface.encodeFunctionData(fn, []),
+            0,
+          ),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.AllowanceExceeded,
+          anyValue,
+          0, // payloadLocation: CallWithinAllowance has no payload
+          0, // payloadSize: no payload
+        );
+    });
+  });
 });

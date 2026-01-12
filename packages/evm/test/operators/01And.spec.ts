@@ -392,4 +392,83 @@ describe("Operator - And", () => {
         );
     });
   });
+
+  describe("violation context", () => {
+    it("reports the violating node index", async () => {
+      const { roles, allowFunction, invoke } = await loadFixture(setupOneParam);
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.None,
+              operator: Operator.And,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.GreaterThan,
+                  compValue: abiCoder.encode(["uint256"], [10]),
+                },
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.LessThan,
+                  compValue: abiCoder.encode(["uint256"], [100]),
+                },
+              ],
+            },
+          ],
+        }),
+      );
+
+      // Fails first child (GreaterThan)
+      await expect(invoke(5))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.ParameterLessThanAllowed,
+          2, // GreaterThan node at BFS index 2
+          anyValue,
+          anyValue,
+        );
+    });
+
+    it("reports the calldata range of the violation", async () => {
+      const { roles, allowFunction, invoke } = await loadFixture(setupOneParam);
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.None,
+              operator: Operator.And,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.GreaterThan,
+                  compValue: abiCoder.encode(["uint256"], [10]),
+                },
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.LessThan,
+                  compValue: abiCoder.encode(["uint256"], [100]),
+                },
+              ],
+            },
+          ],
+        }),
+      );
+
+      await expect(invoke(5))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.ParameterLessThanAllowed,
+          anyValue,
+          4, // payloadLocation: parameter starts at byte 4
+          32, // payloadSize: uint256 is 32 bytes
+        );
+    });
+  });
 });

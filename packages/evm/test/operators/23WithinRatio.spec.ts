@@ -1756,6 +1756,88 @@ describe("Operator - WithinRatio", () => {
         );
     });
   });
+
+  describe("violation context", () => {
+    it("reports the violating node index", async () => {
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupTwoParams);
+
+      const compValue = encodeWithinRatioCompValue({
+        referenceIndex: 7,
+        referenceDecimals: 0,
+        relativeIndex: 3,
+        relativeDecimals: 0,
+        minRatio: 9000, // 90%
+        maxRatio: 11000, // 110%
+      });
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            pluck(3), // relative
+            pluck(7), // reference
+            {
+              paramType: Encoding.None,
+              operator: Operator.WithinRatio,
+              compValue,
+            },
+          ],
+        }),
+      );
+
+      // 850 / 1000 = 85% < 90% → fail
+      await expect(invoke(850, 1000))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.RatioBelowMin,
+          3, // WithinRatio node at BFS index 3
+          anyValue,
+          anyValue,
+        );
+    });
+
+    it("reports the calldata range of the violation", async () => {
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupTwoParams);
+
+      const compValue = encodeWithinRatioCompValue({
+        referenceIndex: 7,
+        referenceDecimals: 0,
+        relativeIndex: 3,
+        relativeDecimals: 0,
+        minRatio: 0,
+        maxRatio: 9000, // 90%
+      });
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            pluck(3), // relative
+            pluck(7), // reference
+            {
+              paramType: Encoding.None,
+              operator: Operator.WithinRatio,
+              compValue,
+            },
+          ],
+        }),
+      );
+
+      // 950 / 1000 = 95% > 90% → fail
+      await expect(invoke(950, 1000))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.RatioAboveMax,
+          anyValue,
+          0, // payloadLocation: WithinRatio uses plucked values, no direct payload
+          0, // payloadSize: no direct payload
+        );
+    });
+  });
 });
 
 // Helper function to encode compValue for WithinRatio operator

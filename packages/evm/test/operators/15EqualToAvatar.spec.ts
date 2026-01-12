@@ -194,4 +194,92 @@ describe("Operator - EqualToAvatar", () => {
       ).to.not.be.reverted;
     });
   });
+
+  describe("violation context", () => {
+    it("reports the violating node index", async () => {
+      const iface = new Interface(["function fn(address)"]);
+      const fn = iface.getFunction("fn")!;
+      const { roles, member, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Static,
+              operator: Operator.EqualToAvatar,
+            },
+          ],
+        }),
+        ExecutionOptions.None,
+      );
+
+      const wrongAddress = hexlify(randomBytes(20));
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            testContractAddress,
+            0,
+            iface.encodeFunctionData(fn, [wrongAddress]),
+            0,
+          ),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          1, // EqualToAvatar node at BFS index 1
+          anyValue,
+          anyValue,
+        );
+    });
+
+    it("reports the calldata range of the violation", async () => {
+      const iface = new Interface(["function fn(address)"]);
+      const fn = iface.getFunction("fn")!;
+      const { roles, member, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Static,
+              operator: Operator.EqualToAvatar,
+            },
+          ],
+        }),
+        ExecutionOptions.None,
+      );
+
+      const wrongAddress = hexlify(randomBytes(20));
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            testContractAddress,
+            0,
+            iface.encodeFunctionData(fn, [wrongAddress]),
+            0,
+          ),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          anyValue,
+          4, // payloadLocation: parameter starts at byte 4
+          32, // payloadSize: address is 32 bytes (padded)
+        );
+    });
+  });
 });

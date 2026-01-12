@@ -274,4 +274,62 @@ describe("Operator - SignedIntLessThan", () => {
         anyValue,
       );
   });
+
+  describe("violation context", () => {
+    it("reports the violating node index", async () => {
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupOneParamSigned);
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Static,
+              operator: Operator.SignedIntLessThan,
+              compValue: defaultAbiCoder.encode(["int256"], [100]),
+            },
+          ],
+        }),
+      );
+
+      await expect(invoke(200))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.ParameterGreaterThanAllowed,
+          1, // SignedIntLessThan node at BFS index 1
+          anyValue,
+          anyValue,
+        );
+    });
+
+    it("reports the calldata range of the violation", async () => {
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupOneParamSigned);
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Static,
+              operator: Operator.SignedIntLessThan,
+              compValue: defaultAbiCoder.encode(["int256"], [100]),
+            },
+          ],
+        }),
+      );
+
+      await expect(invoke(200))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.ParameterGreaterThanAllowed,
+          anyValue,
+          4, // payloadLocation: parameter starts at byte 4
+          32, // payloadSize: int256 is 32 bytes
+        );
+    });
+  });
 });

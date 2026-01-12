@@ -277,4 +277,65 @@ describe("Operator - Bitmask", () => {
         );
     });
   });
+
+  describe("violation context", () => {
+    it("reports the violating node index", async () => {
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupDynamicParam);
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Dynamic,
+              operator: Operator.Bitmask,
+              compValue: encodeCompValue(0, "ffff", "aabb"),
+            },
+          ],
+        }),
+      );
+
+      await expect(invoke("0xccdd"))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.BitmaskNotAllowed,
+          1, // Bitmask node at BFS index 1
+          anyValue,
+          anyValue,
+        );
+    });
+
+    it("reports the calldata range of the violation", async () => {
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupDynamicParam);
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Dynamic,
+              operator: Operator.Bitmask,
+              compValue: encodeCompValue(0, "ffff", "aabb"),
+            },
+          ],
+        }),
+      );
+
+      // 50 bytes of data, padded to 64 bytes
+      const fiftyBytes =
+        "0xccdd000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+      await expect(invoke(fiftyBytes))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.BitmaskNotAllowed,
+          anyValue,
+          36, // payloadLocation: dynamic param at byte 36 (4 + 32)
+          96, // payloadSize: 32 (length) + 64 (50 bytes padded to 64) = 96
+        );
+    });
+  });
 });

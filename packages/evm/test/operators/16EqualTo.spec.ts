@@ -277,4 +277,62 @@ describe("Operator - EqualTo", () => {
         );
     });
   });
+
+  describe("violation context", () => {
+    it("reports the violating node index", async () => {
+      const { roles, allowFunction, invoke } = await loadFixture(setupOneParam);
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Static,
+              operator: Operator.EqualTo,
+              compValue: abiCoder.encode(["uint256"], [100]),
+            },
+          ],
+        }),
+        ExecutionOptions.None,
+      );
+
+      await expect(invoke(999))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          1, // EqualTo node at BFS index 1
+          anyValue,
+          anyValue,
+        );
+    });
+
+    it("reports the calldata range of the violation", async () => {
+      const { roles, allowFunction, invoke } = await loadFixture(setupOneParam);
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Static,
+              operator: Operator.EqualTo,
+              compValue: abiCoder.encode(["uint256"], [100]),
+            },
+          ],
+        }),
+        ExecutionOptions.None,
+      );
+
+      await expect(invoke(999))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          anyValue,
+          4, // payloadLocation: parameter starts at byte 4 (after selector)
+          32, // payloadSize: uint256 is 32 bytes
+        );
+    });
+  });
 });

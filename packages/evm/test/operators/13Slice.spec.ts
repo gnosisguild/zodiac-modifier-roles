@@ -240,4 +240,76 @@ describe("Operator - Slice", () => {
       expect(balance).to.equal(70);
     });
   });
+
+  describe("violation context", () => {
+    it("reports the violating node index", async () => {
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupDynamicParam);
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Dynamic,
+              operator: Operator.Slice,
+              compValue: encodeCompValue(0, 4), // shift=0, size=4
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [0xdeadbeef]),
+                },
+              ],
+            },
+          ],
+        }),
+      );
+
+      await expect(invoke("0xcafebabe"))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          2, // EqualTo node at BFS index 2
+          anyValue,
+          anyValue,
+        );
+    });
+
+    it("reports the calldata range of the violation", async () => {
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupDynamicParam);
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Dynamic,
+              operator: Operator.Slice,
+              compValue: encodeCompValue(0, 4), // shift=0, size=4
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [0xdeadbeef]),
+                },
+              ],
+            },
+          ],
+        }),
+      );
+
+      await expect(invoke("0xcafebabe"))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          anyValue,
+          68, // payloadLocation: bytes data at byte 68 (4 + 32 + 32)
+          4, // payloadSize: 4 bytes sliced
+        );
+    });
+  });
 });

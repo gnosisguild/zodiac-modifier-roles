@@ -1486,4 +1486,82 @@ describe("Operator - WithinAllowance", async () => {
         );
     });
   });
+
+  describe("violation context", () => {
+    it("reports the violating node index", async () => {
+      const { owner, roles, allowFunction, invoke } =
+        await loadFixture(setupOneParam);
+
+      const allowanceKey = hexlify(randomBytes(32));
+
+      await setAllowance(await roles.connect(owner), allowanceKey, {
+        balance: 100,
+        period: 0,
+        refill: 0,
+        timestamp: 0,
+      });
+
+      await allowFunction([
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
+        },
+      ]);
+
+      await expect(invoke(101))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.AllowanceExceeded,
+          1, // WithinAllowance node at BFS index 1
+          anyValue,
+          anyValue,
+        );
+    });
+
+    it("reports the calldata range of the violation", async () => {
+      const { owner, roles, allowFunction, invoke } =
+        await loadFixture(setupOneParam);
+
+      const allowanceKey = hexlify(randomBytes(32));
+
+      await setAllowance(await roles.connect(owner), allowanceKey, {
+        balance: 100,
+        period: 0,
+        refill: 0,
+        timestamp: 0,
+      });
+
+      await allowFunction([
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
+        },
+      ]);
+
+      await expect(invoke(101))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.AllowanceExceeded,
+          anyValue,
+          4, // payloadLocation: parameter starts at byte 4
+          32, // payloadSize: uint256 is 32 bytes
+        );
+    });
+  });
 });
