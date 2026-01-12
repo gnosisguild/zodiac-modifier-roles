@@ -11,19 +11,19 @@ contract TestCustomChecker is ICustomCondition {
         Operation operation,
         uint256 location,
         uint256 size,
-        bytes calldata extra,
+        bytes calldata,
         bytes32[] memory
-    ) public pure returns (bool success, bytes32 reason) {
+    ) public pure returns (bool success) {
         uint256 param = uint256(bytes32(data[location:location + size]));
 
         if (operation != Operation.Call) {
-            return (false, bytes32(0));
+            return false;
         }
 
         if (param > 100) {
-            return (true, 0);
+            return true;
         } else {
-            return (false, bytes32(extra));
+            return false;
         }
     }
 }
@@ -44,7 +44,7 @@ contract TestCustomCheckerReverting is ICustomCondition {
         uint256,
         bytes calldata,
         bytes32[] memory
-    ) public pure returns (bool, bytes32) {
+    ) public pure returns (bool) {
         revert("CustomChecker: intentional revert");
     }
 }
@@ -59,7 +59,7 @@ contract TestCustomCheckerWrongReturn {
         uint256,
         bytes calldata,
         bytes32[] memory
-    ) public pure returns (uint256) {
-        return 999;
+    ) public pure returns (uint256, uint256) {
+        return (999, 0);
     }
 }

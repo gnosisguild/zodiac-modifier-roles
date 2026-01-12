@@ -1,4 +1,5 @@
 import { expect } from "chai";
+import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { hexlify, Interface, randomBytes, ZeroHash } from "ethers";
@@ -183,7 +184,12 @@ describe("Authorization", () => {
             ),
         )
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
-          .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
+          .withArgs(
+            ConditionViolationStatus.ParameterNotAllowed,
+            1, // EqualTo node
+            anyValue,
+            anyValue,
+          );
 
         // twoParamsStatic with first param 100 - should pass
         await expect(
@@ -208,7 +214,12 @@ describe("Authorization", () => {
             ),
         )
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
-          .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
+          .withArgs(
+            ConditionViolationStatus.ParameterNotAllowed,
+            1, // EqualTo node
+            anyValue,
+            anyValue,
+          );
       });
     });
 
@@ -355,7 +366,12 @@ describe("Authorization", () => {
             ),
         )
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
-          .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
+          .withArgs(
+            ConditionViolationStatus.ParameterNotAllowed,
+            1, // EqualTo node
+            anyValue,
+            anyValue,
+          );
       });
     });
 

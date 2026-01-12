@@ -38,8 +38,13 @@ interface IRolesError {
     /// Calldata unwrapping failed
     error MalformedMultiEntrypoint();
 
-    /// Authorization check failed with specified status and info
-    error ConditionViolation(Status status, bytes32 info);
+    /// Authorization check failed with violation information
+    error ConditionViolation(
+        Status status,
+        uint256 violatedNodeIndex,
+        uint256 payloadLocation,
+        uint256 payloadSize
+    );
 
     /// Target address is not allowed for this role
     error TargetAddressNotAllowed(address target);

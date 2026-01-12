@@ -1,13 +1,7 @@
 import { expect } from "chai";
+import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import {
-  AbiCoder,
-  Interface,
-  ZeroHash,
-  hexlify,
-  randomBytes,
-  concat,
-} from "ethers";
+import { AbiCoder, Interface, hexlify, randomBytes, concat } from "ethers";
 
 import {
   setupTestContract,
@@ -68,7 +62,12 @@ describe("Operator - Matches", () => {
         junkHeader + abiCoder.encode(["uint256"], [99]).slice(2);
       await expect(invoke(wrongParamPayload))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          2, // EqualTo node
+          anyValue,
+          anyValue,
+        );
     });
   });
   describe("prefix validation", () => {
@@ -109,7 +108,12 @@ describe("Operator - Matches", () => {
         "0xcafebabe" + abiCoder.encode(["uint256"], [42]).slice(2);
       await expect(invoke(wrongPayload))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.LeadingBytesNotAMatch, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.LeadingBytesNotAMatch,
+          1, // Matches node with prefix
+          anyValue,
+          anyValue,
+        );
     });
 
     it("skips prefix check when compValue is empty (shift 0)", async () => {
@@ -143,7 +147,12 @@ describe("Operator - Matches", () => {
       const payload = abiCoder.encode(["uint256"], [999]);
       await expect(invoke(payload))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          2, // EqualTo node
+          anyValue,
+          anyValue,
+        );
     });
 
     it("validates 10-byte prefix (shift 10)", async () => {
@@ -186,14 +195,24 @@ describe("Operator - Matches", () => {
         wrongPrefix10 + abiCoder.encode(["uint256"], [123]).slice(2);
       await expect(invoke(wrongPrefixPayload))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.LeadingBytesNotAMatch, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.LeadingBytesNotAMatch,
+          1, // Matches node with prefix
+          anyValue,
+          anyValue,
+        );
 
       // Correct prefix + wrong param fails with ParameterNotAllowed
       const wrongParamPayload =
         prefix10 + abiCoder.encode(["uint256"], [999]).slice(2);
       await expect(invoke(wrongParamPayload))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          2, // EqualTo node
+          anyValue,
+          anyValue,
+        );
     });
 
     it("validates 31-byte prefix (shift 31)", async () => {
@@ -236,7 +255,12 @@ describe("Operator - Matches", () => {
         wrongPrefix31 + abiCoder.encode(["uint256"], [456]).slice(2);
       await expect(invoke(wrongPayload))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.LeadingBytesNotAMatch, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.LeadingBytesNotAMatch,
+          1, // Matches node with prefix
+          anyValue,
+          anyValue,
+        );
     });
   });
 
@@ -300,7 +324,12 @@ describe("Operator - Matches", () => {
           ),
       )
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          1, // First EqualTo node
+          anyValue,
+          anyValue,
+        );
 
       // Second param wrong - fails
       await expect(
@@ -314,7 +343,12 @@ describe("Operator - Matches", () => {
           ),
       )
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          2, // Second EqualTo node
+          anyValue,
+          anyValue,
+        );
 
       // Third param wrong - fails
       await expect(
@@ -328,7 +362,12 @@ describe("Operator - Matches", () => {
           ),
       )
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          3, // Third EqualTo node
+          anyValue,
+          anyValue,
+        );
     });
 
     it("passes empty payload to non-structural children", async () => {
@@ -363,7 +402,12 @@ describe("Operator - Matches", () => {
       // Correct param + wrong ether
       await expect(invoke(42, { value: 999 }))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          2, // EtherValue EqualTo node
+          anyValue,
+          anyValue,
+        );
     });
 
     it("accumulates consumptions across children", async () => {
@@ -407,7 +451,78 @@ describe("Operator - Matches", () => {
       // Second call: 30 + 30 = 60, but only 50 remaining
       await expect(invoke(30, 30))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(
+          ConditionViolationStatus.AllowanceExceeded,
+          2, // Second WithinAllowance node
+          anyValue,
+          anyValue,
+        );
+    });
+  });
+
+  describe("violation context", () => {
+    it("reports the violating node index", async () => {
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupTwoParams);
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Static,
+              operator: Operator.Pass,
+            },
+            {
+              paramType: Encoding.Static,
+              operator: Operator.EqualTo,
+              compValue: abiCoder.encode(["uint256"], [42]),
+            },
+          ],
+        }),
+      );
+
+      await expect(invoke(100, 99))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          2, // EqualTo child node at BFS index 2
+          anyValue,
+          anyValue,
+        );
+    });
+
+    it("reports the calldata range of the violation", async () => {
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupTwoParams);
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Static,
+              operator: Operator.Pass,
+            },
+            {
+              paramType: Encoding.Static,
+              operator: Operator.EqualTo,
+              compValue: abiCoder.encode(["uint256"], [42]),
+            },
+          ],
+        }),
+      );
+
+      await expect(invoke(100, 99))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          anyValue,
+          36, // payloadLocation: second param starts at byte 36 (4 + 32)
+          32, // payloadSize: uint256 is 32 bytes
+        );
     });
   });
 });

@@ -1,4 +1,5 @@
 import { expect } from "chai";
+import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import hre from "hardhat";
 import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
 import { Interface } from "ethers";
@@ -687,7 +688,12 @@ describe("AllowanceTracking", () => {
           .execTransactionFromModule(multisendAddress, 0, multisendCalldata, 1),
       )
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.AllowanceExceeded, ALLOWANCE_KEY);
+        .withArgs(
+          ConditionViolationStatus.AllowanceExceeded,
+          1, // WithinAllowance node
+          anyValue,
+          anyValue,
+        );
 
       // Balance unchanged
       const { balance } = await roles.accruedAllowance(ALLOWANCE_KEY);
