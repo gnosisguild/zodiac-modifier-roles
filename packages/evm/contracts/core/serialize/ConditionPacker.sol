@@ -79,7 +79,7 @@ library ConditionPacker {
         // Header: layoutOffset (2 bytes) + maxPluckIndex (1 byte)
         buffer[0] = bytes1(uint8(layoutOffset >> 8));
         buffer[1] = bytes1(uint8(layoutOffset));
-        buffer[2] = bytes1(_maxPluckIndex(conditions));
+        buffer[2] = bytes1(_pluckValuesMaxCount(conditions));
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -199,15 +199,15 @@ library ConditionPacker {
                 condition.compValue.length > 2);
     }
 
-    function _maxPluckIndex(
+    function _pluckValuesMaxCount(
         ConditionFlat[] memory conditions
     ) private pure returns (uint8 result) {
         for (uint256 i = 0; i < conditions.length; ++i) {
             if (conditions[i].operator != Operator.Pluck) continue;
 
-            uint8 index = uint8(conditions[i].compValue[0]);
-            if (index > result) {
-                result = index;
+            uint8 count = uint8(conditions[i].compValue[0]) + 1;
+            if (count > result) {
+                result = count;
             }
         }
     }
