@@ -312,7 +312,7 @@ describe("Operator - Custom", () => {
       const { roles, allowFunction, invoke } =
         await loadFixture(setupWithChecker);
 
-      // Deploy contract that returns uint256 instead of (bool, bytes32)
+      // Deploy contract that returns (uint256, uint256) instead of bool
       const WrongReturnChecker = await hre.ethers.getContractFactory(
         "TestCustomCheckerWrongReturn",
       );
@@ -334,7 +334,7 @@ describe("Operator - Custom", () => {
         ExecutionOptions.Both,
       );
 
-      // Return data length != 64 bytes
+      // Return data length != 32 bytes
       await expect(invoke(101))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
@@ -364,7 +364,7 @@ describe("Operator - Custom", () => {
         ExecutionOptions.Both,
       );
 
-      // Valid adapter returns (true, bytes32) -> passes
+      // Valid adapter returns true -> passes
       await expect(invoke(101)).to.not.be.reverted;
     });
   });

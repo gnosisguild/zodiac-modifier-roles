@@ -135,7 +135,22 @@ library ConditionLogic {
                     );
             } else {
                 assert(operator == Operator.Custom);
-                return _custom(data, condition, payload, consumptions, context);
+                return
+                    _result(
+                        CustomConditionChecker.check(
+                            condition.compValue,
+                            context.to,
+                            context.value,
+                            data,
+                            context.operation,
+                            payload.location,
+                            payload.size,
+                            context.pluckedValues
+                        ),
+                        condition,
+                        payload,
+                        consumptions
+                    );
             }
         }
     }
@@ -420,27 +435,6 @@ library ConditionLogic {
         } else {
             return Status.Ok;
         }
-    }
-
-    function _custom(
-        bytes calldata data,
-        Condition memory condition,
-        Payload memory payload,
-        Consumption[] memory consumptions,
-        Context memory context
-    ) private view returns (Result memory) {
-        (Status status, ) = CustomConditionChecker.check(
-            condition.compValue,
-            context.to,
-            context.value,
-            data,
-            context.operation,
-            payload.location,
-            payload.size,
-            context.pluckedValues
-        );
-
-        return _result(status, condition, payload, consumptions);
     }
 
     function __allowance(
