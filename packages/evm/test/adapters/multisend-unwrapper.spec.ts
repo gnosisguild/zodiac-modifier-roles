@@ -3,22 +3,25 @@ import { expect } from "chai";
 import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import { BigNumberish, getAddress, solidityPacked } from "ethers";
+import { BigNumberish, getAddress, Interface, solidityPacked } from "ethers";
 import { encodeMultisendPayload } from "../utils";
 
 const AddressOne = "0x0000000000000000000000000000000000000001";
+
 enum Operation {
   Call = 0,
-  DelegateCall,
+  DelegateCall = 1,
 }
 
-describe("MultiSendUnwrapper", async () => {
+const iface = new Interface([
+  "function simple(uint256)",
+  "function staticDynamicDynamic32(address, bytes, uint32[])",
+]);
+
+describe("MultiSendUnwrapper", () => {
   async function setup() {
     const MultiSend = await hre.ethers.getContractFactory("MultiSend");
     const multisend = await MultiSend.deploy();
-
-    const TestEncoder = await hre.ethers.getContractFactory("TestEncoder");
-    const testEncoder = await TestEncoder.deploy();
 
     const MultiSendUnwrapper =
       await hre.ethers.getContractFactory("MultiSendUnwrapper");
@@ -26,28 +29,25 @@ describe("MultiSendUnwrapper", async () => {
 
     return {
       multisend,
-      testEncoder,
       unwrapper,
     };
   }
 
   it("reverts if wrong selector used", async () => {
-    const { unwrapper, multisend, testEncoder } = await loadFixture(setup);
+    const { unwrapper, multisend } = await loadFixture(setup);
 
-    const { data: simpleCalldata } =
-      await testEncoder.simple.populateTransaction(1);
+    const simpleCalldata = iface.encodeFunctionData("simple", [1]);
 
     const { data } = await multisend.multiSend.populateTransaction(
       encodeMultisendPayload([
         {
-          to: "0x0000000000000000000000000000000000000001",
+          to: AddressOne,
           value: 0,
           operation: Operation.Call,
-          data: simpleCalldata as string,
+          data: simpleCalldata,
         },
       ]),
     );
-
     assert(data);
 
     const selectorWrong = "bbccddee";
@@ -73,22 +73,20 @@ describe("MultiSendUnwrapper", async () => {
   });
 
   it("reverts if header offset incorrect", async () => {
-    const { unwrapper, multisend, testEncoder } = await loadFixture(setup);
+    const { unwrapper, multisend } = await loadFixture(setup);
 
-    const { data: simpleCalldata } =
-      await testEncoder.simple.populateTransaction(1);
+    const simpleCalldata = iface.encodeFunctionData("simple", [1]);
 
     const { data } = await multisend.multiSend.populateTransaction(
       encodeMultisendPayload([
         {
-          to: "0x0000000000000000000000000000000000000001",
+          to: AddressOne,
           value: 0,
           operation: Operation.DelegateCall,
-          data: simpleCalldata as string,
+          data: simpleCalldata,
         },
       ]),
     );
-
     assert(data);
 
     const offsetOk =
@@ -116,22 +114,20 @@ describe("MultiSendUnwrapper", async () => {
   });
 
   it("reverts if calldata length incorrect", async () => {
-    const { unwrapper, multisend, testEncoder } = await loadFixture(setup);
+    const { unwrapper, multisend } = await loadFixture(setup);
 
-    const { data: simpleCalldata } =
-      await testEncoder.simple.populateTransaction(1);
+    const simpleCalldata = iface.encodeFunctionData("simple", [1]);
 
     const { data } = await multisend.multiSend.populateTransaction(
       encodeMultisendPayload([
         {
-          to: "0x0000000000000000000000000000000000000001",
+          to: AddressOne,
           value: 0,
           operation: Operation.DelegateCall,
-          data: simpleCalldata as string,
+          data: simpleCalldata,
         },
       ]),
     );
-
     assert(data);
 
     const lengthWrong =
@@ -151,10 +147,10 @@ describe("MultiSendUnwrapper", async () => {
   });
 
   it("reverts if value not zero", async () => {
-    const { unwrapper, multisend, testEncoder } = await loadFixture(setup);
+    const { unwrapper, multisend } = await loadFixture(setup);
 
-    const { data: txData } = await testEncoder.simple.populateTransaction(1);
-    assert(txData);
+    const txData = iface.encodeFunctionData("simple", [1]);
+
     const { data } = await multisend.multiSend.populateTransaction(
       encodeMultisendPayload([
         {
@@ -174,16 +170,17 @@ describe("MultiSendUnwrapper", async () => {
   });
 
   it("reverts if operation not delegate call", async () => {
-    const { unwrapper, multisend, testEncoder } = await loadFixture(setup);
+    const { unwrapper, multisend } = await loadFixture(setup);
 
-    const { data: txData } = await testEncoder.simple.populateTransaction(1);
+    const txData = iface.encodeFunctionData("simple", [1]);
+
     const { data } = await multisend.multiSend.populateTransaction(
       encodeMultisendPayload([
         {
           to: "0xaaff330000000000000000000aa0000ff0000000",
           value: 999444555,
           operation: Operation.Call,
-          data: txData as string,
+          data: txData,
         },
       ]),
     );
@@ -199,7 +196,6 @@ describe("MultiSendUnwrapper", async () => {
     const { unwrapper, multisend } = await loadFixture(setup);
 
     const { data } = await multisend.multiSend.populateTransaction("0x");
-
     assert(data);
 
     await expect(unwrapper.unwrap(AddressOne, 0, data, Operation.DelegateCall))
@@ -207,18 +203,17 @@ describe("MultiSendUnwrapper", async () => {
   });
 
   it("reverts if single transaction length wrong", async () => {
-    const { unwrapper, multisend, testEncoder } = await loadFixture(setup);
+    const { unwrapper, multisend } = await loadFixture(setup);
 
-    const { data: simpleCalldata } =
-      await testEncoder.simple.populateTransaction(1);
+    const simpleCalldata = iface.encodeFunctionData("simple", [1]);
 
     const { data } = await multisend.multiSend.populateTransaction(
       encodeMultisendWrongLength([
         {
-          to: "0x0000000000000000000000000000000000000001",
+          to: AddressOne,
           value: 0,
           operation: Operation.DelegateCall,
-          data: simpleCalldata as string,
+          data: simpleCalldata,
         },
       ]),
     );
@@ -229,22 +224,21 @@ describe("MultiSendUnwrapper", async () => {
   });
 
   it("unwraps a single transaction", async () => {
-    const { unwrapper, multisend, testEncoder } = await loadFixture(setup);
+    const { unwrapper, multisend } = await loadFixture(setup);
 
-    const { data: txData } = await testEncoder.simple.populateTransaction(1);
+    const txData = iface.encodeFunctionData("simple", [1]);
+
     const { data } = await multisend.multiSend.populateTransaction(
       encodeMultisendPayload([
         {
           to: "0xaaff330000000000000000000aa0000ff0000000",
           value: 999444555,
           operation: Operation.DelegateCall,
-          data: txData as string,
+          data: txData,
         },
       ]),
     );
-
     assert(data);
-    assert(txData);
 
     const result = await unwrapper.unwrap(
       AddressOne,
@@ -264,29 +258,27 @@ describe("MultiSendUnwrapper", async () => {
   });
 
   it("unwraps multiple transactions", async () => {
-    const { unwrapper, multisend, testEncoder } = await loadFixture(setup);
+    const { unwrapper, multisend } = await loadFixture(setup);
 
-    const { data: txData1 } = await testEncoder.simple.populateTransaction(1);
-    const { data: txData2 } = await testEncoder.staticDynamicDynamic32(
-      "0x0000000000000000000000000000000000000001",
+    const txData1 = iface.encodeFunctionData("simple", [1]);
+    const txData2 = iface.encodeFunctionData("staticDynamicDynamic32", [
+      AddressOne,
       "0xaabbcc",
       [1, 2, 3],
-    );
-    assert(txData1);
-    assert(txData2);
+    ]);
 
     const { data } = await multisend.multiSend.populateTransaction(
       encodeMultisendPayload([
         {
           to: "0x0000000000000000000000000000000000000002",
           value: 999444555,
-          operation: 1,
+          operation: Operation.DelegateCall,
           data: txData1,
         },
         {
           to: "0x0000000000000000000000000000000000000003",
           value: 7654,
-          operation: 0,
+          operation: Operation.Call,
           data: txData2,
         },
       ]),
@@ -303,12 +295,11 @@ describe("MultiSendUnwrapper", async () => {
     expect(result).to.have.lengthOf(2);
     expect(result[0].to).to.equal("0x0000000000000000000000000000000000000002");
     expect(result[0].value).to.equal(BigInt(999444555));
-    expect(result[0].operation).to.equal(1);
+    expect(result[0].operation).to.equal(Operation.DelegateCall);
 
     expect(result[1].to).to.equal("0x0000000000000000000000000000000000000003");
     expect(result[1].value).to.equal(BigInt(7654));
-
-    expect(result[1].operation).to.equal(0);
+    expect(result[1].operation).to.equal(Operation.Call);
 
     let { left, right } = location(result[0]);
     expect(data.slice(2).slice(left, right)).to.equal(txData1.slice(2));
@@ -317,29 +308,33 @@ describe("MultiSendUnwrapper", async () => {
   });
 
   it("reverts if inner transaction operation incorrect", async () => {
-    const { unwrapper, multisend, testEncoder } = await loadFixture(setup);
+    const { unwrapper, multisend } = await loadFixture(setup);
 
-    const { data: txData } = await testEncoder.simple.populateTransaction(1);
+    const txData = iface.encodeFunctionData("simple", [1]);
+
+    // operation = 2 is invalid
     let { data } = await multisend.multiSend.populateTransaction(
       encodeMultisendPayload([
         {
           to: "0xaaff330000000000000000000aa0000ff0000000",
           value: 999444555,
           operation: 2,
-          data: txData as string,
+          data: txData,
         },
       ]),
     );
     await expect(
       unwrapper.unwrap(AddressOne, 0, data as string, Operation.DelegateCall),
     ).to.be.reverted;
+
+    // operation = 1 (DelegateCall) is valid
     ({ data } = await multisend.multiSend.populateTransaction(
       encodeMultisendPayload([
         {
           to: "0xaaff330000000000000000000aa0000ff0000000",
           value: 999444555,
           operation: Operation.DelegateCall,
-          data: txData as string,
+          data: txData,
         },
       ]),
     ));

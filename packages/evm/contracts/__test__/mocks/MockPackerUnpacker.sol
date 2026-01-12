@@ -27,7 +27,8 @@ contract MockPackerUnpacker {
         view
         returns (
             FlatConditionForTest[] memory flatConditions,
-            FlatLayoutForTest[] memory flatLayouts
+            FlatLayoutForTest[] memory flatLayouts,
+            uint256 maxPluckValueCount
         )
     {
         // Pack
@@ -35,12 +36,16 @@ contract MockPackerUnpacker {
         bytes memory buffer = ConditionPacker.pack(conditions, typeTree);
 
         // Unpack
-        (Condition memory condition, Layout memory layout, ) = ConditionUnpacker
-            .unpack(buffer);
+        (
+            Condition memory condition,
+            Layout memory layout,
+            uint256 maxCount
+        ) = ConditionUnpacker.unpack(buffer);
 
         // Flatten both to BFS order
         flatConditions = _flattenCondition(condition);
         flatLayouts = _flattenLayout(layout);
+        maxPluckValueCount = maxCount;
     }
 
     function _flattenCondition(

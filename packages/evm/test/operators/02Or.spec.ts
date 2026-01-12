@@ -2,250 +2,463 @@ import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { AbiCoder, Interface, ZeroHash } from "ethers";
 
+import { setupTestContract, setupOneParam, setupDynamicParam } from "../setup";
 import {
   Encoding,
-  flattenCondition,
   Operator,
-  PermissionCheckerStatus,
+  ExecutionOptions,
+  ConditionViolationStatus,
+  flattenCondition,
 } from "../utils";
-import {
-  setupOneParamStatic,
-  setupOneParamStaticTuple,
-  setupTwoParamsStaticDynamic,
-} from "../setup";
-import { ConditionFlatStruct } from "../../typechain-types/contracts/Roles";
 
-const defaultAbiCoder = AbiCoder.defaultAbiCoder();
+/**
+ * Tests for Operator.Or handler in ConditionLogic.
+ *
+ * This test suite verifies the execution logic of the OR operator, focusing on:
+ * 1. Short-circuiting behavior (boolean logic).
+ * 2. Correct payload routing for variant vs non-variant conditions.
+ * 3. Isolation of side-effects (consumptions) to the successful branch.
+ *
+ * Test Structure:
+ * - Operator - Or
+ *   - boolean logic
+ *     - passes when first child passes
+ *     - passes when second child passes after first fails
+ *     - fails with OrViolation when all children fail
+ *   - payload routing
+ *     - passes same payload to structural children when non-variant
+ *     - passes individual child payloads when variant
+ *     - passes empty payload to non-structural children
+ *   - consumption handling
+ *     - returns consumptions only from the passing branch
+ */
 
-describe("Operator - Or", async () => {
-  it("evaluates operator Or with a single child", async () => {
-    const { roles, allowFunction, invoke } =
-      await loadFixture(setupOneParamStatic);
+const abiCoder = AbiCoder.defaultAbiCoder();
 
-    await allowFunction([
-      {
-        parent: 0,
-        paramType: Encoding.AbiEncoded,
-        operator: Operator.Matches,
-        compValue: "0x",
-      },
-      {
-        parent: 0,
-        paramType: Encoding.None,
-        operator: Operator.Or,
-        compValue: "0x",
-      },
-      {
-        parent: 1,
-        paramType: Encoding.Static,
-        operator: Operator.EqualTo,
-        compValue: defaultAbiCoder.encode(["uint256"], [1]),
-      },
-    ]);
+describe("Operator - Or", () => {
+  describe("boolean logic", () => {
+    it("passes when first child passes", async () => {
+      const { allowFunction, invoke } = await loadFixture(setupOneParam);
 
-    await expect(invoke(1)).to.not.be.reverted;
-
-    await expect(invoke(2))
-      .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.OrViolation, ZeroHash);
-  });
-
-  it("evaluates operator Or with multiple children", async () => {
-    const { roles, allowFunction, invoke } =
-      await loadFixture(setupOneParamStatic);
-
-    await allowFunction([
-      {
-        parent: 0,
-        paramType: Encoding.AbiEncoded,
-        operator: Operator.Matches,
-        compValue: "0x",
-      },
-      {
-        parent: 0,
-        paramType: Encoding.None,
-        operator: Operator.Or,
-        compValue: "0x",
-      },
-      {
-        parent: 1,
-        paramType: Encoding.Static,
-        operator: Operator.EqualTo,
-        compValue: defaultAbiCoder.encode(["uint256"], [15]),
-      },
-      {
-        parent: 1,
-        paramType: Encoding.Static,
-        operator: Operator.EqualTo,
-        compValue: defaultAbiCoder.encode(["uint256"], [30]),
-      },
-    ]);
-
-    await expect(invoke(1))
-      .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.OrViolation, ZeroHash);
-
-    await expect(invoke(15)).to.not.be.reverted;
-
-    await expect(invoke(20))
-      .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.OrViolation, ZeroHash);
-
-    await expect(invoke(30)).to.not.be.reverted;
-
-    await expect(invoke(100))
-      .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.OrViolation, ZeroHash);
-  });
-
-  it("evaluates operator OR, with type equivalent sibling children", async () => {
-    const { roles, allowFunction, invoke } = await loadFixture(
-      setupOneParamStaticTuple,
-    );
-
-    const conditions = flattenCondition({
-      paramType: Encoding.AbiEncoded,
-      operator: Operator.Matches,
-      children: [
-        {
-          paramType: Encoding.None,
-          operator: Operator.Or,
+      // Or: EqualTo(10) OR EqualTo(20)
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
           children: [
             {
-              paramType: Encoding.Tuple,
-              operator: Operator.Matches,
+              paramType: Encoding.None,
+              operator: Operator.Or,
               children: [
                 {
                   paramType: Encoding.Static,
                   operator: Operator.EqualTo,
-                  compValue: defaultAbiCoder.encode(["uint256"], [123]),
+                  compValue: abiCoder.encode(["uint256"], [10]),
                 },
                 {
                   paramType: Encoding.Static,
                   operator: Operator.EqualTo,
-                  compValue: defaultAbiCoder.encode(["bool"], [true]),
-                },
-              ],
-            },
-            {
-              paramType: Encoding.Tuple,
-              operator: Operator.Matches,
-              children: [
-                {
-                  paramType: Encoding.Static,
-                  operator: Operator.EqualTo,
-                  compValue: defaultAbiCoder.encode(["uint256"], [345]),
-                },
-                {
-                  paramType: Encoding.Static,
-                  operator: Operator.EqualTo,
-                  compValue: defaultAbiCoder.encode(["bool"], [false]),
+                  compValue: abiCoder.encode(["uint256"], [20]),
                 },
               ],
             },
           ],
-        },
-      ],
-    }) as ConditionFlatStruct[];
+        }),
+        ExecutionOptions.Both,
+      );
 
-    await allowFunction(conditions);
+      // 10 matches first child - passes immediately
+      await expect(invoke(10)).to.not.be.reverted;
+    });
 
-    // A
-    await expect(invoke({ a: 123, b: true })).to.not.be.reverted;
-    await expect(invoke({ a: 345, b: false })).to.not.be.reverted;
+    it("passes when second child passes after first fails", async () => {
+      const { allowFunction, invoke } = await loadFixture(setupOneParam);
 
-    await expect(invoke({ a: 123, b: false }))
-      .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.OrViolation, ZeroHash);
-
-    await expect(invoke({ a: 345, b: true }))
-      .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.OrViolation, ZeroHash);
-  });
-  it("evaluates operator OR, with variant children", async () => {
-    const {
-      roles,
-      allowFunction,
-      invoke: _invoke,
-    } = await loadFixture(setupTwoParamsStaticDynamic);
-
-    const conditions = flattenCondition({
-      paramType: Encoding.AbiEncoded,
-      operator: Operator.Matches,
-      children: [
-        {
-          paramType: Encoding.Static,
-          operator: Operator.EqualTo,
-          compValue: defaultAbiCoder.encode(["uint256"], [987]),
-        },
-        {
-          paramType: Encoding.None,
-          operator: Operator.Or,
+      // Or: EqualTo(10) OR EqualTo(20)
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
           children: [
             {
-              paramType: Encoding.AbiEncoded,
-              operator: Operator.Matches,
-              compValue: "0x0000", // leadingBytes = 0 (no selector)
-              children: [
-                {
-                  paramType: Encoding.Dynamic,
-                  operator: Operator.EqualTo,
-                  compValue: defaultAbiCoder.encode(
-                    ["bytes"],
-                    ["0xaabbccddee"],
-                  ),
-                },
-              ],
-            },
-            {
-              paramType: Encoding.AbiEncoded,
-              operator: Operator.Matches,
+              paramType: Encoding.None,
+              operator: Operator.Or,
               children: [
                 {
                   paramType: Encoding.Static,
                   operator: Operator.EqualTo,
-                  compValue: defaultAbiCoder.encode(["uint256"], [12345]),
+                  compValue: abiCoder.encode(["uint256"], [10]),
+                },
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [20]),
                 },
               ],
             },
           ],
-        },
-      ],
-    }) as ConditionFlatStruct[];
+        }),
+        ExecutionOptions.Both,
+      );
 
-    await allowFunction(conditions);
+      // 20 fails first child, passes second child
+      await expect(invoke(20)).to.not.be.reverted;
+    });
 
-    const invokeA = (a: number, b: string) => {
-      const embedded = defaultAbiCoder.encode(["bytes"], [b]);
-      return _invoke(a, embedded);
-    };
+    it("fails with OrViolation when all children fail", async () => {
+      const { roles, allowFunction, invoke } = await loadFixture(setupOneParam);
 
-    const invokeB = (a: number, b: number) => {
-      const embedded = Interface.from([
-        "function f(uint256)",
-      ]).encodeFunctionData("f", [b]);
+      // Or: EqualTo(10) OR EqualTo(20)
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.None,
+              operator: Operator.Or,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [10]),
+                },
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [20]),
+                },
+              ],
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
+      );
 
-      return _invoke(a, embedded);
-    };
-
-    // A
-    await expect(invokeA(987, "0xaabbccddee")).to.not.be.reverted;
-    await expect(invokeA(999, "0xaabbccddee"))
-      .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterNotAllowed, ZeroHash);
-    await expect(invokeA(987, "0xaabbccdd"))
-      .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.OrViolation, ZeroHash);
-
-    // B
-    await expect(invokeB(987, 12345)).to.not.be.reverted;
-    await expect(invokeB(999, 12345))
-      .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterNotAllowed, ZeroHash);
-    await expect(invokeB(987, 1234))
-      .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.OrViolation, ZeroHash);
+      // 99 fails all children
+      await expect(invoke(99))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.OrViolation, ZeroHash);
+    });
   });
 
-  it.skip("Tracks the resulting consumption");
+  describe("payload routing", () => {
+    it("passes same payload to structural children when non-variant", async () => {
+      const { roles, allowFunction, invoke } = await loadFixture(setupOneParam);
+
+      // Both children check the same parameter (non-variant: same payload to all)
+      // Or: LessThan(10) OR GreaterThan(100)
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.None,
+              operator: Operator.Or,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.LessThan,
+                  compValue: abiCoder.encode(["uint256"], [10]),
+                },
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.GreaterThan,
+                  compValue: abiCoder.encode(["uint256"], [100]),
+                },
+              ],
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
+      );
+
+      // 5 passes first child (<10)
+      await expect(invoke(5)).to.not.be.reverted;
+
+      // 150 passes second child (>100)
+      await expect(invoke(150)).to.not.be.reverted;
+
+      // 50 fails both (not <10 and not >100)
+      await expect(invoke(50))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.OrViolation, ZeroHash);
+    });
+
+    it("passes individual child payloads when variant", async () => {
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupDynamicParam);
+
+      // Or has two variant children that interpret the bytes param differently:
+      // - Child 1: AbiEncoded with one Dynamic (checks bytes == 0xaabbccdd)
+      // - Child 2: AbiEncoded with two Dynamics (checks first == 0x11111111)
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.None,
+              operator: Operator.Or,
+              children: [
+                // Child 1: interpret as (bytes)
+                {
+                  paramType: Encoding.AbiEncoded,
+                  operator: Operator.Matches,
+                  compValue: "0x0000",
+                  children: [
+                    {
+                      paramType: Encoding.Dynamic,
+                      operator: Operator.EqualTo,
+                      compValue: abiCoder.encode(["bytes"], ["0xaabbccdd"]),
+                    },
+                  ],
+                },
+                // Child 2: interpret as (bytes, bytes)
+                {
+                  paramType: Encoding.AbiEncoded,
+                  operator: Operator.Matches,
+                  compValue: "0x0000",
+                  children: [
+                    {
+                      paramType: Encoding.Dynamic,
+                      operator: Operator.EqualTo,
+                      compValue: abiCoder.encode(["bytes"], ["0x11111111"]),
+                    },
+                    {
+                      paramType: Encoding.Dynamic,
+                      operator: Operator.Pass,
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
+      );
+
+      // Matches child 1: single bytes = 0xaabbccdd
+      const matchChild1 = abiCoder.encode(["bytes"], ["0xaabbccdd"]);
+      await expect(invoke(matchChild1)).to.not.be.reverted;
+
+      // Matches child 2: two bytes where first = 0x11111111
+      const matchChild2 = abiCoder.encode(
+        ["bytes", "bytes"],
+        ["0x11111111", "0xffffffff"],
+      );
+      await expect(invoke(matchChild2)).to.not.be.reverted;
+
+      // Matches neither
+      const matchNeither = abiCoder.encode(["bytes"], ["0xdeadbeef"]);
+      await expect(invoke(matchNeither))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.OrViolation, ZeroHash);
+    });
+
+    it("passes empty payload to non-structural children", async () => {
+      const { roles, allowFunction, invoke } = await loadFixture(setupOneParam);
+
+      // Or with: structural child (checks param) OR non-structural (checks ether value)
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.None,
+              operator: Operator.Or,
+              children: [
+                // Structural: param must equal 42
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [42]),
+                },
+                // Non-structural: ether value must equal 123
+                {
+                  paramType: Encoding.EtherValue,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [123]),
+                },
+              ],
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
+      );
+
+      // Correct param, any ether - passes via first child
+      await expect(invoke(42)).to.not.be.reverted;
+
+      // Wrong param, correct ether - passes via second child
+      await expect(invoke(99, { value: 123 })).to.not.be.reverted;
+
+      // Wrong param, wrong ether - fails both
+      await expect(invoke(99, { value: 999 }))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.OrViolation, ZeroHash);
+    });
+  });
+
+  describe("consumption handling", () => {
+    it("returns consumptions only from the passing branch", async () => {
+      const { roles, allowFunction, invoke } = await loadFixture(setupOneParam);
+
+      const allowanceKeyA =
+        "0x000000000000000000000000000000000000000000000000000000000000000a";
+      const allowanceKeyB =
+        "0x000000000000000000000000000000000000000000000000000000000000000b";
+
+      // Set up two allowances of 100 each
+      await roles.setAllowance(allowanceKeyA, 100, 0, 0, 0, 0);
+      await roles.setAllowance(allowanceKeyB, 100, 0, 0, 0, 0);
+
+      // Or with two branches, each consuming from different allowance
+      // Child 1: value < 50 AND consume from allowanceA
+      // Child 2: value >= 50 AND consume from allowanceB
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.None,
+              operator: Operator.Or,
+              children: [
+                {
+                  paramType: Encoding.None,
+                  operator: Operator.And,
+                  children: [
+                    {
+                      paramType: Encoding.Static,
+                      operator: Operator.LessThan,
+                      compValue: abiCoder.encode(["uint256"], [50]),
+                    },
+                    {
+                      paramType: Encoding.Static,
+                      operator: Operator.WithinAllowance,
+                      compValue: allowanceKeyA,
+                    },
+                  ],
+                },
+                {
+                  paramType: Encoding.None,
+                  operator: Operator.And,
+                  children: [
+                    {
+                      paramType: Encoding.Static,
+                      operator: Operator.GreaterThan,
+                      compValue: abiCoder.encode(["uint256"], [49]),
+                    },
+                    {
+                      paramType: Encoding.Static,
+                      operator: Operator.WithinAllowance,
+                      compValue: allowanceKeyB,
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
+      );
+
+      // Call with value 30 - takes first branch, consumes from allowanceA
+      await expect(invoke(30)).to.not.be.reverted;
+
+      // Verify only allowanceA was consumed
+      const { balance: balanceA } = await roles.accruedAllowance(allowanceKeyA);
+      const { balance: balanceB } = await roles.accruedAllowance(allowanceKeyB);
+      expect(balanceA).to.equal(70); // 100 - 30
+      expect(balanceB).to.equal(100); // unchanged
+
+      // Call with value 60 - takes second branch, consumes from allowanceB
+      await expect(invoke(60)).to.not.be.reverted;
+
+      // Verify only allowanceB was consumed this time
+      const { balance: balanceA2 } =
+        await roles.accruedAllowance(allowanceKeyA);
+      const { balance: balanceB2 } =
+        await roles.accruedAllowance(allowanceKeyB);
+      expect(balanceA2).to.equal(70); // unchanged
+      expect(balanceB2).to.equal(40); // 100 - 60
+    });
+
+    it("rolls back consumptions if a branch fails after consumption", async () => {
+      const { roles, allowFunction, invoke } = await loadFixture(setupOneParam);
+
+      const allowanceKeyA =
+        "0x000000000000000000000000000000000000000000000000000000000000000a";
+      const allowanceKeyB =
+        "0x000000000000000000000000000000000000000000000000000000000000000b";
+
+      await roles.setAllowance(allowanceKeyA, 100, 0, 0, 0, 0);
+      await roles.setAllowance(allowanceKeyB, 100, 0, 0, 0, 0);
+
+      // OR structure:
+      // Branch 1: Consume 10 from A AND Fail (value > 999) -> Should rollback A
+      // Branch 2: Consume 10 from B AND Pass (value > 0) -> Should commit B
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.None,
+              operator: Operator.Or,
+              children: [
+                {
+                  paramType: Encoding.None,
+                  operator: Operator.And,
+                  children: [
+                    {
+                      paramType: Encoding.Static,
+                      operator: Operator.WithinAllowance,
+                      compValue: allowanceKeyA,
+                    },
+                    {
+                      paramType: Encoding.Static,
+                      operator: Operator.GreaterThan,
+                      compValue: abiCoder.encode(["uint256"], [999]),
+                    },
+                  ],
+                },
+                {
+                  paramType: Encoding.None,
+                  operator: Operator.And,
+                  children: [
+                    {
+                      paramType: Encoding.Static,
+                      operator: Operator.WithinAllowance,
+                      compValue: allowanceKeyB,
+                    },
+                    {
+                      paramType: Encoding.Static,
+                      operator: Operator.GreaterThan,
+                      compValue: abiCoder.encode(["uint256"], [0]),
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
+      );
+
+      // Call with value 10
+      await expect(invoke(10)).to.not.be.reverted;
+
+      // Allowance A should be untouched (rolled back)
+      const { balance: balanceA } = await roles.accruedAllowance(allowanceKeyA);
+      expect(balanceA).to.equal(100);
+
+      // Allowance B should be consumed
+      const { balance: balanceB } = await roles.accruedAllowance(allowanceKeyB);
+      expect(balanceB).to.equal(90);
+    });
+  });
 });

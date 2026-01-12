@@ -21,26 +21,25 @@ abstract contract Authorization is RolesStorage {
         uint256 value,
         bytes calldata data,
         Operation operation
-    ) internal view returns (Consumption[] memory) {
-        Result memory result;
+    ) internal view returns (Consumption[] memory consumptions) {
         Transaction memory transaction = Transaction(to, value, operation);
 
         address adapter = unwrappers[_key(to, bytes4(data))];
         if (adapter == address(0)) {
-            result = _transaction(
+            consumptions = _transaction(
                 roleKey,
                 data,
-                result.consumptions,
+                consumptions,
                 transaction
             );
         } else {
-            result = _transactionBundle(adapter, roleKey, data, transaction);
+            consumptions = _transactionBundle(
+                adapter,
+                roleKey,
+                data,
+                transaction
+            );
         }
-        if (result.status != Status.Ok) {
-            revert ConditionViolation(result.status, result.info);
-        }
-
-        return result.consumptions;
     }
 
     function _transactionBundle(
@@ -48,7 +47,7 @@ abstract contract Authorization is RolesStorage {
         bytes32 roleKey,
         bytes calldata data,
         Transaction memory transaction
-    ) private view returns (Result memory result) {
+    ) private view returns (Consumption[] memory consumptions) {
         try
             ITransactionUnwrapper(adapter).unwrap(
                 transaction.to,
@@ -61,15 +60,12 @@ abstract contract Authorization is RolesStorage {
                 UnwrappedTransaction memory entry = unwrapped[i];
                 uint256 left = entry.dataLocation;
                 uint256 right = left + entry.dataSize;
-                result = _transaction(
+                consumptions = _transaction(
                     roleKey,
                     data[left:right],
-                    result.consumptions,
+                    consumptions,
                     Transaction(entry.to, entry.value, entry.operation)
                 );
-                if (result.status != Status.Ok) {
-                    return result;
-                }
             }
         } catch {
             revert MalformedMultiEntrypoint();
@@ -82,93 +78,111 @@ abstract contract Authorization is RolesStorage {
         bytes calldata data,
         Consumption[] memory consumptions,
         Transaction memory transaction
-    ) private view returns (Result memory) {
-        Role storage role = roles[roleKey];
-
+    ) private view returns (Consumption[] memory) {
         if (data.length != 0 && data.length < 4) {
             revert FunctionSignatureTooShort();
         }
 
+        Role storage role = roles[roleKey];
+        /*
+         * Check Clearance
+         */
         Clearance clearance = role.clearance[transaction.to];
         if (clearance == Clearance.None) {
-            return Result(Status.TargetAddressNotAllowed, consumptions, 0);
+            revert TargetAddressNotAllowed(transaction.to);
         }
 
-        bytes32 key = bytes32(bytes20(transaction.to)) |
-            (
-                clearance == Clearance.Target
-                    ? (~bytes32(0) >> 160)
-                    : (bytes32(bytes4(data)) >> 160)
-            );
-
-        uint256 scopeConfig = role.scopeConfig[key];
-        if (scopeConfig == 0) {
-            return
-                Result(
+        /*
+         * Check Function/Default Rules defined
+         */
+        uint256 scopeConfig;
+        {
+            bytes32 key = bytes32(bytes20(transaction.to)) |
+                (
                     clearance == Clearance.Target
-                        ? Status.TargetAddressNotAllowed
-                        : Status.FunctionNotAllowed,
-                    consumptions,
-                    bytes4(data)
+                        ? (~bytes32(0) >> 160)
+                        : (bytes32(bytes4(data)) >> 160)
                 );
+
+            scopeConfig = role.scopeConfig[key];
+            if (scopeConfig == 0) {
+                revert FunctionNotAllowed(transaction.to, bytes4(data));
+            }
         }
 
-        return _function(scopeConfig, data, consumptions, transaction);
-    }
-
-    /// @dev Checks function permission and evaluates conditions.
-    function _function(
-        uint256 scopeConfig,
-        bytes calldata data,
-        Consumption[] memory consumptions,
-        Transaction memory transaction
-    ) private view returns (Result memory result) {
+        /*
+         * Check ExecutionOptions
+         */
         uint256 options = scopeConfig >> 160;
-        /*
-         * ExecutionOptions can send:
-         *  options == ExecutionOptions.Send ||
-         *  options == ExecutionOptions.Both
-         */
         if (options & 1 == 0 && transaction.value > 0) {
-            return Result(Status.SendNotAllowed, consumptions, 0);
+            revert SendNotAllowed(transaction.to);
         }
-
-        /*
-         * ExecutionOptions can delegateCall:
-         * options == ExecutionOptions.DelegateCall ||
-         * options == ExecutionOptions.Both
-         */
         if (
             options & 2 == 0 && transaction.operation == Operation.DelegateCall
         ) {
-            return Result(Status.DelegateCallNotAllowed, consumptions, 0);
+            revert DelegateCallNotAllowed(transaction.to);
         }
 
+        /*
+         * Load Function/Default Rules
+         */
+        (
+            Condition memory condition,
+            Payload memory payload,
+            Context memory context
+        ) = _unpackScopeConfig(scopeConfig, data, transaction);
+
+        /*
+         * Evaluate Rules
+         */
+        Result memory result = ConditionLogic.evaluate(
+            data,
+            condition,
+            payload,
+            consumptions,
+            context
+        );
+
+        if (result.status != Status.Ok) {
+            revert ConditionViolation(result.status, result.info);
+        }
+
+        return result.consumptions;
+    }
+
+    /// @dev Loads packed scope config from immutable storage, unpacks condition
+    ///      tree and layout, decodes calldata into payload, and builds context.
+    function _unpackScopeConfig(
+        uint256 scopeConfig,
+        bytes calldata data,
+        Transaction memory transaction
+    )
+        private
+        view
+        returns (Condition memory, Payload memory payload, Context memory)
+    {
         address pointer = address(uint160(scopeConfig));
+        bytes memory buffer = ImmutableStorage.load(pointer);
 
         (
             Condition memory condition,
             Layout memory layout,
             uint256 maxPluckIndex
-        ) = ConditionUnpacker.unpack(ImmutableStorage.load(pointer));
+        ) = ConditionUnpacker.unpack(buffer);
 
-        Payload memory payload;
         if (layout.encoding != Encoding.None) {
             payload = AbiDecoder.inspect(data, layout);
         }
 
-        return
-            ConditionLogic.evaluate(
-                data,
-                condition,
-                payload,
-                consumptions,
-                Context(
-                    transaction.to,
-                    transaction.value,
-                    transaction.operation,
-                    new bytes32[](maxPluckIndex + 1)
-                )
-            );
+        return (
+            condition,
+            payload,
+            Context(
+                transaction.to,
+                transaction.value,
+                transaction.operation,
+                new bytes32[](maxPluckIndex + 1)
+            )
+        );
     }
 }

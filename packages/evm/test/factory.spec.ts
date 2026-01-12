@@ -1,13 +1,21 @@
 import { expect } from "chai";
-
 import hre, { ethers } from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { AbiCoder } from "ethers";
+import { AbiCoder, ZeroHash } from "ethers";
 import { deployFactories, deployProxy } from "@gnosis-guild/zodiac-core";
 import { createEip1193 } from "./setup";
 
 const AddressOne = "0x0000000000000000000000000000000000000001";
-const saltNonce = "0xfa";
+
+/**
+ * Factory tests
+ *
+ * Scope: Module Deployment & Initialization.
+ *
+ * This file verifies the deployment process via the ModuleProxyFactory:
+ * - Master Copy Safety: Ensuring the master copy is initialized and cannot be taken over.
+ * - Proxy Deployment: Verifying that new module proxies are correctly deployed and initialized with the specified parameters.
+ */
 
 describe("Module works with factory", () => {
   const paramsTypes = ["address", "address", "address"];
@@ -21,10 +29,11 @@ describe("Module works with factory", () => {
       "ConditionsTransform",
     );
     const conditionsTransform = await ConditionsTransform.deploy();
+    const conditionsTransformAddress = await conditionsTransform.getAddress();
 
     const Modifier = await hre.ethers.getContractFactory("Roles", {
       libraries: {
-        ConditionsTransform: await conditionsTransform.getAddress(),
+        ConditionsTransform: conditionsTransformAddress,
       },
     });
     const masterCopy = await Modifier.deploy(
@@ -59,7 +68,7 @@ describe("Module works with factory", () => {
         types: ["address", "address", "address"],
         values: [owner.address, avatar.address, target.address],
       },
-      saltNonce,
+      saltNonce: ZeroHash,
       provider: eip1193Provider,
     });
 

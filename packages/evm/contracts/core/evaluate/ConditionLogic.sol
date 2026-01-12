@@ -2,10 +2,9 @@
 pragma solidity >=0.8.17 <0.9.0;
 
 import "./BitmaskChecker.sol";
+import "./CustomConditionChecker.sol";
 import "./WithinAllowanceChecker.sol";
 import "./WithinRatioChecker.sol";
-
-import "../../periphery/interfaces/ICustomCondition.sol";
 
 import "../../types/Types.sol";
 
@@ -130,17 +129,10 @@ library ConditionLogic {
                     __allowance(
                         uint256(__input(data, payload, context)),
                         condition.compValue,
-                        Status.AllowanceExceeded,
                         consumptions
                     );
             } else if (operator == Operator.CallWithinAllowance) {
-                return
-                    __allowance(
-                        1,
-                        condition.compValue,
-                        Status.CallAllowanceExceeded,
-                        consumptions
-                    );
+                return __allowance(1, condition.compValue, consumptions);
             } else if (operator == Operator.WithinRatio) {
                 return
                     Result({
@@ -193,10 +185,7 @@ library ConditionLogic {
         }
 
         uint256 sChildCount = condition.sChildCount;
-        if (sChildCount != payload.children.length) {
-            result.status = Status.ParameterNotAMatch;
-            return result;
-        }
+        assert(sChildCount == payload.children.length);
 
         Payload memory emptyPayload;
         result.consumptions = consumptions;
@@ -444,55 +433,33 @@ library ConditionLogic {
         Consumption[] memory consumptions,
         Context memory context
     ) private view returns (Result memory) {
-        // first 20 bytes: adapter address
-        ICustomCondition adapter = ICustomCondition(
-            address(bytes20(condition.compValue))
-        );
-
-        bytes memory extra;
-        if (condition.compValue.length > 20) {
-            bytes memory compValue = condition.compValue;
-            assembly {
-                let len := sub(mload(compValue), 20)
-                extra := mload(0x40)
-                mstore(0x40, add(extra, add(0x40, len)))
-                mstore(extra, len)
-                mcopy(add(extra, 0x20), add(compValue, 0x34), len)
-            }
-        }
-
-        (bool success, bytes32 info) = adapter.check(
+        (Status status, bytes32 info) = CustomConditionChecker.check(
+            condition.compValue,
             context.to,
             context.value,
             data,
             context.operation,
             payload.location,
             payload.size,
-            extra,
             context.pluckedValues
         );
-        return
-            Result({
-                status: success ? Status.Ok : Status.CustomConditionViolation,
-                consumptions: consumptions,
-                info: info
-            });
+
+        return Result({status: status, consumptions: consumptions, info: info});
     }
 
     function __allowance(
         uint256 value,
         bytes memory compValue,
-        Status failureStatus,
         Consumption[] memory consumptions
     ) private view returns (Result memory) {
         (
-            bool success,
+            Status status,
             Consumption[] memory nextConsumptions
         ) = WithinAllowanceChecker.check(consumptions, value, compValue);
 
         return
             Result({
-                status: success ? Status.Ok : failureStatus,
+                status: status,
                 consumptions: nextConsumptions,
                 info: bytes32(compValue)
             });

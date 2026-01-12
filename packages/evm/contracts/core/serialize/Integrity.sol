@@ -135,8 +135,8 @@ library Integrity {
             if (!_isWordLike(encoding)) {
                 revert IRolesError.UnsuitableParameterType(index);
             }
-            // compValue is the index (1 byte, 0-255)
-            if (compValue.length != 1) {
+            // compValue is the index (1 byte, 0-254 to avoid overflow in count)
+            if (compValue.length != 1 || uint8(compValue[0]) > 254) {
                 revert IRolesError.UnsuitableCompValue(index);
             }
         } else if (operator == Operator.EqualToAvatar) {
@@ -197,13 +197,18 @@ library Integrity {
             if (!_isWordLike(encoding)) {
                 revert IRolesError.UnsuitableParameterType(index);
             }
-            // 32 bytes: allowanceKey only (legacy)
-            // 54 bytes: allowanceKey + adapter + accrueDecimals + paramDecimals
-            if (compValue.length != 32 && compValue.length != 54) {
+            // 32 bytes: allowanceKey only (no conversion)
+            // 34 bytes: allowanceKey + baseDecimals + paramDecimals
+            // 54 bytes: allowanceKey + baseDecimals + paramDecimals + adapter
+            if (
+                compValue.length != 32 &&
+                compValue.length != 34 &&
+                compValue.length != 54
+            ) {
                 revert IRolesError.UnsuitableCompValue(index);
             }
-            if (compValue.length == 54) {
-                if (uint8(compValue[52]) > 18 || uint8(compValue[53]) > 18) {
+            if (compValue.length > 32) {
+                if (uint8(compValue[32]) > 18 || uint8(compValue[33]) > 18) {
                     revert IRolesError.AllowanceDecimalsExceedMax(index);
                 }
             }

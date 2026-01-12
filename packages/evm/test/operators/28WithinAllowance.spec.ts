@@ -2,7 +2,15 @@ import { expect } from "chai";
 import { time, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import hre from "hardhat";
 
-import { AbiCoder, BigNumberish, parseEther, solidityPacked } from "ethers";
+import {
+  AbiCoder,
+  BigNumberish,
+  hexlify,
+  Interface,
+  parseEther,
+  randomBytes,
+  solidityPacked,
+} from "ethers";
 
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
@@ -10,13 +18,10 @@ import {
   Encoding,
   ExecutionOptions,
   Operator,
-  PermissionCheckerStatus,
+  ConditionViolationStatus,
 } from "../utils";
-import {
-  setupAvatarAndRoles,
-  setupOneParamStatic,
-  setupTwoParamsStatic,
-} from "../setup";
+import { setupTestContract, setupOneParam, setupTwoParams } from "../setup";
+
 import { Roles } from "../../typechain-types";
 
 describe("Operator - WithinAllowance", async () => {
@@ -50,7 +55,7 @@ describe("Operator - WithinAllowance", async () => {
   describe("WithinAllowance - Check", () => {
     it("passes a check with enough balance available and no refill (interval = 0)", async () => {
       const { owner, roles, allowFunction, invoke } =
-        await loadFixture(setupOneParamStatic);
+        await loadFixture(setupOneParam);
 
       const allowanceKey =
         "0x0000000000000000000000000000000000000000000000000000000000000001";
@@ -79,19 +84,18 @@ describe("Operator - WithinAllowance", async () => {
 
       await expect(invoke(1001))
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
 
       await expect(invoke(1000)).to.not.be.reverted;
       await expect(invoke(1))
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
     });
     it("passes a check with only from balance and refill configured", async () => {
       const { roles, owner, allowFunction, invoke } =
-        await loadFixture(setupOneParamStatic);
+        await loadFixture(setupOneParam);
 
-      const allowanceKey =
-        "0x1000000000000000000000000000000000000000000000000000000000000000";
+      const allowanceKey = hexlify(randomBytes(32));
 
       await allowFunction([
         {
@@ -118,18 +122,17 @@ describe("Operator - WithinAllowance", async () => {
 
       await expect(invoke(334))
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
       await expect(invoke(333)).to.not.be.reverted;
       await expect(invoke(1))
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
     });
     it("passes a check balance from available+refill", async () => {
       const { roles, owner, allowFunction, invoke } =
-        await loadFixture(setupOneParamStatic);
+        await loadFixture(setupOneParam);
 
-      const allowanceKey =
-        "0x1000000000000000000000000000000000000000000000000000000000000000";
+      const allowanceKey = hexlify(randomBytes(32));
 
       await allowFunction([
         {
@@ -156,18 +159,17 @@ describe("Operator - WithinAllowance", async () => {
 
       await expect(invoke(351))
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
 
       await expect(invoke(350)).to.not.be.reverted;
       await expect(invoke(1))
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
     });
     it("fails a check, with some balance and not enough elapsed for next refill", async () => {
       const { owner, roles, allowFunction, invoke } =
-        await loadFixture(setupOneParamStatic);
-      const allowanceKey =
-        "0x1000000000000000000000000000000000000000000000000000000000000000";
+        await loadFixture(setupOneParam);
+      const allowanceKey = hexlify(randomBytes(32));
 
       await allowFunction([
         {
@@ -194,20 +196,19 @@ describe("Operator - WithinAllowance", async () => {
 
       await expect(invoke(251))
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
 
       await expect(invoke(250)).to.not.be.reverted;
       await expect(invoke(1))
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
     });
     it("passes a check with balance from refill and bellow maxRefill", async () => {
       const { owner, roles, allowFunction, invoke } =
-        await loadFixture(setupOneParamStatic);
+        await loadFixture(setupOneParam);
 
       const interval = 10000;
-      const allowanceKey =
-        "0x1000000000000000000000000000000000000000000000000000000000000000";
+      const allowanceKey = hexlify(randomBytes(32));
 
       await allowFunction([
         {
@@ -235,16 +236,15 @@ describe("Operator - WithinAllowance", async () => {
 
       await expect(invoke(1001))
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
 
       await expect(invoke(1000)).to.not.be.reverted;
     });
     it("fails a check with balance from refill but capped by maxRefill", async () => {
       const { owner, roles, allowFunction, invoke } =
-        await loadFixture(setupOneParamStatic);
+        await loadFixture(setupOneParam);
 
-      const allowanceKey =
-        "0x1000000000000000000000000000000000000000000000000000000000000000";
+      const allowanceKey = hexlify(randomBytes(32));
       await allowFunction([
         {
           parent: 0,
@@ -271,16 +271,54 @@ describe("Operator - WithinAllowance", async () => {
 
       await expect(invoke(9001))
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
 
       await expect(invoke(9000)).to.not.be.reverted;
+    });
+    it("reverts when value exceeds uint128 max", async () => {
+      const { owner, roles, allowFunction, invoke } =
+        await loadFixture(setupOneParam);
+
+      const allowanceKey = hexlify(randomBytes(32));
+
+      await setAllowance(await roles.connect(owner), allowanceKey, {
+        balance: 1000,
+        period: 0,
+        refill: 0,
+        timestamp: 0,
+      });
+
+      await allowFunction([
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
+        },
+      ]);
+
+      // uint128 max + 1
+      const exceedsUint128 = 2n ** 128n;
+
+      await expect(invoke(exceedsUint128))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.AllowanceValueOverflow,
+          allowanceKey,
+        );
     });
   });
 
   describe("WithinAllowance - Consumption", async () => {
     it("Consumes balance, even with multiple references to same allowance", async () => {
       const { owner, roles, invoke, allowFunction } =
-        await loadFixture(setupTwoParamsStatic);
+        await loadFixture(setupTwoParams);
 
       const allowanceKey =
         "0x0000000000000000000000000000000000000000000000000000000000000001";
@@ -313,24 +351,23 @@ describe("Operator - WithinAllowance", async () => {
         timestamp: 0,
       });
 
-      let allowance = await roles.allowances(allowanceKey);
+      let allowance = await roles.accruedAllowance(allowanceKey);
       expect(allowance.balance).to.equal(3000);
 
       await expect(invoke(3001, 3001))
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
-      allowance = await roles.allowances(allowanceKey);
+        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
+      allowance = await roles.accruedAllowance(allowanceKey);
       expect(allowance.balance).to.equal(3000);
 
       await expect(invoke(1500, 1500)).to.not.be.reverted;
-      allowance = await roles.allowances(allowanceKey);
+      allowance = await roles.accruedAllowance(allowanceKey);
       expect(allowance.balance).to.equal(0);
     });
     it("Fails, when multiple parameters referencing the same limit overspend", async () => {
       const { owner, roles, invoke, allowFunction } =
-        await loadFixture(setupTwoParamsStatic);
-      const allowanceKey =
-        "0x1000000000000000000000000000000000000000000000000000000000000000";
+        await loadFixture(setupTwoParams);
+      const allowanceKey = hexlify(randomBytes(32));
 
       await allowFunction([
         {
@@ -360,22 +397,21 @@ describe("Operator - WithinAllowance", async () => {
         timestamp: 0,
       });
 
-      let allowance = await roles.allowances(allowanceKey);
+      let allowance = await roles.accruedAllowance(allowanceKey);
       expect(allowance.balance).to.equal(3000);
 
       await expect(invoke(3000, 1))
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
-      allowance = await roles.allowances(allowanceKey);
+        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
+      allowance = await roles.accruedAllowance(allowanceKey);
       expect(allowance.balance).to.equal(3000);
     });
     it("Updates timestamp", async () => {
       const { owner, roles, invoke, allowFunction } =
-        await loadFixture(setupOneParamStatic);
+        await loadFixture(setupOneParam);
 
       const interval = 600;
-      const allowanceKey =
-        "0x1000000000000000000000000000000000000000000000000000000000000000";
+      const allowanceKey = hexlify(randomBytes(32));
 
       await allowFunction([
         {
@@ -399,6 +435,7 @@ describe("Operator - WithinAllowance", async () => {
         timestamp: 1,
       });
 
+      // Use allowances() for raw storage timestamp checks
       let allowance = await roles.allowances(allowanceKey);
       expect(allowance.balance).to.equal(100);
       expect(allowance.timestamp).to.equal(1);
@@ -413,9 +450,8 @@ describe("Operator - WithinAllowance", async () => {
     });
     it("Does not updates timestamp if interval is zero", async () => {
       const { owner, roles, invoke, allowFunction } =
-        await loadFixture(setupOneParamStatic);
-      const allowanceKey =
-        "0x1000000000000000000000000000000000000000000000000000000000000000";
+        await loadFixture(setupOneParam);
+      const allowanceKey = hexlify(randomBytes(32));
       await allowFunction([
         {
           parent: 0,
@@ -439,17 +475,17 @@ describe("Operator - WithinAllowance", async () => {
 
       await expect(invoke(0)).to.not.be.reverted;
 
+      // Use allowances() for raw storage timestamp checks
       const allowance = await roles.allowances(allowanceKey);
       expect(allowance.timestamp).to.equal(123);
     });
     it("Updates timestamp from past timestamp", async () => {
       const { owner, roles, invoke, allowFunction } =
-        await loadFixture(setupOneParamStatic);
+        await loadFixture(setupOneParam);
 
       const interval = 600;
 
-      const allowanceKey =
-        "0x1000000000000000000000000000000000000000000000000000000000000000";
+      const allowanceKey = hexlify(randomBytes(32));
 
       await allowFunction([
         {
@@ -474,6 +510,7 @@ describe("Operator - WithinAllowance", async () => {
         timestamp: timestamp,
       });
 
+      // Use allowances() for raw storage timestamp checks
       let allowance = await roles.allowances(allowanceKey);
       expect(allowance.timestamp).to.equal(timestamp);
 
@@ -484,11 +521,10 @@ describe("Operator - WithinAllowance", async () => {
     });
     it("Does not update timestamp from future timestamp", async () => {
       const { owner, roles, invoke, allowFunction } =
-        await loadFixture(setupOneParamStatic);
+        await loadFixture(setupOneParam);
 
       const interval = 600;
-      const allowanceKey =
-        "0x1000000000000000000000000000000000000000000000000000000000000000";
+      const allowanceKey = hexlify(randomBytes(32));
       await allowFunction([
         {
           parent: 0,
@@ -511,6 +547,7 @@ describe("Operator - WithinAllowance", async () => {
         timestamp: timestamp,
       });
 
+      // Use allowances() for raw storage timestamp checks
       let allowance = await roles.allowances(allowanceKey);
       expect(allowance.timestamp).to.equal(timestamp);
 
@@ -521,32 +558,174 @@ describe("Operator - WithinAllowance", async () => {
     });
   });
 
+  describe("WithinAllowance - Decimal Conversion (no price adapter)", () => {
+    function encodeDecimalsOnly({
+      allowanceKey,
+      targetDecimals,
+      sourceDecimals,
+    }: {
+      allowanceKey: string;
+      targetDecimals: number;
+      sourceDecimals: number;
+    }): string {
+      return solidityPacked(
+        ["bytes32", "uint8", "uint8"],
+        [allowanceKey, targetDecimals, sourceDecimals],
+      );
+    }
+
+    const allowanceKey = hexlify(randomBytes(32));
+
+    /**
+     * Real-world scenario: Stablecoin swap USDC → DAI
+     *
+     * - USDC: 6 decimals
+     * - DAI: 18 decimals
+     * - Allowance tracked in DAI decimals (18)
+     */
+    it("USDC (6 dec) → DAI (18 dec): tracks allowance correctly", async () => {
+      const { owner, roles, allowFunction, invoke } =
+        await loadFixture(setupOneParam);
+
+      // Allowance: 1000 DAI (18 decimals)
+      await setAllowance(await roles.connect(owner), allowanceKey, {
+        balance: 1000n * 10n ** 18n,
+        period: 0,
+        refill: 0,
+        timestamp: 0,
+      });
+
+      await allowFunction([
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: encodeDecimalsOnly({
+            allowanceKey,
+            targetDecimals: 18, // DAI
+            sourceDecimals: 6, // USDC
+          }),
+        },
+      ]);
+
+      // Spend 500 USDC (6 dec) → converts to 500 DAI (18 dec)
+      await expect(invoke(500n * 10n ** 6n)).to.not.be.reverted;
+
+      const allowance = await roles.accruedAllowance(allowanceKey);
+      expect(allowance.balance).to.equal(500n * 10n ** 18n); // 500 DAI remaining
+    });
+
+    it("USDC (6 dec) → DAI (18 dec): reverts when exceeding allowance", async () => {
+      const { owner, roles, allowFunction, invoke } =
+        await loadFixture(setupOneParam);
+
+      // Allowance: 100 DAI
+      await setAllowance(await roles.connect(owner), allowanceKey, {
+        balance: 100n * 10n ** 18n,
+        period: 0,
+        refill: 0,
+        timestamp: 0,
+      });
+
+      await allowFunction([
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: encodeDecimalsOnly({
+            allowanceKey,
+            targetDecimals: 18,
+            sourceDecimals: 6,
+          }),
+        },
+      ]);
+
+      // Try to spend 101 USDC → exceeds 100 DAI allowance
+      await expect(invoke(101n * 10n ** 6n))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
+    });
+
+    /**
+     * Reverse direction: DAI → USDC (scaling down)
+     */
+    it("DAI (18 dec) → USDC (6 dec): scales down correctly", async () => {
+      const { owner, roles, allowFunction, invoke } =
+        await loadFixture(setupOneParam);
+
+      // Allowance: 1000 USDC (6 decimals)
+      await setAllowance(await roles.connect(owner), allowanceKey, {
+        balance: 1000n * 10n ** 6n,
+        period: 0,
+        refill: 0,
+        timestamp: 0,
+      });
+
+      await allowFunction([
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: encodeDecimalsOnly({
+            allowanceKey,
+            targetDecimals: 6, // USDC
+            sourceDecimals: 18, // DAI
+          }),
+        },
+      ]);
+
+      // Spend 500 DAI (18 dec) → converts to 500 USDC (6 dec)
+      await expect(invoke(500n * 10n ** 18n)).to.not.be.reverted;
+
+      const allowance = await roles.accruedAllowance(allowanceKey);
+      expect(allowance.balance).to.equal(500n * 10n ** 6n); // 500 USDC remaining
+    });
+  });
+
   describe("WithinAllowance - Price Adapter", () => {
     function encodeAllowanceCompValue({
       allowanceKey,
+      targetDecimals = 0,
+      sourceDecimals = 0,
       adapter = "0x0000000000000000000000000000000000000000",
-      accrueDecimals = 0,
-      paramDecimals = 0,
     }: {
       allowanceKey: string;
+      targetDecimals?: number;
+      sourceDecimals?: number;
       adapter?: string;
-      accrueDecimals?: number;
-      paramDecimals?: number;
     }): string {
       return solidityPacked(
-        ["bytes32", "address", "uint8", "uint8"],
-        [allowanceKey, adapter, accrueDecimals, paramDecimals],
+        ["bytes32", "uint8", "uint8", "address"],
+        [allowanceKey, targetDecimals, sourceDecimals, adapter],
       );
     }
 
     const allowanceKey =
       "0x0000000000000000000000000000000000000000000000000000000000000001";
 
-    // accrue=12, param=6: scale up by 10^6
+    // base=12, param=6: scale up by 10^6
     // 1000 units (6 dec) → converted = 1000e6 * 1e18 * 1e12 / 1e24 = 1000e12 (12 dec)
-    it("param(6) → accrue(12): consumes correctly", async () => {
+    it("param(6) → base(12): consumes correctly", async () => {
       const { owner, roles, allowFunction, invoke } =
-        await loadFixture(setupOneParamStatic);
+        await loadFixture(setupOneParam);
 
       const MockPricing = await hre.ethers.getContractFactory("MockPricing");
       const adapter = await MockPricing.deploy(10n ** 18n); // 1:1 price
@@ -572,8 +751,8 @@ describe("Operator - WithinAllowance", async () => {
           compValue: encodeAllowanceCompValue({
             allowanceKey,
             adapter: await adapter.getAddress(),
-            accrueDecimals: 12,
-            paramDecimals: 6,
+            targetDecimals: 12,
+            sourceDecimals: 6,
           }),
         },
       ]);
@@ -581,14 +760,14 @@ describe("Operator - WithinAllowance", async () => {
       // spend 1000 (6 dec) → 1000e12 (12 dec)
       await expect(invoke(1000n * 10n ** 6n)).to.not.be.reverted;
 
-      const allowance = await roles.allowances(allowanceKey);
+      const allowance = await roles.accruedAllowance(allowanceKey);
       // sent in 1000 in 6 decimals, but it consumed in 12 decimals
       expect(allowance.balance).to.equal(1000n * 10n ** 12n);
     });
 
-    it("param(6) → accrue(12): reverts on overconsume", async () => {
+    it("param(6) → base(12): reverts on overconsume", async () => {
       const { owner, roles, allowFunction, invoke } =
-        await loadFixture(setupOneParamStatic);
+        await loadFixture(setupOneParam);
 
       const MockPricing = await hre.ethers.getContractFactory("MockPricing");
       const adapter = await MockPricing.deploy(10n ** 18n);
@@ -614,8 +793,8 @@ describe("Operator - WithinAllowance", async () => {
           compValue: encodeAllowanceCompValue({
             allowanceKey,
             adapter: await adapter.getAddress(),
-            accrueDecimals: 12,
-            paramDecimals: 6,
+            targetDecimals: 12,
+            sourceDecimals: 6,
           }),
         },
       ]);
@@ -623,13 +802,13 @@ describe("Operator - WithinAllowance", async () => {
       // 1001 (6 dec) → 1001e12 (12 dec) > 1000e12
       await expect(invoke(1001n * 10n ** 6n))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
     });
 
-    // accrue=18, param=6: scale up by 10^12
-    it("param(6) → accrue(18): consumes correctly", async () => {
+    // base=18, param=6: scale up by 10^12
+    it("param(6) → base(18): consumes correctly", async () => {
       const { owner, roles, allowFunction, invoke } =
-        await loadFixture(setupOneParamStatic);
+        await loadFixture(setupOneParam);
 
       const MockPricing = await hre.ethers.getContractFactory("MockPricing");
       const adapter = await MockPricing.deploy(10n ** 18n);
@@ -655,8 +834,8 @@ describe("Operator - WithinAllowance", async () => {
           compValue: encodeAllowanceCompValue({
             allowanceKey,
             adapter: await adapter.getAddress(),
-            accrueDecimals: 18,
-            paramDecimals: 6,
+            targetDecimals: 18,
+            sourceDecimals: 6,
           }),
         },
       ]);
@@ -664,13 +843,13 @@ describe("Operator - WithinAllowance", async () => {
       // spend 1000 (6 dec) → 1000e18 (18 dec)
       await expect(invoke(1000n * 10n ** 6n)).to.not.be.reverted;
 
-      const allowance = await roles.allowances(allowanceKey);
+      const allowance = await roles.accruedAllowance(allowanceKey);
       expect(allowance.balance).to.equal(1000n * 10n ** 18n);
     });
 
-    it("param(6) → accrue(18): reverts on overconsume", async () => {
+    it("param(6) → base(18): reverts on overconsume", async () => {
       const { owner, roles, allowFunction, invoke } =
-        await loadFixture(setupOneParamStatic);
+        await loadFixture(setupOneParam);
 
       const MockPricing = await hre.ethers.getContractFactory("MockPricing");
       const adapter = await MockPricing.deploy(10n ** 18n);
@@ -696,21 +875,21 @@ describe("Operator - WithinAllowance", async () => {
           compValue: encodeAllowanceCompValue({
             allowanceKey,
             adapter: await adapter.getAddress(),
-            accrueDecimals: 18,
-            paramDecimals: 6,
+            targetDecimals: 18,
+            sourceDecimals: 6,
           }),
         },
       ]);
 
       await expect(invoke(1001n * 10n ** 6n))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
     });
 
-    // accrue=6, param=12: scale down by 10^6
-    it("param(12) → accrue(6): consumes correctly", async () => {
+    // base=6, param=12: scale down by 10^6
+    it("param(12) → base(6): consumes correctly", async () => {
       const { owner, roles, allowFunction, invoke } =
-        await loadFixture(setupOneParamStatic);
+        await loadFixture(setupOneParam);
 
       const MockPricing = await hre.ethers.getContractFactory("MockPricing");
       const adapter = await MockPricing.deploy(10n ** 18n);
@@ -736,24 +915,24 @@ describe("Operator - WithinAllowance", async () => {
           compValue: encodeAllowanceCompValue({
             allowanceKey,
             adapter: await adapter.getAddress(),
-            accrueDecimals: 6,
-            paramDecimals: 12,
+            targetDecimals: 6,
+            sourceDecimals: 12,
           }),
         },
       ]);
 
       // spend 1000 (12 dec) → 1000 * 1e6 / 1e6 = 1000 (6 dec) ... wait
-      // formula: value * price * 10^accrue / 10^(18 + param)
+      // formula: value * price * 10^base / 10^(18 + param)
       // = 1000e12 * 1e18 * 1e6 / 1e30 = 1000e36 / 1e30 = 1000e6
       await expect(invoke(500n * 10n ** 12n)).to.not.be.reverted;
 
-      const allowance = await roles.allowances(allowanceKey);
+      const allowance = await roles.accruedAllowance(allowanceKey);
       expect(allowance.balance).to.equal(400n * 10n ** 6n);
     });
 
-    it("param(12) → accrue(6): reverts on overconsume", async () => {
+    it("param(12) → base(6): reverts on overconsume", async () => {
       const { owner, roles, allowFunction, invoke } =
-        await loadFixture(setupOneParamStatic);
+        await loadFixture(setupOneParam);
 
       const MockPricing = await hre.ethers.getContractFactory("MockPricing");
       const adapter = await MockPricing.deploy(10n ** 18n);
@@ -779,21 +958,21 @@ describe("Operator - WithinAllowance", async () => {
           compValue: encodeAllowanceCompValue({
             allowanceKey,
             adapter: await adapter.getAddress(),
-            accrueDecimals: 6,
-            paramDecimals: 12,
+            targetDecimals: 6,
+            sourceDecimals: 12,
           }),
         },
       ]);
 
       await expect(invoke(1001n * 10n ** 12n))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
     });
 
-    // accrue=12, param=18: scale down by 10^6
-    it("param(18) → accrue(12): consumes correctly", async () => {
+    // base=12, param=18: scale down by 10^6
+    it("param(18) → base(12): consumes correctly", async () => {
       const { owner, roles, allowFunction, invoke } =
-        await loadFixture(setupOneParamStatic);
+        await loadFixture(setupOneParam);
 
       const MockPricing = await hre.ethers.getContractFactory("MockPricing");
       const adapter = await MockPricing.deploy(10n ** 18n);
@@ -819,8 +998,8 @@ describe("Operator - WithinAllowance", async () => {
           compValue: encodeAllowanceCompValue({
             allowanceKey,
             adapter: await adapter.getAddress(),
-            accrueDecimals: 12,
-            paramDecimals: 18,
+            targetDecimals: 12,
+            sourceDecimals: 18,
           }),
         },
       ]);
@@ -828,13 +1007,13 @@ describe("Operator - WithinAllowance", async () => {
       // 1000e18 * 1e18 * 1e12 / 1e36 = 1000e12
       await expect(invoke(1000n * 10n ** 18n)).to.not.be.reverted;
 
-      const allowance = await roles.allowances(allowanceKey);
+      const allowance = await roles.accruedAllowance(allowanceKey);
       expect(allowance.balance).to.equal(1000n * 10n ** 12n);
     });
 
-    it("param(18) → accrue(12): reverts on overconsume", async () => {
+    it("param(18) → base(12): reverts on overconsume", async () => {
       const { owner, roles, allowFunction, invoke } =
-        await loadFixture(setupOneParamStatic);
+        await loadFixture(setupOneParam);
 
       const MockPricing = await hre.ethers.getContractFactory("MockPricing");
       const adapter = await MockPricing.deploy(10n ** 18n);
@@ -860,21 +1039,21 @@ describe("Operator - WithinAllowance", async () => {
           compValue: encodeAllowanceCompValue({
             allowanceKey,
             adapter: await adapter.getAddress(),
-            accrueDecimals: 12,
-            paramDecimals: 18,
+            targetDecimals: 12,
+            sourceDecimals: 18,
           }),
         },
       ]);
 
       await expect(invoke(1001n * 10n ** 18n))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
     });
 
     // DAI (18 dec) spending against USDC (6 dec) allowance
-    it("spend DAI(18) → accrue USDC(6)", async () => {
+    it("spend DAI(18) → base USDC(6)", async () => {
       const { owner, roles, allowFunction, invoke } =
-        await loadFixture(setupOneParamStatic);
+        await loadFixture(setupOneParam);
 
       const MockPricing = await hre.ethers.getContractFactory("MockPricing");
       // DAI/USDC price = 1e18 (1:1)
@@ -901,8 +1080,8 @@ describe("Operator - WithinAllowance", async () => {
           compValue: encodeAllowanceCompValue({
             allowanceKey,
             adapter: await adapter.getAddress(),
-            accrueDecimals: 6,
-            paramDecimals: 18,
+            targetDecimals: 6,
+            sourceDecimals: 18,
           }),
         },
       ]);
@@ -910,14 +1089,14 @@ describe("Operator - WithinAllowance", async () => {
       // spend 500 DAI (18 dec) → 500 USDC (6 dec)
       await expect(invoke(500n * 10n ** 18n)).to.not.be.reverted;
 
-      const allowance = await roles.allowances(allowanceKey);
+      const allowance = await roles.accruedAllowance(allowanceKey);
       expect(allowance.balance).to.equal(500n * 10n ** 6n);
     });
 
     // USDC (6 dec) spending against DAI (18 dec) allowance
-    it("spend USDC(6) → accrue DAI(18)", async () => {
+    it("spend USDC(6) → base DAI(18)", async () => {
       const { owner, roles, allowFunction, invoke } =
-        await loadFixture(setupOneParamStatic);
+        await loadFixture(setupOneParam);
 
       const MockPricing = await hre.ethers.getContractFactory("MockPricing");
       const adapter = await MockPricing.deploy(10n ** 18n);
@@ -943,8 +1122,8 @@ describe("Operator - WithinAllowance", async () => {
           compValue: encodeAllowanceCompValue({
             allowanceKey,
             adapter: await adapter.getAddress(),
-            accrueDecimals: 18,
-            paramDecimals: 6,
+            targetDecimals: 18,
+            sourceDecimals: 6,
           }),
         },
       ]);
@@ -952,14 +1131,14 @@ describe("Operator - WithinAllowance", async () => {
       // spend 500 USDC (6 dec) → 500 DAI (18 dec)
       await expect(invoke(500n * 10n ** 6n)).to.not.be.reverted;
 
-      const allowance = await roles.allowances(allowanceKey);
+      const allowance = await roles.accruedAllowance(allowanceKey);
       expect(allowance.balance).to.equal(500n * 10n ** 18n);
     });
 
-    // Multi-asset: USDC(6), DAI(18), ETH(18) all accrue to USDC(6) allowance
-    it("multi-asset (USDC + DAI + ETH) → accrue USDC(6)", async () => {
+    // Multi-asset: USDC(6), DAI(18), ETH(18) all convert to USDC(6) base allowance
+    it("multi-asset (USDC + DAI + ETH) → base USDC(6)", async () => {
       const { owner, roles, invoke, allowFunction } =
-        await loadFixture(setupTwoParamsStatic);
+        await loadFixture(setupTwoParams);
 
       const MockPricing = await hre.ethers.getContractFactory("MockPricing");
       const usdcAdapter = await MockPricing.deploy(10n ** 18n); // 1:1
@@ -986,8 +1165,8 @@ describe("Operator - WithinAllowance", async () => {
           compValue: encodeAllowanceCompValue({
             allowanceKey,
             adapter: await usdcAdapter.getAddress(),
-            accrueDecimals: 6,
-            paramDecimals: 6,
+            targetDecimals: 6,
+            sourceDecimals: 6,
           }),
         },
         {
@@ -997,8 +1176,8 @@ describe("Operator - WithinAllowance", async () => {
           compValue: encodeAllowanceCompValue({
             allowanceKey,
             adapter: await ethAdapter.getAddress(),
-            accrueDecimals: 6,
-            paramDecimals: 18,
+            targetDecimals: 6,
+            sourceDecimals: 18,
           }),
         },
       ]);
@@ -1007,24 +1186,24 @@ describe("Operator - WithinAllowance", async () => {
       await expect(invoke(1000n * 10n ** 6n, 1n * 10n ** 18n)).to.not.be
         .reverted;
 
-      let allowance = await roles.allowances(allowanceKey);
+      let allowance = await roles.accruedAllowance(allowanceKey);
       expect(allowance.balance).to.equal(2000n * 10n ** 6n); // 5000 - 3000 = 2000
 
       // spend remaining: 0 USDC + 1 ETH = 2000 USDC
       await expect(invoke(0, 1n * 10n ** 18n)).to.not.be.reverted;
 
-      allowance = await roles.allowances(allowanceKey);
+      allowance = await roles.accruedAllowance(allowanceKey);
       expect(allowance.balance).to.equal(0);
 
       // any more reverts
       await expect(invoke(1, 0))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
     });
 
     it("preserves decimal precision when scaling down (18 → 6)", async () => {
       const { owner, roles, allowFunction, invoke } =
-        await loadFixture(setupOneParamStatic);
+        await loadFixture(setupOneParam);
 
       const MockPricing = await hre.ethers.getContractFactory("MockPricing");
       const adapter = await MockPricing.deploy(10n ** 18n); // 1:1 price
@@ -1055,24 +1234,24 @@ describe("Operator - WithinAllowance", async () => {
           compValue: encodeAllowanceCompValue({
             allowanceKey,
             adapter: await adapter.getAddress(),
-            accrueDecimals: 6,
-            paramDecimals: 18,
+            targetDecimals: 6,
+            sourceDecimals: 18,
           }),
         },
       ]);
 
-      let allowance = await roles.allowances(allowanceKey);
+      let allowance = await roles.accruedAllowance(allowanceKey);
       expect(allowance.balance).to.equal(valueInAccrueDecimals);
 
       await expect(invoke(valueInParamDecimals)).to.not.be.reverted;
 
-      allowance = await roles.allowances(allowanceKey);
+      allowance = await roles.accruedAllowance(allowanceKey);
       expect(allowance.balance).to.equal(0);
     });
 
     it("preserves decimal precision when scaling up (6 → 18)", async () => {
       const { owner, roles, allowFunction, invoke } =
-        await loadFixture(setupOneParamStatic);
+        await loadFixture(setupOneParam);
 
       const MockPricing = await hre.ethers.getContractFactory("MockPricing");
       const adapter = await MockPricing.deploy(10n ** 18n); // 1:1 price
@@ -1103,26 +1282,26 @@ describe("Operator - WithinAllowance", async () => {
           compValue: encodeAllowanceCompValue({
             allowanceKey,
             adapter: await adapter.getAddress(),
-            accrueDecimals: 18,
-            paramDecimals: 6,
+            targetDecimals: 18,
+            sourceDecimals: 6,
           }),
         },
       ]);
 
-      let allowance = await roles.allowances(allowanceKey);
+      let allowance = await roles.accruedAllowance(allowanceKey);
       expect(allowance.balance).to.equal(valueInAccrueDecimals);
 
       await expect(invoke(valueInParamDecimals)).to.not.be.reverted;
 
-      allowance = await roles.allowances(allowanceKey);
+      allowance = await roles.accruedAllowance(allowanceKey);
       expect(allowance.balance).to.equal(0);
     });
   });
 
   describe("WithinAllowance - from EtherValue", () => {
     it("enforces ether allowance from transaction.value", async () => {
-      const { owner, member, roles, testContract, allowFunction } =
-        await loadFixture(setupAvatarAndRoles);
+      const { roleKey, owner, member, roles, testContract } =
+        await loadFixture(setupTestContract);
 
       // Fund the avatar
       const avatarAddress = await roles.avatar();
@@ -1141,10 +1320,13 @@ describe("Operator - WithinAllowance", async () => {
         timestamp: 0,
       });
 
-      const { selector } = testContract.interface.getFunction("oneParamStatic");
+      const iface = new Interface(["function oneParamStatic(uint256)"]);
+      const selector = iface.getFunction("oneParamStatic")!.selector;
 
       // Static param passes, EtherValue checks allowance
-      await allowFunction(
+      await roles.allowFunction(
+        roleKey,
+        await testContract.getAddress(),
         selector,
         [
           {
@@ -1175,8 +1357,7 @@ describe("Operator - WithinAllowance", async () => {
           .execTransactionFromModule(
             await testContract.getAddress(),
             value,
-            (await testContract.oneParamStatic.populateTransaction(param))
-              .data as string,
+            iface.encodeFunctionData("oneParamStatic", [param]),
             0,
           );
       }
@@ -1184,20 +1365,22 @@ describe("Operator - WithinAllowance", async () => {
       // Exceeds allowance
       await expect(invoke(10001n, 123n))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
 
       // Within allowance
       await expect(invoke(5000n, 456n)).to.not.be.reverted;
-      expect((await roles.allowances(allowanceKey)).balance).to.equal(5000);
+      expect((await roles.accruedAllowance(allowanceKey)).balance).to.equal(
+        5000,
+      );
 
       // Exhaust remaining
       await expect(invoke(5000n, 789n)).to.not.be.reverted;
-      expect((await roles.allowances(allowanceKey)).balance).to.equal(0);
+      expect((await roles.accruedAllowance(allowanceKey)).balance).to.equal(0);
 
       // Now fails
       await expect(invoke(1n, 999n))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(PermissionCheckerStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
     });
   });
 });
