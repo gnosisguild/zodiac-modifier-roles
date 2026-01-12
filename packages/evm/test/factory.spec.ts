@@ -25,15 +25,14 @@ describe("Module works with factory", () => {
     const Factory = await hre.ethers.getContractFactory("ModuleProxyFactory");
     const factory = await Factory.deploy();
 
-    const ConditionsTransform = await hre.ethers.getContractFactory(
-      "ConditionsTransform",
-    );
-    const conditionsTransform = await ConditionsTransform.deploy();
-    const conditionsTransformAddress = await conditionsTransform.getAddress();
+    const ConditionStorer =
+      await hre.ethers.getContractFactory("ConditionStorer");
+    const conditionStorer = await ConditionStorer.deploy();
+    const conditionStorerAddress = await conditionStorer.getAddress();
 
     const Modifier = await hre.ethers.getContractFactory("Roles", {
       libraries: {
-        ConditionsTransform: conditionsTransformAddress,
+        ConditionStorer: conditionStorerAddress,
       },
     });
     const masterCopy = await Modifier.deploy(
