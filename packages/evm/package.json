@@ -16,6 +16,7 @@
     "build": "hardhat compile",
     "clean": "hardhat clean",
     "test": "hardhat test",
+    "test:foundry": "forge test",
     "extract:mastercopy": "yarn run build && yarn hardhat extract:mastercopy",
     "deploy:mastercopies": "yarn hardhat deploy:mastercopies --network",
     "deploy:mastercopy": "yarn hardhat deploy:mastercopy --network",
