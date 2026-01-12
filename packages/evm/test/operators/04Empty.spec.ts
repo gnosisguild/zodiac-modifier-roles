@@ -1,4 +1,5 @@
 import { expect } from "chai";
+import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { ZeroHash } from "ethers";
 
@@ -66,7 +67,54 @@ describe("Operator - Empty", () => {
 
       await expect(invoke("0xdeadbeef"))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.CalldataNotEmpty, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.CalldataNotEmpty,
+          0, // Empty node
+          anyValue,
+          anyValue,
+        );
+    });
+  });
+
+  describe("violation context", () => {
+    it("reports the violating node index", async () => {
+      const { roles, allowTarget, invoke } = await loadFixture(setup);
+
+      await allowTarget(
+        flattenCondition({
+          paramType: Encoding.None,
+          operator: Operator.Empty,
+        }),
+      );
+
+      await expect(invoke("0xdeadbeef"))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.CalldataNotEmpty,
+          0, // Empty node at BFS index 0
+          anyValue,
+          anyValue,
+        );
+    });
+
+    it("reports the calldata range of the violation", async () => {
+      const { roles, allowTarget, invoke } = await loadFixture(setup);
+
+      await allowTarget(
+        flattenCondition({
+          paramType: Encoding.None,
+          operator: Operator.Empty,
+        }),
+      );
+
+      await expect(invoke("0xdeadbeef"))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.CalldataNotEmpty,
+          anyValue,
+          0, // payloadLocation: Empty checks entire calldata
+          0, // payloadSize: Empty node has no specific size
+        );
     });
   });
 });

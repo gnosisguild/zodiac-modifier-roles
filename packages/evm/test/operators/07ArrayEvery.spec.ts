@@ -1,4 +1,5 @@
 import { expect } from "chai";
+import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { AbiCoder, hexlify, randomBytes, ZeroHash } from "ethers";
 
@@ -75,7 +76,9 @@ describe("Operator - ArrayEvery", () => {
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.NotEveryArrayElementPasses,
-          ZeroHash,
+          2, // LessThan node (failing element's child)
+          anyValue,
+          anyValue,
         );
     });
 
@@ -129,7 +132,9 @@ describe("Operator - ArrayEvery", () => {
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.NotEveryArrayElementPasses,
-          ZeroHash,
+          3, // LessThan node (failing element's child)
+          anyValue,
+          anyValue,
         );
 
       // Allowance unchanged - transaction reverted so no consumption persisted
@@ -206,6 +211,76 @@ describe("Operator - ArrayEvery", () => {
       // All elements consumed - remaining is 40
       const { balance } = await roles.accruedAllowance(allowanceKey);
       expect(balance).to.equal(40);
+    });
+  });
+
+  describe("violation context", () => {
+    it("reports the violating node index", async () => {
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupArrayParam);
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Array,
+              operator: Operator.ArrayEvery,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [42]),
+                },
+              ],
+            },
+          ],
+        }),
+      );
+
+      await expect(invoke([42, 99, 42]))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.NotEveryArrayElementPasses,
+          2, // EqualTo node at BFS index 2
+          anyValue,
+          anyValue,
+        );
+    });
+
+    it("reports the calldata range of the violation", async () => {
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupArrayParam);
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Array,
+              operator: Operator.ArrayEvery,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [42]),
+                },
+              ],
+            },
+          ],
+        }),
+      );
+
+      await expect(invoke([1, 2, 3]))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.NotEveryArrayElementPasses,
+          anyValue,
+          68, // payloadLocation: first element at byte 68 (4 + 32 + 32)
+          32, // payloadSize: uint256 element is 32 bytes
+        );
     });
   });
 });

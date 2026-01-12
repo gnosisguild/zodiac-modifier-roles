@@ -144,7 +144,12 @@ abstract contract Authorization is RolesStorage {
         );
 
         if (result.status != Status.Ok) {
-            revert ConditionViolation(result.status, result.info);
+            revert ConditionViolation(
+                result.status,
+                result.violatedNodeIndex,
+                result.payloadLocation,
+                result.payloadSize
+            );
         }
 
         return result.consumptions;
