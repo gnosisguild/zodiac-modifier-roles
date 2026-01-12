@@ -1,0 +1,38 @@
+// SPDX-License-Identifier: LGPL-3.0-only
+pragma solidity >=0.8.17 <0.9.0;
+
+import "../../common/ImmutableStorage.sol";
+
+import "./ConditionUnpacker.sol";
+
+import "../../types/Types.sol";
+
+/**
+ * @title ConditionLoader
+ * @notice Loads and unpacks condition trees from immutable storage.
+ *
+ * @author gnosisguild
+ */
+library ConditionLoader {
+    /**
+     * @param scopeConfig Packed scopeSonfig (options << 160 | pointer).
+     * @return condition The unpacked condition tree.
+     * @return layout The unpacked type tree for ABI decoding.
+     * @return maxPluckIndex Maximum pluck index for pluck bag allocation.
+     */
+    function load(
+        uint256 scopeConfig
+    )
+        internal
+        view
+        returns (
+            Condition memory condition,
+            Layout memory layout,
+            uint256 maxPluckIndex
+        )
+    {
+        address pointer = address(uint160(scopeConfig));
+        bytes memory buffer = ImmutableStorage.load(pointer);
+        return ConditionUnpacker.unpack(buffer);
+    }
+}

@@ -1,23 +1,22 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "../common/ImmutableStorage.sol";
-import "../periphery/interfaces/ITransactionUnwrapper.sol";
+import "../common/AbiDecoder.sol";
 
 import "./evaluate/ConditionLogic.sol";
-import "./serialize/ConditionUnpacker.sol";
+import "./serialize/ConditionLoader.sol";
 import "./Storage.sol";
+
+import "../periphery/interfaces/ITransactionUnwrapper.sol";
 
 /**
  * @title Authorization
- * @notice Authorizes transactions against role permissions.
+ * @notice Authorizes transactions by evaluating role permissions:
+ *         1. Target Clearance - is the target address allowed?
+ *         2. ExecutionOptions - can it send value or delegatecall?
+ *         3. Condition tree - do parameters satisfy the constraints?
  *
- *         For each transaction, it evaluates:
- *         1. Target Clearance
- *         2. ExecutionOptions
- *         3. Condition rules
- *
- *         Handles unwrapping of transaction bundles if an adapter is registered.
+ * @dev Handles unwrapping of transaction bundles if an adapter is registered.
  *
  * @author gnosisguild
  */
@@ -113,23 +112,40 @@ abstract contract Authorization is RolesStorage {
         }
 
         /*
-         * Load Condition
+         * Load and Evaluate Condition
          */
+        return _evaluate(scopeConfig, data, consumptions, transaction);
+    }
+
+    /// @dev Loads condition and evaluates against calldata.
+    function _evaluate(
+        uint256 scopeConfig,
+        bytes calldata data,
+        Consumption[] memory consumptions,
+        Transaction memory transaction
+    ) private view returns (Consumption[] memory) {
         (
             Condition memory condition,
-            Payload memory payload,
-            Context memory context
-        ) = _unpackScopeConfig(scopeConfig, data, transaction);
+            Layout memory layout,
+            uint256 maxPluckIndex
+        ) = ConditionLoader.load(scopeConfig);
 
-        /*
-         * Evaluate Condition
-         */
+        Payload memory payload;
+        if (layout.encoding != Encoding.None) {
+            payload = AbiDecoder.inspect(data, layout);
+        }
+
         Result memory result = ConditionLogic.evaluate(
             data,
             condition,
             payload,
             consumptions,
-            context
+            Context(
+                transaction.to,
+                transaction.value,
+                transaction.operation,
+                new bytes32[](maxPluckIndex + 1)
+            )
         );
 
         if (result.status != Status.Ok) {
@@ -142,41 +158,5 @@ abstract contract Authorization is RolesStorage {
         }
 
         return result.consumptions;
-    }
-
-    /// @dev Loads packed scope config from immutable storage, unpacks condition
-    ///      tree and layout, decodes calldata into payload, and builds context.
-    function _unpackScopeConfig(
-        uint256 scopeConfig,
-        bytes calldata data,
-        Transaction memory transaction
-    )
-        private
-        view
-        returns (Condition memory, Payload memory payload, Context memory)
-    {
-        address pointer = address(uint160(scopeConfig));
-        bytes memory buffer = ImmutableStorage.load(pointer);
-
-        (
-            Condition memory condition,
-            Layout memory layout,
-            uint256 maxPluckIndex
-        ) = ConditionUnpacker.unpack(buffer);
-
-        if (layout.encoding != Encoding.None) {
-            payload = AbiDecoder.inspect(data, layout);
-        }
-
-        return (
-            condition,
-            payload,
-            Context(
-                transaction.to,
-                transaction.value,
-                transaction.operation,
-                new bytes32[](maxPluckIndex + 1)
-            )
-        );
     }
 }

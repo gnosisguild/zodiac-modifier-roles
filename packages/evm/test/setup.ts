@@ -72,11 +72,9 @@ export async function deployRolesMod(
   const provider = createEip1193(hre.network.provider, signer);
 
   await deployFactories({ provider });
-  const conditionsTransform = await hre.artifacts.readArtifact(
-    "ConditionsTransform",
-  );
-  const { address: conditionsTransformAddress } = await deployMastercopy({
-    bytecode: conditionsTransform.bytecode,
+  const conditionStorer = await hre.artifacts.readArtifact("ConditionStorer");
+  const { address: conditionStorerAddress } = await deployMastercopy({
+    bytecode: conditionStorer.bytecode,
     constructorArgs: { types: [], values: [] },
     salt: ZeroHash,
     provider,
@@ -84,7 +82,7 @@ export async function deployRolesMod(
 
   const Modifier = await hre.ethers.getContractFactory("Roles", {
     libraries: {
-      ConditionsTransform: conditionsTransformAddress,
+      ConditionStorer: conditionStorerAddress,
     },
   });
   const modifier = await Modifier.deploy(owner, avatar, target);
