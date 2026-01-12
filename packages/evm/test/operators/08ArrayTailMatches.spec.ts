@@ -1,255 +1,283 @@
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { AbiCoder, hexlify, randomBytes, ZeroHash } from "ethers";
 
-import { AbiCoder, ZeroHash } from "ethers";
-
-const defaultAbiCoder = AbiCoder.defaultAbiCoder();
-
+import { setupArrayParam } from "../setup";
 import {
-  setupOneParamArrayOfStatic,
-  setupOneParamArrayOfStaticTuple,
-} from "../setup";
-import { Encoding, Operator, PermissionCheckerStatus } from "../utils";
+  Encoding,
+  Operator,
+  ExecutionOptions,
+  ConditionViolationStatus,
+  flattenCondition,
+} from "../utils";
 
-describe("Operator - ArrayTailMatches", async () => {
-  it("passes when all tail element checks pass", async () => {
-    const { invoke, allowFunction } = await loadFixture(
-      setupOneParamArrayOfStatic,
-    );
+const abiCoder = AbiCoder.defaultAbiCoder();
 
-    await allowFunction([
-      {
-        parent: 0,
-        paramType: Encoding.AbiEncoded,
-        operator: Operator.Matches,
-        compValue: "0x",
-      },
-      {
-        parent: 0,
-        paramType: Encoding.Array,
-        operator: Operator.ArrayTailMatches,
-        compValue: "0x",
-      },
-      {
-        parent: 1,
-        paramType: Encoding.Static,
-        operator: Operator.EqualTo,
-        compValue: defaultAbiCoder.encode(["uint256"], [100]),
-      },
-      {
-        parent: 1,
-        paramType: Encoding.Static,
-        operator: Operator.EqualTo,
-        compValue: defaultAbiCoder.encode(["uint256"], [200]),
-      },
-    ]);
+describe("Operator - ArrayTailMatches", () => {
+  describe("matching logic", () => {
+    it("matches when tail elements align with conditions", async () => {
+      const { allowFunction, invoke } = await loadFixture(setupArrayParam);
 
-    await expect(invoke([1, 2, 100, 200])).to.not.be.reverted;
-    await expect(invoke([1, 2, 3, 100, 200])).to.not.be.reverted;
-    await expect(invoke([1, 2, 3, 100, 200, 1])).to.be.reverted;
+      // ArrayTailMatches: last 2 elements must be 100, 200
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Array,
+              operator: Operator.ArrayTailMatches,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [100]),
+                },
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [200]),
+                },
+              ],
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
+      );
+
+      // Exact tail match passes
+      await expect(invoke([100, 200])).to.not.be.reverted;
+
+      // Longer array with matching tail passes
+      await expect(invoke([1, 2, 3, 100, 200])).to.not.be.reverted;
+    });
+
+    it("fails when tail elements do not match", async () => {
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupArrayParam);
+
+      // ArrayTailMatches: last 2 elements must be 100, 200
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Array,
+              operator: Operator.ArrayTailMatches,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [100]),
+                },
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [200]),
+                },
+              ],
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
+      );
+
+      // Last element wrong
+      await expect(invoke([100, 999]))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
+
+      // Second-to-last element wrong
+      await expect(invoke([999, 200]))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
+    });
+
+    it("fails when array length is less than number of conditions", async () => {
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupArrayParam);
+
+      // ArrayTailMatches: requires 2 tail elements
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Array,
+              operator: Operator.ArrayTailMatches,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [100]),
+                },
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [200]),
+                },
+              ],
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
+      );
+
+      // Only 1 element - not enough for 2 conditions
+      await expect(invoke([100]))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.ParameterNotAMatch, ZeroHash);
+
+      // Empty array
+      await expect(invoke([]))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.ParameterNotAMatch, ZeroHash);
+    });
+
+    it("ignores elements before the tail (prefix insensitive)", async () => {
+      const { allowFunction, invoke } = await loadFixture(setupArrayParam);
+
+      // ArrayTailMatches: only checks last element
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Array,
+              operator: Operator.ArrayTailMatches,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [42]),
+                },
+              ],
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
+      );
+
+      // Any prefix values are ignored - only tail (42) matters
+      await expect(invoke([999, 888, 777, 42])).to.not.be.reverted;
+
+      // Different prefix, same tail - still passes
+      await expect(invoke([1, 2, 3, 4, 5, 42])).to.not.be.reverted;
+    });
   });
 
-  it("fails when one of the tail element checks fails", async () => {
-    const { roles, invoke, allowFunction } = await loadFixture(
-      setupOneParamArrayOfStatic,
-    );
+  describe("routing & consumption", () => {
+    it("routes correct tail element to corresponding child condition", async () => {
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupArrayParam);
 
-    await allowFunction([
-      {
-        parent: 0,
-        paramType: Encoding.AbiEncoded,
-        operator: Operator.Matches,
-        compValue: "0x",
-      },
-      {
-        parent: 0,
-        paramType: Encoding.Array,
-        operator: Operator.ArrayTailMatches,
-        compValue: "0x",
-      },
-      {
-        parent: 1,
-        paramType: Encoding.Static,
-        operator: Operator.EqualTo,
-        compValue: defaultAbiCoder.encode(["uint256"], [100]),
-      },
-      {
-        parent: 1,
-        paramType: Encoding.Static,
-        operator: Operator.EqualTo,
-        compValue: defaultAbiCoder.encode(["uint256"], [200]),
-      },
-    ]);
+      // ArrayTailMatches with 3 conditions: [>10, ==50, <100]
+      // For array [a, b, c, d, e] with 3 conditions:
+      // - condition[0] (>10) matches element[2] (c)
+      // - condition[1] (==50) matches element[3] (d)
+      // - condition[2] (<100) matches element[4] (e)
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Array,
+              operator: Operator.ArrayTailMatches,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.GreaterThan,
+                  compValue: abiCoder.encode(["uint256"], [10]),
+                },
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [50]),
+                },
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.LessThan,
+                  compValue: abiCoder.encode(["uint256"], [100]),
+                },
+              ],
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
+      );
 
-    await expect(invoke([1, 2, 100, 999]))
-      .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterNotAllowed, ZeroHash);
-  });
+      // Array [1, 2, 20, 50, 80] - tail is [20, 50, 80]
+      // 20 > 10 ✓, 50 == 50 ✓, 80 < 100 ✓
+      await expect(invoke([1, 2, 20, 50, 80])).to.not.be.reverted;
 
-  it("fails when array is shorter than required tail length", async () => {
-    const { roles, invoke, allowFunction } = await loadFixture(
-      setupOneParamArrayOfStatic,
-    );
+      // Array [5, 50, 80] - swapped first condition value
+      // 5 > 10 ✗ - fails on first tail element
+      await expect(invoke([5, 50, 80]))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.ParameterLessThanAllowed, ZeroHash);
 
-    await allowFunction([
-      {
-        parent: 0,
-        paramType: Encoding.AbiEncoded,
-        operator: Operator.Matches,
-        compValue: "0x",
-      },
-      {
-        parent: 0,
-        paramType: Encoding.Array,
-        operator: Operator.ArrayTailMatches,
-        compValue: "0x",
-      },
-      {
-        parent: 1,
-        paramType: Encoding.Static,
-        operator: Operator.EqualTo,
-        compValue: defaultAbiCoder.encode(["uint256"], [100]),
-      },
-      {
-        parent: 1,
-        paramType: Encoding.Static,
-        operator: Operator.EqualTo,
-        compValue: defaultAbiCoder.encode(["uint256"], [200]),
-      },
-    ]);
+      // Array [20, 99, 80] - wrong middle element
+      // 20 > 10 ✓, 99 == 50 ✗
+      await expect(invoke([20, 99, 80]))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
 
-    await expect(invoke([100]))
-      .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterNotAMatch, ZeroHash);
+      // Array [20, 50, 150] - last element too big
+      // 20 > 10 ✓, 50 == 50 ✓, 150 < 100 ✗
+      await expect(invoke([20, 50, 150]))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.ParameterGreaterThanAllowed,
+          ZeroHash,
+        );
+    });
 
-    await expect(invoke([]))
-      .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterNotAMatch, ZeroHash);
-  });
+    it("accumulates consumptions from all tail matches", async () => {
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupArrayParam);
 
-  it("passes when array length equals tail length", async () => {
-    const { invoke, allowFunction } = await loadFixture(
-      setupOneParamArrayOfStatic,
-    );
+      const allowanceKey = hexlify(randomBytes(32));
 
-    await allowFunction([
-      {
-        parent: 0,
-        paramType: Encoding.AbiEncoded,
-        operator: Operator.Matches,
-        compValue: "0x",
-      },
-      {
-        parent: 0,
-        paramType: Encoding.Array,
-        operator: Operator.ArrayTailMatches,
-        compValue: "0x",
-      },
-      {
-        parent: 1,
-        paramType: Encoding.Static,
-        operator: Operator.EqualTo,
-        compValue: defaultAbiCoder.encode(["uint256"], [123]),
-      },
-      {
-        parent: 1,
-        paramType: Encoding.Static,
-        operator: Operator.EqualTo,
-        compValue: defaultAbiCoder.encode(["uint256"], [456]),
-      },
-    ]);
+      // Set up allowance of 100
+      await roles.setAllowance(allowanceKey, 100, 0, 0, 0, 0);
 
-    await expect(invoke([123, 456])).to.not.be.reverted;
-  });
+      // ArrayTailMatches with 2 WithinAllowance conditions
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Array,
+              operator: Operator.ArrayTailMatches,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.WithinAllowance,
+                  compValue: allowanceKey,
+                },
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.WithinAllowance,
+                  compValue: allowanceKey,
+                },
+              ],
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
+      );
 
-  it("passes when array is longer than tail length", async () => {
-    const { invoke, allowFunction } = await loadFixture(
-      setupOneParamArrayOfStatic,
-    );
+      // Array [999, 20, 30] - prefix ignored, tail [20, 30] consumed (50 total)
+      await expect(invoke([999, 20, 30])).to.not.be.reverted;
 
-    await allowFunction([
-      {
-        parent: 0,
-        paramType: Encoding.AbiEncoded,
-        operator: Operator.Matches,
-        compValue: "0x",
-      },
-      {
-        parent: 0,
-        paramType: Encoding.Array,
-        operator: Operator.ArrayTailMatches,
-        compValue: "0x",
-      },
-      {
-        parent: 1,
-        paramType: Encoding.Static,
-        operator: Operator.EqualTo,
-        compValue: defaultAbiCoder.encode(["uint256"], [100]),
-      },
-      {
-        parent: 1,
-        paramType: Encoding.Static,
-        operator: Operator.EqualTo,
-        compValue: defaultAbiCoder.encode(["uint256"], [200]),
-      },
-    ]);
-
-    // Leading elements can be anything
-    await expect(invoke([999, 888, 777, 100, 200])).to.not.be.reverted;
-  });
-
-  it("works with complex children like tuples", async () => {
-    const { roles, invoke, allowFunction } = await loadFixture(
-      setupOneParamArrayOfStaticTuple,
-    );
-
-    await allowFunction([
-      {
-        parent: 0,
-        paramType: Encoding.AbiEncoded,
-        operator: Operator.Matches,
-        compValue: "0x",
-      },
-      {
-        parent: 0,
-        paramType: Encoding.Array,
-        operator: Operator.ArrayTailMatches,
-        compValue: "0x",
-      },
-      {
-        parent: 1,
-        paramType: Encoding.Tuple,
-        operator: Operator.Matches,
-        compValue: "0x",
-      },
-      {
-        parent: 2,
-        paramType: Encoding.Static,
-        operator: Operator.EqualTo,
-        compValue: defaultAbiCoder.encode(["uint256"], [100]),
-      },
-      {
-        parent: 2,
-        paramType: Encoding.Static,
-        operator: Operator.Pass,
-        compValue: "0x",
-      },
-    ]);
-
-    await expect(
-      invoke([
-        { a: 9999, b: false },
-        { a: 100, b: true },
-      ]),
-    ).to.not.be.reverted;
-
-    await expect(
-      invoke([
-        { a: 9999, b: false },
-        { a: 999, b: true },
-      ]),
-    )
-      .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(PermissionCheckerStatus.ParameterNotAllowed, ZeroHash);
+      // Both tail elements consumed - remaining is 50
+      const { balance } = await roles.accruedAllowance(allowanceKey);
+      expect(balance).to.equal(50);
+    });
   });
 });
