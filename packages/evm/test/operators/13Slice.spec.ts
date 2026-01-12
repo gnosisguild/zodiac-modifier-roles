@@ -1,12 +1,7 @@
 import { expect } from "chai";
+import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import {
-  AbiCoder,
-  hexlify,
-  randomBytes,
-  solidityPacked,
-  ZeroHash,
-} from "ethers";
+import { AbiCoder, hexlify, randomBytes, solidityPacked } from "ethers";
 
 import { setupDynamicParam } from "../setup";
 import {
@@ -59,12 +54,22 @@ describe("Operator - Slice", () => {
       // Wrong value at the slice position
       await expect(invoke("0x00000000cafebabe00000000"))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          2,
+          anyValue,
+          anyValue,
+        );
 
       // Value at wrong position (shift 0 instead of 4) - fails
       await expect(invoke("0xdeadbeef0000000000000000"))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          2,
+          anyValue,
+          anyValue,
+        );
     });
 
     it("extracts 1-byte size from compValue (size 1)", async () => {
@@ -101,7 +106,12 @@ describe("Operator - Slice", () => {
       // bytes starting with 0xcd - fails
       await expect(invoke("0xcd00000000000000"))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          2,
+          anyValue,
+          anyValue,
+        );
     });
 
     it("extracts 1-byte size from compValue (size 32)", async () => {
@@ -138,7 +148,12 @@ describe("Operator - Slice", () => {
       // 32 bytes encoding different value - fails
       await expect(invoke(abiCoder.encode(["uint256"], [12346])))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          2,
+          anyValue,
+          anyValue,
+        );
     });
   });
 
@@ -176,7 +191,12 @@ describe("Operator - Slice", () => {
       // Value 100 not > 100 - child fails with ParameterLessThanAllowed, Slice propagates
       await expect(invoke("0x00000064")) // 100 in 4 bytes
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.ParameterLessThanAllowed, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.ParameterLessThanAllowed,
+          2,
+          anyValue,
+          anyValue,
+        );
     });
 
     it("propagates consumption from child", async () => {

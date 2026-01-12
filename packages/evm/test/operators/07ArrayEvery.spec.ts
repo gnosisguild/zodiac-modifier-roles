@@ -1,4 +1,5 @@
 import { expect } from "chai";
+import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { AbiCoder, hexlify, randomBytes, ZeroHash } from "ethers";
 
@@ -75,7 +76,9 @@ describe("Operator - ArrayEvery", () => {
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.NotEveryArrayElementPasses,
-          ZeroHash,
+          2, // LessThan node (failing element's child)
+          anyValue,
+          anyValue,
         );
     });
 
@@ -129,7 +132,9 @@ describe("Operator - ArrayEvery", () => {
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.NotEveryArrayElementPasses,
-          ZeroHash,
+          3, // LessThan node (failing element's child)
+          anyValue,
+          anyValue,
         );
 
       // Allowance unchanged - transaction reverted so no consumption persisted

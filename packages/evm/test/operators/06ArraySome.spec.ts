@@ -1,4 +1,5 @@
 import { expect } from "chai";
+import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { AbiCoder, ZeroHash } from "ethers";
 
@@ -76,7 +77,12 @@ describe("Operator - ArraySome", () => {
       // Array with no matching element fails
       await expect(invoke([1, 2, 3, 4]))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.NoArrayElementPasses, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.NoArrayElementPasses,
+          1, // ArraySome node
+          anyValue,
+          anyValue,
+        );
     });
 
     it("fails when array is empty", async () => {
@@ -108,7 +114,12 @@ describe("Operator - ArraySome", () => {
       // Empty array fails - no element can match
       await expect(invoke([]))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.NoArrayElementPasses, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.NoArrayElementPasses,
+          1, // ArraySome node
+          anyValue,
+          anyValue,
+        );
     });
 
     it("returns on first match (short-circuit)", async () => {

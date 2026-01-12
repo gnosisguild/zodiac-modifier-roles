@@ -1,4 +1,5 @@
 import { expect } from "chai";
+import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { ZeroHash } from "ethers";
 
@@ -66,7 +67,12 @@ describe("Operator - Empty", () => {
 
       await expect(invoke("0xdeadbeef"))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.CalldataNotEmpty, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.CalldataNotEmpty,
+          0, // Empty node
+          anyValue,
+          anyValue,
+        );
     });
   });
 });

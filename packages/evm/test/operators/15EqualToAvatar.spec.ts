@@ -1,4 +1,5 @@
 import { expect } from "chai";
+import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { hexlify, Interface, randomBytes, ZeroHash } from "ethers";
 
@@ -89,7 +90,12 @@ describe("Operator - EqualToAvatar", () => {
           ),
       )
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          1n,
+          anyValue,
+          anyValue,
+        );
 
       // Zero address fails
       const zeroAddress = "0x0000000000000000000000000000000000000000";
@@ -104,7 +110,12 @@ describe("Operator - EqualToAvatar", () => {
           ),
       )
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          1n,
+          anyValue,
+          anyValue,
+        );
     });
   });
 
@@ -163,7 +174,12 @@ describe("Operator - EqualToAvatar", () => {
           ),
       )
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          1n,
+          anyValue,
+          anyValue,
+        );
 
       // New avatar now passes
       await expect(

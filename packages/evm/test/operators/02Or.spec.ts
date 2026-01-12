@@ -1,8 +1,9 @@
 import { expect } from "chai";
+import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { AbiCoder, Interface, ZeroHash } from "ethers";
+import { AbiCoder, ZeroHash } from "ethers";
 
-import { setupTestContract, setupOneParam, setupDynamicParam } from "../setup";
+import { setupOneParam, setupDynamicParam } from "../setup";
 import {
   Encoding,
   Operator,
@@ -10,28 +11,6 @@ import {
   ConditionViolationStatus,
   flattenCondition,
 } from "../utils";
-
-/**
- * Tests for Operator.Or handler in ConditionLogic.
- *
- * This test suite verifies the execution logic of the OR operator, focusing on:
- * 1. Short-circuiting behavior (boolean logic).
- * 2. Correct payload routing for variant vs non-variant conditions.
- * 3. Isolation of side-effects (consumptions) to the successful branch.
- *
- * Test Structure:
- * - Operator - Or
- *   - boolean logic
- *     - passes when first child passes
- *     - passes when second child passes after first fails
- *     - fails with OrViolation when all children fail
- *   - payload routing
- *     - passes same payload to structural children when non-variant
- *     - passes individual child payloads when variant
- *     - passes empty payload to non-structural children
- *   - consumption handling
- *     - returns consumptions only from the passing branch
- */
 
 const abiCoder = AbiCoder.defaultAbiCoder();
 
@@ -138,7 +117,12 @@ describe("Operator - Or", () => {
       // 99 fails all children
       await expect(invoke(99))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.OrViolation, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.OrViolation,
+          1, // Or node
+          anyValue,
+          anyValue,
+        );
     });
   });
 
@@ -183,7 +167,12 @@ describe("Operator - Or", () => {
       // 50 fails both (not <10 and not >100)
       await expect(invoke(50))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.OrViolation, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.OrViolation,
+          1, // Or node
+          anyValue,
+          anyValue,
+        );
     });
 
     it("passes individual child payloads when variant", async () => {
@@ -254,7 +243,12 @@ describe("Operator - Or", () => {
       const matchNeither = abiCoder.encode(["bytes"], ["0xdeadbeef"]);
       await expect(invoke(matchNeither))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.OrViolation, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.OrViolation,
+          1, // Or node
+          anyValue,
+          anyValue,
+        );
     });
 
     it("passes empty payload to non-structural children", async () => {
@@ -298,7 +292,12 @@ describe("Operator - Or", () => {
       // Wrong param, wrong ether - fails both
       await expect(invoke(99, { value: 999 }))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.OrViolation, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.OrViolation,
+          1, // Or node
+          anyValue,
+          anyValue,
+        );
     });
   });
 

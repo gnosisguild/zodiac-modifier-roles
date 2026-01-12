@@ -1,4 +1,5 @@
 import { expect } from "chai";
+import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import hre from "hardhat";
 import { hexlify, Interface, randomBytes, ZeroHash } from "ethers";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
@@ -97,7 +98,12 @@ describe("Operator - Custom", () => {
         ),
       )
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.CustomConditionViolation, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.CustomConditionViolation,
+          1, // Custom node
+          anyValue,
+          anyValue,
+        );
     });
 
     it("extracts and passes extra data (from compValue) to adapter", async () => {
@@ -131,7 +137,9 @@ describe("Operator - Custom", () => {
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.CustomConditionViolation,
-          expectedInfo,
+          1, // Custom node
+          anyValue,
+          anyValue,
         );
     });
   });
@@ -189,7 +197,9 @@ describe("Operator - Custom", () => {
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.CustomConditionViolation,
-          expectedInfo,
+          1, // Custom node
+          anyValue,
+          anyValue,
         );
     });
   });
@@ -219,7 +229,9 @@ describe("Operator - Custom", () => {
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.CustomConditionNotAContract,
-          ZeroHash,
+          1, // Custom node
+          anyValue,
+          anyValue,
         );
     });
 
@@ -252,7 +264,12 @@ describe("Operator - Custom", () => {
       // Function selector not found, no fallback -> staticcall fails
       await expect(invoke(101))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.CustomConditionReverted, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.CustomConditionReverted,
+          1, // Custom node
+          anyValue,
+          anyValue,
+        );
     });
 
     it("function reverts: reverts", async () => {
@@ -283,7 +300,12 @@ describe("Operator - Custom", () => {
       // Adapter reverts -> staticcall fails
       await expect(invoke(101))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.CustomConditionReverted, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.CustomConditionReverted,
+          1, // Custom node
+          anyValue,
+          anyValue,
+        );
     });
 
     it("returns wrong type: reverts", async () => {
@@ -317,7 +339,9 @@ describe("Operator - Custom", () => {
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.CustomConditionInvalidResult,
-          ZeroHash,
+          1, // Custom node
+          anyValue,
+          anyValue,
         );
     });
 

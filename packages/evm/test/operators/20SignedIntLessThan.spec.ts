@@ -1,4 +1,5 @@
 import { expect } from "chai";
+import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { AbiCoder, Interface, solidityPacked, ZeroHash } from "ethers";
 
@@ -61,12 +62,22 @@ describe("Operator - SignedIntLessThan", () => {
     // 100 == 100 fails
     await expect(invoke(100))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(ConditionViolationStatus.ParameterGreaterThanAllowed, ZeroHash);
+      .withArgs(
+        ConditionViolationStatus.ParameterGreaterThanAllowed,
+        1,
+        anyValue,
+        anyValue,
+      );
 
     // 101 > 100 fails
     await expect(invoke(101))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(ConditionViolationStatus.ParameterGreaterThanAllowed, ZeroHash);
+      .withArgs(
+        ConditionViolationStatus.ParameterGreaterThanAllowed,
+        1,
+        anyValue,
+        anyValue,
+      );
   });
 
   it("handles negative numbers correctly", async () => {
@@ -97,17 +108,32 @@ describe("Operator - SignedIntLessThan", () => {
     // -50 == -50 fails
     await expect(invoke(-50))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(ConditionViolationStatus.ParameterGreaterThanAllowed, ZeroHash);
+      .withArgs(
+        ConditionViolationStatus.ParameterGreaterThanAllowed,
+        1,
+        anyValue,
+        anyValue,
+      );
 
     // -49 > -50 fails
     await expect(invoke(-49))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(ConditionViolationStatus.ParameterGreaterThanAllowed, ZeroHash);
+      .withArgs(
+        ConditionViolationStatus.ParameterGreaterThanAllowed,
+        1,
+        anyValue,
+        anyValue,
+      );
 
     // 0 > -50 fails
     await expect(invoke(0))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(ConditionViolationStatus.ParameterGreaterThanAllowed, ZeroHash);
+      .withArgs(
+        ConditionViolationStatus.ParameterGreaterThanAllowed,
+        1,
+        anyValue,
+        anyValue,
+      );
   });
 
   it("integrates with Slice operator", async () => {
@@ -142,7 +168,12 @@ describe("Operator - SignedIntLessThan", () => {
     // 0x00000064 = 100 >= 100 fails
     await expect(invoke("0x00000064"))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(ConditionViolationStatus.ParameterGreaterThanAllowed, ZeroHash);
+      .withArgs(
+        ConditionViolationStatus.ParameterGreaterThanAllowed,
+        2,
+        anyValue,
+        anyValue,
+      );
 
     // 2. Slice 32 bytes (full int256) at offset 0, then SignedIntLessThan -100
     await allowFunction(
@@ -174,13 +205,23 @@ describe("Operator - SignedIntLessThan", () => {
     const neg100 = solidityPacked(["int256"], [-100]);
     await expect(invoke(neg100))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(ConditionViolationStatus.ParameterGreaterThanAllowed, ZeroHash);
+      .withArgs(
+        ConditionViolationStatus.ParameterGreaterThanAllowed,
+        2,
+        anyValue,
+        anyValue,
+      );
 
     // -99 (32 bytes) < -100 -> Fail (Greater)
     const neg99 = solidityPacked(["int256"], [-99]);
     await expect(invoke(neg99))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(ConditionViolationStatus.ParameterGreaterThanAllowed, ZeroHash);
+      .withArgs(
+        ConditionViolationStatus.ParameterGreaterThanAllowed,
+        2,
+        anyValue,
+        anyValue,
+      );
   });
 
   it("compares ether value (msg.value)", async () => {
@@ -226,6 +267,11 @@ describe("Operator - SignedIntLessThan", () => {
         ),
     )
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(ConditionViolationStatus.ParameterGreaterThanAllowed, ZeroHash);
+      .withArgs(
+        ConditionViolationStatus.ParameterGreaterThanAllowed,
+        0n,
+        anyValue,
+        anyValue,
+      );
   });
 });

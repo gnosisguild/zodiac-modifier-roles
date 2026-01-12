@@ -1,14 +1,9 @@
 import { expect } from "chai";
+import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import hre from "hardhat";
 
-import {
-  AbiCoder,
-  Interface,
-  solidityPacked,
-  ZeroAddress,
-  ZeroHash,
-} from "ethers";
+import { AbiCoder, Interface, solidityPacked, ZeroAddress } from "ethers";
 
 import { setupTestContract, setupTwoParams } from "../setup";
 import {
@@ -129,7 +124,12 @@ describe("Operator - WithinRatio", () => {
           // Ratio = 951/1000 = 95.1% > 95% → fail
           await expect(invoke(951, 1000))
             .to.be.revertedWithCustomError(roles, "ConditionViolation")
-            .withArgs(ConditionViolationStatus.RatioAboveMax, ZeroHash);
+            .withArgs(
+              ConditionViolationStatus.RatioAboveMax,
+              3, // WithinRatio node
+              anyValue,
+              anyValue,
+            );
         });
 
         it("skips check when maxRatio is 0 (no upper bound)", async () => {
@@ -264,7 +264,12 @@ describe("Operator - WithinRatio", () => {
           // Ratio = 850/1000 = 85% < 90% → fail
           await expect(invoke(1000, 850))
             .to.be.revertedWithCustomError(roles, "ConditionViolation")
-            .withArgs(ConditionViolationStatus.RatioBelowMin, ZeroHash);
+            .withArgs(
+              ConditionViolationStatus.RatioBelowMin,
+              3, // WithinRatio node
+              anyValue,
+              anyValue,
+            );
         });
 
         it("skips check when minRatio is 0 (no lower bound)", async () => {
@@ -353,7 +358,12 @@ describe("Operator - WithinRatio", () => {
         // Relative: 1970 USDC × 0.0005 = 0.985 ETH → 98.5% < 99%
         await expect(invoke(1970n * 10n ** 6n, 1n * 10n ** 18n))
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
-          .withArgs(ConditionViolationStatus.RatioBelowMin, ZeroHash);
+          .withArgs(
+            ConditionViolationStatus.RatioBelowMin,
+            3, // WithinRatio node
+            anyValue,
+            anyValue,
+          );
       });
 
       it("normalizes when relative has more decimals (with reference adapter)", async () => {
@@ -406,7 +416,12 @@ describe("Operator - WithinRatio", () => {
         // Relative: 76.01 ETH → 101.3% > 101%
         await expect(invoke(7601n * 10n ** 16n, 1n * 10n ** 8n))
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
-          .withArgs(ConditionViolationStatus.RatioAboveMax, ZeroHash);
+          .withArgs(
+            ConditionViolationStatus.RatioAboveMax,
+            3, // WithinRatio node
+            anyValue,
+            anyValue,
+          );
       });
 
       it("handles extreme decimal difference with adapters (6 vs 37 decimals)", async () => {
@@ -460,7 +475,12 @@ describe("Operator - WithinRatio", () => {
         // Relative: 2030 ExoticToken × 0.5 = 1015 USD → 101.5% > 101%
         await expect(invoke(1000n * 10n ** 6n, 2030n * 10n ** 37n))
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
-          .withArgs(ConditionViolationStatus.RatioAboveMax, ZeroHash);
+          .withArgs(
+            ConditionViolationStatus.RatioAboveMax,
+            3, // WithinRatio node
+            anyValue,
+            anyValue,
+          );
       });
     });
 
@@ -510,7 +530,12 @@ describe("Operator - WithinRatio", () => {
         // Relative: 19,700 USD → Ratio = 98.5% < 99%
         await expect(invoke(19700n * 10n ** 18n, 10n * 10n ** 18n))
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
-          .withArgs(ConditionViolationStatus.RatioBelowMin, ZeroHash);
+          .withArgs(
+            ConditionViolationStatus.RatioBelowMin,
+            3, // WithinRatio node
+            anyValue,
+            anyValue,
+          );
       });
 
       it("applies single adapter to relative amount", async () => {
@@ -562,7 +587,12 @@ describe("Operator - WithinRatio", () => {
         // Relative: 0.2967 WBTC → Ratio ≈ 98.9% < 99%
         await expect(invoke(2967n * 10n ** 4n, 45000n * 10n ** 18n))
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
-          .withArgs(ConditionViolationStatus.RatioBelowMin, ZeroHash);
+          .withArgs(
+            ConditionViolationStatus.RatioBelowMin,
+            3, // WithinRatio node
+            anyValue,
+            anyValue,
+          );
       });
 
       it("applies adapters to both amounts (cross-asset)", async () => {
@@ -615,7 +645,12 @@ describe("Operator - WithinRatio", () => {
         // Relative: 0.30225 BTC → Ratio = 100.75% > 100.5%
         await expect(invoke(225n * 10n ** 17n, 30225n * 10n ** 4n))
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
-          .withArgs(ConditionViolationStatus.RatioAboveMax, ZeroHash);
+          .withArgs(
+            ConditionViolationStatus.RatioAboveMax,
+            3, // WithinRatio node
+            anyValue,
+            anyValue,
+          );
       });
     });
 
@@ -656,7 +691,9 @@ describe("Operator - WithinRatio", () => {
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
           .withArgs(
             ConditionViolationStatus.PricingAdapterNotAContract,
-            ZeroHash,
+            3, // WithinRatio node
+            anyValue,
+            anyValue,
           );
       });
 
@@ -697,7 +734,9 @@ describe("Operator - WithinRatio", () => {
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
           .withArgs(
             ConditionViolationStatus.PricingAdapterNotAContract,
-            ZeroHash,
+            3, // WithinRatio node
+            anyValue,
+            anyValue,
           );
       });
 
@@ -738,7 +777,12 @@ describe("Operator - WithinRatio", () => {
 
         await expect(invoke(1000, 1000))
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
-          .withArgs(ConditionViolationStatus.PricingAdapterReverted, ZeroHash);
+          .withArgs(
+            ConditionViolationStatus.PricingAdapterReverted,
+            3, // WithinRatio node
+            anyValue,
+            anyValue,
+          );
       });
 
       it("reverts with PricingAdapterReverted when adapter reverts", async () => {
@@ -779,7 +823,12 @@ describe("Operator - WithinRatio", () => {
 
         await expect(invoke(1000, 1000))
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
-          .withArgs(ConditionViolationStatus.PricingAdapterReverted, ZeroHash);
+          .withArgs(
+            ConditionViolationStatus.PricingAdapterReverted,
+            3, // WithinRatio node
+            anyValue,
+            anyValue,
+          );
       });
 
       it("reverts with PricingAdapterInvalidResult when adapter returns wrong type", async () => {
@@ -821,7 +870,9 @@ describe("Operator - WithinRatio", () => {
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
           .withArgs(
             ConditionViolationStatus.PricingAdapterInvalidResult,
-            ZeroHash,
+            3, // WithinRatio node
+            anyValue,
+            anyValue,
           );
       });
 
@@ -861,7 +912,12 @@ describe("Operator - WithinRatio", () => {
 
         await expect(invoke(1000, 1000))
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
-          .withArgs(ConditionViolationStatus.PricingAdapterZeroPrice, ZeroHash);
+          .withArgs(
+            ConditionViolationStatus.PricingAdapterZeroPrice,
+            3, // WithinRatio node
+            anyValue,
+            anyValue,
+          );
       });
     });
   });
@@ -911,12 +967,22 @@ describe("Operator - WithinRatio", () => {
       // Selling 10 ETH for 19,880 USD → 99.4% < 99.5%
       await expect(invoke(19880n * 10n ** 18n, 10n * 10n ** 18n))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.RatioBelowMin, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.RatioBelowMin,
+          3, // WithinRatio node
+          anyValue,
+          anyValue,
+        );
 
       // Selling 10 ETH for 20,120 USD → 100.6% > 100.5%
       await expect(invoke(20120n * 10n ** 18n, 10n * 10n ** 18n))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.RatioAboveMax, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.RatioAboveMax,
+          3, // WithinRatio node
+          anyValue,
+          anyValue,
+        );
     });
 
     it("WBTC/ETH swap - cross-asset with different decimals", async () => {
@@ -964,12 +1030,22 @@ describe("Operator - WithinRatio", () => {
       // Selling 75 ETH for 0.94 BTC → 94% < 95%
       await expect(invoke(94n * 10n ** 6n, 75n * 10n ** 18n))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.RatioBelowMin, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.RatioBelowMin,
+          3, // WithinRatio node
+          anyValue,
+          anyValue,
+        );
 
       // Selling 75 ETH for 1.06 BTC → 106% > 105%
       await expect(invoke(106n * 10n ** 6n, 75n * 10n ** 18n))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.RatioAboveMax, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.RatioAboveMax,
+          3, // WithinRatio node
+          anyValue,
+          anyValue,
+        );
     });
 
     it("USDC/exotic token swap - extreme decimal difference", async () => {
@@ -1016,7 +1092,12 @@ describe("Operator - WithinRatio", () => {
       // Selling 1000 USDC for 498.7 ExoticToken → 99.74% < 99.75%
       await expect(invoke(4987n * 10n ** 34n, 1000n * 10n ** 6n))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.RatioBelowMin, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.RatioBelowMin,
+          3, // WithinRatio node
+          anyValue,
+          anyValue,
+        );
     });
 
     it("no adapters - enforces min 25% ratio", async () => {
@@ -1052,7 +1133,12 @@ describe("Operator - WithinRatio", () => {
       // 249 / 1000 = 24.9% < 25% → fail
       await expect(invoke(1000n * 10n ** 18n, 249n * 10n ** 18n))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.RatioBelowMin, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.RatioBelowMin,
+          3, // WithinRatio node
+          anyValue,
+          anyValue,
+        );
 
       // 250 / 1000 = 25% → pass
       await expect(invoke(1000n * 10n ** 18n, 250n * 10n ** 18n)).to.not.be
@@ -1105,7 +1191,12 @@ describe("Operator - WithinRatio", () => {
       // 5001 / 1000 = 500.1% → fail
       await expect(invoke(5001n * 10n ** 18n, 1000n * 10n ** 18n))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.RatioAboveMax, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.RatioAboveMax,
+          3, // WithinRatio node
+          anyValue,
+          anyValue,
+        );
     });
 
     it("USD/WBTC swap - WBTC converts to USD base via relative adapter", async () => {
@@ -1154,7 +1245,12 @@ describe("Operator - WithinRatio", () => {
       // Relative: 0.2967 WBTC → 44,505 / 45,000 = 98.9% → fail
       await expect(invoke(45000n * 10n ** 18n, 2967n * 10n ** 4n))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.RatioBelowMin, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.RatioBelowMin,
+          3, // WithinRatio node
+          anyValue,
+          anyValue,
+        );
     });
 
     it("ETH/WBTC swap - converts to ETH base via relative adapter", async () => {
@@ -1204,12 +1300,22 @@ describe("Operator - WithinRatio", () => {
       // Relative: 0.949 WBTC → 71.175 / 75 = 94.9% → fail
       await expect(invoke(949n * 10n ** 5n, 75n * 10n ** 18n))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.RatioBelowMin, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.RatioBelowMin,
+          3, // WithinRatio node
+          anyValue,
+          anyValue,
+        );
 
       // Relative: 1.051 WBTC → 78.825 / 75 = 105.1% → fail
       await expect(invoke(1051n * 10n ** 5n, 75n * 10n ** 18n))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.RatioAboveMax, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.RatioAboveMax,
+          3, // WithinRatio node
+          anyValue,
+          anyValue,
+        );
     });
     it("handles WBTC (8 decimals) vs FunkyToken (27 decimals) both with adapters", async () => {
       const { roles, allowFunction, invoke } =
@@ -1261,12 +1367,22 @@ describe("Operator - WithinRatio", () => {
       // Relative: 49,400 FunkyToken × $2 = $98,800 → 98.8% < 99%
       await expect(invoke(1n * 10n ** 8n, 49400n * 10n ** 27n))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.RatioBelowMin, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.RatioBelowMin,
+          3, // WithinRatio node
+          anyValue,
+          anyValue,
+        );
 
       // Relative: 50,600 FunkyToken × $2 = $101,200 → 101.2% > 101%
       await expect(invoke(1n * 10n ** 8n, 50600n * 10n ** 27n))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.RatioAboveMax, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.RatioAboveMax,
+          3, // WithinRatio node
+          anyValue,
+          anyValue,
+        );
     });
   });
 
@@ -1325,7 +1441,12 @@ describe("Operator - WithinRatio", () => {
       // 1201 / 1000 = 120.1% > 120% → fail
       await expect(invoke(1000, 1201))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.RatioAboveMax, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.RatioAboveMax,
+          4, // WithinRatio node
+          anyValue,
+          anyValue,
+        );
     });
 
     it("extracts values from nested AbiEncoded", async () => {
@@ -1397,7 +1518,12 @@ describe("Operator - WithinRatio", () => {
       );
       await expect(invoke(encodedFail))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.RatioAboveMax, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.RatioAboveMax,
+          5, // WithinRatio node
+          anyValue,
+          anyValue,
+        );
     });
 
     it("extracts values from Tuple", async () => {
@@ -1466,7 +1592,12 @@ describe("Operator - WithinRatio", () => {
       // 1501 / 1000 = 150.1% > 150% → fail
       await expect(invoke(500, 1000, 800, 1501))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.RatioAboveMax, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.RatioAboveMax,
+          6, // WithinRatio node
+          anyValue,
+          anyValue,
+        );
     });
 
     it("extracts values from Array", async () => {
@@ -1527,7 +1658,12 @@ describe("Operator - WithinRatio", () => {
       // 1201 / 1000 = 120.1% > 120% → fail
       await expect(invoke([1000, 500, 1201]))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.RatioAboveMax, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.RatioAboveMax,
+          5, // WithinRatio node
+          anyValue,
+          anyValue,
+        );
     });
 
     it("extracts EtherValue", async () => {
@@ -1612,7 +1748,12 @@ describe("Operator - WithinRatio", () => {
           ),
       )
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.RatioAboveMax, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.RatioAboveMax,
+          3, // WithinRatio node
+          anyValue,
+          anyValue,
+        );
     });
   });
 });

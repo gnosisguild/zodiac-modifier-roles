@@ -1,13 +1,9 @@
 import { expect } from "chai";
+import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { AbiCoder, hexlify, Interface, randomBytes, ZeroHash } from "ethers";
+import { AbiCoder, hexlify, randomBytes, ZeroHash } from "ethers";
 
-import {
-  setupTestContract,
-  setupOneParam,
-  setupTwoParams,
-  setupDynamicParam,
-} from "../setup";
+import { setupOneParam, setupTwoParams, setupDynamicParam } from "../setup";
 import {
   Encoding,
   Operator,
@@ -87,7 +83,12 @@ describe("Operator - And", () => {
       // 5 fails first child (GreaterThan 10), never evaluates second
       await expect(invoke(5))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.ParameterLessThanAllowed, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.ParameterLessThanAllowed,
+          2, // GreaterThan node
+          anyValue,
+          anyValue,
+        );
     });
 
     it("fails on second child after first passes", async () => {
@@ -125,7 +126,9 @@ describe("Operator - And", () => {
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.ParameterGreaterThanAllowed,
-          ZeroHash,
+          3, // LessThan node
+          anyValue,
+          anyValue,
         );
     });
   });
@@ -235,7 +238,12 @@ describe("Operator - And", () => {
       );
       await expect(invoke(wrongFirst))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          4, // EqualTo node in first Matches child
+          anyValue,
+          anyValue,
+        );
 
       // Wrong second bytes - fails child 2
       const wrongSecond = abiCoder.encode(
@@ -244,7 +252,12 @@ describe("Operator - And", () => {
       );
       await expect(invoke(wrongSecond))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          6, // Second EqualTo in second Matches child
+          anyValue,
+          anyValue,
+        );
     });
 
     it("passes empty payload to non-structural children", async () => {
@@ -285,12 +298,22 @@ describe("Operator - And", () => {
       // Wrong param value
       await expect(invoke(99, { value: 123 }))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          2, // EqualTo node for param
+          anyValue,
+          anyValue,
+        );
 
       // Wrong ether value
       await expect(invoke(42, { value: 999 }))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          3, // EtherValue/EqualTo node
+          anyValue,
+          anyValue,
+        );
     });
   });
 
@@ -361,7 +384,12 @@ describe("Operator - And", () => {
       // Should fail.
       await expect(invoke(30, 30))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(
+          ConditionViolationStatus.AllowanceExceeded,
+          6, // Second WithinAllowance node
+          anyValue,
+          anyValue,
+        );
     });
   });
 });

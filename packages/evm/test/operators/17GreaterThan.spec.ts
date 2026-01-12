@@ -1,4 +1,5 @@
 import { expect } from "chai";
+import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { AbiCoder, Interface, solidityPacked, ZeroHash } from "ethers";
 
@@ -57,12 +58,22 @@ describe("Operator - GreaterThan", () => {
     // 100 == 100 fails
     await expect(invoke(100))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(ConditionViolationStatus.ParameterLessThanAllowed, ZeroHash);
+      .withArgs(
+        ConditionViolationStatus.ParameterLessThanAllowed,
+        1,
+        anyValue,
+        anyValue,
+      );
 
     // 99 < 100 fails
     await expect(invoke(99))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(ConditionViolationStatus.ParameterLessThanAllowed, ZeroHash);
+      .withArgs(
+        ConditionViolationStatus.ParameterLessThanAllowed,
+        1,
+        anyValue,
+        anyValue,
+      );
   });
 
   it("integrates with Slice operator", async () => {
@@ -98,7 +109,12 @@ describe("Operator - GreaterThan", () => {
     // 0x00000064 = 100 <= 100 fails
     await expect(invoke("0x00000064"))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(ConditionViolationStatus.ParameterLessThanAllowed, ZeroHash);
+      .withArgs(
+        ConditionViolationStatus.ParameterLessThanAllowed,
+        2,
+        anyValue,
+        anyValue,
+      );
   });
 
   it("compares ether value (msg.value)", async () => {
@@ -144,6 +160,11 @@ describe("Operator - GreaterThan", () => {
         ),
     )
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(ConditionViolationStatus.ParameterLessThanAllowed, ZeroHash);
+      .withArgs(
+        ConditionViolationStatus.ParameterLessThanAllowed,
+        0,
+        anyValue,
+        anyValue,
+      );
   });
 });
