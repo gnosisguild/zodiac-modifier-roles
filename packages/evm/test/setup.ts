@@ -21,8 +21,8 @@ export async function setupFallbacker() {
   const Avatar = await hre.ethers.getContractFactory("TestAvatar");
   const avatar = await Avatar.deploy();
 
-  const Fallbacker = await hre.ethers.getContractFactory("Fallbacker");
-  const fallbacker = await Fallbacker.deploy();
+  const TestContract = await hre.ethers.getContractFactory("Fallbacker");
+  const testContract = await TestContract.deploy();
 
   const avatarAddress = await avatar.getAddress();
   const roles = await deployRolesMod(
@@ -32,19 +32,19 @@ export async function setupFallbacker() {
     avatarAddress,
   );
 
-  const fallbackerAddress = await fallbacker.getAddress();
+  const testContractAddress = await testContract.getAddress();
   const roleKey = hexlify(randomBytes(32));
 
   await roles.connect(owner).enableModule(member.address);
   await roles.connect(owner).grantRole(member.address, roleKey, 0, 0, 0);
   await roles.connect(owner).setDefaultRole(member.address, roleKey);
-  await roles.connect(owner).scopeTarget(roleKey, fallbackerAddress);
+  await roles.connect(owner).scopeTarget(roleKey, testContractAddress);
 
   return {
     roles: roles.connect(owner),
     member,
-    fallbacker,
-    fallbackerAddress,
+    testContract,
+    testContractAddress,
     roleKey,
   };
 }
@@ -103,7 +103,7 @@ export async function setupAvatarAndRoles(
   const Avatar = await hre.ethers.getContractFactory("TestAvatar");
   const avatar = await Avatar.deploy();
 
-  const TestContract = await hre.ethers.getContractFactory("TestContract");
+  const TestContract = await hre.ethers.getContractFactory("Fallbacker");
   const testContract = await TestContract.deploy();
   const avatarAddress = await avatar.getAddress();
   const roles = await deployRolesMod(

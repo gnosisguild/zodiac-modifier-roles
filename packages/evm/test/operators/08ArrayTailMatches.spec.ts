@@ -18,13 +18,13 @@ describe("Operator - ArrayTailMatches", () => {
     it("matches when tail elements align with conditions", async () => {
       const iface = new Interface(["function fn(uint256[])"]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       // ArrayTailMatches: last 2 elements must be 100, 200
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -56,7 +56,7 @@ describe("Operator - ArrayTailMatches", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [[100, 200]]),
             0,
@@ -68,7 +68,7 @@ describe("Operator - ArrayTailMatches", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [[1, 2, 3, 100, 200]]),
             0,
@@ -79,13 +79,13 @@ describe("Operator - ArrayTailMatches", () => {
     it("fails when tail elements do not match", async () => {
       const iface = new Interface(["function fn(uint256[])"]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       // ArrayTailMatches: last 2 elements must be 100, 200
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -117,7 +117,7 @@ describe("Operator - ArrayTailMatches", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [[100, 999]]),
             0,
@@ -131,7 +131,7 @@ describe("Operator - ArrayTailMatches", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [[999, 200]]),
             0,
@@ -144,13 +144,13 @@ describe("Operator - ArrayTailMatches", () => {
     it("fails when array length is less than number of conditions", async () => {
       const iface = new Interface(["function fn(uint256[])"]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       // ArrayTailMatches: requires 2 tail elements
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -182,7 +182,7 @@ describe("Operator - ArrayTailMatches", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [[100]]),
             0,
@@ -196,7 +196,7 @@ describe("Operator - ArrayTailMatches", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [[]]),
             0,
@@ -209,13 +209,13 @@ describe("Operator - ArrayTailMatches", () => {
     it("ignores elements before the tail (prefix insensitive)", async () => {
       const iface = new Interface(["function fn(uint256[])"]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       // ArrayTailMatches: only checks last element
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -242,7 +242,7 @@ describe("Operator - ArrayTailMatches", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [[999, 888, 777, 42]]),
             0,
@@ -254,7 +254,7 @@ describe("Operator - ArrayTailMatches", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [[1, 2, 3, 4, 5, 42]]),
             0,
@@ -267,7 +267,7 @@ describe("Operator - ArrayTailMatches", () => {
     it("routes correct tail element to corresponding child condition", async () => {
       const iface = new Interface(["function fn(uint256[])"]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       // ArrayTailMatches with 3 conditions: [>10, ==50, <100]
@@ -277,7 +277,7 @@ describe("Operator - ArrayTailMatches", () => {
       // - condition[2] (<100) matches element[4] (e)
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -315,7 +315,7 @@ describe("Operator - ArrayTailMatches", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [[1, 2, 20, 50, 80]]),
             0,
@@ -328,7 +328,7 @@ describe("Operator - ArrayTailMatches", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [[5, 50, 80]]),
             0,
@@ -343,7 +343,7 @@ describe("Operator - ArrayTailMatches", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [[20, 99, 80]]),
             0,
@@ -358,7 +358,7 @@ describe("Operator - ArrayTailMatches", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [[20, 50, 150]]),
             0,
@@ -374,7 +374,7 @@ describe("Operator - ArrayTailMatches", () => {
     it("accumulates consumptions from all tail matches", async () => {
       const iface = new Interface(["function fn(uint256[])"]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       const allowanceKey =
@@ -386,7 +386,7 @@ describe("Operator - ArrayTailMatches", () => {
       // ArrayTailMatches with 2 WithinAllowance conditions
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -418,7 +418,7 @@ describe("Operator - ArrayTailMatches", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [[999, 20, 30]]),
             0,

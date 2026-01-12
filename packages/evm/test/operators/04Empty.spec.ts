@@ -14,12 +14,12 @@ import {
 describe("Operator - Empty", () => {
   describe("core behavior", () => {
     it("passes when calldata is empty", async () => {
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       await roles.allowTarget(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         flattenCondition({
           paramType: Encoding.None,
           operator: Operator.Empty,
@@ -30,17 +30,17 @@ describe("Operator - Empty", () => {
       await expect(
         roles
           .connect(member)
-          .execTransactionFromModule(fallbackerAddress, 0, "0x", 0),
+          .execTransactionFromModule(testContractAddress, 0, "0x", 0),
       ).to.not.be.reverted;
     });
 
     it("fails when calldata is not empty", async () => {
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       await roles.allowTarget(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         flattenCondition({
           paramType: Encoding.None,
           operator: Operator.Empty,
@@ -51,7 +51,7 @@ describe("Operator - Empty", () => {
       await expect(
         roles
           .connect(member)
-          .execTransactionFromModule(fallbackerAddress, 0, "0xdeadbeef", 0),
+          .execTransactionFromModule(testContractAddress, 0, "0xdeadbeef", 0),
       )
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(ConditionViolationStatus.CalldataNotEmpty, ZeroHash);

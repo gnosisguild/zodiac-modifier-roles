@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import hre from "hardhat";
 import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
+import { Interface } from "ethers";
 
 import { deployRolesMod } from "./setup";
 
@@ -19,6 +20,11 @@ import { deployRolesMod } from "./setup";
 const maxUint64 = 2n ** 64n - 1n;
 const maxUint128 = 2n ** 128n - 1n;
 
+const iface = new Interface([
+  "function doNothing()",
+  "function fnThatReverts()",
+]);
+
 describe("Membership", () => {
   async function setup() {
     const [owner, member] = await hre.ethers.getSigners();
@@ -34,7 +40,7 @@ describe("Membership", () => {
       avatarAddress,
     );
 
-    const TestContract = await hre.ethers.getContractFactory("TestContract");
+    const TestContract = await hre.ethers.getContractFactory("Fallbacker");
     const testContract = await TestContract.deploy();
     const testContractAddress = await testContract.getAddress();
 
@@ -289,15 +295,14 @@ describe("Membership", () => {
         });
 
         it("does not decrement on failed inner execution", async () => {
-          const { roles, member, testContract, testContractAddress, ROLE_KEY } =
+          const { roles, member, testContractAddress, ROLE_KEY } =
             await loadFixture(setup);
 
           await roles.grantRole(member.address, ROLE_KEY, 0, 0, 2);
           await roles.setDefaultRole(member.address, ROLE_KEY);
           await roles.allowTarget(ROLE_KEY, testContractAddress, [], 0);
 
-          const revertingData =
-            testContract.interface.encodeFunctionData("fnThatReverts");
+          const revertingData = iface.encodeFunctionData("fnThatReverts");
 
           // Execute failing call - should not emit UpdateRole (no decrement)
           await expect(
@@ -312,17 +317,10 @@ describe("Membership", () => {
           ).to.not.emit(roles, "UpdateRole");
 
           // First successful call should show 2 -> 1 (proving failed call didn't decrement)
-          const doNothingData =
-            testContract.interface.encodeFunctionData("doNothing");
           await expect(
             roles
               .connect(member)
-              .execTransactionFromModule(
-                testContractAddress,
-                0,
-                doNothingData,
-                0,
-              ),
+              .execTransactionFromModule(testContractAddress, 0, "0x", 0),
           )
             .to.emit(roles, "UpdateRole")
             .withArgs(ROLE_KEY, member.address, 0, maxUint64, 1);

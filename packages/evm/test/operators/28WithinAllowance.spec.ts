@@ -55,7 +55,7 @@ describe("Operator - WithinAllowance", async () => {
   async function setupOneParam() {
     const iface = new Interface(["function fn(uint256)"]);
     const fn = iface.getFunction("fn")!;
-    const { roles, member, fallbackerAddress, roleKey } =
+    const { roles, member, testContractAddress, roleKey } =
       await setupFallbacker();
 
     const allowFunction = (
@@ -64,7 +64,7 @@ describe("Operator - WithinAllowance", async () => {
     ) =>
       roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         conditions,
         options,
@@ -74,7 +74,7 @@ describe("Operator - WithinAllowance", async () => {
       roles
         .connect(member)
         .execTransactionFromModule(
-          fallbackerAddress,
+          testContractAddress,
           0,
           iface.encodeFunctionData(fn, [a]),
           0,
@@ -84,7 +84,7 @@ describe("Operator - WithinAllowance", async () => {
       owner: (await hre.ethers.getSigners())[0],
       roles,
       member,
-      fallbackerAddress,
+      testContractAddress,
       roleKey,
       allowFunction,
       invoke,
@@ -94,7 +94,7 @@ describe("Operator - WithinAllowance", async () => {
   async function setupTwoParams() {
     const iface = new Interface(["function fn(uint256, uint256)"]);
     const fn = iface.getFunction("fn")!;
-    const { roles, member, fallbackerAddress, roleKey } =
+    const { roles, member, testContractAddress, roleKey } =
       await setupFallbacker();
 
     const allowFunction = (
@@ -103,7 +103,7 @@ describe("Operator - WithinAllowance", async () => {
     ) =>
       roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         conditions,
         options,
@@ -113,7 +113,7 @@ describe("Operator - WithinAllowance", async () => {
       roles
         .connect(member)
         .execTransactionFromModule(
-          fallbackerAddress,
+          testContractAddress,
           0,
           iface.encodeFunctionData(fn, [a, b]),
           0,
@@ -123,7 +123,7 @@ describe("Operator - WithinAllowance", async () => {
       owner: (await hre.ethers.getSigners())[0],
       roles,
       member,
-      fallbackerAddress,
+      testContractAddress,
       roleKey,
       allowFunction,
       invoke,
@@ -1398,7 +1398,8 @@ describe("Operator - WithinAllowance", async () => {
         timestamp: 0,
       });
 
-      const { selector } = testContract.interface.getFunction("oneParamStatic");
+      const iface = new Interface(["function oneParamStatic(uint256)"]);
+      const selector = iface.getFunction("oneParamStatic")!.selector;
 
       // Static param passes, EtherValue checks allowance
       await allowFunction(
@@ -1432,8 +1433,7 @@ describe("Operator - WithinAllowance", async () => {
           .execTransactionFromModule(
             await testContract.getAddress(),
             value,
-            (await testContract.oneParamStatic.populateTransaction(param))
-              .data as string,
+            iface.encodeFunctionData("oneParamStatic", [param]),
             0,
           );
       }

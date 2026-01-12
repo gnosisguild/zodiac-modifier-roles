@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import hre from "hardhat";
 import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
+import { Interface } from "ethers";
 
 import {
   Encoding,
@@ -10,6 +11,12 @@ import {
   encodeMultisendPayload,
 } from "./utils";
 import { deployRolesMod } from "./setup";
+
+const iface = new Interface([
+  "function oneParamStatic(uint256)",
+  "function twoParamsStatic(uint256, uint256)",
+  "function fnThatMaybeReverts(uint256, bool)",
+]);
 
 /**
  * AllowanceTracking tests
@@ -40,7 +47,7 @@ describe("AllowanceTracking", () => {
     );
     await roles.enableModule(member.address);
 
-    const TestContract = await hre.ethers.getContractFactory("TestContract");
+    const TestContract = await hre.ethers.getContractFactory("Fallbacker");
     const testContract = await TestContract.deploy();
     const testContractAddress = await testContract.getAddress();
 
@@ -293,7 +300,6 @@ describe("AllowanceTracking", () => {
           roles,
           owner,
           member,
-          testContract,
           testContractAddress,
           ROLE_KEY,
           ALLOWANCE_KEY,
@@ -303,8 +309,7 @@ describe("AllowanceTracking", () => {
           .connect(owner)
           .setAllowance(ALLOWANCE_KEY, 1000, 0, 0, 0, 0);
 
-        const selector =
-          testContract.interface.getFunction("oneParamStatic").selector;
+        const selector = iface.getFunction("oneParamStatic")!.selector;
         await roles.connect(owner).allowFunction(
           ROLE_KEY,
           testContractAddress,
@@ -326,9 +331,7 @@ describe("AllowanceTracking", () => {
           ExecutionOptions.None,
         );
 
-        const calldata = (
-          await testContract.oneParamStatic.populateTransaction(100)
-        ).data as string;
+        const calldata = iface.encodeFunctionData("oneParamStatic", [100]);
 
         await roles
           .connect(member)
@@ -530,7 +533,6 @@ describe("AllowanceTracking", () => {
         roles,
         owner,
         member,
-        testContract,
         testContractAddress,
         multisend,
         multisendAddress,
@@ -540,8 +542,7 @@ describe("AllowanceTracking", () => {
 
       await roles.connect(owner).setAllowance(ALLOWANCE_KEY, 200, 0, 0, 0, 0);
 
-      const selector1 =
-        testContract.interface.getFunction("oneParamStatic").selector;
+      const selector1 = iface.getFunction("oneParamStatic")!.selector;
       await roles.connect(owner).allowFunction(
         ROLE_KEY,
         testContractAddress,
@@ -563,8 +564,7 @@ describe("AllowanceTracking", () => {
         ExecutionOptions.None,
       );
 
-      const selector2 =
-        testContract.interface.getFunction("twoParamsStatic").selector;
+      const selector2 = iface.getFunction("twoParamsStatic")!.selector;
       await roles.connect(owner).allowFunction(
         ROLE_KEY,
         testContractAddress,
@@ -598,16 +598,13 @@ describe("AllowanceTracking", () => {
             {
               to: testContractAddress,
               value: 0,
-              data: (await testContract.oneParamStatic.populateTransaction(50))
-                .data as string,
+              data: iface.encodeFunctionData("oneParamStatic", [50]),
               operation: 0,
             },
             {
               to: testContractAddress,
               value: 0,
-              data: (
-                await testContract.twoParamsStatic.populateTransaction(60, 999)
-              ).data as string,
+              data: iface.encodeFunctionData("twoParamsStatic", [60, 999]),
               operation: 0,
             },
           ]),
@@ -633,7 +630,6 @@ describe("AllowanceTracking", () => {
         roles,
         owner,
         member,
-        testContract,
         testContractAddress,
         multisend,
         multisendAddress,
@@ -643,8 +639,7 @@ describe("AllowanceTracking", () => {
 
       await roles.connect(owner).setAllowance(ALLOWANCE_KEY, 75, 0, 0, 0, 0);
 
-      const selector =
-        testContract.interface.getFunction("oneParamStatic").selector;
+      const selector = iface.getFunction("oneParamStatic")!.selector;
       await roles.connect(owner).allowFunction(
         ROLE_KEY,
         testContractAddress,
@@ -673,15 +668,13 @@ describe("AllowanceTracking", () => {
             {
               to: testContractAddress,
               value: 0,
-              data: (await testContract.oneParamStatic.populateTransaction(40))
-                .data as string,
+              data: iface.encodeFunctionData("oneParamStatic", [40]),
               operation: 0,
             },
             {
               to: testContractAddress,
               value: 0,
-              data: (await testContract.oneParamStatic.populateTransaction(40))
-                .data as string,
+              data: iface.encodeFunctionData("oneParamStatic", [40]),
               operation: 0,
             },
           ]),
@@ -706,7 +699,6 @@ describe("AllowanceTracking", () => {
         roles,
         owner,
         member,
-        testContract,
         testContractAddress,
         multisend,
         multisendAddress,
@@ -716,8 +708,7 @@ describe("AllowanceTracking", () => {
 
       await roles.connect(owner).setAllowance(ALLOWANCE_KEY, 200, 0, 0, 0, 0);
 
-      const selector =
-        testContract.interface.getFunction("oneParamStatic").selector;
+      const selector = iface.getFunction("oneParamStatic")!.selector;
       await roles.connect(owner).allowFunction(
         ROLE_KEY,
         testContractAddress,
@@ -745,22 +736,19 @@ describe("AllowanceTracking", () => {
             {
               to: testContractAddress,
               value: 0,
-              data: (await testContract.oneParamStatic.populateTransaction(30))
-                .data as string,
+              data: iface.encodeFunctionData("oneParamStatic", [30]),
               operation: 0,
             },
             {
               to: testContractAddress,
               value: 0,
-              data: (await testContract.oneParamStatic.populateTransaction(50))
-                .data as string,
+              data: iface.encodeFunctionData("oneParamStatic", [50]),
               operation: 0,
             },
             {
               to: testContractAddress,
               value: 0,
-              data: (await testContract.oneParamStatic.populateTransaction(20))
-                .data as string,
+              data: iface.encodeFunctionData("oneParamStatic", [20]),
               operation: 0,
             },
           ]),
@@ -784,7 +772,6 @@ describe("AllowanceTracking", () => {
           roles,
           owner,
           member,
-          testContract,
           testContractAddress,
           ROLE_KEY,
           ALLOWANCE_KEY,
@@ -794,8 +781,7 @@ describe("AllowanceTracking", () => {
           .connect(owner)
           .setAllowance(ALLOWANCE_KEY, 1000, 0, 0, 0, 0);
 
-        const selector =
-          testContract.interface.getFunction("oneParamStatic").selector;
+        const selector = iface.getFunction("oneParamStatic")!.selector;
         await roles.connect(owner).allowFunction(
           ROLE_KEY,
           testContractAddress,
@@ -817,9 +803,7 @@ describe("AllowanceTracking", () => {
           ExecutionOptions.None,
         );
 
-        const calldata = (
-          await testContract.oneParamStatic.populateTransaction(100)
-        ).data as string;
+        const calldata = iface.encodeFunctionData("oneParamStatic", [100]);
 
         await roles
           .connect(member)
@@ -834,7 +818,6 @@ describe("AllowanceTracking", () => {
           roles,
           owner,
           member,
-          testContract,
           testContractAddress,
           ROLE_KEY,
           ALLOWANCE_KEY,
@@ -844,8 +827,7 @@ describe("AllowanceTracking", () => {
           .connect(owner)
           .setAllowance(ALLOWANCE_KEY, 1000, 0, 0, 0, 0);
 
-        const selector =
-          testContract.interface.getFunction("oneParamStatic").selector;
+        const selector = iface.getFunction("oneParamStatic")!.selector;
         await roles.connect(owner).allowFunction(
           ROLE_KEY,
           testContractAddress,
@@ -867,9 +849,7 @@ describe("AllowanceTracking", () => {
           ExecutionOptions.None,
         );
 
-        const calldata = (
-          await testContract.oneParamStatic.populateTransaction(100)
-        ).data as string;
+        const calldata = iface.encodeFunctionData("oneParamStatic", [100]);
 
         await expect(
           roles
@@ -885,7 +865,6 @@ describe("AllowanceTracking", () => {
           roles,
           owner,
           member,
-          testContract,
           testContractAddress,
           ROLE_KEY,
           ALLOWANCE_KEY,
@@ -895,8 +874,7 @@ describe("AllowanceTracking", () => {
           .connect(owner)
           .setAllowance(ALLOWANCE_KEY, 1000, 0, 0, 0, 0);
 
-        const selector =
-          testContract.interface.getFunction("fnThatMaybeReverts").selector;
+        const selector = iface.getFunction("fnThatMaybeReverts")!.selector;
         await roles.connect(owner).allowFunction(
           ROLE_KEY,
           testContractAddress,
@@ -925,9 +903,10 @@ describe("AllowanceTracking", () => {
         );
 
         // Call with shouldRevert = true
-        const calldata = (
-          await testContract.fnThatMaybeReverts.populateTransaction(100, true)
-        ).data as string;
+        const calldata = iface.encodeFunctionData("fnThatMaybeReverts", [
+          100,
+          true,
+        ]);
 
         await roles
           .connect(member)
@@ -943,7 +922,6 @@ describe("AllowanceTracking", () => {
           roles,
           owner,
           member,
-          testContract,
           testContractAddress,
           ROLE_KEY,
           ALLOWANCE_KEY,
@@ -955,8 +933,7 @@ describe("AllowanceTracking", () => {
 
         const initialAllowance = await roles.allowances(ALLOWANCE_KEY);
 
-        const selector =
-          testContract.interface.getFunction("fnThatMaybeReverts").selector;
+        const selector = iface.getFunction("fnThatMaybeReverts")!.selector;
         await roles.connect(owner).allowFunction(
           ROLE_KEY,
           testContractAddress,
@@ -984,9 +961,10 @@ describe("AllowanceTracking", () => {
           ExecutionOptions.None,
         );
 
-        const calldata = (
-          await testContract.fnThatMaybeReverts.populateTransaction(100, true)
-        ).data as string;
+        const calldata = iface.encodeFunctionData("fnThatMaybeReverts", [
+          100,
+          true,
+        ]);
 
         await roles
           .connect(member)
@@ -1007,7 +985,6 @@ describe("AllowanceTracking", () => {
         roles,
         owner,
         member,
-        testContract,
         testContractAddress,
         ROLE_KEY,
         ALLOWANCE_KEY,
@@ -1018,8 +995,7 @@ describe("AllowanceTracking", () => {
         .connect(owner)
         .setAllowance(ALLOWANCE_KEY, 1300, 1000, 100, 3600, 0);
 
-      const selector =
-        testContract.interface.getFunction("oneParamStatic").selector;
+      const selector = iface.getFunction("oneParamStatic")!.selector;
       await roles.connect(owner).allowFunction(
         ROLE_KEY,
         testContractAddress,
@@ -1041,9 +1017,7 @@ describe("AllowanceTracking", () => {
         ExecutionOptions.None,
       );
 
-      const calldata = (
-        await testContract.oneParamStatic.populateTransaction(1200)
-      ).data as string;
+      const calldata = iface.encodeFunctionData("oneParamStatic", [1200]);
 
       await roles
         .connect(member)
@@ -1075,19 +1049,12 @@ describe("AllowanceTracking", () => {
     });
 
     it("emits ConsumeAllowance on successful consumption", async () => {
-      const {
-        roles,
-        member,
-        testContract,
-        testContractAddress,
-        ROLE_KEY,
-        ALLOWANCE_KEY,
-      } = await loadFixture(setup);
+      const { roles, member, testContractAddress, ROLE_KEY, ALLOWANCE_KEY } =
+        await loadFixture(setup);
 
       await roles.setAllowance(ALLOWANCE_KEY, 1000, 0, 0, 0, 0);
 
-      const selector =
-        testContract.interface.getFunction("oneParamStatic").selector;
+      const selector = iface.getFunction("oneParamStatic")!.selector;
       await roles.allowFunction(
         ROLE_KEY,
         testContractAddress,
@@ -1109,9 +1076,7 @@ describe("AllowanceTracking", () => {
         ExecutionOptions.None,
       );
 
-      const calldata = (
-        await testContract.oneParamStatic.populateTransaction(100)
-      ).data as string;
+      const calldata = iface.encodeFunctionData("oneParamStatic", [100]);
 
       await expect(
         roles
@@ -1123,19 +1088,12 @@ describe("AllowanceTracking", () => {
     });
 
     it("ConsumeAllowance includes consumed amount and new balance", async () => {
-      const {
-        roles,
-        member,
-        testContract,
-        testContractAddress,
-        ROLE_KEY,
-        ALLOWANCE_KEY,
-      } = await loadFixture(setup);
+      const { roles, member, testContractAddress, ROLE_KEY, ALLOWANCE_KEY } =
+        await loadFixture(setup);
 
       await roles.setAllowance(ALLOWANCE_KEY, 500, 0, 0, 0, 0);
 
-      const selector =
-        testContract.interface.getFunction("oneParamStatic").selector;
+      const selector = iface.getFunction("oneParamStatic")!.selector;
       await roles.allowFunction(
         ROLE_KEY,
         testContractAddress,
@@ -1157,9 +1115,7 @@ describe("AllowanceTracking", () => {
         ExecutionOptions.None,
       );
 
-      const calldata = (
-        await testContract.oneParamStatic.populateTransaction(150)
-      ).data as string;
+      const calldata = iface.encodeFunctionData("oneParamStatic", [150]);
 
       await expect(
         roles

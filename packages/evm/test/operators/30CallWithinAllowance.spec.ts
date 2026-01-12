@@ -26,7 +26,7 @@ describe("Operator - CallWithinAllowance", async () => {
     const iface = new Interface(["function doNothing()"]);
     const fn = iface.getFunction("doNothing")!;
 
-    const { roles, member, fallbackerAddress, roleKey } =
+    const { roles, member, testContractAddress, roleKey } =
       await setupFallbacker();
 
     async function setAllowance({
@@ -58,7 +58,7 @@ describe("Operator - CallWithinAllowance", async () => {
 
     await roles.allowFunction(
       roleKey,
-      fallbackerAddress,
+      testContractAddress,
       fn.selector,
       flattenCondition({
         paramType: Encoding.AbiEncoded,
@@ -78,7 +78,7 @@ describe("Operator - CallWithinAllowance", async () => {
       return roles
         .connect(member)
         .execTransactionFromModule(
-          fallbackerAddress,
+          testContractAddress,
           0,
           iface.encodeFunctionData(fn, []),
           0,
@@ -88,7 +88,7 @@ describe("Operator - CallWithinAllowance", async () => {
     return {
       member,
       roles,
-      fallbackerAddress,
+      testContractAddress,
       roleKey,
       allowanceKey,
       setAllowance,
@@ -186,7 +186,7 @@ describe("Operator - CallWithinAllowance", async () => {
 
   describe("CallWithinAllowance - Variants", () => {
     it("enforces different call allowances per variant", async () => {
-      const { member, roles, fallbackerAddress, roleKey, setAllowance } =
+      const { member, roles, testContractAddress, roleKey, setAllowance } =
         await loadFixture(setup);
 
       const iface = new Interface(["function oneParamStatic(uint256)"]);
@@ -220,7 +220,7 @@ describe("Operator - CallWithinAllowance", async () => {
         return roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [p]),
             0,
@@ -229,7 +229,7 @@ describe("Operator - CallWithinAllowance", async () => {
 
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.None,
@@ -295,7 +295,7 @@ describe("Operator - CallWithinAllowance", async () => {
 
   describe("CallWithinAllowance - Logical Combinations", () => {
     it("AND(CallWithinAllowance, SomeParamComparison)", async () => {
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await setupFallbacker();
 
       const iface = new Interface(["function oneParamStatic(uint256)"]);
@@ -310,7 +310,7 @@ describe("Operator - CallWithinAllowance", async () => {
       // Structure: And -> [Calldata -> Static, CallWithinAllowance] (CallWithinAllowance sibling of Calldata)
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.None,
@@ -344,7 +344,7 @@ describe("Operator - CallWithinAllowance", async () => {
         return roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [p]),
             0,
@@ -373,7 +373,7 @@ describe("Operator - CallWithinAllowance", async () => {
     });
 
     it("AND(CallWithinAllowance, OR(ParamA, ParamB))", async () => {
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await setupFallbacker();
 
       const iface = new Interface(["function oneParamStatic(uint256)"]);
@@ -389,7 +389,7 @@ describe("Operator - CallWithinAllowance", async () => {
       // Structure: And -> [Calldata -> Or, CallWithinAllowance] (CallWithinAllowance sibling of Calldata)
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.None,
@@ -437,7 +437,7 @@ describe("Operator - CallWithinAllowance", async () => {
         return roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [p]),
             0,
@@ -477,7 +477,7 @@ describe("Operator - CallWithinAllowance", async () => {
 
   describe("CallWithinAllowance - Standalone Root", () => {
     it("works as standalone root condition with allowTarget", async () => {
-      const { member, roles, fallbackerAddress, roleKey } =
+      const { member, roles, testContractAddress, roleKey } =
         await loadFixture(setup);
 
       const iface = new Interface([
@@ -493,7 +493,7 @@ describe("Operator - CallWithinAllowance", async () => {
 
       await roles.allowTarget(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         flattenCondition({
           paramType: Encoding.None,
           operator: Operator.CallWithinAllowance,
@@ -510,7 +510,7 @@ describe("Operator - CallWithinAllowance", async () => {
         roles
           .connect(member)
           .execTransactionWithRole(
-            fallbackerAddress,
+            testContractAddress,
             0,
             doNothingData,
             0,
@@ -524,7 +524,7 @@ describe("Operator - CallWithinAllowance", async () => {
         roles
           .connect(member)
           .execTransactionWithRole(
-            fallbackerAddress,
+            testContractAddress,
             0,
             doEvenLessData,
             0,
@@ -538,7 +538,7 @@ describe("Operator - CallWithinAllowance", async () => {
         roles
           .connect(member)
           .execTransactionWithRole(
-            fallbackerAddress,
+            testContractAddress,
             0,
             doNothingData,
             0,

@@ -41,13 +41,13 @@ describe("Operator - Or", () => {
     const fn = iface.getFunction("fn")!;
 
     it("passes when first child passes", async () => {
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       // Or: EqualTo(10) OR EqualTo(20)
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -79,7 +79,7 @@ describe("Operator - Or", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [10]),
             0,
@@ -88,13 +88,13 @@ describe("Operator - Or", () => {
     });
 
     it("passes when second child passes after first fails", async () => {
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       // Or: EqualTo(10) OR EqualTo(20)
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -126,7 +126,7 @@ describe("Operator - Or", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [20]),
             0,
@@ -135,13 +135,13 @@ describe("Operator - Or", () => {
     });
 
     it("fails with OrViolation when all children fail", async () => {
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       // Or: EqualTo(10) OR EqualTo(20)
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -173,7 +173,7 @@ describe("Operator - Or", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [99]),
             0,
@@ -188,14 +188,14 @@ describe("Operator - Or", () => {
     it("passes same payload to structural children when non-variant", async () => {
       const iface = new Interface(["function fn(uint256)"]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       // Both children check the same parameter (non-variant: same payload to all)
       // Or: LessThan(10) OR GreaterThan(100)
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -227,7 +227,7 @@ describe("Operator - Or", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [5]),
             0,
@@ -239,7 +239,7 @@ describe("Operator - Or", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [150]),
             0,
@@ -251,7 +251,7 @@ describe("Operator - Or", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [50]),
             0,
@@ -264,7 +264,7 @@ describe("Operator - Or", () => {
     it("passes individual child payloads when variant", async () => {
       const iface = new Interface(["function fn(bytes)"]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       // Or has two variant children that interpret the bytes param differently:
@@ -272,7 +272,7 @@ describe("Operator - Or", () => {
       // - Child 2: AbiEncoded with two Dynamics (checks first == 0x11111111)
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -325,7 +325,7 @@ describe("Operator - Or", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [matchChild1]),
             0,
@@ -341,7 +341,7 @@ describe("Operator - Or", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [matchChild2]),
             0,
@@ -354,7 +354,7 @@ describe("Operator - Or", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [matchNeither]),
             0,
@@ -367,13 +367,13 @@ describe("Operator - Or", () => {
     it("passes empty payload to non-structural children", async () => {
       const iface = new Interface(["function fn(uint256)"]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       // Or with: structural child (checks param) OR non-structural (checks ether value)
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -407,7 +407,7 @@ describe("Operator - Or", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [42]),
             0,
@@ -419,7 +419,7 @@ describe("Operator - Or", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             123,
             iface.encodeFunctionData(fn, [99]),
             0,
@@ -431,7 +431,7 @@ describe("Operator - Or", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             999,
             iface.encodeFunctionData(fn, [99]),
             0,
@@ -446,7 +446,7 @@ describe("Operator - Or", () => {
     it("returns consumptions only from the passing branch", async () => {
       const iface = new Interface(["function fn(uint256)"]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       const allowanceKeyA =
@@ -463,7 +463,7 @@ describe("Operator - Or", () => {
       // Child 2: value >= 50 AND consume from allowanceB
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -517,7 +517,7 @@ describe("Operator - Or", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [30]),
             0,
@@ -535,7 +535,7 @@ describe("Operator - Or", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [60]),
             0,
@@ -554,7 +554,7 @@ describe("Operator - Or", () => {
     it("rolls back consumptions if a branch fails after consumption", async () => {
       const iface = new Interface(["function fn(uint256)"]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       const allowanceKeyA =
@@ -570,7 +570,7 @@ describe("Operator - Or", () => {
       // Branch 2: Consume 10 from B AND Pass (value > 0) -> Should commit B
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -624,7 +624,7 @@ describe("Operator - Or", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [10]),
             0,

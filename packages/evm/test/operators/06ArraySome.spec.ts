@@ -18,13 +18,13 @@ describe("Operator - ArraySome", () => {
     it("passes when at least one element matches", async () => {
       const iface = new Interface(["function fn(uint256[])"]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       // ArraySome: at least one element must equal 42
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -51,7 +51,7 @@ describe("Operator - ArraySome", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [[1, 2, 42, 4]]),
             0,
@@ -63,7 +63,7 @@ describe("Operator - ArraySome", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [[42]]),
             0,
@@ -74,13 +74,13 @@ describe("Operator - ArraySome", () => {
     it("fails when no element matches", async () => {
       const iface = new Interface(["function fn(uint256[])"]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       // ArraySome: at least one element must equal 42
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -107,7 +107,7 @@ describe("Operator - ArraySome", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [[1, 2, 3, 4]]),
             0,
@@ -120,13 +120,13 @@ describe("Operator - ArraySome", () => {
     it("fails when array is empty", async () => {
       const iface = new Interface(["function fn(uint256[])"]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       // ArraySome: at least one element must equal 42
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -153,7 +153,7 @@ describe("Operator - ArraySome", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [[]]),
             0,
@@ -166,7 +166,7 @@ describe("Operator - ArraySome", () => {
     it("returns on first match (short-circuit)", async () => {
       const iface = new Interface(["function fn(uint256[])"]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       const allowanceKey =
@@ -178,7 +178,7 @@ describe("Operator - ArraySome", () => {
       // ArraySome with WithinAllowance - consumes value of matching element
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -206,7 +206,7 @@ describe("Operator - ArraySome", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [[10, 20, 30]]),
             0,
@@ -223,7 +223,7 @@ describe("Operator - ArraySome", () => {
     it("uses consumptions from matching element only", async () => {
       const iface = new Interface(["function fn(uint256[])"]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       const allowanceKey =
@@ -236,7 +236,7 @@ describe("Operator - ArraySome", () => {
       // Only elements > 15 can match, and matching consumes their value
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -275,7 +275,7 @@ describe("Operator - ArraySome", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [[5, 10, 20, 30]]),
             0,

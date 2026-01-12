@@ -16,7 +16,7 @@ describe("Operator - EqualToAvatar", () => {
     it("matches when parameter equals the avatar address", async () => {
       const iface = new Interface(["function fn(address)"]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       const avatar = await roles.avatar();
@@ -24,7 +24,7 @@ describe("Operator - EqualToAvatar", () => {
       // EqualToAvatar: parameter must equal the avatar address
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -44,7 +44,7 @@ describe("Operator - EqualToAvatar", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [avatar]),
             0,
@@ -55,13 +55,13 @@ describe("Operator - EqualToAvatar", () => {
     it("fails when parameter does not equal the avatar address", async () => {
       const iface = new Interface(["function fn(address)"]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       // EqualToAvatar: parameter must equal the avatar address
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -82,7 +82,7 @@ describe("Operator - EqualToAvatar", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [randomAddress]),
             0,
@@ -97,7 +97,7 @@ describe("Operator - EqualToAvatar", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [zeroAddress]),
             0,
@@ -112,7 +112,7 @@ describe("Operator - EqualToAvatar", () => {
     it("matches new avatar address after avatar changes", async () => {
       const iface = new Interface(["function fn(address)"]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       const originalAvatar = await roles.avatar();
@@ -120,7 +120,7 @@ describe("Operator - EqualToAvatar", () => {
       // Set up EqualToAvatar condition
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -140,7 +140,7 @@ describe("Operator - EqualToAvatar", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [originalAvatar]),
             0,
@@ -156,7 +156,7 @@ describe("Operator - EqualToAvatar", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [originalAvatar]),
             0,
@@ -170,7 +170,7 @@ describe("Operator - EqualToAvatar", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [newAvatar]),
             0,

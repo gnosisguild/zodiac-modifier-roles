@@ -30,7 +30,7 @@ describe("Operator - Custom", () => {
       const {
         roles,
         member,
-        fallbackerAddress,
+        testContractAddress,
         roleKey,
         customCheckerAddress,
       } = await loadFixture(setupWithChecker);
@@ -40,7 +40,7 @@ describe("Operator - Custom", () => {
       // Custom condition: param > 100
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -61,7 +61,7 @@ describe("Operator - Custom", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [101]),
             0,
@@ -73,7 +73,7 @@ describe("Operator - Custom", () => {
       const {
         roles,
         member,
-        fallbackerAddress,
+        testContractAddress,
         roleKey,
         customCheckerAddress,
       } = await loadFixture(setupWithChecker);
@@ -83,7 +83,7 @@ describe("Operator - Custom", () => {
       // Adapter fails if operation != Call (0)
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -102,7 +102,7 @@ describe("Operator - Custom", () => {
       // Call operation (0) passes
       await expect(
         roles.connect(member).execTransactionFromModule(
-          fallbackerAddress,
+          testContractAddress,
           0,
           iface.encodeFunctionData(fn, [101]),
           0, // Operation.Call
@@ -112,7 +112,7 @@ describe("Operator - Custom", () => {
       // DelegateCall operation (1) fails (adapter returns false)
       await expect(
         roles.connect(member).execTransactionFromModule(
-          fallbackerAddress,
+          testContractAddress,
           0,
           iface.encodeFunctionData(fn, [101]),
           1, // Operation.DelegateCall
@@ -126,7 +126,7 @@ describe("Operator - Custom", () => {
       const {
         roles,
         member,
-        fallbackerAddress,
+        testContractAddress,
         roleKey,
         customCheckerAddress,
       } = await loadFixture(setupWithChecker);
@@ -138,7 +138,7 @@ describe("Operator - Custom", () => {
 
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -163,7 +163,7 @@ describe("Operator - Custom", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [99]),
             0,
@@ -182,7 +182,7 @@ describe("Operator - Custom", () => {
       const {
         roles,
         member,
-        fallbackerAddress,
+        testContractAddress,
         roleKey,
         customCheckerAddress,
       } = await loadFixture(setupWithChecker);
@@ -191,7 +191,7 @@ describe("Operator - Custom", () => {
 
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -212,7 +212,7 @@ describe("Operator - Custom", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [101]),
             0,
@@ -224,7 +224,7 @@ describe("Operator - Custom", () => {
       const {
         roles,
         member,
-        fallbackerAddress,
+        testContractAddress,
         roleKey,
         customCheckerAddress,
       } = await loadFixture(setupWithChecker);
@@ -236,7 +236,7 @@ describe("Operator - Custom", () => {
 
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -259,7 +259,7 @@ describe("Operator - Custom", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [99]),
             0,
@@ -278,13 +278,13 @@ describe("Operator - Custom", () => {
     async function allowWithCustomCondition(
       roles: Awaited<ReturnType<typeof setupWithChecker>>["roles"],
       roleKey: string,
-      fallbackerAddress: string,
+      testContractAddress: string,
       selector: string,
       adapterAddress: string,
     ) {
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -302,7 +302,7 @@ describe("Operator - Custom", () => {
     }
 
     it("no code at address: reverts", async () => {
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupWithChecker);
       const iface = new Interface(["function fn(uint256)"]);
       const fn = iface.getFunction("fn")!;
@@ -311,7 +311,7 @@ describe("Operator - Custom", () => {
       await allowWithCustomCondition(
         roles,
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         randomEOA,
       );
@@ -320,7 +320,7 @@ describe("Operator - Custom", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [101]),
             0,
@@ -334,7 +334,7 @@ describe("Operator - Custom", () => {
     });
 
     it("wrong interface: reverts", async () => {
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupWithChecker);
       const iface = new Interface(["function fn(uint256)"]);
       const fn = iface.getFunction("fn")!;
@@ -349,7 +349,7 @@ describe("Operator - Custom", () => {
       await allowWithCustomCondition(
         roles,
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         noInterfaceCheckerAddress,
       );
@@ -359,7 +359,7 @@ describe("Operator - Custom", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [101]),
             0,
@@ -370,7 +370,7 @@ describe("Operator - Custom", () => {
     });
 
     it("function reverts: reverts", async () => {
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupWithChecker);
       const iface = new Interface(["function fn(uint256)"]);
       const fn = iface.getFunction("fn")!;
@@ -384,7 +384,7 @@ describe("Operator - Custom", () => {
       await allowWithCustomCondition(
         roles,
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         revertingCheckerAddress,
       );
@@ -394,7 +394,7 @@ describe("Operator - Custom", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [101]),
             0,
@@ -405,7 +405,7 @@ describe("Operator - Custom", () => {
     });
 
     it("returns wrong type: reverts", async () => {
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupWithChecker);
       const iface = new Interface(["function fn(uint256)"]);
       const fn = iface.getFunction("fn")!;
@@ -420,7 +420,7 @@ describe("Operator - Custom", () => {
       await allowWithCustomCondition(
         roles,
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         wrongReturnCheckerAddress,
       );
@@ -430,7 +430,7 @@ describe("Operator - Custom", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [101]),
             0,
@@ -447,7 +447,7 @@ describe("Operator - Custom", () => {
       const {
         roles,
         member,
-        fallbackerAddress,
+        testContractAddress,
         roleKey,
         customCheckerAddress,
       } = await loadFixture(setupWithChecker);
@@ -457,7 +457,7 @@ describe("Operator - Custom", () => {
       await allowWithCustomCondition(
         roles,
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         customCheckerAddress,
       );
@@ -467,7 +467,7 @@ describe("Operator - Custom", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [101]),
             0,

@@ -18,13 +18,13 @@ describe("Operator - EqualTo", () => {
     it("matches a full 32-byte word (e.g. uint256, bytes32)", async () => {
       const iface = new Interface(["function fn(uint256)"]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       // EqualTo: parameter must equal 12345
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -45,7 +45,7 @@ describe("Operator - EqualTo", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [12345]),
             0,
@@ -56,13 +56,13 @@ describe("Operator - EqualTo", () => {
     it("fails when values differ", async () => {
       const iface = new Interface(["function fn(uint256)"]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       // EqualTo: parameter must equal 100
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -83,7 +83,7 @@ describe("Operator - EqualTo", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [101]),
             0,
@@ -96,13 +96,13 @@ describe("Operator - EqualTo", () => {
     it("integrates with Slice operator", async () => {
       const iface = new Interface(["function fn(bytes)"]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       // Slice 4 bytes at offset 4 (skip first 4 bytes), then EqualTo comparison
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -130,7 +130,7 @@ describe("Operator - EqualTo", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, ["0x00000000deadbeef"]),
             0,
@@ -142,7 +142,7 @@ describe("Operator - EqualTo", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, ["0x00000000cafebabe"]),
             0,
@@ -155,13 +155,13 @@ describe("Operator - EqualTo", () => {
     it("compares ether value (msg.value)", async () => {
       const iface = new Interface(["function fn(uint256)"]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       // EqualTo on EtherValue: msg.value must equal 1000 wei
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -186,7 +186,7 @@ describe("Operator - EqualTo", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             1000,
             iface.encodeFunctionData(fn, [42]),
             0,
@@ -198,7 +198,7 @@ describe("Operator - EqualTo", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             1001,
             iface.encodeFunctionData(fn, [42]),
             0,
@@ -213,7 +213,7 @@ describe("Operator - EqualTo", () => {
     it("matches large dynamic data (e.g. large string/bytes) by comparing hash", async () => {
       const iface = new Interface(["function fn(string)"]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       // Large string > 32 bytes
@@ -223,7 +223,7 @@ describe("Operator - EqualTo", () => {
       // EqualTo: parameter must equal the large string (compared by hash)
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -244,7 +244,7 @@ describe("Operator - EqualTo", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [largeString]),
             0,
@@ -255,7 +255,7 @@ describe("Operator - EqualTo", () => {
     it("matches complex types (e.g. Tuple, Array) by comparing hash", async () => {
       const iface = new Interface(["function fn(uint256[])"]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       const targetArray = [1, 2, 3, 4, 5];
@@ -263,7 +263,7 @@ describe("Operator - EqualTo", () => {
       // EqualTo on Array: entire array must match (compared by hash)
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -290,7 +290,7 @@ describe("Operator - EqualTo", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [targetArray]),
             0,
@@ -301,7 +301,7 @@ describe("Operator - EqualTo", () => {
     it("fails when large dynamic data differs", async () => {
       const iface = new Interface(["function fn(string)"]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       const largeString =
@@ -310,7 +310,7 @@ describe("Operator - EqualTo", () => {
       // EqualTo: parameter must equal the large string
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -333,7 +333,7 @@ describe("Operator - EqualTo", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [differentString]),
             0,

@@ -29,13 +29,13 @@ describe("Operator - Bitmask", () => {
     it("extracts shift and derives mask length correctly", async () => {
       const iface = new Interface(["function fn(bytes)"]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       // shift=3, mask=2 bytes -> reads bytes[3:5]
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -56,7 +56,7 @@ describe("Operator - Bitmask", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, ["0x000000aabb"]),
             0,
@@ -68,7 +68,7 @@ describe("Operator - Bitmask", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, ["0x000000ccdd"]),
             0,
@@ -79,13 +79,13 @@ describe("Operator - Bitmask", () => {
     it("fails with BitmaskOverflow when shift + length exceeds data size", async () => {
       const iface = new Interface(["function fn(bytes)"]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       // 33-byte mask requires 33 bytes (crosses word boundary)
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -106,7 +106,7 @@ describe("Operator - Bitmask", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, ["0x" + "ab".repeat(33)]),
             0,
@@ -118,7 +118,7 @@ describe("Operator - Bitmask", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, ["0x" + "ab".repeat(32)]),
             0,
@@ -133,12 +133,12 @@ describe("Operator - Bitmask", () => {
     it("passes when (data & mask) == expected", async () => {
       const iface = new Interface(["function fn(bytes)"]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -158,7 +158,7 @@ describe("Operator - Bitmask", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, ["0xaabb"]),
             0,
@@ -169,12 +169,12 @@ describe("Operator - Bitmask", () => {
     it("fails when (data & mask) != expected", async () => {
       const iface = new Interface(["function fn(bytes)"]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -194,7 +194,7 @@ describe("Operator - Bitmask", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, ["0xaacc"]),
             0,
@@ -207,13 +207,13 @@ describe("Operator - Bitmask", () => {
     it("ignores bits outside the mask and rinses trailing garbage", async () => {
       const iface = new Interface(["function fn(bytes)"]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       // mask 0xf0 checks only high nibble, expected 0xa0
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -234,7 +234,7 @@ describe("Operator - Bitmask", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, ["0xab7777"]),
             0,
@@ -246,7 +246,7 @@ describe("Operator - Bitmask", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, ["0xaf8888888888"]),
             0,
@@ -258,7 +258,7 @@ describe("Operator - Bitmask", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, ["0xbb"]),
             0,
@@ -273,13 +273,13 @@ describe("Operator - Bitmask", () => {
     it("iterates chunks and passes when all match", async () => {
       const iface = new Interface(["function fn(bytes)"]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       // 64-byte mask spanning 2 words
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -299,7 +299,7 @@ describe("Operator - Bitmask", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, ["0x" + "ab".repeat(64)]),
             0,
@@ -310,13 +310,13 @@ describe("Operator - Bitmask", () => {
     it("fails on mismatch in any chunk (first or subsequent)", async () => {
       const iface = new Interface(["function fn(bytes)"]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       // 64-byte mask spanning 2 words
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -337,7 +337,7 @@ describe("Operator - Bitmask", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, ["0xcd" + "ab".repeat(63)]),
             0,
@@ -351,7 +351,7 @@ describe("Operator - Bitmask", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, ["0x" + "ab".repeat(63) + "cd"]),
             0,
@@ -366,13 +366,13 @@ describe("Operator - Bitmask", () => {
     it("applies shift correctly before reading data", async () => {
       const iface = new Interface(["function fn(bytes)"]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       // shift 5 bytes, then check 1 byte
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -393,7 +393,7 @@ describe("Operator - Bitmask", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, ["0x0000000000cd4444444444"]),
             0,
@@ -405,7 +405,7 @@ describe("Operator - Bitmask", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, ["0x0000000000ab"]),
             0,

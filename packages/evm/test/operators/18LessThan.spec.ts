@@ -17,12 +17,12 @@ describe("Operator - LessThan", () => {
   it("passes when value < compValue", async () => {
     const iface = new Interface(["function fn(uint256)"]);
     const fn = iface.getFunction("fn")!;
-    const { roles, member, fallbackerAddress, roleKey } =
+    const { roles, member, testContractAddress, roleKey } =
       await loadFixture(setupFallbacker);
 
     await roles.allowFunction(
       roleKey,
-      fallbackerAddress,
+      testContractAddress,
       fn.selector,
       flattenCondition({
         paramType: Encoding.AbiEncoded,
@@ -43,7 +43,7 @@ describe("Operator - LessThan", () => {
       roles
         .connect(member)
         .execTransactionFromModule(
-          fallbackerAddress,
+          testContractAddress,
           0,
           iface.encodeFunctionData(fn, [99]),
           0,
@@ -54,12 +54,12 @@ describe("Operator - LessThan", () => {
   it("fails when value >= compValue", async () => {
     const iface = new Interface(["function fn(uint256)"]);
     const fn = iface.getFunction("fn")!;
-    const { roles, member, fallbackerAddress, roleKey } =
+    const { roles, member, testContractAddress, roleKey } =
       await loadFixture(setupFallbacker);
 
     await roles.allowFunction(
       roleKey,
-      fallbackerAddress,
+      testContractAddress,
       fn.selector,
       flattenCondition({
         paramType: Encoding.AbiEncoded,
@@ -80,7 +80,7 @@ describe("Operator - LessThan", () => {
       roles
         .connect(member)
         .execTransactionFromModule(
-          fallbackerAddress,
+          testContractAddress,
           0,
           iface.encodeFunctionData(fn, [100]),
           0,
@@ -94,7 +94,7 @@ describe("Operator - LessThan", () => {
       roles
         .connect(member)
         .execTransactionFromModule(
-          fallbackerAddress,
+          testContractAddress,
           0,
           iface.encodeFunctionData(fn, [101]),
           0,
@@ -107,13 +107,13 @@ describe("Operator - LessThan", () => {
   it("integrates with Slice operator", async () => {
     const iface = new Interface(["function fn(bytes)"]);
     const fn = iface.getFunction("fn")!;
-    const { roles, member, fallbackerAddress, roleKey } =
+    const { roles, member, testContractAddress, roleKey } =
       await loadFixture(setupFallbacker);
 
     // Slice 4 bytes at offset 0, then LessThan comparison
     await roles.allowFunction(
       roleKey,
-      fallbackerAddress,
+      testContractAddress,
       fn.selector,
       flattenCondition({
         paramType: Encoding.AbiEncoded,
@@ -141,7 +141,7 @@ describe("Operator - LessThan", () => {
       roles
         .connect(member)
         .execTransactionFromModule(
-          fallbackerAddress,
+          testContractAddress,
           0,
           iface.encodeFunctionData(fn, ["0x00000063"]),
           0,
@@ -153,7 +153,7 @@ describe("Operator - LessThan", () => {
       roles
         .connect(member)
         .execTransactionFromModule(
-          fallbackerAddress,
+          testContractAddress,
           0,
           iface.encodeFunctionData(fn, ["0x00000064"]),
           0,
@@ -166,13 +166,13 @@ describe("Operator - LessThan", () => {
   it("compares ether value (msg.value)", async () => {
     const iface = new Interface(["function fn()"]);
     const fn = iface.getFunction("fn")!;
-    const { roles, member, fallbackerAddress, roleKey } =
+    const { roles, member, testContractAddress, roleKey } =
       await loadFixture(setupFallbacker);
 
     // LessThan on EtherValue: msg.value must be < 1000 wei
     await roles.allowFunction(
       roleKey,
-      fallbackerAddress,
+      testContractAddress,
       fn.selector,
       flattenCondition({
         paramType: Encoding.EtherValue,
@@ -187,7 +187,7 @@ describe("Operator - LessThan", () => {
       roles
         .connect(member)
         .execTransactionFromModule(
-          fallbackerAddress,
+          testContractAddress,
           999,
           iface.encodeFunctionData(fn),
           0,
@@ -199,7 +199,7 @@ describe("Operator - LessThan", () => {
       roles
         .connect(member)
         .execTransactionFromModule(
-          fallbackerAddress,
+          testContractAddress,
           1000,
           iface.encodeFunctionData(fn),
           0,

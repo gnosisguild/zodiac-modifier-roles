@@ -19,13 +19,13 @@ describe("Operator - And", () => {
     const fn = iface.getFunction("fn")!;
 
     it("passes when all children pass", async () => {
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       // And: GreaterThan(10) AND LessThan(20)
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -57,7 +57,7 @@ describe("Operator - And", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [15]),
             0,
@@ -66,13 +66,13 @@ describe("Operator - And", () => {
     });
 
     it("fails on first child and short-circuits", async () => {
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       // And: GreaterThan(10) AND LessThan(20)
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -104,7 +104,7 @@ describe("Operator - And", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [5]),
             0,
@@ -115,13 +115,13 @@ describe("Operator - And", () => {
     });
 
     it("fails on second child after first passes", async () => {
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       // And: GreaterThan(10) AND LessThan(20)
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -153,7 +153,7 @@ describe("Operator - And", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [25]),
             0,
@@ -171,13 +171,13 @@ describe("Operator - And", () => {
     it("passes same payload to structural children when non-variant", async () => {
       const iface = new Interface(["function fn(uint256)"]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       // Both children check the same parameter (non-variant: same payload to all)
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -209,7 +209,7 @@ describe("Operator - And", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [50]),
             0,
@@ -220,7 +220,7 @@ describe("Operator - And", () => {
     it("passes individual child payloads when variant", async () => {
       const iface = new Interface(["function fn(bytes)"]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       // And has two variant children that interpret the bytes param differently:
@@ -228,7 +228,7 @@ describe("Operator - And", () => {
       // - Child 2: AbiEncoded with two Dynamics (checks both bytes)
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -287,7 +287,7 @@ describe("Operator - And", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [embedded]),
             0,
@@ -303,7 +303,7 @@ describe("Operator - And", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [wrongFirst]),
             0,
@@ -321,7 +321,7 @@ describe("Operator - And", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [wrongSecond]),
             0,
@@ -334,13 +334,13 @@ describe("Operator - And", () => {
     it("passes empty payload to non-structural children", async () => {
       const iface = new Interface(["function fn(uint256)"]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       // And with: structural child (checks param) + non-structural (checks ether value)
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -374,7 +374,7 @@ describe("Operator - And", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             123,
             iface.encodeFunctionData(fn, [42]),
             0,
@@ -386,7 +386,7 @@ describe("Operator - And", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             123,
             iface.encodeFunctionData(fn, [99]),
             0,
@@ -400,7 +400,7 @@ describe("Operator - And", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             999,
             iface.encodeFunctionData(fn, [42]),
             0,
@@ -415,7 +415,7 @@ describe("Operator - And", () => {
     it("accumulates consumptions from multiple children in AND operator", async () => {
       const iface = new Interface(["function fn(uint256,uint256)"]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       const allowanceKey = hexlify(randomBytes(32));
@@ -427,7 +427,7 @@ describe("Operator - And", () => {
       // Child 2: Matches(arg1) -> WithinAllowance
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.None, // Top-level AND must be None
@@ -476,7 +476,7 @@ describe("Operator - And", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [30, 20]),
             0,
@@ -494,7 +494,7 @@ describe("Operator - And", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [30, 30]),
             0,

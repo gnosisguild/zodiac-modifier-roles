@@ -1,13 +1,20 @@
 import { expect } from "chai";
 import hre from "hardhat";
 import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
-import { ZeroHash, ZeroAddress } from "ethers";
+import { ZeroHash, ZeroAddress, Interface } from "ethers";
 
 import { Encoding, ExecutionOptions, Operator } from "./utils";
 import { deployRolesMod } from "./setup";
 
 const maxUint64 = 2n ** 64n - 1n;
 const maxUint128 = 2n ** 128n - 1n;
+
+const iface = new Interface([
+  "function doNothing()",
+  "function doEvenLess()",
+  "function oneParamStatic(uint256)",
+  "function fnThatReverts()",
+]);
 
 /**
  * Setup tests
@@ -38,8 +45,8 @@ describe("Setup", () => {
       avatarAddress,
     );
 
-    const TestContract = await hre.ethers.getContractFactory("TestContract");
-    const testContract = await TestContract.deploy();
+    const Fallbacker = await hre.ethers.getContractFactory("Fallbacker");
+    const testContract = await Fallbacker.deploy();
     const testContractAddress = await testContract.getAddress();
 
     const ROLE_KEY = hre.ethers.id("TEST_ROLE");
@@ -431,7 +438,7 @@ describe("Setup", () => {
     });
 
     it("overwrites existing target permission", async () => {
-      const { roles, member, ROLE_KEY, testContractAddress, testContract } =
+      const { roles, member, ROLE_KEY, testContractAddress } =
         await loadFixture(setup);
 
       await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
@@ -452,8 +459,7 @@ describe("Setup", () => {
           .execTransactionFromModule(
             testContractAddress,
             0,
-            (await testContract.oneParamStatic.populateTransaction(99))
-              .data as string,
+            iface.encodeFunctionData("oneParamStatic", [99]),
             0,
           ),
       ).to.not.be.reverted;
@@ -489,8 +495,7 @@ describe("Setup", () => {
           .execTransactionFromModule(
             testContractAddress,
             0,
-            (await testContract.oneParamStatic.populateTransaction(99))
-              .data as string,
+            iface.encodeFunctionData("oneParamStatic", [99]),
             0,
           ),
       ).to.be.revertedWithCustomError(roles, "ConditionViolation");
@@ -502,8 +507,7 @@ describe("Setup", () => {
           .execTransactionFromModule(
             testContractAddress,
             0,
-            (await testContract.oneParamStatic.populateTransaction(42))
-              .data as string,
+            iface.encodeFunctionData("oneParamStatic", [42]),
             0,
           ),
       ).to.not.be.reverted;
@@ -512,7 +516,7 @@ describe("Setup", () => {
 
   describe("scopeTarget", () => {
     it("sets clearance to Function for address", async () => {
-      const { roles, member, ROLE_KEY, testContractAddress, testContract } =
+      const { roles, member, ROLE_KEY, testContractAddress } =
         await loadFixture(setup);
 
       await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
@@ -526,7 +530,7 @@ describe("Setup", () => {
           .execTransactionFromModule(
             testContractAddress,
             0,
-            (await testContract.doNothing.populateTransaction()).data as string,
+            iface.encodeFunctionData("doNothing"),
             0,
           ),
       ).to.be.revertedWithCustomError(roles, "FunctionNotAllowed");
@@ -589,10 +593,10 @@ describe("Setup", () => {
     });
 
     it("does not clear function-level scopeConfig entries", async () => {
-      const { roles, member, ROLE_KEY, testContractAddress, testContract } =
+      const { roles, member, testContract, ROLE_KEY, testContractAddress } =
         await loadFixture(setup);
 
-      const selector = testContract.interface.getFunction("doNothing").selector;
+      const selector = iface.getFunction("doNothing")!.selector;
 
       await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
       await roles.setDefaultRole(member.address, ROLE_KEY);
@@ -614,7 +618,7 @@ describe("Setup", () => {
           .execTransactionFromModule(
             testContractAddress,
             0,
-            (await testContract.doNothing.populateTransaction()).data as string,
+            iface.encodeFunctionData("doNothing"),
             0,
           ),
       )
@@ -630,10 +634,12 @@ describe("Setup", () => {
           .execTransactionFromModule(
             testContractAddress,
             0,
-            (await testContract.doNothing.populateTransaction()).data as string,
+            iface.encodeFunctionData("doNothing"),
             0,
           ),
-      ).to.emit(testContract, "DoNothing");
+      )
+        .to.emit(testContract, "Invoked")
+        .withArgs(selector);
     });
 
     it("succeeds even if target was not allowed", async () => {
@@ -650,10 +656,10 @@ describe("Setup", () => {
 
   describe("allowFunction", () => {
     it("stores empty conditions as single Pass node", async () => {
-      const { roles, member, ROLE_KEY, testContractAddress, testContract } =
+      const { roles, member, testContract, ROLE_KEY, testContractAddress } =
         await loadFixture(setup);
 
-      const selector = testContract.interface.getFunction("doNothing").selector;
+      const selector = iface.getFunction("doNothing")!.selector;
 
       await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
       await roles.setDefaultRole(member.address, ROLE_KEY);
@@ -673,18 +679,19 @@ describe("Setup", () => {
           .execTransactionFromModule(
             testContractAddress,
             0,
-            (await testContract.doNothing.populateTransaction()).data as string,
+            iface.encodeFunctionData("doNothing"),
             0,
           ),
-      ).to.emit(testContract, "DoNothing");
+      )
+        .to.emit(testContract, "Invoked")
+        .withArgs(selector);
     });
 
     it("stores and enforces provided conditions", async () => {
-      const { roles, member, ROLE_KEY, testContractAddress, testContract } =
+      const { roles, member, ROLE_KEY, testContractAddress } =
         await loadFixture(setup);
 
-      const selector =
-        testContract.interface.getFunction("oneParamStatic").selector;
+      const selector = iface.getFunction("oneParamStatic")!.selector;
 
       await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
       await roles.setDefaultRole(member.address, ROLE_KEY);
@@ -722,8 +729,7 @@ describe("Setup", () => {
           .execTransactionFromModule(
             testContractAddress,
             0,
-            (await testContract.oneParamStatic.populateTransaction(42))
-              .data as string,
+            iface.encodeFunctionData("oneParamStatic", [42]),
             0,
           ),
       ).to.not.be.reverted;
@@ -735,18 +741,16 @@ describe("Setup", () => {
           .execTransactionFromModule(
             testContractAddress,
             0,
-            (await testContract.oneParamStatic.populateTransaction(99))
-              .data as string,
+            iface.encodeFunctionData("oneParamStatic", [99]),
             0,
           ),
       ).to.be.revertedWithCustomError(roles, "ConditionViolation");
     });
 
     it("validates condition tree integrity on store", async () => {
-      const { roles, ROLE_KEY, testContractAddress, testContract } =
-        await loadFixture(setup);
+      const { roles, ROLE_KEY, testContractAddress } = await loadFixture(setup);
 
-      const selector = testContract.interface.getFunction("doNothing").selector;
+      const selector = iface.getFunction("doNothing")!.selector;
 
       // Invalid: root node has invalid parent reference (must be 0 for root)
       await expect(
@@ -768,10 +772,9 @@ describe("Setup", () => {
     });
 
     it("emits AllowFunction event", async () => {
-      const { roles, ROLE_KEY, testContractAddress, testContract } =
-        await loadFixture(setup);
+      const { roles, ROLE_KEY, testContractAddress } = await loadFixture(setup);
 
-      const selector = testContract.interface.getFunction("doNothing").selector;
+      const selector = iface.getFunction("doNothing")!.selector;
 
       await expect(
         roles.allowFunction(
@@ -793,11 +796,10 @@ describe("Setup", () => {
     });
 
     it("overwrites existing function permission", async () => {
-      const { roles, member, ROLE_KEY, testContractAddress, testContract } =
+      const { roles, member, ROLE_KEY, testContractAddress } =
         await loadFixture(setup);
 
-      const selector =
-        testContract.interface.getFunction("oneParamStatic").selector;
+      const selector = iface.getFunction("oneParamStatic")!.selector;
 
       await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
       await roles.setDefaultRole(member.address, ROLE_KEY);
@@ -835,8 +837,7 @@ describe("Setup", () => {
           .execTransactionFromModule(
             testContractAddress,
             0,
-            (await testContract.oneParamStatic.populateTransaction(2))
-              .data as string,
+            iface.encodeFunctionData("oneParamStatic", [2]),
             0,
           ),
       ).to.be.revertedWithCustomError(roles, "ConditionViolation");
@@ -873,8 +874,7 @@ describe("Setup", () => {
           .execTransactionFromModule(
             testContractAddress,
             0,
-            (await testContract.oneParamStatic.populateTransaction(2))
-              .data as string,
+            iface.encodeFunctionData("oneParamStatic", [2]),
             0,
           ),
       ).to.not.be.reverted;
@@ -886,7 +886,7 @@ describe("Setup", () => {
       const { roles, member, ROLE_KEY, testContractAddress, testContract } =
         await loadFixture(setup);
 
-      const selector = testContract.interface.getFunction("doNothing").selector;
+      const selector = iface.getFunction("doNothing")!.selector;
 
       await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
       await roles.setDefaultRole(member.address, ROLE_KEY);
@@ -905,10 +905,12 @@ describe("Setup", () => {
           .execTransactionFromModule(
             testContractAddress,
             0,
-            (await testContract.doNothing.populateTransaction()).data as string,
+            iface.encodeFunctionData("doNothing"),
             0,
           ),
-      ).to.emit(testContract, "DoNothing");
+      )
+        .to.emit(testContract, "Invoked")
+        .withArgs(selector);
 
       await roles.revokeFunction(ROLE_KEY, testContractAddress, selector);
 
@@ -918,17 +920,16 @@ describe("Setup", () => {
           .execTransactionFromModule(
             testContractAddress,
             0,
-            (await testContract.doNothing.populateTransaction()).data as string,
+            iface.encodeFunctionData("doNothing"),
             0,
           ),
       ).to.be.revertedWithCustomError(roles, "FunctionNotAllowed");
     });
 
     it("emits RevokeFunction event", async () => {
-      const { roles, ROLE_KEY, testContractAddress, testContract } =
-        await loadFixture(setup);
+      const { roles, ROLE_KEY, testContractAddress } = await loadFixture(setup);
 
-      const selector = testContract.interface.getFunction("doNothing").selector;
+      const selector = iface.getFunction("doNothing")!.selector;
 
       await roles.allowFunction(
         ROLE_KEY,
@@ -946,13 +947,11 @@ describe("Setup", () => {
     });
 
     it("does not affect other functions on same target", async () => {
-      const { roles, member, ROLE_KEY, testContractAddress, testContract } =
+      const { roles, member, ROLE_KEY, testContractAddress } =
         await loadFixture(setup);
 
-      const selector1 =
-        testContract.interface.getFunction("doNothing").selector;
-      const selector2 =
-        testContract.interface.getFunction("doEvenLess").selector;
+      const selector1 = iface.getFunction("doNothing")!.selector;
+      const selector2 = iface.getFunction("doEvenLess")!.selector;
 
       await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
       await roles.setDefaultRole(member.address, ROLE_KEY);
@@ -982,7 +981,7 @@ describe("Setup", () => {
           .execTransactionFromModule(
             testContractAddress,
             0,
-            (await testContract.doNothing.populateTransaction()).data as string,
+            iface.encodeFunctionData("doNothing"),
             0,
           ),
       ).to.be.revertedWithCustomError(roles, "FunctionNotAllowed");
@@ -994,8 +993,7 @@ describe("Setup", () => {
           .execTransactionFromModule(
             testContractAddress,
             0,
-            (await testContract.doEvenLess.populateTransaction())
-              .data as string,
+            iface.encodeFunctionData("doEvenLess"),
             0,
           ),
       ).to.not.be.reverted;
@@ -1163,15 +1161,14 @@ describe("Setup", () => {
 
   describe("setTransactionUnwrapper", () => {
     it("registers unwrapper for target + selector", async () => {
-      const { roles, testContractAddress, testContract } =
-        await loadFixture(setup);
+      const { roles, testContractAddress } = await loadFixture(setup);
 
       const MultiSendUnwrapper =
         await hre.ethers.getContractFactory("MultiSendUnwrapper");
       const unwrapper = await MultiSendUnwrapper.deploy();
       const unwrapperAddress = await unwrapper.getAddress();
 
-      const selector = testContract.interface.getFunction("doNothing").selector;
+      const selector = iface.getFunction("doNothing")!.selector;
 
       await expect(
         roles.setTransactionUnwrapper(
@@ -1185,15 +1182,14 @@ describe("Setup", () => {
     });
 
     it("emits SetUnwrapAdapter event", async () => {
-      const { roles, testContractAddress, testContract } =
-        await loadFixture(setup);
+      const { roles, testContractAddress } = await loadFixture(setup);
 
       const MultiSendUnwrapper =
         await hre.ethers.getContractFactory("MultiSendUnwrapper");
       const unwrapper = await MultiSendUnwrapper.deploy();
       const unwrapperAddress = await unwrapper.getAddress();
 
-      const selector = testContract.interface.getFunction("doNothing").selector;
+      const selector = iface.getFunction("doNothing")!.selector;
 
       await expect(
         roles.setTransactionUnwrapper(
@@ -1207,8 +1203,7 @@ describe("Setup", () => {
     });
 
     it("can update existing unwrapper", async () => {
-      const { roles, testContractAddress, testContract } =
-        await loadFixture(setup);
+      const { roles, testContractAddress } = await loadFixture(setup);
 
       const MultiSendUnwrapper =
         await hre.ethers.getContractFactory("MultiSendUnwrapper");
@@ -1216,7 +1211,7 @@ describe("Setup", () => {
       const unwrapper2 = await MultiSendUnwrapper.deploy();
       const unwrapper2Address = await unwrapper2.getAddress();
 
-      const selector = testContract.interface.getFunction("doNothing").selector;
+      const selector = iface.getFunction("doNothing")!.selector;
 
       await roles.setTransactionUnwrapper(
         testContractAddress,
@@ -1237,15 +1232,14 @@ describe("Setup", () => {
     });
 
     it("can remove unwrapper by setting to zero address", async () => {
-      const { roles, testContractAddress, testContract } =
-        await loadFixture(setup);
+      const { roles, testContractAddress } = await loadFixture(setup);
 
       const MultiSendUnwrapper =
         await hre.ethers.getContractFactory("MultiSendUnwrapper");
       const unwrapper = await MultiSendUnwrapper.deploy();
       const unwrapperAddress = await unwrapper.getAddress();
 
-      const selector = testContract.interface.getFunction("doNothing").selector;
+      const selector = iface.getFunction("doNothing")!.selector;
 
       await roles.setTransactionUnwrapper(
         testContractAddress,
@@ -1274,8 +1268,8 @@ describe("Setup", () => {
       const { roles, member, ROLE_KEY, testContractAddress } =
         await loadFixture(setup);
 
-      const TestContract2 = await hre.ethers.getContractFactory("TestContract");
-      const testContract2 = await TestContract2.deploy();
+      const Fallbacker2 = await hre.ethers.getContractFactory("Fallbacker");
+      const testContract2 = await Fallbacker2.deploy();
       const testContract2Address = await testContract2.getAddress();
 
       await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
@@ -1308,10 +1302,8 @@ describe("Setup", () => {
       const { roles, member, ROLE_KEY, testContractAddress, testContract } =
         await loadFixture(setup);
 
-      const selector1 =
-        testContract.interface.getFunction("doNothing").selector;
-      const selector2 =
-        testContract.interface.getFunction("fnThatReverts").selector;
+      const selector1 = iface.getFunction("doNothing")!.selector;
+      const selector2 = iface.getFunction("fnThatReverts")!.selector;
 
       await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
       await roles.setDefaultRole(member.address, ROLE_KEY);
@@ -1331,10 +1323,12 @@ describe("Setup", () => {
           .execTransactionFromModule(
             testContractAddress,
             0,
-            (await testContract.doNothing.populateTransaction()).data as string,
+            iface.encodeFunctionData("doNothing"),
             0,
           ),
-      ).to.emit(testContract, "DoNothing");
+      )
+        .to.emit(testContract, "Invoked")
+        .withArgs(selector1);
 
       // selector2 is NOT allowed
       await expect(
@@ -1343,8 +1337,7 @@ describe("Setup", () => {
           .execTransactionFromModule(
             testContractAddress,
             0,
-            (await testContract.fnThatReverts.populateTransaction())
-              .data as string,
+            iface.encodeFunctionData("fnThatReverts"),
             0,
           ),
       ).to.be.revertedWithCustomError(roles, "FunctionNotAllowed");
@@ -1354,11 +1347,11 @@ describe("Setup", () => {
       const { roles, member, ROLE_KEY, testContractAddress, testContract } =
         await loadFixture(setup);
 
-      const TestContract2 = await hre.ethers.getContractFactory("TestContract");
-      const testContract2 = await TestContract2.deploy();
+      const Fallbacker2 = await hre.ethers.getContractFactory("Fallbacker");
+      const testContract2 = await Fallbacker2.deploy();
       const testContract2Address = await testContract2.getAddress();
 
-      const selector = testContract.interface.getFunction("doNothing").selector;
+      const selector = iface.getFunction("doNothing")!.selector;
 
       await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
       await roles.setDefaultRole(member.address, ROLE_KEY);
@@ -1379,10 +1372,12 @@ describe("Setup", () => {
           .execTransactionFromModule(
             testContractAddress,
             0,
-            (await testContract.doNothing.populateTransaction()).data as string,
+            iface.encodeFunctionData("doNothing"),
             0,
           ),
-      ).to.emit(testContract, "DoNothing");
+      )
+        .to.emit(testContract, "Invoked")
+        .withArgs(selector);
 
       // Same function on testContract2Address is NOT allowed
       await expect(
@@ -1391,8 +1386,7 @@ describe("Setup", () => {
           .execTransactionFromModule(
             testContract2Address,
             0,
-            (await testContract2.doNothing.populateTransaction())
-              .data as string,
+            iface.encodeFunctionData("doNothing"),
             0,
           ),
       ).to.be.revertedWithCustomError(roles, "FunctionNotAllowed");
@@ -1404,10 +1398,8 @@ describe("Setup", () => {
 
       const ROLE_KEY_2 = hre.ethers.id("TEST_ROLE_2");
 
-      const selector1 =
-        testContract.interface.getFunction("doNothing").selector;
-      const selector2 =
-        testContract.interface.getFunction("doEvenLess").selector;
+      const selector1 = iface.getFunction("doNothing")!.selector;
+      const selector2 = iface.getFunction("doEvenLess")!.selector;
 
       // Setup: member has ROLE_KEY, grant them both roles
       await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
@@ -1442,10 +1434,12 @@ describe("Setup", () => {
           .execTransactionFromModule(
             testContractAddress,
             0,
-            (await testContract.doNothing.populateTransaction()).data as string,
+            iface.encodeFunctionData("doNothing"),
             0,
           ),
-      ).to.emit(testContract, "DoNothing");
+      )
+        .to.emit(testContract, "Invoked")
+        .withArgs(selector1);
 
       await expect(
         roles
@@ -1453,8 +1447,7 @@ describe("Setup", () => {
           .execTransactionFromModule(
             testContractAddress,
             0,
-            (await testContract.doEvenLess.populateTransaction())
-              .data as string,
+            iface.encodeFunctionData("doEvenLess"),
             0,
           ),
       ).to.be.revertedWithCustomError(roles, "FunctionNotAllowed");
@@ -1468,7 +1461,7 @@ describe("Setup", () => {
           .execTransactionFromModule(
             testContractAddress,
             0,
-            (await testContract.doNothing.populateTransaction()).data as string,
+            iface.encodeFunctionData("doNothing"),
             0,
           ),
       ).to.be.revertedWithCustomError(roles, "FunctionNotAllowed");
@@ -1480,8 +1473,7 @@ describe("Setup", () => {
           .execTransactionFromModule(
             testContractAddress,
             0,
-            (await testContract.doEvenLess.populateTransaction())
-              .data as string,
+            iface.encodeFunctionData("doEvenLess"),
             0,
           ),
       ).to.not.be.reverted;

@@ -31,7 +31,8 @@ function pluck(index: number) {
 async function setupTwoParams() {
   const iface = new Interface(["function fn(uint256, uint256)"]);
   const fn = iface.getFunction("fn")!;
-  const { roles, member, fallbackerAddress, roleKey } = await setupFallbacker();
+  const { roles, member, testContractAddress, roleKey } =
+    await setupFallbacker();
 
   const allowFunction = (
     conditions: ConditionFlatStruct[],
@@ -39,7 +40,7 @@ async function setupTwoParams() {
   ) =>
     roles.allowFunction(
       roleKey,
-      fallbackerAddress,
+      testContractAddress,
       fn.selector,
       conditions,
       options,
@@ -49,7 +50,7 @@ async function setupTwoParams() {
     roles
       .connect(member)
       .execTransactionFromModule(
-        fallbackerAddress,
+        testContractAddress,
         0,
         iface.encodeFunctionData(fn, [a, b]),
         0,
@@ -58,7 +59,7 @@ async function setupTwoParams() {
   return {
     roles,
     member,
-    fallbackerAddress,
+    testContractAddress,
     roleKey,
     allowFunction,
     invoke,
@@ -1315,7 +1316,7 @@ describe("Operator - WithinRatio", () => {
         "function mixedParams(uint256, bytes, uint256)",
       ]);
       const fn = iface.getFunction("mixedParams")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       const compValue = encodeWithinRatioCompValue({
@@ -1329,7 +1330,7 @@ describe("Operator - WithinRatio", () => {
 
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -1352,7 +1353,7 @@ describe("Operator - WithinRatio", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [a, "0xaabbcc", b]),
             0,
@@ -1370,7 +1371,7 @@ describe("Operator - WithinRatio", () => {
     it("extracts values from nested AbiEncoded", async () => {
       const iface = new Interface(["function dynamic(bytes)"]);
       const fn = iface.getFunction("dynamic")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       const compValue = encodeWithinRatioCompValue({
@@ -1384,7 +1385,7 @@ describe("Operator - WithinRatio", () => {
 
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -1416,7 +1417,7 @@ describe("Operator - WithinRatio", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [encoded]),
             0,
@@ -1444,7 +1445,7 @@ describe("Operator - WithinRatio", () => {
         "function mixedTuple((uint256 amount, uint256 second, uint256 limit, uint256 fourth))",
       ]);
       const fn = iface.getFunction("mixedTuple")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       const compValue = encodeWithinRatioCompValue({
@@ -1458,7 +1459,7 @@ describe("Operator - WithinRatio", () => {
 
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -1493,7 +1494,7 @@ describe("Operator - WithinRatio", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [[amount, second, limit, fourth]]),
             0,
@@ -1511,7 +1512,7 @@ describe("Operator - WithinRatio", () => {
     it("extracts values from Array", async () => {
       const iface = new Interface(["function uint256ArrayStatic(uint256[])"]);
       const fn = iface.getFunction("uint256ArrayStatic")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       const compValue = encodeWithinRatioCompValue({
@@ -1525,7 +1526,7 @@ describe("Operator - WithinRatio", () => {
 
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -1554,7 +1555,7 @@ describe("Operator - WithinRatio", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [arr]),
             0,
@@ -1573,7 +1574,7 @@ describe("Operator - WithinRatio", () => {
       // Different pattern - uses single param + ether value, keep inline
       const iface = new Interface(["function fn(uint256)"]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       // Pluck ether value → pluckedValues[0]
@@ -1589,7 +1590,7 @@ describe("Operator - WithinRatio", () => {
 
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.None,
@@ -1620,7 +1621,7 @@ describe("Operator - WithinRatio", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             10n ** 18n,
             iface.encodeFunctionData(fn, [2n * 10n ** 18n]),
             0,
@@ -1632,7 +1633,7 @@ describe("Operator - WithinRatio", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             10n ** 18n,
             iface.encodeFunctionData(fn, [1n * 10n ** 18n]),
             0,
@@ -1644,7 +1645,7 @@ describe("Operator - WithinRatio", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             10n ** 18n,
             iface.encodeFunctionData(fn, [21n * 10n ** 17n]),
             0,

@@ -25,14 +25,14 @@ describe("Operator - Matches", () => {
     it("skips 10 bytes offset before decoding child", async () => {
       const iface = new Interface(["function fn(bytes)"]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       // Matches with AbiEncoded that skips 10 bytes (0x000a) but does NOT match them
       // compValue length is 2 => only configuration, no match bytes
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -65,7 +65,7 @@ describe("Operator - Matches", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [correctPayload]),
             0,
@@ -79,7 +79,7 @@ describe("Operator - Matches", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [wrongParamPayload]),
             0,
@@ -93,13 +93,13 @@ describe("Operator - Matches", () => {
     it("validates 4-byte prefix (shift 4)", async () => {
       const iface = new Interface(["function fn(bytes)"]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       // Matches with 4-byte prefix (common selector size)
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -129,7 +129,7 @@ describe("Operator - Matches", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [correctPayload]),
             0,
@@ -143,7 +143,7 @@ describe("Operator - Matches", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [wrongPayload]),
             0,
@@ -156,13 +156,13 @@ describe("Operator - Matches", () => {
     it("skips prefix check when compValue is empty (shift 0)", async () => {
       const iface = new Interface(["function fn(bytes)"]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       // Matches with empty compValue - no prefix check
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -191,7 +191,7 @@ describe("Operator - Matches", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [payload]),
             0,
@@ -204,7 +204,7 @@ describe("Operator - Matches", () => {
     it("validates 10-byte prefix (shift 10)", async () => {
       const iface = new Interface(["function fn(bytes)"]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       const prefix10 = hexlify(randomBytes(10));
@@ -212,7 +212,7 @@ describe("Operator - Matches", () => {
       // Matches with 10-byte prefix
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -242,7 +242,7 @@ describe("Operator - Matches", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [correctPayload]),
             0,
@@ -257,7 +257,7 @@ describe("Operator - Matches", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [wrongPrefixPayload]),
             0,
@@ -273,7 +273,7 @@ describe("Operator - Matches", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [wrongParamPayload]),
             0,
@@ -286,7 +286,7 @@ describe("Operator - Matches", () => {
     it("validates 31-byte prefix (shift 31)", async () => {
       const iface = new Interface(["function fn(bytes)"]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       const prefix31 = hexlify(randomBytes(31));
@@ -294,7 +294,7 @@ describe("Operator - Matches", () => {
       // Matches with 31-byte prefix
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -324,7 +324,7 @@ describe("Operator - Matches", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [correctPayload]),
             0,
@@ -339,7 +339,7 @@ describe("Operator - Matches", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [wrongPayload]),
             0,
@@ -354,13 +354,13 @@ describe("Operator - Matches", () => {
     it("routes decoded parameters to corresponding children", async () => {
       const iface = new Interface(["function fn(uint256,uint256,uint256)"]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       // Matches routes each param to its corresponding child
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -391,7 +391,7 @@ describe("Operator - Matches", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [100, 200, 300]),
             0,
@@ -403,7 +403,7 @@ describe("Operator - Matches", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [999, 200, 300]),
             0,
@@ -417,7 +417,7 @@ describe("Operator - Matches", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [100, 999, 300]),
             0,
@@ -431,7 +431,7 @@ describe("Operator - Matches", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [100, 200, 999]),
             0,
@@ -444,13 +444,13 @@ describe("Operator - Matches", () => {
     it("passes empty payload to non-structural children", async () => {
       const iface = new Interface(["function fn(uint256)"]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       // Matches with structural child (param) + non-structural child (ether value)
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -478,7 +478,7 @@ describe("Operator - Matches", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             100,
             iface.encodeFunctionData(fn, [42]),
             0,
@@ -490,7 +490,7 @@ describe("Operator - Matches", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             999,
             iface.encodeFunctionData(fn, [42]),
             0,
@@ -503,7 +503,7 @@ describe("Operator - Matches", () => {
     it("accumulates consumptions across children", async () => {
       const iface = new Interface(["function fn(uint256,uint256)"]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, fallbackerAddress, roleKey } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupFallbacker);
 
       const allowanceKey =
@@ -515,7 +515,7 @@ describe("Operator - Matches", () => {
       // Matches with two children consuming from same allowance
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
@@ -541,7 +541,7 @@ describe("Operator - Matches", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [30, 20]),
             0,
@@ -557,7 +557,7 @@ describe("Operator - Matches", () => {
         roles
           .connect(member)
           .execTransactionFromModule(
-            fallbackerAddress,
+            testContractAddress,
             0,
             iface.encodeFunctionData(fn, [30, 30]),
             0,

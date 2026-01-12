@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { ZeroHash } from "ethers";
+import { hexlify, Interface, randomBytes, ZeroHash } from "ethers";
 
 import {
   encodeMultisendPayload,
@@ -11,6 +11,12 @@ import {
   ConditionViolationStatus,
 } from "./utils";
 import { deployRolesMod } from "./setup";
+
+const iface = new Interface([
+  "function doNothing()",
+  "function oneParamStatic(uint256)",
+  "function twoParamsStatic(uint256, uint256)",
+]);
 
 /**
  * Authorization tests
@@ -39,11 +45,11 @@ describe("Authorization", () => {
       avatarAddress,
     );
 
-    const TestContract = await hre.ethers.getContractFactory("TestContract");
-    const testContract = await TestContract.deploy();
+    const Fallbacker = await hre.ethers.getContractFactory("Fallbacker");
+    const testContract = await Fallbacker.deploy();
     const testContractAddress = await testContract.getAddress();
 
-    const ROLE_KEY = hre.ethers.id("TEST_ROLE");
+    const roleKey = hexlify(randomBytes(32));
 
     return {
       avatar,
@@ -52,7 +58,7 @@ describe("Authorization", () => {
       member,
       testContract,
       testContractAddress,
-      ROLE_KEY,
+      roleKey,
     };
   }
 
@@ -63,11 +69,11 @@ describe("Authorization", () => {
   describe("clearance", () => {
     describe("Clearance.None", () => {
       it("reverts with TargetAddressNotAllowed when target has no clearance", async () => {
-        const { roles, member, testContractAddress, ROLE_KEY } =
+        const { roles, member, testContractAddress, roleKey } =
           await loadFixture(setup);
 
-        await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
-        await roles.setDefaultRole(member.address, ROLE_KEY);
+        await roles.grantRole(member.address, roleKey, 0, 0, 0);
+        await roles.setDefaultRole(member.address, roleKey);
 
         // No allowTarget/scopeTarget called - target has no clearance
 
@@ -83,13 +89,13 @@ describe("Authorization", () => {
 
     describe("Clearance.Target", () => {
       it("allows any function on target with target-level clearance", async () => {
-        const { roles, member, testContract, testContractAddress, ROLE_KEY } =
+        const { roles, member, testContract, testContractAddress, roleKey } =
           await loadFixture(setup);
 
-        await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
-        await roles.setDefaultRole(member.address, ROLE_KEY);
+        await roles.grantRole(member.address, roleKey, 0, 0, 0);
+        await roles.setDefaultRole(member.address, roleKey);
         await roles.allowTarget(
-          ROLE_KEY,
+          roleKey,
           testContractAddress,
           [],
           ExecutionOptions.None,
@@ -102,10 +108,12 @@ describe("Authorization", () => {
             .execTransactionFromModule(
               testContractAddress,
               0,
-              testContract.interface.encodeFunctionData("doNothing"),
+              iface.encodeFunctionData("doNothing"),
               0,
             ),
-        ).to.emit(testContract, "DoNothing");
+        )
+          .to.emit(testContract, "Invoked")
+          .withArgs(iface.getFunction("doNothing")!.selector);
 
         // Can call any function - oneParamStatic
         await expect(
@@ -114,22 +122,22 @@ describe("Authorization", () => {
             .execTransactionFromModule(
               testContractAddress,
               0,
-              testContract.interface.encodeFunctionData("oneParamStatic", [42]),
+              iface.encodeFunctionData("oneParamStatic", [42]),
               0,
             ),
         ).to.not.be.reverted;
       });
 
       it("evaluates target condition regardless of which function is called", async () => {
-        const { roles, member, testContract, testContractAddress, ROLE_KEY } =
+        const { roles, member, testContract, testContractAddress, roleKey } =
           await loadFixture(setup);
 
-        await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
-        await roles.setDefaultRole(member.address, ROLE_KEY);
+        await roles.grantRole(member.address, roleKey, 0, 0, 0);
+        await roles.setDefaultRole(member.address, roleKey);
 
         // Allow target with condition: first param must equal 100
         await roles.allowTarget(
-          ROLE_KEY,
+          roleKey,
           testContractAddress,
           [
             {
@@ -158,10 +166,7 @@ describe("Authorization", () => {
             .execTransactionFromModule(
               testContractAddress,
               0,
-              testContract.interface.encodeFunctionData(
-                "oneParamStatic",
-                [100],
-              ),
+              iface.encodeFunctionData("oneParamStatic", [100]),
               0,
             ),
         ).to.not.be.reverted;
@@ -173,7 +178,7 @@ describe("Authorization", () => {
             .execTransactionFromModule(
               testContractAddress,
               0,
-              testContract.interface.encodeFunctionData("oneParamStatic", [50]),
+              iface.encodeFunctionData("oneParamStatic", [50]),
               0,
             ),
         )
@@ -187,10 +192,7 @@ describe("Authorization", () => {
             .execTransactionFromModule(
               testContractAddress,
               0,
-              testContract.interface.encodeFunctionData(
-                "twoParamsStatic",
-                [100, 999],
-              ),
+              iface.encodeFunctionData("twoParamsStatic", [100, 999]),
               0,
             ),
         ).to.not.be.reverted;
@@ -201,10 +203,7 @@ describe("Authorization", () => {
             .execTransactionFromModule(
               testContractAddress,
               0,
-              testContract.interface.encodeFunctionData(
-                "twoParamsStatic",
-                [200, 999],
-              ),
+              iface.encodeFunctionData("twoParamsStatic", [200, 999]),
               0,
             ),
         )
@@ -215,18 +214,17 @@ describe("Authorization", () => {
 
     describe("Clearance.Function", () => {
       it("allows only specifically permitted functions", async () => {
-        const { roles, member, testContract, testContractAddress, ROLE_KEY } =
+        const { roles, member, testContract, testContractAddress, roleKey } =
           await loadFixture(setup);
 
-        await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
-        await roles.setDefaultRole(member.address, ROLE_KEY);
-        await roles.scopeTarget(ROLE_KEY, testContractAddress);
+        await roles.grantRole(member.address, roleKey, 0, 0, 0);
+        await roles.setDefaultRole(member.address, roleKey);
+        await roles.scopeTarget(roleKey, testContractAddress);
 
-        const doNothingSelector =
-          testContract.interface.getFunction("doNothing").selector;
+        const doNothingSelector = iface.getFunction("doNothing")!.selector;
 
         await roles.allowFunction(
-          ROLE_KEY,
+          roleKey,
           testContractAddress,
           doNothingSelector,
           [],
@@ -240,25 +238,26 @@ describe("Authorization", () => {
             .execTransactionFromModule(
               testContractAddress,
               0,
-              testContract.interface.encodeFunctionData("doNothing"),
+              iface.encodeFunctionData("doNothing"),
               0,
             ),
-        ).to.emit(testContract, "DoNothing");
+        )
+          .to.emit(testContract, "Invoked")
+          .withArgs(iface.getFunction("doNothing")!.selector);
       });
 
       it("reverts with FunctionNotAllowed for unpermitted selector", async () => {
-        const { roles, member, testContract, testContractAddress, ROLE_KEY } =
+        const { roles, member, testContract, testContractAddress, roleKey } =
           await loadFixture(setup);
 
-        await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
-        await roles.setDefaultRole(member.address, ROLE_KEY);
-        await roles.scopeTarget(ROLE_KEY, testContractAddress);
+        await roles.grantRole(member.address, roleKey, 0, 0, 0);
+        await roles.setDefaultRole(member.address, roleKey);
+        await roles.scopeTarget(roleKey, testContractAddress);
 
-        const doNothingSelector =
-          testContract.interface.getFunction("doNothing").selector;
+        const doNothingSelector = iface.getFunction("doNothing")!.selector;
 
         await roles.allowFunction(
-          ROLE_KEY,
+          roleKey,
           testContractAddress,
           doNothingSelector,
           [],
@@ -272,14 +271,16 @@ describe("Authorization", () => {
             .execTransactionFromModule(
               testContractAddress,
               0,
-              testContract.interface.encodeFunctionData("doNothing"),
+              iface.encodeFunctionData("doNothing"),
               0,
             ),
-        ).to.emit(testContract, "DoNothing");
+        )
+          .to.emit(testContract, "Invoked")
+          .withArgs(iface.getFunction("doNothing")!.selector);
 
         // oneParamStatic is NOT allowed
         const oneParamStaticSelector =
-          testContract.interface.getFunction("oneParamStatic").selector;
+          iface.getFunction("oneParamStatic")!.selector;
 
         await expect(
           roles
@@ -287,7 +288,7 @@ describe("Authorization", () => {
             .execTransactionFromModule(
               testContractAddress,
               0,
-              testContract.interface.encodeFunctionData("oneParamStatic", [42]),
+              iface.encodeFunctionData("oneParamStatic", [42]),
               0,
             ),
         )
@@ -296,19 +297,18 @@ describe("Authorization", () => {
       });
 
       it("applies function-specific conditions", async () => {
-        const { roles, member, testContract, testContractAddress, ROLE_KEY } =
+        const { roles, member, testContract, testContractAddress, roleKey } =
           await loadFixture(setup);
 
-        await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
-        await roles.setDefaultRole(member.address, ROLE_KEY);
-        await roles.scopeTarget(ROLE_KEY, testContractAddress);
+        await roles.grantRole(member.address, roleKey, 0, 0, 0);
+        await roles.setDefaultRole(member.address, roleKey);
+        await roles.scopeTarget(roleKey, testContractAddress);
 
-        const selector =
-          testContract.interface.getFunction("oneParamStatic").selector;
+        const selector = iface.getFunction("oneParamStatic")!.selector;
 
         // Allow with condition: param must equal 42
         await roles.allowFunction(
-          ROLE_KEY,
+          roleKey,
           testContractAddress,
           selector,
           [
@@ -338,7 +338,7 @@ describe("Authorization", () => {
             .execTransactionFromModule(
               testContractAddress,
               0,
-              testContract.interface.encodeFunctionData("oneParamStatic", [42]),
+              iface.encodeFunctionData("oneParamStatic", [42]),
               0,
             ),
         ).to.not.be.reverted;
@@ -350,7 +350,7 @@ describe("Authorization", () => {
             .execTransactionFromModule(
               testContractAddress,
               0,
-              testContract.interface.encodeFunctionData("oneParamStatic", [99]),
+              iface.encodeFunctionData("oneParamStatic", [99]),
               0,
             ),
         )
@@ -361,15 +361,15 @@ describe("Authorization", () => {
 
     describe("clearance transitions", () => {
       it("function clearance tightens previously allowed target", async () => {
-        const { roles, member, testContract, testContractAddress, ROLE_KEY } =
+        const { roles, member, testContract, testContractAddress, roleKey } =
           await loadFixture(setup);
 
-        await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
-        await roles.setDefaultRole(member.address, ROLE_KEY);
+        await roles.grantRole(member.address, roleKey, 0, 0, 0);
+        await roles.setDefaultRole(member.address, roleKey);
 
         // First allow entire target
         await roles.allowTarget(
-          ROLE_KEY,
+          roleKey,
           testContractAddress,
           [],
           ExecutionOptions.None,
@@ -382,10 +382,12 @@ describe("Authorization", () => {
             .execTransactionFromModule(
               testContractAddress,
               0,
-              testContract.interface.encodeFunctionData("doNothing"),
+              iface.encodeFunctionData("doNothing"),
               0,
             ),
-        ).to.emit(testContract, "DoNothing");
+        )
+          .to.emit(testContract, "Invoked")
+          .withArgs(iface.getFunction("doNothing")!.selector);
 
         await expect(
           roles
@@ -393,19 +395,18 @@ describe("Authorization", () => {
             .execTransactionFromModule(
               testContractAddress,
               0,
-              testContract.interface.encodeFunctionData("oneParamStatic", [42]),
+              iface.encodeFunctionData("oneParamStatic", [42]),
               0,
             ),
         ).to.not.be.reverted;
 
         // Now scope target (tightens to function-level)
-        await roles.scopeTarget(ROLE_KEY, testContractAddress);
+        await roles.scopeTarget(roleKey, testContractAddress);
 
         // Only allow doNothing
-        const doNothingSelector =
-          testContract.interface.getFunction("doNothing").selector;
+        const doNothingSelector = iface.getFunction("doNothing")!.selector;
         await roles.allowFunction(
-          ROLE_KEY,
+          roleKey,
           testContractAddress,
           doNothingSelector,
           [],
@@ -419,10 +420,12 @@ describe("Authorization", () => {
             .execTransactionFromModule(
               testContractAddress,
               0,
-              testContract.interface.encodeFunctionData("doNothing"),
+              iface.encodeFunctionData("doNothing"),
               0,
             ),
-        ).to.emit(testContract, "DoNothing");
+        )
+          .to.emit(testContract, "Invoked")
+          .withArgs(doNothingSelector);
 
         // oneParamStatic no longer works
         await expect(
@@ -431,25 +434,24 @@ describe("Authorization", () => {
             .execTransactionFromModule(
               testContractAddress,
               0,
-              testContract.interface.encodeFunctionData("oneParamStatic", [42]),
+              iface.encodeFunctionData("oneParamStatic", [42]),
               0,
             ),
         ).to.be.revertedWithCustomError(roles, "FunctionNotAllowed");
       });
 
       it("target clearance loosens previously scoped target", async () => {
-        const { roles, member, testContract, testContractAddress, ROLE_KEY } =
+        const { roles, member, testContract, testContractAddress, roleKey } =
           await loadFixture(setup);
 
-        await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
-        await roles.setDefaultRole(member.address, ROLE_KEY);
+        await roles.grantRole(member.address, roleKey, 0, 0, 0);
+        await roles.setDefaultRole(member.address, roleKey);
 
         // First scope target and only allow doNothing
-        await roles.scopeTarget(ROLE_KEY, testContractAddress);
-        const doNothingSelector =
-          testContract.interface.getFunction("doNothing").selector;
+        await roles.scopeTarget(roleKey, testContractAddress);
+        const doNothingSelector = iface.getFunction("doNothing")!.selector;
         await roles.allowFunction(
-          ROLE_KEY,
+          roleKey,
           testContractAddress,
           doNothingSelector,
           [],
@@ -463,14 +465,14 @@ describe("Authorization", () => {
             .execTransactionFromModule(
               testContractAddress,
               0,
-              testContract.interface.encodeFunctionData("oneParamStatic", [42]),
+              iface.encodeFunctionData("oneParamStatic", [42]),
               0,
             ),
         ).to.be.revertedWithCustomError(roles, "FunctionNotAllowed");
 
         // Now allow entire target (loosens)
         await roles.allowTarget(
-          ROLE_KEY,
+          roleKey,
           testContractAddress,
           [],
           ExecutionOptions.None,
@@ -483,25 +485,24 @@ describe("Authorization", () => {
             .execTransactionFromModule(
               testContractAddress,
               0,
-              testContract.interface.encodeFunctionData("oneParamStatic", [42]),
+              iface.encodeFunctionData("oneParamStatic", [42]),
               0,
             ),
         ).to.not.be.reverted;
       });
 
       it("revokeTarget makes allowFunction permissions ineffective", async () => {
-        const { roles, member, testContract, testContractAddress, ROLE_KEY } =
+        const { roles, member, testContract, testContractAddress, roleKey } =
           await loadFixture(setup);
 
-        await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
-        await roles.setDefaultRole(member.address, ROLE_KEY);
+        await roles.grantRole(member.address, roleKey, 0, 0, 0);
+        await roles.setDefaultRole(member.address, roleKey);
 
         // Scope target and allow doNothing
-        await roles.scopeTarget(ROLE_KEY, testContractAddress);
-        const doNothingSelector =
-          testContract.interface.getFunction("doNothing").selector;
+        await roles.scopeTarget(roleKey, testContractAddress);
+        const doNothingSelector = iface.getFunction("doNothing")!.selector;
         await roles.allowFunction(
-          ROLE_KEY,
+          roleKey,
           testContractAddress,
           doNothingSelector,
           [],
@@ -515,13 +516,15 @@ describe("Authorization", () => {
             .execTransactionFromModule(
               testContractAddress,
               0,
-              testContract.interface.encodeFunctionData("doNothing"),
+              iface.encodeFunctionData("doNothing"),
               0,
             ),
-        ).to.emit(testContract, "DoNothing");
+        )
+          .to.emit(testContract, "Invoked")
+          .withArgs(iface.getFunction("doNothing")!.selector);
 
         // Revoke target
-        await roles.revokeTarget(ROLE_KEY, testContractAddress);
+        await roles.revokeTarget(roleKey, testContractAddress);
 
         // doNothing no longer works - target not allowed
         await expect(
@@ -530,7 +533,7 @@ describe("Authorization", () => {
             .execTransactionFromModule(
               testContractAddress,
               0,
-              testContract.interface.encodeFunctionData("doNothing"),
+              iface.encodeFunctionData("doNothing"),
               0,
             ),
         )
@@ -546,13 +549,13 @@ describe("Authorization", () => {
 
   describe("calldata validation", () => {
     it("allows empty calldata (0 bytes)", async () => {
-      const { roles, member, testContractAddress, ROLE_KEY } =
+      const { roles, member, testContract, testContractAddress, roleKey } =
         await loadFixture(setup);
 
-      await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
-      await roles.setDefaultRole(member.address, ROLE_KEY);
+      await roles.grantRole(member.address, roleKey, 0, 0, 0);
+      await roles.setDefaultRole(member.address, roleKey);
       await roles.allowTarget(
-        ROLE_KEY,
+        roleKey,
         testContractAddress,
         [],
         ExecutionOptions.None,
@@ -567,13 +570,13 @@ describe("Authorization", () => {
     });
 
     it("reverts with FunctionSignatureTooShort for 1-3 bytes", async () => {
-      const { roles, member, testContractAddress, ROLE_KEY } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setup);
 
-      await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
-      await roles.setDefaultRole(member.address, ROLE_KEY);
+      await roles.grantRole(member.address, roleKey, 0, 0, 0);
+      await roles.setDefaultRole(member.address, roleKey);
       await roles.allowTarget(
-        ROLE_KEY,
+        roleKey,
         testContractAddress,
         [],
         ExecutionOptions.None,
@@ -610,13 +613,13 @@ describe("Authorization", () => {
     describe("Clearance.Target", () => {
       describe("Send", () => {
         it("reverts with SendNotAllowed when value > 0 and Send not enabled", async () => {
-          const { roles, avatar, member, testContractAddress, ROLE_KEY } =
+          const { roles, avatar, member, testContractAddress, roleKey } =
             await loadFixture(setup);
 
-          await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
-          await roles.setDefaultRole(member.address, ROLE_KEY);
+          await roles.grantRole(member.address, roleKey, 0, 0, 0);
+          await roles.setDefaultRole(member.address, roleKey);
           await roles.allowTarget(
-            ROLE_KEY,
+            roleKey,
             testContractAddress,
             [],
             ExecutionOptions.None, // Send not enabled
@@ -644,13 +647,19 @@ describe("Authorization", () => {
         });
 
         it("allows value transfer when Send is enabled", async () => {
-          const { roles, avatar, member, testContractAddress, ROLE_KEY } =
-            await loadFixture(setup);
+          const {
+            roles,
+            avatar,
+            member,
+            testContract,
+            testContractAddress,
+            roleKey,
+          } = await loadFixture(setup);
 
-          await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
-          await roles.setDefaultRole(member.address, ROLE_KEY);
+          await roles.grantRole(member.address, roleKey, 0, 0, 0);
+          await roles.setDefaultRole(member.address, roleKey);
           await roles.allowTarget(
-            ROLE_KEY,
+            roleKey,
             testContractAddress,
             [],
             ExecutionOptions.Send,
@@ -678,13 +687,13 @@ describe("Authorization", () => {
 
       describe("DelegateCall", () => {
         it("reverts with DelegateCallNotAllowed when operation is DelegateCall and not enabled", async () => {
-          const { roles, member, testContractAddress, ROLE_KEY } =
+          const { roles, member, testContractAddress, roleKey } =
             await loadFixture(setup);
 
-          await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
-          await roles.setDefaultRole(member.address, ROLE_KEY);
+          await roles.grantRole(member.address, roleKey, 0, 0, 0);
+          await roles.setDefaultRole(member.address, roleKey);
           await roles.allowTarget(
-            ROLE_KEY,
+            roleKey,
             testContractAddress,
             [],
             ExecutionOptions.None, // DelegateCall not enabled
@@ -700,18 +709,19 @@ describe("Authorization", () => {
         });
 
         it("allows DelegateCall when option is enabled", async () => {
-          const { roles, member, testContractAddress, ROLE_KEY } =
+          const { roles, member, testContractAddress, roleKey } =
             await loadFixture(setup);
 
-          await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
-          await roles.setDefaultRole(member.address, ROLE_KEY);
+          await roles.grantRole(member.address, roleKey, 0, 0, 0);
+          await roles.setDefaultRole(member.address, roleKey);
           await roles.allowTarget(
-            ROLE_KEY,
+            roleKey,
             testContractAddress,
             [],
             ExecutionOptions.DelegateCall,
           );
 
+          // DelegateCall executes in avatar's context, so we can't verify testContract events
           await expect(
             roles
               .connect(member)
@@ -720,13 +730,13 @@ describe("Authorization", () => {
         });
 
         it("allows Call regardless of DelegateCall option", async () => {
-          const { roles, member, testContractAddress, ROLE_KEY } =
+          const { roles, member, testContract, testContractAddress, roleKey } =
             await loadFixture(setup);
 
-          await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
-          await roles.setDefaultRole(member.address, ROLE_KEY);
+          await roles.grantRole(member.address, roleKey, 0, 0, 0);
+          await roles.setDefaultRole(member.address, roleKey);
           await roles.allowTarget(
-            ROLE_KEY,
+            roleKey,
             testContractAddress,
             [],
             ExecutionOptions.DelegateCall, // Only DelegateCall enabled, not Send
@@ -743,13 +753,19 @@ describe("Authorization", () => {
 
       describe("Both", () => {
         it("allows Send and DelegateCall when Both is enabled", async () => {
-          const { roles, avatar, member, testContractAddress, ROLE_KEY } =
-            await loadFixture(setup);
+          const {
+            roles,
+            avatar,
+            member,
+            testContract,
+            testContractAddress,
+            roleKey,
+          } = await loadFixture(setup);
 
-          await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
-          await roles.setDefaultRole(member.address, ROLE_KEY);
+          await roles.grantRole(member.address, roleKey, 0, 0, 0);
+          await roles.setDefaultRole(member.address, roleKey);
           await roles.allowTarget(
-            ROLE_KEY,
+            roleKey,
             testContractAddress,
             [],
             ExecutionOptions.Both,
@@ -774,7 +790,7 @@ describe("Authorization", () => {
               ),
           ).to.not.be.reverted;
 
-          // DelegateCall works
+          // DelegateCall works (executes in avatar's context, so we can't verify testContract events)
           await expect(
             roles
               .connect(member)
@@ -787,23 +803,16 @@ describe("Authorization", () => {
     describe("Clearance.Function", () => {
       describe("Send", () => {
         it("reverts with SendNotAllowed when value > 0 and Send not enabled", async () => {
-          const {
-            roles,
-            avatar,
-            member,
-            testContract,
-            testContractAddress,
-            ROLE_KEY,
-          } = await loadFixture(setup);
+          const { roles, avatar, member, testContractAddress, roleKey } =
+            await loadFixture(setup);
 
-          await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
-          await roles.setDefaultRole(member.address, ROLE_KEY);
-          await roles.scopeTarget(ROLE_KEY, testContractAddress);
+          await roles.grantRole(member.address, roleKey, 0, 0, 0);
+          await roles.setDefaultRole(member.address, roleKey);
+          await roles.scopeTarget(roleKey, testContractAddress);
 
-          const selector =
-            testContract.interface.getFunction("doNothing").selector;
+          const selector = iface.getFunction("doNothing")!.selector;
           await roles.allowFunction(
-            ROLE_KEY,
+            roleKey,
             testContractAddress,
             selector,
             [],
@@ -823,7 +832,7 @@ describe("Authorization", () => {
               .execTransactionFromModule(
                 testContractAddress,
                 hre.ethers.parseEther("0.1"),
-                testContract.interface.encodeFunctionData("doNothing"),
+                iface.encodeFunctionData("doNothing"),
                 0,
               ),
           )
@@ -838,17 +847,16 @@ describe("Authorization", () => {
             member,
             testContract,
             testContractAddress,
-            ROLE_KEY,
+            roleKey,
           } = await loadFixture(setup);
 
-          await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
-          await roles.setDefaultRole(member.address, ROLE_KEY);
-          await roles.scopeTarget(ROLE_KEY, testContractAddress);
+          await roles.grantRole(member.address, roleKey, 0, 0, 0);
+          await roles.setDefaultRole(member.address, roleKey);
+          await roles.scopeTarget(roleKey, testContractAddress);
 
-          const selector =
-            testContract.interface.getFunction("doNothing").selector;
+          const selector = iface.getFunction("doNothing")!.selector;
           await roles.allowFunction(
-            ROLE_KEY,
+            roleKey,
             testContractAddress,
             selector,
             [],
@@ -868,7 +876,7 @@ describe("Authorization", () => {
               .execTransactionFromModule(
                 testContractAddress,
                 hre.ethers.parseEther("0.1"),
-                testContract.interface.encodeFunctionData("doNothing"),
+                iface.encodeFunctionData("doNothing"),
                 0,
               ),
           ).to.not.be.reverted;
@@ -877,17 +885,16 @@ describe("Authorization", () => {
 
       describe("DelegateCall", () => {
         it("reverts with DelegateCallNotAllowed when operation is DelegateCall and not enabled", async () => {
-          const { roles, member, testContract, testContractAddress, ROLE_KEY } =
+          const { roles, member, testContractAddress, roleKey } =
             await loadFixture(setup);
 
-          await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
-          await roles.setDefaultRole(member.address, ROLE_KEY);
-          await roles.scopeTarget(ROLE_KEY, testContractAddress);
+          await roles.grantRole(member.address, roleKey, 0, 0, 0);
+          await roles.setDefaultRole(member.address, roleKey);
+          await roles.scopeTarget(roleKey, testContractAddress);
 
-          const selector =
-            testContract.interface.getFunction("doNothing").selector;
+          const selector = iface.getFunction("doNothing")!.selector;
           await roles.allowFunction(
-            ROLE_KEY,
+            roleKey,
             testContractAddress,
             selector,
             [],
@@ -900,7 +907,7 @@ describe("Authorization", () => {
               .execTransactionFromModule(
                 testContractAddress,
                 0,
-                testContract.interface.encodeFunctionData("doNothing"),
+                iface.encodeFunctionData("doNothing"),
                 1,
               ), // operation=1 is DelegateCall
           )
@@ -909,47 +916,46 @@ describe("Authorization", () => {
         });
 
         it("allows DelegateCall when option is enabled", async () => {
-          const { roles, member, testContract, testContractAddress, ROLE_KEY } =
+          const { roles, member, testContractAddress, roleKey } =
             await loadFixture(setup);
 
-          await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
-          await roles.setDefaultRole(member.address, ROLE_KEY);
-          await roles.scopeTarget(ROLE_KEY, testContractAddress);
+          await roles.grantRole(member.address, roleKey, 0, 0, 0);
+          await roles.setDefaultRole(member.address, roleKey);
+          await roles.scopeTarget(roleKey, testContractAddress);
 
-          const selector =
-            testContract.interface.getFunction("doNothing").selector;
+          const selector = iface.getFunction("doNothing")!.selector;
           await roles.allowFunction(
-            ROLE_KEY,
+            roleKey,
             testContractAddress,
             selector,
             [],
             ExecutionOptions.DelegateCall,
           );
 
+          // DelegateCall executes in avatar's context, so we can't verify testContract events
           await expect(
             roles
               .connect(member)
               .execTransactionFromModule(
                 testContractAddress,
                 0,
-                testContract.interface.encodeFunctionData("doNothing"),
+                iface.encodeFunctionData("doNothing"),
                 1,
               ),
           ).to.not.be.reverted;
         });
 
         it("allows Call regardless of DelegateCall option", async () => {
-          const { roles, member, testContract, testContractAddress, ROLE_KEY } =
+          const { roles, member, testContract, testContractAddress, roleKey } =
             await loadFixture(setup);
 
-          await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
-          await roles.setDefaultRole(member.address, ROLE_KEY);
-          await roles.scopeTarget(ROLE_KEY, testContractAddress);
+          await roles.grantRole(member.address, roleKey, 0, 0, 0);
+          await roles.setDefaultRole(member.address, roleKey);
+          await roles.scopeTarget(roleKey, testContractAddress);
 
-          const selector =
-            testContract.interface.getFunction("doNothing").selector;
+          const selector = iface.getFunction("doNothing")!.selector;
           await roles.allowFunction(
-            ROLE_KEY,
+            roleKey,
             testContractAddress,
             selector,
             [],
@@ -963,7 +969,7 @@ describe("Authorization", () => {
               .execTransactionFromModule(
                 testContractAddress,
                 0,
-                testContract.interface.encodeFunctionData("doNothing"),
+                iface.encodeFunctionData("doNothing"),
                 0,
               ),
           ).to.not.be.reverted;
@@ -978,17 +984,16 @@ describe("Authorization", () => {
             member,
             testContract,
             testContractAddress,
-            ROLE_KEY,
+            roleKey,
           } = await loadFixture(setup);
 
-          await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
-          await roles.setDefaultRole(member.address, ROLE_KEY);
-          await roles.scopeTarget(ROLE_KEY, testContractAddress);
+          await roles.grantRole(member.address, roleKey, 0, 0, 0);
+          await roles.setDefaultRole(member.address, roleKey);
+          await roles.scopeTarget(roleKey, testContractAddress);
 
-          const selector =
-            testContract.interface.getFunction("doNothing").selector;
+          const selector = iface.getFunction("doNothing")!.selector;
           await roles.allowFunction(
-            ROLE_KEY,
+            roleKey,
             testContractAddress,
             selector,
             [],
@@ -1009,19 +1014,21 @@ describe("Authorization", () => {
               .execTransactionFromModule(
                 testContractAddress,
                 hre.ethers.parseEther("0.1"),
-                testContract.interface.encodeFunctionData("doNothing"),
+                iface.encodeFunctionData("doNothing"),
                 0,
               ),
-          ).to.not.be.reverted;
+          )
+            .to.emit(testContract, "Invoked")
+            .withArgs(selector);
 
-          // DelegateCall works
+          // DelegateCall works (executes in avatar's context, so we can't verify testContract events)
           await expect(
             roles
               .connect(member)
               .execTransactionFromModule(
                 testContractAddress,
                 0,
-                testContract.interface.encodeFunctionData("doNothing"),
+                iface.encodeFunctionData("doNothing"),
                 1,
               ),
           ).to.not.be.reverted;
@@ -1036,7 +1043,7 @@ describe("Authorization", () => {
 
   describe("transaction unwrapping", () => {
     it("unwraps and authorizes batch transactions via adapter", async () => {
-      const { roles, member, testContract, testContractAddress, ROLE_KEY } =
+      const { roles, member, testContract, testContractAddress, roleKey } =
         await loadFixture(setup);
 
       // Deploy multisend and unwrapper
@@ -1049,12 +1056,12 @@ describe("Authorization", () => {
       const unwrapper = await MultiSendUnwrapper.deploy();
       const unwrapperAddress = await unwrapper.getAddress();
 
-      await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
-      await roles.setDefaultRole(member.address, ROLE_KEY);
+      await roles.grantRole(member.address, roleKey, 0, 0, 0);
+      await roles.setDefaultRole(member.address, roleKey);
 
       // Allow the inner target
       await roles.allowTarget(
-        ROLE_KEY,
+        roleKey,
         testContractAddress,
         [],
         ExecutionOptions.None,
@@ -1075,16 +1082,13 @@ describe("Authorization", () => {
           to: testContractAddress,
           value: 0,
           operation: 0,
-          data: testContract.interface.encodeFunctionData("doNothing"),
+          data: iface.encodeFunctionData("doNothing"),
         },
         {
           to: testContractAddress,
           value: 0,
           operation: 0,
-          data: testContract.interface.encodeFunctionData(
-            "oneParamStatic",
-            [42],
-          ),
+          data: iface.encodeFunctionData("oneParamStatic", [42]),
         },
       ]);
 
@@ -1102,7 +1106,7 @@ describe("Authorization", () => {
     });
 
     it("reverts with MalformedMultiEntrypoint when unwrapper fails", async () => {
-      const { roles, member, ROLE_KEY } = await loadFixture(setup);
+      const { roles, member, roleKey } = await loadFixture(setup);
 
       // Deploy multisend and unwrapper
       const MultiSend = await hre.ethers.getContractFactory("MultiSend");
@@ -1114,8 +1118,8 @@ describe("Authorization", () => {
       const unwrapper = await MultiSendUnwrapper.deploy();
       const unwrapperAddress = await unwrapper.getAddress();
 
-      await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
-      await roles.setDefaultRole(member.address, ROLE_KEY);
+      await roles.grantRole(member.address, roleKey, 0, 0, 0);
+      await roles.setDefaultRole(member.address, roleKey);
 
       // Register the unwrapper
       const multiSendSelector =
@@ -1140,7 +1144,7 @@ describe("Authorization", () => {
     });
 
     it("reverts if any unwrapped transaction is unauthorized", async () => {
-      const { roles, member, testContract, testContractAddress, ROLE_KEY } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setup);
 
       // Deploy multisend and unwrapper
@@ -1153,17 +1157,17 @@ describe("Authorization", () => {
       const unwrapper = await MultiSendUnwrapper.deploy();
       const unwrapperAddress = await unwrapper.getAddress();
 
-      // Deploy a second test contract that won't be allowed
-      const TestContract2 = await hre.ethers.getContractFactory("TestContract");
-      const testContract2 = await TestContract2.deploy();
-      const testContract2Address = await testContract2.getAddress();
+      // Deploy a second target that won't be allowed
+      const Fallbacker2 = await hre.ethers.getContractFactory("Fallbacker");
+      const testContract2 = await Fallbacker2.deploy();
+      const target2Address = await testContract2.getAddress();
 
-      await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
-      await roles.setDefaultRole(member.address, ROLE_KEY);
+      await roles.grantRole(member.address, roleKey, 0, 0, 0);
+      await roles.setDefaultRole(member.address, roleKey);
 
       // Only allow the first target
       await roles.allowTarget(
-        ROLE_KEY,
+        roleKey,
         testContractAddress,
         [],
         ExecutionOptions.None,
@@ -1184,13 +1188,13 @@ describe("Authorization", () => {
           to: testContractAddress,
           value: 0,
           operation: 0,
-          data: testContract.interface.encodeFunctionData("doNothing"),
+          data: iface.encodeFunctionData("doNothing"),
         },
         {
-          to: testContract2Address, // Not allowed!
+          to: target2Address, // Not allowed!
           value: 0,
           operation: 0,
-          data: testContract2.interface.encodeFunctionData("doNothing"),
+          data: iface.encodeFunctionData("doNothing"),
         },
       ]);
 
@@ -1205,7 +1209,7 @@ describe("Authorization", () => {
           .execTransactionFromModule(multisendAddress, 0, multisendData, 1),
       )
         .to.be.revertedWithCustomError(roles, "TargetAddressNotAllowed")
-        .withArgs(testContract2Address);
+        .withArgs(target2Address);
     });
   });
 
@@ -1215,13 +1219,13 @@ describe("Authorization", () => {
 
   describe("consumption tracking", () => {
     it("succeeds without allowance consumption when no WithinAllowance used", async () => {
-      const { roles, member, testContract, testContractAddress, ROLE_KEY } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setup);
 
-      await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
-      await roles.setDefaultRole(member.address, ROLE_KEY);
+      await roles.grantRole(member.address, roleKey, 0, 0, 0);
+      await roles.setDefaultRole(member.address, roleKey);
       await roles.allowTarget(
-        ROLE_KEY,
+        roleKey,
         testContractAddress,
         [],
         ExecutionOptions.None,
@@ -1234,29 +1238,28 @@ describe("Authorization", () => {
           .execTransactionFromModule(
             testContractAddress,
             0,
-            testContract.interface.encodeFunctionData("doNothing"),
+            iface.encodeFunctionData("doNothing"),
             0,
           ),
       ).to.not.emit(roles, "ConsumeAllowance");
     });
 
     it("persists consumption after successful execution", async () => {
-      const { roles, member, testContract, testContractAddress, ROLE_KEY } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setup);
 
       const ALLOWANCE_KEY = hre.ethers.id("TEST_ALLOWANCE");
 
-      await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
-      await roles.setDefaultRole(member.address, ROLE_KEY);
-      await roles.scopeTarget(ROLE_KEY, testContractAddress);
+      await roles.grantRole(member.address, roleKey, 0, 0, 0);
+      await roles.setDefaultRole(member.address, roleKey);
+      await roles.scopeTarget(roleKey, testContractAddress);
 
       // Set allowance with balance 1000
       await roles.setAllowance(ALLOWANCE_KEY, 1000, 0, 0, 0, 0);
 
-      const selector =
-        testContract.interface.getFunction("oneParamStatic").selector;
+      const selector = iface.getFunction("oneParamStatic")!.selector;
       await roles.allowFunction(
-        ROLE_KEY,
+        roleKey,
         testContractAddress,
         selector,
         [
@@ -1283,7 +1286,7 @@ describe("Authorization", () => {
           .execTransactionFromModule(
             testContractAddress,
             0,
-            testContract.interface.encodeFunctionData("oneParamStatic", [100]),
+            iface.encodeFunctionData("oneParamStatic", [100]),
             0,
           ),
       )
@@ -1296,7 +1299,7 @@ describe("Authorization", () => {
     });
 
     it("aggregates consumptions across multiple calls in batch", async () => {
-      const { roles, member, testContract, testContractAddress, ROLE_KEY } =
+      const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setup);
 
       const ALLOWANCE_KEY = hre.ethers.id("TEST_ALLOWANCE");
@@ -1311,17 +1314,16 @@ describe("Authorization", () => {
       const unwrapper = await MultiSendUnwrapper.deploy();
       const unwrapperAddress = await unwrapper.getAddress();
 
-      await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
-      await roles.setDefaultRole(member.address, ROLE_KEY);
-      await roles.scopeTarget(ROLE_KEY, testContractAddress);
+      await roles.grantRole(member.address, roleKey, 0, 0, 0);
+      await roles.setDefaultRole(member.address, roleKey);
+      await roles.scopeTarget(roleKey, testContractAddress);
 
       // Set allowance with balance 1000
       await roles.setAllowance(ALLOWANCE_KEY, 1000, 0, 0, 0, 0);
 
-      const selector =
-        testContract.interface.getFunction("oneParamStatic").selector;
+      const selector = iface.getFunction("oneParamStatic")!.selector;
       await roles.allowFunction(
-        ROLE_KEY,
+        roleKey,
         testContractAddress,
         selector,
         [
@@ -1356,19 +1358,13 @@ describe("Authorization", () => {
           to: testContractAddress,
           value: 0,
           operation: 0,
-          data: testContract.interface.encodeFunctionData(
-            "oneParamStatic",
-            [100],
-          ),
+          data: iface.encodeFunctionData("oneParamStatic", [100]),
         },
         {
           to: testContractAddress,
           value: 0,
           operation: 0,
-          data: testContract.interface.encodeFunctionData(
-            "oneParamStatic",
-            [200],
-          ),
+          data: iface.encodeFunctionData("oneParamStatic", [200]),
         },
       ]);
 

@@ -14,30 +14,30 @@ describe("Operator - Pass", () => {
   async function setup() {
     const iface = new Interface(["function fn(uint256)"]);
     const fn = iface.getFunction("fn")!;
-    const { roles, member, fallbackerAddress, roleKey } =
+    const { roles, member, testContractAddress, roleKey } =
       await setupFallbacker();
 
     const invoke = (a: bigint | number) =>
       roles
         .connect(member)
         .execTransactionFromModule(
-          fallbackerAddress,
+          testContractAddress,
           0,
           iface.encodeFunctionData(fn, [a]),
           0,
         );
 
-    return { roles, member, fallbackerAddress, roleKey, fn, invoke };
+    return { roles, member, testContractAddress, roleKey, fn, invoke };
   }
 
   describe("core behavior", () => {
     it("allows any parameter value", async () => {
-      const { roles, fallbackerAddress, roleKey, fn, invoke } =
+      const { roles, testContractAddress, roleKey, fn, invoke } =
         await loadFixture(setup);
 
       await roles.allowFunction(
         roleKey,
-        fallbackerAddress,
+        testContractAddress,
         fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,

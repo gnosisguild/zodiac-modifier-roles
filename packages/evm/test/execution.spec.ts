@@ -1,8 +1,12 @@
 import { expect } from "chai";
 import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { Interface } from "ethers";
+
 import { Encoding, ExecutionOptions, Operator } from "./utils";
 import { deployRolesMod } from "./setup";
+
+const iface = new Interface(["function spendAndMaybeRevert(uint256, bool)"]);
 
 /**
  * Execution Mechanics tests
@@ -35,7 +39,7 @@ describe("Execution Mechanics", () => {
     // Invoker must be a module to call execTransactionFromModule*
     await roles.enableModule(invoker.address);
 
-    const TestContract = await hre.ethers.getContractFactory("TestContract");
+    const TestContract = await hre.ethers.getContractFactory("Fallbacker");
     const testContract = await TestContract.deploy();
     const testContractAddress = await testContract.getAddress();
 
@@ -59,7 +63,7 @@ describe("Execution Mechanics", () => {
     await roles.allowFunction(
       ROLE_KEY,
       testContractAddress,
-      testContract.interface.getFunction("spendAndMaybeRevert").selector,
+      iface.getFunction("spendAndMaybeRevert")!.selector,
       [
         {
           parent: 0,
@@ -87,7 +91,6 @@ describe("Execution Mechanics", () => {
       roles,
       owner,
       invoker,
-      testContract,
       testContractAddress,
       ROLE_KEY,
       ALLOWANCE_KEY,
@@ -96,24 +99,21 @@ describe("Execution Mechanics", () => {
 
   describe("execTransactionFromModule", () => {
     it("returns success=true and persists consumption on successful execution", async () => {
-      const {
-        roles,
-        invoker,
-        testContract,
-        testContractAddress,
-        ALLOWANCE_KEY,
-      } = await loadFixture(setup);
+      const { roles, invoker, testContractAddress, ALLOWANCE_KEY } =
+        await loadFixture(setup);
 
       // Consumes 100
-      const calldata =
-        await testContract.spendAndMaybeRevert.populateTransaction(100, false);
+      const calldata = iface.encodeFunctionData("spendAndMaybeRevert", [
+        100,
+        false,
+      ]);
 
       const success = await roles
         .connect(invoker)
         .execTransactionFromModule.staticCall(
           testContractAddress,
           0,
-          calldata.data as string,
+          calldata,
           0,
         );
 
@@ -121,12 +121,7 @@ describe("Execution Mechanics", () => {
 
       await roles
         .connect(invoker)
-        .execTransactionFromModule(
-          testContractAddress,
-          0,
-          calldata.data as string,
-          0,
-        );
+        .execTransactionFromModule(testContractAddress, 0, calldata, 0);
 
       // Verify persistence: 1000 - 100 = 900
       const { balance } = await roles.accruedAllowance(ALLOWANCE_KEY);
@@ -134,24 +129,21 @@ describe("Execution Mechanics", () => {
     });
 
     it("returns success=false and does not persist consumption on failed inner execution", async () => {
-      const {
-        roles,
-        invoker,
-        testContract,
-        testContractAddress,
-        ALLOWANCE_KEY,
-      } = await loadFixture(setup);
+      const { roles, invoker, testContractAddress, ALLOWANCE_KEY } =
+        await loadFixture(setup);
 
       // Consumes 100 but reverts
-      const calldata =
-        await testContract.spendAndMaybeRevert.populateTransaction(100, true);
+      const calldata = iface.encodeFunctionData("spendAndMaybeRevert", [
+        100,
+        true,
+      ]);
 
       const success = await roles
         .connect(invoker)
         .execTransactionFromModule.staticCall(
           testContractAddress,
           0,
-          calldata.data as string,
+          calldata,
           0,
         );
 
@@ -159,12 +151,7 @@ describe("Execution Mechanics", () => {
 
       await roles
         .connect(invoker)
-        .execTransactionFromModule(
-          testContractAddress,
-          0,
-          calldata.data as string,
-          0,
-        );
+        .execTransactionFromModule(testContractAddress, 0, calldata, 0);
 
       // Verify rollback: 1000 (unchanged)
       const { balance } = await roles.accruedAllowance(ALLOWANCE_KEY);
@@ -174,23 +161,20 @@ describe("Execution Mechanics", () => {
 
   describe("execTransactionFromModuleReturnData", () => {
     it("returns success=true and persists consumption on successful execution", async () => {
-      const {
-        roles,
-        invoker,
-        testContract,
-        testContractAddress,
-        ALLOWANCE_KEY,
-      } = await loadFixture(setup);
+      const { roles, invoker, testContractAddress, ALLOWANCE_KEY } =
+        await loadFixture(setup);
 
-      const calldata =
-        await testContract.spendAndMaybeRevert.populateTransaction(100, false);
+      const calldata = iface.encodeFunctionData("spendAndMaybeRevert", [
+        100,
+        false,
+      ]);
 
       const [success] = await roles
         .connect(invoker)
         .execTransactionFromModuleReturnData.staticCall(
           testContractAddress,
           0,
-          calldata.data as string,
+          calldata,
           0,
         );
 
@@ -201,7 +185,7 @@ describe("Execution Mechanics", () => {
         .execTransactionFromModuleReturnData(
           testContractAddress,
           0,
-          calldata.data as string,
+          calldata,
           0,
         );
 
@@ -210,23 +194,20 @@ describe("Execution Mechanics", () => {
     });
 
     it("returns success=false and does not persist consumption on failed inner execution", async () => {
-      const {
-        roles,
-        invoker,
-        testContract,
-        testContractAddress,
-        ALLOWANCE_KEY,
-      } = await loadFixture(setup);
+      const { roles, invoker, testContractAddress, ALLOWANCE_KEY } =
+        await loadFixture(setup);
 
-      const calldata =
-        await testContract.spendAndMaybeRevert.populateTransaction(100, true);
+      const calldata = iface.encodeFunctionData("spendAndMaybeRevert", [
+        100,
+        true,
+      ]);
 
       const [success] = await roles
         .connect(invoker)
         .execTransactionFromModuleReturnData.staticCall(
           testContractAddress,
           0,
-          calldata.data as string,
+          calldata,
           0,
         );
 
@@ -237,7 +218,7 @@ describe("Execution Mechanics", () => {
         .execTransactionFromModuleReturnData(
           testContractAddress,
           0,
-          calldata.data as string,
+          calldata,
           0,
         );
 
@@ -248,23 +229,19 @@ describe("Execution Mechanics", () => {
 
   describe("execTransactionWithRole", () => {
     it("succeeds and persists consumption when using correct role", async () => {
-      const {
-        roles,
-        invoker,
-        testContract,
-        testContractAddress,
-        ROLE_KEY,
-        ALLOWANCE_KEY,
-      } = await loadFixture(setup);
-      const calldata =
-        await testContract.spendAndMaybeRevert.populateTransaction(100, false);
+      const { roles, invoker, testContractAddress, ROLE_KEY, ALLOWANCE_KEY } =
+        await loadFixture(setup);
+      const calldata = iface.encodeFunctionData("spendAndMaybeRevert", [
+        100,
+        false,
+      ]);
 
       const success = await roles
         .connect(invoker)
         .execTransactionWithRole.staticCall(
           testContractAddress,
           0,
-          calldata.data as string,
+          calldata,
           0,
           ROLE_KEY,
           false,
@@ -277,7 +254,7 @@ describe("Execution Mechanics", () => {
         .execTransactionWithRole(
           testContractAddress,
           0,
-          calldata.data as string,
+          calldata,
           0,
           ROLE_KEY,
           false,
@@ -288,10 +265,11 @@ describe("Execution Mechanics", () => {
     });
 
     it("reverts when using unassigned role", async () => {
-      const { roles, invoker, testContract, testContractAddress } =
-        await loadFixture(setup);
-      const calldata =
-        await testContract.spendAndMaybeRevert.populateTransaction(100, false);
+      const { roles, invoker, testContractAddress } = await loadFixture(setup);
+      const calldata = iface.encodeFunctionData("spendAndMaybeRevert", [
+        100,
+        false,
+      ]);
       const BAD_ROLE = hre.ethers.id("BAD_ROLE");
 
       await expect(
@@ -300,7 +278,7 @@ describe("Execution Mechanics", () => {
           .execTransactionWithRole(
             testContractAddress,
             0,
-            calldata.data as string,
+            calldata,
             0,
             BAD_ROLE,
             false,
@@ -309,23 +287,19 @@ describe("Execution Mechanics", () => {
     });
 
     it("returns success=false and does not persist consumption when inner fail and shouldRevert=false", async () => {
-      const {
-        roles,
-        invoker,
-        testContract,
-        testContractAddress,
-        ROLE_KEY,
-        ALLOWANCE_KEY,
-      } = await loadFixture(setup);
-      const calldata =
-        await testContract.spendAndMaybeRevert.populateTransaction(100, true);
+      const { roles, invoker, testContractAddress, ROLE_KEY, ALLOWANCE_KEY } =
+        await loadFixture(setup);
+      const calldata = iface.encodeFunctionData("spendAndMaybeRevert", [
+        100,
+        true,
+      ]);
 
       const success = await roles
         .connect(invoker)
         .execTransactionWithRole.staticCall(
           testContractAddress,
           0,
-          calldata.data as string,
+          calldata,
           0,
           ROLE_KEY,
           false,
@@ -338,7 +312,7 @@ describe("Execution Mechanics", () => {
         .execTransactionWithRole(
           testContractAddress,
           0,
-          calldata.data as string,
+          calldata,
           0,
           ROLE_KEY,
           false,
@@ -349,16 +323,12 @@ describe("Execution Mechanics", () => {
     });
 
     it("reverts and does not persist consumption when inner fail and shouldRevert=true", async () => {
-      const {
-        roles,
-        invoker,
-        testContract,
-        testContractAddress,
-        ROLE_KEY,
-        ALLOWANCE_KEY,
-      } = await loadFixture(setup);
-      const calldata =
-        await testContract.spendAndMaybeRevert.populateTransaction(100, true);
+      const { roles, invoker, testContractAddress, ROLE_KEY, ALLOWANCE_KEY } =
+        await loadFixture(setup);
+      const calldata = iface.encodeFunctionData("spendAndMaybeRevert", [
+        100,
+        true,
+      ]);
 
       await expect(
         roles
@@ -366,7 +336,7 @@ describe("Execution Mechanics", () => {
           .execTransactionWithRole(
             testContractAddress,
             0,
-            calldata.data as string,
+            calldata,
             0,
             ROLE_KEY,
             true,
@@ -381,23 +351,19 @@ describe("Execution Mechanics", () => {
 
   describe("execTransactionWithRoleReturnData", () => {
     it("returns data and persists consumption on success", async () => {
-      const {
-        roles,
-        invoker,
-        testContract,
-        testContractAddress,
-        ROLE_KEY,
-        ALLOWANCE_KEY,
-      } = await loadFixture(setup);
-      const calldata =
-        await testContract.spendAndMaybeRevert.populateTransaction(100, false);
+      const { roles, invoker, testContractAddress, ROLE_KEY, ALLOWANCE_KEY } =
+        await loadFixture(setup);
+      const calldata = iface.encodeFunctionData("spendAndMaybeRevert", [
+        100,
+        false,
+      ]);
 
       const [success] = await roles
         .connect(invoker)
         .execTransactionWithRoleReturnData.staticCall(
           testContractAddress,
           0,
-          calldata.data as string,
+          calldata,
           0,
           ROLE_KEY,
           false,
@@ -410,7 +376,7 @@ describe("Execution Mechanics", () => {
         .execTransactionWithRoleReturnData(
           testContractAddress,
           0,
-          calldata.data as string,
+          calldata,
           0,
           ROLE_KEY,
           false,
@@ -421,23 +387,19 @@ describe("Execution Mechanics", () => {
     });
 
     it("returns success=false and does not persist consumption when inner fail and shouldRevert=false", async () => {
-      const {
-        roles,
-        invoker,
-        testContract,
-        testContractAddress,
-        ROLE_KEY,
-        ALLOWANCE_KEY,
-      } = await loadFixture(setup);
-      const calldata =
-        await testContract.spendAndMaybeRevert.populateTransaction(100, true);
+      const { roles, invoker, testContractAddress, ROLE_KEY, ALLOWANCE_KEY } =
+        await loadFixture(setup);
+      const calldata = iface.encodeFunctionData("spendAndMaybeRevert", [
+        100,
+        true,
+      ]);
 
       const [success] = await roles
         .connect(invoker)
         .execTransactionWithRoleReturnData.staticCall(
           testContractAddress,
           0,
-          calldata.data as string,
+          calldata,
           0,
           ROLE_KEY,
           false,
@@ -450,7 +412,7 @@ describe("Execution Mechanics", () => {
         .execTransactionWithRoleReturnData(
           testContractAddress,
           0,
-          calldata.data as string,
+          calldata,
           0,
           ROLE_KEY,
           false,
@@ -461,16 +423,12 @@ describe("Execution Mechanics", () => {
     });
 
     it("reverts and does not persist consumption when inner fail and shouldRevert=true", async () => {
-      const {
-        roles,
-        invoker,
-        testContract,
-        testContractAddress,
-        ROLE_KEY,
-        ALLOWANCE_KEY,
-      } = await loadFixture(setup);
-      const calldata =
-        await testContract.spendAndMaybeRevert.populateTransaction(100, true);
+      const { roles, invoker, testContractAddress, ROLE_KEY, ALLOWANCE_KEY } =
+        await loadFixture(setup);
+      const calldata = iface.encodeFunctionData("spendAndMaybeRevert", [
+        100,
+        true,
+      ]);
 
       await expect(
         roles
@@ -478,7 +436,7 @@ describe("Execution Mechanics", () => {
           .execTransactionWithRoleReturnData(
             testContractAddress,
             0,
-            calldata.data as string,
+            calldata,
             0,
             ROLE_KEY,
             true,
