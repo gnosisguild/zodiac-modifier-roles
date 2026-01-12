@@ -15,6 +15,8 @@ enum Encoding {
 }
 
 struct Condition {
+    /// @dev BFS index from unpacking - identifies this node in the flattened tree
+    uint256 nodeIndex;
     Operator operator;
     bytes compValue;
     /// @dev Number of children that describe type structure (Tuple/Array fields).

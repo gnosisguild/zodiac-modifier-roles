@@ -16,8 +16,8 @@ import "../../types/Types.sol";
  *   | No code at address    | (true, "")            | extcodesize == 0              | CustomConditionNotAContract     |
  *   | Wrong interface       | (false, "")           | staticcall fails              | CustomConditionReverted         |
  *   | Function reverts      | (false, <error data>) | staticcall fails              | CustomConditionReverted         |
- *   | Returns wrong type    | (true, <len != 64>)   | returnData.length != 64       | CustomConditionInvalidResult    |
- *   | Returns (false, info) | (true, <64 bytes>)    | Adapter rejects the condition | CustomConditionViolation        |
+ *   | Returns wrong type    | (true, <len != 32>)   | returnData.length != 32       | CustomConditionInvalidResult    |
+ *   | Returns false         | (true, <32 bytes>)    | Adapter rejects the condition | CustomConditionViolation        |
  *
  * @author gnosisguild
  */
@@ -33,7 +33,6 @@ library CustomConditionChecker {
      * @param size Byte length of the parameter
      * @param pluckedValues Array of previously plucked values
      * @return status Ok if condition passes, error status otherwise
-     * @return info Additional info returned by adapter (or error context)
      */
     function check(
         bytes memory compValue,
@@ -44,7 +43,7 @@ library CustomConditionChecker {
         uint256 location,
         uint256 size,
         bytes32[] memory pluckedValues
-    ) internal view returns (Status status, bytes32 info) {
+    ) internal view returns (Status status) {
         address adapter = address(bytes20(compValue));
 
         bytes memory extra;
@@ -85,13 +84,13 @@ library CustomConditionChecker {
         uint256 size,
         bytes memory extra,
         bytes32[] memory pluckedValues
-    ) private view returns (Status, bytes32) {
+    ) private view returns (Status) {
         uint256 codeSize;
         assembly {
             codeSize := extcodesize(adapter)
         }
         if (codeSize == 0) {
-            return (Status.CustomConditionNotAContract, 0);
+            return Status.CustomConditionNotAContract;
         }
 
         (bool callSuccess, bytes memory returnData) = adapter.staticcall(
@@ -111,18 +110,18 @@ library CustomConditionChecker {
         );
 
         if (!callSuccess) {
-            return (Status.CustomConditionReverted, 0);
+            return Status.CustomConditionReverted;
         }
 
-        if (returnData.length != 64) {
-            return (Status.CustomConditionInvalidResult, 0);
+        if (returnData.length != 32) {
+            return Status.CustomConditionInvalidResult;
         }
 
-        (bool success, bytes32 info) = abi.decode(returnData, (bool, bytes32));
+        bool success = abi.decode(returnData, (bool));
         if (!success) {
-            return (Status.CustomConditionViolation, info);
+            return Status.CustomConditionViolation;
         }
 
-        return (Status.Ok, info);
+        return Status.Ok;
     }
 }

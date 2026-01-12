@@ -1,4 +1,5 @@
 import { expect } from "chai";
+import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
 import {
   AbiCoder,
@@ -102,7 +103,12 @@ describe("Operator - CallWithinAllowance", async () => {
 
       await expect(invoke())
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(
+          ConditionViolationStatus.AllowanceExceeded,
+          1, // CallWithinAllowance node
+          anyValue,
+          anyValue,
+        );
     });
 
     it("success - multiple checks from existing balance", async () => {
@@ -122,7 +128,12 @@ describe("Operator - CallWithinAllowance", async () => {
 
       await expect(invoke())
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(
+          ConditionViolationStatus.AllowanceExceeded,
+          1, // CallWithinAllowance node
+          anyValue,
+          anyValue,
+        );
     });
 
     it("success - from balance 0 but enough refill pending", async () => {
@@ -134,7 +145,12 @@ describe("Operator - CallWithinAllowance", async () => {
       await expect(invoke()).to.not.be.reverted;
       await expect(invoke())
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(
+          ConditionViolationStatus.AllowanceExceeded,
+          1, // CallWithinAllowance node
+          anyValue,
+          anyValue,
+        );
     });
 
     it("fail - insufficient balance and not enough elapsed for next refill", async () => {
@@ -145,7 +161,12 @@ describe("Operator - CallWithinAllowance", async () => {
 
       await expect(invoke())
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(
+          ConditionViolationStatus.AllowanceExceeded,
+          1, // CallWithinAllowance node
+          anyValue,
+          anyValue,
+        );
     });
   });
 
@@ -213,16 +234,31 @@ describe("Operator - CallWithinAllowance", async () => {
 
       await expect(invoke(valueOther))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.OrViolation, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.OrViolation,
+          0, // Or node
+          anyValue,
+          anyValue,
+        );
 
       await expect(invoke(value1))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.OrViolation, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.OrViolation,
+          0, // Or node
+          anyValue,
+          anyValue,
+        );
 
       await expect(invoke(value2)).not.to.be.reverted;
       await expect(invoke(value2))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.OrViolation, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.OrViolation,
+          0, // Or node
+          anyValue,
+          anyValue,
+        );
     });
   });
 
@@ -267,7 +303,12 @@ describe("Operator - CallWithinAllowance", async () => {
       // Wrong param value - should fail
       await expect(invoke(999))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          3, // EqualTo node
+          anyValue,
+          anyValue,
+        );
 
       // Correct param - should succeed (3 times)
       await expect(invoke(allowedValue)).to.not.be.reverted;
@@ -282,7 +323,12 @@ describe("Operator - CallWithinAllowance", async () => {
       // Now should fail due to exhausted allowance
       await expect(invoke(allowedValue))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(
+          ConditionViolationStatus.AllowanceExceeded,
+          2, // CallWithinAllowance node
+          anyValue,
+          anyValue,
+        );
     });
 
     it("AND(CallWithinAllowance, OR(ParamA, ParamB))", async () => {
@@ -340,7 +386,12 @@ describe("Operator - CallWithinAllowance", async () => {
       // Wrong param value (not A or B) - should fail
       await expect(invoke(999))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.OrViolation, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.OrViolation,
+          3, // Or node
+          anyValue,
+          anyValue,
+        );
 
       // Allowed value A - should succeed
       await expect(invoke(allowedValueA)).to.not.be.reverted;
@@ -361,10 +412,20 @@ describe("Operator - CallWithinAllowance", async () => {
       // Both values should now fail due to exhausted allowance
       await expect(invoke(allowedValueA))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(
+          ConditionViolationStatus.AllowanceExceeded,
+          2, // CallWithinAllowance node
+          anyValue,
+          anyValue,
+        );
       await expect(invoke(allowedValueB))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(
+          ConditionViolationStatus.AllowanceExceeded,
+          2, // CallWithinAllowance node
+          anyValue,
+          anyValue,
+        );
     });
   });
 
@@ -440,7 +501,108 @@ describe("Operator - CallWithinAllowance", async () => {
           ),
       )
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(
+          ConditionViolationStatus.AllowanceExceeded,
+          0, // CallWithinAllowance as root node
+          anyValue,
+          anyValue,
+        );
+    });
+  });
+
+  describe("violation context", () => {
+    it("reports the violating node index", async () => {
+      const { roles, member, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      const iface = new Interface(["function doNothing()"]);
+      const fn = iface.getFunction("doNothing")!;
+      const allowanceKey = hexlify(randomBytes(32));
+
+      await setAllowance(roles, allowanceKey, 0); // No balance
+
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.None,
+              operator: Operator.CallWithinAllowance,
+              compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
+            },
+          ],
+        }),
+        ExecutionOptions.None,
+      );
+
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            testContractAddress,
+            0,
+            iface.encodeFunctionData(fn, []),
+            0,
+          ),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.AllowanceExceeded,
+          1, // CallWithinAllowance node at BFS index 1
+          anyValue,
+          anyValue,
+        );
+    });
+
+    it("reports the calldata range of the violation", async () => {
+      const { roles, member, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      const iface = new Interface(["function doNothing()"]);
+      const fn = iface.getFunction("doNothing")!;
+      const allowanceKey = hexlify(randomBytes(32));
+
+      await setAllowance(roles, allowanceKey, 0); // No balance
+
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.None,
+              operator: Operator.CallWithinAllowance,
+              compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
+            },
+          ],
+        }),
+        ExecutionOptions.None,
+      );
+
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            testContractAddress,
+            0,
+            iface.encodeFunctionData(fn, []),
+            0,
+          ),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.AllowanceExceeded,
+          anyValue,
+          0, // payloadLocation: CallWithinAllowance has no payload
+          0, // payloadSize: no payload
+        );
     });
   });
 });
