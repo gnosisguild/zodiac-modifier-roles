@@ -1,4 +1,5 @@
 import { expect } from "chai";
+import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import hre from "hardhat";
 import { hexlify, Interface, randomBytes, ZeroHash } from "ethers";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
@@ -97,7 +98,12 @@ describe("Operator - Custom", () => {
         ),
       )
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.CustomConditionViolation, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.CustomConditionViolation,
+          1, // Custom node
+          anyValue,
+          anyValue,
+        );
     });
 
     it("extracts and passes extra data (from compValue) to adapter", async () => {
@@ -131,7 +137,9 @@ describe("Operator - Custom", () => {
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.CustomConditionViolation,
-          expectedInfo,
+          1, // Custom node
+          anyValue,
+          anyValue,
         );
     });
   });
@@ -189,7 +197,9 @@ describe("Operator - Custom", () => {
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.CustomConditionViolation,
-          expectedInfo,
+          1, // Custom node
+          anyValue,
+          anyValue,
         );
     });
   });
@@ -219,7 +229,9 @@ describe("Operator - Custom", () => {
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.CustomConditionNotAContract,
-          ZeroHash,
+          1, // Custom node
+          anyValue,
+          anyValue,
         );
     });
 
@@ -252,7 +264,12 @@ describe("Operator - Custom", () => {
       // Function selector not found, no fallback -> staticcall fails
       await expect(invoke(101))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.CustomConditionReverted, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.CustomConditionReverted,
+          1, // Custom node
+          anyValue,
+          anyValue,
+        );
     });
 
     it("function reverts: reverts", async () => {
@@ -283,14 +300,19 @@ describe("Operator - Custom", () => {
       // Adapter reverts -> staticcall fails
       await expect(invoke(101))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.CustomConditionReverted, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.CustomConditionReverted,
+          1, // Custom node
+          anyValue,
+          anyValue,
+        );
     });
 
     it("returns wrong type: reverts", async () => {
       const { roles, allowFunction, invoke } =
         await loadFixture(setupWithChecker);
 
-      // Deploy contract that returns uint256 instead of (bool, bytes32)
+      // Deploy contract that returns (uint256, uint256) instead of bool
       const WrongReturnChecker = await hre.ethers.getContractFactory(
         "TestCustomCheckerWrongReturn",
       );
@@ -312,12 +334,14 @@ describe("Operator - Custom", () => {
         ExecutionOptions.Both,
       );
 
-      // Return data length != 64 bytes
+      // Return data length != 32 bytes
       await expect(invoke(101))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.CustomConditionInvalidResult,
-          ZeroHash,
+          1, // Custom node
+          anyValue,
+          anyValue,
         );
     });
 
@@ -340,8 +364,67 @@ describe("Operator - Custom", () => {
         ExecutionOptions.Both,
       );
 
-      // Valid adapter returns (true, bytes32) -> passes
+      // Valid adapter returns true -> passes
       await expect(invoke(101)).to.not.be.reverted;
+    });
+  });
+
+  describe("violation context", () => {
+    it("reports the violating node index", async () => {
+      const { roles, allowFunction, invoke, customCheckerAddress } =
+        await loadFixture(setupWithChecker);
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Static,
+              operator: Operator.Custom,
+              compValue: customCheckerAddress,
+            },
+          ],
+        }),
+      );
+
+      // Value <= 100 triggers custom checker failure
+      await expect(invoke(50))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.CustomConditionViolation,
+          1, // Custom node at BFS index 1
+          anyValue,
+          anyValue,
+        );
+    });
+
+    it("reports the calldata range of the violation", async () => {
+      const { roles, allowFunction, invoke, customCheckerAddress } =
+        await loadFixture(setupWithChecker);
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Static,
+              operator: Operator.Custom,
+              compValue: customCheckerAddress,
+            },
+          ],
+        }),
+      );
+
+      await expect(invoke(50))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.CustomConditionViolation,
+          anyValue,
+          4, // payloadLocation: parameter starts at byte 4
+          32, // payloadSize: uint256 is 32 bytes
+        );
     });
   });
 });

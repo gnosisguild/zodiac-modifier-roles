@@ -1,5 +1,6 @@
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { AbiCoder, Interface, solidityPacked, ZeroHash } from "ethers";
 
 import {
@@ -65,7 +66,12 @@ describe("Operator - EqualTo", () => {
       // Different value fails
       await expect(invoke(101))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          1, // EqualTo node
+          anyValue,
+          anyValue,
+        );
     });
 
     it("integrates with Slice operator", async () => {
@@ -101,7 +107,12 @@ describe("Operator - EqualTo", () => {
       // bytes[4:8] = 0xcafebabe does not match
       await expect(invoke("0x00000000cafebabe"))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          2, // EqualTo node under Slice
+          anyValue,
+          anyValue,
+        );
     });
 
     it("compares ether value (msg.value)", async () => {
@@ -133,7 +144,12 @@ describe("Operator - EqualTo", () => {
       // Different ether value fails
       await expect(invoke(42, { value: 1001 }))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          2, // EtherValue/EqualTo node
+          anyValue,
+          anyValue,
+        );
     });
   });
 
@@ -253,7 +269,70 @@ describe("Operator - EqualTo", () => {
           ),
       )
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          1, // EqualTo node
+          anyValue,
+          anyValue,
+        );
+    });
+  });
+
+  describe("violation context", () => {
+    it("reports the violating node index", async () => {
+      const { roles, allowFunction, invoke } = await loadFixture(setupOneParam);
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Static,
+              operator: Operator.EqualTo,
+              compValue: abiCoder.encode(["uint256"], [100]),
+            },
+          ],
+        }),
+        ExecutionOptions.None,
+      );
+
+      await expect(invoke(999))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          1, // EqualTo node at BFS index 1
+          anyValue,
+          anyValue,
+        );
+    });
+
+    it("reports the calldata range of the violation", async () => {
+      const { roles, allowFunction, invoke } = await loadFixture(setupOneParam);
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Static,
+              operator: Operator.EqualTo,
+              compValue: abiCoder.encode(["uint256"], [100]),
+            },
+          ],
+        }),
+        ExecutionOptions.None,
+      );
+
+      await expect(invoke(999))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          anyValue,
+          4, // payloadLocation: parameter starts at byte 4 (after selector)
+          32, // payloadSize: uint256 is 32 bytes
+        );
     });
   });
 });
