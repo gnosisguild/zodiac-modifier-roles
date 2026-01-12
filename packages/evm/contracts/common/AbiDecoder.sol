@@ -54,6 +54,69 @@ library AbiDecoder {
     }
 
     /**
+     * @dev Processes a sequence of elements using HEAD+TAIL encoding.
+     *      Tuple, Array and AbiEncoded use this encoding type.
+     *
+     * @param data     The calldata being inspected.
+     * @param location Byte position where the block's HEAD region starts.
+     * @param length   Number of elements in the block.
+     * @param layout   Type tree node for the block (Array or Tuple).
+     * @param payload  Output: populated with child Payloads.
+     *
+     * @notice Arrays use layout.children[0] as a template for all elements.
+     *         Variant arrays use layout.children[i] for each element.
+     *         Tuples use layout.children[i] for each element.
+     *         Static elements are encoded inline in HEAD.
+     *         Dynamic elements have a pointer in HEAD, data in TAIL.
+     */
+    function __block__(
+        bytes calldata data,
+        uint256 location,
+        uint256 length,
+        Layout memory layout,
+        Payload memory payload
+    ) private pure {
+        Payload[] memory children = new Payload[](length);
+
+        bool isArray = layout.encoding == Encoding.Array;
+        uint256 headOffset;
+        for (uint256 i; i < length; ++i) {
+            Layout memory childLayout = layout.children[
+                isArray && i >= layout.children.length ? 0 : i
+            ];
+            Payload memory childPayload = children[i];
+
+            bool isInline = childLayout.inlined;
+
+            uint256 childLocation = _locationInBlock(
+                data,
+                location,
+                headOffset,
+                isInline
+            );
+
+            if (childLocation == type(uint256).max) {
+                payload.overflow = true;
+                return;
+            }
+
+            _walk(data, childLocation, childLayout, childPayload);
+
+            if (childPayload.overflow) {
+                payload.overflow = true;
+                return;
+            }
+
+            // Update the offset in the block for the next element
+            headOffset += isInline ? childPayload.size : 32;
+
+            // For non-inline elements, we need to account for the 32-byte pointer
+            payload.size += childPayload.size + (isInline ? 0 : 32);
+        }
+        payload.children = children;
+    }
+
+    /**
      * @dev Traverses a type tree, produces Payload with position and size.
      *
      * @param data     The calldata being inspected.
@@ -67,11 +130,6 @@ library AbiDecoder {
         Layout memory layout,
         Payload memory payload
     ) private pure {
-        if (location + 32 > data.length) {
-            payload.overflow = true;
-            return;
-        }
-
         payload.location = location;
         payload.inlined = layout.inlined;
 
@@ -110,69 +168,6 @@ library AbiDecoder {
         if (location + payload.size > data.length) {
             payload.overflow = true;
         }
-    }
-
-    /**
-     * @dev Processes a sequence of elements using HEAD+TAIL encoding.
-     *      Tuple, Array and AbiEncoded use this encoding type.
-     *
-     * @param data     The calldata being inspected.
-     * @param location Byte position where the block's HEAD region starts.
-     * @param length   Number of elements in the block.
-     * @param layout   Type tree node for the block (Array or Tuple).
-     * @param payload  Output: populated with child Payloads.
-     *
-     * @notice Arrays use layout.children[0] as a template for all elements.
-     *         Variant arrays use layout.children[i] for each element.
-     *         Tuples use layout.children[i] for each element.
-     *         Static elements are encoded inline in HEAD.
-     *         Dynamic elements have a pointer in HEAD, data in TAIL.
-     */
-    function __block__(
-        bytes calldata data,
-        uint256 location,
-        uint256 length,
-        Layout memory layout,
-        Payload memory payload
-    ) private pure {
-        Payload[] memory children = new Payload[](length);
-
-        bool isArray = layout.encoding == Encoding.Array;
-        uint256 offset;
-        for (uint256 i; i < length; ++i) {
-            Layout memory childLayout = layout.children[
-                isArray && i >= layout.children.length ? 0 : i
-            ];
-            Payload memory childPayload = children[i];
-
-            bool isInline = childLayout.inlined;
-
-            uint256 childLocation = _locationInBlock(
-                data,
-                location,
-                offset,
-                isInline
-            );
-
-            if (childLocation == type(uint256).max) {
-                payload.overflow = true;
-                return;
-            }
-
-            _walk(data, childLocation, childLayout, childPayload);
-
-            if (childPayload.overflow) {
-                payload.overflow = true;
-                return;
-            }
-
-            // Update the offset in the block for the next element
-            offset += isInline ? childPayload.size : 32;
-
-            // For non-inline elements, we need to account for the 32-byte pointer
-            payload.size += childPayload.size + (isInline ? 0 : 32);
-        }
-        payload.children = children;
     }
 
     /**
