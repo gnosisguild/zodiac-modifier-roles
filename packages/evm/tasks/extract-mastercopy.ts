@@ -37,9 +37,9 @@ task(
   });
   writeMastercopyFromBuild({
     contractVersion: packageJson.version,
-    contractName: "ConditionsTransform",
+    contractName: "ConditionStorer",
     compilerInput: await hre.run("verify:etherscan-get-minimal-input", {
-      sourceName: "contracts/core/serialize/ConditionsTransform.sol",
+      sourceName: "contracts/core/serialize/ConditionStorer.sol",
     }),
     constructorArgs: {
       types: [],

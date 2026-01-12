@@ -56,7 +56,7 @@ library WithinRatioChecker {
             Status status,
             uint256 referenceAmount,
             uint256 relativeAmount
-        ) = _amounts(config, pluckedValues);
+        ) = _convert(config, pluckedValues);
         if (status != Status.Ok) {
             return status;
         }
@@ -79,9 +79,13 @@ library WithinRatioChecker {
     }
 
     /**
-     * @dev Normalizes both amounts to a common precision and applies price conversion.
+     * @dev Extracts and converts reference and relative amounts for ratio comparison.
+     *
+     *      1. Reads raw values from pluckedValues by index
+     *      2. Scales both to the higher decimal precision
+     *      3. Applies price adapters (if configured)
      */
-    function _amounts(
+    function _convert(
         CompValue memory config,
         bytes32[] memory pluckedValues
     )
@@ -93,35 +97,34 @@ library WithinRatioChecker {
             ? config.referenceDecimals
             : config.relativeDecimals;
 
-        {
-            // scale up or down to common precision
-            referenceAmount =
-                uint256(pluckedValues[config.referenceIndex]) *
-                (10 ** (precision - config.referenceDecimals));
-            // apply optional exchange rate
-            (status, referenceAmount) = PriceConversion.convert(
-                referenceAmount,
-                config.referenceAdapter
-            );
-            if (status != Status.Ok) {
-                return (status, 0, 0);
-            }
-        }
+        (status, referenceAmount) = _scaleAndPrice(
+            uint256(pluckedValues[config.referenceIndex]),
+            config.referenceDecimals,
+            precision,
+            config.referenceAdapter
+        );
+        if (status != Status.Ok) return (status, 0, 0);
 
-        {
-            // scale up or down to common precision
-            relativeAmount =
-                uint256(pluckedValues[config.relativeIndex]) *
-                (10 ** (precision - config.relativeDecimals));
-            // apply optional exchange rate
-            (status, relativeAmount) = PriceConversion.convert(
-                relativeAmount,
-                config.relativeAdapter
+        (status, relativeAmount) = _scaleAndPrice(
+            uint256(pluckedValues[config.relativeIndex]),
+            config.relativeDecimals,
+            precision,
+            config.relativeAdapter
+        );
+        if (status != Status.Ok) return (status, 0, 0);
+    }
+
+    function _scaleAndPrice(
+        uint256 value,
+        uint256 decimals,
+        uint256 precision,
+        address adapter
+    ) private view returns (Status, uint256) {
+        return
+            PriceConversion.convert(
+                value * (10 ** (precision - decimals)),
+                adapter
             );
-            if (status != Status.Ok) {
-                return (status, 0, 0);
-            }
-        }
     }
 
     function _unpack(

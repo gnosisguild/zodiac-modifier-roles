@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "../../types/Types.sol";
+import "./Topology.sol";
 
 /**
  * ScopedFunction Layout in Contract Storage
@@ -125,7 +125,7 @@ library ConditionPacker {
             (conditions.length * CONDITION_NODE_BYTES);
 
         for (uint256 i; i < conditions.length; ++i) {
-            (, uint256 childCount, uint256 sChildCount) = _childBounds(
+            (, uint256 childCount, uint256 sChildCount) = Topology.childBounds(
                 conditions,
                 i
             );
@@ -210,59 +210,6 @@ library ConditionPacker {
                 result = count;
             }
         }
-    }
-
-    function _childBounds(
-        ConditionFlat[] memory conditions,
-        uint256 index
-    )
-        private
-        pure
-        returns (uint256 childStart, uint256 childCount, uint256 sChildCount)
-    {
-        for (uint256 i = index + 1; i < conditions.length; ++i) {
-            uint256 parent = conditions[i].parent;
-
-            if (parent == index) {
-                if (childCount == 0) childStart = i;
-                ++childCount;
-            } else if (parent > index) {
-                break;
-            }
-        }
-
-        sChildCount = childCount;
-        for (uint256 i = childStart + childCount; i > childStart; --i) {
-            if (_isNonStructural(conditions, i - 1)) {
-                // non structural come last
-                --sChildCount;
-            } else {
-                // break once structural, all the rest will also be
-                break;
-            }
-        }
-    }
-
-    function _isNonStructural(
-        ConditionFlat[] memory conditions,
-        uint256 index
-    ) private pure returns (bool) {
-        // NonStructural if paramType is None and all descendants are None
-        if (conditions[index].paramType != Encoding.None) {
-            return false;
-        }
-
-        for (uint256 i = index + 1; i < conditions.length; ++i) {
-            if (conditions[i].parent == index) {
-                if (!_isNonStructural(conditions, i)) {
-                    return false;
-                }
-            } else if (conditions[i].parent > index) {
-                break;
-            }
-        }
-
-        return true;
     }
 
     // ═══════════════════════════════════════════════════════════════════════════

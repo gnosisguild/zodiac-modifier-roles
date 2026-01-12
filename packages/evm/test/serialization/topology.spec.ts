@@ -269,6 +269,24 @@ describe("Topology", () => {
         });
         expect(await mockTopology.isStructural(conditions, 0)).to.be.true;
       });
+
+      it("breaks early when iterating past subtree (deep non-structural)", async () => {
+        const { mockTopology } = await loadFixture(setup);
+
+        const conditions = flattenCondition({
+          paramType: Encoding.None,
+          operator: Operator.Pass,
+          children: [
+            {
+              paramType: Encoding.None,
+              operator: Operator.Pass,
+              children: [{ paramType: Encoding.None, operator: Operator.Pass }],
+            },
+          ],
+        });
+
+        expect(await mockTopology.isStructural(conditions, 0)).to.be.false;
+      });
     });
   });
 });
