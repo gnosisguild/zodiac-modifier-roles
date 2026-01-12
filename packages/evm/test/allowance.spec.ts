@@ -47,7 +47,7 @@ describe("AllowanceTracking", () => {
     );
     await roles.enableModule(member.address);
 
-    const TestContract = await hre.ethers.getContractFactory("Fallbacker");
+    const TestContract = await hre.ethers.getContractFactory("TestContract");
     const testContract = await TestContract.deploy();
     const testContractAddress = await testContract.getAddress();
 

@@ -11,17 +11,13 @@ import {
 import { ExecutionOptions } from "./utils";
 import { ConditionFlatStruct } from "../typechain-types/contracts/core/Membership";
 
-/**
- * Setup with Fallbacker contract for flexible calldata testing.
- * Allows crafting arbitrary calldata with AbiCoder.
- */
-export async function setupFallbacker() {
+export async function setupTestContract() {
   const [owner, member] = await hre.ethers.getSigners();
 
   const Avatar = await hre.ethers.getContractFactory("TestAvatar");
   const avatar = await Avatar.deploy();
 
-  const TestContract = await hre.ethers.getContractFactory("Fallbacker");
+  const TestContract = await hre.ethers.getContractFactory("TestContract");
   const testContract = await TestContract.deploy();
 
   const avatarAddress = await avatar.getAddress();
@@ -103,7 +99,7 @@ export async function setupAvatarAndRoles(
   const Avatar = await hre.ethers.getContractFactory("TestAvatar");
   const avatar = await Avatar.deploy();
 
-  const TestContract = await hre.ethers.getContractFactory("Fallbacker");
+  const TestContract = await hre.ethers.getContractFactory("TestContract");
   const testContract = await TestContract.deploy();
   const avatarAddress = await avatar.getAddress();
   const roles = await deployRolesMod(

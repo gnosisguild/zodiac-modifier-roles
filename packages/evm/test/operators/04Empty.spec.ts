@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { ZeroHash } from "ethers";
 
-import { setupFallbacker } from "../setup";
+import { setupTestContract } from "../setup";
 import {
   Encoding,
   Operator,
@@ -15,7 +15,7 @@ describe("Operator - Empty", () => {
   describe("core behavior", () => {
     it("passes when calldata is empty", async () => {
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       await roles.allowTarget(
         roleKey,
@@ -36,7 +36,7 @@ describe("Operator - Empty", () => {
 
     it("fails when calldata is not empty", async () => {
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       await roles.allowTarget(
         roleKey,

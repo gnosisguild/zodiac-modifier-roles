@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { AbiCoder, Interface, solidityPacked, ZeroHash } from "ethers";
 
-import { setupFallbacker } from "../setup";
+import { setupTestContract } from "../setup";
 import {
   Encoding,
   Operator,
@@ -18,7 +18,7 @@ describe("Operator - SignedIntLessThan", () => {
     const iface = new Interface(["function fn(int256)"]);
     const fn = iface.getFunction("fn")!;
     const { roles, member, testContractAddress, roleKey } =
-      await loadFixture(setupFallbacker);
+      await loadFixture(setupTestContract);
 
     await roles.allowFunction(
       roleKey,
@@ -55,7 +55,7 @@ describe("Operator - SignedIntLessThan", () => {
     const iface = new Interface(["function fn(int256)"]);
     const fn = iface.getFunction("fn")!;
     const { roles, member, testContractAddress, roleKey } =
-      await loadFixture(setupFallbacker);
+      await loadFixture(setupTestContract);
 
     await roles.allowFunction(
       roleKey,
@@ -108,7 +108,7 @@ describe("Operator - SignedIntLessThan", () => {
     const iface = new Interface(["function fn(int256)"]);
     const fn = iface.getFunction("fn")!;
     const { roles, member, testContractAddress, roleKey } =
-      await loadFixture(setupFallbacker);
+      await loadFixture(setupTestContract);
 
     // compValue = -50, so value must be < -50
     await roles.allowFunction(
@@ -200,7 +200,7 @@ describe("Operator - SignedIntLessThan", () => {
     const iface = new Interface(["function fn(bytes)"]);
     const fn = iface.getFunction("fn")!;
     const { roles, member, testContractAddress, roleKey } =
-      await loadFixture(setupFallbacker);
+      await loadFixture(setupTestContract);
 
     // Slice 4 bytes at offset 0, then SignedIntLessThan comparison
     await roles.allowFunction(
@@ -259,7 +259,7 @@ describe("Operator - SignedIntLessThan", () => {
     const iface = new Interface(["function fn()"]);
     const fn = iface.getFunction("fn")!;
     const { roles, member, testContractAddress, roleKey } =
-      await loadFixture(setupFallbacker);
+      await loadFixture(setupTestContract);
 
     // SignedIntLessThan on EtherValue: msg.value must be < 1000 wei
     await roles.allowFunction(

@@ -40,7 +40,7 @@ describe("Membership", () => {
       avatarAddress,
     );
 
-    const TestContract = await hre.ethers.getContractFactory("Fallbacker");
+    const TestContract = await hre.ethers.getContractFactory("TestContract");
     const testContract = await TestContract.deploy();
     const testContractAddress = await testContract.getAddress();
 

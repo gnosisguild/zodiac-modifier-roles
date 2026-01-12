@@ -3,7 +3,7 @@ import hre from "hardhat";
 import { Interface, ZeroHash } from "ethers";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import { setupFallbacker } from "../setup";
+import { setupTestContract } from "../setup";
 import {
   Encoding,
   Operator,
@@ -14,7 +14,7 @@ import {
 
 describe("Operator - Custom", () => {
   async function setupWithChecker() {
-    const base = await setupFallbacker();
+    const base = await setupTestContract();
     const CustomChecker =
       await hre.ethers.getContractFactory("TestCustomChecker");
     const customChecker = await CustomChecker.deploy();

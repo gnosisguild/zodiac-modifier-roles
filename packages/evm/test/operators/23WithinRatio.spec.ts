@@ -10,7 +10,7 @@ import {
   ZeroHash,
 } from "ethers";
 
-import { setupFallbacker } from "../setup";
+import { setupTestContract } from "../setup";
 import {
   Encoding,
   flattenCondition,
@@ -32,7 +32,7 @@ async function setupTwoParams() {
   const iface = new Interface(["function fn(uint256, uint256)"]);
   const fn = iface.getFunction("fn")!;
   const { roles, member, testContractAddress, roleKey } =
-    await setupFallbacker();
+    await setupTestContract();
 
   const allowFunction = (
     conditions: ConditionFlatStruct[],
@@ -1317,7 +1317,7 @@ describe("Operator - WithinRatio", () => {
       ]);
       const fn = iface.getFunction("mixedParams")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       const compValue = encodeWithinRatioCompValue({
         referenceIndex: 0,
@@ -1372,7 +1372,7 @@ describe("Operator - WithinRatio", () => {
       const iface = new Interface(["function dynamic(bytes)"]);
       const fn = iface.getFunction("dynamic")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       const compValue = encodeWithinRatioCompValue({
         referenceIndex: 0,
@@ -1446,7 +1446,7 @@ describe("Operator - WithinRatio", () => {
       ]);
       const fn = iface.getFunction("mixedTuple")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       const compValue = encodeWithinRatioCompValue({
         referenceIndex: 0,
@@ -1513,7 +1513,7 @@ describe("Operator - WithinRatio", () => {
       const iface = new Interface(["function uint256ArrayStatic(uint256[])"]);
       const fn = iface.getFunction("uint256ArrayStatic")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       const compValue = encodeWithinRatioCompValue({
         referenceIndex: 0,
@@ -1575,7 +1575,7 @@ describe("Operator - WithinRatio", () => {
       const iface = new Interface(["function fn(uint256)"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       // Pluck ether value → pluckedValues[0]
       // Pluck param → pluckedValues[1]

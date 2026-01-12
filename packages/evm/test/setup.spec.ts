@@ -45,8 +45,8 @@ describe("Setup", () => {
       avatarAddress,
     );
 
-    const Fallbacker = await hre.ethers.getContractFactory("Fallbacker");
-    const testContract = await Fallbacker.deploy();
+    const TestContract = await hre.ethers.getContractFactory("TestContract");
+    const testContract = await TestContract.deploy();
     const testContractAddress = await testContract.getAddress();
 
     const ROLE_KEY = hre.ethers.id("TEST_ROLE");
@@ -1268,8 +1268,8 @@ describe("Setup", () => {
       const { roles, member, ROLE_KEY, testContractAddress } =
         await loadFixture(setup);
 
-      const Fallbacker2 = await hre.ethers.getContractFactory("Fallbacker");
-      const testContract2 = await Fallbacker2.deploy();
+      const TestContract2 = await hre.ethers.getContractFactory("TestContract");
+      const testContract2 = await TestContract2.deploy();
       const testContract2Address = await testContract2.getAddress();
 
       await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
@@ -1347,8 +1347,8 @@ describe("Setup", () => {
       const { roles, member, ROLE_KEY, testContractAddress, testContract } =
         await loadFixture(setup);
 
-      const Fallbacker2 = await hre.ethers.getContractFactory("Fallbacker");
-      const testContract2 = await Fallbacker2.deploy();
+      const TestContract2 = await hre.ethers.getContractFactory("TestContract");
+      const testContract2 = await TestContract2.deploy();
       const testContract2Address = await testContract2.getAddress();
 
       const selector = iface.getFunction("doNothing")!.selector;

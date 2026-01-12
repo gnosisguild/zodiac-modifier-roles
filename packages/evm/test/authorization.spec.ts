@@ -45,8 +45,8 @@ describe("Authorization", () => {
       avatarAddress,
     );
 
-    const Fallbacker = await hre.ethers.getContractFactory("Fallbacker");
-    const testContract = await Fallbacker.deploy();
+    const TestContract = await hre.ethers.getContractFactory("TestContract");
+    const testContract = await TestContract.deploy();
     const testContractAddress = await testContract.getAddress();
 
     const roleKey = hexlify(randomBytes(32));
@@ -1158,8 +1158,8 @@ describe("Authorization", () => {
       const unwrapperAddress = await unwrapper.getAddress();
 
       // Deploy a second target that won't be allowed
-      const Fallbacker2 = await hre.ethers.getContractFactory("Fallbacker");
-      const testContract2 = await Fallbacker2.deploy();
+      const TestContract2 = await hre.ethers.getContractFactory("TestContract");
+      const testContract2 = await TestContract2.deploy();
       const target2Address = await testContract2.getAddress();
 
       await roles.grantRole(member.address, roleKey, 0, 0, 0);

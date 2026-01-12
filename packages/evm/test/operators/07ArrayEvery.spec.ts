@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { AbiCoder, Interface, ZeroHash } from "ethers";
 
-import { setupFallbacker } from "../setup";
+import { setupTestContract } from "../setup";
 import {
   Encoding,
   Operator,
@@ -19,7 +19,7 @@ describe("Operator - ArrayEvery", () => {
       const iface = new Interface(["function fn(uint256[])"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       // ArrayEvery: all elements must be less than 100
       await roles.allowFunction(
@@ -63,7 +63,7 @@ describe("Operator - ArrayEvery", () => {
       const iface = new Interface(["function fn(uint256[])"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       // ArrayEvery: all elements must be less than 100
       await roles.allowFunction(
@@ -112,7 +112,7 @@ describe("Operator - ArrayEvery", () => {
       const iface = new Interface(["function fn(uint256[])"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       const allowanceKey =
         "0x000000000000000000000000000000000000000000000000000000000000abcd";
@@ -185,7 +185,7 @@ describe("Operator - ArrayEvery", () => {
       const iface = new Interface(["function fn(uint256[])"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       // ArrayEvery: all elements must equal 42
       await roles.allowFunction(
@@ -231,7 +231,7 @@ describe("Operator - ArrayEvery", () => {
       const iface = new Interface(["function fn(uint256[])"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       const allowanceKey =
         "0x000000000000000000000000000000000000000000000000000000000000abcd";

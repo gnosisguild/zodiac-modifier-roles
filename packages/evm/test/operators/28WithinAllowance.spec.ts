@@ -20,7 +20,7 @@ import {
   Operator,
   ConditionViolationStatus,
 } from "../utils";
-import { setupFallbacker, setupAvatarAndRoles } from "../setup";
+import { setupTestContract, setupAvatarAndRoles } from "../setup";
 import { Roles } from "../../typechain-types";
 import { ConditionFlatStruct } from "../../typechain-types/contracts/Roles";
 
@@ -56,7 +56,7 @@ describe("Operator - WithinAllowance", async () => {
     const iface = new Interface(["function fn(uint256)"]);
     const fn = iface.getFunction("fn")!;
     const { roles, member, testContractAddress, roleKey } =
-      await setupFallbacker();
+      await setupTestContract();
 
     const allowFunction = (
       conditions: ConditionFlatStruct[],
@@ -95,7 +95,7 @@ describe("Operator - WithinAllowance", async () => {
     const iface = new Interface(["function fn(uint256, uint256)"]);
     const fn = iface.getFunction("fn")!;
     const { roles, member, testContractAddress, roleKey } =
-      await setupFallbacker();
+      await setupTestContract();
 
     const allowFunction = (
       conditions: ConditionFlatStruct[],

@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { Interface, ZeroHash } from "ethers";
 
-import { setupFallbacker } from "../setup";
+import { setupTestContract } from "../setup";
 import {
   Encoding,
   Operator,
@@ -30,7 +30,7 @@ describe("Operator - Bitmask", () => {
       const iface = new Interface(["function fn(bytes)"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       // shift=3, mask=2 bytes -> reads bytes[3:5]
       await roles.allowFunction(
@@ -80,7 +80,7 @@ describe("Operator - Bitmask", () => {
       const iface = new Interface(["function fn(bytes)"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       // 33-byte mask requires 33 bytes (crosses word boundary)
       await roles.allowFunction(
@@ -134,7 +134,7 @@ describe("Operator - Bitmask", () => {
       const iface = new Interface(["function fn(bytes)"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       await roles.allowFunction(
         roleKey,
@@ -170,7 +170,7 @@ describe("Operator - Bitmask", () => {
       const iface = new Interface(["function fn(bytes)"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       await roles.allowFunction(
         roleKey,
@@ -208,7 +208,7 @@ describe("Operator - Bitmask", () => {
       const iface = new Interface(["function fn(bytes)"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       // mask 0xf0 checks only high nibble, expected 0xa0
       await roles.allowFunction(
@@ -274,7 +274,7 @@ describe("Operator - Bitmask", () => {
       const iface = new Interface(["function fn(bytes)"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       // 64-byte mask spanning 2 words
       await roles.allowFunction(
@@ -311,7 +311,7 @@ describe("Operator - Bitmask", () => {
       const iface = new Interface(["function fn(bytes)"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       // 64-byte mask spanning 2 words
       await roles.allowFunction(
@@ -367,7 +367,7 @@ describe("Operator - Bitmask", () => {
       const iface = new Interface(["function fn(bytes)"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       // shift 5 bytes, then check 1 byte
       await roles.allowFunction(

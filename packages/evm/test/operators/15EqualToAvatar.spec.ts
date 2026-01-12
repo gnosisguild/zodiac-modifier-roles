@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { Interface, ZeroHash } from "ethers";
 
-import { setupFallbacker } from "../setup";
+import { setupTestContract } from "../setup";
 import {
   Encoding,
   Operator,
@@ -17,7 +17,7 @@ describe("Operator - EqualToAvatar", () => {
       const iface = new Interface(["function fn(address)"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       const avatar = await roles.avatar();
 
@@ -56,7 +56,7 @@ describe("Operator - EqualToAvatar", () => {
       const iface = new Interface(["function fn(address)"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       // EqualToAvatar: parameter must equal the avatar address
       await roles.allowFunction(
@@ -113,7 +113,7 @@ describe("Operator - EqualToAvatar", () => {
       const iface = new Interface(["function fn(address)"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       const originalAvatar = await roles.avatar();
 

@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { AbiCoder, Interface, ZeroHash } from "ethers";
 
-import { setupFallbacker } from "../setup";
+import { setupTestContract } from "../setup";
 import {
   Encoding,
   Operator,
@@ -42,7 +42,7 @@ describe("Operator - Or", () => {
 
     it("passes when first child passes", async () => {
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       // Or: EqualTo(10) OR EqualTo(20)
       await roles.allowFunction(
@@ -89,7 +89,7 @@ describe("Operator - Or", () => {
 
     it("passes when second child passes after first fails", async () => {
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       // Or: EqualTo(10) OR EqualTo(20)
       await roles.allowFunction(
@@ -136,7 +136,7 @@ describe("Operator - Or", () => {
 
     it("fails with OrViolation when all children fail", async () => {
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       // Or: EqualTo(10) OR EqualTo(20)
       await roles.allowFunction(
@@ -189,7 +189,7 @@ describe("Operator - Or", () => {
       const iface = new Interface(["function fn(uint256)"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       // Both children check the same parameter (non-variant: same payload to all)
       // Or: LessThan(10) OR GreaterThan(100)
@@ -265,7 +265,7 @@ describe("Operator - Or", () => {
       const iface = new Interface(["function fn(bytes)"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       // Or has two variant children that interpret the bytes param differently:
       // - Child 1: AbiEncoded with one Dynamic (checks bytes == 0xaabbccdd)
@@ -368,7 +368,7 @@ describe("Operator - Or", () => {
       const iface = new Interface(["function fn(uint256)"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       // Or with: structural child (checks param) OR non-structural (checks ether value)
       await roles.allowFunction(
@@ -447,7 +447,7 @@ describe("Operator - Or", () => {
       const iface = new Interface(["function fn(uint256)"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       const allowanceKeyA =
         "0x000000000000000000000000000000000000000000000000000000000000000a";
@@ -555,7 +555,7 @@ describe("Operator - Or", () => {
       const iface = new Interface(["function fn(uint256)"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       const allowanceKeyA =
         "0x000000000000000000000000000000000000000000000000000000000000000a";

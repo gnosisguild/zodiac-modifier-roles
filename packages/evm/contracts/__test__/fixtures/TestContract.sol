@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.0;
 
-contract Fallbacker {
+contract TestContract {
     error AnError();
 
     event Invoked(bytes4 selector);
@@ -26,11 +26,5 @@ contract Fallbacker {
             revert AnError();
         }
         return a;
-    }
-
-    function spendAndMaybeRevert(uint256, bool revert_) public pure {
-        if (revert_) {
-            revert();
-        }
     }
 }

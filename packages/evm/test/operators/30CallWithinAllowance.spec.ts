@@ -19,7 +19,7 @@ import {
   ConditionViolationStatus,
   flattenCondition,
 } from "../utils";
-import { setupFallbacker } from "../setup";
+import { setupTestContract } from "../setup";
 
 describe("Operator - CallWithinAllowance", async () => {
   async function setup() {
@@ -27,7 +27,7 @@ describe("Operator - CallWithinAllowance", async () => {
     const fn = iface.getFunction("doNothing")!;
 
     const { roles, member, testContractAddress, roleKey } =
-      await setupFallbacker();
+      await setupTestContract();
 
     async function setAllowance({
       key,
@@ -296,7 +296,7 @@ describe("Operator - CallWithinAllowance", async () => {
   describe("CallWithinAllowance - Logical Combinations", () => {
     it("AND(CallWithinAllowance, SomeParamComparison)", async () => {
       const { roles, member, testContractAddress, roleKey } =
-        await setupFallbacker();
+        await setupTestContract();
 
       const iface = new Interface(["function oneParamStatic(uint256)"]);
       const fn = iface.getFunction("oneParamStatic")!;
@@ -374,7 +374,7 @@ describe("Operator - CallWithinAllowance", async () => {
 
     it("AND(CallWithinAllowance, OR(ParamA, ParamB))", async () => {
       const { roles, member, testContractAddress, roleKey } =
-        await setupFallbacker();
+        await setupTestContract();
 
       const iface = new Interface(["function oneParamStatic(uint256)"]);
       const fn = iface.getFunction("oneParamStatic")!;

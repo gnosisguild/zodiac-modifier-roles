@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { AbiCoder, Interface, solidityPacked, ZeroHash } from "ethers";
 
-import { setupFallbacker } from "../setup";
+import { setupTestContract } from "../setup";
 import {
   Encoding,
   Operator,
@@ -19,7 +19,7 @@ describe("Operator - EqualTo", () => {
       const iface = new Interface(["function fn(uint256)"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       // EqualTo: parameter must equal 12345
       await roles.allowFunction(
@@ -57,7 +57,7 @@ describe("Operator - EqualTo", () => {
       const iface = new Interface(["function fn(uint256)"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       // EqualTo: parameter must equal 100
       await roles.allowFunction(
@@ -97,7 +97,7 @@ describe("Operator - EqualTo", () => {
       const iface = new Interface(["function fn(bytes)"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       // Slice 4 bytes at offset 4 (skip first 4 bytes), then EqualTo comparison
       await roles.allowFunction(
@@ -156,7 +156,7 @@ describe("Operator - EqualTo", () => {
       const iface = new Interface(["function fn(uint256)"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       // EqualTo on EtherValue: msg.value must equal 1000 wei
       await roles.allowFunction(
@@ -214,7 +214,7 @@ describe("Operator - EqualTo", () => {
       const iface = new Interface(["function fn(string)"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       // Large string > 32 bytes
       const largeString =
@@ -256,7 +256,7 @@ describe("Operator - EqualTo", () => {
       const iface = new Interface(["function fn(uint256[])"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       const targetArray = [1, 2, 3, 4, 5];
 
@@ -302,7 +302,7 @@ describe("Operator - EqualTo", () => {
       const iface = new Interface(["function fn(string)"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       const largeString =
         "This is a string that is definitely longer than 32 bytes and will be hashed for comparison";

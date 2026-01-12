@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { AbiCoder, Interface, solidityPacked, ZeroHash } from "ethers";
 
-import { setupFallbacker } from "../setup";
+import { setupTestContract } from "../setup";
 import {
   Encoding,
   Operator,
@@ -23,7 +23,7 @@ describe("Operator - Slice", () => {
       const iface = new Interface(["function fn(bytes)"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       // Slice 4 bytes at shift 4 (skip first 4 bytes)
       await roles.allowFunction(
@@ -100,7 +100,7 @@ describe("Operator - Slice", () => {
       const iface = new Interface(["function fn(bytes)"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       // Slice 1 byte at shift 0
       await roles.allowFunction(
@@ -162,7 +162,7 @@ describe("Operator - Slice", () => {
       const iface = new Interface(["function fn(bytes)"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       // Slice 32 bytes at shift 0 (full word)
       await roles.allowFunction(
@@ -225,7 +225,7 @@ describe("Operator - Slice", () => {
       const iface = new Interface(["function fn(bytes)"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       // Slice 4 bytes, child checks GreaterThan 100
       await roles.allowFunction(
@@ -286,7 +286,7 @@ describe("Operator - Slice", () => {
       const iface = new Interface(["function fn(bytes)"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       const allowanceKey =
         "0x000000000000000000000000000000000000000000000000000000000000abcd";

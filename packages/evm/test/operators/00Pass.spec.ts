@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { Interface } from "ethers";
 
-import { setupFallbacker } from "../setup";
+import { setupTestContract } from "../setup";
 import {
   Operator,
   Encoding,
@@ -15,7 +15,7 @@ describe("Operator - Pass", () => {
     const iface = new Interface(["function fn(uint256)"]);
     const fn = iface.getFunction("fn")!;
     const { roles, member, testContractAddress, roleKey } =
-      await setupFallbacker();
+      await setupTestContract();
 
     const invoke = (a: bigint | number) =>
       roles

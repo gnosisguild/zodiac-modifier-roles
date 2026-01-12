@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { AbiCoder, Interface, ZeroHash } from "ethers";
 
-import { setupFallbacker } from "../setup";
+import { setupTestContract } from "../setup";
 import {
   Encoding,
   Operator,
@@ -19,7 +19,7 @@ describe("Operator - ArrayTailMatches", () => {
       const iface = new Interface(["function fn(uint256[])"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       // ArrayTailMatches: last 2 elements must be 100, 200
       await roles.allowFunction(
@@ -80,7 +80,7 @@ describe("Operator - ArrayTailMatches", () => {
       const iface = new Interface(["function fn(uint256[])"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       // ArrayTailMatches: last 2 elements must be 100, 200
       await roles.allowFunction(
@@ -145,7 +145,7 @@ describe("Operator - ArrayTailMatches", () => {
       const iface = new Interface(["function fn(uint256[])"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       // ArrayTailMatches: requires 2 tail elements
       await roles.allowFunction(
@@ -210,7 +210,7 @@ describe("Operator - ArrayTailMatches", () => {
       const iface = new Interface(["function fn(uint256[])"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       // ArrayTailMatches: only checks last element
       await roles.allowFunction(
@@ -268,7 +268,7 @@ describe("Operator - ArrayTailMatches", () => {
       const iface = new Interface(["function fn(uint256[])"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       // ArrayTailMatches with 3 conditions: [>10, ==50, <100]
       // For array [a, b, c, d, e] with 3 conditions:
@@ -375,7 +375,7 @@ describe("Operator - ArrayTailMatches", () => {
       const iface = new Interface(["function fn(uint256[])"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       const allowanceKey =
         "0x000000000000000000000000000000000000000000000000000000000000abcd";

@@ -9,7 +9,7 @@ import {
   concat,
 } from "ethers";
 
-import { setupFallbacker } from "../setup";
+import { setupTestContract } from "../setup";
 import {
   Encoding,
   Operator,
@@ -26,7 +26,7 @@ describe("Operator - Matches", () => {
       const iface = new Interface(["function fn(bytes)"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       // Matches with AbiEncoded that skips 10 bytes (0x000a) but does NOT match them
       // compValue length is 2 => only configuration, no match bytes
@@ -94,7 +94,7 @@ describe("Operator - Matches", () => {
       const iface = new Interface(["function fn(bytes)"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       // Matches with 4-byte prefix (common selector size)
       await roles.allowFunction(
@@ -157,7 +157,7 @@ describe("Operator - Matches", () => {
       const iface = new Interface(["function fn(bytes)"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       // Matches with empty compValue - no prefix check
       await roles.allowFunction(
@@ -205,7 +205,7 @@ describe("Operator - Matches", () => {
       const iface = new Interface(["function fn(bytes)"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       const prefix10 = hexlify(randomBytes(10));
 
@@ -287,7 +287,7 @@ describe("Operator - Matches", () => {
       const iface = new Interface(["function fn(bytes)"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       const prefix31 = hexlify(randomBytes(31));
 
@@ -355,7 +355,7 @@ describe("Operator - Matches", () => {
       const iface = new Interface(["function fn(uint256,uint256,uint256)"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       // Matches routes each param to its corresponding child
       await roles.allowFunction(
@@ -445,7 +445,7 @@ describe("Operator - Matches", () => {
       const iface = new Interface(["function fn(uint256)"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       // Matches with structural child (param) + non-structural child (ether value)
       await roles.allowFunction(
@@ -504,7 +504,7 @@ describe("Operator - Matches", () => {
       const iface = new Interface(["function fn(uint256,uint256)"]);
       const fn = iface.getFunction("fn")!;
       const { roles, member, testContractAddress, roleKey } =
-        await loadFixture(setupFallbacker);
+        await loadFixture(setupTestContract);
 
       const allowanceKey =
         "0x000000000000000000000000000000000000000000000000000000000000abcd";

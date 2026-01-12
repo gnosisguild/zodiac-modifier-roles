@@ -6,7 +6,9 @@ import { Interface } from "ethers";
 import { Encoding, ExecutionOptions, Operator } from "./utils";
 import { deployRolesMod } from "./setup";
 
-const iface = new Interface(["function spendAndMaybeRevert(uint256, bool)"]);
+const iface = new Interface([
+  "function fnThatMaybeReverts(uint256, bool) returns (uint256)",
+]);
 
 /**
  * Execution Mechanics tests
@@ -39,7 +41,7 @@ describe("Execution Mechanics", () => {
     // Invoker must be a module to call execTransactionFromModule*
     await roles.enableModule(invoker.address);
 
-    const TestContract = await hre.ethers.getContractFactory("Fallbacker");
+    const TestContract = await hre.ethers.getContractFactory("TestContract");
     const testContract = await TestContract.deploy();
     const testContractAddress = await testContract.getAddress();
 
@@ -58,12 +60,12 @@ describe("Execution Mechanics", () => {
     // Scope target
     await roles.scopeTarget(ROLE_KEY, testContractAddress);
 
-    // Allow the test function: spendAndMaybeRevert(uint256, bool)
+    // Allow the test function: fnThatMaybeReverts(uint256, bool)
     // We attach a WithinAllowance condition to track consumption.
     await roles.allowFunction(
       ROLE_KEY,
       testContractAddress,
-      iface.getFunction("spendAndMaybeRevert")!.selector,
+      iface.getFunction("fnThatMaybeReverts")!.selector,
       [
         {
           parent: 0,
@@ -103,7 +105,7 @@ describe("Execution Mechanics", () => {
         await loadFixture(setup);
 
       // Consumes 100
-      const calldata = iface.encodeFunctionData("spendAndMaybeRevert", [
+      const calldata = iface.encodeFunctionData("fnThatMaybeReverts", [
         100,
         false,
       ]);
@@ -133,7 +135,7 @@ describe("Execution Mechanics", () => {
         await loadFixture(setup);
 
       // Consumes 100 but reverts
-      const calldata = iface.encodeFunctionData("spendAndMaybeRevert", [
+      const calldata = iface.encodeFunctionData("fnThatMaybeReverts", [
         100,
         true,
       ]);
@@ -164,7 +166,7 @@ describe("Execution Mechanics", () => {
       const { roles, invoker, testContractAddress, ALLOWANCE_KEY } =
         await loadFixture(setup);
 
-      const calldata = iface.encodeFunctionData("spendAndMaybeRevert", [
+      const calldata = iface.encodeFunctionData("fnThatMaybeReverts", [
         100,
         false,
       ]);
@@ -197,7 +199,7 @@ describe("Execution Mechanics", () => {
       const { roles, invoker, testContractAddress, ALLOWANCE_KEY } =
         await loadFixture(setup);
 
-      const calldata = iface.encodeFunctionData("spendAndMaybeRevert", [
+      const calldata = iface.encodeFunctionData("fnThatMaybeReverts", [
         100,
         true,
       ]);
@@ -231,7 +233,7 @@ describe("Execution Mechanics", () => {
     it("succeeds and persists consumption when using correct role", async () => {
       const { roles, invoker, testContractAddress, ROLE_KEY, ALLOWANCE_KEY } =
         await loadFixture(setup);
-      const calldata = iface.encodeFunctionData("spendAndMaybeRevert", [
+      const calldata = iface.encodeFunctionData("fnThatMaybeReverts", [
         100,
         false,
       ]);
@@ -266,7 +268,7 @@ describe("Execution Mechanics", () => {
 
     it("reverts when using unassigned role", async () => {
       const { roles, invoker, testContractAddress } = await loadFixture(setup);
-      const calldata = iface.encodeFunctionData("spendAndMaybeRevert", [
+      const calldata = iface.encodeFunctionData("fnThatMaybeReverts", [
         100,
         false,
       ]);
@@ -289,7 +291,7 @@ describe("Execution Mechanics", () => {
     it("returns success=false and does not persist consumption when inner fail and shouldRevert=false", async () => {
       const { roles, invoker, testContractAddress, ROLE_KEY, ALLOWANCE_KEY } =
         await loadFixture(setup);
-      const calldata = iface.encodeFunctionData("spendAndMaybeRevert", [
+      const calldata = iface.encodeFunctionData("fnThatMaybeReverts", [
         100,
         true,
       ]);
@@ -325,7 +327,7 @@ describe("Execution Mechanics", () => {
     it("reverts and does not persist consumption when inner fail and shouldRevert=true", async () => {
       const { roles, invoker, testContractAddress, ROLE_KEY, ALLOWANCE_KEY } =
         await loadFixture(setup);
-      const calldata = iface.encodeFunctionData("spendAndMaybeRevert", [
+      const calldata = iface.encodeFunctionData("fnThatMaybeReverts", [
         100,
         true,
       ]);
@@ -353,7 +355,7 @@ describe("Execution Mechanics", () => {
     it("returns data and persists consumption on success", async () => {
       const { roles, invoker, testContractAddress, ROLE_KEY, ALLOWANCE_KEY } =
         await loadFixture(setup);
-      const calldata = iface.encodeFunctionData("spendAndMaybeRevert", [
+      const calldata = iface.encodeFunctionData("fnThatMaybeReverts", [
         100,
         false,
       ]);
@@ -389,7 +391,7 @@ describe("Execution Mechanics", () => {
     it("returns success=false and does not persist consumption when inner fail and shouldRevert=false", async () => {
       const { roles, invoker, testContractAddress, ROLE_KEY, ALLOWANCE_KEY } =
         await loadFixture(setup);
-      const calldata = iface.encodeFunctionData("spendAndMaybeRevert", [
+      const calldata = iface.encodeFunctionData("fnThatMaybeReverts", [
         100,
         true,
       ]);
@@ -425,7 +427,7 @@ describe("Execution Mechanics", () => {
     it("reverts and does not persist consumption when inner fail and shouldRevert=true", async () => {
       const { roles, invoker, testContractAddress, ROLE_KEY, ALLOWANCE_KEY } =
         await loadFixture(setup);
-      const calldata = iface.encodeFunctionData("spendAndMaybeRevert", [
+      const calldata = iface.encodeFunctionData("fnThatMaybeReverts", [
         100,
         true,
       ]);
