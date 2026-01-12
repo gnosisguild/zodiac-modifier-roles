@@ -282,13 +282,13 @@ abstract contract Setup is RolesStorage {
     }
 
     /// @dev Returns the accrued allowance balance at current block.timestamp.
-    /// @param key The allowance key.
+    /// @param allowanceKey The allowance key.
     /// @return balance The accrued balance.
     /// @return timestamp The timestamp of the last accrual point.
     function accruedAllowance(
-        bytes32 key
+        bytes32 allowanceKey
     ) external view returns (uint128 balance, uint64 timestamp) {
-        return AllowanceLoader.accrue(key, uint64(block.timestamp));
+        return AllowanceLoader.accrue(allowanceKey, uint64(block.timestamp));
     }
 
     /*//////////////////////////////////////////////////////////////
