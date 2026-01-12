@@ -27,7 +27,7 @@ const iface = new Interface([
 
 describe("Membership", () => {
   async function setup() {
-    const [owner, member] = await hre.ethers.getSigners();
+    const [owner, member, , , other] = await hre.ethers.getSigners();
 
     const Avatar = await hre.ethers.getContractFactory("TestAvatar");
     const avatar = await Avatar.deploy();
@@ -50,6 +50,7 @@ describe("Membership", () => {
       roles: roles.connect(owner),
       owner,
       member,
+      other,
       testContract,
       testContractAddress,
       ROLE_KEY,
@@ -57,6 +58,17 @@ describe("Membership", () => {
   }
 
   describe("_authenticate", () => {
+    it("reverts when caller is not an enabled module", async () => {
+      const { roles, other, testContractAddress } = await loadFixture(setup);
+
+      // owner is NOT enabled as a module
+      await expect(
+        roles
+          .connect(other)
+          .execTransactionFromModule(testContractAddress, 0, "0x", 0),
+      ).to.be.revertedWithCustomError(roles, "NotAuthorized");
+    });
+
     it("reverts NoMembership when module has no membership for role", async () => {
       const { roles, member, testContractAddress, ROLE_KEY } =
         await loadFixture(setup);
