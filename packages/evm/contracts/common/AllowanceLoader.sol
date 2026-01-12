@@ -25,29 +25,27 @@ library AllowanceLoader {
     }
 
     function _accrue(
-        Allowance memory allowance,
+        Allowance memory a,
         uint64 blockTimestamp
     ) private pure returns (uint128 balance, uint64 timestamp) {
-        if (
-            allowance.period == 0 ||
-            blockTimestamp < (allowance.timestamp + allowance.period)
-        ) {
-            return (allowance.balance, allowance.timestamp);
-        }
+        // No refill configured.
+        if (a.period == 0) return (a.balance, a.timestamp);
 
-        uint64 elapsedIntervals = (blockTimestamp - allowance.timestamp) /
-            allowance.period;
+        uint64 nextAccrualAt = a.timestamp + a.period;
+        // Not enough time elapsed to complete a period.
+        if (blockTimestamp < nextAccrualAt) return (a.balance, a.timestamp);
 
-        if (allowance.balance < allowance.maxRefill) {
-            balance = allowance.balance + allowance.refill * elapsedIntervals;
-            balance = balance < allowance.maxRefill
-                ? balance
-                : allowance.maxRefill;
-        } else {
-            balance = allowance.balance;
-        }
+        // Calculate full periods elapsed
+        uint64 elapsedIntervals = (blockTimestamp - a.timestamp) / a.period;
+        // Timestamp always advances, even when balance is at cap
+        timestamp = a.timestamp + elapsedIntervals * a.period;
 
-        timestamp = allowance.timestamp + elapsedIntervals * allowance.period;
+        // Already at cap, or initial balance was set above maxRefill
+        if (a.balance >= a.maxRefill) return (a.balance, timestamp);
+
+        // Add refill for each elapsed period, capping at maxRefill.
+        uint128 accruedBalance = a.balance + (a.refill * elapsedIntervals);
+        balance = accruedBalance < a.maxRefill ? accruedBalance : a.maxRefill;
     }
 
     /**

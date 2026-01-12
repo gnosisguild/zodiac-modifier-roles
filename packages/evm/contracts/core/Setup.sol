@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
+import "../common/AllowanceLoader.sol";
 import "./serialize/ConditionsTransform.sol";
 import "./Storage.sol";
 
@@ -272,6 +273,16 @@ abstract contract Setup is RolesStorage {
         allowances[key].period = period;
 
         emit SetAllowance(key, balance, maxRefill, refill, period, timestamp);
+    }
+
+    /// @dev Returns the accrued allowance balance at current block.timestamp.
+    /// @param key The allowance key.
+    /// @return balance The accrued balance.
+    /// @return timestamp The timestamp of the last accrual point.
+    function accruedAllowance(
+        bytes32 key
+    ) external view returns (uint128 balance, uint64 timestamp) {
+        return AllowanceLoader.accrue(key, uint64(block.timestamp));
     }
 
     /*//////////////////////////////////////////////////////////////

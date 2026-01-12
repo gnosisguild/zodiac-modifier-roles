@@ -5,7 +5,7 @@ import "../../common/AbiDecoder.sol";
 import "../../core/serialize/TypeTree.sol";
 
 contract MockDecoder {
-    function inspectFlat(
+    function inspect(
         bytes calldata data,
         ConditionFlat[] memory conditions
     ) public pure returns (FlatPayload[] memory) {
@@ -34,7 +34,7 @@ contract MockDecoder {
 
     function flattenTree(
         Payload memory root
-    ) internal pure returns (FlatPayload[] memory) {
+    ) private pure returns (FlatPayload[] memory) {
         FlatPayload[] memory result = new FlatPayload[](countNodes(root));
         _flatten(root, 0, 0, result);
         return result;
