@@ -652,6 +652,106 @@ describe("Operator - WithinRatio", () => {
             anyValue,
           );
       });
+
+      it("applies reference adapter only (32-byte compValue)", async () => {
+        const { roles, allowFunction, invoke } =
+          await loadFixture(setupTwoParams);
+
+        // Reference adapter: 1 token = 2000 USD, no relative adapter
+        const MockPricing = await hre.ethers.getContractFactory("MockPricing");
+        const refAdapter = await MockPricing.deploy(2000n * 10n ** 18n);
+
+        // 32-byte encoding: no relativeAdapter included
+        const compValue = solidityPacked(
+          ["uint8", "uint8", "uint8", "uint8", "uint32", "uint32", "address"],
+          [
+            44, // referenceIndex
+            18, // referenceDecimals
+            33, // relativeIndex
+            18, // relativeDecimals
+            9900, // minRatio (99%)
+            10100, // maxRatio (101%)
+            await refAdapter.getAddress(),
+          ],
+        );
+
+        await allowFunction(
+          flattenCondition({
+            paramType: Encoding.AbiEncoded,
+            operator: Operator.Matches,
+            children: [
+              pluck(33), // relative (USD output)
+              pluck(44), // reference (token input)
+              {
+                paramType: Encoding.None,
+                operator: Operator.WithinRatio,
+                compValue,
+              },
+            ],
+          }),
+        );
+
+        // Reference: 10 tokens × 2000 = 20,000 USD
+        // Relative: 20,000 USD × 1 (no adapter) = 20,000 USD
+        // Ratio = 100%
+        await expect(invoke(20000n * 10n ** 18n, 10n * 10n ** 18n)).to.not.be
+          .reverted;
+      });
+
+      it("applies relative adapter only (52-byte compValue)", async () => {
+        const { roles, allowFunction, invoke } =
+          await loadFixture(setupTwoParams);
+
+        // Relative adapter only: 1 WBTC = 150,000 USD
+        const MockPricing = await hre.ethers.getContractFactory("MockPricing");
+        const relAdapter = await MockPricing.deploy(150000n * 10n ** 18n);
+
+        // 52-byte encoding: referenceAdapter = address(0), relativeAdapter set
+        const compValue = solidityPacked(
+          [
+            "uint8",
+            "uint8",
+            "uint8",
+            "uint8",
+            "uint32",
+            "uint32",
+            "address",
+            "address",
+          ],
+          [
+            55, // referenceIndex (USD)
+            18, // referenceDecimals
+            17, // relativeIndex (WBTC)
+            8, // relativeDecimals
+            9900, // minRatio
+            10100, // maxRatio
+            "0x0000000000000000000000000000000000000000", // no reference adapter
+            await relAdapter.getAddress(),
+          ],
+        );
+
+        await allowFunction(
+          flattenCondition({
+            paramType: Encoding.AbiEncoded,
+            operator: Operator.Matches,
+            children: [
+              pluck(17), // relative (WBTC)
+              pluck(55), // reference (USD)
+              {
+                paramType: Encoding.None,
+                operator: Operator.WithinRatio,
+                compValue,
+              },
+            ],
+          }),
+        );
+
+        // Reference: 45,000 USD × 1 (no adapter) = 45,000 USD
+        // Relative: 0.3 WBTC × 150,000 = 45,000 USD
+        // Ratio = 100%
+        await expect(invoke(3n * 10n ** 7n, 45000n * 10n ** 18n)).to.not.be
+          .reverted;
+      });
     });
 
     describe("adapter call safety", () => {
