@@ -1,46 +1,26 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "../../common/ImmutableStorage.sol";
-
-import "./ConditionPacker.sol";
-import "./Integrity.sol";
-import "./TypeTree.sol";
-
 import "../../types/Types.sol";
 
 /**
- * @title ConditionsTransform
- * @notice Validates, transforms, and stores condition trees as immutable bytecode
- *         that can later be loaded without additional overhead.
+ * @title ConditionTransform
+ * @notice Normalizes condition trees before packing.
+ *
  * @author gnosisguild
  */
-library ConditionsTransform {
+library ConditionTransform {
     /**
-     * @notice Ensures a breadth-first condition tree is well-formed, packs it
-     *         and stores the packed bytes as immutable bytecode.
+     * @notice Transforms conditions in-place for packing.
+     *         - Patches EtherValue encoding to None
+     *         - Removes extraneous offsets from compValue fields
      *
-     * @param conditions The flat condition array in BFS order.
-     * @return pointer Address of the contract where the packed conditions are stored.
+     * @param conditions The flat condition array to transform (modified
+     *                   in-place).
      */
-    function packAndStore(
-        ConditionFlat[] memory conditions
-    ) external returns (address) {
-        Integrity.enforce(conditions);
-
+    function transform(ConditionFlat[] memory conditions) internal pure {
         _patchEtherValue(conditions);
         _removeExtraneousOffsets(conditions);
-
-        Layout memory layout;
-        // For non-structural trees skip TypeTree creation
-        if (Topology.isStructural(conditions, 0)) {
-            layout = TypeTree.inspect(conditions, 0);
-        }
-
-        bytes memory buffer = ConditionPacker.pack(conditions, layout);
-        address pointer = ImmutableStorage.store(buffer);
-
-        return pointer;
     }
 
     /**

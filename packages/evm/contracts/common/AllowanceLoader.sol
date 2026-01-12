@@ -14,20 +14,8 @@ library AllowanceLoader {
         bytes32 allowanceKey,
         uint64 blockTimestamp
     ) internal view returns (uint128 balance, uint64 timestamp) {
-        return _accrue(_load(allowanceKey), blockTimestamp);
-    }
+        Allowance memory a = _load(allowanceKey);
 
-    function accrue(
-        Allowance memory allowance,
-        uint64 blockTimestamp
-    ) internal pure returns (uint128 balance, uint64 timestamp) {
-        return _accrue(allowance, blockTimestamp);
-    }
-
-    function _accrue(
-        Allowance memory a,
-        uint64 blockTimestamp
-    ) private pure returns (uint128 balance, uint64 timestamp) {
         // No refill configured.
         if (a.period == 0) return (a.balance, a.timestamp);
 

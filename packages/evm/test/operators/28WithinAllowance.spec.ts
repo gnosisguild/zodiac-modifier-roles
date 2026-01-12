@@ -422,6 +422,56 @@ describe("Operator - WithinAllowance", async () => {
       allowance = await roles.accruedAllowance(allowanceKey);
       expect(allowance.balance).to.equal(0);
     });
+    it("Consumes from different allowances in same transaction", async () => {
+      const { owner, roles, invoke, allowFunction } =
+        await loadFixture(setupTwoParams);
+
+      const allowanceKey1 = hexlify(randomBytes(32));
+      const allowanceKey2 = hexlify(randomBytes(32));
+
+      await allowFunction([
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey1]),
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey2]),
+        },
+      ]);
+
+      await setAllowance(await roles.connect(owner), allowanceKey1, {
+        balance: 1000,
+        period: 0,
+        refill: 0,
+        timestamp: 0,
+      });
+
+      await setAllowance(await roles.connect(owner), allowanceKey2, {
+        balance: 2000,
+        period: 0,
+        refill: 0,
+        timestamp: 0,
+      });
+
+      // Both allowances consumed independently
+      await expect(invoke(500, 1000)).to.not.be.reverted;
+
+      const allowance1 = await roles.accruedAllowance(allowanceKey1);
+      const allowance2 = await roles.accruedAllowance(allowanceKey2);
+      expect(allowance1.balance).to.equal(500);
+      expect(allowance2.balance).to.equal(1000);
+    });
     it("Fails, when multiple parameters referencing the same limit overspend", async () => {
       const { owner, roles, invoke, allowFunction } =
         await loadFixture(setupTwoParams);
@@ -1388,6 +1438,252 @@ describe("Operator - WithinAllowance", async () => {
 
       allowance = await roles.accruedAllowance(allowanceKey);
       expect(allowance.balance).to.equal(0);
+    });
+  });
+
+  describe("adapter call safety", () => {
+    function encodeAllowanceCompValue({
+      allowanceKey,
+      targetDecimals = 0,
+      sourceDecimals = 0,
+      adapter = "0x0000000000000000000000000000000000000000",
+    }: {
+      allowanceKey: string;
+      targetDecimals?: number;
+      sourceDecimals?: number;
+      adapter?: string;
+    }): string {
+      return solidityPacked(
+        ["bytes32", "uint8", "uint8", "address"],
+        [allowanceKey, targetDecimals, sourceDecimals, adapter],
+      );
+    }
+
+    const allowanceKey = hexlify(randomBytes(32));
+
+    it("reverts with PricingAdapterNotAContract when adapter not deployed", async () => {
+      const { owner, roles, allowFunction, invoke } =
+        await loadFixture(setupOneParam);
+
+      const [, , randomEOA] = await hre.ethers.getSigners();
+
+      await setAllowance(await roles.connect(owner), allowanceKey, {
+        balance: 1000,
+        period: 0,
+        refill: 0,
+        timestamp: 0,
+      });
+
+      await allowFunction([
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: encodeAllowanceCompValue({
+            allowanceKey,
+            adapter: randomEOA.address,
+            targetDecimals: 18,
+            sourceDecimals: 6,
+          }),
+        },
+      ]);
+
+      await expect(invoke(1000))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.PricingAdapterNotAContract,
+          1, // WithinAllowance node
+          anyValue,
+          anyValue,
+        );
+    });
+
+    it("reverts with PricingAdapterReverted when adapter has no getPrice function", async () => {
+      const { owner, roles, allowFunction, invoke } =
+        await loadFixture(setupOneParam);
+
+      const MockPricingNoInterface = await hre.ethers.getContractFactory(
+        "MockPricingNoInterface",
+      );
+      const noInterfaceAdapter = await MockPricingNoInterface.deploy();
+
+      await setAllowance(await roles.connect(owner), allowanceKey, {
+        balance: 1000,
+        period: 0,
+        refill: 0,
+        timestamp: 0,
+      });
+
+      await allowFunction([
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: encodeAllowanceCompValue({
+            allowanceKey,
+            adapter: await noInterfaceAdapter.getAddress(),
+            targetDecimals: 18,
+            sourceDecimals: 6,
+          }),
+        },
+      ]);
+
+      await expect(invoke(1000))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.PricingAdapterReverted,
+          1, // WithinAllowance node
+          anyValue,
+          anyValue,
+        );
+    });
+
+    it("reverts with PricingAdapterReverted when adapter reverts", async () => {
+      const { owner, roles, allowFunction, invoke } =
+        await loadFixture(setupOneParam);
+
+      const MockPricingReverting = await hre.ethers.getContractFactory(
+        "MockPricingReverting",
+      );
+      const revertingAdapter = await MockPricingReverting.deploy();
+
+      await setAllowance(await roles.connect(owner), allowanceKey, {
+        balance: 1000,
+        period: 0,
+        refill: 0,
+        timestamp: 0,
+      });
+
+      await allowFunction([
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: encodeAllowanceCompValue({
+            allowanceKey,
+            adapter: await revertingAdapter.getAddress(),
+            targetDecimals: 18,
+            sourceDecimals: 6,
+          }),
+        },
+      ]);
+
+      await expect(invoke(1000))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.PricingAdapterReverted,
+          1, // WithinAllowance node
+          anyValue,
+          anyValue,
+        );
+    });
+
+    it("reverts with PricingAdapterInvalidResult when adapter returns wrong type", async () => {
+      const { owner, roles, allowFunction, invoke } =
+        await loadFixture(setupOneParam);
+
+      const MockPricingWrongReturn = await hre.ethers.getContractFactory(
+        "MockPricingWrongReturn",
+      );
+      const wrongReturnAdapter = await MockPricingWrongReturn.deploy();
+
+      await setAllowance(await roles.connect(owner), allowanceKey, {
+        balance: 1000,
+        period: 0,
+        refill: 0,
+        timestamp: 0,
+      });
+
+      await allowFunction([
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: encodeAllowanceCompValue({
+            allowanceKey,
+            adapter: await wrongReturnAdapter.getAddress(),
+            targetDecimals: 18,
+            sourceDecimals: 6,
+          }),
+        },
+      ]);
+
+      await expect(invoke(1000))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.PricingAdapterInvalidResult,
+          1, // WithinAllowance node
+          anyValue,
+          anyValue,
+        );
+    });
+
+    it("reverts with PricingAdapterZeroPrice when adapter returns zero", async () => {
+      const { owner, roles, allowFunction, invoke } =
+        await loadFixture(setupOneParam);
+
+      const MockPricing = await hre.ethers.getContractFactory("MockPricing");
+      const zeroAdapter = await MockPricing.deploy(0);
+
+      await setAllowance(await roles.connect(owner), allowanceKey, {
+        balance: 1000,
+        period: 0,
+        refill: 0,
+        timestamp: 0,
+      });
+
+      await allowFunction([
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: encodeAllowanceCompValue({
+            allowanceKey,
+            adapter: await zeroAdapter.getAddress(),
+            targetDecimals: 18,
+            sourceDecimals: 6,
+          }),
+        },
+      ]);
+
+      await expect(invoke(1000))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.PricingAdapterZeroPrice,
+          1, // WithinAllowance node
+          anyValue,
+          anyValue,
+        );
     });
   });
 
