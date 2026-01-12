@@ -1,4 +1,5 @@
 import { expect } from "chai";
+import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { AbiCoder, hexlify, randomBytes, ZeroHash } from "ethers";
 
@@ -86,12 +87,22 @@ describe("Operator - ArrayTailMatches", () => {
       // Last element wrong
       await expect(invoke([100, 999]))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          3, // Second EqualTo (last tail element)
+          anyValue,
+          anyValue,
+        );
 
       // Second-to-last element wrong
       await expect(invoke([999, 200]))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          2, // First EqualTo (second-to-last tail element)
+          anyValue,
+          anyValue,
+        );
     });
 
     it("fails when array length is less than number of conditions", async () => {
@@ -128,12 +139,22 @@ describe("Operator - ArrayTailMatches", () => {
       // Only 1 element - not enough for 2 conditions
       await expect(invoke([100]))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.ParameterNotAMatch, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAMatch,
+          1, // ArrayTailMatches node
+          anyValue,
+          anyValue,
+        );
 
       // Empty array
       await expect(invoke([]))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.ParameterNotAMatch, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAMatch,
+          1, // ArrayTailMatches node
+          anyValue,
+          anyValue,
+        );
     });
 
     it("ignores elements before the tail (prefix insensitive)", async () => {
@@ -218,13 +239,23 @@ describe("Operator - ArrayTailMatches", () => {
       // 5 > 10 ✗ - fails on first tail element
       await expect(invoke([5, 50, 80]))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.ParameterLessThanAllowed, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.ParameterLessThanAllowed,
+          2, // GreaterThan node
+          anyValue,
+          anyValue,
+        );
 
       // Array [20, 99, 80] - wrong middle element
       // 20 > 10 ✓, 99 == 50 ✗
       await expect(invoke([20, 99, 80]))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          3, // EqualTo node
+          anyValue,
+          anyValue,
+        );
 
       // Array [20, 50, 150] - last element too big
       // 20 > 10 ✓, 50 == 50 ✓, 150 < 100 ✗
@@ -232,7 +263,9 @@ describe("Operator - ArrayTailMatches", () => {
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.ParameterGreaterThanAllowed,
-          ZeroHash,
+          4, // LessThan node
+          anyValue,
+          anyValue,
         );
     });
 
@@ -278,6 +311,87 @@ describe("Operator - ArrayTailMatches", () => {
       // Both tail elements consumed - remaining is 50
       const { balance } = await roles.accruedAllowance(allowanceKey);
       expect(balance).to.equal(50);
+    });
+  });
+
+  describe("violation context", () => {
+    it("reports the violating node index", async () => {
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupArrayParam);
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Array,
+              operator: Operator.ArrayTailMatches,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [100]),
+                },
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [200]),
+                },
+              ],
+            },
+          ],
+        }),
+      );
+
+      // Array too short for 2 conditions
+      await expect(invoke([100]))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAMatch,
+          1, // ArrayTailMatches node at BFS index 1
+          anyValue,
+          anyValue,
+        );
+    });
+
+    it("reports the calldata range of the violation", async () => {
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupArrayParam);
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Array,
+              operator: Operator.ArrayTailMatches,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [200]),
+                },
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [300]),
+                },
+              ],
+            },
+          ],
+        }),
+      );
+
+      await expect(invoke([100, 200, 999]))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          anyValue,
+          132, // payloadLocation: last element at byte 132
+          32, // payloadSize: uint256 element is 32 bytes
+        );
     });
   });
 });

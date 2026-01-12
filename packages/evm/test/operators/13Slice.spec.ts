@@ -1,12 +1,7 @@
 import { expect } from "chai";
+import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import {
-  AbiCoder,
-  hexlify,
-  randomBytes,
-  solidityPacked,
-  ZeroHash,
-} from "ethers";
+import { AbiCoder, hexlify, randomBytes, solidityPacked } from "ethers";
 
 import { setupDynamicParam } from "../setup";
 import {
@@ -59,12 +54,22 @@ describe("Operator - Slice", () => {
       // Wrong value at the slice position
       await expect(invoke("0x00000000cafebabe00000000"))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          2,
+          anyValue,
+          anyValue,
+        );
 
       // Value at wrong position (shift 0 instead of 4) - fails
       await expect(invoke("0xdeadbeef0000000000000000"))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          2,
+          anyValue,
+          anyValue,
+        );
     });
 
     it("extracts 1-byte size from compValue (size 1)", async () => {
@@ -101,7 +106,12 @@ describe("Operator - Slice", () => {
       // bytes starting with 0xcd - fails
       await expect(invoke("0xcd00000000000000"))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          2,
+          anyValue,
+          anyValue,
+        );
     });
 
     it("extracts 1-byte size from compValue (size 32)", async () => {
@@ -138,7 +148,12 @@ describe("Operator - Slice", () => {
       // 32 bytes encoding different value - fails
       await expect(invoke(abiCoder.encode(["uint256"], [12346])))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.ParameterNotAllowed, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          2,
+          anyValue,
+          anyValue,
+        );
     });
   });
 
@@ -176,7 +191,12 @@ describe("Operator - Slice", () => {
       // Value 100 not > 100 - child fails with ParameterLessThanAllowed, Slice propagates
       await expect(invoke("0x00000064")) // 100 in 4 bytes
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.ParameterLessThanAllowed, ZeroHash);
+        .withArgs(
+          ConditionViolationStatus.ParameterLessThanAllowed,
+          2,
+          anyValue,
+          anyValue,
+        );
     });
 
     it("propagates consumption from child", async () => {
@@ -218,6 +238,78 @@ describe("Operator - Slice", () => {
       // Consumption propagated through Slice - remaining is 70
       const { balance } = await roles.accruedAllowance(allowanceKey);
       expect(balance).to.equal(70);
+    });
+  });
+
+  describe("violation context", () => {
+    it("reports the violating node index", async () => {
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupDynamicParam);
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Dynamic,
+              operator: Operator.Slice,
+              compValue: encodeCompValue(0, 4), // shift=0, size=4
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [0xdeadbeef]),
+                },
+              ],
+            },
+          ],
+        }),
+      );
+
+      await expect(invoke("0xcafebabe"))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          2, // EqualTo node at BFS index 2
+          anyValue,
+          anyValue,
+        );
+    });
+
+    it("reports the calldata range of the violation", async () => {
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupDynamicParam);
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Dynamic,
+              operator: Operator.Slice,
+              compValue: encodeCompValue(0, 4), // shift=0, size=4
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [0xdeadbeef]),
+                },
+              ],
+            },
+          ],
+        }),
+      );
+
+      await expect(invoke("0xcafebabe"))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          anyValue,
+          68, // payloadLocation: bytes data at byte 68 (4 + 32 + 32)
+          4, // payloadSize: 4 bytes sliced
+        );
     });
   });
 });

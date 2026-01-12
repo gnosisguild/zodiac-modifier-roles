@@ -1,4 +1,5 @@
 import { expect } from "chai";
+import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { time, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import hre from "hardhat";
 
@@ -84,12 +85,22 @@ describe("Operator - WithinAllowance", async () => {
 
       await expect(invoke(1001))
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(
+          ConditionViolationStatus.AllowanceExceeded,
+          1, // WithinAllowance node
+          anyValue,
+          anyValue,
+        );
 
       await expect(invoke(1000)).to.not.be.reverted;
       await expect(invoke(1))
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(
+          ConditionViolationStatus.AllowanceExceeded,
+          1, // WithinAllowance node
+          anyValue,
+          anyValue,
+        );
     });
     it("passes a check with only from balance and refill configured", async () => {
       const { roles, owner, allowFunction, invoke } =
@@ -122,11 +133,21 @@ describe("Operator - WithinAllowance", async () => {
 
       await expect(invoke(334))
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(
+          ConditionViolationStatus.AllowanceExceeded,
+          1, // WithinAllowance node
+          anyValue,
+          anyValue,
+        );
       await expect(invoke(333)).to.not.be.reverted;
       await expect(invoke(1))
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(
+          ConditionViolationStatus.AllowanceExceeded,
+          1, // WithinAllowance node
+          anyValue,
+          anyValue,
+        );
     });
     it("passes a check balance from available+refill", async () => {
       const { roles, owner, allowFunction, invoke } =
@@ -159,12 +180,22 @@ describe("Operator - WithinAllowance", async () => {
 
       await expect(invoke(351))
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(
+          ConditionViolationStatus.AllowanceExceeded,
+          1, // WithinAllowance node
+          anyValue,
+          anyValue,
+        );
 
       await expect(invoke(350)).to.not.be.reverted;
       await expect(invoke(1))
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(
+          ConditionViolationStatus.AllowanceExceeded,
+          1, // WithinAllowance node
+          anyValue,
+          anyValue,
+        );
     });
     it("fails a check, with some balance and not enough elapsed for next refill", async () => {
       const { owner, roles, allowFunction, invoke } =
@@ -196,12 +227,22 @@ describe("Operator - WithinAllowance", async () => {
 
       await expect(invoke(251))
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(
+          ConditionViolationStatus.AllowanceExceeded,
+          1, // WithinAllowance node
+          anyValue,
+          anyValue,
+        );
 
       await expect(invoke(250)).to.not.be.reverted;
       await expect(invoke(1))
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(
+          ConditionViolationStatus.AllowanceExceeded,
+          1, // WithinAllowance node
+          anyValue,
+          anyValue,
+        );
     });
     it("passes a check with balance from refill and bellow maxRefill", async () => {
       const { owner, roles, allowFunction, invoke } =
@@ -236,7 +277,12 @@ describe("Operator - WithinAllowance", async () => {
 
       await expect(invoke(1001))
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(
+          ConditionViolationStatus.AllowanceExceeded,
+          1, // WithinAllowance node
+          anyValue,
+          anyValue,
+        );
 
       await expect(invoke(1000)).to.not.be.reverted;
     });
@@ -271,7 +317,12 @@ describe("Operator - WithinAllowance", async () => {
 
       await expect(invoke(9001))
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(
+          ConditionViolationStatus.AllowanceExceeded,
+          1, // WithinAllowance node
+          anyValue,
+          anyValue,
+        );
 
       await expect(invoke(9000)).to.not.be.reverted;
     });
@@ -310,7 +361,9 @@ describe("Operator - WithinAllowance", async () => {
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.AllowanceValueOverflow,
-          allowanceKey,
+          1, // WithinAllowance node
+          anyValue,
+          anyValue,
         );
     });
   });
@@ -356,7 +409,12 @@ describe("Operator - WithinAllowance", async () => {
 
       await expect(invoke(3001, 3001))
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(
+          ConditionViolationStatus.AllowanceExceeded,
+          1, // First WithinAllowance node
+          anyValue,
+          anyValue,
+        );
       allowance = await roles.accruedAllowance(allowanceKey);
       expect(allowance.balance).to.equal(3000);
 
@@ -402,7 +460,12 @@ describe("Operator - WithinAllowance", async () => {
 
       await expect(invoke(3000, 1))
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
-        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(
+          ConditionViolationStatus.AllowanceExceeded,
+          2, // Second WithinAllowance node (first consumes 3000, second fails with 1)
+          anyValue,
+          anyValue,
+        );
       allowance = await roles.accruedAllowance(allowanceKey);
       expect(allowance.balance).to.equal(3000);
     });
@@ -655,7 +718,12 @@ describe("Operator - WithinAllowance", async () => {
       // Try to spend 101 USDC → exceeds 100 DAI allowance
       await expect(invoke(101n * 10n ** 6n))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(
+          ConditionViolationStatus.AllowanceExceeded,
+          1, // WithinAllowance node
+          anyValue,
+          anyValue,
+        );
     });
 
     /**
@@ -802,7 +870,12 @@ describe("Operator - WithinAllowance", async () => {
       // 1001 (6 dec) → 1001e12 (12 dec) > 1000e12
       await expect(invoke(1001n * 10n ** 6n))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(
+          ConditionViolationStatus.AllowanceExceeded,
+          1, // WithinAllowance node
+          anyValue,
+          anyValue,
+        );
     });
 
     // base=18, param=6: scale up by 10^12
@@ -883,7 +956,12 @@ describe("Operator - WithinAllowance", async () => {
 
       await expect(invoke(1001n * 10n ** 6n))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(
+          ConditionViolationStatus.AllowanceExceeded,
+          1, // WithinAllowance node
+          anyValue,
+          anyValue,
+        );
     });
 
     // base=6, param=12: scale down by 10^6
@@ -966,7 +1044,12 @@ describe("Operator - WithinAllowance", async () => {
 
       await expect(invoke(1001n * 10n ** 12n))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(
+          ConditionViolationStatus.AllowanceExceeded,
+          1, // WithinAllowance node
+          anyValue,
+          anyValue,
+        );
     });
 
     // base=12, param=18: scale down by 10^6
@@ -1047,7 +1130,12 @@ describe("Operator - WithinAllowance", async () => {
 
       await expect(invoke(1001n * 10n ** 18n))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(
+          ConditionViolationStatus.AllowanceExceeded,
+          1, // WithinAllowance node
+          anyValue,
+          anyValue,
+        );
     });
 
     // DAI (18 dec) spending against USDC (6 dec) allowance
@@ -1198,7 +1286,12 @@ describe("Operator - WithinAllowance", async () => {
       // any more reverts
       await expect(invoke(1, 0))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(
+          ConditionViolationStatus.AllowanceExceeded,
+          1, // First WithinAllowance node
+          anyValue,
+          anyValue,
+        );
     });
 
     it("preserves decimal precision when scaling down (18 → 6)", async () => {
@@ -1365,7 +1458,12 @@ describe("Operator - WithinAllowance", async () => {
       // Exceeds allowance
       await expect(invoke(10001n, 123n))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(
+          ConditionViolationStatus.AllowanceExceeded,
+          2, // WithinAllowance node
+          anyValue,
+          anyValue,
+        );
 
       // Within allowance
       await expect(invoke(5000n, 456n)).to.not.be.reverted;
@@ -1380,7 +1478,90 @@ describe("Operator - WithinAllowance", async () => {
       // Now fails
       await expect(invoke(1n, 999n))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(ConditionViolationStatus.AllowanceExceeded, allowanceKey);
+        .withArgs(
+          ConditionViolationStatus.AllowanceExceeded,
+          2, // WithinAllowance node
+          anyValue,
+          anyValue,
+        );
+    });
+  });
+
+  describe("violation context", () => {
+    it("reports the violating node index", async () => {
+      const { owner, roles, allowFunction, invoke } =
+        await loadFixture(setupOneParam);
+
+      const allowanceKey = hexlify(randomBytes(32));
+
+      await setAllowance(await roles.connect(owner), allowanceKey, {
+        balance: 100,
+        period: 0,
+        refill: 0,
+        timestamp: 0,
+      });
+
+      await allowFunction([
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
+        },
+      ]);
+
+      await expect(invoke(101))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.AllowanceExceeded,
+          1, // WithinAllowance node at BFS index 1
+          anyValue,
+          anyValue,
+        );
+    });
+
+    it("reports the calldata range of the violation", async () => {
+      const { owner, roles, allowFunction, invoke } =
+        await loadFixture(setupOneParam);
+
+      const allowanceKey = hexlify(randomBytes(32));
+
+      await setAllowance(await roles.connect(owner), allowanceKey, {
+        balance: 100,
+        period: 0,
+        refill: 0,
+        timestamp: 0,
+      });
+
+      await allowFunction([
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
+        },
+      ]);
+
+      await expect(invoke(101))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.AllowanceExceeded,
+          anyValue,
+          4, // payloadLocation: parameter starts at byte 4
+          32, // payloadSize: uint256 is 32 bytes
+        );
     });
   });
 });
