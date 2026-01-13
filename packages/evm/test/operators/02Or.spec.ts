@@ -1,9 +1,9 @@
 import { expect } from "chai";
 import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { AbiCoder, ZeroHash } from "ethers";
+import { AbiCoder } from "ethers";
 
-import { setupOneParam, setupDynamicParam } from "../setup";
+import { setupTestContract, setupOneParam, setupDynamicParam } from "../setup";
 import {
   Encoding,
   Operator,
@@ -536,6 +536,98 @@ describe("Operator - Or", () => {
           4, // payloadLocation: parameter starts at byte 4
           32, // payloadSize: uint256 is 32 bytes
         );
+    });
+  });
+
+  describe("integrity", () => {
+    describe("encoding", () => {
+      it("reverts UnsuitableParameterType for invalid encodings", async () => {
+        const { roles, testContractAddress, roleKey } =
+          await loadFixture(setupTestContract);
+
+        for (const encoding of [
+          Encoding.Static,
+          Encoding.Dynamic,
+          Encoding.Tuple,
+          Encoding.Array,
+          Encoding.AbiEncoded,
+          Encoding.EtherValue,
+        ]) {
+          await expect(
+            roles.allowTarget(
+              roleKey,
+              testContractAddress,
+              [
+                {
+                  parent: 0,
+                  paramType: encoding,
+                  operator: Operator.Or,
+                  compValue: "0x",
+                },
+                {
+                  parent: 0,
+                  paramType: Encoding.Static,
+                  operator: Operator.Pass,
+                  compValue: "0x",
+                },
+              ],
+              0,
+            ),
+          ).to.be.revertedWithCustomError(roles, "UnsuitableParameterType");
+        }
+      });
+    });
+
+    describe("compValue", () => {
+      it("reverts UnsuitableCompValue when compValue is not empty", async () => {
+        const { roles, testContractAddress, roleKey } =
+          await loadFixture(setupTestContract);
+
+        await expect(
+          roles.allowTarget(
+            roleKey,
+            testContractAddress,
+            [
+              {
+                parent: 0,
+                paramType: Encoding.None,
+                operator: Operator.Or,
+                compValue: "0x".padEnd(66, "0"),
+              },
+              {
+                parent: 0,
+                paramType: Encoding.Static,
+                operator: Operator.Pass,
+                compValue: "0x",
+              },
+            ],
+            0,
+          ),
+        ).to.be.revertedWithCustomError(roles, "UnsuitableCompValue");
+      });
+    });
+
+    describe("children", () => {
+      it("reverts UnsuitableChildCount when Or has zero children", async () => {
+        const { roles, testContractAddress, roleKey } =
+          await loadFixture(setupTestContract);
+
+        await expect(
+          roles.allowTarget(
+            roleKey,
+            testContractAddress,
+            [
+              {
+                parent: 0,
+                paramType: Encoding.None,
+                operator: Operator.Or,
+                compValue: "0x",
+              },
+            ],
+            0,
+          ),
+        ).to.be.revertedWithCustomError(roles, "UnsuitableChildCount");
+      });
     });
   });
 });

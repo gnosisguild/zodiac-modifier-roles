@@ -278,6 +278,120 @@ describe("Operator - EqualTo", () => {
     });
   });
 
+  describe("dynamic bytes comparison", () => {
+    it("matches empty dynamic value", async () => {
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupDynamicParam);
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Dynamic,
+              operator: Operator.EqualTo,
+              compValue: abiCoder.encode(["bytes"], ["0x"]),
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
+      );
+
+      await expect(invoke("0x")).to.not.be.reverted;
+
+      await expect(invoke("0xaa"))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1, anyValue, anyValue);
+    });
+
+    it("matches 10-byte dynamic value", async () => {
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupDynamicParam);
+
+      const bytes10 = "0x00112233445566778899";
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Dynamic,
+              operator: Operator.EqualTo,
+              compValue: abiCoder.encode(["bytes"], [bytes10]),
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
+      );
+
+      await expect(invoke(bytes10)).to.not.be.reverted;
+
+      await expect(invoke("0x00112233445566778800"))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1, anyValue, anyValue);
+    });
+
+    it("matches 32-byte dynamic value", async () => {
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupDynamicParam);
+
+      const bytes32 = ZeroHash;
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Dynamic,
+              operator: Operator.EqualTo,
+              compValue: abiCoder.encode(["bytes"], [bytes32]),
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
+      );
+
+      await expect(invoke(bytes32)).to.not.be.reverted;
+
+      await expect(invoke("0x" + "ff".repeat(32)))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1, anyValue, anyValue);
+    });
+
+    it("matches 100-byte dynamic value", async () => {
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupDynamicParam);
+
+      // 100 bytes
+      const bytes100 =
+        "0x" + "00112233445566778899aabbccddeeff".repeat(6) + "00112233";
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Dynamic,
+              operator: Operator.EqualTo,
+              compValue: abiCoder.encode(["bytes"], [bytes100]),
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
+      );
+
+      await expect(invoke(bytes100)).to.not.be.reverted;
+
+      await expect(invoke("0x" + "ff".repeat(100)))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1, anyValue, anyValue);
+    });
+  });
+
   describe("violation context", () => {
     it("reports the violating node index", async () => {
       const { roles, allowFunction, invoke } = await loadFixture(setupOneParam);
@@ -333,6 +447,52 @@ describe("Operator - EqualTo", () => {
           4, // payloadLocation: parameter starts at byte 4 (after selector)
           32, // payloadSize: uint256 is 32 bytes
         );
+    });
+  });
+
+  describe("integrity", () => {
+    it("reverts UnsuitableParameterType for invalid encodings", async () => {
+      const { roles, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      for (const encoding of [Encoding.None, Encoding.AbiEncoded]) {
+        await expect(
+          roles.allowTarget(
+            roleKey,
+            testContractAddress,
+            [
+              {
+                parent: 0,
+                paramType: encoding,
+                operator: Operator.EqualTo,
+                compValue: abiCoder.encode(["uint256"], [100]),
+              },
+            ],
+            0,
+          ),
+        ).to.be.revertedWithCustomError(roles, "UnsuitableParameterType");
+      }
+    });
+
+    it("reverts UnsuitableCompValue when compValue is empty", async () => {
+      const { roles, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      await expect(
+        roles.allowTarget(
+          roleKey,
+          testContractAddress,
+          [
+            {
+              parent: 0,
+              paramType: Encoding.Static,
+              operator: Operator.EqualTo,
+              compValue: "0x",
+            },
+          ],
+          0,
+        ),
+      ).to.be.revertedWithCustomError(roles, "UnsuitableCompValue");
     });
   });
 });
