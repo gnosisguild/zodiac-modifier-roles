@@ -282,4 +282,84 @@ describe("Operator - EqualToAvatar", () => {
         );
     });
   });
+
+  describe("integrity", () => {
+    it("reverts UnsuitableParameterType for invalid encodings", async () => {
+      const { roles, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      for (const encoding of [
+        Encoding.None,
+        Encoding.Dynamic,
+        Encoding.Tuple,
+        Encoding.Array,
+        Encoding.AbiEncoded,
+        Encoding.EtherValue,
+      ]) {
+        await expect(
+          roles.allowTarget(
+            roleKey,
+            testContractAddress,
+            [
+              {
+                parent: 0,
+                paramType: encoding,
+                operator: Operator.EqualToAvatar,
+                compValue: "0x",
+              },
+            ],
+            0,
+          ),
+        ).to.be.revertedWithCustomError(roles, "UnsuitableParameterType");
+      }
+    });
+
+    it("reverts UnsuitableCompValue when compValue is not empty", async () => {
+      const { roles, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      await expect(
+        roles.allowTarget(
+          roleKey,
+          testContractAddress,
+          [
+            {
+              parent: 0,
+              paramType: Encoding.Static,
+              operator: Operator.EqualToAvatar,
+              compValue: "0x".padEnd(66, "0"),
+            },
+          ],
+          0,
+        ),
+      ).to.be.revertedWithCustomError(roles, "UnsuitableCompValue");
+    });
+
+    it("reverts LeafNodeCannotHaveChildren when EqualToAvatar has children", async () => {
+      const { roles, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      await expect(
+        roles.allowTarget(
+          roleKey,
+          testContractAddress,
+          [
+            {
+              parent: 0,
+              paramType: Encoding.Static,
+              operator: Operator.EqualToAvatar,
+              compValue: "0x",
+            },
+            {
+              parent: 0,
+              paramType: Encoding.Static,
+              operator: Operator.Pass,
+              compValue: "0x",
+            },
+          ],
+          0,
+        ),
+      ).to.be.revertedWithCustomError(roles, "LeafNodeCannotHaveChildren");
+    });
+  });
 });
