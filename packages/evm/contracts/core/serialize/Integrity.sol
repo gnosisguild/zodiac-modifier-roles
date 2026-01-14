@@ -370,6 +370,11 @@ library Integrity {
         if (_isWordish(enc)) {
             unsuitable = node.compValue.length != 32;
         }
+
+        if (enc == Encoding.Tuple || enc == Encoding.Array) {
+            unsuitable = node.compValue.length < 32;
+        }
+
         if (unsuitable) {
             revert IRolesError.UnsuitableCompValue(index);
         }

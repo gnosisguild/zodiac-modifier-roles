@@ -460,6 +460,48 @@ describe("Integrity", () => {
       });
     });
 
+    describe("EqualTo compValue constraints", () => {
+      it("reverts UnsuitableCompValue for Tuple EqualTo with short compValue", async () => {
+        const { roles, allowTarget } = await loadFixture(setup);
+
+        await expect(
+          allowTarget(
+            flattenCondition({
+              paramType: Encoding.Tuple,
+              operator: Operator.EqualTo,
+              compValue: "0x1234",
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.Pass,
+                },
+              ],
+            }),
+          ),
+        ).to.be.revertedWithCustomError(roles, "UnsuitableCompValue");
+      });
+
+      it("reverts UnsuitableCompValue for Array EqualTo with short compValue", async () => {
+        const { roles, allowTarget } = await loadFixture(setup);
+
+        await expect(
+          allowTarget(
+            flattenCondition({
+              paramType: Encoding.Array,
+              operator: Operator.EqualTo,
+              compValue: "0xab",
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.Pass,
+                },
+              ],
+            }),
+          ),
+        ).to.be.revertedWithCustomError(roles, "UnsuitableCompValue");
+      });
+    });
+
     describe("Slice child constraint", () => {
       it("reverts SliceChildNotStatic when child does not resolve to Static", async () => {
         const { roles, allowTarget } = await loadFixture(setup);
