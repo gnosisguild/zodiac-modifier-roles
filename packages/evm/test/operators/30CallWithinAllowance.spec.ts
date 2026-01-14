@@ -56,15 +56,9 @@ describe("Operator - CallWithinAllowance", async () => {
         testContractAddress,
         fn.selector,
         flattenCondition({
-          paramType: Encoding.AbiEncoded,
-          operator: Operator.Matches,
-          children: [
-            {
-              paramType: Encoding.None,
-              operator: Operator.CallWithinAllowance,
-              compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
-            },
-          ],
+          paramType: Encoding.None,
+          operator: Operator.CallWithinAllowance,
+          compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
         }),
         ExecutionOptions.None,
       );
@@ -105,7 +99,7 @@ describe("Operator - CallWithinAllowance", async () => {
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
         .withArgs(
           ConditionViolationStatus.AllowanceExceeded,
-          1, // CallWithinAllowance node
+          0, // CallWithinAllowance node (root)
           anyValue,
           anyValue,
         );
@@ -130,7 +124,7 @@ describe("Operator - CallWithinAllowance", async () => {
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
         .withArgs(
           ConditionViolationStatus.AllowanceExceeded,
-          1, // CallWithinAllowance node
+          0, // CallWithinAllowance node (root)
           anyValue,
           anyValue,
         );
@@ -147,7 +141,7 @@ describe("Operator - CallWithinAllowance", async () => {
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
         .withArgs(
           ConditionViolationStatus.AllowanceExceeded,
-          1, // CallWithinAllowance node
+          0, // CallWithinAllowance node (root)
           anyValue,
           anyValue,
         );
@@ -163,7 +157,7 @@ describe("Operator - CallWithinAllowance", async () => {
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
         .withArgs(
           ConditionViolationStatus.AllowanceExceeded,
-          1, // CallWithinAllowance node
+          0, // CallWithinAllowance node (root)
           anyValue,
           anyValue,
         );
@@ -508,6 +502,68 @@ describe("Operator - CallWithinAllowance", async () => {
           anyValue,
         );
     });
+
+    it("works as standalone root condition with allowFunction", async () => {
+      const { member, roles, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      const iface = new Interface(["function doNothing()"]);
+      const fn = iface.getFunction("doNothing")!;
+
+      const allowanceKey =
+        "0x0000000000000000000000000000000000000000000000000000000000000003";
+
+      // Allowance of 3 calls to this specific function
+      await setAllowance(roles, allowanceKey, 3);
+
+      // CallWithinAllowance as the sole/root condition for a specific function
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
+        flattenCondition({
+          paramType: Encoding.None,
+          operator: Operator.CallWithinAllowance,
+          compValue: allowanceKey,
+        }),
+        ExecutionOptions.None,
+      );
+
+      async function invoke() {
+        return roles
+          .connect(member)
+          .execTransactionFromModule(
+            testContractAddress,
+            0,
+            iface.encodeFunctionData(fn, []),
+            0,
+          );
+      }
+
+      expect((await roles.allowances(allowanceKey)).balance).to.equal(3);
+
+      // First call passes (allowance: 3 -> 2)
+      await expect(invoke()).to.not.be.reverted;
+      expect((await roles.allowances(allowanceKey)).balance).to.equal(2);
+
+      // Second call passes (allowance: 2 -> 1)
+      await expect(invoke()).to.not.be.reverted;
+      expect((await roles.allowances(allowanceKey)).balance).to.equal(1);
+
+      // Third call passes (allowance: 1 -> 0)
+      await expect(invoke()).to.not.be.reverted;
+      expect((await roles.allowances(allowanceKey)).balance).to.equal(0);
+
+      // Fourth call fails (allowance exhausted)
+      await expect(invoke())
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.AllowanceExceeded,
+          0, // CallWithinAllowance as root node
+          anyValue,
+          anyValue,
+        );
+    });
   });
 
   describe("violation context", () => {
@@ -526,15 +582,9 @@ describe("Operator - CallWithinAllowance", async () => {
         testContractAddress,
         fn.selector,
         flattenCondition({
-          paramType: Encoding.AbiEncoded,
-          operator: Operator.Matches,
-          children: [
-            {
-              paramType: Encoding.None,
-              operator: Operator.CallWithinAllowance,
-              compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
-            },
-          ],
+          paramType: Encoding.None,
+          operator: Operator.CallWithinAllowance,
+          compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
         }),
         ExecutionOptions.None,
       );
@@ -552,7 +602,7 @@ describe("Operator - CallWithinAllowance", async () => {
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.AllowanceExceeded,
-          1, // CallWithinAllowance node at BFS index 1
+          0, // CallWithinAllowance node (root)
           anyValue,
           anyValue,
         );
@@ -573,15 +623,9 @@ describe("Operator - CallWithinAllowance", async () => {
         testContractAddress,
         fn.selector,
         flattenCondition({
-          paramType: Encoding.AbiEncoded,
-          operator: Operator.Matches,
-          children: [
-            {
-              paramType: Encoding.None,
-              operator: Operator.CallWithinAllowance,
-              compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
-            },
-          ],
+          paramType: Encoding.None,
+          operator: Operator.CallWithinAllowance,
+          compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
         }),
         ExecutionOptions.None,
       );
@@ -603,6 +647,117 @@ describe("Operator - CallWithinAllowance", async () => {
           0, // payloadLocation: CallWithinAllowance has no payload
           0, // payloadSize: no payload
         );
+    });
+  });
+
+  describe("integrity", () => {
+    describe("encoding", () => {
+      it("reverts UnsuitableParameterType for invalid encodings", async () => {
+        const { roles, testContractAddress, roleKey } =
+          await loadFixture(setupTestContract);
+
+        const allowanceKey = hexlify(randomBytes(32));
+
+        for (const encoding of [
+          Encoding.Static,
+          Encoding.Dynamic,
+          Encoding.Tuple,
+          Encoding.Array,
+          Encoding.AbiEncoded,
+          Encoding.EtherValue,
+        ]) {
+          await expect(
+            roles.allowTarget(
+              roleKey,
+              testContractAddress,
+              [
+                {
+                  parent: 0,
+                  paramType: encoding,
+                  operator: Operator.CallWithinAllowance,
+                  compValue: allowanceKey,
+                },
+              ],
+              0,
+            ),
+          ).to.be.revertedWithCustomError(roles, "UnsuitableParameterType");
+        }
+      });
+    });
+
+    describe("compValue", () => {
+      it("reverts UnsuitableCompValue when compValue is not 32 bytes", async () => {
+        const { roles, testContractAddress, roleKey } =
+          await loadFixture(setupTestContract);
+
+        await expect(
+          roles.allowTarget(
+            roleKey,
+            testContractAddress,
+            [
+              {
+                parent: 0,
+                paramType: Encoding.None,
+                operator: Operator.CallWithinAllowance,
+                compValue: "0x" + "ab".repeat(31), // 31 bytes
+              },
+            ],
+            0,
+          ),
+        ).to.be.revertedWithCustomError(roles, "UnsuitableCompValue");
+      });
+
+      it("reverts UnsuitableCompValue when compValue is 33 bytes", async () => {
+        const { roles, testContractAddress, roleKey } =
+          await loadFixture(setupTestContract);
+
+        await expect(
+          roles.allowTarget(
+            roleKey,
+            testContractAddress,
+            [
+              {
+                parent: 0,
+                paramType: Encoding.None,
+                operator: Operator.CallWithinAllowance,
+                compValue: "0x" + "ab".repeat(33), // 33 bytes
+              },
+            ],
+            0,
+          ),
+        ).to.be.revertedWithCustomError(roles, "UnsuitableCompValue");
+      });
+    });
+
+    describe("children", () => {
+      it("reverts LeafNodeCannotHaveChildren when CallWithinAllowance has children", async () => {
+        const { roles, testContractAddress, roleKey } =
+          await loadFixture(setupTestContract);
+
+        const allowanceKey = hexlify(randomBytes(32));
+
+        await expect(
+          roles.allowTarget(
+            roleKey,
+            testContractAddress,
+            [
+              {
+                parent: 0,
+                paramType: Encoding.None,
+                operator: Operator.CallWithinAllowance,
+                compValue: allowanceKey,
+              },
+              {
+                parent: 0,
+                paramType: Encoding.Static,
+                operator: Operator.Pass,
+                compValue: "0x",
+              },
+            ],
+            0,
+          ),
+        ).to.be.revertedWithCustomError(roles, "LeafNodeCannotHaveChildren");
+      });
     });
   });
 });

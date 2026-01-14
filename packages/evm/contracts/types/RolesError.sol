@@ -90,6 +90,9 @@ interface IRolesError {
     /// Child count is unsuitable for the node at given index
     error UnsuitableChildCount(uint256 index);
 
+    /// Leaf node cannot have children at given index
+    error LeafNodeCannotHaveChildren(uint256 index);
+
     /// Child type tree is unsuitable for the node at given index
     error UnsuitableChildTypeTree(uint256 index);
 

@@ -1860,4 +1860,221 @@ describe("Operator - WithinAllowance", async () => {
         );
     });
   });
+
+  describe("integrity", () => {
+    describe("encoding", () => {
+      it("reverts UnsuitableParameterType for invalid encodings", async () => {
+        const { roles, testContractAddress, roleKey } =
+          await loadFixture(setupTestContract);
+
+        const allowanceKey = hexlify(randomBytes(32));
+
+        for (const encoding of [
+          Encoding.None,
+          Encoding.AbiEncoded,
+          Encoding.Array,
+          Encoding.Dynamic,
+          Encoding.Tuple,
+        ]) {
+          await expect(
+            roles.allowTarget(
+              roleKey,
+              testContractAddress,
+              [
+                {
+                  parent: 0,
+                  paramType: encoding,
+                  operator: Operator.WithinAllowance,
+                  compValue: allowanceKey,
+                },
+              ],
+              0,
+            ),
+          ).to.be.revertedWithCustomError(roles, "UnsuitableParameterType");
+        }
+      });
+
+      it("accepts Static and EtherValue encodings", async () => {
+        const { roles, testContractAddress, roleKey } =
+          await loadFixture(setupTestContract);
+
+        const allowanceKey = hexlify(randomBytes(32));
+
+        for (const encoding of [Encoding.Static, Encoding.EtherValue]) {
+          await expect(
+            roles.allowTarget(
+              roleKey,
+              testContractAddress,
+              [
+                {
+                  parent: 0,
+                  paramType: encoding,
+                  operator: Operator.WithinAllowance,
+                  compValue: allowanceKey,
+                },
+              ],
+              0,
+            ),
+          ).to.not.be.reverted;
+        }
+      });
+    });
+
+    describe("compValue", () => {
+      it("reverts UnsuitableCompValue when compValue is not 32, 34, or 54 bytes", async () => {
+        const { roles, testContractAddress, roleKey } =
+          await loadFixture(setupTestContract);
+
+        await expect(
+          roles.allowTarget(
+            roleKey,
+            testContractAddress,
+            [
+              {
+                parent: 0,
+                paramType: Encoding.Static,
+                operator: Operator.WithinAllowance,
+                compValue: "0x" + "ab".repeat(31), // 31 bytes
+              },
+            ],
+            0,
+          ),
+        ).to.be.revertedWithCustomError(roles, "UnsuitableCompValue");
+      });
+
+      it("reverts UnsuitableCompValue when compValue is 33 bytes", async () => {
+        const { roles, testContractAddress, roleKey } =
+          await loadFixture(setupTestContract);
+
+        await expect(
+          roles.allowTarget(
+            roleKey,
+            testContractAddress,
+            [
+              {
+                parent: 0,
+                paramType: Encoding.Static,
+                operator: Operator.WithinAllowance,
+                compValue: "0x" + "ab".repeat(33), // 33 bytes
+              },
+            ],
+            0,
+          ),
+        ).to.be.revertedWithCustomError(roles, "UnsuitableCompValue");
+      });
+
+      it("reverts AllowanceDecimalsExceedMax when targetDecimals > 27", async () => {
+        const { roles, testContractAddress, roleKey } =
+          await loadFixture(setupTestContract);
+
+        const allowanceKey = hexlify(randomBytes(32));
+        // 34-byte compValue: allowanceKey(32) + targetDecimals(1) + sourceDecimals(1)
+        const compValue = solidityPacked(
+          ["bytes32", "uint8", "uint8"],
+          [allowanceKey, 28, 18], // targetDecimals = 28 (> 27)
+        );
+
+        await expect(
+          roles.allowTarget(
+            roleKey,
+            testContractAddress,
+            [
+              {
+                parent: 0,
+                paramType: Encoding.Static,
+                operator: Operator.WithinAllowance,
+                compValue,
+              },
+            ],
+            0,
+          ),
+        ).to.be.revertedWithCustomError(roles, "AllowanceDecimalsExceedMax");
+      });
+
+      it("reverts AllowanceDecimalsExceedMax when sourceDecimals > 27", async () => {
+        const { roles, testContractAddress, roleKey } =
+          await loadFixture(setupTestContract);
+
+        const allowanceKey = hexlify(randomBytes(32));
+        // 34-byte compValue: allowanceKey(32) + targetDecimals(1) + sourceDecimals(1)
+        const compValue = solidityPacked(
+          ["bytes32", "uint8", "uint8"],
+          [allowanceKey, 18, 28], // sourceDecimals = 28 (> 27)
+        );
+
+        await expect(
+          roles.allowTarget(
+            roleKey,
+            testContractAddress,
+            [
+              {
+                parent: 0,
+                paramType: Encoding.Static,
+                operator: Operator.WithinAllowance,
+                compValue,
+              },
+            ],
+            0,
+          ),
+        ).to.be.revertedWithCustomError(roles, "AllowanceDecimalsExceedMax");
+      });
+
+      it("accepts decimals at boundary (27)", async () => {
+        const { roles, testContractAddress, roleKey } =
+          await loadFixture(setupTestContract);
+
+        const allowanceKey = hexlify(randomBytes(32));
+        // 34-byte compValue with decimals at max allowed value
+        const compValue = solidityPacked(
+          ["bytes32", "uint8", "uint8"],
+          [allowanceKey, 27, 27], // both at max allowed
+        );
+
+        await expect(
+          roles.allowTarget(
+            roleKey,
+            testContractAddress,
+            [
+              {
+                parent: 0,
+                paramType: Encoding.Static,
+                operator: Operator.WithinAllowance,
+                compValue,
+              },
+            ],
+            0,
+          ),
+        ).to.not.be.reverted;
+      });
+    });
+
+    it("reverts LeafNodeCannotHaveChildren when WithinAllowance has children", async () => {
+      const { roles, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      const allowanceKey = hexlify(randomBytes(32));
+
+      await expect(
+        roles.allowTarget(
+          roleKey,
+          testContractAddress,
+          [
+            {
+              parent: 0,
+              paramType: Encoding.Static,
+              operator: Operator.WithinAllowance,
+              compValue: allowanceKey,
+            },
+            {
+              parent: 0,
+              paramType: Encoding.Static,
+              operator: Operator.Pass,
+              compValue: "0x",
+            },
+          ],
+          0,
+        ),
+      ).to.be.revertedWithCustomError(roles, "LeafNodeCannotHaveChildren");
+    });
+  });
 });

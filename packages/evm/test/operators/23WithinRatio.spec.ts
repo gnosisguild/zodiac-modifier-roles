@@ -1983,3 +1983,376 @@ function encodeWithinRatioCompValue({
     ],
   );
 }
+
+describe("integrity", () => {
+  it("reverts UnsuitableParameterType for invalid encodings", async () => {
+    const { roles, testContractAddress, roleKey } =
+      await loadFixture(setupTestContract);
+
+    const compValue = encodeWithinRatioCompValue({
+      referenceIndex: 0,
+      referenceDecimals: 0,
+      relativeIndex: 1,
+      relativeDecimals: 0,
+      minRatio: 9000,
+      maxRatio: 11000,
+    });
+
+    for (const encoding of [
+      Encoding.AbiEncoded,
+      Encoding.Array,
+      Encoding.Dynamic,
+      Encoding.EtherValue,
+      Encoding.Static,
+      Encoding.Tuple,
+    ]) {
+      await expect(
+        roles.allowTarget(
+          roleKey,
+          testContractAddress,
+          [
+            {
+              parent: 0,
+              paramType: encoding,
+              operator: Operator.WithinRatio,
+              compValue,
+            },
+          ],
+          0,
+        ),
+      ).to.be.revertedWithCustomError(roles, "UnsuitableParameterType");
+    }
+  });
+
+  describe("compValue", () => {
+    it("accepts 12-byte compValue (no adapters)", async () => {
+      const { roles, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      // 12 bytes: referenceIndex(1) + referenceDecimals(1) + relativeIndex(1) + relativeDecimals(1) + minRatio(4) + maxRatio(4)
+      const compValue12 = solidityPacked(
+        ["uint8", "uint8", "uint8", "uint8", "uint32", "uint32"],
+        [0, 0, 1, 0, 9000, 11000],
+      );
+
+      await expect(
+        roles.allowTarget(
+          roleKey,
+          testContractAddress,
+          [
+            {
+              parent: 0,
+              paramType: Encoding.AbiEncoded,
+              operator: Operator.Matches,
+              compValue: "0x",
+            },
+            {
+              parent: 0,
+              paramType: Encoding.Static,
+              operator: Operator.Pluck,
+              compValue: "0x00",
+            },
+            {
+              parent: 0,
+              paramType: Encoding.Static,
+              operator: Operator.Pluck,
+              compValue: "0x01",
+            },
+            {
+              parent: 0,
+              paramType: Encoding.None,
+              operator: Operator.WithinRatio,
+              compValue: compValue12,
+            },
+          ],
+          0,
+        ),
+      ).to.not.be.reverted;
+    });
+
+    it("accepts 32-byte compValue (one adapter)", async () => {
+      const { roles, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      // 32 bytes: 12 bytes + referenceAdapter(20)
+      const compValue32 = solidityPacked(
+        ["uint8", "uint8", "uint8", "uint8", "uint32", "uint32", "address"],
+        [0, 0, 1, 0, 9000, 11000, ZeroAddress],
+      );
+
+      await expect(
+        roles.allowTarget(
+          roleKey,
+          testContractAddress,
+          [
+            {
+              parent: 0,
+              paramType: Encoding.AbiEncoded,
+              operator: Operator.Matches,
+              compValue: "0x",
+            },
+            {
+              parent: 0,
+              paramType: Encoding.Static,
+              operator: Operator.Pluck,
+              compValue: "0x00",
+            },
+            {
+              parent: 0,
+              paramType: Encoding.Static,
+              operator: Operator.Pluck,
+              compValue: "0x01",
+            },
+            {
+              parent: 0,
+              paramType: Encoding.None,
+              operator: Operator.WithinRatio,
+              compValue: compValue32,
+            },
+          ],
+          0,
+        ),
+      ).to.not.be.reverted;
+    });
+
+    it("accepts 52-byte compValue (two adapters)", async () => {
+      const { roles, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      // 52 bytes: 12 bytes + referenceAdapter(20) + relativeAdapter(20)
+      const compValue52 = solidityPacked(
+        [
+          "uint8",
+          "uint8",
+          "uint8",
+          "uint8",
+          "uint32",
+          "uint32",
+          "address",
+          "address",
+        ],
+        [0, 0, 1, 0, 9000, 11000, ZeroAddress, ZeroAddress],
+      );
+
+      await expect(
+        roles.allowTarget(
+          roleKey,
+          testContractAddress,
+          [
+            {
+              parent: 0,
+              paramType: Encoding.AbiEncoded,
+              operator: Operator.Matches,
+              compValue: "0x",
+            },
+            {
+              parent: 0,
+              paramType: Encoding.Static,
+              operator: Operator.Pluck,
+              compValue: "0x00",
+            },
+            {
+              parent: 0,
+              paramType: Encoding.Static,
+              operator: Operator.Pluck,
+              compValue: "0x01",
+            },
+            {
+              parent: 0,
+              paramType: Encoding.None,
+              operator: Operator.WithinRatio,
+              compValue: compValue52,
+            },
+          ],
+          0,
+        ),
+      ).to.not.be.reverted;
+    });
+
+    it("reverts UnsuitableCompValue when compValue is less than 12 bytes", async () => {
+      const { roles, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      await expect(
+        roles.allowTarget(
+          roleKey,
+          testContractAddress,
+          [
+            {
+              parent: 0,
+              paramType: Encoding.None,
+              operator: Operator.WithinRatio,
+              compValue: "0x" + "ab".repeat(11), // 11 bytes
+            },
+          ],
+          0,
+        ),
+      ).to.be.revertedWithCustomError(roles, "UnsuitableCompValue");
+    });
+
+    it("reverts UnsuitableCompValue when compValue is between 12 and 32 bytes", async () => {
+      const { roles, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      await expect(
+        roles.allowTarget(
+          roleKey,
+          testContractAddress,
+          [
+            {
+              parent: 0,
+              paramType: Encoding.None,
+              operator: Operator.WithinRatio,
+              compValue: "0x" + "ab".repeat(20), // 20 bytes - invalid
+            },
+          ],
+          0,
+        ),
+      ).to.be.revertedWithCustomError(roles, "UnsuitableCompValue");
+    });
+
+    it("reverts UnsuitableCompValue when compValue is between 32 and 52 bytes", async () => {
+      const { roles, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      await expect(
+        roles.allowTarget(
+          roleKey,
+          testContractAddress,
+          [
+            {
+              parent: 0,
+              paramType: Encoding.None,
+              operator: Operator.WithinRatio,
+              compValue: "0x" + "ab".repeat(40), // 40 bytes - invalid
+            },
+          ],
+          0,
+        ),
+      ).to.be.revertedWithCustomError(roles, "UnsuitableCompValue");
+    });
+
+    it("reverts UnsuitableCompValue when compValue exceeds 52 bytes", async () => {
+      const { roles, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      await expect(
+        roles.allowTarget(
+          roleKey,
+          testContractAddress,
+          [
+            {
+              parent: 0,
+              paramType: Encoding.None,
+              operator: Operator.WithinRatio,
+              compValue: "0x" + "ab".repeat(53), // 53 bytes
+            },
+          ],
+          0,
+        ),
+      ).to.be.revertedWithCustomError(roles, "UnsuitableCompValue");
+    });
+
+    it("reverts WithinRatioNoRatioProvided when both minRatio and maxRatio are zero", async () => {
+      const { roles, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      const compValue = encodeWithinRatioCompValue({
+        referenceIndex: 3,
+        referenceDecimals: 0,
+        relativeIndex: 7,
+        relativeDecimals: 0,
+        minRatio: 0,
+        maxRatio: 0, // Both zero is invalid
+      });
+
+      await expect(
+        roles.allowTarget(
+          roleKey,
+          testContractAddress,
+          [
+            {
+              parent: 0,
+              paramType: Encoding.AbiEncoded,
+              operator: Operator.Matches,
+              compValue: "0x",
+            },
+            {
+              parent: 0,
+              paramType: Encoding.Static,
+              operator: Operator.Pluck,
+              compValue: "0x03",
+            },
+            {
+              parent: 0,
+              paramType: Encoding.Static,
+              operator: Operator.Pluck,
+              compValue: "0x07",
+            },
+            {
+              parent: 0,
+              paramType: Encoding.None,
+              operator: Operator.WithinRatio,
+              compValue,
+            },
+          ],
+          0,
+        ),
+      ).to.be.revertedWithCustomError(roles, "WithinRatioNoRatioProvided");
+    });
+  });
+
+  it("reverts LeafNodeCannotHaveChildren when WithinRatio has children", async () => {
+    const { roles, testContractAddress, roleKey } =
+      await loadFixture(setupTestContract);
+
+    const compValue = encodeWithinRatioCompValue({
+      referenceIndex: 3,
+      referenceDecimals: 0,
+      relativeIndex: 7,
+      relativeDecimals: 0,
+      minRatio: 9000,
+      maxRatio: 11000,
+    });
+
+    await expect(
+      roles.allowTarget(
+        roleKey,
+        testContractAddress,
+        [
+          {
+            parent: 0,
+            paramType: Encoding.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: Encoding.Static,
+            operator: Operator.Pluck,
+            compValue: "0x03",
+          },
+          {
+            parent: 0,
+            paramType: Encoding.Static,
+            operator: Operator.Pluck,
+            compValue: "0x07",
+          },
+          {
+            parent: 0,
+            paramType: Encoding.None,
+            operator: Operator.WithinRatio,
+            compValue,
+          },
+          {
+            parent: 3,
+            paramType: Encoding.Static,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+        ],
+        0,
+      ),
+    ).to.be.revertedWithCustomError(roles, "LeafNodeCannotHaveChildren");
+  });
+});

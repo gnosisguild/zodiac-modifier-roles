@@ -332,4 +332,83 @@ describe("Operator - SignedIntLessThan", () => {
         );
     });
   });
+
+  describe("integrity", () => {
+    it("reverts UnsuitableParameterType for invalid encodings", async () => {
+      const { roles, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      for (const encoding of [
+        Encoding.None,
+        Encoding.Dynamic,
+        Encoding.Tuple,
+        Encoding.Array,
+        Encoding.AbiEncoded,
+      ]) {
+        await expect(
+          roles.allowTarget(
+            roleKey,
+            testContractAddress,
+            [
+              {
+                parent: 0,
+                paramType: encoding,
+                operator: Operator.SignedIntLessThan,
+                compValue: defaultAbiCoder.encode(["int256"], [100]),
+              },
+            ],
+            0,
+          ),
+        ).to.be.revertedWithCustomError(roles, "UnsuitableParameterType");
+      }
+    });
+
+    it("reverts UnsuitableCompValue when compValue is not 32 bytes", async () => {
+      const { roles, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      await expect(
+        roles.allowTarget(
+          roleKey,
+          testContractAddress,
+          [
+            {
+              parent: 0,
+              paramType: Encoding.Static,
+              operator: Operator.SignedIntLessThan,
+              compValue: "0x0000", // Not 32 bytes
+            },
+          ],
+          0,
+        ),
+      ).to.be.revertedWithCustomError(roles, "UnsuitableCompValue");
+    });
+
+    it("reverts LeafNodeCannotHaveChildren when SignedIntLessThan has children", async () => {
+      const { roles, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      await expect(
+        roles.allowTarget(
+          roleKey,
+          testContractAddress,
+          [
+            {
+              parent: 0,
+              paramType: Encoding.Static,
+              operator: Operator.SignedIntLessThan,
+              compValue: defaultAbiCoder.encode(["int256"], [100]),
+            },
+            {
+              parent: 0,
+              paramType: Encoding.Static,
+              operator: Operator.Pass,
+              compValue: "0x",
+            },
+          ],
+          0,
+        ),
+      ).to.be.revertedWithCustomError(roles, "LeafNodeCannotHaveChildren");
+    });
+  });
 });
