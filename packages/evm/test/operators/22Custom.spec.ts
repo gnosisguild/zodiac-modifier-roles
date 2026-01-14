@@ -1,10 +1,10 @@
 import { expect } from "chai";
 import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import hre from "hardhat";
-import { hexlify, Interface, randomBytes, ZeroHash } from "ethers";
+import { hexlify, Interface, randomBytes } from "ethers";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import { setupOneParam } from "../setup";
+import { setupTestContract, setupOneParam } from "../setup";
 import {
   Encoding,
   Operator,
@@ -425,6 +425,29 @@ describe("Operator - Custom", () => {
           4, // payloadLocation: parameter starts at byte 4
           32, // payloadSize: uint256 is 32 bytes
         );
+    });
+  });
+
+  describe("integrity", () => {
+    it("reverts UnsuitableCompValue when compValue is less than 20 bytes", async () => {
+      const { roles, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      await expect(
+        roles.allowTarget(
+          roleKey,
+          testContractAddress,
+          [
+            {
+              parent: 0,
+              paramType: Encoding.Static,
+              operator: Operator.Custom,
+              compValue: "0x" + "ab".repeat(19), // 19 bytes, less than address
+            },
+          ],
+          0,
+        ),
+      ).to.be.revertedWithCustomError(roles, "UnsuitableCompValue");
     });
   });
 });

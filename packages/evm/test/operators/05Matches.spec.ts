@@ -525,4 +525,172 @@ describe("Operator - Matches", () => {
         );
     });
   });
+
+  describe("integrity", () => {
+    it("reverts UnsuitableParameterType for invalid encodings", async () => {
+      const { roles, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      for (const encoding of [
+        Encoding.None,
+        Encoding.Static,
+        Encoding.Dynamic,
+        Encoding.EtherValue,
+      ]) {
+        await expect(
+          roles.allowTarget(
+            roleKey,
+            testContractAddress,
+            [
+              {
+                parent: 0,
+                paramType: encoding,
+                operator: Operator.Matches,
+                compValue: "0x",
+              },
+            ],
+            0,
+          ),
+        ).to.be.revertedWithCustomError(roles, "UnsuitableParameterType");
+      }
+    });
+
+    describe("compValue", () => {
+      it("only AbiEncoded accepts non-empty compValue", async () => {
+        const { roles, testContractAddress, roleKey } =
+          await loadFixture(setupTestContract);
+
+        // All valid Matches encodings except AbiEncoded
+        for (const encoding of [Encoding.Tuple, Encoding.Array]) {
+          await expect(
+            roles.allowTarget(
+              roleKey,
+              testContractAddress,
+              [
+                {
+                  parent: 0,
+                  paramType: encoding,
+                  operator: Operator.Matches,
+                  compValue: "0x".padEnd(66, "0"),
+                },
+                {
+                  parent: 0,
+                  paramType: Encoding.Static,
+                  operator: Operator.Pass,
+                  compValue: "0x",
+                },
+              ],
+              0,
+            ),
+          ).to.be.revertedWithCustomError(roles, "UnsuitableCompValue");
+        }
+      });
+
+      it("reverts UnsuitableCompValue when AbiEncoded Matches has 1 byte compValue", async () => {
+        const { roles, testContractAddress, roleKey } =
+          await loadFixture(setupTestContract);
+
+        await expect(
+          roles.allowTarget(
+            roleKey,
+            testContractAddress,
+            [
+              {
+                parent: 0,
+                paramType: Encoding.AbiEncoded,
+                operator: Operator.Matches,
+                compValue: "0x04", // 1 byte - invalid (must be 0, 2, or 2+N)
+              },
+              {
+                parent: 0,
+                paramType: Encoding.Static,
+                operator: Operator.Pass,
+                compValue: "0x",
+              },
+            ],
+            0,
+          ),
+        ).to.be.revertedWithCustomError(roles, "UnsuitableCompValue");
+      });
+
+      it("reverts UnsuitableCompValue when AbiEncoded Matches compValue exceeds 34 bytes", async () => {
+        const { roles, testContractAddress, roleKey } =
+          await loadFixture(setupTestContract);
+
+        // 35 bytes = 2 + 33, but N must be <= 32
+        const compValue = "0x" + "00".repeat(35);
+
+        await expect(
+          roles.allowTarget(
+            roleKey,
+            testContractAddress,
+            [
+              {
+                parent: 0,
+                paramType: Encoding.AbiEncoded,
+                operator: Operator.Matches,
+                compValue,
+              },
+              {
+                parent: 0,
+                paramType: Encoding.Static,
+                operator: Operator.Pass,
+                compValue: "0x",
+              },
+            ],
+            0,
+          ),
+        ).to.be.revertedWithCustomError(roles, "UnsuitableCompValue");
+      });
+    });
+
+    it("requires at least one structural child", async () => {
+      const { roles, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      const allowanceKey = hexlify(randomBytes(32));
+
+      // Tuple and Array require structural children (AbiEncoded does not)
+      for (const encoding of [Encoding.Tuple, Encoding.Array]) {
+        await expect(
+          roles.allowTarget(
+            roleKey,
+            testContractAddress,
+            [
+              {
+                parent: 0,
+                paramType: encoding,
+                operator: Operator.Matches,
+                compValue: "0x",
+              },
+            ],
+            0,
+          ),
+        ).to.be.revertedWithCustomError(roles, "UnsuitableChildCount");
+
+        await expect(
+          roles.allowTarget(
+            roleKey,
+            testContractAddress,
+            [
+              {
+                parent: 0,
+                paramType: encoding,
+                operator: Operator.Matches,
+                compValue: "0x",
+              },
+              {
+                // Non-structural child - should not count as structural
+                parent: 0,
+                paramType: Encoding.None,
+                operator: Operator.CallWithinAllowance,
+                compValue: allowanceKey,
+              },
+            ],
+            0,
+          ),
+        ).to.be.revertedWithCustomError(roles, "UnsuitableChildCount");
+      }
+    });
+  });
 });

@@ -1,9 +1,8 @@
 import { expect } from "chai";
 import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { ZeroHash } from "ethers";
 
-import { setupDynamicParam } from "../setup";
+import { setupTestContract, setupDynamicParam } from "../setup";
 import {
   Encoding,
   Operator,
@@ -336,6 +335,108 @@ describe("Operator - Bitmask", () => {
           36, // payloadLocation: dynamic param at byte 36 (4 + 32)
           96, // payloadSize: 32 (length) + 64 (50 bytes padded to 64) = 96
         );
+    });
+  });
+
+  describe("integrity", () => {
+    it("reverts UnsuitableParameterType for invalid encodings", async () => {
+      const { roles, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      for (const encoding of [
+        Encoding.None,
+        Encoding.Tuple,
+        Encoding.Array,
+        Encoding.AbiEncoded,
+        Encoding.EtherValue,
+      ]) {
+        await expect(
+          roles.allowTarget(
+            roleKey,
+            testContractAddress,
+            [
+              {
+                parent: 0,
+                paramType: encoding,
+                operator: Operator.Bitmask,
+                compValue: encodeCompValue(0, "ff", "ab"),
+              },
+            ],
+            0,
+          ),
+        ).to.be.revertedWithCustomError(roles, "UnsuitableParameterType");
+      }
+    });
+
+    describe("compValue", () => {
+      it("reverts UnsuitableCompValue when compValue is less than 4 bytes", async () => {
+        const { roles, testContractAddress, roleKey } =
+          await loadFixture(setupTestContract);
+
+        await expect(
+          roles.allowTarget(
+            roleKey,
+            testContractAddress,
+            [
+              {
+                parent: 0,
+                paramType: Encoding.Static,
+                operator: Operator.Bitmask,
+                compValue: "0x0000", // 2 bytes (only shift, no mask/expected)
+              },
+            ],
+            0,
+          ),
+        ).to.be.revertedWithCustomError(roles, "UnsuitableCompValue");
+      });
+
+      it("reverts UnsuitableCompValue when (length - 2) is odd", async () => {
+        const { roles, testContractAddress, roleKey } =
+          await loadFixture(setupTestContract);
+
+        await expect(
+          roles.allowTarget(
+            roleKey,
+            testContractAddress,
+            [
+              {
+                parent: 0,
+                paramType: Encoding.Static,
+                operator: Operator.Bitmask,
+                compValue: "0x0000aabbcc", // 5 bytes: 2 shift + 3 (odd, can't split evenly)
+              },
+            ],
+            0,
+          ),
+        ).to.be.revertedWithCustomError(roles, "UnsuitableCompValue");
+      });
+    });
+
+    it("reverts LeafNodeCannotHaveChildren when Bitmask has children", async () => {
+      const { roles, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      await expect(
+        roles.allowTarget(
+          roleKey,
+          testContractAddress,
+          [
+            {
+              parent: 0,
+              paramType: Encoding.Static,
+              operator: Operator.Bitmask,
+              compValue: encodeCompValue(0, "ff", "ab"),
+            },
+            {
+              parent: 0,
+              paramType: Encoding.Static,
+              operator: Operator.Pass,
+              compValue: "0x",
+            },
+          ],
+          0,
+        ),
+      ).to.be.revertedWithCustomError(roles, "LeafNodeCannotHaveChildren");
     });
   });
 });
