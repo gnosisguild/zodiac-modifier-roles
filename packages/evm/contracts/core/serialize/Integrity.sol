@@ -14,20 +14,22 @@ import {IRolesError} from "../../types/RolesError.sol";
  */
 library Integrity {
     function enforce(ConditionFlat[] memory conditions) internal pure {
-        // 1.Topology Constraints
+        // 1. Topology Constraints
         _validateRoot(conditions);
         _validateBFS(conditions);
 
-        // 2. Operator Validation
+        // 2. Operator Validation (operator-specific rules)
+        // 3. Encoding Validation (child rules per encoding)
         uint256 len = conditions.length;
         for (uint256 i = 0; i < len; ++i) {
             _validateOperator(conditions, i);
+            _validateEncoding(conditions, i);
         }
 
-        // 3. Inter Node Constraints
-        _validateTypeTrees(conditions);
-        _validateNonStructuralOrdering(conditions);
+        // 4. Inter Node Constraints
+        _validateStructuralOrder(conditions);
         _validatePluckOrder(conditions, 0, 0);
+        _validateTypeTrees(conditions);
     }
 
     // -------------------------------------------------------------------------
@@ -111,6 +113,46 @@ library Integrity {
         }
     }
 
+    // -------------------------------------------------------------------------
+    // 3. Encoding Validation
+    // -------------------------------------------------------------------------
+
+    /**
+     * @notice Validates child constraints based on encoding type.
+     *
+     * @dev Encoding types determine fundamental child rules:
+     *      - Leaf types (Static, Dynamic, EtherValue): Cannot have children
+     *      - Container types (Tuple, Array): Must have structural children
+     *      - Abstract types (None, AbiEncoded): Operator-dependent (validated elsewhere)
+     *
+     *      Exception: Slice operator uses Static/Dynamic encoding but requires
+     *      exactly one child (validated in _checkSlice).
+     */
+    function _validateEncoding(
+        ConditionFlat[] memory conditions,
+        uint256 index
+    ) private pure {
+        ConditionFlat memory node = conditions[index];
+        Encoding encoding = node.paramType;
+
+        if (
+            encoding == Encoding.Static ||
+            encoding == Encoding.Dynamic ||
+            encoding == Encoding.EtherValue
+        ) {
+            // Slice is a special case: uses Static/Dynamic but requires a child
+            if (node.operator != Operator.Slice) {
+                // Leaf types cannot have children
+                _ensureNoChildren(conditions, index);
+            }
+        }
+
+        if (encoding == Encoding.Tuple || encoding == Encoding.Array) {
+            // Container types must have structural children for type tree
+            _ensureStructuralChildren(conditions, index);
+        }
+    }
+
     // --- Operator Handlers ---
 
     function _checkPass(
@@ -123,7 +165,6 @@ library Integrity {
         if (node.compValue.length != 0) {
             revert IRolesError.UnsuitableCompValue(index);
         }
-        _ensureLeafNoChildren(conditions, index);
     }
 
     function _checkLogic(
@@ -158,7 +199,7 @@ library Integrity {
             revert IRolesError.UnsuitableCompValue(index);
         }
         // Children: None
-        _ensureLeafNoChildren(conditions, index);
+        _ensureNoChildren(conditions, index);
     }
 
     function _checkMatches(
@@ -215,10 +256,7 @@ library Integrity {
             conditions,
             index
         );
-        if (childCount != 1) {
-            revert IRolesError.UnsuitableChildCount(index);
-        }
-        if (sChildCount != 1) {
+        if (childCount != 1 || sChildCount != 1) {
             revert IRolesError.UnsuitableChildCount(index);
         }
     }
@@ -292,14 +330,13 @@ library Integrity {
     ) private pure {
         ConditionFlat memory node = conditions[index];
         // ParamType: Static / EtherValue
-        if (!_isWordLike(node.paramType)) {
+        if (!_isWordish(node.paramType)) {
             revert IRolesError.UnsuitableParameterType(index);
         }
         // CompValue: 1 byte
         if (node.compValue.length != 1 || uint8(node.compValue[0]) == 255) {
             revert IRolesError.UnsuitableCompValue(index);
         }
-        _ensureLeafNoChildren(conditions, index);
     }
 
     function _checkEqualToAvatar(
@@ -315,7 +352,6 @@ library Integrity {
         if (node.compValue.length != 0) {
             revert IRolesError.UnsuitableCompValue(index);
         }
-        _ensureLeafNoChildren(conditions, index);
     }
 
     function _checkEqualTo(
@@ -331,17 +367,11 @@ library Integrity {
 
         // CompValue check
         bool unsuitable;
-        if (_isWordLike(enc)) {
+        if (_isWordish(enc)) {
             unsuitable = node.compValue.length != 32;
         }
         if (unsuitable) {
             revert IRolesError.UnsuitableCompValue(index);
-        }
-        // Tuple/Array need children for type tree; others are leaves
-        if (enc != Encoding.Tuple && enc != Encoding.Array) {
-            _ensureLeafNoChildren(conditions, index);
-        } else {
-            _ensureStructuralChildren(conditions, index);
         }
     }
 
@@ -351,14 +381,13 @@ library Integrity {
     ) private pure {
         ConditionFlat memory node = conditions[index];
         // ParamType: WordLike
-        if (!_isWordLike(node.paramType)) {
+        if (!_isWordish(node.paramType)) {
             revert IRolesError.UnsuitableParameterType(index);
         }
         // CompValue: 32 bytes
         if (node.compValue.length != 32) {
             revert IRolesError.UnsuitableCompValue(index);
         }
-        _ensureLeafNoChildren(conditions, index);
     }
 
     function _checkBitmask(
@@ -377,7 +406,6 @@ library Integrity {
         if (node.compValue.length < 4 || (node.compValue.length - 2) % 2 != 0) {
             revert IRolesError.UnsuitableCompValue(index);
         }
-        _ensureLeafNoChildren(conditions, index);
     }
 
     function _checkCustom(
@@ -389,7 +417,6 @@ library Integrity {
         if (node.compValue.length < 20) {
             revert IRolesError.UnsuitableCompValue(index);
         }
-        _ensureLeafNoChildren(conditions, index);
     }
 
     function _checkWithinAllowance(
@@ -398,7 +425,7 @@ library Integrity {
     ) private pure {
         ConditionFlat memory node = conditions[index];
         // ParamType: WordLike
-        if (!_isWordLike(node.paramType)) {
+        if (!_isWordish(node.paramType)) {
             revert IRolesError.UnsuitableParameterType(index);
         }
         // CompValue: 32, 34, 54
@@ -416,7 +443,6 @@ library Integrity {
                 revert IRolesError.AllowanceDecimalsExceedMax(index);
             }
         }
-        _ensureLeafNoChildren(conditions, index);
     }
 
     function _checkCallWithinAllowance(
@@ -433,7 +459,7 @@ library Integrity {
             revert IRolesError.UnsuitableCompValue(index);
         }
         // Children: None
-        _ensureLeafNoChildren(conditions, index);
+        _ensureNoChildren(conditions, index);
     }
 
     function _checkWithinRatio(
@@ -465,44 +491,59 @@ library Integrity {
             revert IRolesError.WithinRatioNoRatioProvided(index);
         }
         // Children: None
-        _ensureLeafNoChildren(conditions, index);
+        _ensureNoChildren(conditions, index);
     }
 
     // -------------------------------------------------------------------------
-    // 3. Global Constraints & Helpers
+    // 4. Global Constraints & Helpers
     // -------------------------------------------------------------------------
 
-    function _validateTypeTrees(
+    /**
+     * @notice Validates structural children precede non-structural siblings.
+     *
+     * @dev Structural nodes map 1:1 to decoded ABI payload slots in sequence.
+     *      To ensure correct alignment with the ABI decoder, within any
+     *      node's list of children, structural nodes must appear before
+     *      non-structural ones.
+     */
+    function _validateStructuralOrder(
         ConditionFlat[] memory conditions
     ) private pure {
-        for (uint256 i = 0; i < conditions.length; ++i) {
-            Operator operator = conditions[i].operator;
-            Encoding encoding = conditions[i].paramType;
+        for (uint256 index; index < conditions.length; index++) {
+            (uint256 childStart, uint256 childCount, ) = Topology.childBounds(
+                conditions,
+                index
+            );
 
-            if (
-                operator == Operator.And ||
-                operator == Operator.Or ||
-                encoding == Encoding.Array
-            ) {
-                if (
-                    !_isTypeMatch(conditions, i) &&
-                    !_isTypeEquivalence(conditions, i)
-                ) {
-                    revert IRolesError.UnsuitableChildTypeTree(i);
+            bool seenNonStructural = false;
+            for (uint256 j = 0; j < childCount; j++) {
+                bool isStructural = Topology.isStructural(
+                    conditions,
+                    childStart + j
+                );
+
+                if (isStructural && seenNonStructural) {
+                    revert IRolesError.NonStructuralChildrenMustComeLast(index);
+                }
+
+                if (!isStructural) {
+                    seenNonStructural = true;
                 }
             }
         }
     }
 
     /**
-     * @notice Validates that Pluck variables are defined before they are used.
-     * @dev While the flat `conditions` array is stored in BFS order (parents first),
-     *      execution happens in DFS order (pre-order traversal).
+     * @notice Validates plucked variable definitions precede their usage.
      *
-     *      This function traverses the tree in DFS order to track the `visited`
-     *      state of plucked variables. This ensures that a `WithinRatio` check
-     *      can only reference variables that have arguably been "plucked" by a
-     *      preceding node in the execution flow.
+     * @dev Evaluation happens in DFS order, so this function must check that
+     *      definitions come before usages in DFS order.
+     *
+     *      While the flat `conditions` array is stored in BFS order (parents
+     *      first), this function traverses the tree in DFS order to track the
+     *      `visited` state of plucked variables. This ensures that a
+     *      `WithinRatio` check can only reference variables that have been
+     *      "plucked" by a preceding node in the execution flow.
      */
     function _validatePluckOrder(
         ConditionFlat[] memory conditions,
@@ -546,35 +587,23 @@ library Integrity {
         return visited;
     }
 
-    /**
-     * @notice Ensures structural children come before non-structural ones.
-     * @dev Structural nodes map 1:1 to decoded ABI payload slots in order.
-     *      Non-structural must appear after all structural children. Some
-     *     Operators depend on this assumption
-     */
-    function _validateNonStructuralOrdering(
+    function _validateTypeTrees(
         ConditionFlat[] memory conditions
     ) private pure {
-        for (uint256 index; index < conditions.length; index++) {
-            (uint256 childStart, uint256 childCount, ) = Topology.childBounds(
-                conditions,
-                index
-            );
-            if (childCount == 0) return;
+        for (uint256 i = 0; i < conditions.length; ++i) {
+            Operator operator = conditions[i].operator;
+            Encoding encoding = conditions[i].paramType;
 
-            bool seenNonStructural = false;
-            for (uint256 j = 0; j < childCount; j++) {
-                uint256 childIndex = childStart + j;
-                bool isStructural = Topology.isStructural(
-                    conditions,
-                    childIndex
-                );
-
-                if (seenNonStructural && isStructural) {
-                    revert IRolesError.NonStructuralChildrenMustComeLast(index);
-                }
-                if (!isStructural) {
-                    seenNonStructural = true;
+            if (
+                operator == Operator.And ||
+                operator == Operator.Or ||
+                encoding == Encoding.Array
+            ) {
+                if (
+                    !_isTypeMatch(conditions, i) &&
+                    !_isTypeEquivalence(conditions, i)
+                ) {
+                    revert IRolesError.UnsuitableChildTypeTree(i);
                 }
             }
         }
@@ -582,11 +611,11 @@ library Integrity {
 
     // --- Helpers ---
 
-    function _isWordLike(Encoding encoding) private pure returns (bool) {
+    function _isWordish(Encoding encoding) private pure returns (bool) {
         return encoding == Encoding.Static || encoding == Encoding.EtherValue;
     }
 
-    function _ensureLeafNoChildren(
+    function _ensureNoChildren(
         ConditionFlat[] memory conditions,
         uint256 index
     ) private pure {

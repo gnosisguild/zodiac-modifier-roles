@@ -275,32 +275,46 @@ describe("Integrity", () => {
     });
 
     describe("structural ordering", () => {
-      it("reverts NonStructuralChildrenMustComeLast when structural follows non-structural", async () => {
+      it("reverts NonStructuralChildrenMustComeLast when structural children follow non-structural ones (validates iteration logic)", async () => {
         const { roles, allowTarget } = await loadFixture(setup);
-
         const allowanceKey = hexlify(randomBytes(32));
 
+        // Tree structure designed to catch iteration bugs (e.g., return vs continue on leaf):
+        // Root (Tuple)
+        // ├── Leaf (Static) -> Valid. Loop must continue.
+        // └── Parent (Tuple) -> Contains Ordering Violation
+        //     ├── Non-structural (CallWithinAllowance)
+        //     └── Structural (Static) -> Violation! Structural after Non-structural
+
         await expect(
-          allowTarget([
-            {
-              parent: 0,
-              paramType: Encoding.AbiEncoded,
+          allowTarget(
+            flattenCondition({
+              paramType: Encoding.Tuple,
               operator: Operator.Matches,
-              compValue: "0x",
-            },
-            {
-              parent: 0,
-              paramType: Encoding.None, // Non-structural
-              operator: Operator.CallWithinAllowance,
-              compValue: allowanceKey,
-            },
-            {
-              parent: 0,
-              paramType: Encoding.Static, // Structural after non-structural!
-              operator: Operator.EqualTo,
-              compValue: hre.ethers.zeroPadValue("0x01", 32),
-            },
-          ]),
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.Pass,
+                },
+                {
+                  paramType: Encoding.Tuple,
+                  operator: Operator.Matches,
+                  children: [
+                    {
+                      paramType: Encoding.None,
+                      operator: Operator.CallWithinAllowance,
+                      compValue: allowanceKey,
+                    },
+                    {
+                      // Structural (Child of Parent) -> VIOLATION
+                      paramType: Encoding.Static,
+                      operator: Operator.Pass,
+                    },
+                  ],
+                },
+              ],
+            }),
+          ),
         ).to.be.revertedWithCustomError(
           roles,
           "NonStructuralChildrenMustComeLast",
