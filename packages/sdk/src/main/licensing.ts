@@ -84,7 +84,7 @@ const assertPublicFeatureScope = (role: Role, owner: PrefixedAddress) => {
     )
   ) {
     throw new LicenseError(
-      `Role ${decodeKey(role.key)} is using allowances. Add the owner of the Roles Modifier to your Zodiac OS organization to proceed: https://app.pilot.gnosisguild.org/create/${owner}`,
+      `Role ${decodeKey(role.key)} is using allowances. Add the owner of the Roles Modifier to your Zodiac OS organization to proceed: https://app.zodiac.eco/create/${owner}`,
       owner
     )
   }
