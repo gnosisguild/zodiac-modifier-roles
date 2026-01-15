@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.3.3](https://github.com/gnosisguild/zodiac-modifier-roles/compare/zodiac-roles-sdk-v3.3.2...zodiac-roles-sdk-v3.3.3) (2026-01-15)
+
+
+### Bug Fixes
+
+* update all zodiac.eco links ([#428](https://github.com/gnosisguild/zodiac-modifier-roles/issues/428)) ([25889fb](https://github.com/gnosisguild/zodiac-modifier-roles/commit/25889fb13ce4171072e5ebe13bd12c38537289ff))
+* update zodiac URL ([000f714](https://github.com/gnosisguild/zodiac-modifier-roles/commit/000f714188d047e47e57404ebdf46f98bb8d492a))
+
 ## [3.3.2](https://github.com/gnosisguild/zodiac-modifier-roles/compare/zodiac-roles-sdk-v3.3.1...zodiac-roles-sdk-v3.3.2) (2025-10-21)
 
 
