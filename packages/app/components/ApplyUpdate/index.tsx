@@ -82,7 +82,7 @@ const ApplyUpdates: React.FC<Props> = async ({
           <LinkButton
             primary
             target="_blank"
-            href={`https://app.pilot.gnosisguild.org/create/${error.owner}`}
+            href={`https://app.zodiac.eco/create/${error.owner}`}
           >
             Add account to Zodiac OS
           </LinkButton>
