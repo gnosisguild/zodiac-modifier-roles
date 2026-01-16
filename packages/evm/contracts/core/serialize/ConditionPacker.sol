@@ -67,13 +67,14 @@ library ConditionPacker {
 
     function pack(
         ConditionFlat[] memory conditions,
-        Layout memory layout
+        Layout memory layout,
+        TopologyInfo[] memory topology
     ) internal pure returns (bytes memory buffer) {
         uint256 layoutOffset = 3 + _conditionPackedSize(conditions);
 
         buffer = new bytes(layoutOffset + _layoutPackedSize(layout));
 
-        _packConditions(conditions, buffer, 3);
+        _packConditions(conditions, buffer, 3, topology);
         _packLayout(layout, buffer, layoutOffset);
 
         // Header: layoutOffset (2 bytes) + maxPluckIndex (1 byte)
@@ -117,7 +118,8 @@ library ConditionPacker {
     function _packConditions(
         ConditionFlat[] memory conditions,
         bytes memory buffer,
-        uint256 offset
+        uint256 offset,
+        TopologyInfo[] memory topology
     ) private pure {
         offset += _packUInt16(conditions.length, buffer, offset);
 
@@ -125,10 +127,8 @@ library ConditionPacker {
             (conditions.length * CONDITION_NODE_BYTES);
 
         for (uint256 i; i < conditions.length; ++i) {
-            (, uint256 childCount, uint256 sChildCount) = Topology.childBounds(
-                conditions,
-                i
-            );
+            uint256 childCount = topology[i].childCount;
+            uint256 sChildCount = topology[i].sChildCount;
 
             ConditionFlat memory condition = conditions[i];
             bool hasCompValue = _hasCompValue(condition);

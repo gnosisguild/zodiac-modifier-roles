@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
+import "../../core/serialize/Topology.sol";
 import "../../core/serialize/TypeTree.sol";
 
 contract MockTypeTree {
@@ -11,23 +12,11 @@ contract MockTypeTree {
         bool inlined;
     }
 
-    function inspect(
+    function resolve(
         ConditionFlat[] memory conditions
     ) public pure returns (FlatLayoutForTest[] memory) {
-        return _flattenLayout(TypeTree.inspect(conditions, 0));
-    }
-
-    function id(
-        ConditionFlat[] memory conditions
-    ) public pure returns (bytes32) {
-        return TypeTree.id(conditions, 0);
-    }
-
-    function id(
-        ConditionFlat[] memory conditions,
-        uint256 index
-    ) public pure returns (bytes32) {
-        return TypeTree.id(conditions, index);
+        TopologyInfo[] memory info = Topology.resolve(conditions);
+        return _flattenLayout(TypeTree.resolve(conditions, info, 0));
     }
 
     function _flattenLayout(

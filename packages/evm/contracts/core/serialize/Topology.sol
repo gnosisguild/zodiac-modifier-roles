@@ -4,75 +4,152 @@ pragma solidity >=0.8.17 <0.9.0;
 import "../../types/Types.sol";
 
 /**
- * @title  Topology
- * @notice Library for analyzing the structure of flat condition trees
+ * @title Topology
+ * @notice Computes structural metadata and type information for condition trees.
+ *         This pre-computed analysis is used by other libraries for validation
+ *         and serialization.
+ *
+ * @dev    Achieves O(N) efficiency by doing a single backward pass over the BFS
+ *         ordered data to bubble up properties. This is a significant
+ *         improvement over the previous redundant and recursive approach.
  *
  * @author gnosisguild
  */
 library Topology {
-    /**
-     * @notice Gets the bounds and counts of children for a given node
-     * @param conditions The flat array of conditions
-     * @param index The index of the parent node
-     *
-     * @return childStart The index of the first child (0 if no children)
-     * @return childCount The total number of children (structural + non-structural)
-     * @return sChildCount The number of structural children only
-     */
-    function childBounds(
-        ConditionFlat[] memory conditions,
-        uint256 index
-    )
-        internal
-        pure
-        returns (uint256 childStart, uint256 childCount, uint256 sChildCount)
-    {
-        uint256 len = conditions.length;
+    function resolve(
+        ConditionFlat[] memory conditions
+    ) internal pure returns (TopologyInfo[] memory info) {
+        _validateRoot(conditions);
+        _validateBFS(conditions);
 
-        for (uint256 i = index + 1; i < len; ++i) {
-            uint256 parent = conditions[i].parent;
+        uint256 length = conditions.length;
+        info = new TopologyInfo[](length);
 
-            if (parent == index) {
-                if (childCount == 0) childStart = i;
-                ++childCount;
+        for (uint256 i = length; i > 0; ) {
+            unchecked {
+                --i;
+            }
 
-                // Count structural children
-                if (isStructural(conditions, i)) {
-                    ++sChildCount;
+            Encoding enc = conditions[i].paramType;
+            TopologyInfo memory parent = info[conditions[i].parent];
+            TopologyInfo memory current = info[i];
+
+            bool encodingIsStructural = enc != Encoding.None &&
+                enc != Encoding.EtherValue;
+
+            bool encodingAtOffset = enc == Encoding.Dynamic ||
+                enc == Encoding.Array ||
+                enc == Encoding.AbiEncoded;
+
+            /*
+             * Distinguish between local and inherited properties. Because we
+             * traverse backwards, `current.isStructural` and `current.atOffset`
+             * may have already been set by descendants. We now merge the
+             * node's own encoding properties into these propagated states.
+             */
+            if (encodingIsStructural) {
+                current.isStructural = true;
+            }
+
+            if (encodingAtOffset) {
+                current.atOffset = true;
+            }
+
+            if (i > 0) {
+                // Bubble up. Skip for root
+                parent.childStart = i;
+                parent.childCount++;
+
+                if (current.isStructural) {
+                    parent.isStructural = true;
+                    parent.sChildCount++;
                 }
-            } else if (parent > index) {
-                break;
+
+                if (current.atOffset) {
+                    parent.atOffset = true;
+                }
+            }
+
+            // Base hash: encoding (+ leadingBytes for AbiEncoded)
+            bytes32 hash;
+            if (enc == Encoding.AbiEncoded) {
+                bytes memory compValue = conditions[i].compValue;
+                uint256 leadingBytes = compValue.length == 0
+                    ? 4
+                    : uint256(uint16(bytes2(compValue)));
+                hash = bytes32((leadingBytes << 8) | uint256(enc));
+            } else {
+                hash = bytes32(uint256(enc));
+            }
+
+            if (current.sChildCount == 0) {
+                // Leaf: typeHash = baseHash (or 0 for None/EtherValue)
+                if (encodingIsStructural) {
+                    current.typeHash = hash;
+                }
+                continue;
+            }
+
+            // Detect variance in structural children types (setting `isVariant` if mixed).
+            bytes32 firstHash;
+            uint256 childCount = current.childCount;
+            uint256 childStart = current.childStart;
+            for (uint256 k; k < childCount; ++k) {
+                TopologyInfo memory child = info[childStart + k];
+                if (child.isStructural) {
+                    if (firstHash == bytes32(0)) {
+                        firstHash = child.typeHash;
+                    } else if (firstHash != child.typeHash) {
+                        current.isVariant = true;
+                        break;
+                    }
+                }
+            }
+
+            // transparent operators: inherit first child's typeHash (or 0 if variant)
+            if (!encodingIsStructural && !current.isVariant) {
+                current.typeHash = firstHash;
+                continue;
+            }
+
+            if (current.isVariant) {
+                current.typeHash = bytes32(uint256(Encoding.Dynamic));
+                continue;
+            }
+
+            for (uint256 k; k < childCount; ++k) {
+                TopologyInfo memory child = info[childStart + k];
+                if (child.isStructural) {
+                    hash = keccak256(abi.encodePacked(hash, child.typeHash));
+                }
+            }
+            current.typeHash = hash;
+        }
+    }
+
+    function _validateBFS(ConditionFlat[] memory conditions) private pure {
+        uint256 length = conditions.length;
+        for (uint256 i = 1; i < length; ++i) {
+            // Parent must have lower index (no forward references)
+            if (conditions[i - 1].parent > conditions[i].parent) {
+                revert IRolesError.NotBFS();
+            }
+            // Parent cannot be itself or higher (except root at 0 which is handled separately)
+            if (conditions[i].parent >= i) {
+                revert IRolesError.NotBFS();
             }
         }
     }
 
-    /**
-     * @notice Determines if a node is structural
-     * @dev A node is structural if it has paramType != None OR any descendant has paramType != None
-     */
-    function isStructural(
-        ConditionFlat[] memory conditions,
-        uint256 index
-    ) internal pure returns (bool) {
-        // EtherValue is an alias for None
-        Encoding encoding = conditions[index].paramType;
-        if (encoding != Encoding.None && encoding != Encoding.EtherValue) {
-            return true;
+    function _validateRoot(ConditionFlat[] memory conditions) private pure {
+        // Must be exactly one root node (parent == itself), and it must be at index 0
+        uint256 count;
+        uint256 length = conditions.length;
+        for (uint256 i = 0; i < length; ++i) {
+            if (conditions[i].parent == i) ++count;
         }
-
-        // Check all direct children
-        for (uint256 i = index + 1; i < conditions.length; ++i) {
-            uint256 parent = conditions[i].parent;
-            if (parent == index) {
-                // Recursively check if child is structural
-                if (isStructural(conditions, i)) {
-                    return true;
-                }
-            } else if (parent > index) {
-                break;
-            }
+        if (count != 1 || conditions[0].parent != 0) {
+            revert IRolesError.UnsuitableRootNode();
         }
-
-        return false;
     }
 }

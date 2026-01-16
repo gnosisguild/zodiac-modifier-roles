@@ -30,16 +30,17 @@ library ConditionStorer {
         ConditionFlat[] memory conditions,
         ExecutionOptions options
     ) external returns (uint256 scopeConfig) {
-        Integrity.enforce(conditions);
+        TopologyInfo[] memory topology = Topology.resolve(conditions);
+        Integrity.enforce(conditions, topology);
+        ConditionTransform.transform(conditions, topology);
 
-        ConditionTransform.transform(conditions);
+        Layout memory layout = TypeTree.resolve(conditions, topology, 0);
 
-        Layout memory layout;
-        if (Topology.isStructural(conditions, 0)) {
-            layout = TypeTree.inspect(conditions, 0);
-        }
-
-        bytes memory buffer = ConditionPacker.pack(conditions, layout);
+        bytes memory buffer = ConditionPacker.pack(
+            conditions,
+            layout,
+            topology
+        );
         address pointer = ImmutableStorage.store(buffer);
 
         return (uint256(options) << 160) | uint160(pointer);
