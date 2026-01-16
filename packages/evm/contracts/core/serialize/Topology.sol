@@ -35,10 +35,10 @@ library Topology {
             TopologyInfo memory parent = info[condition.parent];
             TopologyInfo memory current = info[i];
 
-            bool encodingIsStructural = enc != Encoding.None &&
+            bool isStructural = enc != Encoding.None &&
                 enc != Encoding.EtherValue;
 
-            bool encodingAtOffset = enc == Encoding.Dynamic ||
+            bool atOffset = enc == Encoding.Dynamic ||
                 enc == Encoding.Array ||
                 enc == Encoding.AbiEncoded;
 
@@ -51,11 +51,11 @@ library Topology {
              * may have already been set by descendants. We now merge the
              * node's own encoding properties into these propagated states.
              */
-            if (encodingIsStructural) {
+            if (isStructural) {
                 current.isStructural = true;
             }
 
-            if (encodingAtOffset) {
+            if (atOffset) {
                 current.atOffset = true;
             }
 
@@ -139,14 +139,14 @@ library Topology {
             }
 
             if (current.sChildCount == 0) {
-                if (encodingIsStructural) {
+                if (isStructural) {
                     current.typeHash = hash;
                 }
                 continue;
             }
 
             // transparent operators: inherit first child's typeHash
-            if (!encodingIsStructural && !current.isVariant) {
+            if (!isStructural && !current.isVariant) {
                 current.typeHash = firstHash;
                 continue;
             }
