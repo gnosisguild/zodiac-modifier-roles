@@ -67,20 +67,31 @@ library ConditionPacker {
 
     function pack(
         ConditionFlat[] memory conditions,
-        Layout memory layout,
         TopologyInfo[] memory topology
     ) internal pure returns (bytes memory buffer) {
         uint256 layoutOffset = 3 + _conditionPackedSize(conditions);
+        (uint256 layoutNodeCount, uint8 maxPluckIndex) = _count(
+            conditions,
+            topology
+        );
 
-        buffer = new bytes(layoutOffset + _layoutPackedSize(layout));
+        buffer = new bytes(
+            layoutOffset + 2 + layoutNodeCount * LAYOUT_NODE_BYTES
+        );
 
         _packConditions(conditions, buffer, 3, topology);
-        _packLayout(layout, buffer, layoutOffset);
+        _packLayout(
+            conditions,
+            topology,
+            buffer,
+            layoutOffset,
+            layoutNodeCount
+        );
 
         // Header: layoutOffset (2 bytes) + maxPluckIndex (1 byte)
         buffer[0] = bytes1(uint8(layoutOffset >> 8));
         buffer[1] = bytes1(uint8(layoutOffset));
-        buffer[2] = bytes1(_pluckValuesMaxCount(conditions));
+        buffer[2] = bytes1(maxPluckIndex);
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -149,8 +160,6 @@ library ConditionPacker {
                 buffer[offset++] = hasCompValue
                     ? bytes1(uint8(tailOffset))
                     : bytes1(0);
-
-                // todo encode a test with a high number of compValues, make sure both bytes on the tailOffset are considered
             }
 
             if (!hasCompValue) continue;
@@ -199,112 +208,118 @@ library ConditionPacker {
                 condition.compValue.length > 2);
     }
 
-    function _pluckValuesMaxCount(
-        ConditionFlat[] memory conditions
-    ) private pure returns (uint8 result) {
-        for (uint256 i = 0; i < conditions.length; ++i) {
-            if (conditions[i].operator != Operator.Pluck) continue;
-
-            uint8 count = uint8(conditions[i].compValue[0]) + 1;
-            if (count > result) {
-                result = count;
-            }
-        }
-    }
-
     // ═══════════════════════════════════════════════════════════════════════════
     // Layout Packing
     // ═══════════════════════════════════════════════════════════════════════════
 
-    function _layoutPackedSize(
-        Layout memory node
-    ) private pure returns (uint256 result) {
-        // Header (2 bytes) + all nodes (3 bytes each)
-        result = 2 + _countNodes(node) * LAYOUT_NODE_BYTES;
+    /**
+     * @dev Computes layoutNodeCount and maxPluckIndex in a single pass.
+     */
+    function _count(
+        ConditionFlat[] memory conditions,
+        TopologyInfo[] memory topology
+    ) private pure returns (uint256 layoutNodeCount, uint8 maxPluckIndex) {
+        for (uint256 i; i < conditions.length; ++i) {
+            if (topology[i].layoutCount > 0) {
+                layoutNodeCount++;
+            }
+            if (conditions[i].operator == Operator.Pluck) {
+                uint8 pluckIndex = uint8(conditions[i].compValue[0]) + 1;
+                if (pluckIndex > maxPluckIndex) {
+                    maxPluckIndex = pluckIndex;
+                }
+            }
+        }
     }
 
-    function _packLayout(
-        Layout memory tree,
-        bytes memory buffer,
-        uint256 offset
+    /**
+     * @dev Resolves through transparent (non-variant) And/Or chains to find
+     *      the actual layout node that should be emitted.
+     */
+    function _resolveLayoutIndex(
+        TopologyInfo[] memory topology,
+        uint256 index
     ) private pure returns (uint256) {
-        LayoutNodeFlat[] memory nodes = _flattenLayout(tree);
+        while (topology[index].layoutCount == 0) {
+            index = topology[index].childStart;
+        }
+        return index;
+    }
 
-        offset += _packUInt16(nodes.length, buffer, offset);
+    /**
+     * @dev Packs layout nodes directly from topology using BFS traversal,
+     *      without intermediate Layout tree construction.
+     */
+    function _packLayout(
+        ConditionFlat[] memory conditions,
+        TopologyInfo[] memory topology,
+        bytes memory buffer,
+        uint256 offset,
+        uint256 nodeCount
+    ) private pure {
+        offset += _packUInt16(nodeCount, buffer, offset);
 
-        // Pack all nodes (3 bytes each)
-        for (uint256 i; i < nodes.length; ++i) {
-            uint24 packed = (uint24(nodes[i].encoding) << 21) |
-                (nodes[i].inlined ? uint24(1 << 20) : uint24(0)) |
-                (uint24(nodes[i].childCount) << 12) |
-                uint24(nodes[i].leadingBytes);
+        // BFS queue stores resolved condition indices
+        uint256[] memory queue = new uint256[](nodeCount);
+        uint256 head = 0;
+        uint256 tail = 0;
+
+        // Enqueue root (resolved through any transparent chains)
+        queue[tail++] = _resolveLayoutIndex(topology, 0);
+
+        while (head < tail) {
+            uint256 idx = queue[head++];
+            (uint24 packed, uint256 childCount) = _packLayoutNode(
+                conditions,
+                topology,
+                idx
+            );
 
             buffer[offset++] = bytes1(uint8(packed >> 16));
             buffer[offset++] = bytes1(uint8(packed >> 8));
             buffer[offset++] = bytes1(uint8(packed));
-        }
 
-        return 2 + nodes.length * LAYOUT_NODE_BYTES;
-    }
-
-    function _flattenLayout(
-        Layout memory root
-    ) internal pure returns (LayoutNodeFlat[] memory) {
-        uint256 total = _countNodes(root);
-        LayoutNodeFlat[] memory result = new LayoutNodeFlat[](total);
-
-        Layout[] memory queue = new Layout[](total);
-        uint256[] memory parents = new uint256[](total);
-
-        queue[0] = root;
-        parents[0] = 0;
-
-        uint256 head = 0;
-        uint256 tail = 1;
-        uint256 current = 0;
-
-        while (head < tail) {
-            Layout memory node = queue[head];
-            uint256 parent = parents[head];
-            head++;
-
-            // Record this node
-            result[current] = LayoutNodeFlat({
-                encoding: node.encoding,
-                parent: parent,
-                childCount: node.children.length,
-                leadingBytes: uint16(node.leadingBytes),
-                inlined: node.inlined
-            });
-
-            // Enqueue children
-            for (uint256 i = 0; i < node.children.length; ++i) {
-                queue[tail] = node.children[i];
-                parents[tail] = current;
-                tail++;
+            // Enqueue children (resolved through transparent chains)
+            uint256 childStart = topology[idx].childStart;
+            for (uint256 i = 0; i < childCount; ++i) {
+                queue[tail++] = _resolveLayoutIndex(topology, childStart + i);
             }
-
-            current++;
-        }
-
-        return result;
-    }
-
-    function _countNodes(
-        Layout memory node
-    ) internal pure returns (uint256 count) {
-        count = 1;
-        for (uint256 i = 0; i < node.children.length; ++i) {
-            count += _countNodes(node.children[i]);
         }
     }
 
-    struct LayoutNodeFlat {
-        uint256 parent;
-        Encoding encoding;
-        uint256 childCount;
-        uint16 leadingBytes;
-        bool inlined;
+    /**
+     * @dev Computes the packed 24-bit layout node and child count for a given index.
+     */
+    function _packLayoutNode(
+        ConditionFlat[] memory conditions,
+        TopologyInfo[] memory topology,
+        uint256 idx
+    ) private pure returns (uint24 packed, uint256 childCount) {
+        Operator op = conditions[idx].operator;
+        bool isLogical = op == Operator.And || op == Operator.Or;
+
+        // Determine encoding (variant And/Or becomes Dynamic)
+        Encoding encoding = isLogical
+            ? Encoding.Dynamic
+            : conditions[idx].paramType;
+
+        // Extract leadingBytes for AbiEncoded
+        uint256 leadingBytes;
+        if (encoding == Encoding.AbiEncoded) {
+            bytes memory compValue = conditions[idx].compValue;
+            leadingBytes = compValue.length == 0
+                ? 4
+                : uint16(bytes2(compValue));
+        }
+
+        childCount = topology[idx].layoutCount - 1;
+
+        // Pack node (3 bytes = 24 bits)
+        packed =
+            (uint24(encoding) << 21) |
+            (topology[idx].atOffset ? uint24(0) : uint24(1 << 20)) |
+            (uint24(childCount) << 12) |
+            uint24(leadingBytes);
     }
 
     // ═══════════════════════════════════════════════════════════════════════════

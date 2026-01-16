@@ -7,7 +7,6 @@ import "./ConditionPacker.sol";
 import "./ConditionTransform.sol";
 import "./Integrity.sol";
 import "./Topology.sol";
-import "./TypeTree.sol";
 
 import "../../types/Types.sol";
 
@@ -34,13 +33,7 @@ library ConditionStorer {
         Integrity.enforce(conditions, topology);
         ConditionTransform.transform(conditions, topology);
 
-        Layout memory layout = TypeTree.resolve(conditions, topology, 0);
-
-        bytes memory buffer = ConditionPacker.pack(
-            conditions,
-            layout,
-            topology
-        );
+        bytes memory buffer = ConditionPacker.pack(conditions, topology);
         address pointer = ImmutableStorage.store(buffer);
 
         return (uint256(options) << 160) | uint160(pointer);

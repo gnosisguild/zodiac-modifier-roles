@@ -9,4 +9,5 @@ struct TopologyInfo {
     bool isStructural;
     bool isVariant;
     bool atOffset;
+    uint256 layoutCount;
 }
