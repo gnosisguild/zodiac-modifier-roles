@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "./TypeTree.sol";
 import "../../types/Types.sol";
 
 /**
@@ -293,8 +292,7 @@ library Integrity {
             revert IRolesError.SliceChildNotStatic(index);
         }
 
-        Layout memory layout = TypeTree.resolve(conditions, info, childStart);
-        if (layout.encoding != Encoding.Static) {
+        if (_resolvesTo(conditions, info, childStart) != Encoding.Static) {
             revert IRolesError.SliceChildNotStatic(index);
         }
     }
@@ -613,9 +611,7 @@ library Integrity {
         uint256 sChildCount = info[index].sChildCount;
 
         for (uint256 i = 0; i < sChildCount; ++i) {
-            Encoding encoding = TypeTree
-                .resolve(conditions, info, childStart + i)
-                .encoding;
+            Encoding encoding = _resolvesTo(conditions, info, childStart + i);
             if (
                 encoding != Encoding.Dynamic && encoding != Encoding.AbiEncoded
             ) {
@@ -623,5 +619,24 @@ library Integrity {
             }
         }
         return true;
+    }
+
+    /**
+     * @dev Resolves through transparent (non-variant) And/Or chains to find
+     *      the actual layout encoding.
+     */
+    function _resolvesTo(
+        ConditionFlat[] memory conditions,
+        TopologyInfo[] memory info,
+        uint256 index
+    ) private pure returns (Encoding) {
+        while (
+            conditions[index].paramType == Encoding.None ||
+            conditions[index].paramType == Encoding.EtherValue
+        ) {
+            index = info[index].childStart;
+        }
+
+        return conditions[index].paramType;
     }
 }
