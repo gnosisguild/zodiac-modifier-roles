@@ -29,7 +29,7 @@ library ConditionStorer {
         ConditionFlat[] memory conditions,
         ExecutionOptions options
     ) external returns (uint256 scopeConfig) {
-        TopologyInfo[] memory topology = Topology.resolve(conditions);
+        Topology[] memory topology = TopologyLib.resolve(conditions);
         Integrity.enforce(conditions, topology);
         ConditionTransform.transform(conditions, topology);
 

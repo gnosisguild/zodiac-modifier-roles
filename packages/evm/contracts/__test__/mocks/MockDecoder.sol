@@ -12,9 +12,9 @@ contract MockDecoder {
         bytes calldata data,
         ConditionFlat[] memory conditions
     ) public view returns (FlatPayload[] memory) {
-        TopologyInfo[] memory info = Topology.resolve(conditions);
-        Integrity.enforce(conditions, info);
-        bytes memory packed = ConditionPacker.pack(conditions, info);
+        Topology[] memory topology = TopologyLib.resolve(conditions);
+        Integrity.enforce(conditions, topology);
+        bytes memory packed = ConditionPacker.pack(conditions, topology);
         (, Layout memory layout, ) = ConditionUnpacker.unpack(packed);
         return flattenTree(AbiDecoder.inspect(data, layout));
     }

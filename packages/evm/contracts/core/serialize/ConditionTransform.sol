@@ -15,7 +15,7 @@ library ConditionTransform {
      */
     function transform(
         ConditionFlat[] memory conditions,
-        TopologyInfo[] memory info
+        Topology[] memory topology
     ) internal pure {
         uint256 count = conditions.length;
         for (uint256 i; i < count; ++i) {
@@ -45,7 +45,8 @@ library ConditionTransform {
              * offset.
              */
             if (
-                conditions[i].operator == Operator.EqualTo && info[i].atOffset
+                conditions[i].operator == Operator.EqualTo &&
+                topology[i].isNotInline
             ) {
                 bytes memory compValue = conditions[i].compValue;
                 uint256 length = compValue.length;

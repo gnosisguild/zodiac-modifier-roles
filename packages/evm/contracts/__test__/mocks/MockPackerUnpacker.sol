@@ -33,7 +33,7 @@ contract MockPackerUnpacker {
         )
     {
         // Pack
-        TopologyInfo[] memory topology = Topology.resolve(conditions);
+        Topology[] memory topology = TopologyLib.resolve(conditions);
         Integrity.enforce(conditions, topology);
         bytes memory buffer = ConditionPacker.pack(conditions, topology);
 
@@ -107,6 +107,8 @@ contract MockPackerUnpacker {
         uint256 total = _countLayoutNodes(root);
         FlatLayoutForTest[] memory result = new FlatLayoutForTest[](total);
 
+        if (total == 0) return result;
+
         Layout[] memory queue = new Layout[](total);
         uint256[] memory parents = new uint256[](total);
 
@@ -144,6 +146,10 @@ contract MockPackerUnpacker {
     function _countLayoutNodes(
         Layout memory node
     ) private pure returns (uint256 count) {
+        // Empty layout (non-structural tree) has no nodes
+        if (node.encoding == Encoding.None) {
+            return 0;
+        }
         count = 1;
         for (uint256 i = 0; i < node.children.length; ++i) {
             count += _countLayoutNodes(node.children[i]);

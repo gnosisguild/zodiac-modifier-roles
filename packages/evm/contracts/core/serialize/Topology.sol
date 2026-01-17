@@ -4,7 +4,7 @@ pragma solidity >=0.8.17 <0.9.0;
 import "../../types/Types.sol";
 
 /**
- * @title Topology
+ * @title TopologyLib
  * @notice Computes structural metadata and type information for condition trees.
  *         This pre-computed analysis is used by other libraries for validation
  *         and serialization.
@@ -15,15 +15,20 @@ import "../../types/Types.sol";
  *
  * @author gnosisguild
  */
-library Topology {
+library TopologyLib {
     function resolve(
         ConditionFlat[] memory conditions
-    ) internal pure returns (TopologyInfo[] memory info) {
-        _validateRoot(conditions);
+    ) internal pure returns (Topology[] memory topology) {
+        /*
+         * Note: This function assumes input conditions satisfy Integrity rules.
+         * Most notably, within any child collection, structural nodes must
+         * precede non-structural ones for correct serialization alignment.
+         */
         _validateBFS(conditions);
 
         uint256 length = conditions.length;
-        info = new TopologyInfo[](length);
+        bytes32[] memory typeHashes = new bytes32[](length);
+        topology = new Topology[](length);
 
         for (uint256 i = length; i > 0; ) {
             unchecked {
@@ -31,68 +36,57 @@ library Topology {
             }
 
             ConditionFlat memory condition = conditions[i];
-            Encoding enc = condition.paramType;
-            TopologyInfo memory parent = info[condition.parent];
-            TopologyInfo memory current = info[i];
-
-            bool isStructural = enc != Encoding.None &&
-                enc != Encoding.EtherValue;
-
-            bool atOffset = enc == Encoding.Dynamic ||
-                enc == Encoding.Array ||
-                enc == Encoding.AbiEncoded;
 
             bool isLogical = condition.operator == Operator.And ||
                 condition.operator == Operator.Or;
 
+            Encoding e = condition.paramType == Encoding.EtherValue
+                ? Encoding.None
+                : condition.paramType;
+            bool isStructural = e != Encoding.None;
+
+            Topology memory parent = topology[condition.parent];
+            Topology memory current = topology[i];
+
+            if (
+                e == Encoding.Dynamic ||
+                e == Encoding.Array ||
+                e == Encoding.AbiEncoded
+            ) {
+                current.isNotInline = true;
+            }
+
             /*
-             * Distinguish between local and inherited properties. Because we
-             * traverse backwards, `current.isStructural` and `current.atOffset`
-             * may have already been set by descendants. We now merge the
-             * node's own encoding properties into these propagated states.
+             *
+             * Bubble Up. Skip for Root
+             *
              */
-            if (isStructural) {
-                current.isStructural = true;
-            }
-
-            if (atOffset) {
-                current.atOffset = true;
-            }
-
             if (i > 0) {
-                // Bubble up. Skip for root
                 parent.childStart = i;
                 parent.childCount++;
 
-                if (current.isStructural) {
-                    parent.isStructural = true;
+                // A child is structurally meaningful if it has structural
+                // encoding or has structural descendants
+                if (isStructural || current.sChildCount > 0) {
                     parent.sChildCount++;
                 }
 
-                if (current.atOffset) {
-                    parent.atOffset = true;
+                if (current.isNotInline) {
+                    parent.isNotInline = true;
                 }
             }
 
             /*
              * isVariant
              *
-             * Detects if structural children have heterogeneous types. If at least
-             * two structural children have different type hashes, the node is
-             * marked as a 'variant'.
-             *
-             * This determines if a container (like an Array) is homogenous or
-             * requires dynamic handling (Encoding.Dynamic).
+             * Arrays and Logical nodes can be variant. For these container
+             * types, we compare their children's type hashes to determine
+             * if they are variants.
              */
-            uint256 childCount = current.childCount;
-            uint256 childStart = current.childStart;
-            bytes32 firstHash;
-            for (uint256 k; k < childCount; ++k) {
-                TopologyInfo memory child = info[childStart + k];
-                if (child.isStructural) {
-                    if (firstHash == bytes32(0)) {
-                        firstHash = child.typeHash;
-                    } else if (firstHash != child.typeHash) {
+            if ((e == Encoding.Array || isLogical) && current.sChildCount > 1) {
+                bytes32 childHash = typeHashes[current.childStart];
+                for (uint256 j = 1; j < current.sChildCount; ++j) {
+                    if (childHash != typeHashes[current.childStart + j]) {
                         current.isVariant = true;
                         break;
                     }
@@ -100,73 +94,48 @@ library Topology {
             }
 
             /*
-             * layoutCount
+             * isInLayout
              *
-             * Determines the number of entries this node occupies in the serialized
-             * layout (e.g., for ABI decoding or packing).
+             * Determines if this node occupies an entry in the resolved layout
              *
              * Logical nodes (AND/OR) are usually transparent to the data layout
              * unless they are 'variants' (holding mixed types), which forces a
              * dynamic layout wrapper.
-             *
-             * For arrays of a single type (non-variant), the entire list of children
-             * is treated as a single layout element (the array body).
-             * For tuples or variant arrays, every structural child contributes to
-             * the layout count.
              */
-            if (!isLogical || current.isVariant) {
-                bool isNonVariantArray = enc == Encoding.Array &&
-                    !current.isVariant;
-                uint256 layoutChildCount = isNonVariantArray
-                    ? (current.sChildCount > 0 ? 1 : 0)
-                    : current.sChildCount;
-
-                current.layoutCount = 1 + layoutChildCount;
-            }
+            current.isInLayout =
+                isStructural ||
+                (isLogical && current.isVariant);
 
             /*
              * typeHash
              */
-            bytes32 hash;
-            if (enc == Encoding.AbiEncoded) {
-                bytes memory compValue = conditions[i].compValue;
-                uint256 leadingBytes = compValue.length == 0
-                    ? 4
-                    : uint256(uint16(bytes2(compValue)));
-                hash = bytes32((leadingBytes << 8) | uint256(enc));
-            } else {
-                hash = bytes32(uint256(enc));
-            }
-
-            if (current.sChildCount == 0) {
-                if (isStructural) {
-                    current.typeHash = hash;
-                }
+            if (isLogical && !current.isVariant) {
+                // if logic and non variant, take the first
+                typeHashes[i] = typeHashes[current.childStart];
                 continue;
             }
 
-            // transparent operators: inherit first child's typeHash
-            if (!isStructural && !current.isVariant) {
-                current.typeHash = firstHash;
-                continue;
+            bytes32 hash = bytes32(uint256(e));
+            if (e == Encoding.AbiEncoded) {
+                hash |= (_leadingBytes(condition) << 8);
             }
 
-            if (current.isVariant) {
-                current.typeHash = bytes32(uint256(Encoding.Dynamic));
-                continue;
-            }
+            uint256 childHashCount = (e == Encoding.Array && !current.isVariant)
+                ? 1
+                : current.sChildCount;
 
-            for (uint256 k; k < childCount; ++k) {
-                TopologyInfo memory child = info[childStart + k];
-                if (child.isStructural) {
-                    hash = keccak256(abi.encodePacked(hash, child.typeHash));
-                }
+            for (uint256 j; j < childHashCount; ++j) {
+                hash = keccak256(
+                    abi.encodePacked(hash, typeHashes[current.childStart + j])
+                );
             }
-            current.typeHash = hash;
+            typeHashes[i] = hash;
         }
     }
 
     function _validateBFS(ConditionFlat[] memory conditions) private pure {
+        _validateRoot(conditions);
+
         uint256 length = conditions.length;
         for (uint256 i = 1; i < length; ++i) {
             // Parent must have lower index (no forward references)
@@ -190,5 +159,15 @@ library Topology {
         if (count != 1 || conditions[0].parent != 0) {
             revert IRolesError.UnsuitableRootNode();
         }
+    }
+
+    function _leadingBytes(
+        ConditionFlat memory condition
+    ) private pure returns (bytes32) {
+        bytes memory compValue = condition.compValue;
+        uint256 result = compValue.length == 0
+            ? 4
+            : uint256(uint16(bytes2(compValue)));
+        return bytes32(result);
     }
 }

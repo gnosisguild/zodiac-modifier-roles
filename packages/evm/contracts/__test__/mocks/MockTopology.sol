@@ -6,7 +6,7 @@ import "../../core/serialize/Topology.sol";
 contract MockTopology {
     function resolve(
         ConditionFlat[] memory conditions
-    ) public pure returns (TopologyInfo[] memory result) {
-        result = Topology.resolve(conditions);
+    ) public pure returns (Topology[] memory result) {
+        result = TopologyLib.resolve(conditions);
     }
 }

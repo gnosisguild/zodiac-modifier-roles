@@ -67,7 +67,7 @@ library ConditionPacker {
 
     function pack(
         ConditionFlat[] memory conditions,
-        TopologyInfo[] memory topology
+        Topology[] memory topology
     ) internal pure returns (bytes memory buffer) {
         uint256 layoutOffset = 3 + _conditionPackedSize(conditions);
         (uint256 layoutNodeCount, uint8 maxPluckIndex) = _count(
@@ -80,13 +80,14 @@ library ConditionPacker {
         );
 
         _packConditions(conditions, buffer, 3, topology);
-        _packLayout(
-            conditions,
-            topology,
-            buffer,
-            layoutOffset,
-            layoutNodeCount
-        );
+        if (layoutNodeCount > 0)
+            _packLayout(
+                conditions,
+                topology,
+                buffer,
+                layoutOffset,
+                layoutNodeCount
+            );
 
         // Header: layoutOffset (2 bytes) + maxPluckIndex (1 byte)
         buffer[0] = bytes1(uint8(layoutOffset >> 8));
@@ -130,7 +131,7 @@ library ConditionPacker {
         ConditionFlat[] memory conditions,
         bytes memory buffer,
         uint256 offset,
-        TopologyInfo[] memory topology
+        Topology[] memory topology
     ) private pure {
         offset += _packUInt16(conditions.length, buffer, offset);
 
@@ -217,10 +218,10 @@ library ConditionPacker {
      */
     function _count(
         ConditionFlat[] memory conditions,
-        TopologyInfo[] memory topology
+        Topology[] memory topology
     ) private pure returns (uint256 layoutNodeCount, uint8 maxPluckIndex) {
         for (uint256 i; i < conditions.length; ++i) {
-            if (topology[i].layoutCount > 0) {
+            if (topology[i].isInLayout) {
                 layoutNodeCount++;
             }
             if (conditions[i].operator == Operator.Pluck) {
@@ -237,10 +238,10 @@ library ConditionPacker {
      *      the actual layout node that should be emitted.
      */
     function _resolveLayoutIndex(
-        TopologyInfo[] memory topology,
+        Topology[] memory topology,
         uint256 index
     ) private pure returns (uint256) {
-        while (topology[index].layoutCount == 0) {
+        while (!topology[index].isInLayout) {
             index = topology[index].childStart;
         }
         return index;
@@ -252,7 +253,7 @@ library ConditionPacker {
      */
     function _packLayout(
         ConditionFlat[] memory conditions,
-        TopologyInfo[] memory topology,
+        Topology[] memory topology,
         bytes memory buffer,
         uint256 offset,
         uint256 nodeCount
@@ -268,11 +269,11 @@ library ConditionPacker {
         queue[tail++] = _resolveLayoutIndex(topology, 0);
 
         while (head < tail) {
-            uint256 idx = queue[head++];
+            uint256 index = queue[head++];
             (uint24 packed, uint256 childCount) = _packLayoutNode(
                 conditions,
                 topology,
-                idx
+                index
             );
 
             buffer[offset++] = bytes1(uint8(packed >> 16));
@@ -280,7 +281,7 @@ library ConditionPacker {
             buffer[offset++] = bytes1(uint8(packed));
 
             // Enqueue children (resolved through transparent chains)
-            uint256 childStart = topology[idx].childStart;
+            uint256 childStart = topology[index].childStart;
             for (uint256 i = 0; i < childCount; ++i) {
                 queue[tail++] = _resolveLayoutIndex(topology, childStart + i);
             }
@@ -292,32 +293,35 @@ library ConditionPacker {
      */
     function _packLayoutNode(
         ConditionFlat[] memory conditions,
-        TopologyInfo[] memory topology,
-        uint256 idx
+        Topology[] memory topology,
+        uint256 i
     ) private pure returns (uint24 packed, uint256 childCount) {
-        Operator op = conditions[idx].operator;
+        Operator op = conditions[i].operator;
         bool isLogical = op == Operator.And || op == Operator.Or;
 
         // Determine encoding (variant And/Or becomes Dynamic)
         Encoding encoding = isLogical
             ? Encoding.Dynamic
-            : conditions[idx].paramType;
+            : conditions[i].paramType;
 
         // Extract leadingBytes for AbiEncoded
         uint256 leadingBytes;
         if (encoding == Encoding.AbiEncoded) {
-            bytes memory compValue = conditions[idx].compValue;
+            bytes memory compValue = conditions[i].compValue;
             leadingBytes = compValue.length == 0
                 ? 4
                 : uint16(bytes2(compValue));
         }
 
-        childCount = topology[idx].layoutCount - 1;
+        childCount = (conditions[i].paramType == Encoding.Array &&
+            !topology[i].isVariant)
+            ? 1
+            : topology[i].sChildCount;
 
         // Pack node (3 bytes = 24 bits)
         packed =
             (uint24(encoding) << 21) |
-            (topology[idx].atOffset ? uint24(0) : uint24(1 << 20)) |
+            (topology[i].isNotInline ? uint24(0) : uint24(1 << 20)) |
             (uint24(childCount) << 12) |
             uint24(leadingBytes);
     }

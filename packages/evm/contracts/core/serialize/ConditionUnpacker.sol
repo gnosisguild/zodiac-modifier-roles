@@ -127,7 +127,7 @@ library ConditionUnpacker {
     function _unpackLayout(
         bytes memory buffer,
         uint256 offset
-    ) private pure returns (Layout memory) {
+    ) private pure returns (Layout memory empty) {
         // Load the node count from header (16 bits)
         uint256 nodeCount;
         assembly {
@@ -135,6 +135,7 @@ library ConditionUnpacker {
             nodeCount := shr(240, mload(offset))
             offset := add(offset, 2)
         }
+        if (nodeCount == 0) return empty;
 
         Layout[] memory nodes = new Layout[](nodeCount);
         uint256 nextChildBFS = 1;

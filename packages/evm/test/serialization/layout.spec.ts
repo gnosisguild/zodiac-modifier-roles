@@ -48,1651 +48,206 @@ describe("Layout (Full Pipeline)", () => {
     return { mock, getLayout };
   }
 
-  describe("Atomic Resolution", () => {
+  const staticLeaf = (): LayoutNode => ({
+    encoding: Encoding.Static,
+    inlined: true,
+    leadingBytes: 0,
+    children: [],
+  });
+
+  const dynamicLeaf = (): LayoutNode => ({
+    encoding: Encoding.Dynamic,
+    inlined: false,
+    leadingBytes: 0,
+    children: [],
+  });
+
+  const noneLeaf = (): LayoutNode => ({
+    encoding: Encoding.None,
+    inlined: true,
+    leadingBytes: 0,
+    children: [],
+  });
+
+  const etherValueLeaf = (): LayoutNode => ({
+    encoding: Encoding.EtherValue,
+    inlined: true,
+    leadingBytes: 0,
+    children: [],
+  });
+
+  describe("Structural Shapes", () => {
     it("Static leaf", async () => {
       const { getLayout } = await loadFixture(setup);
-
       const layout = await getLayout({
         paramType: Encoding.Static,
         operator: Operator.Pass,
       });
-
-      expect(layout).to.deep.equal({
-        encoding: Encoding.Static,
-        inlined: true,
-        leadingBytes: 0,
-        children: [],
-      });
+      expect(layout).to.deep.equal(staticLeaf());
     });
 
     it("Dynamic leaf", async () => {
       const { getLayout } = await loadFixture(setup);
-
       const layout = await getLayout({
         paramType: Encoding.Dynamic,
         operator: Operator.Pass,
       });
-
-      expect(layout).to.deep.equal({
-        encoding: Encoding.Dynamic,
-        inlined: false,
-        leadingBytes: 0,
-        children: [],
-      });
+      expect(layout).to.deep.equal(dynamicLeaf());
     });
 
-    it("None leaf (non-structural encoding)", async () => {
+    it("EtherValue leaf is non-structural", async () => {
       const { getLayout } = await loadFixture(setup);
-
       const layout = await getLayout({
-        paramType: Encoding.None,
+        paramType: Encoding.EtherValue,
         operator: Operator.Pass,
       });
+      expect(layout).to.equal(null);
+    });
 
+    it("AbiEncoded(Static, Static)", async () => {
+      const { getLayout } = await loadFixture(setup);
+      const layout = await getLayout({
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        children: [
+          { paramType: Encoding.Static, operator: Operator.Pass },
+          { paramType: Encoding.Static, operator: Operator.Pass },
+        ],
+      });
       expect(layout).to.deep.equal({
-        encoding: Encoding.None,
+        encoding: Encoding.AbiEncoded,
+        inlined: false,
+        leadingBytes: 4,
+        children: [staticLeaf(), staticLeaf()],
+      });
+    });
+
+    it("AbiEncoded(Static, Dynamic)", async () => {
+      const { getLayout } = await loadFixture(setup);
+      const layout = await getLayout({
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        children: [
+          { paramType: Encoding.Static, operator: Operator.Pass },
+          { paramType: Encoding.Dynamic, operator: Operator.Pass },
+        ],
+      });
+      expect(layout).to.deep.equal({
+        encoding: Encoding.AbiEncoded,
+        inlined: false,
+        leadingBytes: 4,
+        children: [staticLeaf(), dynamicLeaf()],
+      });
+    });
+
+    it("Tuple(Static)", async () => {
+      const { getLayout } = await loadFixture(setup);
+      const layout = await getLayout({
+        paramType: Encoding.Tuple,
+        operator: Operator.Matches,
+        children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+      });
+      expect(layout).to.deep.equal({
+        encoding: Encoding.Tuple,
         inlined: true,
         leadingBytes: 0,
-        children: [],
-      });
-    });
-  });
-
-  describe("Normalization & Filtering", () => {
-    describe("Single-path reduction", () => {
-      it("And(Static) collapses to Static", async () => {
-        const { getLayout } = await loadFixture(setup);
-
-        const layout = await getLayout({
-          paramType: Encoding.None,
-          operator: Operator.And,
-          children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
-        });
-
-        expect(layout).to.deep.equal({
-          encoding: Encoding.Static,
-          inlined: true,
-          leadingBytes: 0,
-          children: [],
-        });
-      });
-
-      it("Or(Dynamic) collapses to Dynamic", async () => {
-        const { getLayout } = await loadFixture(setup);
-
-        const layout = await getLayout({
-          paramType: Encoding.None,
-          operator: Operator.Or,
-          children: [{ paramType: Encoding.Dynamic, operator: Operator.Pass }],
-        });
-
-        expect(layout).to.deep.equal({
-          encoding: Encoding.Dynamic,
-          inlined: false,
-          leadingBytes: 0,
-          children: [],
-        });
-      });
-
-      it("And -> Or -> And -> Static deep chain collapses to Static", async () => {
-        const { getLayout } = await loadFixture(setup);
-
-        const layout = await getLayout({
-          paramType: Encoding.None,
-          operator: Operator.And,
-          children: [
-            {
-              paramType: Encoding.None,
-              operator: Operator.Or,
-              children: [
-                {
-                  paramType: Encoding.None,
-                  operator: Operator.And,
-                  children: [
-                    { paramType: Encoding.Static, operator: Operator.Pass },
-                  ],
-                },
-                { paramType: Encoding.Static, operator: Operator.Pass },
-              ],
-            },
-          ],
-        });
-
-        expect(layout).to.deep.equal({
-          encoding: Encoding.Static,
-          inlined: true,
-          leadingBytes: 0,
-          children: [],
-        });
+        children: [staticLeaf()],
       });
     });
 
-    describe("Homogeneous reduction", () => {
-      it("And(Static, Static) collapses to single Static", async () => {
-        const { getLayout } = await loadFixture(setup);
-
-        const layout = await getLayout({
-          paramType: Encoding.None,
-          operator: Operator.And,
-          children: [
-            { paramType: Encoding.Static, operator: Operator.Pass },
-            { paramType: Encoding.Static, operator: Operator.Pass },
-          ],
-        });
-
-        expect(layout).to.deep.equal({
-          encoding: Encoding.Static,
-          inlined: true,
-          leadingBytes: 0,
-          children: [],
-        });
-      });
-
-      it("Or(Dynamic, Dynamic) collapses to single Dynamic", async () => {
-        const { getLayout } = await loadFixture(setup);
-
-        const layout = await getLayout({
-          paramType: Encoding.None,
-          operator: Operator.Or,
-          children: [
-            { paramType: Encoding.Dynamic, operator: Operator.Pass },
-            { paramType: Encoding.Dynamic, operator: Operator.Pass },
-          ],
-        });
-
-        expect(layout).to.deep.equal({
-          encoding: Encoding.Dynamic,
-          inlined: false,
-          leadingBytes: 0,
-          children: [],
-        });
-      });
-
-      it("Or(Tuple(Static), Tuple(Static)) collapses due to deep equivalence", async () => {
-        const { getLayout } = await loadFixture(setup);
-
-        const layout = await getLayout({
-          paramType: Encoding.AbiEncoded,
-          operator: Operator.Matches,
-          children: [
-            {
-              paramType: Encoding.None,
-              operator: Operator.Or,
-              children: [
-                {
-                  paramType: Encoding.Tuple,
-                  operator: Operator.Matches,
-                  children: [
-                    { paramType: Encoding.Static, operator: Operator.Pass },
-                  ],
-                },
-                {
-                  paramType: Encoding.Tuple,
-                  operator: Operator.Matches,
-                  children: [
-                    { paramType: Encoding.Static, operator: Operator.Pass },
-                  ],
-                },
-              ],
-            },
-          ],
-        });
-
-        // Or is transparent (non-variant), collapses to Tuple structure
-        expect(layout).to.deep.equal({
-          encoding: Encoding.AbiEncoded,
-          inlined: false,
-          leadingBytes: 4,
-          children: [
-            {
-              encoding: Encoding.Tuple,
-              inlined: true,
-              leadingBytes: 0,
-              children: [
-                {
-                  encoding: Encoding.Static,
-                  inlined: true,
-                  leadingBytes: 0,
-                  children: [],
-                },
-              ],
-            },
-          ],
-        });
-      });
-
-      it("Or(AbiEncoded(Tuple(Static)), AbiEncoded(Tuple(Static, Static))) does not collapse", async () => {
-        const { getLayout } = await loadFixture(setup);
-
-        // Both children are AbiEncoded (type equivalence satisfied), but have different internal structure
-        const layout = await getLayout({
-          paramType: Encoding.AbiEncoded,
-          operator: Operator.Matches,
-          children: [
-            {
-              paramType: Encoding.None,
-              operator: Operator.Or,
-              children: [
-                {
-                  paramType: Encoding.AbiEncoded,
-                  operator: Operator.Matches,
-                  children: [
-                    {
-                      paramType: Encoding.Tuple,
-                      operator: Operator.Matches,
-                      children: [
-                        { paramType: Encoding.Static, operator: Operator.Pass },
-                      ],
-                    },
-                  ],
-                },
-                {
-                  paramType: Encoding.AbiEncoded,
-                  operator: Operator.Matches,
-                  children: [
-                    {
-                      paramType: Encoding.Tuple,
-                      operator: Operator.Matches,
-                      children: [
-                        { paramType: Encoding.Static, operator: Operator.Pass },
-                        { paramType: Encoding.Static, operator: Operator.Pass },
-                      ],
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        });
-
-        // Or is variant (different nested structures) -> Dynamic wrapper with both children
-        expect(layout).to.deep.equal({
-          encoding: Encoding.AbiEncoded,
-          inlined: false,
-          leadingBytes: 4,
-          children: [
-            {
-              encoding: Encoding.Dynamic,
-              inlined: false,
-              leadingBytes: 0,
-              children: [
-                {
-                  encoding: Encoding.AbiEncoded,
-                  inlined: false,
-                  leadingBytes: 4,
-                  children: [
-                    {
-                      encoding: Encoding.Tuple,
-                      inlined: true,
-                      leadingBytes: 0,
-                      children: [
-                        {
-                          encoding: Encoding.Static,
-                          inlined: true,
-                          leadingBytes: 0,
-                          children: [],
-                        },
-                      ],
-                    },
-                  ],
-                },
-                {
-                  encoding: Encoding.AbiEncoded,
-                  inlined: false,
-                  leadingBytes: 4,
-                  children: [
-                    {
-                      encoding: Encoding.Tuple,
-                      inlined: true,
-                      leadingBytes: 0,
-                      children: [
-                        {
-                          encoding: Encoding.Static,
-                          inlined: true,
-                          leadingBytes: 0,
-                          children: [],
-                        },
-                        {
-                          encoding: Encoding.Static,
-                          inlined: true,
-                          leadingBytes: 0,
-                          children: [],
-                        },
-                      ],
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        });
-      });
-    });
-
-    describe("Non-structural filtering", () => {
-      it("Tuple(Static, And(None/Pass)) -> Tuple + Static only", async () => {
-        const { getLayout } = await loadFixture(setup);
-
-        // And with None/Pass child is non-structural (sChildCount=0)
-        // Structural children must come first
-        const layout = await getLayout({
-          paramType: Encoding.Tuple,
-          operator: Operator.Matches,
-          children: [
-            { paramType: Encoding.Static, operator: Operator.Pass },
-            {
-              paramType: Encoding.None,
-              operator: Operator.And,
-              children: [{ paramType: Encoding.None, operator: Operator.Pass }],
-            },
-          ],
-        });
-
-        // And(None/Pass) is non-structural, filtered from layout
-        expect(layout).to.deep.equal({
-          encoding: Encoding.Tuple,
-          inlined: true,
-          leadingBytes: 0,
-          children: [
-            {
-              encoding: Encoding.Static,
-              inlined: true,
-              leadingBytes: 0,
-              children: [],
-            },
-          ],
-        });
-      });
-
-      it("CallWithinAllowance at leaf filtered out", async () => {
-        const { getLayout } = await loadFixture(setup);
-
-        // CallWithinAllowance is non-structural (paramType: None)
-        // 32 bytes for allowance key
-        const layout = await getLayout({
-          paramType: Encoding.Tuple,
-          operator: Operator.Matches,
-          children: [
-            { paramType: Encoding.Static, operator: Operator.Pass },
-            {
-              paramType: Encoding.None,
-              operator: Operator.CallWithinAllowance,
-              compValue: "0x" + "00".repeat(32),
-            },
-          ],
-        });
-
-        // CallWithinAllowance filtered from layout
-        expect(layout).to.deep.equal({
-          encoding: Encoding.Tuple,
-          inlined: true,
-          leadingBytes: 0,
-          children: [
-            {
-              encoding: Encoding.Static,
-              inlined: true,
-              leadingBytes: 0,
-              children: [],
-            },
-          ],
-        });
-      });
-
-      it("WithinAllowance at leaf is structural (has Static paramType)", async () => {
-        const { getLayout } = await loadFixture(setup);
-
-        // WithinAllowance requires Static/EtherValue paramType
-        // 32 bytes allowance key
-        // Since it has Static paramType, it IS structural and appears in layout
-        const layout = await getLayout({
-          paramType: Encoding.Tuple,
-          operator: Operator.Matches,
-          children: [
-            { paramType: Encoding.Static, operator: Operator.Pass },
-            {
-              paramType: Encoding.Static,
-              operator: Operator.WithinAllowance,
-              compValue: "0x" + "00".repeat(32),
-            },
-          ],
-        });
-
-        // WithinAllowance appears in layout (paramType: Static is structural)
-        expect(layout).to.deep.equal({
-          encoding: Encoding.Tuple,
-          inlined: true,
-          leadingBytes: 0,
-          children: [
-            {
-              encoding: Encoding.Static,
-              inlined: true,
-              leadingBytes: 0,
-              children: [],
-            },
-            {
-              encoding: Encoding.Static,
-              inlined: true,
-              leadingBytes: 0,
-              children: [],
-            },
-          ],
-        });
-      });
-
-      it("CallWithinAllowance in middle of tree filtered out", async () => {
-        const { getLayout } = await loadFixture(setup);
-
-        // CallWithinAllowance between structural nodes
-        const layout = await getLayout({
-          paramType: Encoding.Tuple,
-          operator: Operator.Matches,
-          children: [
-            { paramType: Encoding.Static, operator: Operator.Pass },
-            { paramType: Encoding.Dynamic, operator: Operator.Pass },
-            {
-              paramType: Encoding.None,
-              operator: Operator.CallWithinAllowance,
-              compValue: "0x" + "00".repeat(32),
-            },
-          ],
-        });
-
-        // Only structural children appear in layout
-        expect(layout).to.deep.equal({
-          encoding: Encoding.Tuple,
-          inlined: false,
-          leadingBytes: 0,
-          children: [
-            {
-              encoding: Encoding.Static,
-              inlined: true,
-              leadingBytes: 0,
-              children: [],
-            },
-            {
-              encoding: Encoding.Dynamic,
-              inlined: false,
-              leadingBytes: 0,
-              children: [],
-            },
-          ],
-        });
-      });
-
-      it("WithinAllowance in middle of tree is structural (has Static paramType)", async () => {
-        const { getLayout } = await loadFixture(setup);
-
-        // WithinAllowance between other structural nodes
-        // Since it has Static paramType, it IS structural and appears in layout
-        const layout = await getLayout({
-          paramType: Encoding.Tuple,
-          operator: Operator.Matches,
-          children: [
-            { paramType: Encoding.Static, operator: Operator.Pass },
-            { paramType: Encoding.Dynamic, operator: Operator.Pass },
-            {
-              paramType: Encoding.Static,
-              operator: Operator.WithinAllowance,
-              compValue: "0x" + "00".repeat(32),
-            },
-          ],
-        });
-
-        // WithinAllowance appears in layout (paramType: Static is structural)
-        expect(layout).to.deep.equal({
-          encoding: Encoding.Tuple,
-          inlined: false,
-          leadingBytes: 0,
-          children: [
-            {
-              encoding: Encoding.Static,
-              inlined: true,
-              leadingBytes: 0,
-              children: [],
-            },
-            {
-              encoding: Encoding.Dynamic,
-              inlined: false,
-              leadingBytes: 0,
-              children: [],
-            },
-            {
-              encoding: Encoding.Static,
-              inlined: true,
-              leadingBytes: 0,
-              children: [],
-            },
-          ],
-        });
-      });
-    });
-
-    describe("Transparent inside structural", () => {
-      it("Tuple(And(Static)) -> Tuple + Static", async () => {
-        const { getLayout } = await loadFixture(setup);
-
-        const layout = await getLayout({
-          paramType: Encoding.Tuple,
-          operator: Operator.Matches,
-          children: [
-            {
-              paramType: Encoding.None,
-              operator: Operator.And,
-              children: [
-                { paramType: Encoding.Static, operator: Operator.Pass },
-              ],
-            },
-          ],
-        });
-
-        expect(layout).to.deep.equal({
-          encoding: Encoding.Tuple,
-          inlined: true,
-          leadingBytes: 0,
-          children: [
-            {
-              encoding: Encoding.Static,
-              inlined: true,
-              leadingBytes: 0,
-              children: [],
-            },
-          ],
-        });
-      });
-
-      it("AbiEncoded(Or(Dynamic, AbiEncoded(Static))) -> variant Or becomes Dynamic wrapper", async () => {
-        const { getLayout } = await loadFixture(setup);
-
-        // Both children resolve to Dynamic/AbiEncoded (type equivalence satisfied)
-        const layout = await getLayout({
-          paramType: Encoding.AbiEncoded,
-          operator: Operator.Matches,
-          children: [
-            {
-              paramType: Encoding.None,
-              operator: Operator.Or,
-              children: [
-                { paramType: Encoding.Dynamic, operator: Operator.Pass },
-                {
-                  paramType: Encoding.AbiEncoded,
-                  operator: Operator.Matches,
-                  children: [
-                    { paramType: Encoding.Static, operator: Operator.Pass },
-                  ],
-                },
-              ],
-            },
-          ],
-        });
-
-        // variant wrapper
-        expect(layout).to.deep.equal({
-          encoding: Encoding.AbiEncoded,
-          inlined: false,
-          leadingBytes: 4,
-          children: [
-            {
-              encoding: Encoding.Dynamic,
-              inlined: false,
-              leadingBytes: 0,
-              children: [
-                {
-                  encoding: Encoding.Dynamic,
-                  inlined: false,
-                  leadingBytes: 0,
-                  children: [],
-                },
-                {
-                  encoding: Encoding.AbiEncoded,
-                  inlined: false,
-                  leadingBytes: 4,
-                  children: [
-                    {
-                      encoding: Encoding.Static,
-                      inlined: true,
-                      leadingBytes: 0,
-                      children: [],
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        });
-      });
-    });
-  });
-
-  describe("Container Semantics", () => {
-    describe("Tuples", () => {
-      it("Tuple with 3 structural children -> 3 children in order", async () => {
-        const { getLayout } = await loadFixture(setup);
-
-        const layout = await getLayout({
-          paramType: Encoding.Tuple,
-          operator: Operator.Matches,
-          children: [
-            { paramType: Encoding.Static, operator: Operator.Pass },
-            { paramType: Encoding.Dynamic, operator: Operator.Pass },
-            { paramType: Encoding.Static, operator: Operator.Pass },
-          ],
-        });
-
-        expect(layout).to.deep.equal({
-          encoding: Encoding.Tuple,
-          inlined: false,
-          leadingBytes: 0,
-          children: [
-            {
-              encoding: Encoding.Static,
-              inlined: true,
-              leadingBytes: 0,
-              children: [],
-            },
-            {
-              encoding: Encoding.Dynamic,
-              inlined: false,
-              leadingBytes: 0,
-              children: [],
-            },
-            {
-              encoding: Encoding.Static,
-              inlined: true,
-              leadingBytes: 0,
-              children: [],
-            },
-          ],
-        });
-      });
-
-      it("Nested tuples", async () => {
-        const { getLayout } = await loadFixture(setup);
-
-        const layout = await getLayout({
-          paramType: Encoding.Tuple,
-          operator: Operator.Matches,
-          children: [
-            {
-              paramType: Encoding.Tuple,
-              operator: Operator.Matches,
-              children: [
-                { paramType: Encoding.Static, operator: Operator.Pass },
-              ],
-            },
-            {
-              paramType: Encoding.Tuple,
-              operator: Operator.Matches,
-              children: [
-                { paramType: Encoding.Dynamic, operator: Operator.Pass },
-              ],
-            },
-          ],
-        });
-
-        expect(layout).to.deep.equal({
-          encoding: Encoding.Tuple,
-          inlined: false,
-          leadingBytes: 0,
-          children: [
-            {
-              encoding: Encoding.Tuple,
-              inlined: true,
-              leadingBytes: 0,
-              children: [
-                {
-                  encoding: Encoding.Static,
-                  inlined: true,
-                  leadingBytes: 0,
-                  children: [],
-                },
-              ],
-            },
-            {
-              encoding: Encoding.Tuple,
-              inlined: false,
-              leadingBytes: 0,
-              children: [
-                {
-                  encoding: Encoding.Dynamic,
-                  inlined: false,
-                  leadingBytes: 0,
-                  children: [],
-                },
-              ],
-            },
-          ],
-        });
-      });
-    });
-
-    describe("Arrays", () => {
-      it("Template: Array(Static x 5) -> Array + 1 Static template", async () => {
-        const { getLayout } = await loadFixture(setup);
-
-        const layout = await getLayout({
-          paramType: Encoding.Array,
-          operator: Operator.Matches,
-          children: [
-            { paramType: Encoding.Static, operator: Operator.Pass },
-            { paramType: Encoding.Static, operator: Operator.Pass },
-            { paramType: Encoding.Static, operator: Operator.Pass },
-            { paramType: Encoding.Static, operator: Operator.Pass },
-            { paramType: Encoding.Static, operator: Operator.Pass },
-          ],
-        });
-
-        // Non-variant array uses first child as template
-        expect(layout).to.deep.equal({
-          encoding: Encoding.Array,
-          inlined: false,
-          leadingBytes: 0,
-          children: [
-            {
-              encoding: Encoding.Static,
-              inlined: true,
-              leadingBytes: 0,
-              children: [],
-            },
-          ],
-        });
-      });
-
-      it("Variant: Array(Dynamic, AbiEncoded(Static)) -> Array + both children", async () => {
-        const { getLayout } = await loadFixture(setup);
-
-        // Type equivalence: both resolve to Dynamic/AbiEncoded
-        const layout = await getLayout({
-          paramType: Encoding.Array,
-          operator: Operator.Matches,
-          children: [
-            { paramType: Encoding.Dynamic, operator: Operator.Pass },
-            {
-              paramType: Encoding.AbiEncoded,
-              operator: Operator.Matches,
-              children: [
-                { paramType: Encoding.Static, operator: Operator.Pass },
-              ],
-            },
-          ],
-        });
-
-        expect(layout).to.deep.equal({
-          encoding: Encoding.Array,
-          inlined: false,
-          leadingBytes: 0,
-          children: [
-            {
-              encoding: Encoding.Dynamic,
-              inlined: false,
-              leadingBytes: 0,
-              children: [],
-            },
-            {
-              encoding: Encoding.AbiEncoded,
-              inlined: false,
-              leadingBytes: 4,
-              children: [
-                {
-                  encoding: Encoding.Static,
-                  inlined: true,
-                  leadingBytes: 0,
-                  children: [],
-                },
-              ],
-            },
-          ],
-        });
-      });
-
-      it("Variant via header: Array(AbiEncoded[4], AbiEncoded[8]) -> explicit children", async () => {
-        const { getLayout } = await loadFixture(setup);
-
-        const layout = await getLayout({
-          paramType: Encoding.Array,
-          operator: Operator.Matches,
-          children: [
-            {
-              paramType: Encoding.AbiEncoded,
-              operator: Operator.Matches,
-              compValue: "0x0004",
-              children: [
-                { paramType: Encoding.Static, operator: Operator.Pass },
-              ],
-            },
-            {
-              paramType: Encoding.AbiEncoded,
-              operator: Operator.Matches,
-              compValue: "0x0008",
-              children: [
-                { paramType: Encoding.Static, operator: Operator.Pass },
-              ],
-            },
-          ],
-        });
-
-        // Different leadingBytes -> variant -> both children in layout
-        expect(layout).to.deep.equal({
-          encoding: Encoding.Array,
-          inlined: false,
-          leadingBytes: 0,
-          children: [
-            {
-              encoding: Encoding.AbiEncoded,
-              inlined: false,
-              leadingBytes: 4,
-              children: [
-                {
-                  encoding: Encoding.Static,
-                  inlined: true,
-                  leadingBytes: 0,
-                  children: [],
-                },
-              ],
-            },
-            {
-              encoding: Encoding.AbiEncoded,
-              inlined: false,
-              leadingBytes: 8,
-              children: [
-                {
-                  encoding: Encoding.Static,
-                  inlined: true,
-                  leadingBytes: 0,
-                  children: [],
-                },
-              ],
-            },
-          ],
-        });
-      });
-    });
-
-    describe("AbiEncoded", () => {
-      it("default leadingBytes (empty compValue) -> 4", async () => {
-        const { getLayout } = await loadFixture(setup);
-
-        const layout = await getLayout({
-          paramType: Encoding.AbiEncoded,
-          operator: Operator.Matches,
-          children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
-        });
-
-        expect(layout).to.deep.equal({
-          encoding: Encoding.AbiEncoded,
-          inlined: false,
-          leadingBytes: 4,
-          children: [
-            {
-              encoding: Encoding.Static,
-              inlined: true,
-              leadingBytes: 0,
-              children: [],
-            },
-          ],
-        });
-      });
-
-      it("leadingBytes 0x0000 -> 0", async () => {
-        const { getLayout } = await loadFixture(setup);
-
-        const layout = await getLayout({
-          paramType: Encoding.AbiEncoded,
-          operator: Operator.Matches,
-          compValue: "0x0000",
-          children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
-        });
-
-        expect(layout).to.deep.equal({
-          encoding: Encoding.AbiEncoded,
-          inlined: false,
-          leadingBytes: 0,
-          children: [
-            {
-              encoding: Encoding.Static,
-              inlined: true,
-              leadingBytes: 0,
-              children: [],
-            },
-          ],
-        });
-      });
-
-      it("leadingBytes 0x0020 -> 32", async () => {
-        const { getLayout } = await loadFixture(setup);
-
-        const layout = await getLayout({
-          paramType: Encoding.AbiEncoded,
-          operator: Operator.Matches,
-          compValue: "0x0020",
-          children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
-        });
-
-        expect(layout).to.deep.equal({
-          encoding: Encoding.AbiEncoded,
-          inlined: false,
-          leadingBytes: 32,
-          children: [
-            {
-              encoding: Encoding.Static,
-              inlined: true,
-              leadingBytes: 0,
-              children: [],
-            },
-          ],
-        });
-      });
-
-      it("AbiEncoded with child resolution through transparent And", async () => {
-        const { getLayout } = await loadFixture(setup);
-
-        const layout = await getLayout({
-          paramType: Encoding.AbiEncoded,
-          operator: Operator.Matches,
-          children: [
-            {
-              paramType: Encoding.None,
-              operator: Operator.And,
-              children: [
-                { paramType: Encoding.Static, operator: Operator.Pass },
-              ],
-            },
-            { paramType: Encoding.Dynamic, operator: Operator.Pass },
-          ],
-        });
-
-        expect(layout).to.deep.equal({
-          encoding: Encoding.AbiEncoded,
-          inlined: false,
-          leadingBytes: 4,
-          children: [
-            {
-              encoding: Encoding.Static,
-              inlined: true,
-              leadingBytes: 0,
-              children: [],
-            },
-            {
-              encoding: Encoding.Dynamic,
-              inlined: false,
-              leadingBytes: 0,
-              children: [],
-            },
-          ],
-        });
-      });
-    });
-  });
-
-  describe("Variance Detection", () => {
-    it("Encoding variance: Or(Dynamic, AbiEncoded) -> Dynamic wrapper", async () => {
+    it("Tuple(Static, Dynamic)", async () => {
       const { getLayout } = await loadFixture(setup);
-
       const layout = await getLayout({
-        paramType: Encoding.AbiEncoded,
+        paramType: Encoding.Tuple,
         operator: Operator.Matches,
         children: [
-          {
-            paramType: Encoding.None,
-            operator: Operator.Or,
-            children: [
-              { paramType: Encoding.Dynamic, operator: Operator.Pass },
-              {
-                paramType: Encoding.AbiEncoded,
-                operator: Operator.Matches,
-                children: [
-                  { paramType: Encoding.Static, operator: Operator.Pass },
-                ],
-              },
-            ],
-          },
+          { paramType: Encoding.Static, operator: Operator.Pass },
+          { paramType: Encoding.Dynamic, operator: Operator.Pass },
         ],
       });
-
       expect(layout).to.deep.equal({
-        encoding: Encoding.AbiEncoded,
+        encoding: Encoding.Tuple,
         inlined: false,
-        leadingBytes: 4,
-        children: [
-          {
-            encoding: Encoding.Dynamic,
-            inlined: false,
-            leadingBytes: 0,
-            children: [
-              {
-                encoding: Encoding.Dynamic,
-                inlined: false,
-                leadingBytes: 0,
-                children: [],
-              },
-              {
-                encoding: Encoding.AbiEncoded,
-                inlined: false,
-                leadingBytes: 4,
-                children: [
-                  {
-                    encoding: Encoding.Static,
-                    inlined: true,
-                    leadingBytes: 0,
-                    children: [],
-                  },
-                ],
-              },
-            ],
-          },
-        ],
+        leadingBytes: 0,
+        children: [staticLeaf(), dynamicLeaf()],
       });
     });
 
-    it("Header variance: Or(AbiEncoded[4], AbiEncoded[8]) -> Dynamic wrapper", async () => {
+    it("Tuple(Tuple(Static))", async () => {
       const { getLayout } = await loadFixture(setup);
-
-      const layout = await getLayout({
-        paramType: Encoding.AbiEncoded,
-        operator: Operator.Matches,
-        children: [
-          {
-            paramType: Encoding.None,
-            operator: Operator.Or,
-            children: [
-              {
-                paramType: Encoding.AbiEncoded,
-                operator: Operator.Matches,
-                compValue: "0x0004",
-                children: [
-                  { paramType: Encoding.Static, operator: Operator.Pass },
-                ],
-              },
-              {
-                paramType: Encoding.AbiEncoded,
-                operator: Operator.Matches,
-                compValue: "0x0008",
-                children: [
-                  { paramType: Encoding.Static, operator: Operator.Pass },
-                ],
-              },
-            ],
-          },
-        ],
-      });
-
-      expect(layout).to.deep.equal({
-        encoding: Encoding.AbiEncoded,
-        inlined: false,
-        leadingBytes: 4,
-        children: [
-          {
-            encoding: Encoding.Dynamic,
-            inlined: false,
-            leadingBytes: 0,
-            children: [
-              {
-                encoding: Encoding.AbiEncoded,
-                inlined: false,
-                leadingBytes: 4,
-                children: [
-                  {
-                    encoding: Encoding.Static,
-                    inlined: true,
-                    leadingBytes: 0,
-                    children: [],
-                  },
-                ],
-              },
-              {
-                encoding: Encoding.AbiEncoded,
-                inlined: false,
-                leadingBytes: 8,
-                children: [
-                  {
-                    encoding: Encoding.Static,
-                    inlined: true,
-                    leadingBytes: 0,
-                    children: [],
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      });
-    });
-
-    it("Deep structural variance: Or(AbiEncoded(Static), AbiEncoded(Dynamic))", async () => {
-      const { getLayout } = await loadFixture(setup);
-
-      const layout = await getLayout({
-        paramType: Encoding.AbiEncoded,
-        operator: Operator.Matches,
-        children: [
-          {
-            paramType: Encoding.None,
-            operator: Operator.Or,
-            children: [
-              {
-                paramType: Encoding.AbiEncoded,
-                operator: Operator.Matches,
-                children: [
-                  { paramType: Encoding.Static, operator: Operator.Pass },
-                ],
-              },
-              {
-                paramType: Encoding.AbiEncoded,
-                operator: Operator.Matches,
-                children: [
-                  { paramType: Encoding.Dynamic, operator: Operator.Pass },
-                ],
-              },
-            ],
-          },
-        ],
-      });
-
-      // Different child structure -> variant
-      expect(layout).to.deep.equal({
-        encoding: Encoding.AbiEncoded,
-        inlined: false,
-        leadingBytes: 4,
-        children: [
-          {
-            encoding: Encoding.Dynamic,
-            inlined: false,
-            leadingBytes: 0,
-            children: [
-              {
-                encoding: Encoding.AbiEncoded,
-                inlined: false,
-                leadingBytes: 4,
-                children: [
-                  {
-                    encoding: Encoding.Static,
-                    inlined: true,
-                    leadingBytes: 0,
-                    children: [],
-                  },
-                ],
-              },
-              {
-                encoding: Encoding.AbiEncoded,
-                inlined: false,
-                leadingBytes: 4,
-                children: [
-                  {
-                    encoding: Encoding.Dynamic,
-                    inlined: false,
-                    leadingBytes: 0,
-                    children: [],
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      });
-    });
-
-    it("Variant inside container: Tuple(Or(AbiEncoded[4], AbiEncoded[8]))", async () => {
-      const { getLayout } = await loadFixture(setup);
-
       const layout = await getLayout({
         paramType: Encoding.Tuple,
         operator: Operator.Matches,
         children: [
           {
-            paramType: Encoding.None,
-            operator: Operator.Or,
-            children: [
-              {
-                paramType: Encoding.AbiEncoded,
-                operator: Operator.Matches,
-                compValue: "0x0004",
-                children: [
-                  { paramType: Encoding.Static, operator: Operator.Pass },
-                ],
-              },
-              {
-                paramType: Encoding.AbiEncoded,
-                operator: Operator.Matches,
-                compValue: "0x0008",
-                children: [
-                  { paramType: Encoding.Static, operator: Operator.Pass },
-                ],
-              },
-            ],
+            paramType: Encoding.Tuple,
+            operator: Operator.Matches,
+            children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
           },
         ],
       });
+      expect(layout).to.deep.equal({
+        encoding: Encoding.Tuple,
+        inlined: true,
+        leadingBytes: 0,
+        children: [
+          {
+            encoding: Encoding.Tuple,
+            inlined: true,
+            leadingBytes: 0,
+            children: [staticLeaf()],
+          },
+        ],
+      });
+    });
 
+    it("Tuple(Static, Tuple(Dynamic))", async () => {
+      const { getLayout } = await loadFixture(setup);
+      const layout = await getLayout({
+        paramType: Encoding.Tuple,
+        operator: Operator.Matches,
+        children: [
+          { paramType: Encoding.Static, operator: Operator.Pass },
+          {
+            paramType: Encoding.Tuple,
+            operator: Operator.Matches,
+            children: [{ paramType: Encoding.Dynamic, operator: Operator.Pass }],
+          },
+        ],
+      });
       expect(layout).to.deep.equal({
         encoding: Encoding.Tuple,
         inlined: false,
         leadingBytes: 0,
         children: [
+          staticLeaf(),
           {
-            encoding: Encoding.Dynamic,
+            encoding: Encoding.Tuple,
             inlined: false,
             leadingBytes: 0,
-            children: [
-              {
-                encoding: Encoding.AbiEncoded,
-                inlined: false,
-                leadingBytes: 4,
-                children: [
-                  {
-                    encoding: Encoding.Static,
-                    inlined: true,
-                    leadingBytes: 0,
-                    children: [],
-                  },
-                ],
-              },
-              {
-                encoding: Encoding.AbiEncoded,
-                inlined: false,
-                leadingBytes: 8,
-                children: [
-                  {
-                    encoding: Encoding.Static,
-                    inlined: true,
-                    leadingBytes: 0,
-                    children: [],
-                  },
-                ],
-              },
-            ],
+            children: [dynamicLeaf()],
           },
         ],
       });
     });
-  });
 
-  describe("Attribute Propagation", () => {
-    describe("Inlined rules", () => {
-      it("Array never inlined", async () => {
-        const { getLayout } = await loadFixture(setup);
-
-        const layout = await getLayout({
-          paramType: Encoding.Array,
-          operator: Operator.Matches,
-          children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
-        });
-
-        expect(layout).to.deep.equal({
-          encoding: Encoding.Array,
-          inlined: false,
-          leadingBytes: 0,
-          children: [
-            {
-              encoding: Encoding.Static,
-              inlined: true,
-              leadingBytes: 0,
-              children: [],
-            },
-          ],
-        });
-      });
-
-      it("Tuple inlined iff all children inlined (all Static)", async () => {
-        const { getLayout } = await loadFixture(setup);
-
-        const layout = await getLayout({
-          paramType: Encoding.Tuple,
-          operator: Operator.Matches,
-          children: [
-            { paramType: Encoding.Static, operator: Operator.Pass },
-            { paramType: Encoding.Static, operator: Operator.Pass },
-          ],
-        });
-
-        expect(layout).to.deep.equal({
-          encoding: Encoding.Tuple,
-          inlined: true,
-          leadingBytes: 0,
-          children: [
-            {
-              encoding: Encoding.Static,
-              inlined: true,
-              leadingBytes: 0,
-              children: [],
-            },
-            {
-              encoding: Encoding.Static,
-              inlined: true,
-              leadingBytes: 0,
-              children: [],
-            },
-          ],
-        });
-      });
-
-      it("Tuple not inlined if any child not inlined (has Dynamic)", async () => {
-        const { getLayout } = await loadFixture(setup);
-
-        const layout = await getLayout({
-          paramType: Encoding.Tuple,
-          operator: Operator.Matches,
-          children: [
-            { paramType: Encoding.Static, operator: Operator.Pass },
-            { paramType: Encoding.Dynamic, operator: Operator.Pass },
-          ],
-        });
-
-        expect(layout).to.deep.equal({
-          encoding: Encoding.Tuple,
-          inlined: false,
-          leadingBytes: 0,
-          children: [
-            {
-              encoding: Encoding.Static,
-              inlined: true,
-              leadingBytes: 0,
-              children: [],
-            },
-            {
-              encoding: Encoding.Dynamic,
-              inlined: false,
-              leadingBytes: 0,
-              children: [],
-            },
-          ],
-        });
-      });
-    });
-
-    describe("Deep propagation", () => {
-      it("Tuple(Tuple(Static, Dynamic)) -> all ancestors not inlined", async () => {
-        const { getLayout } = await loadFixture(setup);
-
-        const layout = await getLayout({
-          paramType: Encoding.Tuple,
-          operator: Operator.Matches,
-          children: [
-            {
-              paramType: Encoding.Tuple,
-              operator: Operator.Matches,
-              children: [
-                { paramType: Encoding.Static, operator: Operator.Pass },
-                { paramType: Encoding.Dynamic, operator: Operator.Pass },
-              ],
-            },
-          ],
-        });
-
-        expect(layout).to.deep.equal({
-          encoding: Encoding.Tuple,
-          inlined: false,
-          leadingBytes: 0,
-          children: [
-            {
-              encoding: Encoding.Tuple,
-              inlined: false,
-              leadingBytes: 0,
-              children: [
-                {
-                  encoding: Encoding.Static,
-                  inlined: true,
-                  leadingBytes: 0,
-                  children: [],
-                },
-                {
-                  encoding: Encoding.Dynamic,
-                  inlined: false,
-                  leadingBytes: 0,
-                  children: [],
-                },
-              ],
-            },
-          ],
-        });
-      });
-
-      it("Tuple(Tuple(Tuple(Static))) -> all inlined", async () => {
-        const { getLayout } = await loadFixture(setup);
-
-        const layout = await getLayout({
-          paramType: Encoding.Tuple,
-          operator: Operator.Matches,
-          children: [
-            {
-              paramType: Encoding.Tuple,
-              operator: Operator.Matches,
-              children: [
-                {
-                  paramType: Encoding.Tuple,
-                  operator: Operator.Matches,
-                  children: [
-                    { paramType: Encoding.Static, operator: Operator.Pass },
-                  ],
-                },
-              ],
-            },
-          ],
-        });
-
-        expect(layout).to.deep.equal({
-          encoding: Encoding.Tuple,
-          inlined: true,
-          leadingBytes: 0,
-          children: [
-            {
-              encoding: Encoding.Tuple,
-              inlined: true,
-              leadingBytes: 0,
-              children: [
-                {
-                  encoding: Encoding.Tuple,
-                  inlined: true,
-                  leadingBytes: 0,
-                  children: [
-                    {
-                      encoding: Encoding.Static,
-                      inlined: true,
-                      leadingBytes: 0,
-                      children: [],
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        });
-      });
-
-      it("Tuple(Static, Tuple(Array(Static))) -> root not inlined due to deep Array", async () => {
-        const { getLayout } = await loadFixture(setup);
-
-        const layout = await getLayout({
-          paramType: Encoding.Tuple,
-          operator: Operator.Matches,
-          children: [
-            { paramType: Encoding.Static, operator: Operator.Pass },
-            {
-              paramType: Encoding.Tuple,
-              operator: Operator.Matches,
-              children: [
-                {
-                  paramType: Encoding.Array,
-                  operator: Operator.Matches,
-                  children: [
-                    { paramType: Encoding.Static, operator: Operator.Pass },
-                  ],
-                },
-              ],
-            },
-          ],
-        });
-
-        expect(layout).to.deep.equal({
-          encoding: Encoding.Tuple,
-          inlined: false,
-          leadingBytes: 0,
-          children: [
-            {
-              encoding: Encoding.Static,
-              inlined: true,
-              leadingBytes: 0,
-              children: [],
-            },
-            {
-              encoding: Encoding.Tuple,
-              inlined: false,
-              leadingBytes: 0,
-              children: [
-                {
-                  encoding: Encoding.Array,
-                  inlined: false,
-                  leadingBytes: 0,
-                  children: [
-                    {
-                      encoding: Encoding.Static,
-                      inlined: true,
-                      leadingBytes: 0,
-                      children: [],
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        });
-      });
-    });
-
-    describe("Golden fixture", () => {
-      it("Full-tree assertion with all fields", async () => {
-        const { getLayout } = await loadFixture(setup);
-
-        // Complex tree: AbiEncoded[4] -> Tuple(Static, Array(Dynamic), Tuple(Static, Static))
-        const layout = await getLayout({
-          paramType: Encoding.AbiEncoded,
-          operator: Operator.Matches,
-          compValue: "0x0004",
-          children: [
-            {
-              paramType: Encoding.Tuple,
-              operator: Operator.Matches,
-              children: [
-                { paramType: Encoding.Static, operator: Operator.Pass },
-                {
-                  paramType: Encoding.Array,
-                  operator: Operator.Matches,
-                  children: [
-                    { paramType: Encoding.Dynamic, operator: Operator.Pass },
-                  ],
-                },
-                {
-                  paramType: Encoding.Tuple,
-                  operator: Operator.Matches,
-                  children: [
-                    { paramType: Encoding.Static, operator: Operator.Pass },
-                    { paramType: Encoding.Static, operator: Operator.Pass },
-                  ],
-                },
-              ],
-            },
-          ],
-        });
-
-        expect(layout).to.deep.equal({
-          encoding: Encoding.AbiEncoded,
-          inlined: false,
-          leadingBytes: 4,
-          children: [
-            {
-              encoding: Encoding.Tuple,
-              inlined: false,
-              leadingBytes: 0,
-              children: [
-                {
-                  encoding: Encoding.Static,
-                  inlined: true,
-                  leadingBytes: 0,
-                  children: [],
-                },
-                {
-                  encoding: Encoding.Array,
-                  inlined: false,
-                  leadingBytes: 0,
-                  children: [
-                    {
-                      encoding: Encoding.Dynamic,
-                      inlined: false,
-                      leadingBytes: 0,
-                      children: [],
-                    },
-                  ],
-                },
-                {
-                  encoding: Encoding.Tuple,
-                  inlined: true,
-                  leadingBytes: 0,
-                  children: [
-                    {
-                      encoding: Encoding.Static,
-                      inlined: true,
-                      leadingBytes: 0,
-                      children: [],
-                    },
-                    {
-                      encoding: Encoding.Static,
-                      inlined: true,
-                      leadingBytes: 0,
-                      children: [],
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        });
-      });
-    });
-  });
-
-  describe("Complex Integration", () => {
-    it("ABI function call: AbiEncoded[4](Static, Static, Dynamic)", async () => {
+    it("Array(Static)", async () => {
       const { getLayout } = await loadFixture(setup);
-
       const layout = await getLayout({
-        paramType: Encoding.AbiEncoded,
+        paramType: Encoding.Array,
         operator: Operator.Matches,
-        compValue: "0x0004",
-        children: [
-          { paramType: Encoding.Static, operator: Operator.Pass },
-          { paramType: Encoding.Static, operator: Operator.Pass },
-          { paramType: Encoding.Dynamic, operator: Operator.Pass },
-        ],
+        children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
       });
-
       expect(layout).to.deep.equal({
-        encoding: Encoding.AbiEncoded,
+        encoding: Encoding.Array,
         inlined: false,
-        leadingBytes: 4,
-        children: [
-          {
-            encoding: Encoding.Static,
-            inlined: true,
-            leadingBytes: 0,
-            children: [],
-          },
-          {
-            encoding: Encoding.Static,
-            inlined: true,
-            leadingBytes: 0,
-            children: [],
-          },
-          {
-            encoding: Encoding.Dynamic,
-            inlined: false,
-            leadingBytes: 0,
-            children: [],
-          },
-        ],
+        leadingBytes: 0,
+        children: [staticLeaf()],
       });
     });
 
-    it("Struct array: Array(Tuple(Static, Array(Dynamic)))", async () => {
+    it("Array(Tuple(Static, Dynamic))", async () => {
       const { getLayout } = await loadFixture(setup);
-
       const layout = await getLayout({
         paramType: Encoding.Array,
         operator: Operator.Matches,
@@ -1702,18 +257,11 @@ describe("Layout (Full Pipeline)", () => {
             operator: Operator.Matches,
             children: [
               { paramType: Encoding.Static, operator: Operator.Pass },
-              {
-                paramType: Encoding.Array,
-                operator: Operator.Matches,
-                children: [
-                  { paramType: Encoding.Dynamic, operator: Operator.Pass },
-                ],
-              },
+              { paramType: Encoding.Dynamic, operator: Operator.Pass },
             ],
           },
         ],
       });
-
       expect(layout).to.deep.equal({
         encoding: Encoding.Array,
         inlined: false,
@@ -1723,23 +271,454 @@ describe("Layout (Full Pipeline)", () => {
             encoding: Encoding.Tuple,
             inlined: false,
             leadingBytes: 0,
+            children: [staticLeaf(), dynamicLeaf()],
+          },
+        ],
+      });
+    });
+
+    it("Array(Array(Static))", async () => {
+      const { getLayout } = await loadFixture(setup);
+      const layout = await getLayout({
+        paramType: Encoding.Array,
+        operator: Operator.Matches,
+        children: [
+          {
+            paramType: Encoding.Array,
+            operator: Operator.Matches,
+            children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+          },
+        ],
+      });
+      expect(layout).to.deep.equal({
+        encoding: Encoding.Array,
+        inlined: false,
+        leadingBytes: 0,
+        children: [
+          {
+            encoding: Encoding.Array,
+            inlined: false,
+            leadingBytes: 0,
+            children: [staticLeaf()],
+          },
+        ],
+      });
+    });
+
+    it("Tuple(Array(Static))", async () => {
+      const { getLayout } = await loadFixture(setup);
+      const layout = await getLayout({
+        paramType: Encoding.Tuple,
+        operator: Operator.Matches,
+        children: [
+          {
+            paramType: Encoding.Array,
+            operator: Operator.Matches,
+            children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+          },
+        ],
+      });
+      expect(layout).to.deep.equal({
+        encoding: Encoding.Tuple,
+        inlined: false,
+        leadingBytes: 0,
+        children: [
+          {
+            encoding: Encoding.Array,
+            inlined: false,
+            leadingBytes: 0,
+            children: [staticLeaf()],
+          },
+        ],
+      });
+    });
+
+    it("Array(Dynamic, AbiEncoded) is variant", async () => {
+      const { getLayout } = await loadFixture(setup);
+      const layout = await getLayout({
+        paramType: Encoding.Array,
+        operator: Operator.Matches,
+        children: [
+          { paramType: Encoding.Dynamic, operator: Operator.Pass },
+          {
+            paramType: Encoding.AbiEncoded,
+            operator: Operator.Matches,
+            children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+          },
+        ],
+      });
+      expect(layout).to.deep.equal({
+        encoding: Encoding.Array,
+        inlined: false,
+        leadingBytes: 0,
+        children: [
+          dynamicLeaf(),
+          {
+            encoding: Encoding.AbiEncoded,
+            inlined: false,
+            leadingBytes: 4,
+            children: [staticLeaf()],
+          },
+        ],
+      });
+    });
+
+    it("AbiEncoded leadingBytes default (4)", async () => {
+      const { getLayout } = await loadFixture(setup);
+      const layout = await getLayout({
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+      });
+      expect(layout).to.deep.equal({
+        encoding: Encoding.AbiEncoded,
+        inlined: false,
+        leadingBytes: 4,
+        children: [staticLeaf()],
+      });
+    });
+
+    it("AbiEncoded leadingBytes=0", async () => {
+      const { getLayout } = await loadFixture(setup);
+      const layout = await getLayout({
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        compValue: "0x0000",
+        children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+      });
+      expect(layout).to.deep.equal({
+        encoding: Encoding.AbiEncoded,
+        inlined: false,
+        leadingBytes: 0,
+        children: [staticLeaf()],
+      });
+    });
+
+    it("Nested AbiEncoded", async () => {
+      const { getLayout } = await loadFixture(setup);
+      const layout = await getLayout({
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        children: [
+          {
+            paramType: Encoding.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x0000",
+            children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+          },
+        ],
+      });
+      expect(layout).to.deep.equal({
+        encoding: Encoding.AbiEncoded,
+        inlined: false,
+        leadingBytes: 4,
+        children: [
+          {
+            encoding: Encoding.AbiEncoded,
+            inlined: false,
+            leadingBytes: 0,
+            children: [staticLeaf()],
+          },
+        ],
+      });
+    });
+  });
+
+  describe("Atomic Operators", () => {
+    it("Pass on None", async () => {
+      const { getLayout } = await loadFixture(setup);
+      const layout = await getLayout({
+        paramType: Encoding.None,
+        operator: Operator.Pass,
+      });
+      expect(layout).to.equal(null);
+    });
+
+    it("EqualTo on Static", async () => {
+      const { getLayout } = await loadFixture(setup);
+      const layout = await getLayout({
+        paramType: Encoding.Static,
+        operator: Operator.EqualTo,
+        compValue: "0x" + "00".repeat(32),
+      });
+      expect(layout).to.deep.equal(staticLeaf());
+    });
+
+    it("EqualTo on EtherValue is non-structural", async () => {
+      const { getLayout } = await loadFixture(setup);
+      const layout = await getLayout({
+        paramType: Encoding.EtherValue,
+        operator: Operator.EqualTo,
+        compValue: "0x" + "00".repeat(32),
+      });
+      expect(layout).to.equal(null);
+    });
+
+    it("GreaterThan on Static", async () => {
+      const { getLayout } = await loadFixture(setup);
+      const layout = await getLayout({
+        paramType: Encoding.Static,
+        operator: Operator.GreaterThan,
+        compValue: "0x" + "00".repeat(32),
+      });
+      expect(layout).to.deep.equal(staticLeaf());
+    });
+
+    it("GreaterThan on EtherValue is non-structural", async () => {
+      const { getLayout } = await loadFixture(setup);
+      const layout = await getLayout({
+        paramType: Encoding.EtherValue,
+        operator: Operator.GreaterThan,
+        compValue: "0x" + "00".repeat(32),
+      });
+      expect(layout).to.equal(null);
+    });
+
+    it("Bitmask on Dynamic", async () => {
+      const { getLayout } = await loadFixture(setup);
+      const layout = await getLayout({
+        paramType: Encoding.Dynamic,
+        operator: Operator.Bitmask,
+        compValue: "0x" + "ff".repeat(32) + "00".repeat(32),
+      });
+      expect(layout).to.deep.equal(dynamicLeaf());
+    });
+
+    it("WithinAllowance on Static", async () => {
+      const { getLayout } = await loadFixture(setup);
+      const layout = await getLayout({
+        paramType: Encoding.Static,
+        operator: Operator.WithinAllowance,
+        compValue: "0x" + "00".repeat(32),
+      });
+      expect(layout).to.deep.equal(staticLeaf());
+    });
+
+    it("WithinAllowance on EtherValue is non-structural", async () => {
+      const { getLayout } = await loadFixture(setup);
+      const layout = await getLayout({
+        paramType: Encoding.EtherValue,
+        operator: Operator.WithinAllowance,
+        compValue: "0x" + "00".repeat(32),
+      });
+      expect(layout).to.equal(null);
+    });
+
+    it("Custom on Static", async () => {
+      const { getLayout } = await loadFixture(setup);
+      const layout = await getLayout({
+        paramType: Encoding.Static,
+        operator: Operator.Custom,
+        compValue: "0x" + "00".repeat(20),
+      });
+      expect(layout).to.deep.equal(staticLeaf());
+    });
+
+    it("Custom on Tuple", async () => {
+      const { getLayout } = await loadFixture(setup);
+      const layout = await getLayout({
+        paramType: Encoding.Tuple,
+        operator: Operator.Custom,
+        compValue: "0x" + "00".repeat(20),
+        children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+      });
+      expect(layout).to.deep.equal({
+        encoding: Encoding.Tuple,
+        inlined: true,
+        leadingBytes: 0,
+        children: [staticLeaf()],
+      });
+    });
+
+    it("EqualToAvatar on Static", async () => {
+      const { getLayout } = await loadFixture(setup);
+      const layout = await getLayout({
+        paramType: Encoding.Static,
+        operator: Operator.EqualToAvatar,
+      });
+      expect(layout).to.deep.equal(staticLeaf());
+    });
+
+    it("Empty is non-structural", async () => {
+      const { getLayout } = await loadFixture(setup);
+      const layout = await getLayout({
+        paramType: Encoding.None,
+        operator: Operator.Empty,
+      });
+      expect(layout).to.equal(null);
+    });
+  });
+
+  describe("Logical Transparency & Variants", () => {
+    it("And(Static, Static) -> transparent", async () => {
+      const { getLayout } = await loadFixture(setup);
+      const layout = await getLayout({
+        paramType: Encoding.None,
+        operator: Operator.And,
+        children: [
+          { paramType: Encoding.Static, operator: Operator.Pass },
+          { paramType: Encoding.Static, operator: Operator.Pass },
+        ],
+      });
+      expect(layout).to.deep.equal(staticLeaf());
+    });
+
+    it("And(Static, Dynamic) fails type equivalence", async () => {
+      const { mock } = await loadFixture(setup);
+      const input = flattenCondition({
+        paramType: Encoding.None,
+        operator: Operator.And,
+        children: [
+          { paramType: Encoding.Static, operator: Operator.Pass },
+          { paramType: Encoding.Dynamic, operator: Operator.Pass },
+        ],
+      });
+      await expect(mock.roundtrip(input)).to.be.revertedWithCustomError(
+        mock,
+        "UnsuitableChildTypeTree",
+      );
+    });
+
+    it("Or(Dynamic, Dynamic) -> transparent", async () => {
+      const { getLayout } = await loadFixture(setup);
+      const layout = await getLayout({
+        paramType: Encoding.None,
+        operator: Operator.Or,
+        children: [
+          { paramType: Encoding.Dynamic, operator: Operator.Pass },
+          { paramType: Encoding.Dynamic, operator: Operator.Pass },
+        ],
+      });
+      expect(layout).to.deep.equal(dynamicLeaf());
+    });
+
+    it("Or(Static, Dynamic) fails type equivalence", async () => {
+      const { mock } = await loadFixture(setup);
+      const input = flattenCondition({
+        paramType: Encoding.None,
+        operator: Operator.Or,
+        children: [
+          { paramType: Encoding.Static, operator: Operator.Pass },
+          { paramType: Encoding.Dynamic, operator: Operator.Pass },
+        ],
+      });
+      await expect(mock.roundtrip(input)).to.be.revertedWithCustomError(
+        mock,
+        "UnsuitableChildTypeTree",
+      );
+    });
+
+    it("Or(AbiEncoded, AbiEncoded) same structure -> transparent", async () => {
+      const { getLayout } = await loadFixture(setup);
+      const layout = await getLayout({
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        children: [
+          {
+            paramType: Encoding.None,
+            operator: Operator.Or,
             children: [
               {
-                encoding: Encoding.Static,
-                inlined: true,
-                leadingBytes: 0,
-                children: [],
+                paramType: Encoding.Tuple,
+                operator: Operator.Matches,
+                children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
               },
               {
-                encoding: Encoding.Array,
-                inlined: false,
-                leadingBytes: 0,
+                paramType: Encoding.Tuple,
+                operator: Operator.Matches,
+                children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+              },
+            ],
+          },
+        ],
+      });
+      expect(layout).to.deep.equal({
+        encoding: Encoding.AbiEncoded,
+        inlined: false,
+        leadingBytes: 4,
+        children: [
+          {
+            encoding: Encoding.Tuple,
+            inlined: true,
+            leadingBytes: 0,
+            children: [staticLeaf()],
+          },
+        ],
+      });
+    });
+
+    it("Or(AbiEncoded, AbiEncoded) different structure -> variant", async () => {
+      const { getLayout } = await loadFixture(setup);
+      const layout = await getLayout({
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        children: [
+          {
+            paramType: Encoding.None,
+            operator: Operator.Or,
+            children: [
+              {
+                paramType: Encoding.AbiEncoded,
+                operator: Operator.Matches,
                 children: [
                   {
-                    encoding: Encoding.Dynamic,
-                    inlined: false,
+                    paramType: Encoding.Tuple,
+                    operator: Operator.Matches,
+                    children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+                  },
+                ],
+              },
+              {
+                paramType: Encoding.AbiEncoded,
+                operator: Operator.Matches,
+                children: [
+                  {
+                    paramType: Encoding.Tuple,
+                    operator: Operator.Matches,
+                    children: [
+                      { paramType: Encoding.Static, operator: Operator.Pass },
+                      { paramType: Encoding.Static, operator: Operator.Pass },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      });
+      expect(layout).to.deep.equal({
+        encoding: Encoding.AbiEncoded,
+        inlined: false,
+        leadingBytes: 4,
+        children: [
+          {
+            encoding: Encoding.Dynamic,
+            inlined: false,
+            leadingBytes: 0,
+            children: [
+              {
+                encoding: Encoding.AbiEncoded,
+                inlined: false,
+                leadingBytes: 4,
+                children: [
+                  {
+                    encoding: Encoding.Tuple,
+                    inlined: true,
                     leadingBytes: 0,
-                    children: [],
+                    children: [staticLeaf()],
+                  },
+                ],
+              },
+              {
+                encoding: Encoding.AbiEncoded,
+                inlined: false,
+                leadingBytes: 4,
+                children: [
+                  {
+                    encoding: Encoding.Tuple,
+                    inlined: true,
+                    leadingBytes: 0,
+                    children: [staticLeaf(), staticLeaf()],
                   },
                 ],
               },
@@ -1749,14 +728,149 @@ describe("Layout (Full Pipeline)", () => {
       });
     });
 
-    it("Nested struct: Tuple(Static, Tuple(Static, Dynamic))", async () => {
+    it("And -> Or -> And -> Static deep chain collapses", async () => {
       const { getLayout } = await loadFixture(setup);
-
       const layout = await getLayout({
-        paramType: Encoding.Tuple,
+        paramType: Encoding.None,
+        operator: Operator.And,
+        children: [
+          {
+            paramType: Encoding.None,
+            operator: Operator.Or,
+            children: [
+              {
+                paramType: Encoding.None,
+                operator: Operator.And,
+                children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+              },
+              { paramType: Encoding.Static, operator: Operator.Pass },
+            ],
+          },
+        ],
+      });
+      expect(layout).to.deep.equal(staticLeaf());
+    });
+
+    it("Or(AbiEncoded[4], AbiEncoded[8]) -> variant", async () => {
+      const { getLayout } = await loadFixture(setup);
+      const layout = await getLayout({
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         children: [
-          { paramType: Encoding.Static, operator: Operator.Pass },
+          {
+            paramType: Encoding.None,
+            operator: Operator.Or,
+            children: [
+              {
+                paramType: Encoding.AbiEncoded,
+                operator: Operator.Matches,
+                compValue: "0x0004",
+                children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+              },
+              {
+                paramType: Encoding.AbiEncoded,
+                operator: Operator.Matches,
+                compValue: "0x0008",
+                children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+              },
+            ],
+          },
+        ],
+      });
+      expect(layout).to.deep.equal({
+        encoding: Encoding.AbiEncoded,
+        inlined: false,
+        leadingBytes: 4,
+        children: [
+          {
+            encoding: Encoding.Dynamic,
+            inlined: false,
+            leadingBytes: 0,
+            children: [
+              {
+                encoding: Encoding.AbiEncoded,
+                inlined: false,
+                leadingBytes: 4,
+                children: [staticLeaf()],
+              },
+              {
+                encoding: Encoding.AbiEncoded,
+                inlined: false,
+                leadingBytes: 8,
+                children: [staticLeaf()],
+              },
+            ],
+          },
+        ],
+      });
+    });
+
+    it("Or(Dynamic, AbiEncoded) -> variant", async () => {
+      const { getLayout } = await loadFixture(setup);
+      const layout = await getLayout({
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        children: [
+          {
+            paramType: Encoding.None,
+            operator: Operator.Or,
+            children: [
+              { paramType: Encoding.Dynamic, operator: Operator.Pass },
+              {
+                paramType: Encoding.AbiEncoded,
+                operator: Operator.Matches,
+                children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+              },
+            ],
+          },
+        ],
+      });
+      expect(layout).to.deep.equal({
+        encoding: Encoding.AbiEncoded,
+        inlined: false,
+        leadingBytes: 4,
+        children: [
+          {
+            encoding: Encoding.Dynamic,
+            inlined: false,
+            leadingBytes: 0,
+            children: [
+              dynamicLeaf(),
+              {
+                encoding: Encoding.AbiEncoded,
+                inlined: false,
+                leadingBytes: 4,
+                children: [staticLeaf()],
+              },
+            ],
+          },
+        ],
+      });
+    });
+  });
+
+  describe("Array Operators", () => {
+    it("ArraySome(Static)", async () => {
+      const { getLayout } = await loadFixture(setup);
+      const layout = await getLayout({
+        paramType: Encoding.Array,
+        operator: Operator.ArraySome,
+        children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+      });
+      expect(layout).to.deep.equal({
+        encoding: Encoding.Array,
+        inlined: false,
+        leadingBytes: 0,
+        children: [staticLeaf()],
+      });
+    });
+
+    it("ArraySome(Tuple(Static, Dynamic))", async () => {
+      const { getLayout } = await loadFixture(setup);
+      const layout = await getLayout({
+        paramType: Encoding.Array,
+        operator: Operator.ArraySome,
+        children: [
           {
             paramType: Encoding.Tuple,
             operator: Operator.Matches,
@@ -1767,212 +881,251 @@ describe("Layout (Full Pipeline)", () => {
           },
         ],
       });
-
       expect(layout).to.deep.equal({
-        encoding: Encoding.Tuple,
+        encoding: Encoding.Array,
         inlined: false,
         leadingBytes: 0,
         children: [
           {
-            encoding: Encoding.Static,
-            inlined: true,
-            leadingBytes: 0,
-            children: [],
-          },
-          {
             encoding: Encoding.Tuple,
             inlined: false,
             leadingBytes: 0,
-            children: [
-              {
-                encoding: Encoding.Static,
-                inlined: true,
-                leadingBytes: 0,
-                children: [],
-              },
-              {
-                encoding: Encoding.Dynamic,
-                inlined: false,
-                leadingBytes: 0,
-                children: [],
-              },
-            ],
+            children: [staticLeaf(), dynamicLeaf()],
           },
         ],
       });
     });
 
-    it("Real-world: ERC20 transfer (function + address + uint256)", async () => {
+    it("Matches on Array with many identical elements -> single template", async () => {
       const { getLayout } = await loadFixture(setup);
-
-      // transfer(address,uint256) -> AbiEncoded[4](Static, Static)
       const layout = await getLayout({
-        paramType: Encoding.AbiEncoded,
+        paramType: Encoding.Array,
         operator: Operator.Matches,
-        compValue: "0x0004",
         children: [
-          { paramType: Encoding.Static, operator: Operator.Pass }, // address (as Static)
-          { paramType: Encoding.Static, operator: Operator.Pass }, // uint256
+          { paramType: Encoding.Static, operator: Operator.Pass },
+          { paramType: Encoding.Static, operator: Operator.Pass },
+          { paramType: Encoding.Static, operator: Operator.Pass },
+          { paramType: Encoding.Static, operator: Operator.Pass },
+          { paramType: Encoding.Static, operator: Operator.Pass },
         ],
       });
-
       expect(layout).to.deep.equal({
-        encoding: Encoding.AbiEncoded,
+        encoding: Encoding.Array,
         inlined: false,
-        leadingBytes: 4,
+        leadingBytes: 0,
+        children: [staticLeaf()],
+      });
+    });
+
+    it("Matches: Array(AbiEncoded[4], AbiEncoded[8]) -> variant", async () => {
+      const { getLayout } = await loadFixture(setup);
+      const layout = await getLayout({
+        paramType: Encoding.Array,
+        operator: Operator.Matches,
         children: [
           {
-            encoding: Encoding.Static,
-            inlined: true,
-            leadingBytes: 0,
-            children: [],
+            paramType: Encoding.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x0004",
+            children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
           },
           {
-            encoding: Encoding.Static,
-            inlined: true,
-            leadingBytes: 0,
-            children: [],
+            paramType: Encoding.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x0008",
+            children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+          },
+        ],
+      });
+      expect(layout).to.deep.equal({
+        encoding: Encoding.Array,
+        inlined: false,
+        leadingBytes: 0,
+        children: [
+          {
+            encoding: Encoding.AbiEncoded,
+            inlined: false,
+            leadingBytes: 4,
+            children: [staticLeaf()],
+          },
+          {
+            encoding: Encoding.AbiEncoded,
+            inlined: false,
+            leadingBytes: 8,
+            children: [staticLeaf()],
           },
         ],
       });
     });
   });
 
-  describe("Edge Cases", () => {
-    describe("Boundary leadingBytes values", () => {
-      it("leadingBytes: 0", async () => {
-        const { getLayout } = await loadFixture(setup);
-
-        const layout = await getLayout({
-          paramType: Encoding.AbiEncoded,
-          operator: Operator.Matches,
-          compValue: "0x0000",
-          children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
-        });
-
-        expect(layout).to.deep.equal({
-          encoding: Encoding.AbiEncoded,
-          inlined: false,
-          leadingBytes: 0,
-          children: [
-            {
-              encoding: Encoding.Static,
-              inlined: true,
-              leadingBytes: 0,
-              children: [],
-            },
-          ],
-        });
+  describe("Edge Cases & Integrations", () => {
+    it("Tuple(Static, And(None/Pass)) -> non-structural And filtered", async () => {
+      const { getLayout } = await loadFixture(setup);
+      const layout = await getLayout({
+        paramType: Encoding.Tuple,
+        operator: Operator.Matches,
+        children: [
+          { paramType: Encoding.Static, operator: Operator.Pass },
+          {
+            paramType: Encoding.None,
+            operator: Operator.And,
+            children: [{ paramType: Encoding.None, operator: Operator.Pass }],
+          },
+        ],
       });
-
-      it("leadingBytes: 4 (default/function selector)", async () => {
-        const { getLayout } = await loadFixture(setup);
-
-        const layout = await getLayout({
-          paramType: Encoding.AbiEncoded,
-          operator: Operator.Matches,
-          compValue: "0x0004",
-          children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
-        });
-
-        expect(layout).to.deep.equal({
-          encoding: Encoding.AbiEncoded,
-          inlined: false,
-          leadingBytes: 4,
-          children: [
-            {
-              encoding: Encoding.Static,
-              inlined: true,
-              leadingBytes: 0,
-              children: [],
-            },
-          ],
-        });
-      });
-
-      it("leadingBytes: 32 (max with match bytes)", async () => {
-        const { getLayout } = await loadFixture(setup);
-
-        const layout = await getLayout({
-          paramType: Encoding.AbiEncoded,
-          operator: Operator.Matches,
-          compValue: "0x0020",
-          children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
-        });
-
-        expect(layout).to.deep.equal({
-          encoding: Encoding.AbiEncoded,
-          inlined: false,
-          leadingBytes: 32,
-          children: [
-            {
-              encoding: Encoding.Static,
-              inlined: true,
-              leadingBytes: 0,
-              children: [],
-            },
-          ],
-        });
+      expect(layout).to.deep.equal({
+        encoding: Encoding.Tuple,
+        inlined: true,
+        leadingBytes: 0,
+        children: [staticLeaf()],
       });
     });
 
-    describe("Invalid shapes throw", () => {
-      it("Or(Static, Dynamic) fails type equivalence", async () => {
-        const { mock } = await loadFixture(setup);
-
-        const input = flattenCondition({
-          paramType: Encoding.None,
-          operator: Operator.Or,
-          children: [
-            { paramType: Encoding.Static, operator: Operator.Pass },
-            { paramType: Encoding.Dynamic, operator: Operator.Pass },
-          ],
-        });
-
-        await expect(mock.roundtrip(input)).to.be.revertedWithCustomError(
-          mock,
-          "UnsuitableChildTypeTree",
-        );
+    it("CallWithinAllowance at leaf filtered out", async () => {
+      const { getLayout } = await loadFixture(setup);
+      const layout = await getLayout({
+        paramType: Encoding.Tuple,
+        operator: Operator.Matches,
+        children: [
+          { paramType: Encoding.Static, operator: Operator.Pass },
+          {
+            paramType: Encoding.None,
+            operator: Operator.CallWithinAllowance,
+            compValue: "0x" + "00".repeat(32),
+          },
+        ],
       });
-
-      it("Tuple with no structural children fails", async () => {
-        const { mock } = await loadFixture(setup);
-
-        // Tuple with only non-structural child (And with None/Pass)
-        const input = flattenCondition({
-          paramType: Encoding.Tuple,
-          operator: Operator.Matches,
-          children: [
-            {
-              paramType: Encoding.None,
-              operator: Operator.And,
-              children: [{ paramType: Encoding.None, operator: Operator.Pass }],
-            },
-          ],
-        });
-
-        await expect(mock.roundtrip(input)).to.be.revertedWithCustomError(
-          mock,
-          "UnsuitableChildCount",
-        );
+      expect(layout).to.deep.equal({
+        encoding: Encoding.Tuple,
+        inlined: true,
+        leadingBytes: 0,
+        children: [staticLeaf()],
       });
+    });
 
-      it("Array(Static, Dynamic) fails type equivalence", async () => {
-        const { mock } = await loadFixture(setup);
+    it("WithinAllowance in tuple is structural", async () => {
+      const { getLayout } = await loadFixture(setup);
+      const layout = await getLayout({
+        paramType: Encoding.Tuple,
+        operator: Operator.Matches,
+        children: [
+          { paramType: Encoding.Static, operator: Operator.Pass },
+          {
+            paramType: Encoding.Static,
+            operator: Operator.WithinAllowance,
+            compValue: "0x" + "00".repeat(32),
+          },
+        ],
+      });
+      expect(layout).to.deep.equal({
+        encoding: Encoding.Tuple,
+        inlined: true,
+        leadingBytes: 0,
+        children: [staticLeaf(), staticLeaf()],
+      });
+    });
 
-        const input = flattenCondition({
-          paramType: Encoding.Array,
-          operator: Operator.Matches,
-          children: [
-            { paramType: Encoding.Static, operator: Operator.Pass },
-            { paramType: Encoding.Dynamic, operator: Operator.Pass },
-          ],
-        });
+    it("EtherValue with EqualTo is non-structural", async () => {
+      const { getLayout } = await loadFixture(setup);
+      const layout = await getLayout({
+        paramType: Encoding.EtherValue,
+        operator: Operator.EqualTo,
+        compValue: "0x" + "00".repeat(32),
+      });
+      expect(layout).to.equal(null);
+    });
 
-        await expect(mock.roundtrip(input)).to.be.revertedWithCustomError(
-          mock,
-          "UnsuitableChildTypeTree",
-        );
+    it("Tuple with no structural children fails", async () => {
+      const { mock } = await loadFixture(setup);
+      const input = flattenCondition({
+        paramType: Encoding.Tuple,
+        operator: Operator.Matches,
+        children: [
+          {
+            paramType: Encoding.None,
+            operator: Operator.And,
+            children: [{ paramType: Encoding.None, operator: Operator.Pass }],
+          },
+        ],
+      });
+      await expect(mock.roundtrip(input)).to.be.revertedWithCustomError(
+        mock,
+        "UnsuitableChildCount",
+      );
+    });
+
+    it("Array(Static, Dynamic) fails type equivalence", async () => {
+      const { mock } = await loadFixture(setup);
+      const input = flattenCondition({
+        paramType: Encoding.Array,
+        operator: Operator.Matches,
+        children: [
+          { paramType: Encoding.Static, operator: Operator.Pass },
+          { paramType: Encoding.Dynamic, operator: Operator.Pass },
+        ],
+      });
+      await expect(mock.roundtrip(input)).to.be.revertedWithCustomError(
+        mock,
+        "UnsuitableChildTypeTree",
+      );
+    });
+
+    it("Golden fixture: AbiEncoded[4](Tuple(Static, Array(Dynamic), Tuple(Static, Static)))", async () => {
+      const { getLayout } = await loadFixture(setup);
+      const layout = await getLayout({
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        compValue: "0x0004",
+        children: [
+          {
+            paramType: Encoding.Tuple,
+            operator: Operator.Matches,
+            children: [
+              { paramType: Encoding.Static, operator: Operator.Pass },
+              {
+                paramType: Encoding.Array,
+                operator: Operator.Matches,
+                children: [{ paramType: Encoding.Dynamic, operator: Operator.Pass }],
+              },
+              {
+                paramType: Encoding.Tuple,
+                operator: Operator.Matches,
+                children: [
+                  { paramType: Encoding.Static, operator: Operator.Pass },
+                  { paramType: Encoding.Static, operator: Operator.Pass },
+                ],
+              },
+            ],
+          },
+        ],
+      });
+      expect(layout).to.deep.equal({
+        encoding: Encoding.AbiEncoded,
+        inlined: false,
+        leadingBytes: 4,
+        children: [
+          {
+            encoding: Encoding.Tuple,
+            inlined: false,
+            leadingBytes: 0,
+            children: [
+              staticLeaf(),
+              {
+                encoding: Encoding.Array,
+                inlined: false,
+                leadingBytes: 0,
+                children: [dynamicLeaf()],
+              },
+              {
+                encoding: Encoding.Tuple,
+                inlined: true,
+                leadingBytes: 0,
+                children: [staticLeaf(), staticLeaf()],
+              },
+            ],
+          },
+        ],
       });
     });
   });
