@@ -93,20 +93,9 @@ library TopologyLib {
             }
 
             /*
-             * isInLayout
-             *
-             * Determines if this node occupies an entry in the resolved layout
-             *
-             * Logical nodes (AND/OR) are usually transparent to the data layout
-             * unless they are 'variants' (holding mixed types), which forces a
-             * dynamic layout wrapper.
-             */
-            current.isInLayout =
-                isStructural ||
-                (isLogical && current.isVariant);
-
-            /*
-             * typeHash
+             * Non-variant logical nodes are transparent in the layout. Since all
+             * children share the same type, only the first contributes - exclude
+             * the rest. Same idea for typeHash.
              */
             if (isLogical && !current.isVariant) {
                 for (uint256 j = 1; j < current.childCount; ++j) {
@@ -116,12 +105,32 @@ library TopologyLib {
                 continue;
             }
 
-            bytes32 hash = bytes32(uint256(e));
-            if (e == Encoding.AbiEncoded) {
-                hash |= (_leadingBytes(condition) << 8);
-            }
+            /*
+             * isInLayout
+             *
+             * Structural nodes and Logical Variant nodes are in layout.
+             * (Logical Non-variant were handled above).
+             */
+            current.isInLayout = isStructural || isLogical;
 
-            uint256 childHashCount = (e == Encoding.Array && !current.isVariant)
+            /*
+             * typeHash
+             *
+             * Computes a unique hash representing the node's type structure.
+             * Used to detect whether siblings share the same type (for isVariant).
+             *
+             * The hash combines: encoding type, leadingBytes (for AbiEncoded),
+             * and children's type hashes. Non-variant arrays use only the first
+             * child as a template since all elements share the same type.
+             */
+            bytes32 hash = bytes32(uint256(e)) |
+                (
+                    e == Encoding.AbiEncoded
+                        ? _leadingBytes(condition) << 8
+                        : bytes32(0)
+                );
+
+            uint256 childHashCount = e == Encoding.Array && !current.isVariant
                 ? 1
                 : current.sChildCount;
 
