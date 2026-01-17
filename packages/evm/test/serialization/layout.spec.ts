@@ -211,7 +211,9 @@ describe("Layout (Full Pipeline)", () => {
           {
             paramType: Encoding.Tuple,
             operator: Operator.Matches,
-            children: [{ paramType: Encoding.Dynamic, operator: Operator.Pass }],
+            children: [
+              { paramType: Encoding.Dynamic, operator: Operator.Pass },
+            ],
           },
         ],
       });
@@ -621,12 +623,16 @@ describe("Layout (Full Pipeline)", () => {
               {
                 paramType: Encoding.Tuple,
                 operator: Operator.Matches,
-                children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+                children: [
+                  { paramType: Encoding.Static, operator: Operator.Pass },
+                ],
               },
               {
                 paramType: Encoding.Tuple,
                 operator: Operator.Matches,
-                children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+                children: [
+                  { paramType: Encoding.Static, operator: Operator.Pass },
+                ],
               },
             ],
           },
@@ -664,7 +670,9 @@ describe("Layout (Full Pipeline)", () => {
                   {
                     paramType: Encoding.Tuple,
                     operator: Operator.Matches,
-                    children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+                    children: [
+                      { paramType: Encoding.Static, operator: Operator.Pass },
+                    ],
                   },
                 ],
               },
@@ -741,7 +749,9 @@ describe("Layout (Full Pipeline)", () => {
               {
                 paramType: Encoding.None,
                 operator: Operator.And,
-                children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+                children: [
+                  { paramType: Encoding.Static, operator: Operator.Pass },
+                ],
               },
               { paramType: Encoding.Static, operator: Operator.Pass },
             ],
@@ -765,13 +775,17 @@ describe("Layout (Full Pipeline)", () => {
                 paramType: Encoding.AbiEncoded,
                 operator: Operator.Matches,
                 compValue: "0x0004",
-                children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+                children: [
+                  { paramType: Encoding.Static, operator: Operator.Pass },
+                ],
               },
               {
                 paramType: Encoding.AbiEncoded,
                 operator: Operator.Matches,
                 compValue: "0x0008",
-                children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+                children: [
+                  { paramType: Encoding.Static, operator: Operator.Pass },
+                ],
               },
             ],
           },
@@ -819,7 +833,9 @@ describe("Layout (Full Pipeline)", () => {
               {
                 paramType: Encoding.AbiEncoded,
                 operator: Operator.Matches,
-                children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+                children: [
+                  { paramType: Encoding.Static, operator: Operator.Pass },
+                ],
               },
             ],
           },
@@ -1086,7 +1102,9 @@ describe("Layout (Full Pipeline)", () => {
               {
                 paramType: Encoding.Array,
                 operator: Operator.Matches,
-                children: [{ paramType: Encoding.Dynamic, operator: Operator.Pass }],
+                children: [
+                  { paramType: Encoding.Dynamic, operator: Operator.Pass },
+                ],
               },
               {
                 paramType: Encoding.Tuple,
