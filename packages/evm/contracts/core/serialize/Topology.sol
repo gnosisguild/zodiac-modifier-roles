@@ -5,13 +5,12 @@ import "../../types/Types.sol";
 
 /**
  * @title TopologyLib
- * @notice Computes structural metadata and type information for condition trees.
- *         This pre-computed analysis is used by other libraries for validation
- *         and serialization.
+ * @notice Analyzes condition trees to extract structure and type information
+ *         needed for serialization and validation.
  *
- * @dev    Achieves O(N) efficiency by doing a single backward pass over the BFS
- *         ordered data to bubble up properties. This is a significant
- *         improvement over the previous redundant and recursive approach.
+ * @dev    Conditions arrive in BFS order, so a single backward pass lets us
+ *         bubble up child properties to parents in O(N) time, avoiding
+ *         expensive redundant traversals.
  *
  * @author gnosisguild
  */
@@ -22,7 +21,7 @@ library TopologyLib {
         /*
          * Note: This function assumes input conditions satisfy Integrity rules.
          * Most notably, within any child collection, structural nodes must
-         * precede non-structural ones for correct serialization alignment.
+         * precede non-structural ones for correct serialization.
          */
         _validateBFS(conditions);
 
