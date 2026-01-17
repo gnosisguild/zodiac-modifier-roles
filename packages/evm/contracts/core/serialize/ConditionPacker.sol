@@ -69,15 +69,20 @@ library ConditionPacker {
         ConditionFlat[] memory conditions,
         Topology[] memory topology
     ) internal pure returns (bytes memory buffer) {
-        uint256 layoutOffset = 3 + _conditionPackedSize(conditions);
         (uint256 layoutNodeCount, uint8 maxPluckIndex) = _count(
             conditions,
             topology
         );
+        uint256 layoutOffset = 3 + _conditionPackedSize(conditions);
 
         buffer = new bytes(
             layoutOffset + 2 + layoutNodeCount * LAYOUT_NODE_BYTES
         );
+
+        // Header: layoutOffset (2 bytes) + maxPluckIndex (1 byte)
+        buffer[0] = bytes1(uint8(layoutOffset >> 8));
+        buffer[1] = bytes1(uint8(layoutOffset));
+        buffer[2] = bytes1(maxPluckIndex);
 
         _packConditions(conditions, buffer, 3, topology);
         if (layoutNodeCount > 0)
@@ -88,11 +93,6 @@ library ConditionPacker {
                 layoutOffset,
                 layoutNodeCount
             );
-
-        // Header: layoutOffset (2 bytes) + maxPluckIndex (1 byte)
-        buffer[0] = bytes1(uint8(layoutOffset >> 8));
-        buffer[1] = bytes1(uint8(layoutOffset));
-        buffer[2] = bytes1(maxPluckIndex);
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -109,20 +109,25 @@ library ConditionPacker {
 
         // Add space for compValues
         for (uint256 i; i < count; ++i) {
-            if (!_hasCompValue(conditions[i])) continue;
+            ConditionFlat memory condition = conditions[i];
+
+            bool hasCompValue = condition.compValue.length >
+                (condition.paramType == Encoding.AbiEncoded ? 2 : 0);
+
+            if (!hasCompValue) continue;
 
             // 2 bytes for length field
             result += 2;
 
-            if (conditions[i].paramType == Encoding.AbiEncoded) {
-                result += conditions[i].compValue.length - 2; // skip leadingBytes
+            if (condition.paramType == Encoding.AbiEncoded) {
+                result += condition.compValue.length - 2; // skip leadingBytes
             } else if (
-                conditions[i].operator == Operator.EqualTo &&
-                conditions[i].compValue.length > 32
+                condition.operator == Operator.EqualTo &&
+                condition.compValue.length > 32
             ) {
                 result += 32; // store keccak256 hash
             } else {
-                result += conditions[i].compValue.length;
+                result += condition.compValue.length;
             }
         }
     }
@@ -143,12 +148,13 @@ library ConditionPacker {
             uint256 sChildCount = topology[i].sChildCount;
 
             ConditionFlat memory condition = conditions[i];
-            bool hasCompValue = _hasCompValue(condition);
+            bool hasCompValue = condition.compValue.length >
+                (condition.paramType == Encoding.AbiEncoded ? 2 : 0);
 
             // Pack Node
             {
                 // byte 1: operator (5 bits) shifted left, 3 trailing unused bits
-                buffer[offset++] = bytes1(uint8(conditions[i].operator) << 3);
+                buffer[offset++] = bytes1(uint8(condition.operator) << 3);
                 // byte 2
                 buffer[offset++] = bytes1(uint8(childCount));
                 // byte 3
@@ -196,17 +202,6 @@ library ConditionPacker {
             }
             tailOffset += length;
         }
-    }
-
-    function _hasCompValue(
-        ConditionFlat memory condition
-    ) private pure returns (bool) {
-        return
-            condition.operator >= Operator.EqualTo ||
-            condition.operator == Operator.Slice ||
-            condition.operator == Operator.Pluck ||
-            (condition.paramType == Encoding.AbiEncoded &&
-                condition.compValue.length > 2);
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
