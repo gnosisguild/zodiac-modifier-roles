@@ -111,8 +111,8 @@ library TopologyLib {
              */
             if (isLogical && !current.isVariant) {
                 // if logic and non variant, take the first
+                _excludeFromLayout(topology, i, true);
                 typeHashes[i] = typeHashes[current.childStart];
-                _pruneUnreachable(topology, i, true);
                 continue;
             }
 
@@ -162,7 +162,7 @@ library TopologyLib {
         }
     }
 
-    function _pruneUnreachable(
+    function _excludeFromLayout(
         Topology[] memory topology,
         uint256 index,
         bool entrypoint
@@ -175,7 +175,7 @@ library TopologyLib {
         uint256 childStart = current.childStart;
 
         for (uint256 i = entrypoint ? 1 : 0; i < childCount; ++i) {
-            _pruneUnreachable(topology, childStart + i, false);
+            _excludeFromLayout(topology, childStart + i, false);
         }
     }
 
