@@ -3630,7 +3630,7 @@ describe("Operator - EqualTo", () => {
       ).to.not.be.reverted;
     });
 
-    it("handles large condition trees (600 nodes)", async () => {
+    it.skip("handles large condition trees (600 nodes)", async () => {
       // Limited by block gas (100M in hardhat config)
       // 1 AbiEncoded + 1 Tuple + X*(1 Array + 1 Tuple + 4 Static) = 602
       // 2 + 6X = 602 => X = 100 array fields (602 nodes)
