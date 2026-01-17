@@ -759,6 +759,109 @@ describe("Topology", () => {
 
       expect(result!.isInLayout).to.equal(false);
       expect(result!.isVariant).to.equal(false);
+      // First structural child IS in layout
+      expect(result!.children[0].isInLayout).to.equal(true);
+      expect(result!.children[0].isVariant).to.equal(false);
+      // Second structural child is NOT in layout (same type as first)
+      expect(result!.children[1].isInLayout).to.equal(false);
+      expect(result!.children[1].isVariant).to.equal(false);
+    });
+
+    it("Logical: non-variant excludes descendants of non-first children", async () => {
+      const { resolve } = await loadFixture(setup);
+
+      // And (non-variant)
+      // ├── Tuple (first structural child - IN layout)
+      // │   ├── Static (IN layout)
+      // │   └── Static (IN layout)
+      // └── Tuple (second structural child - NOT in layout)
+      //     ├── Static (NOT in layout - ancestor excluded)
+      //     └── Static (NOT in layout - ancestor excluded)
+      const result = await resolve({
+        paramType: Encoding.None,
+        operator: Operator.And,
+        children: [
+          {
+            paramType: Encoding.Tuple,
+            operator: Operator.Matches,
+            children: [
+              { paramType: Encoding.Static, operator: Operator.Pass },
+              { paramType: Encoding.Static, operator: Operator.Pass },
+            ],
+          },
+          {
+            paramType: Encoding.Tuple,
+            operator: Operator.Matches,
+            children: [
+              { paramType: Encoding.Static, operator: Operator.Pass },
+              { paramType: Encoding.Static, operator: Operator.Pass },
+            ],
+          },
+        ],
+      });
+
+      expect(result!.isInLayout).to.equal(false);
+      expect(result!.isVariant).to.equal(false);
+
+      // First Tuple and its children ARE in layout
+      expect(result!.children[0].isInLayout).to.equal(true);
+      expect(result!.children[0].children[0].isInLayout).to.equal(true);
+      expect(result!.children[0].children[1].isInLayout).to.equal(true);
+
+      // Second Tuple and its children are NOT in layout
+      expect(result!.children[1].isInLayout).to.equal(false);
+      expect(result!.children[1].children[0].isInLayout).to.equal(false);
+      expect(result!.children[1].children[1].isInLayout).to.equal(false);
+    });
+
+    it("Logical: non-variant with nested logical excludes deeply", async () => {
+      const { resolve } = await loadFixture(setup);
+
+      // Or (non-variant)
+      // ├── And (first - IN layout, also non-variant so transparent)
+      // │   ├── Static (IN layout - first structural of And)
+      // │   └── Static (NOT in layout - second structural of And)
+      // └── And (second - NOT in layout)
+      //     ├── Static (NOT in layout - ancestor excluded)
+      //     └── Static (NOT in layout - ancestor excluded)
+      const result = await resolve({
+        paramType: Encoding.None,
+        operator: Operator.Or,
+        children: [
+          {
+            paramType: Encoding.None,
+            operator: Operator.And,
+            children: [
+              { paramType: Encoding.Static, operator: Operator.Pass },
+              { paramType: Encoding.Static, operator: Operator.Pass },
+            ],
+          },
+          {
+            paramType: Encoding.None,
+            operator: Operator.And,
+            children: [
+              { paramType: Encoding.Static, operator: Operator.Pass },
+              { paramType: Encoding.Static, operator: Operator.Pass },
+            ],
+          },
+        ],
+      });
+
+      expect(result!.isInLayout).to.equal(false);
+      expect(result!.isVariant).to.equal(false);
+
+      // First And is transparent (non-variant logical)
+      expect(result!.children[0].isInLayout).to.equal(false);
+      // First And's first child IS in layout
+      expect(result!.children[0].children[0].isInLayout).to.equal(true);
+      // First And's second child is NOT in layout
+      expect(result!.children[0].children[1].isInLayout).to.equal(false);
+
+      // Second And is NOT in layout (excluded by parent Or)
+      expect(result!.children[1].isInLayout).to.equal(false);
+      // Second And's children are also NOT in layout (ancestor excluded)
+      expect(result!.children[1].children[0].isInLayout).to.equal(false);
+      expect(result!.children[1].children[1].isInLayout).to.equal(false);
     });
 
     it("Logical: variant has isInLayout true", async () => {

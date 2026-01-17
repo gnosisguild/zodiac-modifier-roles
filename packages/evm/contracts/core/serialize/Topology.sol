@@ -112,6 +112,7 @@ library TopologyLib {
             if (isLogical && !current.isVariant) {
                 // if logic and non variant, take the first
                 typeHashes[i] = typeHashes[current.childStart];
+                _pruneUnreachable(topology, i, true);
                 continue;
             }
 
@@ -158,6 +159,23 @@ library TopologyLib {
         }
         if (count != 1 || conditions[0].parent != 0) {
             revert IRolesError.UnsuitableRootNode();
+        }
+    }
+
+    function _pruneUnreachable(
+        Topology[] memory topology,
+        uint256 index,
+        bool entrypoint
+    ) private pure {
+        Topology memory current = topology[index];
+
+        current.isInLayout = false;
+        uint256 childCount = current.childCount;
+        if (childCount == 0) return;
+        uint256 childStart = current.childStart;
+
+        for (uint256 i = entrypoint ? 1 : 0; i < childCount; ++i) {
+            _pruneUnreachable(topology, childStart + i, false);
         }
     }
 
