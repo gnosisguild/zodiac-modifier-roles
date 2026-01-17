@@ -110,8 +110,9 @@ library TopologyLib {
              * typeHash
              */
             if (isLogical && !current.isVariant) {
-                // if logic and non variant, take the first
-                _excludeFromLayout(topology, i, true);
+                for (uint256 j = 1; j < current.childCount; ++j) {
+                    _excludeFromLayout(topology, current.childStart + j);
+                }
                 typeHashes[i] = typeHashes[current.childStart];
                 continue;
             }
@@ -164,18 +165,13 @@ library TopologyLib {
 
     function _excludeFromLayout(
         Topology[] memory topology,
-        uint256 index,
-        bool entrypoint
+        uint256 index
     ) private pure {
-        Topology memory current = topology[index];
+        Topology memory entry = topology[index];
+        entry.isInLayout = false;
 
-        current.isInLayout = false;
-        uint256 childCount = current.childCount;
-        if (childCount == 0) return;
-        uint256 childStart = current.childStart;
-
-        for (uint256 i = entrypoint ? 1 : 0; i < childCount; ++i) {
-            _excludeFromLayout(topology, childStart + i, false);
+        for (uint256 i; i < entry.childCount; ++i) {
+            _excludeFromLayout(topology, entry.childStart + i);
         }
     }
 
