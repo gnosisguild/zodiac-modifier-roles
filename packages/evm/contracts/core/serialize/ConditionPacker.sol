@@ -229,22 +229,8 @@ library ConditionPacker {
     }
 
     /**
-     * @dev Resolves through transparent (non-variant) And/Or chains to find
-     *      the actual layout node that should be emitted.
-     */
-    function _resolveLayoutIndex(
-        Topology[] memory topology,
-        uint256 index
-    ) private pure returns (uint256) {
-        while (!topology[index].isInLayout) {
-            index = topology[index].childStart;
-        }
-        return index;
-    }
-
-    /**
-     * @dev Packs layout nodes directly from topology using BFS traversal,
-     *      without intermediate Layout tree construction.
+     * @dev Packs layout nodes with a simple forward pass.
+     *      Nodes are already in BFS order, so we just emit those with isInLayout=true.
      */
     function _packLayout(
         ConditionFlat[] memory conditions,
@@ -255,42 +241,25 @@ library ConditionPacker {
     ) private pure {
         offset += _packUInt16(nodeCount, buffer, offset);
 
-        // BFS queue stores resolved condition indices
-        uint256[] memory queue = new uint256[](nodeCount);
-        uint256 head = 0;
-        uint256 tail = 0;
+        for (uint256 i; i < conditions.length; ++i) {
+            if (!topology[i].isInLayout) continue;
 
-        // Enqueue root (resolved through any transparent chains)
-        queue[tail++] = _resolveLayoutIndex(topology, 0);
-
-        while (head < tail) {
-            uint256 index = queue[head++];
-            (uint24 packed, uint256 childCount) = _packLayoutNode(
-                conditions,
-                topology,
-                index
-            );
+            uint24 packed = _packLayoutNode(conditions, topology, i);
 
             buffer[offset++] = bytes1(uint8(packed >> 16));
             buffer[offset++] = bytes1(uint8(packed >> 8));
             buffer[offset++] = bytes1(uint8(packed));
-
-            // Enqueue children (resolved through transparent chains)
-            uint256 childStart = topology[index].childStart;
-            for (uint256 i = 0; i < childCount; ++i) {
-                queue[tail++] = _resolveLayoutIndex(topology, childStart + i);
-            }
         }
     }
 
     /**
-     * @dev Computes the packed 24-bit layout node and child count for a given index.
+     * @dev Computes the packed 24-bit layout node for a given index.
      */
     function _packLayoutNode(
         ConditionFlat[] memory conditions,
         Topology[] memory topology,
         uint256 i
-    ) private pure returns (uint24 packed, uint256 childCount) {
+    ) private pure returns (uint24 packed) {
         Operator op = conditions[i].operator;
         bool isLogical = op == Operator.And || op == Operator.Or;
 
@@ -308,7 +277,7 @@ library ConditionPacker {
                 : uint16(bytes2(compValue));
         }
 
-        childCount = (conditions[i].paramType == Encoding.Array &&
+        uint256 childCount = (conditions[i].paramType == Encoding.Array &&
             !topology[i].isVariant)
             ? 1
             : topology[i].sChildCount;
