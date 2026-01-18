@@ -85,7 +85,7 @@ library ConditionPacker {
         buffer[2] = bytes1(maxPluckIndex);
 
         _packConditions(conditions, buffer, 3, topology);
-        if (layoutNodeCount > 0)
+        if (layoutNodeCount > 0) {
             _packLayout(
                 conditions,
                 topology,
@@ -93,6 +93,7 @@ library ConditionPacker {
                 layoutOffset,
                 layoutNodeCount
             );
+        }
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -157,7 +158,7 @@ library ConditionPacker {
             // Pack Node
             {
                 /*
-                 * Node (5 bytes, 40 bits):
+                 * Condition Node (5 bytes, 40 bits):
                  * ┌──────────┬────────┬────────────┬─────────────┬─────────────────┐
                  * │ operator │ unused │ childCount │ sChildCount │ compValueOffset │
                  * │  5 bits  │ 3 bits │   8 bits   │   8 bits    │    16 bits      │
@@ -223,6 +224,70 @@ library ConditionPacker {
     // ═══════════════════════════════════════════════════════════════════════════
 
     /**
+     * @dev Packs layout nodes. Nodes are already in BFS order, so we emit
+     *      those with isInLayout=true. Variant logical nodes use Dynamic
+     *      encoding; non-variant arrays use a single child as template.
+     */
+    function _packLayout(
+        ConditionFlat[] memory conditions,
+        Topology[] memory topology,
+        bytes memory buffer,
+        uint256 offset,
+        uint256 nodeCount
+    ) private pure {
+        offset += _packUInt16(nodeCount, buffer, offset);
+
+        uint256 length = conditions.length;
+        for (uint256 i; i < length; ++i) {
+            Topology memory t = topology[i];
+
+            if (!t.isInLayout) continue;
+
+            ConditionFlat memory condition = conditions[i];
+
+            // a logic here means variant container
+            Encoding encoding = (condition.operator == Operator.And ||
+                condition.operator == Operator.Or)
+                ? Encoding.Dynamic
+                : condition.paramType;
+
+            uint256 leadingBytes = encoding == Encoding.AbiEncoded
+                ? (
+                    condition.compValue.length == 0
+                        ? 4
+                        : uint16(bytes2(condition.compValue))
+                )
+                : 0;
+
+            uint256 childCount = encoding == Encoding.Array && !t.isVariant
+                ? 1
+                : t.sChildCount;
+
+            /*
+             * Layout Node (3 bytes, 24 bits):
+             * ┌──────────┬────────┬────────────┬──────────────┐
+             * │ encoding │ inline │ childCount │ leadingBytes │
+             * │  3 bits  │ 1 bit  │   8 bits   │   12 bits    │
+             * └──────────┴────────┴────────────┴──────────────┘
+             */
+            uint256 packed = (uint256(encoding) << 21) |
+                (t.isNotInline ? 0 : (1 << 20)) |
+                (childCount << 12) |
+                leadingBytes;
+
+            assembly {
+                let ptr := add(add(buffer, 0x20), offset)
+                mstore(ptr, shl(232, packed))
+            }
+            offset += 3;
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // Helpers
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /**
      * @dev Computes layoutNodeCount and maxPluckIndex in a single pass.
      */
     function _count(
@@ -242,72 +307,6 @@ library ConditionPacker {
             }
         }
     }
-
-    /**
-     * @dev Packs layout nodes with a simple forward pass.
-     *      Nodes are already in BFS order, so we just emit those with isInLayout=true.
-     */
-    function _packLayout(
-        ConditionFlat[] memory conditions,
-        Topology[] memory topology,
-        bytes memory buffer,
-        uint256 offset,
-        uint256 nodeCount
-    ) private pure {
-        offset += _packUInt16(nodeCount, buffer, offset);
-
-        for (uint256 i; i < conditions.length; ++i) {
-            if (!topology[i].isInLayout) continue;
-
-            uint24 packed = _packLayoutNode(conditions, topology, i);
-
-            buffer[offset++] = bytes1(uint8(packed >> 16));
-            buffer[offset++] = bytes1(uint8(packed >> 8));
-            buffer[offset++] = bytes1(uint8(packed));
-        }
-    }
-
-    /**
-     * @dev Computes the packed 24-bit layout node for a given index.
-     */
-    function _packLayoutNode(
-        ConditionFlat[] memory conditions,
-        Topology[] memory topology,
-        uint256 i
-    ) private pure returns (uint24 packed) {
-        Operator op = conditions[i].operator;
-        bool isLogical = op == Operator.And || op == Operator.Or;
-
-        // Determine encoding (variant And/Or becomes Dynamic)
-        Encoding encoding = isLogical
-            ? Encoding.Dynamic
-            : conditions[i].paramType;
-
-        // Extract leadingBytes for AbiEncoded
-        uint256 leadingBytes;
-        if (encoding == Encoding.AbiEncoded) {
-            bytes memory compValue = conditions[i].compValue;
-            leadingBytes = compValue.length == 0
-                ? 4
-                : uint16(bytes2(compValue));
-        }
-
-        uint256 childCount = (conditions[i].paramType == Encoding.Array &&
-            !topology[i].isVariant)
-            ? 1
-            : topology[i].sChildCount;
-
-        // Pack node (3 bytes = 24 bits)
-        packed =
-            (uint24(encoding) << 21) |
-            (topology[i].isNotInline ? uint24(0) : uint24(1 << 20)) |
-            (uint24(childCount) << 12) |
-            uint24(leadingBytes);
-    }
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // Buffer Helpers
-    // ═══════════════════════════════════════════════════════════════════════════
 
     function _packUInt16(
         uint256 value,
