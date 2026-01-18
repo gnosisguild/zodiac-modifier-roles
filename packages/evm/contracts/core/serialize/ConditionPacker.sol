@@ -143,64 +143,78 @@ library ConditionPacker {
         uint256 tailOffset = offset +
             (conditions.length * CONDITION_NODE_BYTES);
 
-        for (uint256 i; i < conditions.length; ++i) {
+        uint256 length = conditions.length;
+        for (uint256 i; i < length; ++i) {
+            ConditionFlat memory condition = conditions[i];
+            Operator operator = condition.operator;
+
             uint256 childCount = topology[i].childCount;
             uint256 sChildCount = topology[i].sChildCount;
 
-            ConditionFlat memory condition = conditions[i];
             bool hasCompValue = condition.compValue.length >
                 (condition.paramType == Encoding.AbiEncoded ? 2 : 0);
 
             // Pack Node
             {
-                // byte 1: operator (5 bits) shifted left, 3 trailing unused bits
-                buffer[offset++] = bytes1(uint8(condition.operator) << 3);
-                // byte 2
-                buffer[offset++] = bytes1(uint8(childCount));
-                // byte 3
-                buffer[offset++] = bytes1(uint8(sChildCount));
+                /*
+                 * Node (5 bytes, 40 bits):
+                 * ┌──────────┬────────┬────────────┬─────────────┬─────────────────┐
+                 * │ operator │ unused │ childCount │ sChildCount │ compValueOffset │
+                 * │  5 bits  │ 3 bits │   8 bits   │   8 bits    │    16 bits      │
+                 * └──────────┴────────┴────────────┴─────────────┴─────────────────┘
+                 *
+                 */
+                uint256 packed = (uint256(operator) << 35) |
+                    (childCount << 24) |
+                    (sChildCount << 16) |
+                    (hasCompValue ? tailOffset : 0);
 
-                // bytes 4-5: compValueOffset (0 if no compValue)
-                buffer[offset++] = hasCompValue
-                    ? bytes1(uint8(tailOffset >> 8))
-                    : bytes1(0);
-                buffer[offset++] = hasCompValue
-                    ? bytes1(uint8(tailOffset))
-                    : bytes1(0);
+                /*
+                 * The or with mload preserves bytes 5-31 (compValues written in
+                 * previous iterations) while writing our 5 bytes at positions 0-4.
+                 */
+                assembly {
+                    let ptr := add(add(buffer, 0x20), offset)
+                    mstore(ptr, or(mload(ptr), shl(216, packed)))
+                }
+                offset += 5;
             }
 
             if (!hasCompValue) continue;
 
-            // Pack CompValue - three cases:
-            // 1. AbiEncoded match bytes: store N bytes (skip first 2 bytes of compValue)
-            // 2. EqualTo with >32 bytes: store keccak256 hash (32 bytes)
-            // 3. Other comparisons: store compValue as-is
-            bytes memory compValue = condition.compValue;
-            uint256 length;
-            uint256 srcOffset;
-            if (condition.paramType == Encoding.AbiEncoded) {
-                length = compValue.length - 2;
-                srcOffset = 2; // skip leadingBytes
-            } else if (
-                condition.operator == Operator.EqualTo && compValue.length > 32
-            ) {
-                compValue = abi.encodePacked(keccak256(compValue));
-                length = 32;
-                srcOffset = 0;
-            } else {
-                length = compValue.length;
-                srcOffset = 0;
-            }
+            // Pack CompValue:
+            // 1. AbiEncoded: skip first 2 bytes
+            // 2. EqualTo: hash greater than 32 bytes
+            {
+                bytes memory compValue = condition.compValue;
+                uint256 compValueLength = compValue.length;
+                uint256 srcOffset;
+                if (condition.paramType == Encoding.AbiEncoded) {
+                    compValueLength -= 2;
+                    srcOffset = 2; // skip leadingBytes
+                } else if (
+                    operator == Operator.EqualTo && compValueLength > 32
+                ) {
+                    compValue = abi.encodePacked(keccak256(compValue));
+                    compValueLength = 32;
+                }
 
-            buffer[tailOffset++] = bytes1(uint8(length >> 8));
-            buffer[tailOffset++] = bytes1(uint8(length));
-
-            assembly {
-                let src := add(add(0x20, compValue), srcOffset)
-                let dst := add(add(0x20, buffer), tailOffset)
-                mcopy(dst, src, length)
+                /*
+                 * Writing at tail, so mstore's 30 zero bytes after the 2-byte
+                 * length are safe - they get overwritten by mcopy or are past
+                 * the buffer's used region.
+                 */
+                assembly {
+                    let ptr := add(add(buffer, 0x20), tailOffset)
+                    mstore(ptr, shl(240, compValueLength))
+                    mcopy(
+                        add(ptr, 2),
+                        add(add(compValue, 0x20), srcOffset),
+                        compValueLength
+                    )
+                }
+                tailOffset += 2 + compValueLength;
             }
-            tailOffset += length;
         }
     }
 
@@ -215,9 +229,10 @@ library ConditionPacker {
         ConditionFlat[] memory conditions,
         Topology[] memory topology
     ) private pure returns (uint256 layoutNodeCount, uint8 maxPluckIndex) {
-        for (uint256 i; i < conditions.length; ++i) {
+        uint256 length = conditions.length;
+        for (uint256 i; i < length; ++i) {
             if (topology[i].isInLayout) {
-                layoutNodeCount++;
+                ++layoutNodeCount;
             }
             if (conditions[i].operator == Operator.Pluck) {
                 uint8 pluckIndex = uint8(conditions[i].compValue[0]) + 1;
