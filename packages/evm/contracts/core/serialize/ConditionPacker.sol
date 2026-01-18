@@ -10,7 +10,7 @@ import "./Topology.sol";
  * │ HEADER (3 bytes)                                                    │
  * ├─────────────────────────────────────────────────────────────────────┤
  * │ • layoutOffset             16 bits (0-65535)                        │
- * │ • maxPluckIndex             8 bits (0-255)                          │
+ * │ • maxPluckCount             8 bits (0-255)                          │
  * └─────────────────────────────────────────────────────────────────────┘
  *
  * ┌─────────────────────────────────────────────────────────────────────┐
@@ -69,20 +69,22 @@ library ConditionPacker {
         ConditionFlat[] memory conditions,
         Topology[] memory topology
     ) internal pure returns (bytes memory buffer) {
-        (uint256 layoutNodeCount, uint8 maxPluckIndex) = _count(
+        (uint256 layoutNodeCount, uint256 maxPluckCount) = _count(
             conditions,
             topology
         );
+
         uint256 layoutOffset = 3 + _conditionPackedSize(conditions);
 
         buffer = new bytes(
             layoutOffset + 2 + layoutNodeCount * LAYOUT_NODE_BYTES
         );
 
-        // Header: layoutOffset (2 bytes) + maxPluckIndex (1 byte)
-        buffer[0] = bytes1(uint8(layoutOffset >> 8));
-        buffer[1] = bytes1(uint8(layoutOffset));
-        buffer[2] = bytes1(maxPluckIndex);
+        // Header: layoutOffset (2 bytes) + maxPluckCount (1 byte)
+        uint256 header = (layoutOffset << 8) | maxPluckCount;
+        assembly {
+            mstore(add(buffer, 0x20), shl(232, header))
+        }
 
         _packConditions(conditions, buffer, 3, topology);
         if (layoutNodeCount > 0) {
@@ -288,21 +290,21 @@ library ConditionPacker {
     // ═══════════════════════════════════════════════════════════════════════════
 
     /**
-     * @dev Computes layoutNodeCount and maxPluckIndex in a single pass.
+     * @dev Computes layoutNodeCount and maxPluckCount in a single pass.
      */
     function _count(
         ConditionFlat[] memory conditions,
         Topology[] memory topology
-    ) private pure returns (uint256 layoutNodeCount, uint8 maxPluckIndex) {
+    ) private pure returns (uint256 layoutNodeCount, uint256 maxPluckCount) {
         uint256 length = conditions.length;
         for (uint256 i; i < length; ++i) {
             if (topology[i].isInLayout) {
                 ++layoutNodeCount;
             }
             if (conditions[i].operator == Operator.Pluck) {
-                uint8 pluckIndex = uint8(conditions[i].compValue[0]) + 1;
-                if (pluckIndex > maxPluckIndex) {
-                    maxPluckIndex = pluckIndex;
+                uint8 pluckIndex = uint8(conditions[i].compValue[0]);
+                if (pluckIndex + 1 > maxPluckCount) {
+                    maxPluckCount = pluckIndex + 1;
                 }
             }
         }
