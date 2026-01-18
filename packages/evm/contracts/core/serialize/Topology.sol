@@ -144,30 +144,24 @@ library TopologyLib {
     }
 
     function _validateBFS(ConditionFlat[] memory conditions) private pure {
-        _validateRoot(conditions);
-
         uint256 length = conditions.length;
-        for (uint256 i = 1; i < length; ++i) {
-            // Parent must have lower index (no forward references)
-            if (conditions[i - 1].parent > conditions[i].parent) {
-                revert IRolesError.NotBFS();
-            }
-            // Parent cannot be itself or higher (except root at 0 which is handled separately)
-            if (conditions[i].parent >= i) {
-                revert IRolesError.NotBFS();
-            }
-        }
-    }
-
-    function _validateRoot(ConditionFlat[] memory conditions) private pure {
-        // Must be exactly one root node (parent == itself), and it must be at index 0
-        uint256 count;
-        uint256 length = conditions.length;
-        for (uint256 i = 0; i < length; ++i) {
-            if (conditions[i].parent == i) ++count;
-        }
-        if (count != 1 || conditions[0].parent != 0) {
+        if (length == 0 || conditions[0].parent != 0) {
             revert IRolesError.UnsuitableRootNode();
+        }
+
+        for (uint256 i = 1; i < length; ++i) {
+            uint256 parent = conditions[i].parent;
+            if (parent == i) {
+                revert IRolesError.UnsuitableRootNode();
+            }
+            // Parent must have lower index (no forward references)
+            if (parent < conditions[i - 1].parent) {
+                revert IRolesError.NotBFS();
+            }
+            // Parent cannot be higher than self
+            if (parent >= i) {
+                revert IRolesError.NotBFS();
+            }
         }
     }
 
