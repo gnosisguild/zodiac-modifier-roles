@@ -17,8 +17,10 @@ library ConditionTransform {
         ConditionFlat[] memory conditions,
         Topology[] memory topology
     ) internal pure {
-        uint256 count = conditions.length;
-        for (uint256 i; i < count; ++i) {
+        uint256 conditionCount = conditions.length;
+
+        for (uint256 i; i < conditionCount; ++i) {
+            ConditionFlat memory condition = conditions[i];
             /*
              * Patch EtherValue
              *
@@ -26,8 +28,8 @@ library ConditionTransform {
              * This enables downstream detection via payload.size == 0, when
              * retrieving input.
              */
-            if (conditions[i].paramType == Encoding.EtherValue) {
-                conditions[i].paramType = Encoding.None;
+            if (condition.paramType == Encoding.EtherValue) {
+                condition.paramType = Encoding.None;
             }
 
             /*
@@ -45,16 +47,16 @@ library ConditionTransform {
              * offset.
              */
             if (
-                conditions[i].operator == Operator.EqualTo &&
+                condition.operator == Operator.EqualTo &&
                 topology[i].isNotInline
             ) {
-                bytes memory compValue = conditions[i].compValue;
+                bytes memory compValue = condition.compValue;
                 uint256 length = compValue.length;
                 assembly {
                     compValue := add(compValue, 32)
                     mstore(compValue, sub(length, 32))
                 }
-                conditions[i].compValue = compValue;
+                condition.compValue = compValue;
             }
         }
     }
