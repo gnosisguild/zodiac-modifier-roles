@@ -50,12 +50,13 @@ describe("ConditionPacker and ConditionUnpacker", () => {
     it("binary tree", async () => {
       const { mock } = await loadFixture(setup);
 
+      // Use homogeneous children to satisfy type equivalence
       const input = flattenCondition({
         paramType: Encoding.None,
         operator: Operator.Or,
         children: [
           { paramType: Encoding.Static, operator: Operator.Pass },
-          { paramType: Encoding.Dynamic, operator: Operator.Pass },
+          { paramType: Encoding.Static, operator: Operator.Pass },
         ],
       });
 
@@ -196,12 +197,13 @@ describe("ConditionPacker and ConditionUnpacker", () => {
     it("Slice operator with compValue", async () => {
       const { mock } = await loadFixture(setup);
 
-      // Slice compValue format: offset (2 bytes) + length (2 bytes)
+      // Slice compValue format: offset (2 bytes) + size (1 byte, 1-32)
+      // Slice child must resolve to Static
       const input = flattenCondition({
         paramType: Encoding.Dynamic,
         operator: Operator.Slice,
-        compValue: "0x00040010", // offset=4, length=16
-        children: [{ paramType: Encoding.Dynamic, operator: Operator.Pass }],
+        compValue: "0x000410", // offset=4, size=16
+        children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
       });
 
       const [conditions] = await mock.roundtrip(input);
@@ -213,6 +215,7 @@ describe("ConditionPacker and ConditionUnpacker", () => {
     it("Pluck operator with compValue", async () => {
       const { mock } = await loadFixture(setup);
 
+      // Pluck is a leaf (Static encoding can't have children)
       const input = flattenCondition({
         paramType: Encoding.None,
         operator: Operator.And,
@@ -221,7 +224,6 @@ describe("ConditionPacker and ConditionUnpacker", () => {
             paramType: Encoding.Static,
             operator: Operator.Pluck,
             compValue: "0x00", // pluck index 0
-            children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
           },
           {
             paramType: Encoding.Static,
@@ -232,6 +234,36 @@ describe("ConditionPacker and ConditionUnpacker", () => {
         ],
       });
 
+      const [conditions] = await mock.roundtrip(input);
+      expect(conditionFieldsOnly(conditions)).to.deep.equal(
+        conditionFieldsOnly(input),
+      );
+    });
+
+    it("high compValueOffset (>255) uses both bytes", async () => {
+      const { mock } = await loadFixture(setup);
+
+      // Create many children with compValues to push tailOffset beyond 255
+      // Each node: 5 bytes, each compValue: 2 + 32 = 34 bytes
+      // We need enough nodes so that later compValueOffsets exceed 255
+      const children = [];
+      for (let i = 0; i < 10; i++) {
+        children.push({
+          paramType: Encoding.Static,
+          operator: Operator.EqualTo,
+          compValue: "0x" + i.toString(16).padStart(2, "0").padEnd(64, "0"), // 32-byte value
+        });
+      }
+
+      const input = flattenCondition({
+        paramType: Encoding.None,
+        operator: Operator.Or,
+        children,
+      });
+
+      // Verify: header(3) + condHeader(2) + 11*5(nodes) + compValues
+      // tailOffset starts at 5 + 55 = 60
+      // After 6 compValues: 60 + 6*(2+32) = 60 + 204 = 264 > 255
       const [conditions] = await mock.roundtrip(input);
       expect(conditionFieldsOnly(conditions)).to.deep.equal(
         conditionFieldsOnly(input),
@@ -465,6 +497,7 @@ describe("ConditionPacker and ConditionUnpacker", () => {
     it("returns 1 when highest Pluck index is 0", async () => {
       const { mock } = await loadFixture(setup);
 
+      // Pluck is a leaf (Static encoding can't have children)
       const input = flattenCondition({
         paramType: Encoding.None,
         operator: Operator.And,
@@ -473,7 +506,6 @@ describe("ConditionPacker and ConditionUnpacker", () => {
             paramType: Encoding.Static,
             operator: Operator.Pluck,
             compValue: "0x00", // pluck index 0
-            children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
           },
           { paramType: Encoding.Static, operator: Operator.Pass },
         ],
@@ -487,6 +519,7 @@ describe("ConditionPacker and ConditionUnpacker", () => {
     it("returns count for highest index with multiple Pluck operators", async () => {
       const { mock } = await loadFixture(setup);
 
+      // Pluck is a leaf (Static encoding can't have children)
       const input = flattenCondition({
         paramType: Encoding.None,
         operator: Operator.And,
@@ -495,19 +528,16 @@ describe("ConditionPacker and ConditionUnpacker", () => {
             paramType: Encoding.Static,
             operator: Operator.Pluck,
             compValue: "0x00", // pluck index 0
-            children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
           },
           {
             paramType: Encoding.Static,
             operator: Operator.Pluck,
             compValue: "0x05", // pluck index 5
-            children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
           },
           {
             paramType: Encoding.Static,
             operator: Operator.Pluck,
             compValue: "0x02", // pluck index 2
-            children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
           },
         ],
       });

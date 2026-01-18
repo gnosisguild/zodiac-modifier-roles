@@ -10,7 +10,7 @@ import "./Topology.sol";
  * │ HEADER (3 bytes)                                                    │
  * ├─────────────────────────────────────────────────────────────────────┤
  * │ • layoutOffset             16 bits (0-65535)                        │
- * │ • maxPluckIndex             8 bits (0-255)                          │
+ * │ • maxPluckCount             8 bits (0-255)                          │
  * └─────────────────────────────────────────────────────────────────────┘
  *
  * ┌─────────────────────────────────────────────────────────────────────┐
@@ -67,19 +67,35 @@ library ConditionPacker {
 
     function pack(
         ConditionFlat[] memory conditions,
-        Layout memory layout
+        Topology[] memory topology
     ) internal pure returns (bytes memory buffer) {
+        (uint256 layoutNodeCount, uint256 maxPluckCount) = _count(
+            conditions,
+            topology
+        );
+
         uint256 layoutOffset = 3 + _conditionPackedSize(conditions);
 
-        buffer = new bytes(layoutOffset + _layoutPackedSize(layout));
+        buffer = new bytes(
+            layoutOffset + 2 + layoutNodeCount * LAYOUT_NODE_BYTES
+        );
 
-        _packConditions(conditions, buffer, 3);
-        _packLayout(layout, buffer, layoutOffset);
+        // Header: layoutOffset (2 bytes) + maxPluckCount (1 byte)
+        uint256 header = (layoutOffset << 8) | maxPluckCount;
+        assembly {
+            mstore(add(buffer, 0x20), shl(232, header))
+        }
 
-        // Header: layoutOffset (2 bytes) + maxPluckIndex (1 byte)
-        buffer[0] = bytes1(uint8(layoutOffset >> 8));
-        buffer[1] = bytes1(uint8(layoutOffset));
-        buffer[2] = bytes1(_pluckValuesMaxCount(conditions));
+        _packConditions(conditions, buffer, 3, topology);
+        if (layoutNodeCount > 0) {
+            _packLayout(
+                conditions,
+                topology,
+                buffer,
+                layoutOffset,
+                layoutNodeCount
+            );
+        }
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -96,20 +112,25 @@ library ConditionPacker {
 
         // Add space for compValues
         for (uint256 i; i < count; ++i) {
-            if (!_hasCompValue(conditions[i])) continue;
+            ConditionFlat memory condition = conditions[i];
+
+            bool hasCompValue = condition.compValue.length >
+                (condition.paramType == Encoding.AbiEncoded ? 2 : 0);
+
+            if (!hasCompValue) continue;
 
             // 2 bytes for length field
             result += 2;
 
-            if (conditions[i].paramType == Encoding.AbiEncoded) {
-                result += conditions[i].compValue.length - 2; // skip leadingBytes
+            if (condition.paramType == Encoding.AbiEncoded) {
+                result += condition.compValue.length - 2; // skip leadingBytes
             } else if (
-                conditions[i].operator == Operator.EqualTo &&
-                conditions[i].compValue.length > 32
+                condition.operator == Operator.EqualTo &&
+                condition.compValue.length > 32
             ) {
                 result += 32; // store keccak256 hash
             } else {
-                result += conditions[i].compValue.length;
+                result += condition.compValue.length;
             }
         }
     }
@@ -117,97 +138,85 @@ library ConditionPacker {
     function _packConditions(
         ConditionFlat[] memory conditions,
         bytes memory buffer,
-        uint256 offset
+        uint256 offset,
+        Topology[] memory topology
     ) private pure {
         offset += _packUInt16(conditions.length, buffer, offset);
 
         uint256 tailOffset = offset +
             (conditions.length * CONDITION_NODE_BYTES);
 
-        for (uint256 i; i < conditions.length; ++i) {
-            (, uint256 childCount, uint256 sChildCount) = Topology.childBounds(
-                conditions,
-                i
-            );
-
+        uint256 length = conditions.length;
+        for (uint256 i; i < length; ++i) {
             ConditionFlat memory condition = conditions[i];
-            bool hasCompValue = _hasCompValue(condition);
+            Operator operator = condition.operator;
+
+            uint256 childCount = topology[i].childCount;
+            uint256 sChildCount = topology[i].sChildCount;
+
+            bool hasCompValue = condition.compValue.length >
+                (condition.paramType == Encoding.AbiEncoded ? 2 : 0);
 
             // Pack Node
             {
-                // byte 1: operator (5 bits) shifted left, 3 trailing unused bits
-                buffer[offset++] = bytes1(uint8(conditions[i].operator) << 3);
-                // byte 2
-                buffer[offset++] = bytes1(uint8(childCount));
-                // byte 3
-                buffer[offset++] = bytes1(uint8(sChildCount));
+                /*
+                 * Condition Node (5 bytes, 40 bits):
+                 * ┌──────────┬────────┬────────────┬─────────────┬─────────────────┐
+                 * │ operator │ unused │ childCount │ sChildCount │ compValueOffset │
+                 * │  5 bits  │ 3 bits │   8 bits   │   8 bits    │    16 bits      │
+                 * └──────────┴────────┴────────────┴─────────────┴─────────────────┘
+                 *
+                 */
+                uint256 packed = (uint256(operator) << 35) |
+                    (childCount << 24) |
+                    (sChildCount << 16) |
+                    (hasCompValue ? tailOffset : 0);
 
-                // bytes 4-5: compValueOffset (0 if no compValue)
-                buffer[offset++] = hasCompValue
-                    ? bytes1(uint8(tailOffset >> 8))
-                    : bytes1(0);
-                buffer[offset++] = hasCompValue
-                    ? bytes1(uint8(tailOffset))
-                    : bytes1(0);
-
-                // todo encode a test with a high number of compValues, make sure both bytes on the tailOffset are considered
+                /*
+                 * The or with mload preserves bytes 5-31 (compValues written in
+                 * previous iterations) while writing our 5 bytes at positions 0-4.
+                 */
+                assembly {
+                    let ptr := add(add(buffer, 0x20), offset)
+                    mstore(ptr, or(mload(ptr), shl(216, packed)))
+                }
+                offset += 5;
             }
 
             if (!hasCompValue) continue;
 
-            // Pack CompValue - three cases:
-            // 1. AbiEncoded match bytes: store N bytes (skip first 2 bytes of compValue)
-            // 2. EqualTo with >32 bytes: store keccak256 hash (32 bytes)
-            // 3. Other comparisons: store compValue as-is
-            bytes memory compValue = condition.compValue;
-            uint256 length;
-            uint256 srcOffset;
-            if (condition.paramType == Encoding.AbiEncoded) {
-                length = compValue.length - 2;
-                srcOffset = 2; // skip leadingBytes
-            } else if (
-                condition.operator == Operator.EqualTo && compValue.length > 32
-            ) {
-                compValue = abi.encodePacked(keccak256(compValue));
-                length = 32;
-                srcOffset = 0;
-            } else {
-                length = compValue.length;
-                srcOffset = 0;
-            }
+            // Pack CompValue:
+            // 1. AbiEncoded: skip first 2 bytes
+            // 2. EqualTo: hash greater than 32 bytes
+            {
+                bytes memory compValue = condition.compValue;
+                uint256 compValueLength = compValue.length;
+                uint256 srcOffset;
+                if (condition.paramType == Encoding.AbiEncoded) {
+                    compValueLength -= 2;
+                    srcOffset = 2; // skip leadingBytes
+                } else if (
+                    operator == Operator.EqualTo && compValueLength > 32
+                ) {
+                    compValue = abi.encodePacked(keccak256(compValue));
+                    compValueLength = 32;
+                }
 
-            buffer[tailOffset++] = bytes1(uint8(length >> 8));
-            buffer[tailOffset++] = bytes1(uint8(length));
-
-            assembly {
-                let src := add(add(0x20, compValue), srcOffset)
-                let dst := add(add(0x20, buffer), tailOffset)
-                mcopy(dst, src, length)
-            }
-            tailOffset += length;
-        }
-    }
-
-    function _hasCompValue(
-        ConditionFlat memory condition
-    ) private pure returns (bool) {
-        return
-            condition.operator >= Operator.EqualTo ||
-            condition.operator == Operator.Slice ||
-            condition.operator == Operator.Pluck ||
-            (condition.paramType == Encoding.AbiEncoded &&
-                condition.compValue.length > 2);
-    }
-
-    function _pluckValuesMaxCount(
-        ConditionFlat[] memory conditions
-    ) private pure returns (uint8 result) {
-        for (uint256 i = 0; i < conditions.length; ++i) {
-            if (conditions[i].operator != Operator.Pluck) continue;
-
-            uint8 count = uint8(conditions[i].compValue[0]) + 1;
-            if (count > result) {
-                result = count;
+                /*
+                 * Writing at tail, so mstore's 30 zero bytes after the 2-byte
+                 * length are safe - they get overwritten by mcopy or are past
+                 * the buffer's used region.
+                 */
+                assembly {
+                    let ptr := add(add(buffer, 0x20), tailOffset)
+                    mstore(ptr, shl(240, compValueLength))
+                    mcopy(
+                        add(ptr, 2),
+                        add(add(compValue, 0x20), srcOffset),
+                        compValueLength
+                    )
+                }
+                tailOffset += 2 + compValueLength;
             }
         }
     }
@@ -216,100 +225,90 @@ library ConditionPacker {
     // Layout Packing
     // ═══════════════════════════════════════════════════════════════════════════
 
-    function _layoutPackedSize(
-        Layout memory node
-    ) private pure returns (uint256 result) {
-        // Header (2 bytes) + all nodes (3 bytes each)
-        result = 2 + _countNodes(node) * LAYOUT_NODE_BYTES;
-    }
-
+    /**
+     * @dev Packs layout nodes. Nodes are already in BFS order, so we emit
+     *      those with isInLayout=true. Variant logical nodes use Dynamic
+     *      encoding; non-variant arrays use a single child as template.
+     */
     function _packLayout(
-        Layout memory tree,
+        ConditionFlat[] memory conditions,
+        Topology[] memory topology,
         bytes memory buffer,
-        uint256 offset
-    ) private pure returns (uint256) {
-        LayoutNodeFlat[] memory nodes = _flattenLayout(tree);
+        uint256 offset,
+        uint256 nodeCount
+    ) private pure {
+        offset += _packUInt16(nodeCount, buffer, offset);
 
-        offset += _packUInt16(nodes.length, buffer, offset);
+        uint256 length = conditions.length;
+        for (uint256 i; i < length; ++i) {
+            Topology memory t = topology[i];
 
-        // Pack all nodes (3 bytes each)
-        for (uint256 i; i < nodes.length; ++i) {
-            uint24 packed = (uint24(nodes[i].encoding) << 21) |
-                (nodes[i].inlined ? uint24(1 << 20) : uint24(0)) |
-                (uint24(nodes[i].childCount) << 12) |
-                uint24(nodes[i].leadingBytes);
+            if (!t.isInLayout) continue;
 
-            buffer[offset++] = bytes1(uint8(packed >> 16));
-            buffer[offset++] = bytes1(uint8(packed >> 8));
-            buffer[offset++] = bytes1(uint8(packed));
-        }
+            ConditionFlat memory condition = conditions[i];
 
-        return 2 + nodes.length * LAYOUT_NODE_BYTES;
-    }
+            // a logic here means variant container
+            Encoding encoding = (condition.operator == Operator.And ||
+                condition.operator == Operator.Or)
+                ? Encoding.Dynamic
+                : condition.paramType;
 
-    function _flattenLayout(
-        Layout memory root
-    ) internal pure returns (LayoutNodeFlat[] memory) {
-        uint256 total = _countNodes(root);
-        LayoutNodeFlat[] memory result = new LayoutNodeFlat[](total);
+            uint256 leadingBytes = encoding == Encoding.AbiEncoded
+                ? (
+                    condition.compValue.length == 0
+                        ? 4
+                        : uint16(bytes2(condition.compValue))
+                )
+                : 0;
 
-        Layout[] memory queue = new Layout[](total);
-        uint256[] memory parents = new uint256[](total);
+            uint256 childCount = encoding == Encoding.Array && !t.isVariant
+                ? 1
+                : t.sChildCount;
 
-        queue[0] = root;
-        parents[0] = 0;
+            /*
+             * Layout Node (3 bytes, 24 bits):
+             * ┌──────────┬────────┬────────────┬──────────────┐
+             * │ encoding │ inline │ childCount │ leadingBytes │
+             * │  3 bits  │ 1 bit  │   8 bits   │   12 bits    │
+             * └──────────┴────────┴────────────┴──────────────┘
+             */
+            uint256 packed = (uint256(encoding) << 21) |
+                (t.isNotInline ? 0 : (1 << 20)) |
+                (childCount << 12) |
+                leadingBytes;
 
-        uint256 head = 0;
-        uint256 tail = 1;
-        uint256 current = 0;
-
-        while (head < tail) {
-            Layout memory node = queue[head];
-            uint256 parent = parents[head];
-            head++;
-
-            // Record this node
-            result[current] = LayoutNodeFlat({
-                encoding: node.encoding,
-                parent: parent,
-                childCount: node.children.length,
-                leadingBytes: uint16(node.leadingBytes),
-                inlined: node.inlined
-            });
-
-            // Enqueue children
-            for (uint256 i = 0; i < node.children.length; ++i) {
-                queue[tail] = node.children[i];
-                parents[tail] = current;
-                tail++;
+            assembly {
+                let ptr := add(add(buffer, 0x20), offset)
+                mstore(ptr, shl(232, packed))
             }
-
-            current++;
-        }
-
-        return result;
-    }
-
-    function _countNodes(
-        Layout memory node
-    ) internal pure returns (uint256 count) {
-        count = 1;
-        for (uint256 i = 0; i < node.children.length; ++i) {
-            count += _countNodes(node.children[i]);
+            offset += 3;
         }
     }
 
-    struct LayoutNodeFlat {
-        uint256 parent;
-        Encoding encoding;
-        uint256 childCount;
-        uint16 leadingBytes;
-        bool inlined;
-    }
+    // ═══════════════════════════════════════════════════════════════════════════
+    // Helpers
+    // ═══════════════════════════════════════════════════════════════════════════
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // Buffer Helpers
-    // ═══════════════════════════════════════════════════════════════════════════
+    /**
+     * @dev Computes layoutNodeCount and maxPluckCount in a single pass.
+     */
+    function _count(
+        ConditionFlat[] memory conditions,
+        Topology[] memory topology
+    ) private pure returns (uint256 layoutNodeCount, uint256 maxPluckCount) {
+        uint256 length = conditions.length;
+        for (uint256 i; i < length; ++i) {
+            if (topology[i].isInLayout) {
+                ++layoutNodeCount;
+            }
+            if (conditions[i].operator == Operator.Pluck) {
+                uint8 pluckIndex = uint8(conditions[i].compValue[0]);
+                if (pluckIndex + 1 > maxPluckCount) {
+                    maxPluckCount = pluckIndex + 1;
+                }
+            }
+        }
+    }
 
     function _packUInt16(
         uint256 value,

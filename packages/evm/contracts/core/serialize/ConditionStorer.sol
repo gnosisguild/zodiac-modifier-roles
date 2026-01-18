@@ -7,7 +7,6 @@ import "./ConditionPacker.sol";
 import "./ConditionTransform.sol";
 import "./Integrity.sol";
 import "./Topology.sol";
-import "./TypeTree.sol";
 
 import "../../types/Types.sol";
 
@@ -30,16 +29,11 @@ library ConditionStorer {
         ConditionFlat[] memory conditions,
         ExecutionOptions options
     ) external returns (uint256 scopeConfig) {
-        Integrity.enforce(conditions);
+        Topology[] memory topology = TopologyLib.resolve(conditions);
+        Integrity.enforce(conditions, topology);
+        ConditionTransform.transform(conditions, topology);
 
-        ConditionTransform.transform(conditions);
-
-        Layout memory layout;
-        if (Topology.isStructural(conditions, 0)) {
-            layout = TypeTree.inspect(conditions, 0);
-        }
-
-        bytes memory buffer = ConditionPacker.pack(conditions, layout);
+        bytes memory buffer = ConditionPacker.pack(conditions, topology);
         address pointer = ImmutableStorage.store(buffer);
 
         return (uint256(options) << 160) | uint160(pointer);

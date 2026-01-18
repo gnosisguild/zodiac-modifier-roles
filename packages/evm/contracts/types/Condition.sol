@@ -29,7 +29,7 @@ struct Condition {
 // used for ABI encoding a scope config tree
 // (ABI does not support recursive types)
 struct ConditionFlat {
-    uint8 parent;
+    uint16 parent;
     Encoding paramType;
     Operator operator;
     bytes compValue;
