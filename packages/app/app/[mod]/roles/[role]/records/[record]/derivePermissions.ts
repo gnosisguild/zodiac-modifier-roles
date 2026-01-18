@@ -48,11 +48,16 @@ export async function derivePermissionsFromRecord(
       throw new Error(`Unable to decode function data for call ${call.id}`)
     }
 
+    // If some call to this target function is a send or delegatecall, we must allow it for all derived permissions.
+    // (Otherwise it would yield errors when merging the variants.)
+    const send = calls.some(c => c.to === call.to && c.data.slice(0, 10) === selector && BigInt(c.value || 0) > 0n)
+    const delegatecall = calls.some(c => c.to === call.to && c.data.slice(0, 10) === selector && c.operation === Operation.DelegateCall)
+
     const wildcardsObj = record.wildcards[call.to + ":" + selector] || {}
     const wildcards = Object.entries(wildcardsObj)
       .filter(([, active]) => !!active)
       .map(([paramPath]) => paramPath)
-    return derivePermissionFromCall({ call, abi: functionAbi, wildcards })
+    return derivePermissionFromCall({ call, abi: functionAbi, wildcards, send, delegatecall })
   })
 }
 
@@ -60,10 +65,14 @@ export const derivePermissionFromCall = ({
   call,
   abi,
   wildcards,
+  send,
+  delegatecall
 }: {
   call: Call
   abi: AbiFunction
   wildcards: string[]
+  send: boolean
+  delegatecall: boolean
 }): FunctionPermissionCoerced => {
   const selector = call.data.slice(0, 10) as `0x${string}`
   // viem returns args as undefined for functions without args even though the types indicate something else 😤
@@ -75,8 +84,8 @@ export const derivePermissionFromCall = ({
   return {
     targetAddress: call.to,
     selector,
-    delegatecall: call.operation === Operation.DelegateCall,
-    send: BigInt(call.value || "0") > 0,
+    delegatecall,
+    send,
     condition: condition && condition(ParamType.from("bytes")),
   }
 }
