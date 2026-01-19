@@ -1896,16 +1896,15 @@ describe("Operator - WithinAllowance", async () => {
         const allowanceKey = hexlify(randomBytes(32));
 
         for (const encoding of [Encoding.Static, Encoding.EtherValue]) {
-          await expect(
-            packConditions(roles, [
-              {
-                parent: 0,
-                paramType: encoding,
-                operator: Operator.WithinAllowance,
-                compValue: allowanceKey,
-              },
-            ]),
-          ).to.not.be.reverted;
+          //Should succeed without reverting
+          await roles.packConditions([
+            {
+              parent: 0,
+              paramType: encoding,
+              operator: Operator.WithinAllowance,
+              compValue: allowanceKey,
+            },
+          ]);
         }
       });
     });
@@ -1995,16 +1994,15 @@ describe("Operator - WithinAllowance", async () => {
           [allowanceKey, 27, 27], // both at max allowed
         );
 
-        await expect(
-          packConditions(roles, [
-            {
-              parent: 0,
-              paramType: Encoding.Static,
-              operator: Operator.WithinAllowance,
-              compValue,
-            },
-          ]),
-        ).to.not.be.reverted;
+        // Should succeed without reverting
+        await roles.packConditions([
+          {
+            parent: 0,
+            paramType: Encoding.Static,
+            operator: Operator.WithinAllowance,
+            compValue,
+          },
+        ]);
       });
     });
 

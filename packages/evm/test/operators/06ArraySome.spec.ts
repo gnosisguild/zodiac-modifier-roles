@@ -409,27 +409,25 @@ describe("Operator - ArraySome", () => {
 
         const allowanceKey = hexlify(randomBytes(32));
 
-        // Valid: ArraySome with one structural child
-        await expect(
-          packConditions(roles, [
-            {
-              parent: 0,
-              paramType: Encoding.Array,
-              operator: Operator.ArraySome,
-              compValue: "0x",
-            },
-            {
-              parent: 0,
-              paramType: Encoding.Static,
-              operator: Operator.Pass,
-              compValue: "0x",
-            },
-          ]),
-        ).to.not.be.reverted;
+        // Valid: ArraySome with one structural child - should succeed
+        await roles.packConditions([
+          {
+            parent: 0,
+            paramType: Encoding.Array,
+            operator: Operator.ArraySome,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: Encoding.Static,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+        ]);
 
         // Invalid: Adding a non-structural child should fail
         await expect(
-          packConditions(roles, [
+          roles.packConditions([
             {
               parent: 0,
               paramType: Encoding.Array,

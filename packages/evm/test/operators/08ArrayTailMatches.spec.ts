@@ -463,27 +463,25 @@ describe("Operator - ArrayTailMatches", () => {
 
         const allowanceKey = hexlify(randomBytes(32));
 
-        // Valid: ArrayTailMatches with one structural child
-        await expect(
-          packConditions(roles, [
-            {
-              parent: 0,
-              paramType: Encoding.Array,
-              operator: Operator.ArrayTailMatches,
-              compValue: "0x",
-            },
-            {
-              parent: 0,
-              paramType: Encoding.Static,
-              operator: Operator.Pass,
-              compValue: "0x",
-            },
-          ]),
-        ).to.not.be.reverted;
+        // Valid: ArrayTailMatches with one structural child - should succeed
+        await roles.packConditions([
+          {
+            parent: 0,
+            paramType: Encoding.Array,
+            operator: Operator.ArrayTailMatches,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: Encoding.Static,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+        ]);
 
         // Invalid: Adding a non-structural child should fail
         await expect(
-          packConditions(roles, [
+          roles.packConditions([
             {
               parent: 0,
               paramType: Encoding.Array,

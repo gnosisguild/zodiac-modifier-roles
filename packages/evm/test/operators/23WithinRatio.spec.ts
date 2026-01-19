@@ -2049,34 +2049,33 @@ describe("integrity", () => {
         [0, 0, 1, 0, 9000, 11000],
       );
 
-      await expect(
-        packConditions(roles, [
-          {
-            parent: 0,
-            paramType: Encoding.AbiEncoded,
-            operator: Operator.Matches,
-            compValue: "0x",
-          },
-          {
-            parent: 0,
-            paramType: Encoding.Static,
-            operator: Operator.Pluck,
-            compValue: "0x00",
-          },
-          {
-            parent: 0,
-            paramType: Encoding.Static,
-            operator: Operator.Pluck,
-            compValue: "0x01",
-          },
-          {
-            parent: 0,
-            paramType: Encoding.None,
-            operator: Operator.WithinRatio,
-            compValue: compValue12,
-          },
-        ]),
-      ).to.not.be.reverted;
+      // Should succeed without reverting
+      await roles.packConditions([
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.Pluck,
+          compValue: "0x00",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.Pluck,
+          compValue: "0x01",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.None,
+          operator: Operator.WithinRatio,
+          compValue: compValue12,
+        },
+      ]);
     });
 
     it("accepts 32-byte compValue (one adapter)", async () => {
@@ -2088,34 +2087,33 @@ describe("integrity", () => {
         [0, 0, 1, 0, 9000, 11000, ZeroAddress],
       );
 
-      await expect(
-        packConditions(roles, [
-          {
-            parent: 0,
-            paramType: Encoding.AbiEncoded,
-            operator: Operator.Matches,
-            compValue: "0x",
-          },
-          {
-            parent: 0,
-            paramType: Encoding.Static,
-            operator: Operator.Pluck,
-            compValue: "0x00",
-          },
-          {
-            parent: 0,
-            paramType: Encoding.Static,
-            operator: Operator.Pluck,
-            compValue: "0x01",
-          },
-          {
-            parent: 0,
-            paramType: Encoding.None,
-            operator: Operator.WithinRatio,
-            compValue: compValue32,
-          },
-        ]),
-      ).to.not.be.reverted;
+      // Should succeed without reverting
+      await roles.packConditions([
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.Pluck,
+          compValue: "0x00",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.Pluck,
+          compValue: "0x01",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.None,
+          operator: Operator.WithinRatio,
+          compValue: compValue32,
+        },
+      ]);
     });
 
     it("accepts 52-byte compValue (two adapters)", async () => {
@@ -2136,34 +2134,33 @@ describe("integrity", () => {
         [0, 0, 1, 0, 9000, 11000, ZeroAddress, ZeroAddress],
       );
 
-      await expect(
-        packConditions(roles, [
-          {
-            parent: 0,
-            paramType: Encoding.AbiEncoded,
-            operator: Operator.Matches,
-            compValue: "0x",
-          },
-          {
-            parent: 0,
-            paramType: Encoding.Static,
-            operator: Operator.Pluck,
-            compValue: "0x00",
-          },
-          {
-            parent: 0,
-            paramType: Encoding.Static,
-            operator: Operator.Pluck,
-            compValue: "0x01",
-          },
-          {
-            parent: 0,
-            paramType: Encoding.None,
-            operator: Operator.WithinRatio,
-            compValue: compValue52,
-          },
-        ]),
-      ).to.not.be.reverted;
+      // Should succeed without reverting
+      await roles.packConditions([
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.Pluck,
+          compValue: "0x00",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.Pluck,
+          compValue: "0x01",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.None,
+          operator: Operator.WithinRatio,
+          compValue: compValue52,
+        },
+      ]);
     });
 
     it("reverts UnsuitableCompValue when compValue is less than 12 bytes", async () => {

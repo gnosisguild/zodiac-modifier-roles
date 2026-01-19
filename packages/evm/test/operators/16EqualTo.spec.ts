@@ -3425,6 +3425,12 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
+        );
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
+          packed,
           ExecutionOptions.Both,
         );
 
