@@ -147,12 +147,12 @@ abstract contract Setup is RolesStorage {
     /// @dev Allows transactions to a target address, optionally with conditions.
     /// @param roleKey identifier of the role to be modified.
     /// @param targetAddress Destination address of transaction.
-    /// @param conditions The conditions to enforce on all calls (empty for pass-through).
+    /// @param conditions Pre-packed condition buffer (use packConditions() or empty bytes for pass-through).
     /// @param options designates if a transaction can send ether and/or delegatecall to target.
     function allowTarget(
         bytes32 roleKey,
         address targetAddress,
-        ConditionFlat[] memory conditions,
+        bytes memory conditions,
         ExecutionOptions options
     ) external onlyOwner {
         bytes32 key = bytes32(bytes20(targetAddress)) | (~bytes32(0) >> 160);
@@ -196,13 +196,13 @@ abstract contract Setup is RolesStorage {
     /// @param roleKey identifier of the role to be modified.
     /// @param targetAddress Destination address of transaction.
     /// @param selector 4 byte function selector.
-    /// @param conditions The conditions to enforce (empty for pass-through).
+    /// @param conditions Pre-packed condition buffer (use packConditions() or empty bytes for pass-through).
     /// @param options designates if a transaction can send ether and/or delegatecall to target.
     function allowFunction(
         bytes32 roleKey,
         address targetAddress,
         bytes4 selector,
-        ConditionFlat[] memory conditions,
+        bytes memory conditions,
         ExecutionOptions options
     ) external onlyOwner {
         bytes32 key = _key(targetAddress, selector);
@@ -305,14 +305,33 @@ abstract contract Setup is RolesStorage {
     }
 
     /*//////////////////////////////////////////////////////////////
+                               HELPERS
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev Packs conditions into a buffer for allowTarget/allowFunction.
+    /// @param conditions The conditions to pack.
+    /// @return buffer The packed condition buffer.
+    function packConditions(
+        ConditionFlat[] memory conditions
+    ) public pure returns (bytes memory) {
+        if (conditions.length == 0) {
+            return ConditionStorer.pack(new ConditionFlat[](1));
+        }
+        return ConditionStorer.pack(conditions);
+    }
+
+    /*//////////////////////////////////////////////////////////////
                                INTERNALS
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev If conditions is empty, stores a single zero-initialized
-    ///      ConditionFlat which evaluates as Operator.Pass
+    /// @dev If buffer is empty, returns packed single Pass condition;
+    ///      otherwise returns the buffer unchanged.
     function _conditionsOrPass(
-        ConditionFlat[] memory conditions
-    ) private pure returns (ConditionFlat[] memory) {
-        return conditions.length > 0 ? conditions : new ConditionFlat[](1);
+        bytes memory buffer
+    ) private pure returns (bytes memory) {
+        if (buffer.length == 0) {
+            return ConditionStorer.pack(new ConditionFlat[](1));
+        }
+        return buffer;
     }
 }

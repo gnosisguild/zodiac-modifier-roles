@@ -58,7 +58,12 @@ describe("Reentrancy", () => {
     await roles.enableModule(checkerAddress);
     await roles.grantRole(checkerAddress, roleKey, 0, 0, 0);
 
-    await roles.allowTarget(roleKey, checkerAddress, [], ExecutionOptions.None);
+    await roles.allowTarget(
+      roleKey,
+      checkerAddress,
+      "0x",
+      ExecutionOptions.None,
+    );
 
     await roles
       .connect(invoker)

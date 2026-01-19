@@ -10,6 +10,7 @@ import {
   Operator,
   ConditionViolationStatus,
   encodeMultisendPayload,
+  packConditions,
 } from "./utils";
 import { deployRolesMod } from "./setup";
 
@@ -311,26 +312,29 @@ describe("AllowanceTracking", () => {
           .setAllowance(ALLOWANCE_KEY, 1000, 0, 0, 0, 0);
 
         const selector = iface.getFunction("oneParamStatic")!.selector;
-        await roles.connect(owner).allowFunction(
-          ROLE_KEY,
-          testContractAddress,
-          selector,
-          [
-            {
-              parent: 0,
-              paramType: Encoding.AbiEncoded,
-              operator: Operator.Matches,
-              compValue: "0x",
-            },
-            {
-              parent: 0,
-              paramType: Encoding.Static,
-              operator: Operator.WithinAllowance,
-              compValue: ALLOWANCE_KEY,
-            },
-          ],
-          ExecutionOptions.None,
-        );
+        const packed = await packConditions(roles, [
+          {
+            parent: 0,
+            paramType: Encoding.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: Encoding.Static,
+            operator: Operator.WithinAllowance,
+            compValue: ALLOWANCE_KEY,
+          },
+        ]);
+        await roles
+          .connect(owner)
+          .allowFunction(
+            ROLE_KEY,
+            testContractAddress,
+            selector,
+            packed,
+            ExecutionOptions.None,
+          );
 
         const calldata = iface.encodeFunctionData("oneParamStatic", [100]);
 
@@ -544,54 +548,60 @@ describe("AllowanceTracking", () => {
       await roles.connect(owner).setAllowance(ALLOWANCE_KEY, 200, 0, 0, 0, 0);
 
       const selector1 = iface.getFunction("oneParamStatic")!.selector;
-      await roles.connect(owner).allowFunction(
-        ROLE_KEY,
-        testContractAddress,
-        selector1,
-        [
-          {
-            parent: 0,
-            paramType: Encoding.AbiEncoded,
-            operator: Operator.Matches,
-            compValue: "0x",
-          },
-          {
-            parent: 0,
-            paramType: Encoding.Static,
-            operator: Operator.WithinAllowance,
-            compValue: ALLOWANCE_KEY,
-          },
-        ],
-        ExecutionOptions.None,
-      );
+      const packed1 = await packConditions(roles, [
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: ALLOWANCE_KEY,
+        },
+      ]);
+      await roles
+        .connect(owner)
+        .allowFunction(
+          ROLE_KEY,
+          testContractAddress,
+          selector1,
+          packed1,
+          ExecutionOptions.None,
+        );
 
       const selector2 = iface.getFunction("twoParamsStatic")!.selector;
-      await roles.connect(owner).allowFunction(
-        ROLE_KEY,
-        testContractAddress,
-        selector2,
-        [
-          {
-            parent: 0,
-            paramType: Encoding.AbiEncoded,
-            operator: Operator.Matches,
-            compValue: "0x",
-          },
-          {
-            parent: 0,
-            paramType: Encoding.Static,
-            operator: Operator.WithinAllowance,
-            compValue: ALLOWANCE_KEY,
-          },
-          {
-            parent: 0,
-            paramType: Encoding.Static,
-            operator: Operator.Pass,
-            compValue: "0x",
-          },
-        ],
-        ExecutionOptions.None,
-      );
+      const packed2 = await packConditions(roles, [
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: ALLOWANCE_KEY,
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.Pass,
+          compValue: "0x",
+        },
+      ]);
+      await roles
+        .connect(owner)
+        .allowFunction(
+          ROLE_KEY,
+          testContractAddress,
+          selector2,
+          packed2,
+          ExecutionOptions.None,
+        );
 
       const multisendCalldata = (
         await multisend.multiSend.populateTransaction(
@@ -641,26 +651,29 @@ describe("AllowanceTracking", () => {
       await roles.connect(owner).setAllowance(ALLOWANCE_KEY, 75, 0, 0, 0, 0);
 
       const selector = iface.getFunction("oneParamStatic")!.selector;
-      await roles.connect(owner).allowFunction(
-        ROLE_KEY,
-        testContractAddress,
-        selector,
-        [
-          {
-            parent: 0,
-            paramType: Encoding.AbiEncoded,
-            operator: Operator.Matches,
-            compValue: "0x",
-          },
-          {
-            parent: 0,
-            paramType: Encoding.Static,
-            operator: Operator.WithinAllowance,
-            compValue: ALLOWANCE_KEY,
-          },
-        ],
-        ExecutionOptions.None,
-      );
+      const packed = await packConditions(roles, [
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: ALLOWANCE_KEY,
+        },
+      ]);
+      await roles
+        .connect(owner)
+        .allowFunction(
+          ROLE_KEY,
+          testContractAddress,
+          selector,
+          packed,
+          ExecutionOptions.None,
+        );
 
       // 40 + 40 = 80 > 75, should fail
       const multisendCalldata = (
@@ -715,26 +728,29 @@ describe("AllowanceTracking", () => {
       await roles.connect(owner).setAllowance(ALLOWANCE_KEY, 200, 0, 0, 0, 0);
 
       const selector = iface.getFunction("oneParamStatic")!.selector;
-      await roles.connect(owner).allowFunction(
-        ROLE_KEY,
-        testContractAddress,
-        selector,
-        [
-          {
-            parent: 0,
-            paramType: Encoding.AbiEncoded,
-            operator: Operator.Matches,
-            compValue: "0x",
-          },
-          {
-            parent: 0,
-            paramType: Encoding.Static,
-            operator: Operator.WithinAllowance,
-            compValue: ALLOWANCE_KEY,
-          },
-        ],
-        ExecutionOptions.None,
-      );
+      const packed = await packConditions(roles, [
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: ALLOWANCE_KEY,
+        },
+      ]);
+      await roles
+        .connect(owner)
+        .allowFunction(
+          ROLE_KEY,
+          testContractAddress,
+          selector,
+          packed,
+          ExecutionOptions.None,
+        );
 
       const multisendCalldata = (
         await multisend.multiSend.populateTransaction(
@@ -788,26 +804,29 @@ describe("AllowanceTracking", () => {
           .setAllowance(ALLOWANCE_KEY, 1000, 0, 0, 0, 0);
 
         const selector = iface.getFunction("oneParamStatic")!.selector;
-        await roles.connect(owner).allowFunction(
-          ROLE_KEY,
-          testContractAddress,
-          selector,
-          [
-            {
-              parent: 0,
-              paramType: Encoding.AbiEncoded,
-              operator: Operator.Matches,
-              compValue: "0x",
-            },
-            {
-              parent: 0,
-              paramType: Encoding.Static,
-              operator: Operator.WithinAllowance,
-              compValue: ALLOWANCE_KEY,
-            },
-          ],
-          ExecutionOptions.None,
-        );
+        const packed = await packConditions(roles, [
+          {
+            parent: 0,
+            paramType: Encoding.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: Encoding.Static,
+            operator: Operator.WithinAllowance,
+            compValue: ALLOWANCE_KEY,
+          },
+        ]);
+        await roles
+          .connect(owner)
+          .allowFunction(
+            ROLE_KEY,
+            testContractAddress,
+            selector,
+            packed,
+            ExecutionOptions.None,
+          );
 
         const calldata = iface.encodeFunctionData("oneParamStatic", [100]);
 
@@ -834,26 +853,29 @@ describe("AllowanceTracking", () => {
           .setAllowance(ALLOWANCE_KEY, 1000, 0, 0, 0, 0);
 
         const selector = iface.getFunction("oneParamStatic")!.selector;
-        await roles.connect(owner).allowFunction(
-          ROLE_KEY,
-          testContractAddress,
-          selector,
-          [
-            {
-              parent: 0,
-              paramType: Encoding.AbiEncoded,
-              operator: Operator.Matches,
-              compValue: "0x",
-            },
-            {
-              parent: 0,
-              paramType: Encoding.Static,
-              operator: Operator.WithinAllowance,
-              compValue: ALLOWANCE_KEY,
-            },
-          ],
-          ExecutionOptions.None,
-        );
+        const packed = await packConditions(roles, [
+          {
+            parent: 0,
+            paramType: Encoding.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: Encoding.Static,
+            operator: Operator.WithinAllowance,
+            compValue: ALLOWANCE_KEY,
+          },
+        ]);
+        await roles
+          .connect(owner)
+          .allowFunction(
+            ROLE_KEY,
+            testContractAddress,
+            selector,
+            packed,
+            ExecutionOptions.None,
+          );
 
         const calldata = iface.encodeFunctionData("oneParamStatic", [100]);
 
@@ -881,32 +903,35 @@ describe("AllowanceTracking", () => {
           .setAllowance(ALLOWANCE_KEY, 1000, 0, 0, 0, 0);
 
         const selector = iface.getFunction("fnThatMaybeReverts")!.selector;
-        await roles.connect(owner).allowFunction(
-          ROLE_KEY,
-          testContractAddress,
-          selector,
-          [
-            {
-              parent: 0,
-              paramType: Encoding.AbiEncoded,
-              operator: Operator.Matches,
-              compValue: "0x",
-            },
-            {
-              parent: 0,
-              paramType: Encoding.Static,
-              operator: Operator.WithinAllowance,
-              compValue: ALLOWANCE_KEY,
-            },
-            {
-              parent: 0,
-              paramType: Encoding.Static,
-              operator: Operator.Pass,
-              compValue: "0x",
-            },
-          ],
-          ExecutionOptions.None,
-        );
+        const packed = await packConditions(roles, [
+          {
+            parent: 0,
+            paramType: Encoding.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: Encoding.Static,
+            operator: Operator.WithinAllowance,
+            compValue: ALLOWANCE_KEY,
+          },
+          {
+            parent: 0,
+            paramType: Encoding.Static,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+        ]);
+        await roles
+          .connect(owner)
+          .allowFunction(
+            ROLE_KEY,
+            testContractAddress,
+            selector,
+            packed,
+            ExecutionOptions.None,
+          );
 
         // Call with shouldRevert = true
         const calldata = iface.encodeFunctionData("fnThatMaybeReverts", [
@@ -940,32 +965,35 @@ describe("AllowanceTracking", () => {
         const initialAllowance = await roles.allowances(ALLOWANCE_KEY);
 
         const selector = iface.getFunction("fnThatMaybeReverts")!.selector;
-        await roles.connect(owner).allowFunction(
-          ROLE_KEY,
-          testContractAddress,
-          selector,
-          [
-            {
-              parent: 0,
-              paramType: Encoding.AbiEncoded,
-              operator: Operator.Matches,
-              compValue: "0x",
-            },
-            {
-              parent: 0,
-              paramType: Encoding.Static,
-              operator: Operator.WithinAllowance,
-              compValue: ALLOWANCE_KEY,
-            },
-            {
-              parent: 0,
-              paramType: Encoding.Static,
-              operator: Operator.Pass,
-              compValue: "0x",
-            },
-          ],
-          ExecutionOptions.None,
-        );
+        const packed = await packConditions(roles, [
+          {
+            parent: 0,
+            paramType: Encoding.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: Encoding.Static,
+            operator: Operator.WithinAllowance,
+            compValue: ALLOWANCE_KEY,
+          },
+          {
+            parent: 0,
+            paramType: Encoding.Static,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+        ]);
+        await roles
+          .connect(owner)
+          .allowFunction(
+            ROLE_KEY,
+            testContractAddress,
+            selector,
+            packed,
+            ExecutionOptions.None,
+          );
 
         const calldata = iface.encodeFunctionData("fnThatMaybeReverts", [
           100,
@@ -1002,26 +1030,29 @@ describe("AllowanceTracking", () => {
         .setAllowance(ALLOWANCE_KEY, 1300, 1000, 100, 3600, 0);
 
       const selector = iface.getFunction("oneParamStatic")!.selector;
-      await roles.connect(owner).allowFunction(
-        ROLE_KEY,
-        testContractAddress,
-        selector,
-        [
-          {
-            parent: 0,
-            paramType: Encoding.AbiEncoded,
-            operator: Operator.Matches,
-            compValue: "0x",
-          },
-          {
-            parent: 0,
-            paramType: Encoding.Static,
-            operator: Operator.WithinAllowance,
-            compValue: ALLOWANCE_KEY,
-          },
-        ],
-        ExecutionOptions.None,
-      );
+      const packed = await packConditions(roles, [
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: ALLOWANCE_KEY,
+        },
+      ]);
+      await roles
+        .connect(owner)
+        .allowFunction(
+          ROLE_KEY,
+          testContractAddress,
+          selector,
+          packed,
+          ExecutionOptions.None,
+        );
 
       const calldata = iface.encodeFunctionData("oneParamStatic", [1200]);
 
@@ -1061,24 +1092,25 @@ describe("AllowanceTracking", () => {
       await roles.setAllowance(ALLOWANCE_KEY, 1000, 0, 0, 0, 0);
 
       const selector = iface.getFunction("oneParamStatic")!.selector;
+      const packed = await packConditions(roles, [
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: ALLOWANCE_KEY,
+        },
+      ]);
       await roles.allowFunction(
         ROLE_KEY,
         testContractAddress,
         selector,
-        [
-          {
-            parent: 0,
-            paramType: Encoding.AbiEncoded,
-            operator: Operator.Matches,
-            compValue: "0x",
-          },
-          {
-            parent: 0,
-            paramType: Encoding.Static,
-            operator: Operator.WithinAllowance,
-            compValue: ALLOWANCE_KEY,
-          },
-        ],
+        packed,
         ExecutionOptions.None,
       );
 
@@ -1100,24 +1132,25 @@ describe("AllowanceTracking", () => {
       await roles.setAllowance(ALLOWANCE_KEY, 500, 0, 0, 0, 0);
 
       const selector = iface.getFunction("oneParamStatic")!.selector;
+      const packed = await packConditions(roles, [
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: ALLOWANCE_KEY,
+        },
+      ]);
       await roles.allowFunction(
         ROLE_KEY,
         testContractAddress,
         selector,
-        [
-          {
-            parent: 0,
-            paramType: Encoding.AbiEncoded,
-            operator: Operator.Matches,
-            compValue: "0x",
-          },
-          {
-            parent: 0,
-            paramType: Encoding.Static,
-            operator: Operator.WithinAllowance,
-            compValue: ALLOWANCE_KEY,
-          },
-        ],
+        packed,
         ExecutionOptions.None,
       );
 

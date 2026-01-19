@@ -14,6 +14,7 @@ import {
   ExecutionOptions,
   ConditionViolationStatus,
   flattenCondition,
+  packConditions,
 } from "../utils";
 
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
@@ -222,15 +223,19 @@ describe("Operator - SignedIntGreaterThan", () => {
     const fn = iface.getFunction("fn")!;
 
     // SignedIntGreaterThan on EtherValue: msg.value must be > 1000 wei
-    await roles.allowFunction(
-      roleKey,
-      testContractAddress,
-      fn.selector,
+    const packed = await packConditions(
+      roles,
       flattenCondition({
         paramType: Encoding.EtherValue,
         operator: Operator.SignedIntGreaterThan,
         compValue: defaultAbiCoder.encode(["int256"], [1000]),
       }),
+    );
+    await roles.allowFunction(
+      roleKey,
+      testContractAddress,
+      fn.selector,
+      packed,
       ExecutionOptions.Send,
     );
 
@@ -326,8 +331,7 @@ describe("Operator - SignedIntGreaterThan", () => {
 
   describe("integrity", () => {
     it("reverts UnsuitableParameterType for invalid encodings", async () => {
-      const { roles, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { roles } = await loadFixture(setupTestContract);
 
       for (const encoding of [
         Encoding.None,
@@ -337,68 +341,51 @@ describe("Operator - SignedIntGreaterThan", () => {
         Encoding.AbiEncoded,
       ]) {
         await expect(
-          roles.allowTarget(
-            roleKey,
-            testContractAddress,
-            [
-              {
-                parent: 0,
-                paramType: encoding,
-                operator: Operator.SignedIntGreaterThan,
-                compValue: defaultAbiCoder.encode(["int256"], [100]),
-              },
-            ],
-            0,
-          ),
+          packConditions(roles, [
+            {
+              parent: 0,
+              paramType: encoding,
+              operator: Operator.SignedIntGreaterThan,
+              compValue: defaultAbiCoder.encode(["int256"], [100]),
+            },
+          ]),
         ).to.be.revertedWithCustomError(roles, "UnsuitableParameterType");
       }
     });
 
     it("reverts UnsuitableCompValue when compValue is not 32 bytes", async () => {
-      const { roles, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { roles } = await loadFixture(setupTestContract);
 
       await expect(
-        roles.allowTarget(
-          roleKey,
-          testContractAddress,
-          [
-            {
-              parent: 0,
-              paramType: Encoding.Static,
-              operator: Operator.SignedIntGreaterThan,
-              compValue: "0x0000", // Not 32 bytes
-            },
-          ],
-          0,
-        ),
+        packConditions(roles, [
+          {
+            parent: 0,
+            paramType: Encoding.Static,
+            operator: Operator.SignedIntGreaterThan,
+            compValue: "0x0000", // Not 32 bytes
+          },
+        ]),
       ).to.be.revertedWithCustomError(roles, "UnsuitableCompValue");
     });
 
     it("reverts LeafNodeCannotHaveChildren when SignedIntGreaterThan has children", async () => {
-      const { roles, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { roles } = await loadFixture(setupTestContract);
 
       await expect(
-        roles.allowTarget(
-          roleKey,
-          testContractAddress,
-          [
-            {
-              parent: 0,
-              paramType: Encoding.Static,
-              operator: Operator.SignedIntGreaterThan,
-              compValue: defaultAbiCoder.encode(["int256"], [100]),
-            },
-            {
-              parent: 0,
-              paramType: Encoding.Static,
-              operator: Operator.Pass,
-              compValue: "0x",
-            },
-          ],
-          0,
-        ),
+        packConditions(roles, [
+          {
+            parent: 0,
+            paramType: Encoding.Static,
+            operator: Operator.SignedIntGreaterThan,
+            compValue: defaultAbiCoder.encode(["int256"], [100]),
+          },
+          {
+            parent: 0,
+            paramType: Encoding.Static,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+        ]),
       ).to.be.revertedWithCustomError(roles, "LeafNodeCannotHaveChildren");
     });
   });

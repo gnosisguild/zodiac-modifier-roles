@@ -10,6 +10,7 @@ import {
   ExecutionOptions,
   ConditionViolationStatus,
   flattenCondition,
+  packConditions,
 } from "../utils";
 
 const abiCoder = AbiCoder.defaultAbiCoder();
@@ -397,8 +398,7 @@ describe("Operator - ArrayTailMatches", () => {
 
   describe("integrity", () => {
     it("reverts UnsuitableParameterType for invalid encodings", async () => {
-      const { roles, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { roles } = await loadFixture(setupTestContract);
 
       for (const encoding of [
         Encoding.AbiEncoded,
@@ -409,37 +409,68 @@ describe("Operator - ArrayTailMatches", () => {
         Encoding.Tuple,
       ]) {
         await expect(
-          roles.allowTarget(
-            roleKey,
-            testContractAddress,
-            [
-              {
-                parent: 0,
-                paramType: encoding,
-                operator: Operator.ArrayTailMatches,
-                compValue: "0x",
-              },
-            ],
-            0,
-          ),
+          packConditions(roles, [
+            {
+              parent: 0,
+              paramType: encoding,
+              operator: Operator.ArrayTailMatches,
+              compValue: "0x",
+            },
+          ]),
         ).to.be.revertedWithCustomError(roles, "UnsuitableParameterType");
       }
     });
 
     it("reverts UnsuitableCompValue when compValue is not empty", async () => {
-      const { roles, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { roles } = await loadFixture(setupTestContract);
 
       await expect(
-        roles.allowTarget(
-          roleKey,
-          testContractAddress,
-          [
+        packConditions(roles, [
+          {
+            parent: 0,
+            paramType: Encoding.Array,
+            operator: Operator.ArrayTailMatches,
+            compValue: "0x01",
+          },
+          {
+            parent: 0,
+            paramType: Encoding.Static,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+        ]),
+      ).to.be.revertedWithCustomError(roles, "UnsuitableCompValue");
+    });
+
+    describe("children", () => {
+      it("reverts UnsuitableChildCount when ArrayTailMatches has zero children", async () => {
+        const { roles } = await loadFixture(setupTestContract);
+
+        await expect(
+          packConditions(roles, [
             {
               parent: 0,
               paramType: Encoding.Array,
               operator: Operator.ArrayTailMatches,
-              compValue: "0x01",
+              compValue: "0x",
+            },
+          ]),
+        ).to.be.revertedWithCustomError(roles, "UnsuitableChildCount");
+      });
+
+      it("reverts UnsuitableChildCount when ArrayTailMatches has non-structural child", async () => {
+        const { roles } = await loadFixture(setupTestContract);
+
+        const allowanceKey = hexlify(randomBytes(32));
+
+        // Valid: ArrayTailMatches with one structural child
+        await expect(
+          packConditions(roles, [
+            {
+              parent: 0,
+              paramType: Encoding.Array,
+              operator: Operator.ArrayTailMatches,
+              compValue: "0x",
             },
             {
               parent: 0,
@@ -447,90 +478,31 @@ describe("Operator - ArrayTailMatches", () => {
               operator: Operator.Pass,
               compValue: "0x",
             },
-          ],
-          0,
-        ),
-      ).to.be.revertedWithCustomError(roles, "UnsuitableCompValue");
-    });
-
-    describe("children", () => {
-      it("reverts UnsuitableChildCount when ArrayTailMatches has zero children", async () => {
-        const { roles, testContractAddress, roleKey } =
-          await loadFixture(setupTestContract);
-
-        await expect(
-          roles.allowTarget(
-            roleKey,
-            testContractAddress,
-            [
-              {
-                parent: 0,
-                paramType: Encoding.Array,
-                operator: Operator.ArrayTailMatches,
-                compValue: "0x",
-              },
-            ],
-            0,
-          ),
-        ).to.be.revertedWithCustomError(roles, "UnsuitableChildCount");
-      });
-
-      it("reverts UnsuitableChildCount when ArrayTailMatches has non-structural child", async () => {
-        const { roles, testContractAddress, roleKey } =
-          await loadFixture(setupTestContract);
-
-        const allowanceKey = hexlify(randomBytes(32));
-
-        // Valid: ArrayTailMatches with one structural child
-        await expect(
-          roles.allowTarget(
-            roleKey,
-            testContractAddress,
-            [
-              {
-                parent: 0,
-                paramType: Encoding.Array,
-                operator: Operator.ArrayTailMatches,
-                compValue: "0x",
-              },
-              {
-                parent: 0,
-                paramType: Encoding.Static,
-                operator: Operator.Pass,
-                compValue: "0x",
-              },
-            ],
-            0,
-          ),
+          ]),
         ).to.not.be.reverted;
 
         // Invalid: Adding a non-structural child should fail
         await expect(
-          roles.allowTarget(
-            roleKey,
-            testContractAddress,
-            [
-              {
-                parent: 0,
-                paramType: Encoding.Array,
-                operator: Operator.ArrayTailMatches,
-                compValue: "0x",
-              },
-              {
-                parent: 0,
-                paramType: Encoding.Static,
-                operator: Operator.Pass,
-                compValue: "0x",
-              },
-              {
-                parent: 0,
-                paramType: Encoding.None,
-                operator: Operator.CallWithinAllowance,
-                compValue: allowanceKey,
-              },
-            ],
-            0,
-          ),
+          packConditions(roles, [
+            {
+              parent: 0,
+              paramType: Encoding.Array,
+              operator: Operator.ArrayTailMatches,
+              compValue: "0x",
+            },
+            {
+              parent: 0,
+              paramType: Encoding.Static,
+              operator: Operator.Pass,
+              compValue: "0x",
+            },
+            {
+              parent: 0,
+              paramType: Encoding.None,
+              operator: Operator.CallWithinAllowance,
+              compValue: allowanceKey,
+            },
+          ]),
         ).to.be.revertedWithCustomError(roles, "UnsuitableChildCount");
       });
     });

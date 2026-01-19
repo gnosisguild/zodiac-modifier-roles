@@ -19,23 +19,32 @@ import "../../types/Types.sol";
  */
 library ConditionStorer {
     /**
-     * @notice Validates, transforms, packs, and stores a condition tree.
+     * @notice Validates, transforms, and packs a condition tree into bytes.
      *
      * @param conditions The flat condition array in BFS order.
+     * @return buffer The packed condition buffer.
+     */
+    function pack(
+        ConditionFlat[] memory conditions
+    ) external pure returns (bytes memory buffer) {
+        Topology[] memory topology = TopologyLib.resolve(conditions);
+        Integrity.enforce(conditions, topology);
+        ConditionTransform.transform(conditions, topology);
+        return ConditionPacker.pack(conditions, topology);
+    }
+
+    /**
+     * @notice Stores a pre-packed condition buffer.
+     *
+     * @param buffer The packed condition buffer (from pack()).
      * @param options Execution options (Send, DelegateCall, Both, None).
      * @return scopeConfig Packed scope config (options << 160 | pointer).
      */
     function store(
-        ConditionFlat[] memory conditions,
+        bytes memory buffer,
         ExecutionOptions options
     ) external returns (uint256 scopeConfig) {
-        Topology[] memory topology = TopologyLib.resolve(conditions);
-        Integrity.enforce(conditions, topology);
-        ConditionTransform.transform(conditions, topology);
-
-        bytes memory buffer = ConditionPacker.pack(conditions, topology);
         address pointer = ImmutableStorage.store(buffer);
-
         return (uint256(options) << 160) | uint160(pointer);
     }
 }
