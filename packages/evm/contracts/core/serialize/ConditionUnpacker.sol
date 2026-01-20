@@ -42,6 +42,7 @@ library ConditionUnpacker {
 
         Condition[] memory conditions = new Condition[]((header >> 24));
         Layout[] memory layouts = new Layout[]((header >> 8) & 0xFFFF);
+
         _unpackTrees(buffer, conditions, layouts);
 
         condition = conditions[0];
@@ -59,7 +60,7 @@ library ConditionUnpacker {
          *      Both trees are built simultaneously from the unified node
          *      format. This implementation provides a ~3x improvement in gas
          *      cost compared to a naive approach involving multiple loops,
-         *      auxiliary functions, and standard child array allocations.
+         *      auxiliary functions, and child array allocations.
          */
 
         uint256 offset;
@@ -102,13 +103,25 @@ library ConditionUnpacker {
                 uint256 childCount = (packed >> 14) & 0x3FF;
                 if (childCount > 0) {
                     condition.sChildCount = (packed >> 4) & 0x3FF;
-                    uint256 copyPtr;
-                    (copyPtr, childConditionPtr) = _shallowCopy(
-                        childConditionPtr,
-                        childCount
-                    );
+                    /*
+                     * shallowCopy children array
+                     */
                     assembly {
-                        mstore(add(condition, 0x80), copyPtr)
+                        let size := mul(childCount, 0x20)
+                        // free mem pointer: load
+                        let dest := mload(0x40)
+                        // free mem pointer: advance
+                        mstore(0x40, add(add(dest, 0x20), size))
+
+                        // new array: store length
+                        mstore(dest, childCount)
+                        // new array: shallow copy body
+                        mcopy(add(dest, 0x20), childConditionPtr, size)
+
+                        //condition: point to copied array
+                        mstore(add(condition, 0x80), dest)
+                        // advance child pointer
+                        childConditionPtr := add(childConditionPtr, size)
                     }
                 }
             }
@@ -134,15 +147,22 @@ library ConditionUnpacker {
                 }
 
                 if (length > 0) {
-                    bytes memory compValue;
                     assembly {
-                        compValue := mload(0x40)
-                        mstore(compValue, length)
-                        mcopy(add(compValue, 0x20), compValueOffset, length)
+                        // free mem pointer: load
+                        let compValue := mload(0x40)
+                        // free mem pointer: advance
                         mstore(0x40, add(add(compValue, 0x20), length))
+
+                        // new buffer: store length
+                        mstore(compValue, length)
+                        // new buffer: copy body
+                        mcopy(add(compValue, 0x20), compValueOffset, length)
+
+                        //condition: point to copied buffer
+                        mstore(add(condition, 0x40), compValue)
+                        // advance pointer
                         compValueOffset := add(compValueOffset, length)
                     }
-                    condition.compValue = compValue;
                 }
             }
 
@@ -168,13 +188,18 @@ library ConditionUnpacker {
                         ? 1 // Non-Variant Arrays -> use first child as template
                         : condition.sChildCount;
 
-                    uint256 copyPtr;
-                    (copyPtr, childLayoutPtr) = _shallowCopy(
-                        childLayoutPtr,
-                        childCount
-                    );
+                    /*
+                     * shallowCopy children array
+                     */
+
                     assembly {
-                        mstore(add(layout, 0x20), copyPtr)
+                        let size := mul(childCount, 0x20)
+                        let dest := mload(0x40)
+                        mstore(0x40, add(add(dest, 0x20), size))
+                        mstore(dest, childCount)
+                        mcopy(add(dest, 0x20), childLayoutPtr, size)
+                        mstore(add(layout, 0x20), dest)
+                        childLayoutPtr := add(childLayoutPtr, size)
                     }
                 }
             }
@@ -187,27 +212,6 @@ library ConditionUnpacker {
                 }
                 condition.compValue = abi.encode(avatar);
             }
-        }
-    }
-
-    function _shallowCopy(
-        uint256 src,
-        uint256 count
-    ) private pure returns (uint256 dest, uint256 nextSrc) {
-        assembly {
-            //let size := mul(count, 0x20)
-            let size := shl(5, count)
-
-            // load and advance free memory pointer
-            dest := mload(0x40)
-            mstore(0x40, add(add(dest, 0x20), size))
-
-            // store length
-            mstore(dest, count)
-            // copy the array
-            mcopy(add(dest, 0x20), src, size)
-
-            nextSrc := add(src, size)
         }
     }
 }
