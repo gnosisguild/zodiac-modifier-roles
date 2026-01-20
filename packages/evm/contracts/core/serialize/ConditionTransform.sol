@@ -33,7 +33,19 @@ library ConditionTransform {
             }
 
             /*
+             * Patch AbiEncoded leadingBytes
              *
+             * AbiEncoded nodes without compValue need a default leadingBytes of 4
+             * (function selector size). Store as 2-byte big-endian value.
+             */
+            if (
+                condition.paramType == Encoding.AbiEncoded &&
+                condition.compValue.length == 0
+            ) {
+                condition.compValue = hex"0004";
+            }
+
+            /*
              * Remove Extraneous Offsets
              *
              * Remove unnecessary offsets from compValue fields. This ensures a

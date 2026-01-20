@@ -401,8 +401,10 @@ library ConditionLogic {
         Context memory context
     ) private pure returns (Status) {
         Operator operator = condition.operator;
-        // For >32 bytes, compValue is already pre-hashed at storage time
-        bytes32 compValue = bytes32(condition.compValue);
+
+        bytes32 compValue = condition.compValue.length > 32
+            ? keccak256(condition.compValue)
+            : bytes32(condition.compValue);
         bytes32 value = __input(data, payload, context);
 
         if (operator == Operator.EqualTo && value != compValue) {
@@ -526,7 +528,7 @@ library ConditionLogic {
         return
             Result({
                 status: status,
-                violatedNodeIndex: condition.nodeIndex,
+                violatedNodeIndex: condition.index,
                 payloadLocation: payload.location,
                 payloadSize: payload.size,
                 consumptions: consumptions

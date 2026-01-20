@@ -72,26 +72,26 @@ abstract contract Setup is RolesStorage {
     /// @dev Grants a role to a module with optional session parameters.
     /// @param module Module to grant the role to.
     /// @param roleKey Role to grant.
-    /// @param start Start timestamp (0 = immediately valid).
-    /// @param end End timestamp (0 = never expires).
+    /// @param startTimestamp Start timestamp (0 = immediately valid).
+    /// @param endTimestamp End timestamp (0 = never expires).
     /// @param usesLeft Number of uses (0 = unlimited).
     function grantRole(
         address module,
         bytes32 roleKey,
-        uint64 start,
-        uint64 end,
+        uint64 startTimestamp,
+        uint64 endTimestamp,
         uint128 usesLeft
     ) public onlyOwner {
-        end = end != 0 ? end : type(uint64).max;
+        endTimestamp = endTimestamp != 0 ? endTimestamp : type(uint64).max;
         usesLeft = usesLeft != 0 ? usesLeft : type(uint128).max;
         roles[roleKey].members[module] =
-            (uint256(start) << 192) |
-            (uint256(end) << 128) |
+            (uint256(startTimestamp) << 192) |
+            (uint256(endTimestamp) << 128) |
             uint256(usesLeft);
         if (!isModuleEnabled(module)) {
             enableModule(module);
         }
-        emit GrantRole(roleKey, module, start, end, usesLeft);
+        emit GrantRole(roleKey, module, startTimestamp, endTimestamp, usesLeft);
     }
 
     /// @dev Revokes a role from a module.
@@ -147,23 +147,23 @@ abstract contract Setup is RolesStorage {
     /// @dev Allows transactions to a target address, optionally with conditions.
     /// @param roleKey identifier of the role to be modified.
     /// @param targetAddress Destination address of transaction.
-    /// @param conditions Pre-packed condition buffer (use packConditions() or empty bytes for pass-through).
+    /// @param packedConditions Pre-packed condition buffer (use packConditions() or empty bytes for pass-through).
     /// @param options designates if a transaction can send ether and/or delegatecall to target.
     function allowTarget(
         bytes32 roleKey,
         address targetAddress,
-        bytes memory conditions,
+        bytes memory packedConditions,
         ExecutionOptions options
     ) external onlyOwner {
         bytes32 key = bytes32(bytes20(targetAddress)) | (~bytes32(0) >> 160);
 
         roles[roleKey].clearance[targetAddress] = Clearance.Target;
         roles[roleKey].scopeConfig[key] = ConditionStorer.store(
-            _conditionsOrPass(conditions),
+            _conditionsOrPass(packedConditions),
             options
         );
 
-        emit AllowTarget(roleKey, targetAddress, conditions, options);
+        emit AllowTarget(roleKey, targetAddress, packedConditions, options);
     }
 
     /// @dev Designates only specific functions can be called.
@@ -196,19 +196,19 @@ abstract contract Setup is RolesStorage {
     /// @param roleKey identifier of the role to be modified.
     /// @param targetAddress Destination address of transaction.
     /// @param selector 4 byte function selector.
-    /// @param conditions Pre-packed condition buffer (use packConditions() or empty bytes for pass-through).
+    /// @param packedConditions Pre-packed condition buffer (use packConditions() or empty bytes for pass-through).
     /// @param options designates if a transaction can send ether and/or delegatecall to target.
     function allowFunction(
         bytes32 roleKey,
         address targetAddress,
         bytes4 selector,
-        bytes memory conditions,
+        bytes memory packedConditions,
         ExecutionOptions options
     ) external onlyOwner {
         bytes32 key = _key(targetAddress, selector);
 
         roles[roleKey].scopeConfig[key] = ConditionStorer.store(
-            _conditionsOrPass(conditions),
+            _conditionsOrPass(packedConditions),
             options
         );
 
@@ -216,7 +216,7 @@ abstract contract Setup is RolesStorage {
             roleKey,
             targetAddress,
             selector,
-            conditions,
+            packedConditions,
             options
         );
     }
@@ -313,11 +313,10 @@ abstract contract Setup is RolesStorage {
     /// @return buffer The packed condition buffer.
     function packConditions(
         ConditionFlat[] memory conditions
-    ) public pure returns (bytes memory) {
-        if (conditions.length == 0) {
-            return ConditionStorer.pack(new ConditionFlat[](1));
+    ) external pure returns (bytes memory buffer) {
+        if (conditions.length > 0) {
+            buffer = ConditionStorer.pack(conditions);
         }
-        return ConditionStorer.pack(conditions);
     }
 
     /*//////////////////////////////////////////////////////////////

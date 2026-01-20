@@ -137,21 +137,26 @@ describe("ConditionPacker and ConditionUnpacker", () => {
       );
     });
 
-    it("EqualTo with compValue >32 bytes hashes to keccak256", async () => {
+    it("EqualTo with compValue >32 bytes preserves full value", async () => {
       const { mock } = await loadFixture(setup);
 
-      // 40 bytes of data (>32)
-      const longValue = "0x" + "ab".repeat(40);
+      // Use abi.encode for dynamic bytes - creates offset + length + data
+      const rawBytes = "0x" + "ab".repeat(40);
+      const abiEncoded = hre.ethers.AbiCoder.defaultAbiCoder().encode(
+        ["bytes"],
+        [rawBytes],
+      );
       const input = flattenCondition({
         paramType: Encoding.Dynamic,
         operator: Operator.EqualTo,
-        compValue: longValue,
+        compValue: abiEncoded,
       });
 
       const [conditions] = await mock.roundtrip(input);
 
-      // After round-trip, compValue should be keccak256 hash (32 bytes)
-      expect(conditions[0].compValue).to.equal(hre.ethers.keccak256(longValue));
+      // Transform strips offset (first 32 bytes), remaining is preserved
+      const stripped = "0x" + abiEncoded.slice(66); // Remove 0x + 64 hex chars (32 bytes)
+      expect(conditions[0].compValue).to.equal(stripped);
     });
 
     it("AbiEncoded with match bytes", async () => {

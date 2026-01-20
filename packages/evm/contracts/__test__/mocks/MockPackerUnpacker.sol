@@ -3,6 +3,7 @@ pragma solidity >=0.8.17 <0.9.0;
 
 import "../../core/serialize/ConditionPacker.sol";
 import "../../core/serialize/ConditionUnpacker.sol";
+import "../../core/serialize/ConditionTransform.sol";
 import "../../core/serialize/Integrity.sol";
 import "../../core/serialize/Topology.sol";
 
@@ -35,6 +36,7 @@ contract MockPackerUnpacker {
         // Pack
         Topology[] memory topology = TopologyLib.resolve(conditions);
         Integrity.enforce(conditions, topology);
+        ConditionTransform.transform(conditions, topology);
         bytes memory buffer = ConditionPacker.pack(conditions, topology);
 
         // Unpack
