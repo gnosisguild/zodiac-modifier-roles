@@ -68,6 +68,7 @@
     "generate": "yarn eth-sdk"
   },
   "dependencies": {
+    "@cowprotocol/cow-sdk": "^7.2.11",
     "ethers": "^6.13.5",
     "zodiac-roles-deployments": "workspace:*"
   },

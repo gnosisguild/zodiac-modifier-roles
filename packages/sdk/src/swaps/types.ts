@@ -1,5 +1,12 @@
 /**
- * Supported chain IDs for COW Protocol
+ * Chain IDs where the CowOrderSigner contract is deployed.
+ * This is a subset of chains supported by cow-sdk.
+ *
+ * TODO: Deploy CowOrderSigner contract to these additional cow-sdk chains:
+ * - BNB (56)
+ * - LENS (232)
+ * - PLASMA (9745)
+ * - LINEA (59144)
  */
 export enum SupportedChainId {
   MAINNET = 1,
