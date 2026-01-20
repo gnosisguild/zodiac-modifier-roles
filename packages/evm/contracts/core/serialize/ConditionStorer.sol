@@ -4,7 +4,6 @@ pragma solidity >=0.8.17 <0.9.0;
 import "../../common/ImmutableStorage.sol";
 
 import "./ConditionPacker.sol";
-import "./ConditionTransform.sol";
 import "./Integrity.sol";
 import "./Topology.sol";
 
@@ -12,14 +11,13 @@ import "../../types/Types.sol";
 
 /**
  * @title ConditionStorer
- * @notice Validates, transforms, and stores condition trees in immutable
- *         storage.
+ * @notice Validates and stores condition trees in immutable storage.
  *
  * @author gnosisguild
  */
 library ConditionStorer {
     /**
-     * @notice Validates, transforms, and packs a condition tree into bytes.
+     * @notice Validates and packs a condition tree into bytes.
      *
      * @param conditions The flat condition array in BFS order.
      * @return buffer The packed condition buffer.
@@ -29,7 +27,6 @@ library ConditionStorer {
     ) external pure returns (bytes memory buffer) {
         Topology[] memory topology = TopologyLib.resolve(conditions);
         Integrity.enforce(conditions, topology);
-        ConditionTransform.transform(conditions, topology);
         return ConditionPacker.pack(conditions, topology);
     }
 

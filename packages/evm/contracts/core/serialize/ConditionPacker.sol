@@ -52,6 +52,8 @@ library ConditionPacker {
         ConditionFlat[] memory conditions,
         Topology[] memory topology
     ) internal pure returns (bytes memory buffer) {
+        _transform(conditions, topology);
+
         (
             uint256 layoutNodeCount,
             uint256 compValuesSize,
@@ -88,7 +90,10 @@ library ConditionPacker {
 
             Encoding encoding = condition.paramType;
             bool isInline = !t.isNotInline;
-            bool hasCompValue = condition.compValue.length > 0;
+
+            bytes memory compValue = condition.compValue;
+            uint256 compValueLength = compValue.length;
+            bool hasCompValue = compValueLength > 0;
 
             /*
              * ┌───────────────────────────────────────────────────────────┐
@@ -117,37 +122,23 @@ library ConditionPacker {
              * previous iterations) while writing our 4 bytes at positions 0-3.
              */
             assembly {
-                let ptr := add(add(buffer, 0x20), offset)
-                mstore(ptr, or(mload(ptr), shl(224, packed)))
+                let dest := add(add(buffer, 0x20), offset)
+                mstore(dest, or(mload(dest), shl(224, packed)))
             }
             offset += NODE_BYTES;
 
-            // Pack compValue if present
+            // Pack compValue writes at tail, no preserving required
             if (hasCompValue) {
-                compValueOffset = _packCompValue(
-                    condition,
-                    buffer,
-                    compValueOffset
-                );
+                assembly {
+                    let dest := add(add(buffer, 0x20), compValueOffset)
+                    // write 2 bytes length
+                    mstore(dest, shl(240, compValueLength))
+                    // copy compValue body
+                    mcopy(add(dest, 2), add(compValue, 0x20), compValueLength)
+                }
+                compValueOffset = compValueOffset + 2 + compValueLength;
             }
         }
-    }
-
-    function _packCompValue(
-        ConditionFlat memory condition,
-        bytes memory buffer,
-        uint256 offset
-    ) private pure returns (uint256) {
-        bytes memory compValue = condition.compValue;
-        uint256 compValueLength = compValue.length;
-
-        assembly {
-            let ptr := add(add(buffer, 0x20), offset)
-            mstore(ptr, shl(240, compValueLength))
-            mcopy(add(ptr, 2), add(compValue, 0x20), compValueLength)
-        }
-
-        return offset + 2 + compValueLength;
     }
 
     function _count(
@@ -165,12 +156,10 @@ library ConditionPacker {
         for (uint256 i; i < conditions.length; ++i) {
             ConditionFlat memory condition = conditions[i];
 
-            // Layout counting
             if (topology[i].isInLayout) {
                 ++layoutNodeCount;
             }
 
-            // MaxPluck counting
             if (condition.operator == Operator.Pluck) {
                 uint8 pluckIndex = uint8(condition.compValue[0]);
                 if (pluckIndex + 1 > maxPluckCount) {
@@ -178,9 +167,62 @@ library ConditionPacker {
                 }
             }
 
-            if (condition.compValue.length > 0) {
-                // length + body
-                compValuesSize += 2 + condition.compValue.length;
+            uint256 length = condition.compValue.length;
+            if (length > 0) {
+                compValuesSize += 2 + length;
+            }
+        }
+    }
+
+    /**
+     * @dev Normalizes conditions in-place before packing:
+     *      1. AbiEncoded without compValue gets default leadingBytes (0x0004)
+     *      2. EqualTo at offset has 32-byte head pointer stripped
+     */
+    function _transform(
+        ConditionFlat[] memory conditions,
+        Topology[] memory topology
+    ) private pure {
+        for (uint256 i; i < conditions.length; ++i) {
+            ConditionFlat memory condition = conditions[i];
+
+            /*
+             * Patch AbiEncoded leadingBytes
+             *
+             * AbiEncoded nodes without compValue need a default leadingBytes of 4
+             * (function selector size). Store as 2-byte big-endian value.
+             */
+            if (
+                condition.paramType == Encoding.AbiEncoded &&
+                condition.compValue.length == 0
+            ) {
+                condition.compValue = hex"0004";
+            }
+
+            /*
+             * Remove Extraneous Offsets
+             *
+             * Remove unnecessary offsets from compValue fields. This ensures a
+             * consistent API where every `compValue` provided for use in
+             * `Operator.EqualTo` is obtained by calling `abi.encode` directly.
+             *
+             * By removing the leading extraneous offset this makes
+             * `abi.encode(...)` output line up with the layout produced by
+             * Decoder inspection. Without it, callers would need to patch
+             * compValues based on whether the payload is fully inline or at
+             * offset.
+             */
+            if (
+                condition.operator == Operator.EqualTo &&
+                topology[i].isNotInline
+            ) {
+                bytes memory compValue = condition.compValue;
+                assembly {
+                    let newLength := sub(mload(compValue), 32)
+                    compValue := add(compValue, 32)
+                    mstore(compValue, newLength)
+                }
+                condition.compValue = compValue;
             }
         }
     }
