@@ -65,6 +65,38 @@ export const allowCowOrderSigning = ({
   const sellTokens = resolveTokens(sell)
   const buyTokens = resolveTokens(buy)
 
+  // Check if all tokens are native or wrapped native
+  const isOnlyNativeOrWrapped = (tokens: (`0x${string}` | "native")[]) =>
+    tokens.every(
+      (token) =>
+        token === "native" ||
+        token.toLowerCase() === wrappedNativeToken.toLowerCase()
+    )
+
+  // If both sell and buy tokens are only native/wrapped native, skip signOrder, approve, and unsignOrder permissions
+  if (isOnlyNativeOrWrapped(sell) && isOnlyNativeOrWrapped(buy)) {
+    const permissions: Permission[] = []
+
+    // Add WETH.deposit() permission when selling native tokens
+    if (sellIncludesNative && wrappedNativeToken) {
+      permissions.push({
+        targetAddress: wrappedNativeToken,
+        signature: "deposit()",
+        send: true,
+      })
+    }
+
+    // Add WETH.withdraw() permission when buying native tokens
+    if (buyIncludesNative && wrappedNativeToken) {
+      permissions.push({
+        targetAddress: wrappedNativeToken,
+        signature: "withdraw(uint256)",
+      })
+    }
+
+    return permissions
+  }
+
   const permissions: Permission[] = [
     ...allowErc20Approve(sellTokens, gpV2VaultRelayer, approveAllowance),
     {
