@@ -62,6 +62,18 @@ export const allowCowOrderSigning = ({
       return token
     })
 
+  // Throw if sell and buy are identical single-element arrays (swapping a token into itself is not possible)
+  if (
+    sell.length === 1 &&
+    buy.length === 1 &&
+    ((sell[0] === "native" && buy[0] === "native") ||
+      (sell[0] !== "native" &&
+        buy[0] !== "native" &&
+        sell[0].toLowerCase() === buy[0].toLowerCase()))
+  ) {
+    throw new Error("Cannot swap a token into itself")
+  }
+
   const sellTokens = resolveTokens(sell)
   const buyTokens = resolveTokens(buy)
 
