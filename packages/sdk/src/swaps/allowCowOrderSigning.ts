@@ -3,7 +3,7 @@ import { c, forAll, Permission } from "zodiac-roles-sdk"
 import {
   WRAPPED_NATIVE_CURRENCIES,
   COW_PROTOCOL_VAULT_RELAYER_ADDRESS,
-} from "@cowprotocol/cow-sdk"
+} from "@cowprotocol/sdk-config"
 import { SupportedChainId } from "./types"
 
 const cowOrderSigner = "0x23dA9AdE38E4477b23770DeD512fD37b12381FAB" as const
