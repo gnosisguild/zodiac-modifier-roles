@@ -3,7 +3,7 @@ import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { hexlify, randomBytes } from "ethers";
 
-import { Encoding, Operator, flattenCondition } from "../utils";
+import { Encoding, Operator, flattenCondition, packConditions } from "../utils";
 import { deployRolesMod } from "../setup";
 
 describe("Integrity", () => {
@@ -24,21 +24,28 @@ describe("Integrity", () => {
     const roleKey = hexlify(randomBytes(32));
     const TARGET = "0x000000000000000000000000000000000000000f";
 
-    const allowTarget = (conditions: any[]) =>
-      roles.connect(owner).allowTarget(roleKey, TARGET, conditions, 0);
+    // For testing validation errors, we call packConditions directly
+    // since validation now happens during packing
+    const pack = (conditions: any[]) => packConditions(roles, conditions);
 
-    return { roles, owner, allowTarget };
+    // For testing successful cases
+    const allowTarget = async (conditions: any[]) => {
+      const packed = await packConditions(roles, conditions);
+      return roles.connect(owner).allowTarget(roleKey, TARGET, packed, 0);
+    };
+
+    return { roles, owner, pack, allowTarget };
   }
 
   // 1. TREE STRUCTURE
   describe("tree structure", () => {
     describe("root node", () => {
       it("reverts UnsuitableRootNode when no root exists", async () => {
-        const { roles, allowTarget } = await loadFixture(setup);
+        const { roles, pack } = await loadFixture(setup);
 
         // All nodes have parent != self index
         await expect(
-          allowTarget([
+          pack([
             {
               parent: 1,
               paramType: Encoding.Static,
@@ -56,11 +63,11 @@ describe("Integrity", () => {
       });
 
       it("reverts UnsuitableRootNode when multiple roots exist", async () => {
-        const { roles, allowTarget } = await loadFixture(setup);
+        const { roles, pack } = await loadFixture(setup);
 
         // Two nodes with parent == self
         await expect(
-          allowTarget([
+          pack([
             {
               parent: 0,
               paramType: Encoding.Static,
@@ -78,11 +85,11 @@ describe("Integrity", () => {
       });
 
       it("reverts UnsuitableRootNode when root is not at index 0", async () => {
-        const { roles, allowTarget } = await loadFixture(setup);
+        const { roles, pack } = await loadFixture(setup);
 
         // Root at index 1 instead of 0
         await expect(
-          allowTarget([
+          pack([
             {
               parent: 1,
               paramType: Encoding.Static,
@@ -102,10 +109,10 @@ describe("Integrity", () => {
 
     describe("BFS ordering", () => {
       it("reverts NotBFS when parent index exceeds current index", async () => {
-        const { roles, allowTarget } = await loadFixture(setup);
+        const { roles, pack } = await loadFixture(setup);
 
         await expect(
-          allowTarget([
+          pack([
             {
               parent: 0,
               paramType: Encoding.AbiEncoded,
@@ -123,10 +130,10 @@ describe("Integrity", () => {
       });
 
       it("reverts NotBFS when parent indices are not non-decreasing", async () => {
-        const { roles, allowTarget } = await loadFixture(setup);
+        const { roles, pack } = await loadFixture(setup);
 
         await expect(
-          allowTarget([
+          pack([
             {
               parent: 0,
               paramType: Encoding.AbiEncoded,
@@ -161,13 +168,13 @@ describe("Integrity", () => {
   describe("child constraints", () => {
     describe("container types require structural children", () => {
       it("reverts UnsuitableChildCount for Tuple with no structural children", async () => {
-        const { roles, allowTarget } = await loadFixture(setup);
+        const { roles, pack } = await loadFixture(setup);
 
         const allowanceKey = hexlify(randomBytes(32));
 
         // Tuple with only a non-structural child (no structural children)
         await expect(
-          allowTarget([
+          pack([
             {
               parent: 0,
               paramType: Encoding.Tuple,
@@ -185,13 +192,13 @@ describe("Integrity", () => {
       });
 
       it("reverts UnsuitableChildCount for Array with no structural children", async () => {
-        const { roles, allowTarget } = await loadFixture(setup);
+        const { roles, pack } = await loadFixture(setup);
 
         const allowanceKey = hexlify(randomBytes(32));
 
         // Array with only a non-structural child (no structural children)
         await expect(
-          allowTarget([
+          pack([
             {
               parent: 0,
               paramType: Encoding.Array,
@@ -211,10 +218,10 @@ describe("Integrity", () => {
 
     describe("leaf types forbid children", () => {
       it("reverts LeafNodeCannotHaveChildren for Static with children", async () => {
-        const { roles, allowTarget } = await loadFixture(setup);
+        const { roles, pack } = await loadFixture(setup);
 
         await expect(
-          allowTarget([
+          pack([
             {
               parent: 0,
               paramType: Encoding.Static,
@@ -232,10 +239,10 @@ describe("Integrity", () => {
       });
 
       it("reverts LeafNodeCannotHaveChildren for Dynamic with children", async () => {
-        const { roles, allowTarget } = await loadFixture(setup);
+        const { roles, pack } = await loadFixture(setup);
 
         await expect(
-          allowTarget([
+          pack([
             {
               parent: 0,
               paramType: Encoding.Dynamic,
@@ -253,10 +260,10 @@ describe("Integrity", () => {
       });
 
       it("reverts LeafNodeCannotHaveChildren for EtherValue with children", async () => {
-        const { roles, allowTarget } = await loadFixture(setup);
+        const { roles, pack } = await loadFixture(setup);
 
         await expect(
-          allowTarget([
+          pack([
             {
               parent: 0,
               paramType: Encoding.EtherValue,
@@ -276,7 +283,7 @@ describe("Integrity", () => {
 
     describe("structural ordering", () => {
       it("reverts NonStructuralChildrenMustComeLast when structural children follow non-structural ones (validates iteration logic)", async () => {
-        const { roles, allowTarget } = await loadFixture(setup);
+        const { roles, pack } = await loadFixture(setup);
         const allowanceKey = hexlify(randomBytes(32));
 
         // Tree structure designed to catch iteration bugs (e.g., return vs continue on leaf):
@@ -287,7 +294,7 @@ describe("Integrity", () => {
         //     └── Structural (Static) -> Violation! Structural after Non-structural
 
         await expect(
-          allowTarget(
+          pack(
             flattenCondition({
               paramType: Encoding.Tuple,
               operator: Operator.Matches,
@@ -327,10 +334,10 @@ describe("Integrity", () => {
   describe("type tree", () => {
     describe("branching nodes require matching children", () => {
       it("reverts UnsuitableChildTypeTree for And with mismatched children", async () => {
-        const { roles, allowTarget } = await loadFixture(setup);
+        const { roles, pack } = await loadFixture(setup);
 
         await expect(
-          allowTarget([
+          pack([
             {
               parent: 0,
               paramType: Encoding.None,
@@ -360,10 +367,10 @@ describe("Integrity", () => {
       });
 
       it("reverts UnsuitableChildTypeTree for Or with mismatched children", async () => {
-        const { roles, allowTarget } = await loadFixture(setup);
+        const { roles, pack } = await loadFixture(setup);
 
         await expect(
-          allowTarget([
+          pack([
             {
               parent: 0,
               paramType: Encoding.None,
@@ -393,10 +400,10 @@ describe("Integrity", () => {
       });
 
       it("reverts UnsuitableChildTypeTree for Array with mismatched children", async () => {
-        const { roles, allowTarget } = await loadFixture(setup);
+        const { roles, pack } = await loadFixture(setup);
 
         await expect(
-          allowTarget([
+          pack([
             {
               parent: 0,
               paramType: Encoding.Array,
@@ -462,10 +469,10 @@ describe("Integrity", () => {
 
     describe("EqualTo compValue constraints", () => {
       it("reverts UnsuitableCompValue for Tuple EqualTo with short compValue", async () => {
-        const { roles, allowTarget } = await loadFixture(setup);
+        const { roles, pack } = await loadFixture(setup);
 
         await expect(
-          allowTarget(
+          pack(
             flattenCondition({
               paramType: Encoding.Tuple,
               operator: Operator.EqualTo,
@@ -482,10 +489,10 @@ describe("Integrity", () => {
       });
 
       it("reverts UnsuitableCompValue for Array EqualTo with short compValue", async () => {
-        const { roles, allowTarget } = await loadFixture(setup);
+        const { roles, pack } = await loadFixture(setup);
 
         await expect(
-          allowTarget(
+          pack(
             flattenCondition({
               paramType: Encoding.Array,
               operator: Operator.EqualTo,
@@ -504,10 +511,10 @@ describe("Integrity", () => {
 
     describe("Slice child constraint", () => {
       it("reverts SliceChildNotStatic when child does not resolve to Static", async () => {
-        const { roles, allowTarget } = await loadFixture(setup);
+        const { roles, pack } = await loadFixture(setup);
 
         await expect(
-          allowTarget([
+          pack([
             {
               parent: 0,
               paramType: Encoding.Static,
@@ -529,7 +536,7 @@ describe("Integrity", () => {
   // 4. CROSS-NODE DEPENDENCIES
   describe("pluck order", () => {
     it("reverts PluckNotVisitedBeforeRef when WithinRatio references unvisited pluck index", async () => {
-      const { roles, allowTarget } = await loadFixture(setup);
+      const { roles, pack } = await loadFixture(setup);
 
       // WithinRatio compValue: referenceIndex(1) + referenceDecimals(1) + relativeIndex(1) + relativeDecimals(1) + minRatio(4) + maxRatio(4) = 12 bytes minimum
       // Reference index 5, relative index 7 - but no Pluck nodes visited before
@@ -545,7 +552,7 @@ describe("Integrity", () => {
         "0000000000000000000000000000000000000000"; // relativeAdapter
 
       await expect(
-        allowTarget([
+        pack([
           {
             parent: 0,
             paramType: Encoding.AbiEncoded,
@@ -569,7 +576,7 @@ describe("Integrity", () => {
     });
 
     it("reverts PluckNotVisitedBeforeRef when Pluck in later sibling subtree", async () => {
-      const { roles, allowTarget } = await loadFixture(setup);
+      const { roles, pack } = await loadFixture(setup);
 
       // Scenario: Two sibling Tuples where first contains WithinRatio,
       // second contains the Pluck nodes it references.
@@ -601,7 +608,7 @@ describe("Integrity", () => {
       // WithinRatio is visited BEFORE Pluck nodes!
 
       await expect(
-        allowTarget(
+        pack(
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,

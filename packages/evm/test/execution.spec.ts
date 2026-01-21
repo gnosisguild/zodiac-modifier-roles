@@ -3,7 +3,7 @@ import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { Interface } from "ethers";
 
-import { Encoding, ExecutionOptions, Operator } from "./utils";
+import { Encoding, ExecutionOptions, Operator, packConditions } from "./utils";
 import { deployRolesMod } from "./setup";
 
 const iface = new Interface([
@@ -62,30 +62,31 @@ describe("Execution Mechanics", () => {
 
     // Allow the test function: fnThatMaybeReverts(uint256, bool)
     // We attach a WithinAllowance condition to track consumption.
+    const packed = await packConditions(roles, [
+      {
+        parent: 0,
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        compValue: "0x",
+      },
+      {
+        parent: 0,
+        paramType: Encoding.Static,
+        operator: Operator.WithinAllowance,
+        compValue: ALLOWANCE_KEY,
+      },
+      {
+        parent: 0,
+        paramType: Encoding.Static,
+        operator: Operator.Pass,
+        compValue: "0x",
+      },
+    ]);
     await roles.allowFunction(
       ROLE_KEY,
       testContractAddress,
       iface.getFunction("fnThatMaybeReverts")!.selector,
-      [
-        {
-          parent: 0,
-          paramType: Encoding.AbiEncoded,
-          operator: Operator.Matches,
-          compValue: "0x",
-        },
-        {
-          parent: 0,
-          paramType: Encoding.Static,
-          operator: Operator.WithinAllowance,
-          compValue: ALLOWANCE_KEY,
-        },
-        {
-          parent: 0,
-          paramType: Encoding.Static,
-          operator: Operator.Pass,
-          compValue: "0x",
-        },
-      ],
+      packed,
       ExecutionOptions.None,
     );
 
