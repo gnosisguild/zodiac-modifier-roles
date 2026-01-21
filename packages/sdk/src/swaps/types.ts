@@ -1,5 +1,10 @@
 /**
- * Supported chain IDs for COW Protocol
+ * Chain IDs where the CowOrderSigner contract is deployed.
+ * This is a subset of chains supported by cow-sdk.
+ *
+ * TODO: Deploy CowOrderSigner contracts to these additional cow-sdk chains:
+ * - LENS (232)
+ * - 
  */
 export enum SupportedChainId {
   MAINNET = 1,
@@ -8,20 +13,11 @@ export enum SupportedChainId {
   BASE = 8453,
   AVALANCHE = 43114,
   POLYGON = 137,
+  BNB = 56,
+  PLASMA = 9745,
+  LINEA = 59144,
   SEPOLIA = 11155111,
 }
-
-export type OrderKind = "sell" | "buy"
-
-/**
- * Sell token balance source
- */
-export type SellTokenBalance = "erc20" | "external" | "internal"
-
-/**
- * Buy token balance destination
- */
-export type BuyTokenBalance = "erc20" | "internal"
 
 interface SellOrderRequest {
   kind: "sell"
@@ -33,10 +29,8 @@ interface BuyOrderRequest {
   buyAmountAfterFee: bigint
 }
 
-type PriceQuality = "fast" | "optimal"
-
 /**
- * Union type for quote requests
+ * Request parameters for getting a CowSwap quote.
  */
 export type QuoteRequest = (SellOrderRequest | BuyOrderRequest) & {
   sellToken: `0x${string}`
@@ -44,15 +38,18 @@ export type QuoteRequest = (SellOrderRequest | BuyOrderRequest) & {
   receiver?: `0x${string}` | null
   validTo?: number
   partiallyFillable?: boolean
-  sellTokenBalance?: SellTokenBalance
-  buyTokenBalance?: BuyTokenBalance
-  priceQuality?: PriceQuality
+  sellTokenBalance?: "erc20" | "external" | "internal"
+  buyTokenBalance?: "erc20" | "internal"
+  priceQuality?: "fast" | "optimal"
 
   chainId: SupportedChainId
   rolesModifier: `0x${string}`
   roleKey: `0x${string}`
 }
 
+/**
+ * Quote returned by getCowQuote, used as input for signCowOrder and postCowOrder.
+ */
 export type Quote = {
   sellToken: `0x${string}`
   buyToken: `0x${string}`
@@ -63,10 +60,10 @@ export type Quote = {
   appData: string
   appDataHash: string
   networkCostsAmount: string
-  kind: OrderKind
+  kind: "sell" | "buy"
   partiallyFillable: boolean
-  sellTokenBalance: SellTokenBalance
-  buyTokenBalance: BuyTokenBalance
+  sellTokenBalance: "erc20" | "external" | "internal"
+  buyTokenBalance: "erc20" | "internal"
 
   from: `0x${string}`
   chainId: SupportedChainId
@@ -75,15 +72,8 @@ export type Quote = {
 }
 
 /**
- * AppData structure for COW Protocol orders
+ * Advanced options for getCowQuote.
  */
-export interface AppData {
-  partnerFee: {
-    bps: number
-    recipient: string
-  }
-}
-
 export interface AdvancedOptions {
   appCode?: string
   environment?: string

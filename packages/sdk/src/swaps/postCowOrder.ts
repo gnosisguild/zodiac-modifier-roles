@@ -1,6 +1,24 @@
+import {
+  OrderKind,
+  SigningScheme,
+  SellTokenSource,
+  BuyTokenDestination,
+} from "@cowprotocol/sdk-order-book"
 import { Quote } from "./types"
 import { validateAppData } from "./appData"
 import { postCowOrder as postCowOrderApi } from "./cowOrderbookApi"
+
+// Mapping helpers for converting string options to SDK enums
+const sellTokenSourceMap: Record<string, SellTokenSource> = {
+  erc20: SellTokenSource.ERC20,
+  internal: SellTokenSource.INTERNAL,
+  external: SellTokenSource.EXTERNAL,
+}
+
+const buyTokenDestinationMap: Record<string, BuyTokenDestination> = {
+  erc20: BuyTokenDestination.ERC20,
+  internal: BuyTokenDestination.INTERNAL,
+}
 
 /**
  * Posts a CowSwap order to the Cow order book API.
@@ -23,12 +41,16 @@ export const postCowOrder = async (quote: Quote) => {
     validTo: quote.validTo,
     appData: quote.appData,
     feeAmount: "0",
-    kind: quote.kind,
+    kind: quote.kind === "sell" ? OrderKind.SELL : OrderKind.BUY,
     partiallyFillable: quote.partiallyFillable,
-    sellTokenBalance: quote.sellTokenBalance,
-    buyTokenBalance: quote.buyTokenBalance,
+    sellTokenBalance: quote.sellTokenBalance
+      ? sellTokenSourceMap[quote.sellTokenBalance]
+      : undefined,
+    buyTokenBalance: quote.buyTokenBalance
+      ? buyTokenDestinationMap[quote.buyTokenBalance]
+      : undefined,
     from: quote.from,
     signature: quote.from,
-    signingScheme: "presign",
+    signingScheme: SigningScheme.PRESIGN,
   })
 }

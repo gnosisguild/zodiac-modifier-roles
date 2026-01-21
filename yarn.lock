@@ -500,6 +500,38 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@cowprotocol/sdk-common@npm:0.5.0":
+  version: 0.5.0
+  resolution: "@cowprotocol/sdk-common@npm:0.5.0"
+  dependencies:
+    "@cowprotocol/sdk-config": 0.6.3
+  checksum: 77b3f39f9e6b8997f8da1081964ea2212e40ada18ea654f52f4f77b6826d3bd017c31b7d38316ec5118b41f5a40ff8e798d3af8940cc09e707eabaa86336112e
+  languageName: node
+  linkType: hard
+
+"@cowprotocol/sdk-config@npm:0.6.3, @cowprotocol/sdk-config@npm:^0.6.3":
+  version: 0.6.3
+  resolution: "@cowprotocol/sdk-config@npm:0.6.3"
+  dependencies:
+    exponential-backoff: ^3.1.1
+    limiter: ^2.1.0
+  checksum: 18426292c35a19eb11cdfaacc2b2821f5174dc2beaf30724834a3f48efd571f77d77c4582473ec0bb76c29f1c953c7cc267b76244b20c2b01250c8dff6a60fac
+  languageName: node
+  linkType: hard
+
+"@cowprotocol/sdk-order-book@npm:^0.5.1":
+  version: 0.5.1
+  resolution: "@cowprotocol/sdk-order-book@npm:0.5.1"
+  dependencies:
+    "@cowprotocol/sdk-common": 0.5.0
+    "@cowprotocol/sdk-config": 0.6.3
+    cross-fetch: ^3.2.0
+    exponential-backoff: ^3.1.2
+    limiter: ^3.0.0
+  checksum: 7636e620ff157dd917773df7cf102047cadefc359a0f8fdfda243d76376bd0954f89c1a982da5fd6e4b4df2e106150c0820c6d7c795e106e4fb27ae9a4f06fbb
+  languageName: node
+  linkType: hard
+
 "@cspotcode/source-map-support@npm:^0.8.0":
   version: 0.8.1
   resolution: "@cspotcode/source-map-support@npm:0.8.1"
@@ -7695,7 +7727,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cross-fetch@npm:^3.1.4":
+"cross-fetch@npm:^3.1.4, cross-fetch@npm:^3.2.0":
   version: 3.2.0
   resolution: "cross-fetch@npm:3.2.0"
   dependencies:
@@ -9887,6 +9919,13 @@ __metadata:
   version: 3.1.2
   resolution: "exponential-backoff@npm:3.1.2"
   checksum: 7e191e3dd6edd8c56c88f2c8037c98fbb8034fe48778be53ed8cb30ccef371a061a4e999a469aab939b92f8f12698f3b426d52f4f76b7a20da5f9f98c3cbc862
+  languageName: node
+  linkType: hard
+
+"exponential-backoff@npm:^3.1.2":
+  version: 3.1.3
+  resolution: "exponential-backoff@npm:3.1.3"
+  checksum: 471fdb70fd3d2c08a74a026973bdd4105b7832911f610ca67bbb74e39279411c1eed2f2a110c9d41c2edd89459ba58fdaba1c174beed73e7a42d773882dcff82
   languageName: node
   linkType: hard
 
@@ -12236,6 +12275,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"just-performance@npm:4.3.0":
+  version: 4.3.0
+  resolution: "just-performance@npm:4.3.0"
+  checksum: 37e226e308689b27ad7e0cdb2b2181c8be85f28cb0026db4b68c189f4894828a2865ea4a7a5f3488f4e3390bac1f9428fc6e40a554c068b08e5992e26920e376
+  languageName: node
+  linkType: hard
+
 "katex@npm:^0.16.0, katex@npm:^0.16.21, katex@npm:^0.16.9":
   version: 0.16.21
   resolution: "katex@npm:0.16.21"
@@ -12363,6 +12409,22 @@ __metadata:
     prelude-ls: ~1.1.2
     type-check: ~0.3.2
   checksum: 0d084a524231a8246bb10fec48cdbb35282099f6954838604f3c7fc66f2e16fa66fd9cc2f3f20a541a113c4dafdf181e822c887c8a319c9195444e6c64ac395e
+  languageName: node
+  linkType: hard
+
+"limiter@npm:^2.1.0":
+  version: 2.1.0
+  resolution: "limiter@npm:2.1.0"
+  dependencies:
+    just-performance: 4.3.0
+  checksum: 989092bfdafeefb37bd139f6451f165d449a628cd6fbe9308ed5147a9af24631f031e16466a3e48283418e0bea45c06aa1710f8f8945bc56ea7ef01f94ed5c65
+  languageName: node
+  linkType: hard
+
+"limiter@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "limiter@npm:3.0.0"
+  checksum: f08d5643d6d331eb3138acc267280bd4de2417e3e58fc4372660b9a64fb021e09e8ab283ba8a297d43c848e6dd2220db84ba12091f27daa6962187348023fb8a
   languageName: node
   linkType: hard
 
@@ -20101,6 +20163,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "zodiac-roles-sdk@workspace:packages/sdk"
   dependencies:
+    "@cowprotocol/sdk-config": ^0.6.3
+    "@cowprotocol/sdk-order-book": ^0.5.1
     "@gnosis-guild/eth-sdk": ^0.3.7
     "@gnosis-guild/eth-sdk-client": ^0.1.6
     "@gnosis-guild/typechain-ethers-v6": ^0.5.5
