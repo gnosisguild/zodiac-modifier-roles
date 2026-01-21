@@ -9,6 +9,7 @@ import {
   ExecutionOptions,
   ConditionViolationStatus,
   flattenCondition,
+  packConditions,
 } from "../utils";
 
 // Helper: compValue = [shift (2 bytes)][mask (N bytes)][expected (N bytes)]
@@ -340,8 +341,7 @@ describe("Operator - Bitmask", () => {
 
   describe("integrity", () => {
     it("reverts UnsuitableParameterType for invalid encodings", async () => {
-      const { roles, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { roles } = await loadFixture(setupTestContract);
 
       for (const encoding of [
         Encoding.None,
@@ -351,91 +351,68 @@ describe("Operator - Bitmask", () => {
         Encoding.EtherValue,
       ]) {
         await expect(
-          roles.allowTarget(
-            roleKey,
-            testContractAddress,
-            [
-              {
-                parent: 0,
-                paramType: encoding,
-                operator: Operator.Bitmask,
-                compValue: encodeCompValue(0, "ff", "ab"),
-              },
-            ],
-            0,
-          ),
+          packConditions(roles, [
+            {
+              parent: 0,
+              paramType: encoding,
+              operator: Operator.Bitmask,
+              compValue: encodeCompValue(0, "ff", "ab"),
+            },
+          ]),
         ).to.be.revertedWithCustomError(roles, "UnsuitableParameterType");
       }
     });
 
     describe("compValue", () => {
       it("reverts UnsuitableCompValue when compValue is less than 4 bytes", async () => {
-        const { roles, testContractAddress, roleKey } =
-          await loadFixture(setupTestContract);
+        const { roles } = await loadFixture(setupTestContract);
 
         await expect(
-          roles.allowTarget(
-            roleKey,
-            testContractAddress,
-            [
-              {
-                parent: 0,
-                paramType: Encoding.Static,
-                operator: Operator.Bitmask,
-                compValue: "0x0000", // 2 bytes (only shift, no mask/expected)
-              },
-            ],
-            0,
-          ),
+          packConditions(roles, [
+            {
+              parent: 0,
+              paramType: Encoding.Static,
+              operator: Operator.Bitmask,
+              compValue: "0x0000", // 2 bytes (only shift, no mask/expected)
+            },
+          ]),
         ).to.be.revertedWithCustomError(roles, "UnsuitableCompValue");
       });
 
       it("reverts UnsuitableCompValue when (length - 2) is odd", async () => {
-        const { roles, testContractAddress, roleKey } =
-          await loadFixture(setupTestContract);
+        const { roles } = await loadFixture(setupTestContract);
 
         await expect(
-          roles.allowTarget(
-            roleKey,
-            testContractAddress,
-            [
-              {
-                parent: 0,
-                paramType: Encoding.Static,
-                operator: Operator.Bitmask,
-                compValue: "0x0000aabbcc", // 5 bytes: 2 shift + 3 (odd, can't split evenly)
-              },
-            ],
-            0,
-          ),
+          packConditions(roles, [
+            {
+              parent: 0,
+              paramType: Encoding.Static,
+              operator: Operator.Bitmask,
+              compValue: "0x0000aabbcc", // 5 bytes: 2 shift + 3 (odd, can't split evenly)
+            },
+          ]),
         ).to.be.revertedWithCustomError(roles, "UnsuitableCompValue");
       });
     });
 
     it("reverts LeafNodeCannotHaveChildren when Bitmask has children", async () => {
-      const { roles, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { roles } = await loadFixture(setupTestContract);
 
       await expect(
-        roles.allowTarget(
-          roleKey,
-          testContractAddress,
-          [
-            {
-              parent: 0,
-              paramType: Encoding.Static,
-              operator: Operator.Bitmask,
-              compValue: encodeCompValue(0, "ff", "ab"),
-            },
-            {
-              parent: 0,
-              paramType: Encoding.Static,
-              operator: Operator.Pass,
-              compValue: "0x",
-            },
-          ],
-          0,
-        ),
+        packConditions(roles, [
+          {
+            parent: 0,
+            paramType: Encoding.Static,
+            operator: Operator.Bitmask,
+            compValue: encodeCompValue(0, "ff", "ab"),
+          },
+          {
+            parent: 0,
+            paramType: Encoding.Static,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+        ]),
       ).to.be.revertedWithCustomError(roles, "LeafNodeCannotHaveChildren");
     });
   });

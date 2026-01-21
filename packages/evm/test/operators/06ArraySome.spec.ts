@@ -10,6 +10,7 @@ import {
   ExecutionOptions,
   ConditionViolationStatus,
   flattenCondition,
+  packConditions,
 } from "../utils";
 
 const abiCoder = AbiCoder.defaultAbiCoder();
@@ -291,8 +292,7 @@ describe("Operator - ArraySome", () => {
 
   describe("integrity", () => {
     it("reverts UnsuitableParameterType for invalid encodings", async () => {
-      const { roles, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { roles } = await loadFixture(setupTestContract);
 
       for (const encoding of [
         Encoding.AbiEncoded,
@@ -303,37 +303,66 @@ describe("Operator - ArraySome", () => {
         Encoding.Tuple,
       ]) {
         await expect(
-          roles.allowTarget(
-            roleKey,
-            testContractAddress,
-            [
-              {
-                parent: 0,
-                paramType: encoding,
-                operator: Operator.ArraySome,
-                compValue: "0x",
-              },
-            ],
-            0,
-          ),
+          packConditions(roles, [
+            {
+              parent: 0,
+              paramType: encoding,
+              operator: Operator.ArraySome,
+              compValue: "0x",
+            },
+          ]),
         ).to.be.revertedWithCustomError(roles, "UnsuitableParameterType");
       }
     });
 
     it("reverts UnsuitableCompValue when compValue is not empty", async () => {
-      const { roles, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { roles } = await loadFixture(setupTestContract);
 
       await expect(
-        roles.allowTarget(
-          roleKey,
-          testContractAddress,
-          [
+        packConditions(roles, [
+          {
+            parent: 0,
+            paramType: Encoding.Array,
+            operator: Operator.ArraySome,
+            compValue: "0x01",
+          },
+          {
+            parent: 0,
+            paramType: Encoding.Static,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+        ]),
+      ).to.be.revertedWithCustomError(roles, "UnsuitableCompValue");
+    });
+
+    describe("children", () => {
+      it("reverts UnsuitableChildCount when ArraySome has zero children", async () => {
+        const { roles } = await loadFixture(setupTestContract);
+
+        await expect(
+          packConditions(roles, [
             {
               parent: 0,
               paramType: Encoding.Array,
               operator: Operator.ArraySome,
-              compValue: "0x01",
+              compValue: "0x",
+            },
+          ]),
+        ).to.be.revertedWithCustomError(roles, "UnsuitableChildCount");
+      });
+
+      it("reverts UnsuitableChildCount when ArraySome has more than one child", async () => {
+        const { roles } = await loadFixture(setupTestContract);
+
+        // ArraySome requires exactly 1 structural child
+        await expect(
+          packConditions(roles, [
+            {
+              parent: 0,
+              paramType: Encoding.Array,
+              operator: Operator.ArraySome,
+              compValue: "0x",
             },
             {
               parent: 0,
@@ -341,153 +370,83 @@ describe("Operator - ArraySome", () => {
               operator: Operator.Pass,
               compValue: "0x",
             },
-          ],
-          0,
-        ),
-      ).to.be.revertedWithCustomError(roles, "UnsuitableCompValue");
-    });
-
-    describe("children", () => {
-      it("reverts UnsuitableChildCount when ArraySome has zero children", async () => {
-        const { roles, testContractAddress, roleKey } =
-          await loadFixture(setupTestContract);
-
-        await expect(
-          roles.allowTarget(
-            roleKey,
-            testContractAddress,
-            [
-              {
-                parent: 0,
-                paramType: Encoding.Array,
-                operator: Operator.ArraySome,
-                compValue: "0x",
-              },
-            ],
-            0,
-          ),
-        ).to.be.revertedWithCustomError(roles, "UnsuitableChildCount");
-      });
-
-      it("reverts UnsuitableChildCount when ArraySome has more than one child", async () => {
-        const { roles, testContractAddress, roleKey } =
-          await loadFixture(setupTestContract);
-
-        // ArraySome requires exactly 1 structural child
-        await expect(
-          roles.allowTarget(
-            roleKey,
-            testContractAddress,
-            [
-              {
-                parent: 0,
-                paramType: Encoding.Array,
-                operator: Operator.ArraySome,
-                compValue: "0x",
-              },
-              {
-                parent: 0,
-                paramType: Encoding.Static,
-                operator: Operator.Pass,
-                compValue: "0x",
-              },
-              {
-                parent: 0,
-                paramType: Encoding.Static,
-                operator: Operator.Pass,
-                compValue: "0x",
-              },
-            ],
-            0,
-          ),
+            {
+              parent: 0,
+              paramType: Encoding.Static,
+              operator: Operator.Pass,
+              compValue: "0x",
+            },
+          ]),
         ).to.be.revertedWithCustomError(roles, "UnsuitableChildCount");
 
         // ArraySome requires exactly 1 structural child
         await expect(
-          roles.allowTarget(
-            roleKey,
-            testContractAddress,
-            [
-              {
-                parent: 0,
-                paramType: Encoding.Array,
-                operator: Operator.ArraySome,
-                compValue: "0x",
-              },
-              {
-                parent: 0,
-                paramType: Encoding.Static,
-                operator: Operator.Pass,
-                compValue: "0x",
-              },
-              {
-                parent: 0,
-                paramType: Encoding.None,
-                operator: Operator.Pass,
-                compValue: "0x",
-              },
-            ],
-            0,
-          ),
+          packConditions(roles, [
+            {
+              parent: 0,
+              paramType: Encoding.Array,
+              operator: Operator.ArraySome,
+              compValue: "0x",
+            },
+            {
+              parent: 0,
+              paramType: Encoding.Static,
+              operator: Operator.Pass,
+              compValue: "0x",
+            },
+            {
+              parent: 0,
+              paramType: Encoding.None,
+              operator: Operator.Pass,
+              compValue: "0x",
+            },
+          ]),
         ).to.be.revertedWithCustomError(roles, "UnsuitableChildCount");
       });
 
       it("reverts UnsuitableChildCount when ArraySome has non-structural child", async () => {
-        const { roles, testContractAddress, roleKey } =
-          await loadFixture(setupTestContract);
+        const { roles } = await loadFixture(setupTestContract);
 
         const allowanceKey = hexlify(randomBytes(32));
 
-        // Valid: ArraySome with one structural child
-        await expect(
-          roles.allowTarget(
-            roleKey,
-            testContractAddress,
-            [
-              {
-                parent: 0,
-                paramType: Encoding.Array,
-                operator: Operator.ArraySome,
-                compValue: "0x",
-              },
-              {
-                parent: 0,
-                paramType: Encoding.Static,
-                operator: Operator.Pass,
-                compValue: "0x",
-              },
-            ],
-            0,
-          ),
-        ).to.not.be.reverted;
+        // Valid: ArraySome with one structural child - should succeed
+        await roles.packConditions([
+          {
+            parent: 0,
+            paramType: Encoding.Array,
+            operator: Operator.ArraySome,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: Encoding.Static,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+        ]);
 
         // Invalid: Adding a non-structural child should fail
         await expect(
-          roles.allowTarget(
-            roleKey,
-            testContractAddress,
-            [
-              {
-                parent: 0,
-                paramType: Encoding.Array,
-                operator: Operator.ArraySome,
-                compValue: "0x",
-              },
-              {
-                parent: 0,
-                paramType: Encoding.Static,
-                operator: Operator.Pass,
-                compValue: "0x",
-              },
-              {
-                parent: 0,
-                paramType: Encoding.None,
-                operator: Operator.CallWithinAllowance,
-                compValue: allowanceKey,
-              },
-            ],
-            0,
-          ),
+          roles.packConditions([
+            {
+              parent: 0,
+              paramType: Encoding.Array,
+              operator: Operator.ArraySome,
+              compValue: "0x",
+            },
+            {
+              parent: 0,
+              paramType: Encoding.Static,
+              operator: Operator.Pass,
+              compValue: "0x",
+            },
+            {
+              parent: 0,
+              paramType: Encoding.None,
+              operator: Operator.CallWithinAllowance,
+              compValue: allowanceKey,
+            },
+          ]),
         ).to.be.revertedWithCustomError(roles, "UnsuitableChildCount");
       });
     });

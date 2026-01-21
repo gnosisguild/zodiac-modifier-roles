@@ -9,6 +9,7 @@ import {
   ExecutionOptions,
   Operator,
   ConditionViolationStatus,
+  packConditions,
 } from "../utils";
 import { deployRolesMod } from "../setup";
 
@@ -52,32 +53,35 @@ describe("AvatarIsOwnerOfERC721", () => {
     // Extra bytes (padding) for the custom checker address in compValue
     const extra = "000000000000000000000000";
 
-    await roles.connect(owner).allowFunction(
-      ROLE_KEY,
-      mockERC721Address,
-      SELECTOR,
-      [
-        {
-          parent: 0,
-          paramType: Encoding.AbiEncoded,
-          operator: Operator.Matches,
-          compValue: "0x",
-        },
-        {
-          parent: 0,
-          paramType: Encoding.Static,
-          operator: Operator.Custom,
-          compValue: `${customCheckerAddress}${extra}`,
-        },
-        {
-          parent: 0,
-          paramType: Encoding.Static,
-          operator: Operator.Pass,
-          compValue: "0x",
-        },
-      ],
-      ExecutionOptions.None,
-    );
+    const packed = await packConditions(roles, [
+      {
+        parent: 0,
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        compValue: "0x",
+      },
+      {
+        parent: 0,
+        paramType: Encoding.Static,
+        operator: Operator.Custom,
+        compValue: `${customCheckerAddress}${extra}`,
+      },
+      {
+        parent: 0,
+        paramType: Encoding.Static,
+        operator: Operator.Pass,
+        compValue: "0x",
+      },
+    ]);
+    await roles
+      .connect(owner)
+      .allowFunction(
+        ROLE_KEY,
+        mockERC721Address,
+        SELECTOR,
+        packed,
+        ExecutionOptions.None,
+      );
 
     async function invoke(tokenId: number, someParam: number) {
       return roles

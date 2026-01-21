@@ -2,7 +2,6 @@
 pragma solidity >=0.8.17 <0.9.0;
 
 import {ExecutionOptions} from "./Permission.sol";
-import {ConditionFlat} from "./Condition.sol";
 
 /**
  * @title IRolesEvent - All events emitted by the Roles Mod.
@@ -55,7 +54,7 @@ interface IRolesEvent {
     event AllowTarget(
         bytes32 roleKey,
         address targetAddress,
-        ConditionFlat[] conditions,
+        bytes conditions,
         ExecutionOptions options
     );
 
@@ -70,7 +69,7 @@ interface IRolesEvent {
         bytes32 roleKey,
         address targetAddress,
         bytes4 selector,
-        ConditionFlat[] conditions,
+        bytes conditions,
         ExecutionOptions options
     );
 
