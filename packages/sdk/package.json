@@ -1,6 +1,6 @@
 {
   "name": "zodiac-roles-sdk",
-  "version": "3.3.3",
+  "version": "3.4.0",
   "license": "LGPL-3.0+",
   "description": "A library for managing role permissions on Zodiac Roles Modifier",
   "main": "./build/index.js",

@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.4.0](https://github.com/gnosisguild/zodiac-modifier-roles/compare/zodiac-roles-sdk-v3.3.3...zodiac-roles-sdk-v3.4.0) (2026-01-21)
+
+
+### Features
+
+* swap native tokens ([#431](https://github.com/gnosisguild/zodiac-modifier-roles/issues/431)) ([783eb75](https://github.com/gnosisguild/zodiac-modifier-roles/commit/783eb75b92f613220f27ac43e96aed588f559591))
+
 ## [3.3.3](https://github.com/gnosisguild/zodiac-modifier-roles/compare/zodiac-roles-sdk-v3.3.2...zodiac-roles-sdk-v3.3.3) (2026-01-15)
 
 
