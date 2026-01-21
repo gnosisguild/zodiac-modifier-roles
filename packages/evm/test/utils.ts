@@ -1,6 +1,6 @@
 import assert from "assert";
 import { BigNumberish, solidityPacked } from "ethers";
-import { ConditionFlatStruct } from "../typechain-types/contracts/Roles";
+import { ConditionFlatStruct, Roles } from "../typechain-types/contracts/Roles";
 
 export const logGas = async (
   message: string,
@@ -212,4 +212,16 @@ export function flattenCondition(root: Condition): ConditionFlatStruct[] {
   }
 
   return result;
+}
+
+/**
+ * Packs conditions into bytes format for allowTarget/allowFunction.
+ * Returns "0x" for empty conditions (the contract will use Pass condition).
+ */
+export async function packConditions(
+  roles: Roles,
+  conditions: ConditionFlatStruct[],
+): Promise<string> {
+  if (conditions.length === 0) return "0x";
+  return roles.packConditions(conditions);
 }

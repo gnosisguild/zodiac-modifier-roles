@@ -15,6 +15,7 @@ import {
   ExecutionOptions,
   ConditionViolationStatus,
   flattenCondition,
+  packConditions,
 } from "../utils";
 
 const abiCoder = AbiCoder.defaultAbiCoder();
@@ -480,8 +481,7 @@ describe("Operator - And", () => {
   describe("integrity", () => {
     describe("encoding", () => {
       it("reverts UnsuitableParameterType for invalid encodings", async () => {
-        const { roles, testContractAddress, roleKey } =
-          await loadFixture(setupTestContract);
+        const { roles } = await loadFixture(setupTestContract);
 
         for (const encoding of [
           Encoding.Static,
@@ -492,45 +492,12 @@ describe("Operator - And", () => {
           Encoding.EtherValue,
         ]) {
           await expect(
-            roles.allowTarget(
-              roleKey,
-              testContractAddress,
-              [
-                {
-                  parent: 0,
-                  paramType: encoding,
-                  operator: Operator.And,
-                  compValue: "0x",
-                },
-                {
-                  parent: 0,
-                  paramType: Encoding.Static,
-                  operator: Operator.Pass,
-                  compValue: "0x",
-                },
-              ],
-              0,
-            ),
-          ).to.be.revertedWithCustomError(roles, "UnsuitableParameterType");
-        }
-      });
-    });
-
-    describe("compValue", () => {
-      it("reverts UnsuitableCompValue when compValue is not empty", async () => {
-        const { roles, testContractAddress, roleKey } =
-          await loadFixture(setupTestContract);
-
-        await expect(
-          roles.allowTarget(
-            roleKey,
-            testContractAddress,
-            [
+            packConditions(roles, [
               {
                 parent: 0,
-                paramType: Encoding.None,
+                paramType: encoding,
                 operator: Operator.And,
-                compValue: "0x".padEnd(66, "0"),
+                compValue: "0x",
               },
               {
                 parent: 0,
@@ -538,32 +505,48 @@ describe("Operator - And", () => {
                 operator: Operator.Pass,
                 compValue: "0x",
               },
-            ],
-            0,
-          ),
+            ]),
+          ).to.be.revertedWithCustomError(roles, "UnsuitableParameterType");
+        }
+      });
+    });
+
+    describe("compValue", () => {
+      it("reverts UnsuitableCompValue when compValue is not empty", async () => {
+        const { roles } = await loadFixture(setupTestContract);
+
+        await expect(
+          packConditions(roles, [
+            {
+              parent: 0,
+              paramType: Encoding.None,
+              operator: Operator.And,
+              compValue: "0x".padEnd(66, "0"),
+            },
+            {
+              parent: 0,
+              paramType: Encoding.Static,
+              operator: Operator.Pass,
+              compValue: "0x",
+            },
+          ]),
         ).to.be.revertedWithCustomError(roles, "UnsuitableCompValue");
       });
     });
 
     describe("children", () => {
       it("reverts UnsuitableChildCount when And has zero children", async () => {
-        const { roles, testContractAddress, roleKey } =
-          await loadFixture(setupTestContract);
+        const { roles } = await loadFixture(setupTestContract);
 
         await expect(
-          roles.allowTarget(
-            roleKey,
-            testContractAddress,
-            [
-              {
-                parent: 0,
-                paramType: Encoding.None,
-                operator: Operator.And,
-                compValue: "0x",
-              },
-            ],
-            0,
-          ),
+          packConditions(roles, [
+            {
+              parent: 0,
+              paramType: Encoding.None,
+              operator: Operator.And,
+              compValue: "0x",
+            },
+          ]),
         ).to.be.revertedWithCustomError(roles, "UnsuitableChildCount");
       });
     });

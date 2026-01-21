@@ -3,17 +3,21 @@ pragma solidity >=0.8.17 <0.9.0;
 
 import "../../types/Types.sol";
 
+/**
+ * @title  ConditionUnpacker
+ * @notice A library that provides unpacking functions for reconstructing
+ *         Condition and Layout trees from a memory-optimized buffer.
+ *
+ * @dev    This is performance-critical code. Every transaction execution
+ *         begins by loading packed conditions from contract storage
+ *         (via extcodecopy) and performing tree unpacking. The implementation
+ *         is deliberately low-level to minimize execution overhead.
+ *
+ * @author gnosisguild
+ */
 library ConditionUnpacker {
-    // ═══════════════════════════════════════════════════════════════════════════
-    // Constants
-    // ═══════════════════════════════════════════════════════════════════════════
-
-    uint256 private constant CONDITION_NODE_BYTES = 5;
-    uint256 private constant LAYOUT_NODE_BYTES = 3;
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // Main Unpacking Function
-    // ═══════════════════════════════════════════════════════════════════════════
+    uint256 private constant HEADER_BYTES = 5;
+    uint256 private constant NODE_BYTES = 4;
 
     function unpack(
         bytes memory buffer
@@ -23,169 +27,191 @@ library ConditionUnpacker {
         returns (
             Condition memory condition,
             Layout memory layout,
-            uint256 maxPluckIndex
+            uint256 maxPluckValue
         )
     {
-        // Unpack condition tree (starts at offset 3)
-        condition = _unpackCondition(buffer, 3);
+        /*
+         * ┌───────────────────────────────────────────────────────────────┐
+         * │ header 40 bits, 5 bytes:                                      │
+         * │   • conditionNodeCount    16 bits  [39-24]                    │
+         * │   • layoutNodeCount       16 bits  [23-8]                     │
+         * │   • maxPluckCount          8 bits  [7-0]                      │
+         * └───────────────────────────────────────────────────────────────┘
+         */
+        uint256 header = uint40(bytes5(buffer));
 
-        // Unpack layout
-        layout = _unpackLayout(buffer, uint16(bytes2(buffer)));
+        Condition[] memory conditions = new Condition[]((header >> 24));
+        Layout[] memory layouts = new Layout[]((header >> 8) & 0xFFFF);
 
-        // Read maxPluckIndex from header
-        maxPluckIndex = uint8(buffer[2]);
+        _unpackTrees(buffer, conditions, layouts);
+
+        condition = conditions[0];
+        if (layouts.length > 0) layout = layouts[0];
+        maxPluckValue = header & 0xFF;
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // Condition Unpacking
-    // ═══════════════════════════════════════════════════════════════════════════
-
-    function _unpackCondition(
+    function _unpackTrees(
         bytes memory buffer,
-        uint256 offset
-    ) private view returns (Condition memory) {
-        // Load the node count from header (16 bits)
-        uint256 nodeCount;
+        Condition[] memory conditions,
+        Layout[] memory layouts
+    ) private view {
+        /**
+         * @dev Unpacks buffer into Condition and Layout trees in a single pass.
+         *      Both trees are built simultaneously from the unified node
+         *      format. This implementation provides a ~3x improvement in gas
+         *      cost compared to a naive approach involving multiple loops,
+         *      auxiliary functions, and child array allocations.
+         */
+
+        uint256 offset;
+        uint256 compValueOffset;
+        uint256 childConditionPtr;
+        uint256 childLayoutPtr;
         assembly {
-            offset := add(0x20, add(buffer, offset))
-            nodeCount := shr(240, mload(offset))
-            offset := add(offset, 2)
+            offset := add(add(buffer, 0x20), HEADER_BYTES)
+            compValueOffset := add(offset, mul(mload(conditions), NODE_BYTES))
+            childConditionPtr := add(conditions, 0x40)
+            childLayoutPtr := add(layouts, 0x40)
         }
 
-        Condition[] memory nodes = new Condition[](nodeCount);
-        uint256 nextChildBFS = 1;
-
-        for (uint256 i = 0; i < nodeCount; ++i) {
-            uint256 packed;
-            assembly {
-                packed := shr(216, mload(offset)) // Load 5 bytes, 40 bits
-            }
-
+        uint256 l;
+        for (uint256 c; c < conditions.length; ++c) {
             /*
              * ┌───────────────────────────────────────────────────────────┐
-             * │Each node 40 bits, 5 bytes:                                │
-             * │  • operator              5 bits                           │
-             * │  • unused                3 bits                           │
-             * │  • childCount            8 bits  (0-255)                  │
-             * │  • sChildCount           8 bits  (0-255)                  │
-             * │  • compValueOffset      16 bits  (0 if no value)          │
+             * │ packed 32 bits, 4 bytes:                                  │
+             * │   • encoding              3 bits  [31-29]                 │
+             * │   • operator              5 bits  [28-24]                 │
+             * │   • childCount           10 bits  [23-14]                 │
+             * │   • sChildCount          10 bits  [13-4]                  │
+             * │   • isInline              1 bit   [3]                     │
+             * │   • isVariant             1 bit   [2]                     │
+             * │   • isInLayout            1 bit   [1]                     │
+             * │   • hasCompValue          1 bit   [0]                     │
              * └───────────────────────────────────────────────────────────┘
              */
-
-            Condition memory node = nodes[i];
-            node.nodeIndex = i;
-            node.operator = Operator((packed >> 35) & 0x1F);
-            uint256 childCount = (packed >> 24) & 0xFF;
-            node.sChildCount = (packed >> 16) & 0xFF;
-            uint256 offsetCompValue = packed & 0xFFFF;
-
-            if (offsetCompValue != 0) {
-                uint256 length;
-                assembly {
-                    // load 2 bytes, 16 bits
-                    length := shr(
-                        240,
-                        mload(add(0x20, add(buffer, offsetCompValue)))
-                    )
-                }
-
-                bytes memory compValue = new bytes(length);
-                assembly {
-                    let src := add(0x22, add(buffer, offsetCompValue))
-                    let dst := add(0x20, compValue)
-                    mcopy(dst, src, length)
-                }
-                node.compValue = compValue;
-            }
-
-            if (childCount > 0) {
-                node.children = new Condition[](childCount);
-                for (uint256 j = 0; j < childCount; ++j) {
-                    node.children[j] = nodes[nextChildBFS];
-                    unchecked {
-                        ++nextChildBFS;
-                    }
-                }
-            } else if (node.operator == Operator.EqualToAvatar) {
-                node.operator = Operator.EqualTo;
-                node.compValue = abi.encode(_avatar());
-            }
-
-            unchecked {
-                offset += CONDITION_NODE_BYTES;
-            }
-        }
-
-        // Return root node
-        return nodes[0];
-    }
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // Layout Unpacking
-    // ═══════════════════════════════════════════════════════════════════════════
-
-    function _unpackLayout(
-        bytes memory buffer,
-        uint256 offset
-    ) private pure returns (Layout memory) {
-        // Load the node count from header (16 bits)
-        uint256 nodeCount;
-        assembly {
-            offset := add(0x20, add(buffer, offset))
-            nodeCount := shr(240, mload(offset))
-            offset := add(offset, 2)
-        }
-
-        Layout[] memory nodes = new Layout[](nodeCount);
-        uint256 nextChildBFS = 1;
-
-        for (uint256 i = 0; i < nodeCount; ++i) {
             uint256 packed;
             assembly {
-                packed := shr(232, mload(offset)) // Load 3 bytes (24 bits)
+                packed := shr(224, mload(offset))
+                offset := add(offset, NODE_BYTES)
             }
-            /*
-             * ┌──────────────────────────────────────────────────────────┐
-             * │Each node (24 bits = 3 bytes):                            │
-             * │  • encoding              3 bits  (bits 23-21)            │
-             * │  • inlined               1 bit   (bit 20)                │
-             * │  • childCount            8 bits  (bits 19-12)            │
-             * │  • leadingBytes         12 bits  (bits 11-0)             │
-             * └──────────────────────────────────────────────────────────┘
-             */
 
-            Layout memory node = nodes[i];
-            node.encoding = Encoding((packed >> 21) & 0x07);
-            node.inlined = (packed >> 20) & 1 != 0;
-            uint256 childCount = (packed >> 12) & 0xFF;
-            node.leadingBytes = packed & 0xFFF;
+            Condition memory condition = conditions[c];
+            condition.index = c;
+            condition.operator = Operator((packed >> 24) & 0x1F);
 
-            if (childCount > 0) {
-                node.children = new Layout[](childCount);
+            {
+                uint256 childCount = (packed >> 14) & 0x3FF;
+                if (childCount > 0) {
+                    condition.sChildCount = (packed >> 4) & 0x3FF;
+                    /*
+                     * shallowCopy children array
+                     */
+                    assembly {
+                        let size := mul(childCount, 0x20)
+                        // free mem pointer: load
+                        let dest := mload(0x40)
+                        // free mem pointer: advance
+                        mstore(0x40, add(add(dest, 0x20), size))
 
-                for (uint256 j = 0; j < childCount; ++j) {
-                    node.children[j] = nodes[nextChildBFS];
-                    unchecked {
-                        ++nextChildBFS;
+                        // new array: store length
+                        mstore(dest, childCount)
+                        // new array: shallow copy body
+                        mcopy(add(dest, 0x20), childConditionPtr, size)
+
+                        //condition: point to copied array
+                        mstore(add(condition, 0x80), dest)
+                        // advance child pointer
+                        childConditionPtr := add(childConditionPtr, size)
                     }
                 }
             }
 
-            unchecked {
-                offset += LAYOUT_NODE_BYTES;
+            uint256 encoding = (packed >> 29);
+
+            uint256 leadingBytes;
+            // hasCompValue
+            if ((packed & 1) != 0) {
+                uint256 length;
+                assembly {
+                    length := shr(240, mload(compValueOffset))
+                    compValueOffset := add(compValueOffset, 2)
+                }
+
+                // Encoding.AbiEncoded(5)
+                if (encoding == 5) {
+                    assembly {
+                        leadingBytes := shr(240, mload(compValueOffset))
+                        compValueOffset := add(compValueOffset, 2)
+                        length := sub(length, 2)
+                    }
+                }
+
+                if (length > 0) {
+                    assembly {
+                        // free mem pointer: load
+                        let compValue := mload(0x40)
+                        // free mem pointer: advance
+                        mstore(0x40, add(add(compValue, 0x20), length))
+
+                        // new buffer: store length
+                        mstore(compValue, length)
+                        // new buffer: copy body
+                        mcopy(add(compValue, 0x20), compValueOffset, length)
+
+                        //condition: point to copied buffer
+                        mstore(add(condition, 0x40), compValue)
+                        // advance pointer
+                        compValueOffset := add(compValueOffset, length)
+                    }
+                }
             }
-        }
 
-        return nodes[0];
-    }
+            // isInLayout
+            if ((packed & 2) != 0) {
+                // Encoding.EtherValue(6) Encoding.None(0)
+                if (encoding == 6) encoding = 0;
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // Helper
-    // ═══════════════════════════════════════════════════════════════════════════
+                Layout memory layout = layouts[l++];
 
-    function _avatar() private view returns (address result) {
-        assembly {
-            result := sload(101)
+                // isVariant && !isArray
+                layout.encoding = ((packed & 4) != 0) && encoding != 4
+                    ? Encoding.Dynamic
+                    : Encoding(encoding);
+
+                layout.inlined = (packed & 8) != 0;
+
+                if (condition.sChildCount > 0) {
+                    layout.leadingBytes = leadingBytes;
+
+                    // !isVariant && isArray
+                    uint256 childCount = ((packed & 4) == 0 && encoding == 4)
+                        ? 1 // Non-Variant Arrays -> use first child as template
+                        : condition.sChildCount;
+
+                    /*
+                     * shallowCopy children array
+                     */
+
+                    assembly {
+                        let size := mul(childCount, 0x20)
+                        let dest := mload(0x40)
+                        mstore(0x40, add(add(dest, 0x20), size))
+                        mstore(dest, childCount)
+                        mcopy(add(dest, 0x20), childLayoutPtr, size)
+                        mstore(add(layout, 0x20), dest)
+                        childLayoutPtr := add(childLayoutPtr, size)
+                    }
+                }
+            }
+
+            if (condition.operator == Operator.EqualToAvatar) {
+                condition.operator = Operator.EqualTo;
+                address avatar;
+                assembly {
+                    avatar := sload(101)
+                }
+                condition.compValue = abi.encode(avatar);
+            }
         }
     }
 }

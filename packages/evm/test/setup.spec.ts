@@ -3,7 +3,7 @@ import hre from "hardhat";
 import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
 import { ZeroHash, ZeroAddress, Interface } from "ethers";
 
-import { Encoding, ExecutionOptions, Operator } from "./utils";
+import { Encoding, ExecutionOptions, Operator, packConditions } from "./utils";
 import { deployRolesMod } from "./setup";
 
 const maxUint64 = 2n ** 64n - 1n;
@@ -75,7 +75,7 @@ describe("Setup", () => {
       await roles.allowTarget(
         ROLE_KEY,
         testContractAddress,
-        [],
+        "0x",
         ExecutionOptions.None,
       );
 
@@ -178,7 +178,7 @@ describe("Setup", () => {
       await roles.allowTarget(
         ROLE_KEY,
         testContractAddress,
-        [],
+        "0x",
         ExecutionOptions.None,
       );
 
@@ -237,7 +237,7 @@ describe("Setup", () => {
       await roles.allowTarget(
         ROLE_KEY,
         testContractAddress,
-        [],
+        "0x",
         ExecutionOptions.None,
       );
 
@@ -389,7 +389,7 @@ describe("Setup", () => {
       await roles.allowTarget(
         ROLE_KEY,
         testContractAddress,
-        [],
+        "0x",
         ExecutionOptions.None,
       );
 
@@ -401,24 +401,19 @@ describe("Setup", () => {
       ).to.not.be.reverted;
     });
 
-    it("validates condition tree integrity on store", async () => {
-      const { roles, ROLE_KEY, testContractAddress } = await loadFixture(setup);
+    it("validates condition tree integrity on pack", async () => {
+      const { roles } = await loadFixture(setup);
 
       // Invalid: root node has invalid parent reference (must be 0 for root)
       await expect(
-        roles.allowTarget(
-          ROLE_KEY,
-          testContractAddress,
-          [
-            {
-              parent: 5, // Invalid - root node must have parent 0
-              paramType: Encoding.Static,
-              operator: Operator.Pass,
-              compValue: "0x",
-            },
-          ],
-          ExecutionOptions.None,
-        ),
+        roles.packConditions([
+          {
+            parent: 5, // Invalid - root node must have parent 0
+            paramType: Encoding.Static,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+        ]),
       ).to.be.revertedWithCustomError(roles, "UnsuitableRootNode");
     });
 
@@ -429,12 +424,12 @@ describe("Setup", () => {
         roles.allowTarget(
           ROLE_KEY,
           testContractAddress,
-          [],
+          "0x",
           ExecutionOptions.None,
         ),
       )
         .to.emit(roles, "AllowTarget")
-        .withArgs(ROLE_KEY, testContractAddress, [], ExecutionOptions.None);
+        .withArgs(ROLE_KEY, testContractAddress, "0x", ExecutionOptions.None);
     });
 
     it("overwrites existing target permission", async () => {
@@ -448,7 +443,7 @@ describe("Setup", () => {
       await roles.allowTarget(
         ROLE_KEY,
         testContractAddress,
-        [],
+        "0x",
         ExecutionOptions.None,
       );
 
@@ -465,26 +460,27 @@ describe("Setup", () => {
       ).to.not.be.reverted;
 
       // Overwrite with condition: param must equal 42
+      const conditionsEq42 = await packConditions(roles, [
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.EqualTo,
+          compValue: hre.ethers.AbiCoder.defaultAbiCoder().encode(
+            ["uint256"],
+            [42],
+          ),
+        },
+      ]);
       await roles.allowTarget(
         ROLE_KEY,
         testContractAddress,
-        [
-          {
-            parent: 0,
-            paramType: Encoding.AbiEncoded,
-            operator: Operator.Matches,
-            compValue: "0x",
-          },
-          {
-            parent: 0,
-            paramType: Encoding.Static,
-            operator: Operator.EqualTo,
-            compValue: hre.ethers.AbiCoder.defaultAbiCoder().encode(
-              ["uint256"],
-              [42],
-            ),
-          },
-        ],
+        conditionsEq42,
         ExecutionOptions.None,
       );
 
@@ -555,7 +551,7 @@ describe("Setup", () => {
       await roles.allowTarget(
         ROLE_KEY,
         testContractAddress,
-        [],
+        "0x",
         ExecutionOptions.None,
       );
 
@@ -583,7 +579,7 @@ describe("Setup", () => {
       await roles.allowTarget(
         ROLE_KEY,
         testContractAddress,
-        [],
+        "0x",
         ExecutionOptions.None,
       );
 
@@ -605,7 +601,7 @@ describe("Setup", () => {
         ROLE_KEY,
         testContractAddress,
         selector,
-        [],
+        "0x",
         ExecutionOptions.None,
       );
 
@@ -668,7 +664,7 @@ describe("Setup", () => {
         ROLE_KEY,
         testContractAddress,
         selector,
-        [],
+        "0x",
         ExecutionOptions.None,
       );
 
@@ -698,27 +694,28 @@ describe("Setup", () => {
       await roles.scopeTarget(ROLE_KEY, testContractAddress);
 
       // Allow with condition: param must equal 42
+      const conditionsEq42 = await packConditions(roles, [
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.EqualTo,
+          compValue: hre.ethers.AbiCoder.defaultAbiCoder().encode(
+            ["uint256"],
+            [42],
+          ),
+        },
+      ]);
       await roles.allowFunction(
         ROLE_KEY,
         testContractAddress,
         selector,
-        [
-          {
-            parent: 0,
-            paramType: Encoding.AbiEncoded,
-            operator: Operator.Matches,
-            compValue: "0x",
-          },
-          {
-            parent: 0,
-            paramType: Encoding.Static,
-            operator: Operator.EqualTo,
-            compValue: hre.ethers.AbiCoder.defaultAbiCoder().encode(
-              ["uint256"],
-              [42],
-            ),
-          },
-        ],
+        conditionsEq42,
         ExecutionOptions.None,
       );
 
@@ -747,27 +744,19 @@ describe("Setup", () => {
       ).to.be.revertedWithCustomError(roles, "ConditionViolation");
     });
 
-    it("validates condition tree integrity on store", async () => {
-      const { roles, ROLE_KEY, testContractAddress } = await loadFixture(setup);
-
-      const selector = iface.getFunction("doNothing")!.selector;
+    it("validates condition tree integrity on pack", async () => {
+      const { roles } = await loadFixture(setup);
 
       // Invalid: root node has invalid parent reference (must be 0 for root)
       await expect(
-        roles.allowFunction(
-          ROLE_KEY,
-          testContractAddress,
-          selector,
-          [
-            {
-              parent: 5, // Invalid - root node must have parent 0
-              paramType: Encoding.Static,
-              operator: Operator.Pass,
-              compValue: "0x",
-            },
-          ],
-          ExecutionOptions.None,
-        ),
+        roles.packConditions([
+          {
+            parent: 5, // Invalid - root node must have parent 0
+            paramType: Encoding.Static,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+        ]),
       ).to.be.revertedWithCustomError(roles, "UnsuitableRootNode");
     });
 
@@ -781,7 +770,7 @@ describe("Setup", () => {
           ROLE_KEY,
           testContractAddress,
           selector,
-          [],
+          "0x",
           ExecutionOptions.None,
         ),
       )
@@ -790,7 +779,7 @@ describe("Setup", () => {
           ROLE_KEY,
           testContractAddress,
           selector,
-          [],
+          "0x",
           ExecutionOptions.None,
         );
     });
@@ -806,27 +795,28 @@ describe("Setup", () => {
       await roles.scopeTarget(ROLE_KEY, testContractAddress);
 
       // Allow with condition: param must equal 1
+      const conditionsEq1 = await packConditions(roles, [
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.EqualTo,
+          compValue: hre.ethers.AbiCoder.defaultAbiCoder().encode(
+            ["uint256"],
+            [1],
+          ),
+        },
+      ]);
       await roles.allowFunction(
         ROLE_KEY,
         testContractAddress,
         selector,
-        [
-          {
-            parent: 0,
-            paramType: Encoding.AbiEncoded,
-            operator: Operator.Matches,
-            compValue: "0x",
-          },
-          {
-            parent: 0,
-            paramType: Encoding.Static,
-            operator: Operator.EqualTo,
-            compValue: hre.ethers.AbiCoder.defaultAbiCoder().encode(
-              ["uint256"],
-              [1],
-            ),
-          },
-        ],
+        conditionsEq1,
         ExecutionOptions.None,
       );
 
@@ -843,27 +833,28 @@ describe("Setup", () => {
       ).to.be.revertedWithCustomError(roles, "ConditionViolation");
 
       // Overwrite: param must equal 2
+      const conditionsEq2 = await packConditions(roles, [
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.EqualTo,
+          compValue: hre.ethers.AbiCoder.defaultAbiCoder().encode(
+            ["uint256"],
+            [2],
+          ),
+        },
+      ]);
       await roles.allowFunction(
         ROLE_KEY,
         testContractAddress,
         selector,
-        [
-          {
-            parent: 0,
-            paramType: Encoding.AbiEncoded,
-            operator: Operator.Matches,
-            compValue: "0x",
-          },
-          {
-            parent: 0,
-            paramType: Encoding.Static,
-            operator: Operator.EqualTo,
-            compValue: hre.ethers.AbiCoder.defaultAbiCoder().encode(
-              ["uint256"],
-              [2],
-            ),
-          },
-        ],
+        conditionsEq2,
         ExecutionOptions.None,
       );
 
@@ -895,7 +886,7 @@ describe("Setup", () => {
         ROLE_KEY,
         testContractAddress,
         selector,
-        [],
+        "0x",
         ExecutionOptions.None,
       );
 
@@ -935,7 +926,7 @@ describe("Setup", () => {
         ROLE_KEY,
         testContractAddress,
         selector,
-        [],
+        "0x",
         ExecutionOptions.None,
       );
 
@@ -960,14 +951,14 @@ describe("Setup", () => {
         ROLE_KEY,
         testContractAddress,
         selector1,
-        [],
+        "0x",
         ExecutionOptions.None,
       );
       await roles.allowFunction(
         ROLE_KEY,
         testContractAddress,
         selector2,
-        [],
+        "0x",
         ExecutionOptions.None,
       );
 
@@ -1277,7 +1268,7 @@ describe("Setup", () => {
       await roles.allowTarget(
         ROLE_KEY,
         testContractAddress,
-        [],
+        "0x",
         ExecutionOptions.None,
       );
 
@@ -1312,7 +1303,7 @@ describe("Setup", () => {
         ROLE_KEY,
         testContractAddress,
         selector1,
-        [],
+        "0x",
         ExecutionOptions.None,
       );
 
@@ -1361,7 +1352,7 @@ describe("Setup", () => {
         ROLE_KEY,
         testContractAddress,
         selector,
-        [],
+        "0x",
         ExecutionOptions.None,
       );
 
@@ -1411,7 +1402,7 @@ describe("Setup", () => {
         ROLE_KEY,
         testContractAddress,
         selector1,
-        [],
+        "0x",
         ExecutionOptions.None,
       );
 
@@ -1421,7 +1412,7 @@ describe("Setup", () => {
         ROLE_KEY_2,
         testContractAddress,
         selector2,
-        [],
+        "0x",
         ExecutionOptions.None,
       );
 
