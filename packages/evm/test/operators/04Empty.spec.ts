@@ -10,6 +10,7 @@ import {
   ExecutionOptions,
   ConditionViolationStatus,
   flattenCondition,
+  packConditions,
 } from "../utils";
 import { ConditionFlatStruct } from "../../typechain-types/contracts/Roles";
 
@@ -18,10 +19,13 @@ describe("Operator - Empty", () => {
     const { roles, member, testContractAddress, roleKey } =
       await setupTestContract();
 
-    const allowTarget = (
+    const allowTarget = async (
       conditions: ConditionFlatStruct[],
       options = ExecutionOptions.None,
-    ) => roles.allowTarget(roleKey, testContractAddress, conditions, options);
+    ) => {
+      const packed = await packConditions(roles, conditions);
+      return roles.allowTarget(roleKey, testContractAddress, packed, options);
+    };
 
     const invoke = (
       data: string,
@@ -120,8 +124,7 @@ describe("Operator - Empty", () => {
 
   describe("integrity", () => {
     it("reverts UnsuitableParameterType for invalid encodings", async () => {
-      const { roles, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { roles } = await loadFixture(setupTestContract);
 
       for (const encoding of [
         Encoding.Static,
@@ -132,86 +135,69 @@ describe("Operator - Empty", () => {
         Encoding.EtherValue,
       ]) {
         await expect(
-          roles.allowTarget(
-            roleKey,
-            testContractAddress,
-            [
-              {
-                parent: 0,
-                paramType: Encoding.None,
-                operator: Operator.Or,
-                compValue: "0x",
-              },
-              {
-                parent: 0,
-                paramType: encoding,
-                operator: Operator.Empty,
-                compValue: "0x",
-              },
-            ],
-            0,
-          ),
+          packConditions(roles, [
+            {
+              parent: 0,
+              paramType: Encoding.None,
+              operator: Operator.Or,
+              compValue: "0x",
+            },
+            {
+              parent: 0,
+              paramType: encoding,
+              operator: Operator.Empty,
+              compValue: "0x",
+            },
+          ]),
         ).to.be.revertedWithCustomError(roles, "UnsuitableParameterType");
       }
     });
 
     it("reverts UnsuitableCompValue when compValue is not empty", async () => {
-      const { roles, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { roles } = await loadFixture(setupTestContract);
 
       await expect(
-        roles.allowTarget(
-          roleKey,
-          testContractAddress,
-          [
-            {
-              parent: 0,
-              paramType: Encoding.None,
-              operator: Operator.Or,
-              compValue: "0x",
-            },
-            {
-              parent: 0,
-              paramType: Encoding.None,
-              operator: Operator.Empty,
-              compValue: "0x01",
-            },
-          ],
-          0,
-        ),
+        packConditions(roles, [
+          {
+            parent: 0,
+            paramType: Encoding.None,
+            operator: Operator.Or,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: Encoding.None,
+            operator: Operator.Empty,
+            compValue: "0x01",
+          },
+        ]),
       ).to.be.revertedWithCustomError(roles, "UnsuitableCompValue");
     });
 
     it("reverts LeafNodeCannotHaveChildren when Empty has children", async () => {
-      const { roles, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { roles } = await loadFixture(setupTestContract);
 
       await expect(
-        roles.allowTarget(
-          roleKey,
-          testContractAddress,
-          [
-            {
-              parent: 0,
-              paramType: Encoding.None,
-              operator: Operator.Or,
-              compValue: "0x",
-            },
-            {
-              parent: 0,
-              paramType: Encoding.None,
-              operator: Operator.Empty,
-              compValue: "0x",
-            },
-            {
-              parent: 1,
-              paramType: Encoding.Static,
-              operator: Operator.Pass,
-              compValue: "0x",
-            },
-          ],
-          0,
-        ),
+        packConditions(roles, [
+          {
+            parent: 0,
+            paramType: Encoding.None,
+            operator: Operator.Or,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: Encoding.None,
+            operator: Operator.Empty,
+            compValue: "0x",
+          },
+          {
+            parent: 1,
+            paramType: Encoding.Static,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+        ]),
       ).to.be.revertedWithCustomError(roles, "LeafNodeCannotHaveChildren");
     });
   });

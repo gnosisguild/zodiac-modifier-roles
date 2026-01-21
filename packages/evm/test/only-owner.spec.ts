@@ -127,7 +127,7 @@ describe("onlyOwner", () => {
         await expect(
           roles
             .connect(owner)
-            .allowTarget(ROLE_KEY, TARGET, [], ExecutionOptions.None),
+            .allowTarget(ROLE_KEY, TARGET, "0x", ExecutionOptions.None),
         ).to.not.be.reverted;
       });
 
@@ -137,7 +137,7 @@ describe("onlyOwner", () => {
         await expect(
           roles
             .connect(nonOwner)
-            .allowTarget(ROLE_KEY, TARGET, [], ExecutionOptions.None),
+            .allowTarget(ROLE_KEY, TARGET, "0x", ExecutionOptions.None),
         ).to.be.revertedWith("Ownable: caller is not the owner");
       });
     });
@@ -190,7 +190,7 @@ describe("onlyOwner", () => {
               ROLE_KEY,
               TARGET,
               SELECTOR,
-              [],
+              "0x",
               ExecutionOptions.None,
             ),
         ).to.not.be.reverted;
@@ -207,7 +207,7 @@ describe("onlyOwner", () => {
               ROLE_KEY,
               TARGET,
               SELECTOR,
-              [],
+              "0x",
               ExecutionOptions.None,
             ),
         ).to.be.revertedWith("Ownable: caller is not the owner");

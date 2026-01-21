@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "./Topology.sol";
-import "./TypeTree.sol";
-
-import {IRolesError} from "../../types/RolesError.sol";
+import "../../types/Types.sol";
 
 /**
  * @title Integrity
@@ -13,60 +10,25 @@ import {IRolesError} from "../../types/RolesError.sol";
  * @author gnosisguild
  */
 library Integrity {
-    function enforce(ConditionFlat[] memory conditions) internal pure {
-        // 1. Topology Constraints
-        _validateRoot(conditions);
-        _validateBFS(conditions);
-
-        // 2. Operator Validation (operator-specific rules)
-        // 3. Encoding Validation (child rules per encoding)
+    function enforce(
+        ConditionFlat[] memory conditions,
+        Topology[] memory topology
+    ) internal pure {
         uint256 len = conditions.length;
         for (uint256 i = 0; i < len; ++i) {
-            _validateOperator(conditions, i);
-            _validateEncoding(conditions, i);
+            _validateOperator(conditions, topology, i);
+            _validateEncoding(conditions, topology, i);
         }
 
-        // 4. Inter Node Constraints
-        _validateStructuralOrder(conditions);
-        _validatePluckOrder(conditions, 0, 0);
-        _validateTypeTrees(conditions);
+        // Inter Node Constraints
+        _validateStructuralOrder(conditions, topology);
+        _validatePluckOrder(conditions, topology, 0, 0);
+        _validateTypeTrees(conditions, topology);
     }
-
-    // -------------------------------------------------------------------------
-    // 1. Global Topology
-    // -------------------------------------------------------------------------
-
-    function _validateBFS(ConditionFlat[] memory conditions) private pure {
-        uint256 length = conditions.length;
-        for (uint256 i = 1; i < length; ++i) {
-            // Parent must have lower index (no forward references)
-            if (conditions[i - 1].parent > conditions[i].parent) {
-                revert IRolesError.NotBFS();
-            }
-            // Parent cannot be itself or higher (except root at 0 which is handled separately)
-            if (conditions[i].parent >= i) {
-                revert IRolesError.NotBFS();
-            }
-        }
-    }
-
-    function _validateRoot(ConditionFlat[] memory conditions) private pure {
-        // Must be exactly one root node (parent == itself), and it must be at index 0
-        uint256 count;
-        for (uint256 i = 0; i < conditions.length; ++i) {
-            if (conditions[i].parent == i) ++count;
-        }
-        if (count != 1 || conditions[0].parent != 0) {
-            revert IRolesError.UnsuitableRootNode();
-        }
-    }
-
-    // -------------------------------------------------------------------------
-    // 2. Operator Validation
-    // -------------------------------------------------------------------------
 
     function _validateOperator(
         ConditionFlat[] memory conditions,
+        Topology[] memory topology,
         uint256 index
     ) private pure {
         Operator op = conditions[index].operator;
@@ -74,17 +36,17 @@ library Integrity {
         if (op == Operator.Pass) {
             _checkPass(conditions, index);
         } else if (op == Operator.And || op == Operator.Or) {
-            _checkLogic(conditions, index);
+            _checkLogic(conditions, topology, index);
         } else if (op == Operator.Empty) {
-            _checkEmpty(conditions, index);
+            _checkEmpty(conditions, topology, index);
         } else if (op == Operator.Matches) {
-            _checkMatches(conditions, index);
+            _checkMatches(conditions, topology, index);
         } else if (op == Operator.ArraySome || op == Operator.ArrayEvery) {
-            _checkArrayIterator(conditions, index);
+            _checkArrayIterator(conditions, topology, index);
         } else if (op == Operator.ArrayTailMatches) {
-            _checkArrayTail(conditions, index);
+            _checkArrayTail(conditions, topology, index);
         } else if (op == Operator.Slice) {
-            _checkSlice(conditions, index);
+            _checkSlice(conditions, topology, index);
         } else if (op == Operator.Pluck) {
             _checkPluck(conditions, index);
         } else if (op == Operator.EqualToAvatar) {
@@ -105,16 +67,16 @@ library Integrity {
         } else if (op == Operator.WithinAllowance) {
             _checkWithinAllowance(conditions, index);
         } else if (op == Operator.CallWithinAllowance) {
-            _checkCallWithinAllowance(conditions, index);
+            _checkCallWithinAllowance(conditions, topology, index);
         } else if (op == Operator.WithinRatio) {
-            _checkWithinRatio(conditions, index);
+            _checkWithinRatio(conditions, topology, index);
         } else {
             revert IRolesError.UnsupportedOperator(index);
         }
     }
 
     // -------------------------------------------------------------------------
-    // 3. Encoding Validation
+    // Encoding Validation
     // -------------------------------------------------------------------------
 
     /**
@@ -130,6 +92,7 @@ library Integrity {
      */
     function _validateEncoding(
         ConditionFlat[] memory conditions,
+        Topology[] memory topology,
         uint256 index
     ) private pure {
         ConditionFlat memory node = conditions[index];
@@ -143,13 +106,17 @@ library Integrity {
             // Slice is a special case: uses Static/Dynamic but requires a child
             if (node.operator != Operator.Slice) {
                 // Leaf types cannot have children
-                _ensureNoChildren(conditions, index);
+                if (topology[index].childCount != 0) {
+                    revert IRolesError.LeafNodeCannotHaveChildren(index);
+                }
             }
         }
 
         if (encoding == Encoding.Tuple || encoding == Encoding.Array) {
             // Container types must have structural children for type tree
-            _ensureStructuralChildren(conditions, index);
+            if (topology[index].sChildCount == 0) {
+                revert IRolesError.UnsuitableChildCount(index);
+            }
         }
     }
 
@@ -169,6 +136,7 @@ library Integrity {
 
     function _checkLogic(
         ConditionFlat[] memory conditions,
+        Topology[] memory topology,
         uint256 index
     ) private pure {
         ConditionFlat memory node = conditions[index];
@@ -182,11 +150,14 @@ library Integrity {
             revert IRolesError.UnsuitableCompValue(index);
         }
         // Children: Must have children
-        _ensureChildren(conditions, index);
+        if (topology[index].childCount == 0) {
+            revert IRolesError.UnsuitableChildCount(index);
+        }
     }
 
     function _checkEmpty(
         ConditionFlat[] memory conditions,
+        Topology[] memory topology,
         uint256 index
     ) private pure {
         ConditionFlat memory node = conditions[index];
@@ -199,11 +170,14 @@ library Integrity {
             revert IRolesError.UnsuitableCompValue(index);
         }
         // Children: None
-        _ensureNoChildren(conditions, index);
+        if (topology[index].childCount != 0) {
+            revert IRolesError.LeafNodeCannotHaveChildren(index);
+        }
     }
 
     function _checkMatches(
         ConditionFlat[] memory conditions,
+        Topology[] memory topology,
         uint256 index
     ) private pure {
         ConditionFlat memory node = conditions[index];
@@ -234,11 +208,14 @@ library Integrity {
             }
         }
 
-        _ensureStructuralChildren(conditions, index);
+        if (topology[index].sChildCount == 0) {
+            revert IRolesError.UnsuitableChildCount(index);
+        }
     }
 
     function _checkArrayIterator(
         ConditionFlat[] memory conditions,
+        Topology[] memory topology,
         uint256 index
     ) private pure {
         ConditionFlat memory node = conditions[index];
@@ -252,17 +229,16 @@ library Integrity {
             revert IRolesError.UnsuitableCompValue(index);
         }
         // Children: Exactly 1 child
-        (, uint256 childCount, uint256 sChildCount) = Topology.childBounds(
-            conditions,
-            index
-        );
-        if (childCount != 1 || sChildCount != 1) {
+        if (
+            topology[index].childCount != 1 || topology[index].sChildCount != 1
+        ) {
             revert IRolesError.UnsuitableChildCount(index);
         }
     }
 
     function _checkArrayTail(
         ConditionFlat[] memory conditions,
+        Topology[] memory topology,
         uint256 index
     ) private pure {
         ConditionFlat memory node = conditions[index];
@@ -276,10 +252,8 @@ library Integrity {
             revert IRolesError.UnsuitableCompValue(index);
         }
         // Children: All children must be structural
-        (, uint256 childCount, uint256 sChildCount) = Topology.childBounds(
-            conditions,
-            index
-        );
+        uint256 childCount = topology[index].childCount;
+        uint256 sChildCount = topology[index].sChildCount;
         if (sChildCount == 0 || childCount != sChildCount) {
             revert IRolesError.UnsuitableChildCount(index);
         }
@@ -287,6 +261,7 @@ library Integrity {
 
     function _checkSlice(
         ConditionFlat[] memory conditions,
+        Topology[] memory topology,
         uint256 index
     ) private pure {
         ConditionFlat memory node = conditions[index];
@@ -307,8 +282,9 @@ library Integrity {
         }
 
         // Children: At most 1 child
-        (uint256 childStart, uint256 childCount, uint256 sChildCount) = Topology
-            .childBounds(conditions, index);
+        uint256 childStart = topology[index].childStart;
+        uint256 childCount = topology[index].childCount;
+        uint256 sChildCount = topology[index].sChildCount;
         if (childCount != 1) {
             revert IRolesError.UnsuitableChildCount(index);
         }
@@ -318,8 +294,7 @@ library Integrity {
             revert IRolesError.SliceChildNotStatic(index);
         }
 
-        Layout memory layout = TypeTree.inspect(conditions, childStart);
-        if (layout.encoding != Encoding.Static) {
+        if (_resolvesTo(conditions, topology, childStart) != Encoding.Static) {
             revert IRolesError.SliceChildNotStatic(index);
         }
     }
@@ -452,6 +427,7 @@ library Integrity {
 
     function _checkCallWithinAllowance(
         ConditionFlat[] memory conditions,
+        Topology[] memory topology,
         uint256 index
     ) private pure {
         ConditionFlat memory node = conditions[index];
@@ -464,11 +440,14 @@ library Integrity {
             revert IRolesError.UnsuitableCompValue(index);
         }
         // Children: None
-        _ensureNoChildren(conditions, index);
+        if (topology[index].childCount != 0) {
+            revert IRolesError.LeafNodeCannotHaveChildren(index);
+        }
     }
 
     function _checkWithinRatio(
         ConditionFlat[] memory conditions,
+        Topology[] memory topology,
         uint256 index
     ) private pure {
         ConditionFlat memory node = conditions[index];
@@ -496,11 +475,13 @@ library Integrity {
             revert IRolesError.WithinRatioNoRatioProvided(index);
         }
         // Children: None
-        _ensureNoChildren(conditions, index);
+        if (topology[index].childCount != 0) {
+            revert IRolesError.LeafNodeCannotHaveChildren(index);
+        }
     }
 
     // -------------------------------------------------------------------------
-    // 4. Global Constraints & Helpers
+    // Global Constraints & Helpers
     // -------------------------------------------------------------------------
 
     /**
@@ -512,20 +493,19 @@ library Integrity {
      *      non-structural ones.
      */
     function _validateStructuralOrder(
-        ConditionFlat[] memory conditions
+        ConditionFlat[] memory conditions,
+        Topology[] memory topology
     ) private pure {
         for (uint256 index; index < conditions.length; index++) {
-            (uint256 childStart, uint256 childCount, ) = Topology.childBounds(
-                conditions,
-                index
-            );
+            uint256 childStart = topology[index].childStart;
+            uint256 childCount = topology[index].childCount;
 
             bool seenNonStructural = false;
             for (uint256 j = 0; j < childCount; j++) {
-                bool isStructural = Topology.isStructural(
-                    conditions,
-                    childStart + j
-                );
+                Encoding encoding = conditions[childStart + j].paramType;
+                bool isStructural = topology[childStart + j].sChildCount > 0 ||
+                    encoding == Encoding.Static ||
+                    encoding == Encoding.Dynamic;
 
                 if (isStructural && seenNonStructural) {
                     revert IRolesError.NonStructuralChildrenMustComeLast(index);
@@ -552,6 +532,7 @@ library Integrity {
      */
     function _validatePluckOrder(
         ConditionFlat[] memory conditions,
+        Topology[] memory topology,
         uint256 index,
         uint256 visited
     ) private pure returns (uint256) {
@@ -580,20 +561,24 @@ library Integrity {
             }
         }
 
-        (uint256 childStart, uint256 childCount, ) = Topology.childBounds(
-            conditions,
-            index
-        );
+        uint256 childStart = topology[index].childStart;
+        uint256 childCount = topology[index].childCount;
 
         for (uint256 i = 0; i < childCount; ++i) {
-            visited = _validatePluckOrder(conditions, childStart + i, visited);
+            visited = _validatePluckOrder(
+                conditions,
+                topology,
+                childStart + i,
+                visited
+            );
         }
 
         return visited;
     }
 
     function _validateTypeTrees(
-        ConditionFlat[] memory conditions
+        ConditionFlat[] memory conditions,
+        Topology[] memory topology
     ) private pure {
         for (uint256 i = 0; i < conditions.length; ++i) {
             Operator operator = conditions[i].operator;
@@ -604,9 +589,11 @@ library Integrity {
                 operator == Operator.Or ||
                 encoding == Encoding.Array
             ) {
+                // If not variant, children have matching type trees (same typeHash)
+                // If variant, must check type equivalence (all resolve to Dynamic/AbiEncoded)
                 if (
-                    !_isTypeMatch(conditions, i) &&
-                    !_isTypeEquivalence(conditions, i)
+                    topology[i].isVariant &&
+                    !_isTypeEquivalence(conditions, topology, i)
                 ) {
                     revert IRolesError.UnsuitableChildTypeTree(i);
                 }
@@ -620,65 +607,20 @@ library Integrity {
         return encoding == Encoding.Static || encoding == Encoding.EtherValue;
     }
 
-    function _ensureNoChildren(
-        ConditionFlat[] memory conditions,
-        uint256 index
-    ) private pure {
-        (, uint256 childCount, ) = Topology.childBounds(conditions, index);
-        if (childCount != 0) {
-            revert IRolesError.LeafNodeCannotHaveChildren(index);
-        }
-    }
-
-    function _ensureChildren(
-        ConditionFlat[] memory conditions,
-        uint256 index
-    ) private pure {
-        (, uint256 childCount, ) = Topology.childBounds(conditions, index);
-        if (childCount == 0) {
-            revert IRolesError.UnsuitableChildCount(index);
-        }
-    }
-
-    function _ensureStructuralChildren(
-        ConditionFlat[] memory conditions,
-        uint256 index
-    ) private pure {
-        (, , uint256 sChildCount) = Topology.childBounds(conditions, index);
-        if (sChildCount == 0) {
-            revert IRolesError.UnsuitableChildCount(index);
-        }
-    }
-
-    function _isTypeMatch(
-        ConditionFlat[] memory conditions,
-        uint256 index
-    ) private pure returns (bool) {
-        (uint256 childStart, , uint256 sChildCount) = Topology.childBounds(
-            conditions,
-            index
-        );
-        if (sChildCount <= 1) return true;
-
-        bytes32 id = TypeTree.id(conditions, childStart);
-        for (uint256 i = 1; i < sChildCount; ++i) {
-            if (id != TypeTree.id(conditions, childStart + i)) return false;
-        }
-        return true;
-    }
-
     function _isTypeEquivalence(
         ConditionFlat[] memory conditions,
+        Topology[] memory topology,
         uint256 index
     ) private pure returns (bool) {
-        (uint256 childStart, , uint256 sChildCount) = Topology.childBounds(
-            conditions,
-            index
-        );
+        uint256 childStart = topology[index].childStart;
+        uint256 sChildCount = topology[index].sChildCount;
+
         for (uint256 i = 0; i < sChildCount; ++i) {
-            Encoding encoding = TypeTree
-                .inspect(conditions, childStart + i)
-                .encoding;
+            Encoding encoding = _resolvesTo(
+                conditions,
+                topology,
+                childStart + i
+            );
             if (
                 encoding != Encoding.Dynamic && encoding != Encoding.AbiEncoded
             ) {
@@ -686,5 +628,24 @@ library Integrity {
             }
         }
         return true;
+    }
+
+    /**
+     * @dev Resolves through transparent (non-variant) And/Or chains to find
+     *      the actual layout encoding.
+     */
+    function _resolvesTo(
+        ConditionFlat[] memory conditions,
+        Topology[] memory topology,
+        uint256 index
+    ) private pure returns (Encoding) {
+        while (
+            conditions[index].paramType == Encoding.None ||
+            conditions[index].paramType == Encoding.EtherValue
+        ) {
+            index = topology[index].childStart;
+        }
+
+        return conditions[index].paramType;
     }
 }
