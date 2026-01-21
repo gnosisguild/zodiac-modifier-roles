@@ -38,10 +38,12 @@ library TopologyLib {
             bool isLogical = condition.operator == Operator.And ||
                 condition.operator == Operator.Or;
 
-            Encoding e = condition.paramType == Encoding.EtherValue
-                ? Encoding.None
-                : condition.paramType;
-            bool isStructural = e != Encoding.None;
+            Encoding e = condition.paramType;
+            bool isStructural = e == Encoding.Static ||
+                e == Encoding.Dynamic ||
+                e == Encoding.Tuple ||
+                e == Encoding.Array ||
+                e == Encoding.AbiEncoded;
 
             Topology memory parent = topology[condition.parent];
             Topology memory current = topology[i];
@@ -112,7 +114,9 @@ library TopologyLib {
              * Structural nodes and Logical Variant nodes are in layout.
              * (Logical Non-variant were handled above).
              */
-            current.isInLayout = isStructural || isLogical;
+            current.isInLayout =
+                (isLogical && current.isVariant) ||
+                isStructural;
 
             /*
              * typeHash
