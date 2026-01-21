@@ -154,20 +154,18 @@ library ConditionPacker {
         )
     {
         for (uint256 i; i < conditions.length; ++i) {
-            ConditionFlat memory condition = conditions[i];
-
             if (topology[i].isInLayout) {
                 ++layoutNodeCount;
             }
 
-            if (condition.operator == Operator.Pluck) {
-                uint8 pluckIndex = uint8(condition.compValue[0]);
+            if (conditions[i].operator == Operator.Pluck) {
+                uint8 pluckIndex = uint8(conditions[i].compValue[0]);
                 if (pluckIndex + 1 > maxPluckCount) {
                     maxPluckCount = pluckIndex + 1;
                 }
             }
 
-            uint256 length = condition.compValue.length;
+            uint256 length = conditions[i].compValue.length;
             if (length > 0) {
                 compValuesSize += 2 + length;
             }
@@ -184,8 +182,6 @@ library ConditionPacker {
         Topology[] memory topology
     ) private pure {
         for (uint256 i; i < conditions.length; ++i) {
-            ConditionFlat memory condition = conditions[i];
-
             /*
              * Patch AbiEncoded leadingBytes
              *
@@ -193,10 +189,10 @@ library ConditionPacker {
              * (function selector size). Store as 2-byte big-endian value.
              */
             if (
-                condition.paramType == Encoding.AbiEncoded &&
-                condition.compValue.length == 0
+                conditions[i].paramType == Encoding.AbiEncoded &&
+                conditions[i].compValue.length == 0
             ) {
-                condition.compValue = hex"0004";
+                conditions[i].compValue = hex"0004";
             }
 
             /*
@@ -213,16 +209,16 @@ library ConditionPacker {
              * offset.
              */
             if (
-                condition.operator == Operator.EqualTo &&
+                conditions[i].operator == Operator.EqualTo &&
                 topology[i].isNotInline
             ) {
-                bytes memory compValue = condition.compValue;
+                bytes memory compValue = conditions[i].compValue;
                 assembly {
                     let newLength := sub(mload(compValue), 32)
                     compValue := add(compValue, 32)
                     mstore(compValue, newLength)
                 }
-                condition.compValue = compValue;
+                conditions[i].compValue = compValue;
             }
         }
     }
