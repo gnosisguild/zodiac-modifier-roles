@@ -2,9 +2,9 @@
  * Chain IDs where the CowOrderSigner contract is deployed.
  * This is a subset of chains supported by cow-sdk.
  *
- * TODO: Deploy CowOrderSigner and RolesModifier contracts to these additional cow-sdk chains:
+ * TODO: Deploy CowOrderSigner contracts to these additional cow-sdk chains:
  * - LENS (232)
- * - LINEA (59144)
+ * - 
  */
 export enum SupportedChainId {
   MAINNET = 1,
@@ -12,9 +12,10 @@ export enum SupportedChainId {
   ARBITRUM_ONE = 42161,
   BASE = 8453,
   AVALANCHE = 43114,
+  POLYGON = 137,
   BNB = 56,
   PLASMA = 9745,
-  POLYGON = 137,
+  LINEA = 59144,
   SEPOLIA = 11155111,
 }
 
