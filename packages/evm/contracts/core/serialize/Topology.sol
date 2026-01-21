@@ -25,15 +25,10 @@ library TopologyLib {
          */
         _validateBFS(conditions);
 
-        bytes32[] memory typeHashes = new bytes32[](conditions.length);
         topology = new Topology[](conditions.length);
 
         for (uint256 i = conditions.length; i > 0; ) {
-            unchecked {
-                --i;
-            }
-
-            ConditionFlat memory condition = conditions[i];
+            ConditionFlat memory condition = conditions[--i];
 
             bool isLogical = condition.operator == Operator.And ||
                 condition.operator == Operator.Or;
@@ -86,9 +81,9 @@ library TopologyLib {
              * if they are variants.
              */
             if ((e == Encoding.Array || isLogical) && current.sChildCount > 1) {
-                bytes32 childHash = typeHashes[childStart];
+                bytes32 childHash = topology[childStart].typeHash;
                 for (uint256 j = 1; j < current.sChildCount; ++j) {
-                    if (childHash != typeHashes[childStart + j]) {
+                    if (childHash != topology[childStart + j].typeHash) {
                         current.isVariant = true;
                         break;
                     }
@@ -104,7 +99,7 @@ library TopologyLib {
                 for (uint256 j = 1; j < current.childCount; ++j) {
                     _excludeFromLayout(topology, childStart + j);
                 }
-                typeHashes[i] = typeHashes[childStart];
+                current.typeHash = topology[childStart].typeHash;
                 continue;
             }
 
@@ -141,31 +136,13 @@ library TopologyLib {
 
             /*
              * Computes hash which is a composite of all child hashes.
-             * The assembly below is equivalent to:
-             *
-
+             */
             for (uint256 j; j < childHashCount; ++j) {
                 hash = keccak256(
-                    abi.encodePacked(hash, typeHashes[current.childStart + j])
+                    abi.encodePacked(hash, topology[childStart + j].typeHash)
                 );
-            }             
-             *
-             * It uses the 64-byte scratch space, hashing and accumulating in
-             * place, to avoid buffer allocations.
-             */
-            assembly {
-                mstore(0x00, hash)
-                let ptr := add(typeHashes, add(0x20, mul(childStart, 0x20)))
-                let end := add(ptr, mul(childHashCount, 0x20))
-                for {} lt(ptr, end) {
-                    ptr := add(ptr, 0x20)
-                } {
-                    mstore(0x20, mload(ptr))
-                    mstore(0x00, keccak256(0x00, 0x40))
-                }
-                hash := mload(0x00)
             }
-            typeHashes[i] = hash;
+            current.typeHash = hash;
         }
     }
 

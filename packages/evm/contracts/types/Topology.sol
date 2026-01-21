@@ -8,4 +8,5 @@ struct Topology {
     bool isNotInline;
     bool isVariant;
     bool isInLayout;
+    bytes32 typeHash;
 }
