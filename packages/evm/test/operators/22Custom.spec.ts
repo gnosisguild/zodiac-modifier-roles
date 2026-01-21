@@ -11,6 +11,7 @@ import {
   ExecutionOptions,
   ConditionViolationStatus,
   flattenCondition,
+  packConditions,
 } from "../utils";
 
 describe("Operator - Custom", () => {
@@ -430,23 +431,17 @@ describe("Operator - Custom", () => {
 
   describe("integrity", () => {
     it("reverts UnsuitableCompValue when compValue is less than 20 bytes", async () => {
-      const { roles, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { roles } = await loadFixture(setupTestContract);
 
       await expect(
-        roles.allowTarget(
-          roleKey,
-          testContractAddress,
-          [
-            {
-              parent: 0,
-              paramType: Encoding.Static,
-              operator: Operator.Custom,
-              compValue: "0x" + "ab".repeat(19), // 19 bytes, less than address
-            },
-          ],
-          0,
-        ),
+        packConditions(roles, [
+          {
+            parent: 0,
+            paramType: Encoding.Static,
+            operator: Operator.Custom,
+            compValue: "0x" + "ab".repeat(19), // 19 bytes, less than address
+          },
+        ]),
       ).to.be.revertedWithCustomError(roles, "UnsuitableCompValue");
     });
   });

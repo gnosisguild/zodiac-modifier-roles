@@ -21,6 +21,7 @@ describe("AbiDecoder - Traversal", () => {
       const data = defaultAbiCoder.encode(["uint256"], [value]);
       const conditions = flattenCondition({
         paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
         compValue: "0x0000",
         children: [{ paramType: Encoding.Static }],
       });
@@ -40,6 +41,7 @@ describe("AbiDecoder - Traversal", () => {
       const data = defaultAbiCoder.encode(["bytes"], [value]);
       const conditions = flattenCondition({
         paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
         compValue: "0x0000",
         children: [{ paramType: Encoding.Dynamic }],
       });
@@ -59,6 +61,7 @@ describe("AbiDecoder - Traversal", () => {
       const data = defaultAbiCoder.encode(["bytes"], [value]);
       const conditions = flattenCondition({
         paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
         compValue: "0x0000",
         children: [{ paramType: Encoding.Dynamic }],
       });
@@ -76,6 +79,7 @@ describe("AbiDecoder - Traversal", () => {
       const data = defaultAbiCoder.encode(["bytes"], ["0x"]);
       const conditions = flattenCondition({
         paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
         compValue: "0x0000",
         children: [{ paramType: Encoding.Dynamic }],
       });
@@ -101,10 +105,12 @@ describe("AbiDecoder - Traversal", () => {
         );
         const conditions = flattenCondition({
           paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
           compValue: "0x0000",
           children: [
             {
               paramType: Encoding.Tuple,
+              operator: Operator.Matches,
               children: [
                 { paramType: Encoding.Static },
                 { paramType: Encoding.Static },
@@ -146,10 +152,12 @@ describe("AbiDecoder - Traversal", () => {
         const data = defaultAbiCoder.encode(["tuple(bytes)"], [value]);
         const conditions = flattenCondition({
           paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
           compValue: "0x0000",
           children: [
             {
               paramType: Encoding.Tuple,
+              operator: Operator.Matches,
               children: [{ paramType: Encoding.Dynamic }],
             },
           ],
@@ -178,10 +186,12 @@ describe("AbiDecoder - Traversal", () => {
         const data = defaultAbiCoder.encode(["uint256[]"], [value]);
         const conditions = flattenCondition({
           paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
           compValue: "0x0000",
           children: [
             {
               paramType: Encoding.Array,
+              operator: Operator.Matches,
               children: [{ paramType: Encoding.Static }],
             },
           ],
@@ -213,10 +223,12 @@ describe("AbiDecoder - Traversal", () => {
         const data = defaultAbiCoder.encode(["bytes[]"], [value]);
         const conditions = flattenCondition({
           paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
           compValue: "0x0000",
           children: [
             {
               paramType: Encoding.Array,
+              operator: Operator.Matches,
               children: [{ paramType: Encoding.Dynamic }],
             },
           ],
@@ -246,10 +258,12 @@ describe("AbiDecoder - Traversal", () => {
         const data = defaultAbiCoder.encode(["uint256[]"], [[]]);
         const conditions = flattenCondition({
           paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
           compValue: "0x0000",
           children: [
             {
               paramType: Encoding.Array,
+              operator: Operator.Matches,
               children: [{ paramType: Encoding.Static }],
             },
           ],
@@ -279,12 +293,15 @@ describe("AbiDecoder - Traversal", () => {
 
         const conditions = flattenCondition({
           paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
           children: [
             {
               paramType: Encoding.Array,
+              operator: Operator.Matches,
               children: [
                 {
                   paramType: Encoding.AbiEncoded,
+                  operator: Operator.Matches,
                   children: [{ paramType: Encoding.Static }],
                 },
               ],
@@ -324,10 +341,12 @@ describe("AbiDecoder - Traversal", () => {
 
         const conditions = flattenCondition({
           paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
           compValue: "0x0000",
           children: [
             {
               paramType: Encoding.AbiEncoded,
+              operator: Operator.Matches,
               compValue: "0x0000",
               children: [{ paramType: Encoding.Static }],
             },
@@ -352,10 +371,12 @@ describe("AbiDecoder - Traversal", () => {
 
         const conditions = flattenCondition({
           paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
           compValue: "0x0000",
           children: [
             {
               paramType: Encoding.AbiEncoded,
+              operator: Operator.Matches,
               children: [{ paramType: Encoding.Static }],
             },
           ],
@@ -379,10 +400,12 @@ describe("AbiDecoder - Traversal", () => {
 
         const conditions = flattenCondition({
           paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
           compValue: "0x0000",
           children: [
             {
               paramType: Encoding.AbiEncoded,
+              operator: Operator.Matches,
               compValue: "0x0002", // 2
               children: [{ paramType: Encoding.Static }],
             },
@@ -407,13 +430,16 @@ describe("AbiDecoder - Traversal", () => {
 
       const conditions = flattenCondition({
         paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
         compValue: "0x0000",
         children: [
           {
             paramType: Encoding.Tuple,
+            operator: Operator.Matches,
             children: [
               {
                 paramType: Encoding.Array,
+                operator: Operator.Matches,
                 children: [{ paramType: Encoding.Static }],
               },
             ],
@@ -459,13 +485,16 @@ describe("AbiDecoder - Traversal", () => {
 
       const conditions = flattenCondition({
         paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
         compValue: "0x0000",
         children: [
           {
             paramType: Encoding.Array,
+            operator: Operator.Matches,
             children: [
               {
                 paramType: Encoding.Tuple,
+                operator: Operator.Matches,
                 children: [
                   { paramType: Encoding.Static },
                   { paramType: Encoding.Static },
@@ -519,13 +548,16 @@ describe("AbiDecoder - Traversal", () => {
 
       const conditions = flattenCondition({
         paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
         compValue: "0x0000",
         children: [
           {
             paramType: Encoding.Array,
+            operator: Operator.Matches,
             children: [
               {
                 paramType: Encoding.AbiEncoded,
+                operator: Operator.Matches,
                 compValue: "0x0000",
                 children: [{ paramType: Encoding.Static }],
               },
@@ -568,17 +600,21 @@ describe("AbiDecoder - Traversal", () => {
 
       const conditions = flattenCondition({
         paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
         compValue: "0x0000",
         children: [
           {
             paramType: Encoding.Tuple,
+            operator: Operator.Matches,
             children: [
               {
                 paramType: Encoding.AbiEncoded,
+                operator: Operator.Matches,
                 compValue: "0x0000",
                 children: [
                   {
                     paramType: Encoding.Array,
+                    operator: Operator.Matches,
                     children: [{ paramType: Encoding.Dynamic }],
                   },
                 ],
@@ -625,6 +661,7 @@ describe("AbiDecoder - Traversal", () => {
 
       const conditions = flattenCondition({
         paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
         compValue: "0x0000",
         children: [
           {
@@ -633,6 +670,7 @@ describe("AbiDecoder - Traversal", () => {
             children: [
               {
                 paramType: Encoding.AbiEncoded,
+                operator: Operator.Matches,
                 compValue: "0x0000",
                 children: [
                   { paramType: Encoding.Static },
@@ -641,6 +679,7 @@ describe("AbiDecoder - Traversal", () => {
               },
               {
                 paramType: Encoding.AbiEncoded,
+                operator: Operator.Matches,
                 compValue: "0x0000",
                 children: [{ paramType: Encoding.Static }],
               },
@@ -670,6 +709,7 @@ describe("AbiDecoder - Traversal", () => {
 
       const conditions = flattenCondition({
         paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
         compValue: "0x0000",
         children: [
           {
@@ -679,6 +719,7 @@ describe("AbiDecoder - Traversal", () => {
               { paramType: Encoding.Dynamic },
               {
                 paramType: Encoding.AbiEncoded,
+                operator: Operator.Matches,
                 compValue: "0x0000",
                 children: [{ paramType: Encoding.Static }],
               },
@@ -706,6 +747,7 @@ describe("AbiDecoder - Traversal", () => {
 
       const conditions = flattenCondition({
         paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
         compValue: "0x0000",
         children: [
           {
@@ -715,10 +757,12 @@ describe("AbiDecoder - Traversal", () => {
               { paramType: Encoding.Dynamic },
               {
                 paramType: Encoding.AbiEncoded,
+                operator: Operator.Matches,
                 compValue: "0x0000",
                 children: [
                   {
                     paramType: Encoding.Tuple,
+                    operator: Operator.Matches,
                     children: [
                       { paramType: Encoding.Static },
                       { paramType: Encoding.Static },
@@ -766,6 +810,7 @@ describe("AbiDecoder - Traversal", () => {
 
       const conditions = flattenCondition({
         paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
         children: [
           {
             paramType: Encoding.None,
@@ -774,10 +819,12 @@ describe("AbiDecoder - Traversal", () => {
               // Branch 1: tuple(uint256, address) - both static
               {
                 paramType: Encoding.AbiEncoded,
+                operator: Operator.Matches,
                 compValue: "0x0000",
                 children: [
                   {
                     paramType: Encoding.Tuple,
+                    operator: Operator.Matches,
                     children: [
                       { paramType: Encoding.Static },
                       { paramType: Encoding.Static },
@@ -788,10 +835,12 @@ describe("AbiDecoder - Traversal", () => {
               // Branch 2: tuple(bytes, address) - first dynamic
               {
                 paramType: Encoding.AbiEncoded,
+                operator: Operator.Matches,
                 compValue: "0x0000",
                 children: [
                   {
                     paramType: Encoding.Tuple,
+                    operator: Operator.Matches,
                     children: [
                       { paramType: Encoding.Dynamic },
                       { paramType: Encoding.Static },
@@ -836,6 +885,7 @@ describe("AbiDecoder - Traversal", () => {
 
       const conditions = flattenCondition({
         paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
         compValue: "0x0000",
         children: [
           {
@@ -879,6 +929,7 @@ describe("AbiDecoder - Traversal", () => {
 
       const conditions = flattenCondition({
         paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
         compValue: "0x0000",
         children: [
           {
@@ -940,6 +991,7 @@ describe("AbiDecoder - Traversal", () => {
 
       const conditions = flattenCondition({
         paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
         children: [
           {
             paramType: Encoding.Array,
@@ -948,14 +1000,17 @@ describe("AbiDecoder - Traversal", () => {
               { paramType: Encoding.Dynamic },
               {
                 paramType: Encoding.AbiEncoded,
+                operator: Operator.Matches,
                 children: [{ paramType: Encoding.Static }],
               },
               {
                 paramType: Encoding.AbiEncoded,
+                operator: Operator.Matches,
                 compValue: "0x0000", // leadingBytes = 0 (no selector)
                 children: [
                   {
                     paramType: Encoding.Tuple,
+                    operator: Operator.Matches,
                     children: [
                       { paramType: Encoding.Static },
                       { paramType: Encoding.Static },
@@ -1005,10 +1060,12 @@ describe("AbiDecoder - Traversal", () => {
 
       const conditions = flattenCondition({
         paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
         compValue: "0x0000",
         children: [
           {
             paramType: Encoding.Array,
+            operator: Operator.Matches,
             children: [{ paramType: Encoding.Static }],
           },
         ],
@@ -1048,6 +1105,7 @@ describe("AbiDecoder - Traversal", () => {
 
       const conditions = flattenCondition({
         paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
         compValue: "0x0000",
         children: [
           { paramType: Encoding.Dynamic },
@@ -1084,10 +1142,12 @@ describe("AbiDecoder - Traversal", () => {
 
       const conditions = flattenCondition({
         paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
         compValue: "0x0000",
         children: [
           {
             paramType: Encoding.Tuple,
+            operator: Operator.Matches,
             children: [
               { paramType: Encoding.Static },
               { paramType: Encoding.Static },

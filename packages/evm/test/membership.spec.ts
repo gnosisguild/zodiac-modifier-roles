@@ -89,7 +89,7 @@ describe("Membership", () => {
 
       await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
       await roles.setDefaultRole(member.address, ROLE_KEY);
-      await roles.allowTarget(ROLE_KEY, testContractAddress, [], 0);
+      await roles.allowTarget(ROLE_KEY, testContractAddress, "0x", 0);
 
       await expect(
         roles
@@ -130,7 +130,7 @@ describe("Membership", () => {
 
         await roles.grantRole(member.address, ROLE_KEY, futureStart, 0, 0);
         await roles.setDefaultRole(member.address, ROLE_KEY);
-        await roles.allowTarget(ROLE_KEY, testContractAddress, [], 0);
+        await roles.allowTarget(ROLE_KEY, testContractAddress, "0x", 0);
 
         await expect(
           roles
@@ -147,7 +147,7 @@ describe("Membership", () => {
 
         await roles.grantRole(member.address, ROLE_KEY, start, 0, 0);
         await roles.setDefaultRole(member.address, ROLE_KEY);
-        await roles.allowTarget(ROLE_KEY, testContractAddress, [], 0);
+        await roles.allowTarget(ROLE_KEY, testContractAddress, "0x", 0);
 
         await time.increaseTo(start);
 
@@ -168,7 +168,7 @@ describe("Membership", () => {
 
         await roles.grantRole(member.address, ROLE_KEY, start, end, 0);
         await roles.setDefaultRole(member.address, ROLE_KEY);
-        await roles.allowTarget(ROLE_KEY, testContractAddress, [], 0);
+        await roles.allowTarget(ROLE_KEY, testContractAddress, "0x", 0);
 
         await expect(
           roles
@@ -185,7 +185,7 @@ describe("Membership", () => {
 
         await roles.grantRole(member.address, ROLE_KEY, 0, end, 0);
         await roles.setDefaultRole(member.address, ROLE_KEY);
-        await roles.allowTarget(ROLE_KEY, testContractAddress, [], 0);
+        await roles.allowTarget(ROLE_KEY, testContractAddress, "0x", 0);
 
         await time.setNextBlockTimestamp(end);
 
@@ -204,7 +204,7 @@ describe("Membership", () => {
 
         await roles.grantRole(member.address, ROLE_KEY, 0, end, 0);
         await roles.setDefaultRole(member.address, ROLE_KEY);
-        await roles.allowTarget(ROLE_KEY, testContractAddress, [], 0);
+        await roles.allowTarget(ROLE_KEY, testContractAddress, "0x", 0);
 
         await time.increaseTo(end + 1);
 
@@ -224,7 +224,7 @@ describe("Membership", () => {
 
           await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
           await roles.setDefaultRole(member.address, ROLE_KEY);
-          await roles.allowTarget(ROLE_KEY, testContractAddress, [], 0);
+          await roles.allowTarget(ROLE_KEY, testContractAddress, "0x", 0);
 
           // Execute multiple times - all should succeed
           for (let i = 0; i < 5; i++) {
@@ -242,7 +242,7 @@ describe("Membership", () => {
 
           await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
           await roles.setDefaultRole(member.address, ROLE_KEY);
-          await roles.allowTarget(ROLE_KEY, testContractAddress, [], 0);
+          await roles.allowTarget(ROLE_KEY, testContractAddress, "0x", 0);
 
           await expect(
             roles
@@ -257,7 +257,7 @@ describe("Membership", () => {
 
           await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
           await roles.setDefaultRole(member.address, ROLE_KEY);
-          await roles.allowTarget(ROLE_KEY, testContractAddress, [], 0);
+          await roles.allowTarget(ROLE_KEY, testContractAddress, "0x", 0);
 
           await expect(
             roles
@@ -274,7 +274,7 @@ describe("Membership", () => {
 
           await roles.grantRole(member.address, ROLE_KEY, 0, 0, 3);
           await roles.setDefaultRole(member.address, ROLE_KEY);
-          await roles.allowTarget(ROLE_KEY, testContractAddress, [], 0);
+          await roles.allowTarget(ROLE_KEY, testContractAddress, "0x", 0);
 
           await expect(
             roles
@@ -295,7 +295,7 @@ describe("Membership", () => {
 
           await roles.grantRole(member.address, ROLE_KEY, start, end, 5);
           await roles.setDefaultRole(member.address, ROLE_KEY);
-          await roles.allowTarget(ROLE_KEY, testContractAddress, [], 0);
+          await roles.allowTarget(ROLE_KEY, testContractAddress, "0x", 0);
 
           await expect(
             roles
@@ -312,7 +312,7 @@ describe("Membership", () => {
 
           await roles.grantRole(member.address, ROLE_KEY, 0, 0, 2);
           await roles.setDefaultRole(member.address, ROLE_KEY);
-          await roles.allowTarget(ROLE_KEY, testContractAddress, [], 0);
+          await roles.allowTarget(ROLE_KEY, testContractAddress, "0x", 0);
 
           const revertingData = iface.encodeFunctionData("fnThatReverts");
 
@@ -344,7 +344,7 @@ describe("Membership", () => {
 
           await roles.grantRole(member.address, ROLE_KEY, 0, 0, 5);
           await roles.setDefaultRole(member.address, ROLE_KEY);
-          await roles.allowTarget(ROLE_KEY, testContractAddress, [], 0);
+          await roles.allowTarget(ROLE_KEY, testContractAddress, "0x", 0);
 
           // First decrement: 5 -> 4
           await expect(
@@ -373,7 +373,7 @@ describe("Membership", () => {
 
           await roles.grantRole(member.address, ROLE_KEY, 0, 0, 1);
           await roles.setDefaultRole(member.address, ROLE_KEY);
-          await roles.allowTarget(ROLE_KEY, testContractAddress, [], 0);
+          await roles.allowTarget(ROLE_KEY, testContractAddress, "0x", 0);
 
           // Use the one use
           await expect(
@@ -396,7 +396,7 @@ describe("Membership", () => {
 
           await roles.grantRole(member.address, ROLE_KEY, 0, 0, 1);
           await roles.setDefaultRole(member.address, ROLE_KEY);
-          await roles.allowTarget(ROLE_KEY, testContractAddress, [], 0);
+          await roles.allowTarget(ROLE_KEY, testContractAddress, "0x", 0);
 
           await expect(
             roles
@@ -413,7 +413,7 @@ describe("Membership", () => {
 
           await roles.grantRole(member.address, ROLE_KEY, 0, 0, 2);
           await roles.setDefaultRole(member.address, ROLE_KEY);
-          await roles.allowTarget(ROLE_KEY, testContractAddress, [], 0);
+          await roles.allowTarget(ROLE_KEY, testContractAddress, "0x", 0);
 
           // Use both uses
           await expect(

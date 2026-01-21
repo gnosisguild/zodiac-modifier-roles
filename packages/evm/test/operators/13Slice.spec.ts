@@ -10,6 +10,7 @@ import {
   ExecutionOptions,
   ConditionViolationStatus,
   flattenCondition,
+  packConditions,
 } from "../utils";
 
 const abiCoder = AbiCoder.defaultAbiCoder();
@@ -315,130 +316,99 @@ describe("Operator - Slice", () => {
 
   describe("integrity", () => {
     it("reverts UnsuitableParameterType for invalid encodings", async () => {
-      const { roles, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { roles } = await loadFixture(setupTestContract);
 
       for (const encoding of [Encoding.Tuple, Encoding.Array]) {
         await expect(
-          roles.allowTarget(
-            roleKey,
-            testContractAddress,
-            [
-              {
-                parent: 0,
-                paramType: encoding,
-                operator: Operator.Slice,
-                compValue: encodeCompValue(0, 4),
-              },
-            ],
-            0,
-          ),
+          packConditions(roles, [
+            {
+              parent: 0,
+              paramType: encoding,
+              operator: Operator.Slice,
+              compValue: encodeCompValue(0, 4),
+            },
+          ]),
         ).to.be.revertedWithCustomError(roles, "UnsuitableParameterType");
       }
     });
 
     describe("compValue", () => {
       it("reverts UnsuitableCompValue when compValue is not 3 bytes", async () => {
-        const { roles, testContractAddress, roleKey } =
-          await loadFixture(setupTestContract);
+        const { roles } = await loadFixture(setupTestContract);
 
         await expect(
-          roles.allowTarget(
-            roleKey,
-            testContractAddress,
-            [
-              {
-                parent: 0,
-                paramType: Encoding.Static,
-                operator: Operator.Slice,
-                compValue: "0x0000", // 2 bytes instead of 3
-              },
-            ],
-            0,
-          ),
+          packConditions(roles, [
+            {
+              parent: 0,
+              paramType: Encoding.Static,
+              operator: Operator.Slice,
+              compValue: "0x0000", // 2 bytes instead of 3
+            },
+          ]),
         ).to.be.revertedWithCustomError(roles, "UnsuitableCompValue");
       });
 
       it("reverts UnsuitableCompValue when size is 0", async () => {
-        const { roles, testContractAddress, roleKey } =
-          await loadFixture(setupTestContract);
+        const { roles } = await loadFixture(setupTestContract);
 
         await expect(
-          roles.allowTarget(
-            roleKey,
-            testContractAddress,
-            [
-              {
-                parent: 0,
-                paramType: Encoding.Static,
-                operator: Operator.Slice,
-                compValue: encodeCompValue(0, 0), // size=0 not allowed
-              },
-            ],
-            0,
-          ),
+          packConditions(roles, [
+            {
+              parent: 0,
+              paramType: Encoding.Static,
+              operator: Operator.Slice,
+              compValue: encodeCompValue(0, 0), // size=0 not allowed
+            },
+          ]),
         ).to.be.revertedWithCustomError(roles, "UnsuitableCompValue");
       });
 
       it("reverts UnsuitableCompValue when size is greater than 32", async () => {
-        const { roles, testContractAddress, roleKey } =
-          await loadFixture(setupTestContract);
+        const { roles } = await loadFixture(setupTestContract);
 
         await expect(
-          roles.allowTarget(
-            roleKey,
-            testContractAddress,
-            [
-              {
-                parent: 0,
-                paramType: Encoding.Static,
-                operator: Operator.Slice,
-                compValue: encodeCompValue(0, 33), // size=33 exceeds max
-              },
-            ],
-            0,
-          ),
+          packConditions(roles, [
+            {
+              parent: 0,
+              paramType: Encoding.Static,
+              operator: Operator.Slice,
+              compValue: encodeCompValue(0, 33), // size=33 exceeds max
+            },
+          ]),
         ).to.be.revertedWithCustomError(roles, "UnsuitableCompValue");
       });
     });
 
     describe("children", () => {
       it("reverts UnsuitableChildCount when Slice has more than one child", async () => {
-        const { roles, testContractAddress, roleKey } =
-          await loadFixture(setupTestContract);
+        const { roles } = await loadFixture(setupTestContract);
 
         await expect(
-          roles.allowTarget(
-            roleKey,
-            testContractAddress,
-            [
-              {
-                parent: 0,
-                paramType: Encoding.Static,
-                operator: Operator.Slice,
-                compValue: encodeCompValue(0, 4),
-              },
-              {
-                parent: 0,
-                paramType: Encoding.Static,
-                operator: Operator.Pass,
-                compValue: "0x",
-              },
-              {
-                parent: 0,
-                paramType: Encoding.Static,
-                operator: Operator.Pass,
-                compValue: "0x",
-              },
-            ],
-            0,
-          ),
+          packConditions(roles, [
+            {
+              parent: 0,
+              paramType: Encoding.Static,
+              operator: Operator.Slice,
+              compValue: encodeCompValue(0, 4),
+            },
+            {
+              parent: 0,
+              paramType: Encoding.Static,
+              operator: Operator.Pass,
+              compValue: "0x",
+            },
+            {
+              parent: 0,
+              paramType: Encoding.Static,
+              operator: Operator.Pass,
+              compValue: "0x",
+            },
+          ]),
         ).to.be.revertedWithCustomError(roles, "UnsuitableChildCount");
       });
 
       it("reverts SliceChildNotStatic when Slice child is not Static", async () => {
-        const { roles, testContractAddress, roleKey } =
-          await loadFixture(setupTestContract);
+        const { roles } = await loadFixture(setupTestContract);
 
         // All non-Static encodings should be rejected
         for (const encoding of [
@@ -449,25 +419,20 @@ describe("Operator - Slice", () => {
           Encoding.EtherValue,
         ]) {
           await expect(
-            roles.allowTarget(
-              roleKey,
-              testContractAddress,
-              [
-                {
-                  parent: 0,
-                  paramType: Encoding.Static,
-                  operator: Operator.Slice,
-                  compValue: encodeCompValue(0, 4),
-                },
-                {
-                  parent: 0,
-                  paramType: encoding,
-                  operator: Operator.Pass,
-                  compValue: "0x",
-                },
-              ],
-              0,
-            ),
+            packConditions(roles, [
+              {
+                parent: 0,
+                paramType: Encoding.Static,
+                operator: Operator.Slice,
+                compValue: encodeCompValue(0, 4),
+              },
+              {
+                parent: 0,
+                paramType: encoding,
+                operator: Operator.Pass,
+                compValue: "0x",
+              },
+            ]),
           ).to.be.revertedWithCustomError(roles, "SliceChildNotStatic");
         }
       });
