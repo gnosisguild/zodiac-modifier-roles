@@ -5,7 +5,6 @@ import "./Storage.sol";
 
 /**
  * @title   Membership
- *
  * @notice  Validates that a module holds an active role membership before
  *          authorizing transactions. Memberships can be time-bound and usage-limited.
  *

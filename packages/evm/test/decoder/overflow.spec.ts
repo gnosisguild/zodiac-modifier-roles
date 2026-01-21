@@ -385,6 +385,7 @@ describe("AbiDecoder - Security & Bounds", () => {
 
       const conditions = flattenCondition({
         paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
         children: [
           {
             paramType: Encoding.None,
@@ -393,6 +394,7 @@ describe("AbiDecoder - Security & Bounds", () => {
               // Branch 1: AbiEncoded expecting 2 params (will overflow - only 1 param)
               {
                 paramType: Encoding.AbiEncoded,
+                operator: Operator.Matches,
                 compValue: "0x0000", // no selector
                 children: [
                   { paramType: Encoding.Static },
@@ -402,6 +404,7 @@ describe("AbiDecoder - Security & Bounds", () => {
               // Branch 2: AbiEncoded expecting 1 param (will succeed)
               {
                 paramType: Encoding.AbiEncoded,
+                operator: Operator.Matches,
                 compValue: "0x0000", // no selector
                 children: [{ paramType: Encoding.Static }],
               },
@@ -431,6 +434,7 @@ describe("AbiDecoder - Security & Bounds", () => {
 
       const conditions = flattenCondition({
         paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
         children: [
           {
             paramType: Encoding.None,
@@ -439,12 +443,14 @@ describe("AbiDecoder - Security & Bounds", () => {
               // Branch 1: AbiEncoded expecting 1 param (will overflow - 0 bytes)
               {
                 paramType: Encoding.AbiEncoded,
+                operator: Operator.Matches,
                 compValue: "0x0000",
                 children: [{ paramType: Encoding.Static }],
               },
               // Branch 2: AbiEncoded expecting 2 params (will overflow - 0 bytes)
               {
                 paramType: Encoding.AbiEncoded,
+                operator: Operator.Matches,
                 compValue: "0x0000",
                 children: [
                   { paramType: Encoding.Static },
@@ -469,6 +475,7 @@ describe("AbiDecoder - Security & Bounds", () => {
 
       const conditions = flattenCondition({
         paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
         children: [{ paramType: Encoding.Static }],
       });
 
@@ -491,6 +498,7 @@ describe("AbiDecoder - Security & Bounds", () => {
 
       const conditions = flattenCondition({
         paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
         children: [{ paramType: Encoding.Static }],
       });
 
@@ -514,15 +522,12 @@ describe("AbiDecoder - Security & Bounds", () => {
 
       const conditions = flattenCondition({
         paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
         children: [
           {
-            paramType: Encoding.Dynamic,
-            children: [
-              {
-                paramType: Encoding.AbiEncoded,
-                children: [{ paramType: Encoding.Static }],
-              },
-            ],
+            paramType: Encoding.AbiEncoded,
+            operator: Operator.Matches,
+            children: [{ paramType: Encoding.Static }],
           },
         ],
       });
@@ -547,9 +552,11 @@ describe("AbiDecoder - Security & Bounds", () => {
 
       const conditions = flattenCondition({
         paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
         children: [
           {
             paramType: Encoding.Array,
+            operator: Operator.Matches,
             children: [{ paramType: Encoding.Static }],
           },
         ],

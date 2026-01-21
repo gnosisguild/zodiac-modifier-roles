@@ -10,6 +10,7 @@ import {
   ExecutionOptions,
   Operator,
   ConditionViolationStatus,
+  packConditions,
 } from "./utils";
 import { deployRolesMod } from "./setup";
 
@@ -98,7 +99,7 @@ describe("Authorization", () => {
         await roles.allowTarget(
           roleKey,
           testContractAddress,
-          [],
+          "0x",
           ExecutionOptions.None,
         );
 
@@ -137,26 +138,27 @@ describe("Authorization", () => {
         await roles.setDefaultRole(member.address, roleKey);
 
         // Allow target with condition: first param must equal 100
+        const conditionsEq100 = await packConditions(roles, [
+          {
+            parent: 0,
+            paramType: Encoding.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: Encoding.Static,
+            operator: Operator.EqualTo,
+            compValue: hre.ethers.AbiCoder.defaultAbiCoder().encode(
+              ["uint256"],
+              [100],
+            ),
+          },
+        ]);
         await roles.allowTarget(
           roleKey,
           testContractAddress,
-          [
-            {
-              parent: 0,
-              paramType: Encoding.AbiEncoded,
-              operator: Operator.Matches,
-              compValue: "0x",
-            },
-            {
-              parent: 0,
-              paramType: Encoding.Static,
-              operator: Operator.EqualTo,
-              compValue: hre.ethers.AbiCoder.defaultAbiCoder().encode(
-                ["uint256"],
-                [100],
-              ),
-            },
-          ],
+          conditionsEq100,
           ExecutionOptions.None,
         );
 
@@ -238,7 +240,7 @@ describe("Authorization", () => {
           roleKey,
           testContractAddress,
           doNothingSelector,
-          [],
+          "0x",
           ExecutionOptions.None,
         );
 
@@ -271,7 +273,7 @@ describe("Authorization", () => {
           roleKey,
           testContractAddress,
           doNothingSelector,
-          [],
+          "0x",
           ExecutionOptions.None,
         );
 
@@ -318,27 +320,28 @@ describe("Authorization", () => {
         const selector = iface.getFunction("oneParamStatic")!.selector;
 
         // Allow with condition: param must equal 42
+        const conditionsEq42 = await packConditions(roles, [
+          {
+            parent: 0,
+            paramType: Encoding.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: Encoding.Static,
+            operator: Operator.EqualTo,
+            compValue: hre.ethers.AbiCoder.defaultAbiCoder().encode(
+              ["uint256"],
+              [42],
+            ),
+          },
+        ]);
         await roles.allowFunction(
           roleKey,
           testContractAddress,
           selector,
-          [
-            {
-              parent: 0,
-              paramType: Encoding.AbiEncoded,
-              operator: Operator.Matches,
-              compValue: "0x",
-            },
-            {
-              parent: 0,
-              paramType: Encoding.Static,
-              operator: Operator.EqualTo,
-              compValue: hre.ethers.AbiCoder.defaultAbiCoder().encode(
-                ["uint256"],
-                [42],
-              ),
-            },
-          ],
+          conditionsEq42,
           ExecutionOptions.None,
         );
 
@@ -387,7 +390,7 @@ describe("Authorization", () => {
         await roles.allowTarget(
           roleKey,
           testContractAddress,
-          [],
+          "0x",
           ExecutionOptions.None,
         );
 
@@ -425,7 +428,7 @@ describe("Authorization", () => {
           roleKey,
           testContractAddress,
           doNothingSelector,
-          [],
+          "0x",
           ExecutionOptions.None,
         );
 
@@ -470,7 +473,7 @@ describe("Authorization", () => {
           roleKey,
           testContractAddress,
           doNothingSelector,
-          [],
+          "0x",
           ExecutionOptions.None,
         );
 
@@ -490,7 +493,7 @@ describe("Authorization", () => {
         await roles.allowTarget(
           roleKey,
           testContractAddress,
-          [],
+          "0x",
           ExecutionOptions.None,
         );
 
@@ -521,7 +524,7 @@ describe("Authorization", () => {
           roleKey,
           testContractAddress,
           doNothingSelector,
-          [],
+          "0x",
           ExecutionOptions.None,
         );
 
@@ -573,7 +576,7 @@ describe("Authorization", () => {
       await roles.allowTarget(
         roleKey,
         testContractAddress,
-        [],
+        "0x",
         ExecutionOptions.None,
       );
 
@@ -594,7 +597,7 @@ describe("Authorization", () => {
       await roles.allowTarget(
         roleKey,
         testContractAddress,
-        [],
+        "0x",
         ExecutionOptions.None,
       );
 
@@ -637,7 +640,7 @@ describe("Authorization", () => {
           await roles.allowTarget(
             roleKey,
             testContractAddress,
-            [],
+            "0x",
             ExecutionOptions.None, // Send not enabled
           );
 
@@ -677,7 +680,7 @@ describe("Authorization", () => {
           await roles.allowTarget(
             roleKey,
             testContractAddress,
-            [],
+            "0x",
             ExecutionOptions.Send,
           );
 
@@ -711,7 +714,7 @@ describe("Authorization", () => {
           await roles.allowTarget(
             roleKey,
             testContractAddress,
-            [],
+            "0x",
             ExecutionOptions.None, // DelegateCall not enabled
           );
 
@@ -733,7 +736,7 @@ describe("Authorization", () => {
           await roles.allowTarget(
             roleKey,
             testContractAddress,
-            [],
+            "0x",
             ExecutionOptions.DelegateCall,
           );
 
@@ -754,7 +757,7 @@ describe("Authorization", () => {
           await roles.allowTarget(
             roleKey,
             testContractAddress,
-            [],
+            "0x",
             ExecutionOptions.DelegateCall, // Only DelegateCall enabled, not Send
           );
 
@@ -783,7 +786,7 @@ describe("Authorization", () => {
           await roles.allowTarget(
             roleKey,
             testContractAddress,
-            [],
+            "0x",
             ExecutionOptions.Both,
           );
 
@@ -831,7 +834,7 @@ describe("Authorization", () => {
             roleKey,
             testContractAddress,
             selector,
-            [],
+            "0x",
             ExecutionOptions.None, // Send not enabled
           );
 
@@ -875,7 +878,7 @@ describe("Authorization", () => {
             roleKey,
             testContractAddress,
             selector,
-            [],
+            "0x",
             ExecutionOptions.Send,
           );
 
@@ -913,7 +916,7 @@ describe("Authorization", () => {
             roleKey,
             testContractAddress,
             selector,
-            [],
+            "0x",
             ExecutionOptions.None, // DelegateCall not enabled
           );
 
@@ -944,7 +947,7 @@ describe("Authorization", () => {
             roleKey,
             testContractAddress,
             selector,
-            [],
+            "0x",
             ExecutionOptions.DelegateCall,
           );
 
@@ -974,7 +977,7 @@ describe("Authorization", () => {
             roleKey,
             testContractAddress,
             selector,
-            [],
+            "0x",
             ExecutionOptions.DelegateCall, // Only DelegateCall enabled
           );
 
@@ -1012,7 +1015,7 @@ describe("Authorization", () => {
             roleKey,
             testContractAddress,
             selector,
-            [],
+            "0x",
             ExecutionOptions.Both,
           );
 
@@ -1079,7 +1082,7 @@ describe("Authorization", () => {
       await roles.allowTarget(
         roleKey,
         testContractAddress,
-        [],
+        "0x",
         ExecutionOptions.None,
       );
 
@@ -1185,7 +1188,7 @@ describe("Authorization", () => {
       await roles.allowTarget(
         roleKey,
         testContractAddress,
-        [],
+        "0x",
         ExecutionOptions.None,
       );
 
@@ -1243,7 +1246,7 @@ describe("Authorization", () => {
       await roles.allowTarget(
         roleKey,
         testContractAddress,
-        [],
+        "0x",
         ExecutionOptions.None,
       );
 
@@ -1274,24 +1277,25 @@ describe("Authorization", () => {
       await roles.setAllowance(ALLOWANCE_KEY, 1000, 0, 0, 0, 0);
 
       const selector = iface.getFunction("oneParamStatic")!.selector;
+      const conditionsWithAllowance = await packConditions(roles, [
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: ALLOWANCE_KEY,
+        },
+      ]);
       await roles.allowFunction(
         roleKey,
         testContractAddress,
         selector,
-        [
-          {
-            parent: 0,
-            paramType: Encoding.AbiEncoded,
-            operator: Operator.Matches,
-            compValue: "0x",
-          },
-          {
-            parent: 0,
-            paramType: Encoding.Static,
-            operator: Operator.WithinAllowance,
-            compValue: ALLOWANCE_KEY,
-          },
-        ],
+        conditionsWithAllowance,
         ExecutionOptions.None,
       );
 
@@ -1338,24 +1342,25 @@ describe("Authorization", () => {
       await roles.setAllowance(ALLOWANCE_KEY, 1000, 0, 0, 0, 0);
 
       const selector = iface.getFunction("oneParamStatic")!.selector;
+      const conditionsWithAllowance = await packConditions(roles, [
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: ALLOWANCE_KEY,
+        },
+      ]);
       await roles.allowFunction(
         roleKey,
         testContractAddress,
         selector,
-        [
-          {
-            parent: 0,
-            paramType: Encoding.AbiEncoded,
-            operator: Operator.Matches,
-            compValue: "0x",
-          },
-          {
-            parent: 0,
-            paramType: Encoding.Static,
-            operator: Operator.WithinAllowance,
-            compValue: ALLOWANCE_KEY,
-          },
-        ],
+        conditionsWithAllowance,
         ExecutionOptions.None,
       );
 

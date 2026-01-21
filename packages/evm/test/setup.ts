@@ -1,6 +1,6 @@
 import { hexlify, Interface, randomBytes, ZeroHash } from "ethers";
 
-import { ExecutionOptions } from "./utils";
+import { ExecutionOptions, packConditions } from "./utils";
 import { ConditionFlatStruct } from "../typechain-types/contracts/Roles";
 import hre from "hardhat";
 import { EthereumProvider, HardhatRuntimeEnvironment } from "hardhat/types";
@@ -96,17 +96,19 @@ export async function setupOneParam() {
   const { owner, roles, member, testContractAddress, roleKey } =
     await setupTestContract();
 
-  const allowFunction = (
+  const allowFunction = async (
     conditions: ConditionFlatStruct[],
     options = ExecutionOptions.None,
-  ) =>
-    roles.allowFunction(
+  ) => {
+    const packed = await packConditions(roles, conditions);
+    return roles.allowFunction(
       roleKey,
       testContractAddress,
       fn.selector,
-      conditions,
+      packed,
       options,
     );
+  };
 
   const invoke = (
     a: bigint | number,
@@ -139,17 +141,19 @@ export async function setupOneParamSigned() {
   const { owner, roles, member, testContractAddress, roleKey } =
     await setupTestContract();
 
-  const allowFunction = (
+  const allowFunction = async (
     conditions: ConditionFlatStruct[],
     options = ExecutionOptions.None,
-  ) =>
-    roles.allowFunction(
+  ) => {
+    const packed = await packConditions(roles, conditions);
+    return roles.allowFunction(
       roleKey,
       testContractAddress,
       fn.selector,
-      conditions,
+      packed,
       options,
     );
+  };
 
   const invoke = (
     a: bigint | number,
@@ -182,17 +186,19 @@ export async function setupTwoParams() {
   const { owner, roles, member, testContractAddress, roleKey } =
     await setupTestContract();
 
-  const allowFunction = (
+  const allowFunction = async (
     conditions: ConditionFlatStruct[],
     options = ExecutionOptions.None,
-  ) =>
-    roles.allowFunction(
+  ) => {
+    const packed = await packConditions(roles, conditions);
+    return roles.allowFunction(
       roleKey,
       testContractAddress,
       fn.selector,
-      conditions,
+      packed,
       options,
     );
+  };
 
   const invoke = (
     a: bigint | number,
@@ -226,17 +232,19 @@ export async function setupDynamicParam() {
   const { owner, roles, member, testContractAddress, roleKey } =
     await setupTestContract();
 
-  const allowFunction = (
+  const allowFunction = async (
     conditions: ConditionFlatStruct[],
     options = ExecutionOptions.None,
-  ) =>
-    roles.allowFunction(
+  ) => {
+    const packed = await packConditions(roles, conditions);
+    return roles.allowFunction(
       roleKey,
       testContractAddress,
       fn.selector,
-      conditions,
+      packed,
       options,
     );
+  };
 
   const invoke = (
     data: string,
@@ -269,17 +277,19 @@ export async function setupArrayParam() {
   const { owner, roles, member, testContractAddress, roleKey } =
     await setupTestContract();
 
-  const allowFunction = (
+  const allowFunction = async (
     conditions: ConditionFlatStruct[],
     options = ExecutionOptions.None,
-  ) =>
-    roles.allowFunction(
+  ) => {
+    const packed = await packConditions(roles, conditions);
+    return roles.allowFunction(
       roleKey,
       testContractAddress,
       fn.selector,
-      conditions,
+      packed,
       options,
     );
+  };
 
   const invoke = (
     arr: (bigint | number)[],

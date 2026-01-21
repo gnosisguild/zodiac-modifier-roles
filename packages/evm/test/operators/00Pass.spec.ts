@@ -7,6 +7,7 @@ import {
   Encoding,
   ExecutionOptions,
   flattenCondition,
+  packConditions,
 } from "../utils";
 
 describe("Operator - Pass", () => {
@@ -36,23 +37,17 @@ describe("Operator - Pass", () => {
 
   describe("integrity", () => {
     it("reverts UnsuitableCompValue when compValue is not empty", async () => {
-      const { roles, testContractAddress, roleKey } =
-        await loadFixture(setupTestContract);
+      const { roles } = await loadFixture(setupTestContract);
 
       await expect(
-        roles.allowTarget(
-          roleKey,
-          testContractAddress,
-          [
-            {
-              parent: 0,
-              paramType: Encoding.Static,
-              operator: Operator.Pass,
-              compValue: "0x".padEnd(66, "0"),
-            },
-          ],
-          0,
-        ),
+        packConditions(roles, [
+          {
+            parent: 0,
+            paramType: Encoding.Static,
+            operator: Operator.Pass,
+            compValue: "0x".padEnd(66, "0"),
+          },
+        ]),
       ).to.be.revertedWithCustomError(roles, "UnsuitableCompValue");
     });
   });
