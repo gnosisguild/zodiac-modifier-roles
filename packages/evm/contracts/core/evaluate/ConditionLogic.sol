@@ -70,8 +70,7 @@ library ConditionLogic {
                         consumptions,
                         context
                     );
-            } else {
-                assert(operator == Operator.ArrayTailMatches);
+            } else if (operator == Operator.ArrayTailMatches) {
                 return
                     _arrayTailMatches(
                         data,
@@ -80,6 +79,10 @@ library ConditionLogic {
                         consumptions,
                         context
                     );
+            } else {
+                assert(operator == Operator.ZipSome);
+                return
+                    _zipSome(data, condition, payload, consumptions, context);
             }
         } else {
             if (operator <= Operator.LessThan) {
@@ -287,6 +290,59 @@ library ConditionLogic {
         return
             _violation(
                 Status.NoArrayElementPasses,
+                condition,
+                payload,
+                consumptions
+            );
+    }
+
+    function _zipSome(
+        bytes calldata data,
+        Condition memory condition,
+        Payload memory payload,
+        Consumption[] memory consumptions,
+        Context memory context
+    ) private view returns (Result memory result) {
+        Payload memory left = context.pluckedPayloads[
+            uint256(uint8(condition.compValue[0]))
+        ];
+        Payload memory right = context.pluckedPayloads[
+            uint256(uint8(condition.compValue[1]))
+        ];
+
+        uint256 length = left.children.length;
+        if (length != right.children.length) {
+            return
+                _violation(
+                    Status.ZippedArrayLengthMismatch,
+                    condition,
+                    payload,
+                    consumptions
+                );
+        }
+
+        Payload memory tuplePayload;
+        tuplePayload.children = new Payload[](2);
+
+        for (uint256 i; i < length; ++i) {
+            tuplePayload.children[0] = left.children[i];
+            tuplePayload.children[1] = right.children[i];
+
+            result = evaluate(
+                data,
+                condition.children[0],
+                tuplePayload,
+                consumptions,
+                context
+            );
+            if (result.status == Status.Ok) {
+                return result;
+            }
+        }
+
+        return
+            _violation(
+                Status.NoZippedElementPasses,
                 condition,
                 payload,
                 consumptions

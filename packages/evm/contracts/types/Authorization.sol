@@ -43,7 +43,11 @@ enum Status {
     /// Calldata is not empty when it should be
     CalldataNotEmpty,
     /// Leading bytes do not match expected value
-    LeadingBytesNotAMatch
+    LeadingBytesNotAMatch,
+    /// Zipped arrays have different lengths
+    ZippedArrayLengthMismatch,
+    /// No zipped element pair passes
+    NoZippedElementPasses
 }
 
 struct Transaction {

@@ -9,11 +9,11 @@ describe("Operator - Pluck", () => {
     it("reverts UnsuitableParameterType for invalid encodings", async () => {
       const { roles } = await loadFixture(setupTestContract);
 
+      // Note: Array is now allowed for Pluck (used by ZipSome operator)
       for (const encoding of [
         Encoding.None,
         Encoding.AbiEncoded,
         Encoding.Tuple,
-        Encoding.Array,
         Encoding.Dynamic,
       ]) {
         await expect(

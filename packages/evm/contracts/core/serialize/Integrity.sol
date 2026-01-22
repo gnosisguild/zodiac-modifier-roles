@@ -43,6 +43,8 @@ library Integrity {
             _checkMatches(conditions, topology, index);
         } else if (op == Operator.ArraySome || op == Operator.ArrayEvery) {
             _checkArrayIterator(conditions, topology, index);
+        } else if (op == Operator.ZipSome) {
+            _checkZipSome(conditions, topology, index);
         } else if (op == Operator.ArrayTailMatches) {
             _checkArrayTail(conditions, topology, index);
         } else if (op == Operator.Slice) {
@@ -113,9 +115,12 @@ library Integrity {
         }
 
         if (encoding == Encoding.Tuple || encoding == Encoding.Array) {
-            // Container types must have structural children for type tree
-            if (topology[index].sChildCount == 0) {
-                revert IRolesError.UnsuitableChildCount(index);
+            // Pluck is a special case: uses Array encoding but doesn't require children
+            if (node.operator != Operator.Pluck) {
+                // Container types must have structural children for type tree
+                if (topology[index].sChildCount == 0) {
+                    revert IRolesError.UnsuitableChildCount(index);
+                }
             }
         }
     }
@@ -236,6 +241,112 @@ library Integrity {
         }
     }
 
+    function _checkZipSome(
+        ConditionFlat[] memory conditions,
+        Topology[] memory topology,
+        uint256 index
+    ) private pure {
+        ConditionFlat memory node = conditions[index];
+        // ZipSome
+        // ParamType: None
+        if (node.paramType != Encoding.None) {
+            revert IRolesError.UnsuitableParameterType(index);
+        }
+        // CompValue: 2 bytes (two pluck indexes)
+        if (node.compValue.length != 2) {
+            revert IRolesError.UnsuitableCompValue(index);
+        }
+        // Children: Exactly 1 child (non-structural since ZipSome creates synthetic payloads)
+        if (
+            topology[index].childCount != 1 || topology[index].sChildCount != 0
+        ) {
+            revert IRolesError.UnsuitableChildCount(index);
+        }
+
+        // Get pluck indexes and find the plucked arrays
+        uint8 pluckIndexLeft = uint8(node.compValue[0]);
+        uint8 pluckIndexRight = uint8(node.compValue[1]);
+
+        uint256 pluckNodeLeft = type(uint256).max;
+        uint256 pluckNodeRight = type(uint256).max;
+
+        for (uint256 i = 0; i < index; ++i) {
+            if (conditions[i].operator == Operator.Pluck) {
+                uint8 pluckIdx = uint8(conditions[i].compValue[0]);
+                if (pluckIdx == pluckIndexLeft) pluckNodeLeft = i;
+                if (pluckIdx == pluckIndexRight) pluckNodeRight = i;
+            }
+        }
+
+        // Both plucked arrays must exist and be Array encoding
+        if (
+            pluckNodeLeft == type(uint256).max ||
+            conditions[pluckNodeLeft].paramType != Encoding.Array
+        ) {
+            revert IRolesError.UnsuitableCompValue(index);
+        }
+        if (
+            pluckNodeRight == type(uint256).max ||
+            conditions[pluckNodeRight].paramType != Encoding.Array
+        ) {
+            revert IRolesError.UnsuitableCompValue(index);
+        }
+
+        // Validate child typeHash matches Tuple(leftElementType, rightElementType)
+        uint256 childIndex = topology[index].childStart;
+        bytes32 leftElementHash = topology[topology[pluckNodeLeft].childStart]
+            .typeHash;
+        bytes32 rightElementHash = topology[topology[pluckNodeRight].childStart]
+            .typeHash;
+
+        bytes32 expectedHash = keccak256(
+            abi.encodePacked(bytes32(uint256(Encoding.Tuple)), leftElementHash)
+        );
+        expectedHash = keccak256(
+            abi.encodePacked(expectedHash, rightElementHash)
+        );
+
+        if (topology[childIndex].typeHash != expectedHash) {
+            revert IRolesError.UnsuitableChildTypeTree(childIndex);
+        }
+
+        // Validate no forbidden operators in ZipSome descendants
+        _validateZipSomeDescendants(conditions, topology, childIndex);
+    }
+
+    /**
+     * @dev Validates that ZipSome descendants don't contain forbidden operators.
+     */
+    function _validateZipSomeDescendants(
+        ConditionFlat[] memory conditions,
+        Topology[] memory topology,
+        uint256 startIndex
+    ) private pure {
+        /*
+         * ZipSome creates synthetic tuple payloads at runtime by zipping two
+         * plucked arrays. Its child subtree must not contain Pluck or ZipSome.
+         *
+         * Uses linear traversal exploiting BFS array layout: we can track if
+         * we are still within a node's subtree, without going recursive or
+         * storing bounds.
+         */
+        uint256 toVisit = 1;
+        uint256 current = startIndex;
+
+        while (toVisit > 0) {
+            Operator op = conditions[current].operator;
+
+            // Forbidden operators inside ZipSome
+            if (op == Operator.Pluck || op == Operator.ZipSome) {
+                revert IRolesError.UnsupportedOperator(current);
+            }
+
+            toVisit--;
+            toVisit += topology[current].childCount;
+            current++;
+        }
+    }
+
     function _checkArrayTail(
         ConditionFlat[] memory conditions,
         Topology[] memory topology,
@@ -304,8 +415,8 @@ library Integrity {
         uint256 index
     ) private pure {
         ConditionFlat memory node = conditions[index];
-        // ParamType: Static / EtherValue
-        if (!_isWordish(node.paramType)) {
+        // ParamType: Static / EtherValue / Array
+        if (!_isWordish(node.paramType) && node.paramType != Encoding.Array) {
             revert IRolesError.UnsuitableParameterType(index);
         }
         // CompValue: 1 byte
@@ -522,7 +633,8 @@ library Integrity {
      * @notice Validates plucked variable definitions precede their usage.
      *
      * @dev Evaluation happens in DFS order, so this function must check that
-     *      definitions come before usages in DFS order.
+     *      definitions come before usages in DFS order. That's the reason we
+     *      are using recursion
      *
      *      While the flat `conditions` array is stored in BFS order (parents
      *      first), this function traverses the tree in DFS order to track the

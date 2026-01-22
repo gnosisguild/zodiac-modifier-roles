@@ -52,6 +52,22 @@ library TopologyLib {
             }
 
             /*
+             * ZipSome operates on plucked payloads and creates synthetic tuples.
+             * Its children describe the synthetic tuple structure, not ABI-decoded
+             * data, so they must be excluded from the layout and not counted as
+             * structural children.
+             *
+             * IMPORTANT: This must be handled BEFORE bubble-up to prevent ZipSome
+             * from contributing to its parent's sChildCount.
+             */
+            if (condition.operator == Operator.ZipSome) {
+                for (uint256 j; j < current.childCount; ++j) {
+                    _excludeFromLayout(topology, current.childStart + j);
+                }
+                current.sChildCount = 0;
+            }
+
+            /*
              *
              * Bubble Up. Skip for Root
              *

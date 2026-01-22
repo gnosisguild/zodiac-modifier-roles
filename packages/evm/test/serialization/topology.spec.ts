@@ -879,5 +879,90 @@ describe("Topology", () => {
       expect(result!.isInLayout).to.equal(true);
       expect(result!.isVariant).to.equal(true);
     });
+
+    it("ZipSome: has isInLayout false", async () => {
+      const { resolve } = await loadFixture(setup);
+
+      const result = await resolve({
+        paramType: Encoding.None,
+        operator: Operator.ZipSome,
+        compValue: "0x0001",
+        children: [
+          {
+            paramType: Encoding.Tuple,
+            operator: Operator.Pass,
+            children: [
+              { paramType: Encoding.Static, operator: Operator.Pass },
+              { paramType: Encoding.Static, operator: Operator.Pass },
+            ],
+          },
+        ],
+      });
+
+      expect(result!.isInLayout).to.equal(false);
+    });
+
+    it("ZipSome: children are excluded from layout", async () => {
+      const { resolve } = await loadFixture(setup);
+
+      // ZipSome with structural children - they should all be excluded
+      const result = await resolve({
+        paramType: Encoding.None,
+        operator: Operator.ZipSome,
+        compValue: "0x0001",
+        children: [
+          {
+            paramType: Encoding.Tuple,
+            operator: Operator.Pass,
+            children: [
+              { paramType: Encoding.Static, operator: Operator.Pass },
+              { paramType: Encoding.Static, operator: Operator.Pass },
+            ],
+          },
+        ],
+      });
+
+      // ZipSome itself is not in layout
+      expect(result!.isInLayout).to.equal(false);
+      // ZipSome's structural child (Tuple) is excluded from layout
+      expect(result!.children[0].isInLayout).to.equal(false);
+      // Tuple's children are also excluded (descendants of excluded node)
+      expect(result!.children[0].children[0].isInLayout).to.equal(false);
+      expect(result!.children[0].children[1].isInLayout).to.equal(false);
+    });
+
+    it("ZipSome: does not contribute sChildCount to parent", async () => {
+      const { resolve } = await loadFixture(setup);
+
+      // Tuple containing Static and ZipSome
+      // ZipSome should not count as structural child
+      const result = await resolve({
+        paramType: Encoding.Tuple,
+        operator: Operator.Matches,
+        children: [
+          { paramType: Encoding.Static, operator: Operator.Pass },
+          {
+            paramType: Encoding.None,
+            operator: Operator.ZipSome,
+            compValue: "0x0001",
+            children: [
+              {
+                paramType: Encoding.Tuple,
+                operator: Operator.Pass,
+                children: [
+                  { paramType: Encoding.Static, operator: Operator.Pass },
+                  { paramType: Encoding.Static, operator: Operator.Pass },
+                ],
+              },
+            ],
+          },
+        ],
+      });
+
+      // Tuple has sChildCount = 1 (only Static, not ZipSome)
+      expect(result!.sChildCount).to.equal(1);
+      // ZipSome has sChildCount = 0 (children excluded)
+      expect(result!.children[1].sChildCount).to.equal(0);
+    });
   });
 });
