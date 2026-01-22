@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.4.1](https://github.com/gnosisguild/zodiac-modifier-roles/compare/zodiac-roles-sdk-v3.4.0...zodiac-roles-sdk-v3.4.1) (2026-01-22)
+
+
+### Bug Fixes
+
+* swap ETH to WETH does not need cow order signing permissions ([#433](https://github.com/gnosisguild/zodiac-modifier-roles/issues/433)) ([5b32ce8](https://github.com/gnosisguild/zodiac-modifier-roles/commit/5b32ce8c0685d06eb354971483f99ac33a447790))
+
 ## [3.4.0](https://github.com/gnosisguild/zodiac-modifier-roles/compare/zodiac-roles-sdk-v3.3.3...zodiac-roles-sdk-v3.4.0) (2026-01-21)
 
 
