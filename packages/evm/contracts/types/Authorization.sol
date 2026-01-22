@@ -47,7 +47,9 @@ enum Status {
     /// Zipped arrays have different lengths
     ZippedArrayLengthMismatch,
     /// No zipped element pair passes
-    NoZippedElementPasses
+    NoZippedElementPasses,
+    /// Not every zipped element pair passes
+    NotEveryZippedElementPasses
 }
 
 struct Transaction {

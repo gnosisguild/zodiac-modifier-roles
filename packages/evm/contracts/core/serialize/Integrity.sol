@@ -43,8 +43,8 @@ library Integrity {
             _checkMatches(conditions, topology, index);
         } else if (op == Operator.ArraySome || op == Operator.ArrayEvery) {
             _checkArrayIterator(conditions, topology, index);
-        } else if (op == Operator.ZipSome) {
-            _checkZipSome(conditions, topology, index);
+        } else if (op == Operator.ZipSome || op == Operator.ZipEvery) {
+            _checkZipIterator(conditions, topology, index);
         } else if (op == Operator.ArrayTailMatches) {
             _checkArrayTail(conditions, topology, index);
         } else if (op == Operator.Slice) {
@@ -241,13 +241,13 @@ library Integrity {
         }
     }
 
-    function _checkZipSome(
+    function _checkZipIterator(
         ConditionFlat[] memory conditions,
         Topology[] memory topology,
         uint256 index
     ) private pure {
         ConditionFlat memory node = conditions[index];
-        // ZipSome
+        // ZipSome / ZipEvery
         // ParamType: None
         if (node.paramType != Encoding.None) {
             revert IRolesError.UnsuitableParameterType(index);
@@ -256,7 +256,7 @@ library Integrity {
         if (node.compValue.length != 2) {
             revert IRolesError.UnsuitableCompValue(index);
         }
-        // Children: Exactly 1 child (non-structural since ZipSome creates synthetic payloads)
+        // Children: Exactly 1 child (non-structural since Zip creates synthetic payloads)
         if (
             topology[index].childCount != 1 || topology[index].sChildCount != 0
         ) {
@@ -310,21 +310,21 @@ library Integrity {
             revert IRolesError.UnsuitableChildTypeTree(childIndex);
         }
 
-        // Validate no forbidden operators in ZipSome descendants
-        _validateZipSomeDescendants(conditions, topology, childIndex);
+        // Validate no forbidden operators in Zip descendants
+        _validateZipIteratorDescendants(conditions, topology, childIndex);
     }
 
     /**
-     * @dev Validates that ZipSome descendants don't contain forbidden operators.
+     * @dev Validates that Zip descendants don't contain forbidden operators.
      */
-    function _validateZipSomeDescendants(
+    function _validateZipIteratorDescendants(
         ConditionFlat[] memory conditions,
         Topology[] memory topology,
         uint256 startIndex
     ) private pure {
         /*
-         * ZipSome creates synthetic tuple payloads at runtime by zipping two
-         * plucked arrays. Its child subtree must not contain Pluck or ZipSome.
+         * Zip operators create synthetic tuple payloads at runtime by zipping
+         * two plucked arrays. Child subtree must not contain Pluck or Zip.
          *
          * Uses linear traversal exploiting BFS array layout: we can track if
          * we are still within a node's subtree, without going recursive or
@@ -336,8 +336,12 @@ library Integrity {
         while (toVisit > 0) {
             Operator op = conditions[current].operator;
 
-            // Forbidden operators inside ZipSome
-            if (op == Operator.Pluck || op == Operator.ZipSome) {
+            // Forbidden operators inside Zip
+            if (
+                op == Operator.Pluck ||
+                op == Operator.ZipSome ||
+                op == Operator.ZipEvery
+            ) {
                 revert IRolesError.UnsupportedOperator(current);
             }
 

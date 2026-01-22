@@ -52,15 +52,18 @@ library TopologyLib {
             }
 
             /*
-             * ZipSome operates on plucked payloads and creates synthetic tuples.
-             * Its children describe the synthetic tuple structure, not ABI-decoded
+             * Zip operators operate on plucked payloads and create synthetic tuples.
+             * Their children describe the synthetic tuple structure, not ABI-decoded
              * data, so they must be excluded from the layout and not counted as
              * structural children.
              *
-             * IMPORTANT: This must be handled BEFORE bubble-up to prevent ZipSome
+             * IMPORTANT: This must be handled BEFORE bubble-up to prevent Zip
              * from contributing to its parent's sChildCount.
              */
-            if (condition.operator == Operator.ZipSome) {
+            if (
+                condition.operator == Operator.ZipSome ||
+                condition.operator == Operator.ZipEvery
+            ) {
                 for (uint256 j; j < current.childCount; ++j) {
                     _excludeFromLayout(topology, current.childStart + j);
                 }
