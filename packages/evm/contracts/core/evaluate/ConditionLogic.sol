@@ -46,11 +46,9 @@ library ConditionLogic {
             } else if (operator == Operator.Slice) {
                 return _slice(data, condition, payload, consumptions, context);
             } else if (operator == Operator.Pluck) {
-                context.pluckedValues[uint8(condition.compValue[0])] = __input(
-                    data,
-                    payload,
-                    context
-                );
+                uint256 index = uint256(uint8(condition.compValue[0]));
+                context.pluckedValues[index] = __input(data, payload, context);
+                context.pluckedPayloads[index] = payload;
                 return _ok(consumptions);
             } else if (operator == Operator.Empty) {
                 return

@@ -4,6 +4,7 @@ pragma solidity >=0.8.17 <0.9.0;
 import "@gnosis-guild/zodiac-core/contracts/core/Operation.sol";
 
 import {Consumption} from "./Allowance.sol";
+import {Payload} from "./Condition.sol";
 
 enum Status {
     Ok,
@@ -56,6 +57,7 @@ struct Context {
     uint256 value;
     Operation operation;
     bytes32[] pluckedValues;
+    Payload[] pluckedPayloads;
 }
 
 struct Result {
