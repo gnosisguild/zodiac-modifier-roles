@@ -54,11 +54,11 @@ describe("allowCowOrderSigning", () => {
     expect(() => targetIntegrity(targets)).not.toThrow()
   })
 
-  it("should add both deposit and withdraw permissions when native is in both sell and buy", () => {
+  it("should add both deposit and withdraw permissions when native is in both sell and buy arrays with other tokens", () => {
     const permissions = allowCowOrderSigning({
       chainId: SupportedChainId.MAINNET,
-      sell: ["native"],
-      buy: ["native"],
+      sell: ["native", COW],
+      buy: ["native", COW],
     })
 
     const depositPermission = permissions.find(
@@ -76,6 +76,89 @@ describe("allowCowOrderSigning", () => {
 
     const { targets } = processPermissions(permissions)
     expect(() => targetIntegrity(targets)).not.toThrow()
+  })
+
+  it("should skip signOrder, approve, and unsignOrder permissions when both sell and buy are only native/wrapped native tokens", () => {
+    // Test case: native to WETH
+    const permissionsNativeToWeth = allowCowOrderSigning({
+      chainId: SupportedChainId.MAINNET,
+      sell: ["native"],
+      buy: [WETH],
+    })
+
+    // Should only have deposit, no signOrder/approve/unsignOrder
+    expect(permissionsNativeToWeth).toHaveLength(1)
+    expect(
+      "signature" in permissionsNativeToWeth[0] &&
+        permissionsNativeToWeth[0].signature
+    ).toBe("deposit()")
+
+    // Test case: WETH to native
+    const permissionsWethToNative = allowCowOrderSigning({
+      chainId: SupportedChainId.MAINNET,
+      sell: [WETH],
+      buy: ["native"],
+    })
+
+    // Should only have withdraw, no signOrder/approve/unsignOrder
+    expect(permissionsWethToNative).toHaveLength(1)
+    expect(
+      "signature" in permissionsWethToNative[0] &&
+        permissionsWethToNative[0].signature
+    ).toBe("withdraw(uint256)")
+
+  })
+
+  it("should still include signOrder/approve/unsignOrder when mixed with other tokens", () => {
+    // If sell includes both native and another token, should still have full permissions
+    const permissions = allowCowOrderSigning({
+      chainId: SupportedChainId.MAINNET,
+      sell: ["native", COW],
+      buy: [WETH],
+    })
+
+    const signOrderPermission = permissions.find(
+      (p) => "signature" in p && p.signature.includes("signOrder")
+    )
+    const approvePermission = permissions.find(
+      (p) => "signature" in p && p.signature === "approve(address,uint256)"
+    )
+    const unsignOrderPermission = permissions.find(
+      (p) => "signature" in p && p.signature.includes("unsignOrder")
+    )
+
+    expect(signOrderPermission).toBeDefined()
+    expect(approvePermission).toBeDefined()
+    expect(unsignOrderPermission).toBeDefined()
+  })
+
+  it("should throw when sell and buy are identical single-element arrays", () => {
+    // WETH to WETH
+    expect(() =>
+      allowCowOrderSigning({
+        chainId: SupportedChainId.MAINNET,
+        sell: [WETH],
+        buy: [WETH],
+      })
+    ).toThrow("Cannot swap a token into itself")
+
+    // native to native (both resolve to WETH)
+    expect(() =>
+      allowCowOrderSigning({
+        chainId: SupportedChainId.MAINNET,
+        sell: ["native"],
+        buy: ["native"],
+      })
+    ).toThrow("Cannot swap a token into itself")
+
+    // Should NOT throw when arrays have multiple elements even if overlapping
+    expect(() =>
+      allowCowOrderSigning({
+        chainId: SupportedChainId.MAINNET,
+        sell: [WETH, COW],
+        buy: [WETH, COW],
+      })
+    ).not.toThrow()
   })
 
   it("should work with different chains", () => {
