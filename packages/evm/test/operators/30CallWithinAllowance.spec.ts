@@ -190,13 +190,19 @@ describe("Operator - CallWithinAllowance", async () => {
           operator: Operator.Or,
           children: [
             {
-              paramType: Encoding.AbiEncoded,
-              operator: Operator.Matches,
+              paramType: Encoding.None,
+              operator: Operator.And,
               children: [
                 {
-                  paramType: Encoding.Static,
-                  operator: Operator.EqualTo,
-                  compValue: defaultAbiCoder.encode(["uint256"], [value1]),
+                  paramType: Encoding.AbiEncoded,
+                  operator: Operator.Matches,
+                  children: [
+                    {
+                      paramType: Encoding.Static,
+                      operator: Operator.EqualTo,
+                      compValue: defaultAbiCoder.encode(["uint256"], [value1]),
+                    },
+                  ],
                 },
                 {
                   paramType: Encoding.None,
@@ -209,13 +215,19 @@ describe("Operator - CallWithinAllowance", async () => {
               ],
             },
             {
-              paramType: Encoding.AbiEncoded,
-              operator: Operator.Matches,
+              paramType: Encoding.None,
+              operator: Operator.And,
               children: [
                 {
-                  paramType: Encoding.Static,
-                  operator: Operator.EqualTo,
-                  compValue: defaultAbiCoder.encode(["uint256"], [value2]),
+                  paramType: Encoding.AbiEncoded,
+                  operator: Operator.Matches,
+                  children: [
+                    {
+                      paramType: Encoding.Static,
+                      operator: Operator.EqualTo,
+                      compValue: defaultAbiCoder.encode(["uint256"], [value2]),
+                    },
+                  ],
                 },
                 {
                   paramType: Encoding.None,
@@ -422,6 +434,101 @@ describe("Operator - CallWithinAllowance", async () => {
         .withArgs(
           ConditionViolationStatus.AllowanceExceeded,
           2, // CallWithinAllowance node
+          anyValue,
+          anyValue,
+        );
+    });
+
+    it("CallWithinAllowance inside And as tuple field - Tuple(Static, And(CallWithinAllowance, Static))", async () => {
+      const { member, roles, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      const iface = new Interface([
+        "function twoParams(uint256 first, uint256 second)",
+      ]);
+      const fn = iface.getFunction("twoParams")!;
+
+      const allowanceKey =
+        "0x0000000000000000000000000000000000000000000000000000000000000001";
+
+      await setAllowance(roles, allowanceKey, 2);
+
+      // Structure: AbiEncoded -> Matches(Pass, And(EqualTo, CallWithinAllowance))
+      // The And wraps CallWithinAllowance together with the field's structural check.
+      // Type tree sees this as tuple(static, static).
+      const packed = await packConditions(
+        roles,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Static,
+              operator: Operator.Pass,
+            },
+            {
+              paramType: Encoding.None,
+              operator: Operator.And,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: defaultAbiCoder.encode(["uint256"], [42]),
+                },
+                {
+                  paramType: Encoding.None,
+                  operator: Operator.CallWithinAllowance,
+                  compValue: defaultAbiCoder.encode(
+                    ["bytes32"],
+                    [allowanceKey],
+                  ),
+                },
+              ],
+            },
+          ],
+        }),
+      );
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
+        packed,
+        ExecutionOptions.None,
+      );
+
+      const invoke = (first: number, second: number) =>
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            testContractAddress,
+            0,
+            iface.encodeFunctionData(fn, [first, second]),
+            0,
+          );
+
+      // Wrong second param - should fail
+      await expect(invoke(100, 999))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          3, // EqualTo: Matches[0] -> Pass[1], And[2] -> EqualTo[3], CallWithinAllowance[4]
+          anyValue,
+          anyValue,
+        );
+
+      // Correct second param (42) - should succeed and consume allowance
+      await expect(invoke(100, 42)).to.not.be.reverted;
+      expect((await roles.allowances(allowanceKey)).balance).to.equal(1);
+
+      await expect(invoke(200, 42)).to.not.be.reverted;
+      expect((await roles.allowances(allowanceKey)).balance).to.equal(0);
+
+      // Allowance exhausted - should fail
+      await expect(invoke(300, 42))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.AllowanceExceeded,
+          4, // CallWithinAllowance node
           anyValue,
           anyValue,
         );

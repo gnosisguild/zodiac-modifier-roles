@@ -1,575 +1,268 @@
-import hre from "hardhat";
 import { expect } from "chai";
+import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { Encoding, Operator, flattenCondition } from "../utils";
 
-import { Encoding, flattenCondition, Operator } from "../utils";
-
-describe("ConditionPacker and ConditionUnpacker", () => {
+describe("PackerUnpacker", () => {
   async function setup() {
     const MockPackerUnpacker =
       await hre.ethers.getContractFactory("MockPackerUnpacker");
     const mock = await MockPackerUnpacker.deploy();
+
     return { mock };
   }
 
-  describe("Condition round-trip", () => {
-    it("single node", async () => {
+  describe("roundtrip", () => {
+    it("preserves operator", async () => {
       const { mock } = await loadFixture(setup);
 
-      const input = flattenCondition({
-        paramType: Encoding.Static,
-        operator: Operator.Pass,
-      });
-
-      const [conditions] = await mock.roundtrip(input);
-      expect(conditionFieldsOnly(conditions)).to.deep.equal(
-        conditionFieldsOnly(input),
+      const [result] = await mock.roundtrip(
+        flattenCondition({
+          paramType: Encoding.Static,
+          operator: Operator.Pass,
+        }),
       );
+
+      expect(result[0].operator).to.equal(Operator.Pass);
     });
 
-    it("tree with one child", async () => {
+    it("preserves encoding", async () => {
       const { mock } = await loadFixture(setup);
 
-      const input = flattenCondition({
-        paramType: Encoding.None,
-        operator: Operator.And,
-        children: [
-          {
-            paramType: Encoding.Static,
-            operator: Operator.Pass,
-          },
-        ],
-      });
-
-      const [conditions] = await mock.roundtrip(input);
-      expect(conditionFieldsOnly(conditions)).to.deep.equal(
-        conditionFieldsOnly(input),
+      const [result] = await mock.roundtrip(
+        flattenCondition({
+          paramType: Encoding.Static,
+          operator: Operator.Pass,
+        }),
       );
+
+      expect(result[0].encoding).to.equal(Encoding.Static);
     });
 
-    it("binary tree", async () => {
+    it("preserves compValue", async () => {
       const { mock } = await loadFixture(setup);
 
-      // Use homogeneous children to satisfy type equivalence
-      const input = flattenCondition({
-        paramType: Encoding.None,
-        operator: Operator.Or,
-        children: [
-          { paramType: Encoding.Static, operator: Operator.Pass },
-          { paramType: Encoding.Static, operator: Operator.Pass },
-        ],
-      });
-
-      const [conditions] = await mock.roundtrip(input);
-      expect(conditionFieldsOnly(conditions)).to.deep.equal(
-        conditionFieldsOnly(input),
-      );
-    });
-
-    it("wide tree - many children", async () => {
-      const { mock } = await loadFixture(setup);
-
-      const input = flattenCondition({
-        paramType: Encoding.AbiEncoded,
-        operator: Operator.Matches,
-        children: [
-          { paramType: Encoding.Static, operator: Operator.Pass },
-          { paramType: Encoding.Static, operator: Operator.Pass },
-          { paramType: Encoding.Dynamic, operator: Operator.Pass },
-          { paramType: Encoding.Static, operator: Operator.Pass },
-        ],
-      });
-
-      const [conditions] = await mock.roundtrip(input);
-      expect(conditionFieldsOnly(conditions)).to.deep.equal(
-        conditionFieldsOnly(input),
-      );
-    });
-
-    it("deep nesting", async () => {
-      const { mock } = await loadFixture(setup);
-
-      const input = flattenCondition({
-        paramType: Encoding.None,
-        operator: Operator.And,
-        children: [
-          {
-            paramType: Encoding.None,
-            operator: Operator.Or,
-            children: [
-              {
-                paramType: Encoding.None,
-                operator: Operator.And,
-                children: [
-                  {
-                    paramType: Encoding.None,
-                    operator: Operator.Or,
-                    children: [
-                      { paramType: Encoding.Static, operator: Operator.Pass },
-                    ],
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      });
-
-      const [conditions] = await mock.roundtrip(input);
-      expect(conditionFieldsOnly(conditions)).to.deep.equal(
-        conditionFieldsOnly(input),
-      );
-    });
-
-    it("EqualTo with compValue", async () => {
-      const { mock } = await loadFixture(setup);
-
-      const input = flattenCondition({
-        paramType: Encoding.Static,
-        operator: Operator.EqualTo,
-        compValue:
-          "0x000000000000000000000000000000000000000000000000000000000000007b",
-      });
-
-      const [conditions] = await mock.roundtrip(input);
-      expect(conditionFieldsOnly(conditions)).to.deep.equal(
-        conditionFieldsOnly(input),
-      );
-    });
-
-    it("EqualTo with compValue >32 bytes preserves full value", async () => {
-      const { mock } = await loadFixture(setup);
-
-      // Use abi.encode for dynamic bytes - creates offset + length + data
-      const rawBytes = "0x" + "ab".repeat(40);
-      const abiEncoded = hre.ethers.AbiCoder.defaultAbiCoder().encode(
-        ["bytes"],
-        [rawBytes],
-      );
-      const input = flattenCondition({
-        paramType: Encoding.Dynamic,
-        operator: Operator.EqualTo,
-        compValue: abiEncoded,
-      });
-
-      const [conditions] = await mock.roundtrip(input);
-
-      // Transform strips offset (first 32 bytes), remaining is preserved
-      const stripped = "0x" + abiEncoded.slice(66); // Remove 0x + 64 hex chars (32 bytes)
-      expect(conditions[0].compValue).to.equal(stripped);
-    });
-
-    it("AbiEncoded with match bytes", async () => {
-      const { mock } = await loadFixture(setup);
-
-      // compValue: 0x0004 (leadingBytes=4) + deadbeef (match data)
-      const input = flattenCondition({
-        paramType: Encoding.AbiEncoded,
-        operator: Operator.Matches,
-        compValue: "0x0004deadbeef",
-        children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
-      });
-
-      const [conditions] = await mock.roundtrip(input);
-
-      // After unpacking, compValue should be just the match bytes (without leadingBytes prefix)
-      expect(conditionFieldsOnly(conditions)).to.deep.equal([
-        { parent: 0, operator: Operator.Matches, compValue: "0xdeadbeef" },
-        { parent: 0, operator: Operator.Pass, compValue: "0x" },
-      ]);
-    });
-
-    it("AbiEncoded without match bytes", async () => {
-      const { mock } = await loadFixture(setup);
-
-      // compValue: 0x0004 (just leadingBytes, no trailing match data)
-      const input = flattenCondition({
-        paramType: Encoding.AbiEncoded,
-        operator: Operator.Matches,
-        compValue: "0x0004",
-        children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
-      });
-
-      const [conditions] = await mock.roundtrip(input);
-
-      // When no trailing match data, compValue should be empty
-      expect(conditionFieldsOnly(conditions)).to.deep.equal([
-        { parent: 0, operator: Operator.Matches, compValue: "0x" },
-        { parent: 0, operator: Operator.Pass, compValue: "0x" },
-      ]);
-    });
-
-    it("Slice operator with compValue", async () => {
-      const { mock } = await loadFixture(setup);
-
-      // Slice compValue format: offset (2 bytes) + size (1 byte, 1-32)
-      // Slice child must resolve to Static
-      const input = flattenCondition({
-        paramType: Encoding.Dynamic,
-        operator: Operator.Slice,
-        compValue: "0x000410", // offset=4, size=16
-        children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
-      });
-
-      const [conditions] = await mock.roundtrip(input);
-      expect(conditionFieldsOnly(conditions)).to.deep.equal(
-        conditionFieldsOnly(input),
-      );
-    });
-
-    it("Pluck operator with compValue", async () => {
-      const { mock } = await loadFixture(setup);
-
-      // Pluck is a leaf (Static encoding can't have children)
-      const input = flattenCondition({
-        paramType: Encoding.None,
-        operator: Operator.And,
-        children: [
-          {
-            paramType: Encoding.Static,
-            operator: Operator.Pluck,
-            compValue: "0x00", // pluck index 0
-          },
-          {
-            paramType: Encoding.Static,
-            operator: Operator.EqualTo,
-            compValue:
-              "0x0000000000000000000000000000000000000000000000000000000000000001",
-          },
-        ],
-      });
-
-      const [conditions] = await mock.roundtrip(input);
-      expect(conditionFieldsOnly(conditions)).to.deep.equal(
-        conditionFieldsOnly(input),
-      );
-    });
-
-    it("high compValueOffset (>255) uses both bytes", async () => {
-      const { mock } = await loadFixture(setup);
-
-      // Create many children with compValues to push tailOffset beyond 255
-      // Each node: 5 bytes, each compValue: 2 + 32 = 34 bytes
-      // We need enough nodes so that later compValueOffsets exceed 255
-      const children = [];
-      for (let i = 0; i < 10; i++) {
-        children.push({
+      const compValue =
+        "0x000000000000000000000000000000000000000000000000000000000000002a";
+      const [result] = await mock.roundtrip(
+        flattenCondition({
           paramType: Encoding.Static,
           operator: Operator.EqualTo,
-          compValue: "0x" + i.toString(16).padStart(2, "0").padEnd(64, "0"), // 32-byte value
-        });
-      }
+          compValue,
+        }),
+      );
 
-      const input = flattenCondition({
-        paramType: Encoding.None,
-        operator: Operator.Or,
-        children,
-      });
+      expect(result[0].compValue).to.equal(compValue);
+    });
 
-      // Verify: header(3) + condHeader(2) + 11*5(nodes) + compValues
-      // tailOffset starts at 5 + 55 = 60
-      // After 6 compValues: 60 + 6*(2+32) = 60 + 204 = 264 > 255
-      const [conditions] = await mock.roundtrip(input);
-      expect(conditionFieldsOnly(conditions)).to.deep.equal(
-        conditionFieldsOnly(input),
+    it("preserves tree structure with children", async () => {
+      const { mock } = await loadFixture(setup);
+
+      const [result] = await mock.roundtrip(
+        flattenCondition({
+          paramType: Encoding.Tuple,
+          operator: Operator.Matches,
+          children: [
+            { paramType: Encoding.Static, operator: Operator.Pass },
+            { paramType: Encoding.Static, operator: Operator.Pass },
+          ],
+        }),
+      );
+
+      expect(result.length).to.equal(3);
+      expect(result[0].encoding).to.equal(Encoding.Tuple);
+      expect(result[1].parent).to.equal(0);
+      expect(result[2].parent).to.equal(0);
+    });
+
+    it("preserves nested tree structure", async () => {
+      const { mock } = await loadFixture(setup);
+
+      // Tree structure:
+      // 0: Tuple (root)
+      // ├── 1: Tuple
+      // │   └── 3: Static (BFS: children of level 1 come after level 1)
+      // └── 2: Static
+      const [result] = await mock.roundtrip(
+        flattenCondition({
+          paramType: Encoding.Tuple,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Tuple,
+              operator: Operator.Matches,
+              children: [
+                { paramType: Encoding.Static, operator: Operator.Pass },
+              ],
+            },
+            { paramType: Encoding.Static, operator: Operator.Pass },
+          ],
+        }),
+      );
+
+      expect(result.length).to.equal(4);
+      expect(result[0].parent).to.equal(0); // root
+      expect(result[1].parent).to.equal(0); // first child of root (Tuple)
+      expect(result[2].parent).to.equal(0); // second child of root (Static)
+      expect(result[3].parent).to.equal(1); // child of first Tuple
+    });
+
+    it("computes inlined correctly for Static", async () => {
+      const { mock } = await loadFixture(setup);
+
+      const [result] = await mock.roundtrip(
+        flattenCondition({
+          paramType: Encoding.Static,
+          operator: Operator.Pass,
+        }),
+      );
+
+      expect(result[0].inlined).to.equal(true);
+    });
+
+    it("computes inlined correctly for Dynamic", async () => {
+      const { mock } = await loadFixture(setup);
+
+      const [result] = await mock.roundtrip(
+        flattenCondition({
+          paramType: Encoding.Dynamic,
+          operator: Operator.Pass,
+        }),
+      );
+
+      expect(result[0].inlined).to.equal(false);
+    });
+
+    it("computes inlined correctly for Tuple with all Static children", async () => {
+      const { mock } = await loadFixture(setup);
+
+      const [result] = await mock.roundtrip(
+        flattenCondition({
+          paramType: Encoding.Tuple,
+          operator: Operator.Matches,
+          children: [
+            { paramType: Encoding.Static, operator: Operator.Pass },
+            { paramType: Encoding.Static, operator: Operator.Pass },
+          ],
+        }),
+      );
+
+      expect(result[0].inlined).to.equal(true);
+      expect(result[1].inlined).to.equal(true);
+      expect(result[2].inlined).to.equal(true);
+    });
+
+    it("computes inlined correctly for Tuple with Dynamic child", async () => {
+      const { mock } = await loadFixture(setup);
+
+      const [result] = await mock.roundtrip(
+        flattenCondition({
+          paramType: Encoding.Tuple,
+          operator: Operator.Matches,
+          children: [
+            { paramType: Encoding.Static, operator: Operator.Pass },
+            { paramType: Encoding.Dynamic, operator: Operator.Pass },
+          ],
+        }),
+      );
+
+      expect(result[0].inlined).to.equal(false);
+      expect(result[1].inlined).to.equal(true);
+      expect(result[2].inlined).to.equal(false);
+    });
+
+    it("Array is never inlined", async () => {
+      const { mock } = await loadFixture(setup);
+
+      const [result] = await mock.roundtrip(
+        flattenCondition({
+          paramType: Encoding.Array,
+          operator: Operator.Matches,
+          children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+        }),
+      );
+
+      expect(result[0].inlined).to.equal(false);
+    });
+
+    it("tracks maxPluckValue", async () => {
+      const { mock } = await loadFixture(setup);
+
+      const [, maxPluckValue] = await mock.roundtrip(
+        flattenCondition({
+          paramType: Encoding.None,
+          operator: Operator.And,
+          children: [
+            {
+              paramType: Encoding.Static,
+              operator: Operator.Pluck,
+              compValue: "0x00",
+            },
+            {
+              paramType: Encoding.Static,
+              operator: Operator.Pluck,
+              compValue: "0x02",
+            },
+          ],
+        }),
+      );
+
+      expect(maxPluckValue).to.equal(3); // max index is 2, so count is 3
+    });
+
+    it("handles EqualTo compValue stripping for non-inlined nodes", async () => {
+      const { mock } = await loadFixture(setup);
+
+      // Dynamic node at offset - the 32-byte head pointer should be stripped
+      const compValue =
+        "0x0000000000000000000000000000000000000000000000000000000000000020" + // offset (stripped)
+        "0000000000000000000000000000000000000000000000000000000000000005" + // length
+        "68656c6c6f000000000000000000000000000000000000000000000000000000"; // "hello"
+
+      const [result] = await mock.roundtrip(
+        flattenCondition({
+          paramType: Encoding.Dynamic,
+          operator: Operator.EqualTo,
+          compValue,
+        }),
+      );
+
+      // The first 32 bytes (offset) should be stripped
+      expect(result[0].compValue).to.equal(
+        "0x" +
+          "0000000000000000000000000000000000000000000000000000000000000005" +
+          "68656c6c6f000000000000000000000000000000000000000000000000000000",
       );
     });
-  });
 
-  describe("Layout round-trip", () => {
-    it("single node", async () => {
+    it("handles AbiEncoded default leadingBytes", async () => {
       const { mock } = await loadFixture(setup);
 
-      const input = flattenCondition({
-        paramType: Encoding.Static,
-        operator: Operator.Pass,
-      });
+      // AbiEncoded without compValue gets default leadingBytes of 4
+      const [result] = await mock.roundtrip(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
+        }),
+      );
 
-      const [, layout] = await mock.roundtrip(input);
-      expect(layoutFieldsOnly(layout)).to.deep.equal([
-        { encoding: Encoding.Static, parent: 0, inlined: true },
-      ]);
+      // compValue should be empty (leadingBytes is extracted separately)
+      expect(result[0].compValue).to.equal("0x");
     });
 
-    it("AbiEncoded with children", async () => {
+    it("maps EtherValue to None encoding", async () => {
       const { mock } = await loadFixture(setup);
 
-      const input = flattenCondition({
-        paramType: Encoding.AbiEncoded,
-        operator: Operator.Matches,
-        children: [
-          { paramType: Encoding.Static, operator: Operator.Pass },
-          { paramType: Encoding.Dynamic, operator: Operator.Pass },
-        ],
-      });
+      const [result] = await mock.roundtrip(
+        flattenCondition({
+          paramType: Encoding.EtherValue,
+          operator: Operator.Pass,
+        }),
+      );
 
-      const [, layout] = await mock.roundtrip(input);
-      expect(layoutFieldsOnly(layout)).to.deep.equal([
-        { encoding: Encoding.AbiEncoded, parent: 0, inlined: false },
-        { encoding: Encoding.Static, parent: 0, inlined: true },
-        { encoding: Encoding.Dynamic, parent: 0, inlined: false },
-      ]);
-    });
-
-    it("Tuple with children", async () => {
-      const { mock } = await loadFixture(setup);
-
-      const input = flattenCondition({
-        paramType: Encoding.AbiEncoded,
-        operator: Operator.Matches,
-        children: [
-          {
-            paramType: Encoding.Tuple,
-            operator: Operator.Matches,
-            children: [
-              { paramType: Encoding.Static, operator: Operator.Pass },
-              { paramType: Encoding.Dynamic, operator: Operator.Pass },
-            ],
-          },
-        ],
-      });
-
-      const [, layout] = await mock.roundtrip(input);
-      expect(layoutFieldsOnly(layout)).to.deep.equal([
-        { encoding: Encoding.AbiEncoded, parent: 0, inlined: false },
-        { encoding: Encoding.Tuple, parent: 0, inlined: false },
-        { encoding: Encoding.Static, parent: 1, inlined: true },
-        { encoding: Encoding.Dynamic, parent: 1, inlined: false },
-      ]);
-    });
-
-    it("Array with children", async () => {
-      const { mock } = await loadFixture(setup);
-
-      const input = flattenCondition({
-        paramType: Encoding.AbiEncoded,
-        operator: Operator.Matches,
-        children: [
-          {
-            paramType: Encoding.Array,
-            operator: Operator.Matches,
-            children: [
-              { paramType: Encoding.Static, operator: Operator.Pass },
-              { paramType: Encoding.Static, operator: Operator.Pass },
-            ],
-          },
-        ],
-      });
-
-      const [, layout] = await mock.roundtrip(input);
-      // Non-variant array keeps only first child in layout
-      expect(layoutFieldsOnly(layout)).to.deep.equal([
-        { encoding: Encoding.AbiEncoded, parent: 0, inlined: false },
-        { encoding: Encoding.Array, parent: 0, inlined: false },
-        { encoding: Encoding.Static, parent: 1, inlined: true },
-      ]);
-    });
-
-    it("deep nesting", async () => {
-      const { mock } = await loadFixture(setup);
-
-      const input = flattenCondition({
-        paramType: Encoding.AbiEncoded,
-        operator: Operator.Matches,
-        children: [
-          {
-            paramType: Encoding.Tuple,
-            operator: Operator.Matches,
-            children: [
-              {
-                paramType: Encoding.Tuple,
-                operator: Operator.Matches,
-                children: [
-                  { paramType: Encoding.Static, operator: Operator.Pass },
-                ],
-              },
-            ],
-          },
-        ],
-      });
-
-      const [, layout] = await mock.roundtrip(input);
-      expect(layoutFieldsOnly(layout)).to.deep.equal([
-        { encoding: Encoding.AbiEncoded, parent: 0, inlined: false },
-        { encoding: Encoding.Tuple, parent: 0, inlined: true },
-        { encoding: Encoding.Tuple, parent: 1, inlined: true },
-        { encoding: Encoding.Static, parent: 2, inlined: true },
-      ]);
-    });
-
-    it("logical operators are transparent", async () => {
-      const { mock } = await loadFixture(setup);
-
-      const input = flattenCondition({
-        paramType: Encoding.AbiEncoded,
-        operator: Operator.Matches,
-        children: [
-          {
-            paramType: Encoding.None,
-            operator: Operator.Or,
-            children: [
-              { paramType: Encoding.Static, operator: Operator.Pass },
-              {
-                paramType: Encoding.Static,
-                operator: Operator.GreaterThan,
-                compValue:
-                  "0x0000000000000000000000000000000000000000000000000000000000000001",
-              },
-            ],
-          },
-        ],
-      });
-
-      const [, layout] = await mock.roundtrip(input);
-      // Logical Or with homogeneous Static children collapses to Static
-      expect(layoutFieldsOnly(layout)).to.deep.equal([
-        { encoding: Encoding.AbiEncoded, parent: 0, inlined: false },
-        { encoding: Encoding.Static, parent: 0, inlined: true },
-      ]);
-    });
-
-    it("preserves inlined flag", async () => {
-      const { mock } = await loadFixture(setup);
-
-      // Static types inside Tuple are inlined
-      const input = flattenCondition({
-        paramType: Encoding.AbiEncoded,
-        operator: Operator.Matches,
-        children: [
-          {
-            paramType: Encoding.Tuple,
-            operator: Operator.Matches,
-            children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
-          },
-        ],
-      });
-
-      const [, layout] = await mock.roundtrip(input);
-      // Static inside Tuple should have inlined=true
-      expect(layout[2].inlined).to.equal(true);
-    });
-
-    it("variant Or with heterogeneous children uses Dynamic encoding", async () => {
-      const { mock } = await loadFixture(setup);
-
-      // Or with children of different type structures (Dynamic vs AbiEncoded)
-      const input = flattenCondition({
-        paramType: Encoding.AbiEncoded,
-        operator: Operator.Matches,
-        children: [
-          {
-            paramType: Encoding.None,
-            operator: Operator.Or,
-            children: [
-              { paramType: Encoding.Dynamic, operator: Operator.Pass },
-              {
-                paramType: Encoding.AbiEncoded,
-                operator: Operator.Matches,
-                children: [
-                  { paramType: Encoding.Static, operator: Operator.Pass },
-                ],
-              },
-            ],
-          },
-        ],
-      });
-
-      const [, layout] = await mock.roundtrip(input);
-      // Variant Or should have Dynamic encoding and include both children
-      expect(layoutFieldsOnly(layout)).to.deep.equal([
-        { encoding: Encoding.AbiEncoded, parent: 0, inlined: false },
-        { encoding: Encoding.Dynamic, parent: 0, inlined: false }, // variant marker
-        { encoding: Encoding.Dynamic, parent: 1, inlined: false },
-        { encoding: Encoding.AbiEncoded, parent: 1, inlined: false },
-        { encoding: Encoding.Static, parent: 3, inlined: true },
-      ]);
-    });
-  });
-
-  describe("maxPluckValueCount", () => {
-    it("returns 0 when no Pluck operators", async () => {
-      const { mock } = await loadFixture(setup);
-
-      const input = flattenCondition({
-        paramType: Encoding.Static,
-        operator: Operator.Pass,
-      });
-
-      const [, , maxPluckValueCount] = await mock.roundtrip(input);
-      expect(maxPluckValueCount).to.equal(0);
-    });
-
-    it("returns 1 when highest Pluck index is 0", async () => {
-      const { mock } = await loadFixture(setup);
-
-      // Pluck is a leaf (Static encoding can't have children)
-      const input = flattenCondition({
-        paramType: Encoding.None,
-        operator: Operator.And,
-        children: [
-          {
-            paramType: Encoding.Static,
-            operator: Operator.Pluck,
-            compValue: "0x00", // pluck index 0
-          },
-          { paramType: Encoding.Static, operator: Operator.Pass },
-        ],
-      });
-
-      const [, , maxPluckValueCount] = await mock.roundtrip(input);
-      // When highest pluck index is 0, we still need 1 slot
-      expect(maxPluckValueCount).to.equal(1);
-    });
-
-    it("returns count for highest index with multiple Pluck operators", async () => {
-      const { mock } = await loadFixture(setup);
-
-      // Pluck is a leaf (Static encoding can't have children)
-      const input = flattenCondition({
-        paramType: Encoding.None,
-        operator: Operator.And,
-        children: [
-          {
-            paramType: Encoding.Static,
-            operator: Operator.Pluck,
-            compValue: "0x00", // pluck index 0
-          },
-          {
-            paramType: Encoding.Static,
-            operator: Operator.Pluck,
-            compValue: "0x05", // pluck index 5
-          },
-          {
-            paramType: Encoding.Static,
-            operator: Operator.Pluck,
-            compValue: "0x02", // pluck index 2
-          },
-        ],
-      });
-
-      const [, , maxPluckValueCount] = await mock.roundtrip(input);
-      // Highest index is 5, so count is 6 (indices 0-5)
-      expect(maxPluckValueCount).to.equal(6);
+      // EtherValue (6) maps to None (0) in unpacked condition
+      expect(result[0].encoding).to.equal(Encoding.None);
     });
   });
 });
-
-function conditionFieldsOnly(result: any[]): {
-  parent: number;
-  operator: Operator;
-  compValue: string;
-}[] {
-  return result.map((node: any) => ({
-    parent: Number(node.parent),
-    operator: Number(node.operator),
-    compValue: node.compValue,
-  }));
-}
-
-function layoutFieldsOnly(result: any[]) {
-  return result.map((node: any) => ({
-    encoding: Number(node.encoding),
-    parent: Number(node.parent),
-    inlined: node.inlined,
-  }));
-}

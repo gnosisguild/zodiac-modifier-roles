@@ -1,250 +1,149 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import {Encoding, Layout, Payload} from "../types/Condition.sol";
+import {Condition, Encoding, Payload} from "../types/Condition.sol";
+import {Operator} from "../types/Operator.sol";
 
 /**
- * @title AbiDecoder - Locates parameters within ABI-encoded calldata
+ * @title AbiDecoder - Decodes ABI-encoded parameters on-demand
  *
  * @author gnosisguild
  *
- * @notice Given ABI-encoded calldata and a type tree (Layout) describing its
- *         structure, this library produces a Payload tree that maps each
- *         parameter to its location and size (how many bytes it spans).
- *
- *         The decoder validates bounds but does NOT extract or interpret
- *         values. It only identifies WHERE parameters are, not WHAT they
- *         contain.
- *
- *         The resulting Payload is used by ConditionLogic for efficient
- *         calldata slicing during condition evaluation.
+ * @notice Provides on-demand decoding of ABI-encoded calldata.
+ *         Given a location and layout template, computes child locations or size.
  */
 library AbiDecoder {
     /**
-     * @dev Entry point. Locates all parameters in calldata according to Layout.
-     *
-     * @param data     The calldata to inspect.
-     * @param layout   The type tree describing the encoding structure.
-     * @return payload A tree matching the encoding structure, with location
-     *                 and size for each parameter.
+     * @dev Gets the locations of all direct children.
+     * @param data      The calldata being inspected.
+     * @param location  Byte position of this node in calldata.
+     * @param condition The condition with layout and children info.
+     * @return childLocations Array of child locations, or empty if overflow.
+     * @return overflow Whether decoding overflowed.
      */
-    function inspect(
+    function getChildLocations(
         bytes calldata data,
-        Layout memory layout
-    ) internal pure returns (Payload memory payload) {
-        assert(layout.encoding == Encoding.AbiEncoded);
-        /*
-         * The parameter encoding area consists of a head region, divided into
-         * 32-byte chunks. Each parameter occupies one chunk in the head:
-         * - Static parameters are encoded inline.
-         * - Dynamic parameters store an offset pointing to the tail region, where
-         *   the actual encoded data resides.
-         *
-         * Note: The offset is relative to the start of each block, not the start
-         * of the buffer.
-         */
-        __block__(
-            data,
-            layout.leadingBytes,
-            layout.children.length,
-            layout,
-            payload
-        );
-        payload.size = data.length;
+        uint256 location,
+        Condition memory condition
+    ) internal pure returns (uint256[] memory childLocations, bool overflow) {
+        Encoding enc = condition.payload.encoding;
+
+        // Static and Dynamic don't have children
+        if (enc == Encoding.Static || enc == Encoding.Dynamic) {
+            return (childLocations, false);
+        }
+
+        uint256 childCount;
+        bool isArray;
+
+        if (enc == Encoding.Array) {
+            // Array: read length from data, skip 32 bytes
+            if (location + 32 > data.length) {
+                return (childLocations, true);
+            }
+            childCount = uint256(word(data, location));
+            location += 32;
+            isArray = true;
+        } else if (enc == Encoding.Tuple || enc == Encoding.AbiEncoded) {
+            childCount = condition.children.length;
+        } else {
+            // None, EtherValue - no children
+            return (childLocations, false);
+        }
+
+        if (childCount == 0) {
+            return (childLocations, false);
+        }
+
+        childLocations = new uint256[](childCount);
+        uint256 headOffset;
+
+        for (uint256 i; i < childCount; ++i) {
+            Condition memory child = condition.children[isArray ? 0 : i];
+
+            uint256 childLoc;
+            if (child.payload.inlined) {
+                childLoc = location + headOffset;
+                headOffset += getSize(data, childLoc, child);
+            } else {
+                // Read pointer from head, follow to data
+                childLoc =
+                    location +
+                    uint256(word(data, location + headOffset));
+                headOffset += 32;
+            }
+
+            childLocations[i] = childLoc;
+        }
+
+        return (childLocations, false);
     }
 
     /**
-     * @dev Processes a sequence of elements using HEAD+TAIL encoding.
-     *      Tuple, Array and AbiEncoded use this encoding type.
-     *
-     * @param data     The calldata being inspected.
-     * @param location Byte position where the block's HEAD region starts.
-     * @param length   Number of elements in the block.
-     * @param layout   Type tree node for the block (Array or Tuple).
-     * @param payload  Output: populated with child Payloads.
-     *
-     * @notice Arrays use layout.children[0] as a template for all elements.
-     *         Variant arrays use layout.children[i] for each element.
-     *         Tuples use layout.children[i] for each element.
-     *         Static elements are encoded inline in HEAD.
-     *         Dynamic elements have a pointer in HEAD, data in TAIL.
+     * @dev Computes the size of data at a location.
+     *      For containers (Tuple, Array), returns the complete encoded size
+     *      including both head (pointers) and tail (actual data) regions.
      */
-    function __block__(
+    function getSize(
         bytes calldata data,
         uint256 location,
-        uint256 length,
-        Layout memory layout,
-        Payload memory payload
-    ) private pure {
-        Payload[] memory children = new Payload[](length);
+        Condition memory condition
+    ) internal pure returns (uint256) {
+        Payload memory payload = condition.payload;
+        Encoding enc = payload.encoding;
 
-        bool isArray = layout.encoding == Encoding.Array;
-        uint256 headOffset;
-        for (uint256 i; i < length; ++i) {
-            Layout memory childLayout = layout.children[
-                isArray && i >= layout.children.length ? 0 : i
-            ];
-            Payload memory childPayload = children[i];
+        // Non-variant logical operators (And/Or with encoding=None but children.length>0)
+        // are transparent - use first child's size since all children have same type
+        if (enc == Encoding.None && condition.children.length > 0) {
+            return getSize(data, location, condition.children[0]);
+        }
 
-            bool isInline = childLayout.inlined;
-
-            uint256 childLocation = _locationInBlock(
+        if (enc == Encoding.Static) {
+            return 32;
+        } else if (enc == Encoding.Dynamic) {
+            if (location + 32 > data.length) return 0;
+            return 32 + _ceil32(uint256(word(data, location)));
+        } else if (enc == Encoding.Tuple) {
+            uint256 total;
+            (uint256[] memory childLocs, bool overflow) = getChildLocations(
                 data,
                 location,
-                headOffset,
-                isInline
+                condition
             );
+            if (overflow) return 0;
 
-            if (childLocation == type(uint256).max) {
-                payload.overflow = true;
-                return;
+            for (uint256 i; i < childLocs.length; ++i) {
+                Condition memory child = condition.children[i];
+                uint256 childSize = getSize(data, childLocs[i], child);
+                // Inlined: data is in head, count its size
+                // Not inlined: 32-byte pointer in head + data in tail
+                total += child.payload.inlined ? childSize : 32 + childSize;
             }
-
-            _walk(data, childLocation, childLayout, childPayload);
-
-            if (childPayload.overflow) {
-                payload.overflow = true;
-                return;
-            }
-
-            // Update the offset in the block for the next element
-            headOffset += isInline ? childPayload.size : 32;
-
-            // For non-inline elements, we need to account for the 32-byte pointer
-            payload.size += childPayload.size + (isInline ? 0 : 32);
-        }
-        payload.children = children;
-    }
-
-    /**
-     * @dev Traverses a type tree, produces Payload with position and size.
-     *
-     * @param data     The calldata being inspected.
-     * @param location Absolute byte position of this parameter.
-     * @param layout   The type tree node to process.
-     * @param payload  Output: populated with location, size, and children.
-     */
-    function _walk(
-        bytes calldata data,
-        uint256 location,
-        Layout memory layout,
-        Payload memory payload
-    ) private pure {
-        payload.location = location;
-        payload.inlined = layout.inlined;
-
-        Encoding encoding = layout.encoding;
-        if (encoding == Encoding.Static) {
-            payload.size = 32;
-        } else if (encoding == Encoding.Dynamic) {
-            if (layout.children.length > 0) {
-                _variant(data, location, layout, payload);
-            }
-            payload.size = 32 + _ceil32(uint256(word(data, location)));
-        } else if (encoding == Encoding.Tuple) {
-            __block__(data, location, layout.children.length, layout, payload);
-        } else if (encoding == Encoding.Array) {
-            __block__(
+            return total;
+        } else if (enc == Encoding.Array) {
+            if (location + 32 > data.length) return 0;
+            (uint256[] memory childLocs, bool overflow) = getChildLocations(
                 data,
-                location + 32,
-                uint256(word(data, location)),
-                layout,
-                payload
+                location,
+                condition
             );
-            payload.size += 32;
-        } else {
-            assert(encoding == Encoding.AbiEncoded);
-            __block__(
-                data,
-                location + 32 + layout.leadingBytes,
-                layout.children.length,
-                layout,
-                payload
-            );
-            payload.location = location + 32;
-            payload.size = 32 + _ceil32(uint256(word(data, location)));
-        }
+            if (overflow) return 0;
 
-        if (location + payload.size > data.length) {
-            payload.overflow = true;
-        }
-    }
-
-    /**
-     * @dev Tries multiple type interpretations for the same bytes location.
-     *      Handles cases where a dynamic parameter's content has multiple valid
-     *      decodings.
-     *
-     * @param data     The calldata being inspected.
-     * @param location Byte position to interpret.
-     * @param layout   Type tree node with variant children.
-     * @param payload  Output: marked as variant, with one child per interpretation.
-     *
-     * @notice Sets overflow=false if at least one interpretation succeeds.
-     */
-    function _variant(
-        bytes calldata data,
-        uint256 location,
-        Layout memory layout,
-        Payload memory payload
-    ) private pure {
-        uint256 length = layout.children.length;
-
-        payload.variant = true;
-        payload.overflow = true;
-        payload.children = new Payload[](length);
-
-        unchecked {
-            for (uint256 i; i < length; ++i) {
-                _walk(data, location, layout.children[i], payload.children[i]);
-                payload.overflow =
-                    payload.overflow &&
-                    payload.children[i].overflow;
+            uint256 total = 32; // length field
+            Condition memory child = condition.children[0];
+            for (uint256 i; i < childLocs.length; ++i) {
+                uint256 childSize = getSize(data, childLocs[i], child);
+                // Inlined: data is in head, count its size
+                // Not inlined: 32-byte pointer in head + data in tail
+                total += child.payload.inlined ? childSize : 32 + childSize;
             }
-        }
-    }
-
-    /**
-     * @dev Computes the absolute calldata position of an element within a block.
-     *
-     * @param data       The calldata being inspected.
-     * @param location   Start of the block's HEAD region.
-     * @param headOffset Current offset within HEAD.
-     * @param isInline   Whether element is stored directly in HEAD.
-     * @return           Absolute position, or type(uint256).max on overflow.
-     *
-     * @notice Inline elements live at location + headOffset.
-     *         Non-inline elements read a pointer from HEAD that points into TAIL.
-     *         TAIL offsets are relative to block start.
-     */
-    function _locationInBlock(
-        bytes calldata data,
-        uint256 location,
-        uint256 headOffset,
-        bool isInline
-    ) private pure returns (uint256) {
-        // is head within calldata
-        if (location + headOffset + 32 > data.length) {
-            return type(uint256).max;
+            return total;
+        } else if (enc == Encoding.AbiEncoded) {
+            if (location + 32 > data.length) return 0;
+            return 32 + _ceil32(uint256(word(data, location)));
         }
 
-        if (isInline) {
-            return location + headOffset;
-        }
-
-        uint256 tailOffset = uint256(word(data, location + headOffset));
-
-        // tail points within head?
-        if (tailOffset <= headOffset) {
-            return type(uint256).max;
-        }
-
-        // tail points beyond calldata?
-        if (location + tailOffset + 32 > data.length) {
-            return type(uint256).max;
-        }
-
-        return location + tailOffset;
+        return 0;
     }
 
     /**

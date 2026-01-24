@@ -19,10 +19,8 @@ struct Condition {
     uint256 index;
     Operator operator;
     bytes compValue;
-    /// @dev Number of children that describe type structure (Tuple/Array fields).
-    ///      Structural children come first; non-structural (And/Or/None logic) follow.
-    uint256 sChildCount;
     Condition[] children;
+    Payload payload;
 }
 
 // This struct is a flattened version of Condition
@@ -35,26 +33,24 @@ struct ConditionFlat {
     bytes compValue;
 }
 
+/// @dev Payload describes how to decode this node's data from calldata.
+///      Set during unpacking from storage.
+struct Payload {
+    Encoding encoding;
+    uint256 leadingBytes;
+    bool inlined;
+    uint256 size; // If non-zero, use this size instead of calling AbiDecoder (e.g., for Slice)
+}
+
+/// @dev Layout is a type tree used for EIP712 encoding and type hashing.
+///      Built at runtime by TypeTree library.
 struct Layout {
     Encoding encoding;
-    Layout[] children;
-    /// @dev Bytes to skip before ABI-encoded data begins (e.g., 4 for selector).
-    uint256 leadingBytes;
-    /// @dev True if this type is encoded inline (includes children)
     bool inlined;
+    Layout[] children;
 }
 
 struct LayoutFlat {
     uint256 parent;
     Encoding encoding;
-}
-
-struct Payload {
-    uint256 location;
-    uint256 size;
-    Payload[] children;
-    /* meta flags */
-    bool inlined;
-    bool variant;
-    bool overflow;
 }

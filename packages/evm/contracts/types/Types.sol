@@ -8,4 +8,3 @@ import "./Operator.sol";
 import "./Permission.sol";
 import "./RolesError.sol";
 import "./RolesEvent.sol";
-import "./Topology.sol";

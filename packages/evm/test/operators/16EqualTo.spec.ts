@@ -122,12 +122,18 @@ describe("Operator - EqualTo", () => {
       // EqualTo on EtherValue: msg.value must equal 1000 wei
       await allowFunction(
         flattenCondition({
-          paramType: Encoding.AbiEncoded,
-          operator: Operator.Matches,
+          paramType: Encoding.None,
+          operator: Operator.And,
           children: [
             {
-              paramType: Encoding.Static,
-              operator: Operator.Pass,
+              paramType: Encoding.AbiEncoded,
+              operator: Operator.Matches,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.Pass,
+                },
+              ],
             },
             {
               paramType: Encoding.EtherValue,
@@ -147,7 +153,7 @@ describe("Operator - EqualTo", () => {
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.ParameterNotAllowed,
-          2, // EtherValue/EqualTo node
+          2, // EtherValue/EqualTo node: And[0] -> Matches[1], EqualTo[2]
           anyValue,
           anyValue,
         );
@@ -3884,7 +3890,6 @@ describe("Operator - EqualTo", () => {
             },
           ],
         }),
-        ExecutionOptions.Both,
       );
 
       await expect(

@@ -1717,14 +1717,14 @@ describe("Operator - WithinAllowance", async () => {
       const packed = await packConditions(roles, [
         {
           parent: 0,
-          paramType: Encoding.AbiEncoded,
-          operator: Operator.Matches,
+          paramType: Encoding.None,
+          operator: Operator.And,
           compValue: "0x",
         },
         {
           parent: 0,
-          paramType: Encoding.Static,
-          operator: Operator.Pass,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
           compValue: "0x",
         },
         {
@@ -1732,6 +1732,12 @@ describe("Operator - WithinAllowance", async () => {
           paramType: Encoding.EtherValue,
           operator: Operator.WithinAllowance,
           compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
+        },
+        {
+          parent: 1,
+          paramType: Encoding.Static,
+          operator: Operator.Pass,
+          compValue: "0x",
         },
       ]);
       await roles.allowFunction(
@@ -1758,7 +1764,7 @@ describe("Operator - WithinAllowance", async () => {
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.AllowanceExceeded,
-          2, // WithinAllowance node
+          2, // WithinAllowance node: And[0] -> Matches[1], WithinAllowance[2]
           anyValue,
           anyValue,
         );
@@ -1778,7 +1784,7 @@ describe("Operator - WithinAllowance", async () => {
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.AllowanceExceeded,
-          2, // WithinAllowance node
+          2, // WithinAllowance node: And[0] -> Matches[1], WithinAllowance[2]
           anyValue,
           anyValue,
         );

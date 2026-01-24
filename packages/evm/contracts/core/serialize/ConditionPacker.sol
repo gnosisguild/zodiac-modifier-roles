@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "./Topology.sol";
+import "./TypeTree.sol";
 
 /**
  * @title  ConditionPacker
@@ -15,23 +15,20 @@ import "./Topology.sol";
  *
  * ╔════════════════════════════════ BUFFER ═════════════════════════════════╗
  * ║ ┌─────────────────────────────────────────────────────────────────────┐ ║
- * ║ │ HEADER (5 bytes = 40 bits)                                          │ ║
+ * ║ │ HEADER (3 bytes = 24 bits)                                          │ ║
  * ║ ├─────────────────────────────────────────────────────────────────────┤ ║
  * ║ │ • conditionNodeCount     16 bits (bytes 0-1)                        │ ║
- * ║ │ • layoutNodeCount        16 bits (bytes 2-3)                        │ ║
- * ║ │ • maxPluckValue           8 bits (byte 4)                           │ ║
+ * ║ │ • maxPluckValue           8 bits (byte 2)                           │ ║
  * ║ └─────────────────────────────────────────────────────────────────────┘ ║
  * ║ ┌─────────────────────────────────────────────────────────────────────┐ ║
- * ║ │ NODES (nodeCount × 4 bytes each)                                    │ ║
+ * ║ │ NODES (nodeCount × 3 bytes each)                                    │ ║
  * ║ ├─────────────────────────────────────────────────────────────────────┤ ║
- * ║ │ Each node (32 bits = 4 bytes):                                      │ ║
- * ║ │   • encoding              3 bits  [31-29]                           │ ║
- * ║ │   • operator              5 bits  [28-24]                           │ ║
- * ║ │   • childCount           10 bits  [23-14]                           │ ║
- * ║ │   • sChildCount          10 bits  [13-4]                            │ ║
- * ║ │   • isInline              1 bit   [3]                               │ ║
- * ║ │   • isVariant             1 bit   [2]                               │ ║
- * ║ │   • isInLayout            1 bit   [1]                               │ ║
+ * ║ │ Each node (24 bits = 3 bytes):                                      │ ║
+ * ║ │   • encoding              3 bits  [23-21]                           │ ║
+ * ║ │   • operator              5 bits  [20-16]                           │ ║
+ * ║ │   • childCount           10 bits  [15-6]                            │ ║
+ * ║ │   • (reserved)            4 bits  [5-2]                             │ ║
+ * ║ │   • isInline              1 bit   [1]                               │ ║
  * ║ │   • hasCompValue          1 bit   [0]                               │ ║
  * ║ └─────────────────────────────────────────────────────────────────────┘ ║
  * ║ ┌─────────────────────────────────────────────────────────────────────┐ ║
@@ -45,20 +42,15 @@ import "./Topology.sol";
  *
  */
 library ConditionPacker {
-    uint256 private constant HEADER_BYTES = 5;
-    uint256 private constant NODE_BYTES = 4;
+    uint256 private constant HEADER_BYTES = 3;
+    uint256 private constant NODE_BYTES = 3;
 
     function pack(
-        ConditionFlat[] memory conditions,
-        Topology[] memory topology
+        ConditionFlat[] memory conditions
     ) internal pure returns (bytes memory buffer) {
-        _transform(conditions, topology);
+        _transform(conditions);
 
-        (
-            uint256 layoutNodeCount,
-            uint256 compValuesSize,
-            uint256 maxPluckCount
-        ) = _count(conditions, topology);
+        (uint256 compValuesSize, uint256 maxPluckCount) = _count(conditions);
 
         uint256 nodeCount = conditions.length;
 
@@ -66,19 +58,16 @@ library ConditionPacker {
             HEADER_BYTES + nodeCount * NODE_BYTES + compValuesSize
         );
 
-        uint256 header = (nodeCount << 24) |
-            (layoutNodeCount << 8) |
-            maxPluckCount;
+        uint256 header = (nodeCount << 8) | maxPluckCount;
         assembly {
-            mstore(add(buffer, 0x20), shl(216, header))
+            mstore(add(buffer, 0x20), shl(232, header))
         }
 
-        _packNodes(conditions, topology, buffer);
+        _packNodes(conditions, buffer);
     }
 
     function _packNodes(
         ConditionFlat[] memory conditions,
-        Topology[] memory topology,
         bytes memory buffer
     ) private pure {
         uint256 offset = HEADER_BYTES;
@@ -86,10 +75,10 @@ library ConditionPacker {
 
         for (uint256 i; i < conditions.length; ++i) {
             ConditionFlat memory condition = conditions[i];
-            Topology memory t = topology[i];
 
             Encoding encoding = condition.paramType;
-            bool isInline = !t.isNotInline;
+            (, uint256 childCount, ) = TypeTree.childBounds(conditions, i);
+            bool isInline = TypeTree.isInlined(conditions, i);
 
             bytes memory compValue = condition.compValue;
             uint256 compValueLength = compValue.length;
@@ -97,33 +86,28 @@ library ConditionPacker {
 
             /*
              * ┌───────────────────────────────────────────────────────────┐
-             * │ packed 32 bits, 4 bytes:                                  │
-             * │   • encoding              3 bits  [31-29]                 │
-             * │   • operator              5 bits  [28-24]                 │
-             * │   • childCount           10 bits  [23-14]                 │
-             * │   • sChildCount          10 bits  [13-4]                  │
-             * │   • isInline              1 bit   [3]                     │
-             * │   • isVariant             1 bit   [2]                     │
-             * │   • isInLayout            1 bit   [1]                     │
+             * │ packed 24 bits, 3 bytes:                                  │
+             * │   • encoding              3 bits  [23-21]                 │
+             * │   • operator              5 bits  [20-16]                 │
+             * │   • childCount           10 bits  [15-6]                  │
+             * │   • (reserved)            4 bits  [5-2]                   │
+             * │   • isInline              1 bit   [1]                     │
              * │   • hasCompValue          1 bit   [0]                     │
              * └───────────────────────────────────────────────────────────┘
              */
-            uint256 packed = (uint256(encoding) << 29) |
-                (uint256(condition.operator) << 24) |
-                (t.childCount << 14) |
-                (t.sChildCount << 4) |
-                (isInline ? 8 : 0) |
-                (t.isVariant ? 4 : 0) |
-                (t.isInLayout ? 2 : 0) |
+            uint256 packed = (uint256(encoding) << 21) |
+                (uint256(condition.operator) << 16) |
+                (childCount << 6) |
+                (isInline ? 2 : 0) |
                 (hasCompValue ? 1 : 0);
 
             /*
-             * The or with mload preserves bytes 4-31 (compValues written in
-             * previous iterations) while writing our 4 bytes at positions 0-3.
+             * The or with mload preserves bytes 3-31 (compValues written in
+             * previous iterations) while writing our 3 bytes at positions 0-2.
              */
             assembly {
                 let dest := add(add(buffer, 0x20), offset)
-                mstore(dest, or(mload(dest), shl(224, packed)))
+                mstore(dest, or(mload(dest), shl(232, packed)))
             }
             offset += NODE_BYTES;
 
@@ -142,22 +126,9 @@ library ConditionPacker {
     }
 
     function _count(
-        ConditionFlat[] memory conditions,
-        Topology[] memory topology
-    )
-        private
-        pure
-        returns (
-            uint256 layoutNodeCount,
-            uint256 compValuesSize,
-            uint256 maxPluckCount
-        )
-    {
+        ConditionFlat[] memory conditions
+    ) private pure returns (uint256 compValuesSize, uint256 maxPluckCount) {
         for (uint256 i; i < conditions.length; ++i) {
-            if (topology[i].isInLayout) {
-                ++layoutNodeCount;
-            }
-
             if (conditions[i].operator == Operator.Pluck) {
                 uint8 pluckIndex = uint8(conditions[i].compValue[0]);
                 if (pluckIndex + 1 > maxPluckCount) {
@@ -177,10 +148,7 @@ library ConditionPacker {
      *      1. AbiEncoded without compValue gets default leadingBytes (0x0004)
      *      2. EqualTo at offset has 32-byte head pointer stripped
      */
-    function _transform(
-        ConditionFlat[] memory conditions,
-        Topology[] memory topology
-    ) private pure {
+    function _transform(ConditionFlat[] memory conditions) private pure {
         for (uint256 i; i < conditions.length; ++i) {
             /*
              * Patch AbiEncoded leadingBytes
@@ -210,7 +178,7 @@ library ConditionPacker {
              */
             if (
                 conditions[i].operator == Operator.EqualTo &&
-                topology[i].isNotInline
+                !TypeTree.isInlined(conditions, i)
             ) {
                 bytes memory compValue = conditions[i].compValue;
                 assembly {

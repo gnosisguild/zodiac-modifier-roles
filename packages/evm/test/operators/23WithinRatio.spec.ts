@@ -22,6 +22,30 @@ function pluck(index: number) {
   };
 }
 
+// Helper to create correct structure: Matches only has structural children (plucks),
+// WithinRatio is a sibling in an And wrapper
+function matchesWithRatio(
+  plucks: ReturnType<typeof pluck>[],
+  withinRatioCompValue: string,
+) {
+  return {
+    paramType: Encoding.None,
+    operator: Operator.And,
+    children: [
+      {
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        children: plucks,
+      },
+      {
+        paramType: Encoding.None,
+        operator: Operator.WithinRatio,
+        compValue: withinRatioCompValue,
+      },
+    ],
+  };
+}
+
 describe("Operator - WithinRatio", () => {
   describe("Core Functionality", () => {
     describe("ratio bounds", () => {
@@ -40,19 +64,7 @@ describe("Operator - WithinRatio", () => {
           });
 
           await allowFunction(
-            flattenCondition({
-              paramType: Encoding.AbiEncoded,
-              operator: Operator.Matches,
-              children: [
-                pluck(3), // param0 → pluckedValues[3] = relative
-                pluck(7), // param1 → pluckedValues[7] = reference
-                {
-                  paramType: Encoding.None,
-                  operator: Operator.WithinRatio,
-                  compValue,
-                },
-              ],
-            }),
+            flattenCondition(matchesWithRatio([pluck(3), pluck(7)], compValue)),
           );
 
           // invoke(relative, reference): Ratio = 950/1000 = 95% == maxRatio → pass
@@ -72,19 +84,7 @@ describe("Operator - WithinRatio", () => {
           });
 
           await allowFunction(
-            flattenCondition({
-              paramType: Encoding.AbiEncoded,
-              operator: Operator.Matches,
-              children: [
-                pluck(5),
-                pluck(2),
-                {
-                  paramType: Encoding.None,
-                  operator: Operator.WithinRatio,
-                  compValue,
-                },
-              ],
-            }),
+            flattenCondition(matchesWithRatio([pluck(5), pluck(2)], compValue)),
           );
 
           // Ratio = 800/1000 = 80% < 95% → pass
@@ -106,19 +106,9 @@ describe("Operator - WithinRatio", () => {
           });
 
           await allowFunction(
-            flattenCondition({
-              paramType: Encoding.AbiEncoded,
-              operator: Operator.Matches,
-              children: [
-                pluck(12), // relative first
-                pluck(4), // reference second
-                {
-                  paramType: Encoding.None,
-                  operator: Operator.WithinRatio,
-                  compValue,
-                },
-              ],
-            }),
+            flattenCondition(
+              matchesWithRatio([pluck(12), pluck(4)], compValue),
+            ),
           );
 
           // invoke(relative, reference) since param0→relative, param1→reference
@@ -127,7 +117,7 @@ describe("Operator - WithinRatio", () => {
             .to.be.revertedWithCustomError(roles, "ConditionViolation")
             .withArgs(
               ConditionViolationStatus.RatioAboveMax,
-              3, // WithinRatio node
+              2, // WithinRatio node
               anyValue,
               anyValue,
             );
@@ -146,19 +136,9 @@ describe("Operator - WithinRatio", () => {
           });
 
           await allowFunction(
-            flattenCondition({
-              paramType: Encoding.AbiEncoded,
-              operator: Operator.Matches,
-              children: [
-                pluck(8),
-                pluck(15),
-                {
-                  paramType: Encoding.None,
-                  operator: Operator.WithinRatio,
-                  compValue,
-                },
-              ],
-            }),
+            flattenCondition(
+              matchesWithRatio([pluck(8), pluck(15)], compValue),
+            ),
           );
 
           // Ratio = 5000/1000 = 500% → pass (no upper bound, above 10% min)
@@ -181,19 +161,9 @@ describe("Operator - WithinRatio", () => {
           });
 
           await allowFunction(
-            flattenCondition({
-              paramType: Encoding.AbiEncoded,
-              operator: Operator.Matches,
-              children: [
-                pluck(10), // param0 → pluckedValues[10] = relative
-                pluck(20), // param1 → pluckedValues[20] = reference
-                {
-                  paramType: Encoding.None,
-                  operator: Operator.WithinRatio,
-                  compValue,
-                },
-              ],
-            }),
+            flattenCondition(
+              matchesWithRatio([pluck(10), pluck(20)], compValue),
+            ),
           );
 
           // invoke(relative, reference): Ratio = 900/1000 = 90% == minRatio → pass
@@ -214,19 +184,7 @@ describe("Operator - WithinRatio", () => {
           });
 
           await allowFunction(
-            flattenCondition({
-              paramType: Encoding.AbiEncoded,
-              operator: Operator.Matches,
-              children: [
-                pluck(1), // relative first
-                pluck(6), // reference second
-                {
-                  paramType: Encoding.None,
-                  operator: Operator.WithinRatio,
-                  compValue,
-                },
-              ],
-            }),
+            flattenCondition(matchesWithRatio([pluck(1), pluck(6)], compValue)),
           );
 
           // Ratio = 950/1000 = 95% > 90% → pass
@@ -247,19 +205,9 @@ describe("Operator - WithinRatio", () => {
           });
 
           await allowFunction(
-            flattenCondition({
-              paramType: Encoding.AbiEncoded,
-              operator: Operator.Matches,
-              children: [
-                pluck(25),
-                pluck(30),
-                {
-                  paramType: Encoding.None,
-                  operator: Operator.WithinRatio,
-                  compValue,
-                },
-              ],
-            }),
+            flattenCondition(
+              matchesWithRatio([pluck(25), pluck(30)], compValue),
+            ),
           );
 
           // Ratio = 850/1000 = 85% < 90% → fail
@@ -267,7 +215,7 @@ describe("Operator - WithinRatio", () => {
             .to.be.revertedWithCustomError(roles, "ConditionViolation")
             .withArgs(
               ConditionViolationStatus.RatioBelowMin,
-              3, // WithinRatio node
+              2, // WithinRatio node
               anyValue,
               anyValue,
             );
@@ -287,19 +235,9 @@ describe("Operator - WithinRatio", () => {
           });
 
           await allowFunction(
-            flattenCondition({
-              paramType: Encoding.AbiEncoded,
-              operator: Operator.Matches,
-              children: [
-                pluck(50), // param0 → pluckedValues[50] = relative
-                pluck(100), // param1 → pluckedValues[100] = reference
-                {
-                  paramType: Encoding.None,
-                  operator: Operator.WithinRatio,
-                  compValue,
-                },
-              ],
-            }),
+            flattenCondition(
+              matchesWithRatio([pluck(50), pluck(100)], compValue),
+            ),
           );
 
           // invoke(relative, reference) → ratio = 10/1000 = 1% → pass (no lower bound)
@@ -330,19 +268,7 @@ describe("Operator - WithinRatio", () => {
         });
 
         await allowFunction(
-          flattenCondition({
-            paramType: Encoding.AbiEncoded,
-            operator: Operator.Matches,
-            children: [
-              pluck(14), // param0 → pluckedValues[14] = relative (USDC)
-              pluck(9), // param1 → pluckedValues[9] = reference (ETH)
-              {
-                paramType: Encoding.None,
-                operator: Operator.WithinRatio,
-                compValue,
-              },
-            ],
-          }),
+          flattenCondition(matchesWithRatio([pluck(14), pluck(9)], compValue)),
         );
 
         // invoke(relative, reference)
@@ -361,7 +287,7 @@ describe("Operator - WithinRatio", () => {
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
           .withArgs(
             ConditionViolationStatus.RatioBelowMin,
-            3, // WithinRatio node
+            2, // WithinRatio node
             anyValue,
             anyValue,
           );
@@ -388,19 +314,7 @@ describe("Operator - WithinRatio", () => {
         });
 
         await allowFunction(
-          flattenCondition({
-            paramType: Encoding.AbiEncoded,
-            operator: Operator.Matches,
-            children: [
-              pluck(11), // param0 → pluckedValues[11] = relative
-              pluck(22), // param1 → pluckedValues[22] = reference
-              {
-                paramType: Encoding.None,
-                operator: Operator.WithinRatio,
-                compValue,
-              },
-            ],
-          }),
+          flattenCondition(matchesWithRatio([pluck(11), pluck(22)], compValue)),
         );
 
         // invoke(relative, reference)
@@ -419,7 +333,7 @@ describe("Operator - WithinRatio", () => {
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
           .withArgs(
             ConditionViolationStatus.RatioAboveMax,
-            3, // WithinRatio node
+            2, // WithinRatio node
             anyValue,
             anyValue,
           );
@@ -448,19 +362,7 @@ describe("Operator - WithinRatio", () => {
         });
 
         await allowFunction(
-          flattenCondition({
-            paramType: Encoding.AbiEncoded,
-            operator: Operator.Matches,
-            children: [
-              pluck(77),
-              pluck(88),
-              {
-                paramType: Encoding.None,
-                operator: Operator.WithinRatio,
-                compValue,
-              },
-            ],
-          }),
+          flattenCondition(matchesWithRatio([pluck(77), pluck(88)], compValue)),
         );
 
         // Reference: 1000 USDC × 1 = 1000 USD
@@ -478,7 +380,7 @@ describe("Operator - WithinRatio", () => {
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
           .withArgs(
             ConditionViolationStatus.RatioAboveMax,
-            3, // WithinRatio node
+            2, // WithinRatio node
             anyValue,
             anyValue,
           );
@@ -506,19 +408,7 @@ describe("Operator - WithinRatio", () => {
         });
 
         await allowFunction(
-          flattenCondition({
-            paramType: Encoding.AbiEncoded,
-            operator: Operator.Matches,
-            children: [
-              pluck(33), // param0 → pluckedValues[33] = relative (USD)
-              pluck(44), // param1 → pluckedValues[44] = reference (token)
-              {
-                paramType: Encoding.None,
-                operator: Operator.WithinRatio,
-                compValue,
-              },
-            ],
-          }),
+          flattenCondition(matchesWithRatio([pluck(33), pluck(44)], compValue)),
         );
 
         // invoke(relative, reference)
@@ -533,7 +423,7 @@ describe("Operator - WithinRatio", () => {
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
           .withArgs(
             ConditionViolationStatus.RatioBelowMin,
-            3, // WithinRatio node
+            2, // WithinRatio node
             anyValue,
             anyValue,
           );
@@ -559,19 +449,7 @@ describe("Operator - WithinRatio", () => {
         });
 
         await allowFunction(
-          flattenCondition({
-            paramType: Encoding.AbiEncoded,
-            operator: Operator.Matches,
-            children: [
-              pluck(17), // relative first
-              pluck(55), // reference second
-              {
-                paramType: Encoding.None,
-                operator: Operator.WithinRatio,
-                compValue,
-              },
-            ],
-          }),
+          flattenCondition(matchesWithRatio([pluck(17), pluck(55)], compValue)),
         );
 
         // invoke(relative, reference) since param0→relative, param1→reference
@@ -590,7 +468,7 @@ describe("Operator - WithinRatio", () => {
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
           .withArgs(
             ConditionViolationStatus.RatioBelowMin,
-            3, // WithinRatio node
+            2, // WithinRatio node
             anyValue,
             anyValue,
           );
@@ -618,19 +496,9 @@ describe("Operator - WithinRatio", () => {
         });
 
         await allowFunction(
-          flattenCondition({
-            paramType: Encoding.AbiEncoded,
-            operator: Operator.Matches,
-            children: [
-              pluck(200),
-              pluck(150),
-              {
-                paramType: Encoding.None,
-                operator: Operator.WithinRatio,
-                compValue,
-              },
-            ],
-          }),
+          flattenCondition(
+            matchesWithRatio([pluck(200), pluck(150)], compValue),
+          ),
         );
 
         // Reference: 22.5 ETH × 2000 = 45,000 USD
@@ -648,7 +516,7 @@ describe("Operator - WithinRatio", () => {
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
           .withArgs(
             ConditionViolationStatus.RatioAboveMax,
-            3, // WithinRatio node
+            2, // WithinRatio node
             anyValue,
             anyValue,
           );
@@ -677,19 +545,7 @@ describe("Operator - WithinRatio", () => {
         );
 
         await allowFunction(
-          flattenCondition({
-            paramType: Encoding.AbiEncoded,
-            operator: Operator.Matches,
-            children: [
-              pluck(33), // relative (USD output)
-              pluck(44), // reference (token input)
-              {
-                paramType: Encoding.None,
-                operator: Operator.WithinRatio,
-                compValue,
-              },
-            ],
-          }),
+          flattenCondition(matchesWithRatio([pluck(33), pluck(44)], compValue)),
         );
 
         // Reference: 10 tokens × 2000 = 20,000 USD
@@ -732,19 +588,7 @@ describe("Operator - WithinRatio", () => {
         );
 
         await allowFunction(
-          flattenCondition({
-            paramType: Encoding.AbiEncoded,
-            operator: Operator.Matches,
-            children: [
-              pluck(17), // relative (WBTC)
-              pluck(55), // reference (USD)
-              {
-                paramType: Encoding.None,
-                operator: Operator.WithinRatio,
-                compValue,
-              },
-            ],
-          }),
+          flattenCondition(matchesWithRatio([pluck(17), pluck(55)], compValue)),
         );
 
         // Reference: 45,000 USD × 1 (no adapter) = 45,000 USD
@@ -773,26 +617,14 @@ describe("Operator - WithinRatio", () => {
         });
 
         await allowFunction(
-          flattenCondition({
-            paramType: Encoding.AbiEncoded,
-            operator: Operator.Matches,
-            children: [
-              pluck(41),
-              pluck(82),
-              {
-                paramType: Encoding.None,
-                operator: Operator.WithinRatio,
-                compValue,
-              },
-            ],
-          }),
+          flattenCondition(matchesWithRatio([pluck(41), pluck(82)], compValue)),
         );
 
         await expect(invoke(1000, 1000))
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
           .withArgs(
             ConditionViolationStatus.PricingAdapterNotAContract,
-            3, // WithinRatio node
+            2, // WithinRatio node
             anyValue,
             anyValue,
           );
@@ -816,26 +648,14 @@ describe("Operator - WithinRatio", () => {
         });
 
         await allowFunction(
-          flattenCondition({
-            paramType: Encoding.AbiEncoded,
-            operator: Operator.Matches,
-            children: [
-              pluck(13), // relative first
-              pluck(99), // reference second
-              {
-                paramType: Encoding.None,
-                operator: Operator.WithinRatio,
-                compValue,
-              },
-            ],
-          }),
+          flattenCondition(matchesWithRatio([pluck(13), pluck(99)], compValue)),
         );
 
         await expect(invoke(1000, 1000))
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
           .withArgs(
             ConditionViolationStatus.PricingAdapterNotAContract,
-            3, // WithinRatio node
+            2, // WithinRatio node
             anyValue,
             anyValue,
           );
@@ -861,26 +681,14 @@ describe("Operator - WithinRatio", () => {
         });
 
         await allowFunction(
-          flattenCondition({
-            paramType: Encoding.AbiEncoded,
-            operator: Operator.Matches,
-            children: [
-              pluck(63),
-              pluck(27),
-              {
-                paramType: Encoding.None,
-                operator: Operator.WithinRatio,
-                compValue,
-              },
-            ],
-          }),
+          flattenCondition(matchesWithRatio([pluck(63), pluck(27)], compValue)),
         );
 
         await expect(invoke(1000, 1000))
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
           .withArgs(
             ConditionViolationStatus.PricingAdapterReverted,
-            3, // WithinRatio node
+            2, // WithinRatio node
             anyValue,
             anyValue,
           );
@@ -907,26 +715,16 @@ describe("Operator - WithinRatio", () => {
         });
 
         await allowFunction(
-          flattenCondition({
-            paramType: Encoding.AbiEncoded,
-            operator: Operator.Matches,
-            children: [
-              pluck(45), // relative first
-              pluck(180), // reference second
-              {
-                paramType: Encoding.None,
-                operator: Operator.WithinRatio,
-                compValue,
-              },
-            ],
-          }),
+          flattenCondition(
+            matchesWithRatio([pluck(45), pluck(180)], compValue),
+          ),
         );
 
         await expect(invoke(1000, 1000))
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
           .withArgs(
             ConditionViolationStatus.PricingAdapterReverted,
-            3, // WithinRatio node
+            2, // WithinRatio node
             anyValue,
             anyValue,
           );
@@ -952,26 +750,16 @@ describe("Operator - WithinRatio", () => {
         });
 
         await allowFunction(
-          flattenCondition({
-            paramType: Encoding.AbiEncoded,
-            operator: Operator.Matches,
-            children: [
-              pluck(72),
-              pluck(108),
-              {
-                paramType: Encoding.None,
-                operator: Operator.WithinRatio,
-                compValue,
-              },
-            ],
-          }),
+          flattenCondition(
+            matchesWithRatio([pluck(72), pluck(108)], compValue),
+          ),
         );
 
         await expect(invoke(1000, 1000))
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
           .withArgs(
             ConditionViolationStatus.PricingAdapterInvalidResult,
-            3, // WithinRatio node
+            2, // WithinRatio node
             anyValue,
             anyValue,
           );
@@ -996,26 +784,14 @@ describe("Operator - WithinRatio", () => {
         });
 
         await allowFunction(
-          flattenCondition({
-            paramType: Encoding.AbiEncoded,
-            operator: Operator.Matches,
-            children: [
-              pluck(23), // relative first
-              pluck(56), // reference second
-              {
-                paramType: Encoding.None,
-                operator: Operator.WithinRatio,
-                compValue,
-              },
-            ],
-          }),
+          flattenCondition(matchesWithRatio([pluck(23), pluck(56)], compValue)),
         );
 
         await expect(invoke(1000, 1000))
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
           .withArgs(
             ConditionViolationStatus.PricingAdapterZeroPrice,
-            3, // WithinRatio node
+            2, // WithinRatio node
             anyValue,
             anyValue,
           );
@@ -1045,19 +821,7 @@ describe("Operator - WithinRatio", () => {
       });
 
       await allowFunction(
-        flattenCondition({
-          paramType: Encoding.AbiEncoded,
-          operator: Operator.Matches,
-          children: [
-            pluck(7), // relative (USD) first
-            pluck(19), // reference (ETH) second
-            {
-              paramType: Encoding.None,
-              operator: Operator.WithinRatio,
-              compValue,
-            },
-          ],
-        }),
+        flattenCondition(matchesWithRatio([pluck(7), pluck(19)], compValue)),
       );
 
       // invoke(relative, reference) since param0→relative (USD), param1→reference (ETH)
@@ -1070,7 +834,7 @@ describe("Operator - WithinRatio", () => {
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.RatioBelowMin,
-          3, // WithinRatio node
+          2, // WithinRatio node
           anyValue,
           anyValue,
         );
@@ -1080,7 +844,7 @@ describe("Operator - WithinRatio", () => {
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.RatioAboveMax,
-          3, // WithinRatio node
+          2, // WithinRatio node
           anyValue,
           anyValue,
         );
@@ -1109,19 +873,7 @@ describe("Operator - WithinRatio", () => {
       });
 
       await allowFunction(
-        flattenCondition({
-          paramType: Encoding.AbiEncoded,
-          operator: Operator.Matches,
-          children: [
-            pluck(42), // param0 → pluckedValues[42] = relative (WBTC)
-            pluck(91), // param1 → pluckedValues[91] = reference (ETH)
-            {
-              paramType: Encoding.None,
-              operator: Operator.WithinRatio,
-              compValue,
-            },
-          ],
-        }),
+        flattenCondition(matchesWithRatio([pluck(42), pluck(91)], compValue)),
       );
 
       // invoke(relative, reference)
@@ -1133,7 +885,7 @@ describe("Operator - WithinRatio", () => {
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.RatioBelowMin,
-          3, // WithinRatio node
+          2, // WithinRatio node
           anyValue,
           anyValue,
         );
@@ -1143,7 +895,7 @@ describe("Operator - WithinRatio", () => {
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.RatioAboveMax,
-          3, // WithinRatio node
+          2, // WithinRatio node
           anyValue,
           anyValue,
         );
@@ -1170,19 +922,7 @@ describe("Operator - WithinRatio", () => {
       });
 
       await allowFunction(
-        flattenCondition({
-          paramType: Encoding.AbiEncoded,
-          operator: Operator.Matches,
-          children: [
-            pluck(61), // param0 → pluckedValues[61] = relative (ExoticToken)
-            pluck(83), // param1 → pluckedValues[83] = reference (USDC)
-            {
-              paramType: Encoding.None,
-              operator: Operator.WithinRatio,
-              compValue,
-            },
-          ],
-        }),
+        flattenCondition(matchesWithRatio([pluck(61), pluck(83)], compValue)),
       );
 
       // invoke(relative, reference) since param0→relative (ExoticToken), param1→reference (USDC)
@@ -1195,7 +935,7 @@ describe("Operator - WithinRatio", () => {
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.RatioBelowMin,
-          3, // WithinRatio node
+          2, // WithinRatio node
           anyValue,
           anyValue,
         );
@@ -1216,19 +956,7 @@ describe("Operator - WithinRatio", () => {
       });
 
       await allowFunction(
-        flattenCondition({
-          paramType: Encoding.AbiEncoded,
-          operator: Operator.Matches,
-          children: [
-            pluck(37),
-            pluck(53),
-            {
-              paramType: Encoding.None,
-              operator: Operator.WithinRatio,
-              compValue,
-            },
-          ],
-        }),
+        flattenCondition(matchesWithRatio([pluck(37), pluck(53)], compValue)),
       );
 
       // 249 / 1000 = 24.9% < 25% → fail
@@ -1236,7 +964,7 @@ describe("Operator - WithinRatio", () => {
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.RatioBelowMin,
-          3, // WithinRatio node
+          2, // WithinRatio node
           anyValue,
           anyValue,
         );
@@ -1265,19 +993,7 @@ describe("Operator - WithinRatio", () => {
       });
 
       await allowFunction(
-        flattenCondition({
-          paramType: Encoding.AbiEncoded,
-          operator: Operator.Matches,
-          children: [
-            pluck(28), // param0 → pluckedValues[28] = relative
-            pluck(64), // param1 → pluckedValues[64] = reference
-            {
-              paramType: Encoding.None,
-              operator: Operator.WithinRatio,
-              compValue,
-            },
-          ],
-        }),
+        flattenCondition(matchesWithRatio([pluck(28), pluck(64)], compValue)),
       );
 
       // invoke(relative, reference)
@@ -1294,7 +1010,7 @@ describe("Operator - WithinRatio", () => {
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.RatioAboveMax,
-          3, // WithinRatio node
+          2, // WithinRatio node
           anyValue,
           anyValue,
         );
@@ -1320,19 +1036,7 @@ describe("Operator - WithinRatio", () => {
       });
 
       await allowFunction(
-        flattenCondition({
-          paramType: Encoding.AbiEncoded,
-          operator: Operator.Matches,
-          children: [
-            pluck(71),
-            pluck(18),
-            {
-              paramType: Encoding.None,
-              operator: Operator.WithinRatio,
-              compValue,
-            },
-          ],
-        }),
+        flattenCondition(matchesWithRatio([pluck(71), pluck(18)], compValue)),
       );
 
       // Reference: 45,000 USD, Relative: 0.3 WBTC × 150,000 = 45,000 USD → 100%
@@ -1348,7 +1052,7 @@ describe("Operator - WithinRatio", () => {
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.RatioBelowMin,
-          3, // WithinRatio node
+          2, // WithinRatio node
           anyValue,
           anyValue,
         );
@@ -1375,19 +1079,7 @@ describe("Operator - WithinRatio", () => {
       });
 
       await allowFunction(
-        flattenCondition({
-          paramType: Encoding.AbiEncoded,
-          operator: Operator.Matches,
-          children: [
-            pluck(33), // param0 → pluckedValues[33] = relative (WBTC)
-            pluck(95), // param1 → pluckedValues[95] = reference (ETH)
-            {
-              paramType: Encoding.None,
-              operator: Operator.WithinRatio,
-              compValue,
-            },
-          ],
-        }),
+        flattenCondition(matchesWithRatio([pluck(33), pluck(95)], compValue)),
       );
 
       // invoke(relative, reference)
@@ -1403,7 +1095,7 @@ describe("Operator - WithinRatio", () => {
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.RatioBelowMin,
-          3, // WithinRatio node
+          2, // WithinRatio node
           anyValue,
           anyValue,
         );
@@ -1413,7 +1105,7 @@ describe("Operator - WithinRatio", () => {
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.RatioAboveMax,
-          3, // WithinRatio node
+          2, // WithinRatio node
           anyValue,
           anyValue,
         );
@@ -1440,19 +1132,7 @@ describe("Operator - WithinRatio", () => {
       });
 
       await allowFunction(
-        flattenCondition({
-          paramType: Encoding.AbiEncoded,
-          operator: Operator.Matches,
-          children: [
-            pluck(3),
-            pluck(7),
-            {
-              paramType: Encoding.None,
-              operator: Operator.WithinRatio,
-              compValue,
-            },
-          ],
-        }),
+        flattenCondition(matchesWithRatio([pluck(3), pluck(7)], compValue)),
       );
 
       // Reference: 1 WBTC × $100,000 = $100,000
@@ -1470,7 +1150,7 @@ describe("Operator - WithinRatio", () => {
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.RatioBelowMin,
-          3, // WithinRatio node
+          2, // WithinRatio node
           anyValue,
           anyValue,
         );
@@ -1480,7 +1160,7 @@ describe("Operator - WithinRatio", () => {
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.RatioAboveMax,
-          3, // WithinRatio node
+          2, // WithinRatio node
           anyValue,
           anyValue,
         );
@@ -1508,12 +1188,18 @@ describe("Operator - WithinRatio", () => {
       const packed = await packConditions(
         roles,
         flattenCondition({
-          paramType: Encoding.AbiEncoded,
-          operator: Operator.Matches,
+          paramType: Encoding.None,
+          operator: Operator.And,
           children: [
-            pluck(0), // param 0 → pluckedValues[0]
-            { paramType: Encoding.Dynamic, operator: Operator.Pass },
-            pluck(1), // param 2 → pluckedValues[1]
+            {
+              paramType: Encoding.AbiEncoded,
+              operator: Operator.Matches,
+              children: [
+                pluck(0), // param 0 → pluckedValues[0]
+                { paramType: Encoding.Dynamic, operator: Operator.Pass },
+                pluck(1), // param 2 → pluckedValues[1]
+              ],
+            },
             {
               paramType: Encoding.None,
               operator: Operator.WithinRatio,
@@ -1548,7 +1234,7 @@ describe("Operator - WithinRatio", () => {
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.RatioAboveMax,
-          4, // WithinRatio node
+          2, // WithinRatio node (And=0, Matches=1, WithinRatio=2)
           anyValue,
           anyValue,
         );
@@ -1572,23 +1258,29 @@ describe("Operator - WithinRatio", () => {
       const packed = await packConditions(
         roles,
         flattenCondition({
-          paramType: Encoding.AbiEncoded,
-          operator: Operator.Matches,
+          paramType: Encoding.None,
+          operator: Operator.And,
           children: [
             {
               paramType: Encoding.AbiEncoded,
               operator: Operator.Matches,
-              compValue: "0x0000", // leadingBytes = 0
               children: [
-                pluck(0), // encoded[0] → pluckedValues[0]
-                { paramType: Encoding.Static, operator: Operator.Pass },
-                pluck(1), // encoded[2] → pluckedValues[1]
                 {
-                  paramType: Encoding.None,
-                  operator: Operator.WithinRatio,
-                  compValue,
+                  paramType: Encoding.AbiEncoded,
+                  operator: Operator.Matches,
+                  compValue: "0x0000", // leadingBytes = 0
+                  children: [
+                    pluck(0), // encoded[0] → pluckedValues[0]
+                    { paramType: Encoding.Static, operator: Operator.Pass },
+                    pluck(1), // encoded[2] → pluckedValues[1]
+                  ],
                 },
               ],
+            },
+            {
+              paramType: Encoding.None,
+              operator: Operator.WithinRatio,
+              compValue,
             },
           ],
         }),
@@ -1629,7 +1321,7 @@ describe("Operator - WithinRatio", () => {
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.RatioAboveMax,
-          5, // WithinRatio node
+          2, // WithinRatio node: And[0] -> Matches[1], WithinRatio[2]
           anyValue,
           anyValue,
         );
@@ -1655,23 +1347,29 @@ describe("Operator - WithinRatio", () => {
       const packed = await packConditions(
         roles,
         flattenCondition({
-          paramType: Encoding.AbiEncoded,
-          operator: Operator.Matches,
+          paramType: Encoding.None,
+          operator: Operator.And,
           children: [
             {
-              paramType: Encoding.Tuple,
+              paramType: Encoding.AbiEncoded,
               operator: Operator.Matches,
               children: [
-                { paramType: Encoding.Static, operator: Operator.Pass }, // amount
-                pluck(0), // second → pluckedValues[0] (reference)
-                { paramType: Encoding.Static, operator: Operator.Pass }, // limit
-                pluck(1), // fourth → pluckedValues[1] (relative)
                 {
-                  paramType: Encoding.None,
-                  operator: Operator.WithinRatio,
-                  compValue,
+                  paramType: Encoding.Tuple,
+                  operator: Operator.Matches,
+                  children: [
+                    { paramType: Encoding.Static, operator: Operator.Pass }, // amount
+                    pluck(0), // second → pluckedValues[0] (reference)
+                    { paramType: Encoding.Static, operator: Operator.Pass }, // limit
+                    pluck(1), // fourth → pluckedValues[1] (relative)
+                  ],
                 },
               ],
+            },
+            {
+              paramType: Encoding.None,
+              operator: Operator.WithinRatio,
+              compValue,
             },
           ],
         }),
@@ -1707,7 +1405,88 @@ describe("Operator - WithinRatio", () => {
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.RatioAboveMax,
-          6, // WithinRatio node
+          2, // WithinRatio node: And[0] -> Matches[1], WithinRatio[2]
+          anyValue,
+          anyValue,
+        );
+    });
+
+    it("WithinRatio inside And as tuple field - Tuple(Static, And(WithinRatio, Static))", async () => {
+      const iface = new Interface([
+        "function twoParams(uint256 reference, uint256 relative)",
+      ]);
+      const fn = iface.getFunction("twoParams")!;
+      const { roles, member, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      const compValue = encodeWithinRatioCompValue({
+        referenceIndex: 0,
+        referenceDecimals: 0,
+        relativeIndex: 1,
+        relativeDecimals: 0,
+        minRatio: 0,
+        maxRatio: 15000, // 150%
+      });
+
+      const packed = await packConditions(
+        roles,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              // First tuple field: just a Pluck
+              paramType: Encoding.Static,
+              operator: Operator.Pluck,
+              compValue: "0x00", // pluckedValues[0] = reference
+            },
+            {
+              // Second tuple field: And wrapping WithinRatio + Pluck
+              paramType: Encoding.None,
+              operator: Operator.And,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.Pluck,
+                  compValue: "0x01", // pluckedValues[1] = relative
+                },
+                {
+                  paramType: Encoding.None,
+                  operator: Operator.WithinRatio,
+                  compValue,
+                },
+              ],
+            },
+          ],
+        }),
+      );
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
+        packed,
+        ExecutionOptions.None,
+      );
+
+      const invoke = (reference: number, relative: number) =>
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            testContractAddress,
+            0,
+            iface.encodeFunctionData(fn, [reference, relative]),
+            0,
+          );
+
+      // 1500 / 1000 = 150% → pass
+      await expect(invoke(1000, 1500)).to.not.be.reverted;
+
+      // 1501 / 1000 = 150.1% > 150% → fail
+      await expect(invoke(1000, 1501))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.RatioAboveMax,
+          4, // WithinRatio: Matches[0] -> Pluck[1], And[2] -> Pluck[3], WithinRatio[4]
           anyValue,
           anyValue,
         );
@@ -1731,22 +1510,28 @@ describe("Operator - WithinRatio", () => {
       const packed = await packConditions(
         roles,
         flattenCondition({
-          paramType: Encoding.AbiEncoded,
-          operator: Operator.Matches,
+          paramType: Encoding.None,
+          operator: Operator.And,
           children: [
             {
-              paramType: Encoding.Array,
+              paramType: Encoding.AbiEncoded,
               operator: Operator.Matches,
               children: [
-                pluck(0), // array[0] → pluckedValues[0] (reference)
-                { paramType: Encoding.Static, operator: Operator.Pass },
-                pluck(1), // array[2] → pluckedValues[1] (relative)
                 {
-                  paramType: Encoding.None,
-                  operator: Operator.WithinRatio,
-                  compValue,
+                  paramType: Encoding.Array,
+                  operator: Operator.Matches,
+                  children: [
+                    pluck(0), // array[0] → pluckedValues[0] (reference)
+                    { paramType: Encoding.Static, operator: Operator.Pass },
+                    pluck(1), // array[2] → pluckedValues[1] (relative)
+                  ],
                 },
               ],
+            },
+            {
+              paramType: Encoding.None,
+              operator: Operator.WithinRatio,
+              compValue,
             },
           ],
         }),
@@ -1777,7 +1562,7 @@ describe("Operator - WithinRatio", () => {
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.RatioAboveMax,
-          5, // WithinRatio node
+          2, // WithinRatio node: And[0] -> Matches[1], WithinRatio[2]
           anyValue,
           anyValue,
         );
@@ -1871,7 +1656,7 @@ describe("Operator - WithinRatio", () => {
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.RatioAboveMax,
-          3, // WithinRatio node
+          3, // WithinRatio node: And[0] -> Matches[1], Pluck[2], WithinRatio[3]
           anyValue,
           anyValue,
         );
@@ -1893,19 +1678,7 @@ describe("Operator - WithinRatio", () => {
       });
 
       await allowFunction(
-        flattenCondition({
-          paramType: Encoding.AbiEncoded,
-          operator: Operator.Matches,
-          children: [
-            pluck(3), // relative
-            pluck(7), // reference
-            {
-              paramType: Encoding.None,
-              operator: Operator.WithinRatio,
-              compValue,
-            },
-          ],
-        }),
+        flattenCondition(matchesWithRatio([pluck(3), pluck(7)], compValue)),
       );
 
       // 850 / 1000 = 85% < 90% → fail
@@ -1913,7 +1686,7 @@ describe("Operator - WithinRatio", () => {
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.RatioBelowMin,
-          3, // WithinRatio node at BFS index 3
+          2, // WithinRatio node at BFS index 3
           anyValue,
           anyValue,
         );
@@ -1933,19 +1706,7 @@ describe("Operator - WithinRatio", () => {
       });
 
       await allowFunction(
-        flattenCondition({
-          paramType: Encoding.AbiEncoded,
-          operator: Operator.Matches,
-          children: [
-            pluck(3), // relative
-            pluck(7), // reference
-            {
-              paramType: Encoding.None,
-              operator: Operator.WithinRatio,
-              compValue,
-            },
-          ],
-        }),
+        flattenCondition(matchesWithRatio([pluck(3), pluck(7)], compValue)),
       );
 
       // 950 / 1000 = 95% > 90% → fail
@@ -2053,27 +1814,33 @@ describe("integrity", () => {
       await roles.packConditions([
         {
           parent: 0,
+          paramType: Encoding.None,
+          operator: Operator.And,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
+          paramType: Encoding.None,
+          operator: Operator.WithinRatio,
+          compValue: compValue12,
+        },
+        {
+          parent: 1,
           paramType: Encoding.Static,
           operator: Operator.Pluck,
           compValue: "0x00",
         },
         {
-          parent: 0,
+          parent: 1,
           paramType: Encoding.Static,
           operator: Operator.Pluck,
           compValue: "0x01",
-        },
-        {
-          parent: 0,
-          paramType: Encoding.None,
-          operator: Operator.WithinRatio,
-          compValue: compValue12,
         },
       ]);
     });
@@ -2091,27 +1858,33 @@ describe("integrity", () => {
       await roles.packConditions([
         {
           parent: 0,
+          paramType: Encoding.None,
+          operator: Operator.And,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
+          paramType: Encoding.None,
+          operator: Operator.WithinRatio,
+          compValue: compValue32,
+        },
+        {
+          parent: 1,
           paramType: Encoding.Static,
           operator: Operator.Pluck,
           compValue: "0x00",
         },
         {
-          parent: 0,
+          parent: 1,
           paramType: Encoding.Static,
           operator: Operator.Pluck,
           compValue: "0x01",
-        },
-        {
-          parent: 0,
-          paramType: Encoding.None,
-          operator: Operator.WithinRatio,
-          compValue: compValue32,
         },
       ]);
     });
@@ -2138,27 +1911,33 @@ describe("integrity", () => {
       await roles.packConditions([
         {
           parent: 0,
+          paramType: Encoding.None,
+          operator: Operator.And,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
           compValue: "0x",
         },
         {
           parent: 0,
+          paramType: Encoding.None,
+          operator: Operator.WithinRatio,
+          compValue: compValue52,
+        },
+        {
+          parent: 1,
           paramType: Encoding.Static,
           operator: Operator.Pluck,
           compValue: "0x00",
         },
         {
-          parent: 0,
+          parent: 1,
           paramType: Encoding.Static,
           operator: Operator.Pluck,
           compValue: "0x01",
-        },
-        {
-          parent: 0,
-          paramType: Encoding.None,
-          operator: Operator.WithinRatio,
-          compValue: compValue52,
         },
       ]);
     });
@@ -2239,27 +2018,33 @@ describe("integrity", () => {
         packConditions(roles, [
           {
             parent: 0,
+            paramType: Encoding.None,
+            operator: Operator.And,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
             compValue: "0x",
           },
           {
             parent: 0,
+            paramType: Encoding.None,
+            operator: Operator.WithinRatio,
+            compValue,
+          },
+          {
+            parent: 1,
             paramType: Encoding.Static,
             operator: Operator.Pluck,
             compValue: "0x03",
           },
           {
-            parent: 0,
+            parent: 1,
             paramType: Encoding.Static,
             operator: Operator.Pluck,
             compValue: "0x07",
-          },
-          {
-            parent: 0,
-            paramType: Encoding.None,
-            operator: Operator.WithinRatio,
-            compValue,
           },
         ]),
       ).to.be.revertedWithCustomError(roles, "WithinRatioNoRatioProvided");

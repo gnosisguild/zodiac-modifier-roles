@@ -3,7 +3,7 @@ pragma solidity >=0.8.17 <0.9.0;
 
 import "../../common/AbiDecoder.sol";
 
-import {Status} from "../../types/Types.sol";
+import {Status, Payload} from "../../types/Types.sol";
 
 /**
  * @title BitmaskChecker
@@ -17,13 +17,14 @@ import {Status} from "../../types/Types.sol";
 library BitmaskChecker {
     function check(
         bytes calldata data,
+        uint256 location,
         bytes memory compValue,
         Payload memory payload
     ) internal pure returns (Status) {
         uint256 shift = uint16(bytes2(compValue));
         uint256 length = (compValue.length - 2) / 2;
 
-        uint256 start = payload.location + (payload.inlined ? 0 : 32);
+        uint256 start = location + (payload.inlined ? 0 : 32);
         uint256 end = data.length;
 
         if (shift + length > end - start) {

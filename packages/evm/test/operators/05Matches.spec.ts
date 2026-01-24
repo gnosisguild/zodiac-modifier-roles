@@ -378,19 +378,24 @@ describe("Operator - Matches", () => {
     it("passes empty payload to non-structural children", async () => {
       const { roles, allowFunction, invoke } = await loadFixture(setupOneParam);
 
-      // Matches with structural child (param) + non-structural child (ether value)
       await allowFunction(
         flattenCondition({
-          paramType: Encoding.AbiEncoded,
-          operator: Operator.Matches,
+          paramType: Encoding.None,
+          operator: Operator.And,
           children: [
-            // Structural: checks param
+            // Structural: Matches checks param
             {
-              paramType: Encoding.Static,
-              operator: Operator.EqualTo,
-              compValue: abiCoder.encode(["uint256"], [42]),
+              paramType: Encoding.AbiEncoded,
+              operator: Operator.Matches,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [42]),
+                },
+              ],
             },
-            // Non-structural: checks ether value (gets empty payload)
+            // Non-structural: checks ether value (sibling of Matches)
             {
               paramType: Encoding.EtherValue,
               operator: Operator.EqualTo,
@@ -409,7 +414,7 @@ describe("Operator - Matches", () => {
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.ParameterNotAllowed,
-          2, // EtherValue EqualTo node
+          2, // EtherValue EqualTo node (BFS: And=0, Matches=1, EtherValue=2, Static=3)
           anyValue,
           anyValue,
         );

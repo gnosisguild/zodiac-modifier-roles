@@ -7,6 +7,7 @@ import "./WithinAllowanceChecker.sol";
 import "./WithinRatioChecker.sol";
 
 import "../../types/Types.sol";
+import "../../common/AbiDecoder.sol";
 
 /**
  * @title ConditionLogic
@@ -17,38 +18,33 @@ library ConditionLogic {
     function evaluate(
         bytes calldata data,
         Condition memory condition,
-        Payload memory payload,
+        uint256 location,
         Consumption[] memory consumptions,
         Context memory context
     ) internal view returns (Result memory) {
-        if (payload.overflow) {
-            return
-                _violation(
-                    Status.CalldataOverflow,
-                    condition,
-                    payload,
-                    consumptions
-                );
-        }
-
         Operator operator = condition.operator;
 
         if (operator < Operator.EqualTo) {
             if (operator == Operator.Pass) {
                 return _ok(consumptions);
             } else if (operator == Operator.Matches) {
+                location = location > 0 &&
+                    condition.payload.encoding == Encoding.AbiEncoded
+                    ? location + 32
+                    : location;
                 return
-                    _matches(data, condition, payload, consumptions, context);
+                    _matches(data, condition, location, consumptions, context);
             } else if (operator == Operator.And) {
-                return _and(data, condition, payload, consumptions, context);
+                return _and(data, condition, location, consumptions, context);
             } else if (operator == Operator.Or) {
-                return _or(data, condition, payload, consumptions, context);
+                return _or(data, condition, location, consumptions, context);
             } else if (operator == Operator.Slice) {
-                return _slice(data, condition, payload, consumptions, context);
+                return _slice(data, condition, location, consumptions, context);
             } else if (operator == Operator.Pluck) {
                 context.pluckedValues[uint8(condition.compValue[0])] = __input(
                     data,
-                    payload,
+                    location,
+                    condition,
                     context
                 );
                 return _ok(consumptions);
@@ -57,18 +53,23 @@ library ConditionLogic {
                     _result(
                         data.length == 0 ? Status.Ok : Status.CalldataNotEmpty,
                         condition,
-                        payload,
                         consumptions
                     );
             } else if (operator == Operator.ArraySome) {
                 return
-                    _arraySome(data, condition, payload, consumptions, context);
+                    _arraySome(
+                        data,
+                        condition,
+                        location,
+                        consumptions,
+                        context
+                    );
             } else if (operator == Operator.ArrayEvery) {
                 return
                     _arrayEvery(
                         data,
                         condition,
-                        payload,
+                        location,
                         consumptions,
                         context
                     );
@@ -78,51 +79,66 @@ library ConditionLogic {
                     _arrayTailMatches(
                         data,
                         condition,
-                        payload,
+                        location,
                         consumptions,
                         context
                     );
             }
         } else {
             if (operator <= Operator.LessThan) {
+                uint256 payloadSize = condition.payload.size != 0
+                    ? condition.payload.size
+                    : AbiDecoder.getSize(data, location, condition);
                 return
                     _result(
-                        _compare(data, condition, payload, context),
+                        _compare(data, location, condition, context),
                         condition,
-                        payload,
+                        location,
+                        payloadSize,
                         consumptions
                     );
             } else if (operator <= Operator.SignedIntLessThan) {
+                uint256 payloadSize = condition.payload.size != 0
+                    ? condition.payload.size
+                    : AbiDecoder.getSize(data, location, condition);
                 return
                     _result(
-                        _compareSignedInt(data, condition, payload, context),
+                        _compareSignedInt(data, location, condition, context),
                         condition,
-                        payload,
+                        location,
+                        payloadSize,
                         consumptions
                     );
             } else if (operator == Operator.Bitmask) {
+                uint256 payloadSize = condition.payload.size != 0
+                    ? condition.payload.size
+                    : AbiDecoder.getSize(data, location, condition);
                 return
                     _result(
                         BitmaskChecker.check(
                             data,
+                            location,
                             condition.compValue,
-                            payload
+                            condition.payload
                         ),
                         condition,
-                        payload,
+                        location,
+                        payloadSize,
                         consumptions
                     );
             } else if (operator == Operator.WithinAllowance) {
                 return
                     __allowance(
-                        uint256(__input(data, payload, context)),
+                        uint256(__input(data, location, condition, context)),
                         condition,
-                        payload,
-                        consumptions
+                        location,
+                        consumptions,
+                        data
                     );
             } else if (operator == Operator.CallWithinAllowance) {
-                return __allowance(1, condition, payload, consumptions);
+                return __allowance(1, condition, location, consumptions, data);
             } else if (operator == Operator.WithinRatio) {
+                // WithinRatio uses plucked values, not a direct payload location
                 return
                     _result(
                         WithinRatioChecker.check(
@@ -130,11 +146,13 @@ library ConditionLogic {
                             context.pluckedValues
                         ),
                         condition,
-                        payload,
                         consumptions
                     );
             } else {
                 assert(operator == Operator.Custom);
+                uint256 payloadSize = condition.payload.size != 0
+                    ? condition.payload.size
+                    : AbiDecoder.getSize(data, location, condition);
                 return
                     _result(
                         CustomConditionChecker.check(
@@ -143,12 +161,13 @@ library ConditionLogic {
                             context.value,
                             data,
                             context.operation,
-                            payload.location,
-                            payload.size,
+                            location,
+                            payloadSize,
                             context.pluckedValues
                         ),
                         condition,
-                        payload,
+                        location,
+                        payloadSize,
                         consumptions
                     );
             }
@@ -158,17 +177,19 @@ library ConditionLogic {
     function _matches(
         bytes calldata data,
         Condition memory condition,
-        Payload memory payload,
+        uint256 location,
         Consumption[] memory consumptions,
         Context memory context
     ) private view returns (Result memory result) {
+        Payload memory payload = condition.payload;
+
         uint256 shift = 32 - condition.compValue.length;
         if (shift < 32) {
             /*
              * Leading Bytes Validation
              *
              * For AbiEncoded + Matches, compValue might contain N bytes that must
-             * match the first N bytes of calldata at payload.location.
+             * match the first N bytes of calldata at location.
              *
              * Integrity.sol validates N <= 32, so shift underflow is impossible.
              *
@@ -181,29 +202,41 @@ library ConditionLogic {
              */
 
             bytes32 expected = bytes32(condition.compValue) >> shift;
-            bytes32 actual = bytes32(data[payload.location:]) >> shift;
+            bytes32 actual = bytes32(data[location:]) >> shift;
 
             if (expected != actual) {
                 return
                     _violation(
                         Status.LeadingBytesNotAMatch,
                         condition,
-                        payload,
+                        location,
                         consumptions
                     );
             }
         }
 
-        uint256 sChildCount = condition.sChildCount;
-        assert(sChildCount == payload.children.length);
+        // For AbiEncoded, children start after leadingBytes
+        uint256 childrenStart = location + payload.leadingBytes;
 
-        Payload memory emptyPayload;
+        // Decode children locations - all children are structural
+        (uint256[] memory childLocations, bool overflow) = AbiDecoder
+            .getChildLocations(data, childrenStart, condition);
+        if (overflow) {
+            return
+                _violation(
+                    Status.ParameterNotAMatch,
+                    condition,
+                    location,
+                    consumptions
+                );
+        }
+
         result.consumptions = consumptions;
-        for (uint256 i; i < condition.children.length; ++i) {
+        for (uint256 i; i < childLocations.length; ++i) {
             result = evaluate(
                 data,
                 condition.children[i],
-                i < sChildCount ? payload.children[i] : emptyPayload,
+                childLocations[i],
                 result.consumptions,
                 context
             );
@@ -217,19 +250,16 @@ library ConditionLogic {
     function _and(
         bytes calldata data,
         Condition memory condition,
-        Payload memory payload,
+        uint256 location,
         Consumption[] memory consumptions,
         Context memory context
     ) private view returns (Result memory result) {
-        Payload memory emptyPayload;
         result.consumptions = consumptions;
         for (uint256 i; i < condition.children.length; ++i) {
             result = evaluate(
                 data,
                 condition.children[i],
-                i < condition.sChildCount
-                    ? (payload.variant ? payload.children[i] : payload)
-                    : emptyPayload,
+                location,
                 result.consumptions,
                 context
             );
@@ -243,18 +273,15 @@ library ConditionLogic {
     function _or(
         bytes calldata data,
         Condition memory condition,
-        Payload memory payload,
+        uint256 location,
         Consumption[] memory consumptions,
         Context memory context
     ) private view returns (Result memory result) {
-        Payload memory emptyPayload;
         for (uint256 i; i < condition.children.length; ++i) {
             result = evaluate(
                 data,
                 condition.children[i],
-                i < condition.sChildCount
-                    ? (payload.variant ? payload.children[i] : payload)
-                    : emptyPayload,
+                location,
                 consumptions,
                 context
             );
@@ -263,34 +290,53 @@ library ConditionLogic {
             }
         }
 
-        return _violation(Status.OrViolation, condition, payload, consumptions);
+        // Use the last child's payloadSize for the Or violation
+        // (all children see the same payload, so any child's size works)
+        return
+            _violation(
+                Status.OrViolation,
+                condition,
+                location,
+                result.payloadSize,
+                consumptions
+            );
     }
 
     function _arraySome(
         bytes calldata data,
         Condition memory condition,
-        Payload memory payload,
+        uint256 location,
         Consumption[] memory consumptions,
         Context memory context
     ) private view returns (Result memory result) {
-        uint256 length = payload.children.length;
-        for (uint256 i; i < length; ++i) {
+        // Decode array element locations
+        (uint256[] memory childLocations, ) = AbiDecoder.getChildLocations(
+            data,
+            location,
+            condition
+        );
+
+        for (uint256 i; i < childLocations.length; ++i) {
             result = evaluate(
                 data,
                 condition.children[0],
-                payload.children[i],
+                childLocations[i],
                 consumptions,
                 context
             );
+
             if (result.status == Status.Ok) {
                 return result;
             }
         }
+
+        uint256 payloadSize = AbiDecoder.getSize(data, location, condition);
         return
             _violation(
                 Status.NoArrayElementPasses,
                 condition,
-                payload,
+                location,
+                payloadSize,
                 consumptions
             );
     }
@@ -298,19 +344,27 @@ library ConditionLogic {
     function _arrayEvery(
         bytes calldata data,
         Condition memory condition,
-        Payload memory payload,
+        uint256 location,
         Consumption[] memory consumptions,
         Context memory context
     ) private view returns (Result memory result) {
+        // Decode array element locations
+        (uint256[] memory childLocations, ) = AbiDecoder.getChildLocations(
+            data,
+            location,
+            condition
+        );
+
         result.consumptions = consumptions;
-        for (uint256 i; i < payload.children.length; ++i) {
+        for (uint256 i; i < childLocations.length; ++i) {
             result = evaluate(
                 data,
                 condition.children[0],
-                payload.children[i],
+                childLocations[i],
                 result.consumptions,
                 context
             );
+
             if (result.status != Status.Ok) {
                 result.status = Status.NotEveryArrayElementPasses;
                 return result;
@@ -322,19 +376,26 @@ library ConditionLogic {
     function _arrayTailMatches(
         bytes calldata data,
         Condition memory condition,
-        Payload memory payload,
+        uint256 location,
         Consumption[] memory consumptions,
         Context memory context
     ) private view returns (Result memory result) {
+        // Decode array element locations
+        (uint256[] memory childLocations, ) = AbiDecoder.getChildLocations(
+            data,
+            location,
+            condition
+        );
+
         uint256 conditionCount = condition.children.length;
-        uint256 childCount = payload.children.length;
+        uint256 childCount = childLocations.length;
 
         if (childCount < conditionCount) {
             return
                 _violation(
                     Status.ParameterNotAMatch,
                     condition,
-                    payload,
+                    location,
                     consumptions
                 );
         }
@@ -346,10 +407,11 @@ library ConditionLogic {
             result = evaluate(
                 data,
                 condition.children[i],
-                payload.children[tailOffset + i],
+                childLocations[tailOffset + i],
                 result.consumptions,
                 context
             );
+
             if (result.status != Status.Ok) {
                 return result;
             }
@@ -358,8 +420,8 @@ library ConditionLogic {
     }
 
     /*
-     * Slice creates a new Payload that points to a byte-range within the
-     * current payload, so the child transparently evaluates against that
+     * Slice computes a new location pointing to a byte-range within the
+     * current location, so the child transparently evaluates against that
      * slice.
      *
      * The child will read the slice via __input, which right-aligns values
@@ -368,36 +430,47 @@ library ConditionLogic {
     function _slice(
         bytes calldata data,
         Condition memory condition,
-        Payload memory payload,
+        uint256 location,
         Consumption[] memory consumptions,
         Context memory context
-    ) private view returns (Result memory) {
+    ) private view returns (Result memory result) {
+        Payload memory payload = condition.payload;
+
         // compValue layout: | 2 bytes: shift | 1 byte: size (1-32)
         uint16 shift = uint16(bytes2(condition.compValue));
         uint8 size = uint8(condition.compValue[2]);
 
-        // Create sliced payload pointing to the slice range
-        Payload memory slicedPayload;
-        slicedPayload.location =
-            payload.location +
-            (payload.inlined ? 0 : 32) +
-            shift;
-        slicedPayload.size = size;
+        // Compute sliced location
+        uint256 childLocation = location + (payload.inlined ? 0 : 32) + shift;
 
-        return
-            evaluate(
-                data,
-                condition.children[0],
-                slicedPayload,
-                consumptions,
-                context
-            );
+        // Modify the child's layout size directly
+        Condition memory childCondition = condition.children[0];
+        uint256 originalSize = childCondition.payload.size;
+        childCondition.payload.size = size;
+
+        result = evaluate(
+            data,
+            childCondition,
+            childLocation,
+            consumptions,
+            context
+        );
+
+        // Restore original size (in case condition is reused)
+        childCondition.payload.size = originalSize;
+
+        // If child violated, override payloadSize with the actual slice size
+        if (result.status != Status.Ok) {
+            result.payloadSize = size;
+        }
+
+        return result;
     }
 
     function _compare(
         bytes calldata data,
+        uint256 location,
         Condition memory condition,
-        Payload memory payload,
         Context memory context
     ) private pure returns (Status) {
         Operator operator = condition.operator;
@@ -405,7 +478,7 @@ library ConditionLogic {
         bytes32 compValue = condition.compValue.length > 32
             ? keccak256(condition.compValue)
             : bytes32(condition.compValue);
-        bytes32 value = __input(data, payload, context);
+        bytes32 value = __input(data, location, condition, context);
 
         if (operator == Operator.EqualTo && value != compValue) {
             return Status.ParameterNotAllowed;
@@ -420,13 +493,15 @@ library ConditionLogic {
 
     function _compareSignedInt(
         bytes calldata data,
+        uint256 location,
         Condition memory condition,
-        Payload memory payload,
         Context memory context
     ) private pure returns (Status) {
         Operator operator = condition.operator;
         int256 compValue = int256(uint256(bytes32(condition.compValue)));
-        int256 value = int256(uint256(__input(data, payload, context)));
+        int256 value = int256(
+            uint256(__input(data, location, condition, context))
+        );
 
         if (operator == Operator.SignedIntGreaterThan && value <= compValue) {
             return Status.ParameterLessThanAllowed;
@@ -442,8 +517,9 @@ library ConditionLogic {
     function __allowance(
         uint256 value,
         Condition memory condition,
-        Payload memory payload,
-        Consumption[] memory consumptions
+        uint256 location,
+        Consumption[] memory consumptions,
+        bytes calldata data
     ) private view returns (Result memory) {
         (
             Status status,
@@ -454,56 +530,111 @@ library ConditionLogic {
                 condition.compValue
             );
 
-        return _result(status, condition, payload, nextConsumptions);
+        uint256 payloadSize = condition.payload.size != 0
+            ? condition.payload.size
+            : AbiDecoder.getSize(data, location, condition);
+        return
+            _result(status, condition, location, payloadSize, nextConsumptions);
     }
 
     /**
      * @dev Reads a value from calldata or from Transaction.value, right-aligning when needed.
-     *      - payload.size == 0: returns context.value (ether amount)
-     *      - payload.size <= 32: reads from calldata and right-aligns
-     *      - payload.size > 32: returns keccak256 hash of the calldata slice
+     *      - Encoding.None: returns context.value (ether amount)
+     *      - size <= 32: reads from calldata and right-aligns
+     *      - size > 32: returns keccak256 hash of the calldata slice
      *
-     * @param data    The calldata to read from.
-     * @param payload The payload specifying location and size.
-     * @param context The execution context (for ether value).
-     * @return result The value as bytes32, right-aligned or hashed.
+     * @param data      The calldata to read from.
+     * @param location  The location in calldata.
+     * @param condition The condition with layout info.
+     * @param context   The execution context (for ether value).
+     * @return result   The value as bytes32, right-aligned or hashed.
      */
     function __input(
         bytes calldata data,
-        Payload memory payload,
+        uint256 location,
+        Condition memory condition,
         Context memory context
     ) private pure returns (bytes32 result) {
-        if (payload.size == 32) {
+        Payload memory payload = condition.payload;
+
+        if (payload.encoding == Encoding.None) {
+            return bytes32(context.value);
+        }
+
+        // Check if layout has size set (e.g., from Slice), otherwise get from decoder
+        uint256 size = payload.size != 0
+            ? payload.size
+            : AbiDecoder.getSize(data, location, condition);
+
+        // Clamp size to available data (handles bounds)
+        if (location < data.length) {
+            uint256 available = data.length - location;
+            if (size > available) {
+                size = available;
+            }
+        } else {
+            size = 0;
+        }
+
+        if (size == 32) {
             assembly {
-                result := calldataload(add(data.offset, mload(payload)))
+                result := calldataload(add(data.offset, location))
             }
             return result;
         }
 
-        uint256 size = payload.size;
-        if (size == 0) {
-            return bytes32(context.value);
+        if (size < 32 && size > 0) {
+            // Right-align - read exactly 'size' bytes
+            return bytes32(data[location:location + size]) >> ((32 - size) * 8);
         }
 
-        uint256 location = payload.location;
-        if (size < 32) {
-            // Right-align
-            return bytes32(data[location:]) >> ((32 - size) * 8);
+        if (size > 32) {
+            return keccak256(data[location:location + size]);
         }
 
-        return keccak256(data[location:location + size]);
+        return bytes32(0);
     }
 
     function _result(
         Status status,
         Condition memory condition,
-        Payload memory payload,
         Consumption[] memory consumptions
     ) private pure returns (Result memory) {
         return
             status == Status.Ok
                 ? _ok(consumptions)
-                : _violation(status, condition, payload, consumptions);
+                : _violation(status, condition, consumptions);
+    }
+
+    function _result(
+        Status status,
+        Condition memory condition,
+        uint256 location,
+        Consumption[] memory consumptions
+    ) private pure returns (Result memory) {
+        return
+            status == Status.Ok
+                ? _ok(consumptions)
+                : _violation(status, condition, location, consumptions);
+    }
+
+    function _result(
+        Status status,
+        Condition memory condition,
+        uint256 location,
+        uint256 payloadSize,
+        Consumption[] memory consumptions
+    ) private pure returns (Result memory) {
+        return
+            status == Status.Ok
+                ? _ok(consumptions)
+                : _violation(
+                    status,
+                    condition,
+                    location,
+                    payloadSize,
+                    consumptions
+                );
     }
 
     function _ok(
@@ -522,16 +653,41 @@ library ConditionLogic {
     function _violation(
         Status status,
         Condition memory condition,
-        Payload memory payload,
+        uint256 location,
         Consumption[] memory consumptions
     ) private pure returns (Result memory) {
         return
             Result({
                 status: status,
                 violatedNodeIndex: condition.index,
-                payloadLocation: payload.location,
-                payloadSize: payload.size,
+                payloadLocation: location,
+                payloadSize: 0,
                 consumptions: consumptions
             });
+    }
+
+    function _violation(
+        Status status,
+        Condition memory condition,
+        uint256 location,
+        uint256 payloadSize,
+        Consumption[] memory consumptions
+    ) private pure returns (Result memory) {
+        return
+            Result({
+                status: status,
+                violatedNodeIndex: condition.index,
+                payloadLocation: location,
+                payloadSize: payloadSize,
+                consumptions: consumptions
+            });
+    }
+
+    function _violation(
+        Status status,
+        Condition memory condition,
+        Consumption[] memory consumptions
+    ) private pure returns (Result memory) {
+        return _violation(status, condition, 0, consumptions);
     }
 }
