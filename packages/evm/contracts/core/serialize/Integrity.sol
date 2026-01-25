@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
+import "./Topology.sol";
 import "./TypeTree.sol";
 
 import "../../types/Types.sol";
@@ -15,8 +16,7 @@ library Integrity {
     function enforce(ConditionFlat[] memory conditions) internal pure {
         _validateBFS(conditions);
 
-        uint256 len = conditions.length;
-        for (uint256 i = 0; i < len; ++i) {
+        for (uint256 i = 0; i < conditions.length; ++i) {
             _validateOperator(conditions, i);
             _validateEncoding(conditions, i);
         }
@@ -106,7 +106,7 @@ library Integrity {
      * @dev Encoding types determine fundamental child rules:
      *      - Leaf types (Static, Dynamic, EtherValue): Cannot have children
      *      - Container types (Tuple, Array): Must have structural children
-     *      - Abstract types (None, AbiEncoded): Operator-dependent (validated elsewhere)
+     *      - None: Operator-dependent (validated elsewhere)
      *
      *      Exception: Slice operator uses Static/Dynamic encoding but requires
      *      exactly one child (validated in _checkSlice).
@@ -118,26 +118,29 @@ library Integrity {
         ConditionFlat memory node = conditions[index];
         Encoding encoding = node.paramType;
 
-        (, uint256 childCount, uint256 sChildCount) = TypeTree.childBounds(
+        (, uint256 childCount, uint256 sChildCount) = _sChildBounds(
             conditions,
             index
         );
 
         if (
-            encoding == Encoding.Static ||
-            encoding == Encoding.Dynamic ||
-            encoding == Encoding.EtherValue
+            (encoding == Encoding.Static ||
+                encoding == Encoding.Dynamic ||
+                encoding == Encoding.EtherValue) &&
+            (node.operator != Operator.Slice)
         ) {
             // Slice is a special case: uses Static/Dynamic but requires a child
-            if (node.operator != Operator.Slice) {
-                // Leaf types cannot have children
-                if (childCount != 0) {
-                    revert IRolesError.LeafNodeCannotHaveChildren(index);
-                }
+            // Leaf types cannot have children
+            if (childCount != 0) {
+                revert IRolesError.LeafNodeCannotHaveChildren(index);
             }
         }
 
-        if (encoding == Encoding.Tuple || encoding == Encoding.Array) {
+        if (
+            encoding == Encoding.AbiEncoded ||
+            encoding == Encoding.Tuple ||
+            encoding == Encoding.Array
+        ) {
             // Container types must have structural children for type tree
             if (sChildCount == 0) {
                 revert IRolesError.UnsuitableChildCount(index);
@@ -174,7 +177,7 @@ library Integrity {
             revert IRolesError.UnsuitableCompValue(index);
         }
         // Children: Must have children
-        (, uint256 childCount, ) = TypeTree.childBounds(conditions, index);
+        (, uint256 childCount) = Topology.childBounds(conditions, index);
         if (childCount == 0) {
             revert IRolesError.UnsuitableChildCount(index);
         }
@@ -194,7 +197,7 @@ library Integrity {
             revert IRolesError.UnsuitableCompValue(index);
         }
         // Children: None
-        (, uint256 childCount, ) = TypeTree.childBounds(conditions, index);
+        (, uint256 childCount) = Topology.childBounds(conditions, index);
         if (childCount != 0) {
             revert IRolesError.LeafNodeCannotHaveChildren(index);
         }
@@ -233,7 +236,7 @@ library Integrity {
         }
 
         // All children must be structural
-        (, uint256 childCount, uint256 sChildCount) = TypeTree.childBounds(
+        (, uint256 childCount, uint256 sChildCount) = _sChildBounds(
             conditions,
             index
         );
@@ -257,7 +260,7 @@ library Integrity {
             revert IRolesError.UnsuitableCompValue(index);
         }
         // Children: Exactly 1 child
-        (, uint256 childCount, uint256 sChildCount) = TypeTree.childBounds(
+        (, uint256 childCount, uint256 sChildCount) = _sChildBounds(
             conditions,
             index
         );
@@ -281,7 +284,7 @@ library Integrity {
             revert IRolesError.UnsuitableCompValue(index);
         }
         // Children: All children must be structural
-        (, uint256 childCount, uint256 sChildCount) = TypeTree.childBounds(
+        (, uint256 childCount, uint256 sChildCount) = _sChildBounds(
             conditions,
             index
         );
@@ -312,8 +315,11 @@ library Integrity {
         }
 
         // Children: At most 1 child
-        (uint256 childStart, uint256 childCount, uint256 sChildCount) = TypeTree
-            .childBounds(conditions, index);
+        (
+            uint256 childStart,
+            uint256 childCount,
+            uint256 sChildCount
+        ) = _sChildBounds(conditions, index);
         if (childCount != 1) {
             revert IRolesError.UnsuitableChildCount(index);
         }
@@ -468,7 +474,7 @@ library Integrity {
             revert IRolesError.UnsuitableCompValue(index);
         }
         // Children: None
-        (, uint256 childCount, ) = TypeTree.childBounds(conditions, index);
+        (, uint256 childCount) = Topology.childBounds(conditions, index);
         if (childCount != 0) {
             revert IRolesError.LeafNodeCannotHaveChildren(index);
         }
@@ -503,7 +509,7 @@ library Integrity {
             revert IRolesError.WithinRatioNoRatioProvided(index);
         }
         // Children: None
-        (, uint256 childCount, ) = TypeTree.childBounds(conditions, index);
+        (, uint256 childCount) = Topology.childBounds(conditions, index);
         if (childCount != 0) {
             revert IRolesError.LeafNodeCannotHaveChildren(index);
         }
@@ -555,7 +561,7 @@ library Integrity {
             }
         }
 
-        (uint256 childStart, uint256 childCount, ) = TypeTree.childBounds(
+        (uint256 childStart, uint256 childCount) = Topology.childBounds(
             conditions,
             index
         );
@@ -571,27 +577,34 @@ library Integrity {
         ConditionFlat[] memory conditions
     ) private pure {
         for (uint256 i = 0; i < conditions.length; ++i) {
-            Operator operator = conditions[i].operator;
-            Encoding encoding = conditions[i].paramType;
-
+            // If not variant, children have matching type trees (same typeHash)
+            // If variant, must check type equivalence (all resolve to Dynamic/AbiEncoded)
             if (
-                operator == Operator.And ||
-                operator == Operator.Or ||
-                encoding == Encoding.Array
+                TypeTree.isVariant(conditions, i) &&
+                !_isTypeEquivalence(conditions, i)
             ) {
-                // If not variant, children have matching type trees (same typeHash)
-                // If variant, must check type equivalence (all resolve to Dynamic/AbiEncoded)
-                if (
-                    TypeTree.isVariant(conditions, i) &&
-                    !_isTypeEquivalence(conditions, i)
-                ) {
-                    revert IRolesError.UnsuitableChildTypeTree(i);
-                }
+                revert IRolesError.UnsuitableChildTypeTree(i);
             }
         }
     }
 
     // --- Helpers ---
+
+    function _sChildBounds(
+        ConditionFlat[] memory conditions,
+        uint256 index
+    )
+        private
+        pure
+        returns (uint256 childStart, uint256 childCount, uint256 sChildCount)
+    {
+        (childStart, childCount) = Topology.childBounds(conditions, index);
+        for (uint256 i; i < childCount; ++i) {
+            if (Topology.isStructural(conditions, childStart + i)) {
+                ++sChildCount;
+            }
+        }
+    }
 
     function _isWordish(Encoding encoding) private pure returns (bool) {
         return encoding == Encoding.Static || encoding == Encoding.EtherValue;
@@ -601,7 +614,7 @@ library Integrity {
         ConditionFlat[] memory conditions,
         uint256 index
     ) private pure returns (bool) {
-        (uint256 childStart, , uint256 sChildCount) = TypeTree.childBounds(
+        (uint256 childStart, , uint256 sChildCount) = _sChildBounds(
             conditions,
             index
         );

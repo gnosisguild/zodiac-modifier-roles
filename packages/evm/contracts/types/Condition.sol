@@ -39,7 +39,7 @@ struct Payload {
     Encoding encoding;
     uint256 leadingBytes;
     bool inlined;
-    uint256 size; // If non-zero, use this size instead of calling AbiDecoder (e.g., for Slice)
+    uint256 size; // Pre-computed size for inlined nodes, or override for Slice
 }
 
 /// @dev Layout is a type tree used for EIP712 encoding and type hashing.

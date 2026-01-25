@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "./TypeTree.sol";
+import "./Topology.sol";
 
 /**
  * @title  ConditionPacker
@@ -21,14 +21,13 @@ import "./TypeTree.sol";
  * ║ │ • maxPluckValue           8 bits (byte 2)                           │ ║
  * ║ └─────────────────────────────────────────────────────────────────────┘ ║
  * ║ ┌─────────────────────────────────────────────────────────────────────┐ ║
- * ║ │ NODES (nodeCount × 3 bytes each)                                    │ ║
+ * ║ │ NODES (nodeCount × 4 bytes each)                                    │ ║
  * ║ ├─────────────────────────────────────────────────────────────────────┤ ║
- * ║ │ Each node (24 bits = 3 bytes):                                      │ ║
- * ║ │   • encoding              3 bits  [23-21]                           │ ║
- * ║ │   • operator              5 bits  [20-16]                           │ ║
- * ║ │   • childCount           10 bits  [15-6]                            │ ║
- * ║ │   • (reserved)            4 bits  [5-2]                             │ ║
- * ║ │   • isInline              1 bit   [1]                               │ ║
+ * ║ │ Each node (32 bits = 4 bytes):                                      │ ║
+ * ║ │   • encoding              3 bits  [31-29]                           │ ║
+ * ║ │   • operator              5 bits  [28-24]                           │ ║
+ * ║ │   • childCount           10 bits  [23-14]                           │ ║
+ * ║ │   • inlinedSize          13 bits  [13-1]                            │ ║
  * ║ │   • hasCompValue          1 bit   [0]                               │ ║
  * ║ └─────────────────────────────────────────────────────────────────────┘ ║
  * ║ ┌─────────────────────────────────────────────────────────────────────┐ ║
@@ -43,7 +42,7 @@ import "./TypeTree.sol";
  */
 library ConditionPacker {
     uint256 private constant HEADER_BYTES = 3;
-    uint256 private constant NODE_BYTES = 3;
+    uint256 private constant NODE_BYTES = 4;
 
     function pack(
         ConditionFlat[] memory conditions
@@ -77,8 +76,10 @@ library ConditionPacker {
             ConditionFlat memory condition = conditions[i];
 
             Encoding encoding = condition.paramType;
-            (, uint256 childCount, ) = TypeTree.childBounds(conditions, i);
-            bool isInline = TypeTree.isInlined(conditions, i);
+            (, uint256 childCount) = Topology.childBounds(conditions, i);
+            uint256 inlinedSize = Topology.isInlined(conditions, i)
+                ? Topology.inlinedSize(conditions, i)
+                : 0;
 
             bytes memory compValue = condition.compValue;
             uint256 compValueLength = compValue.length;
@@ -86,28 +87,27 @@ library ConditionPacker {
 
             /*
              * ┌───────────────────────────────────────────────────────────┐
-             * │ packed 24 bits, 3 bytes:                                  │
-             * │   • encoding              3 bits  [23-21]                 │
-             * │   • operator              5 bits  [20-16]                 │
-             * │   • childCount           10 bits  [15-6]                  │
-             * │   • (reserved)            4 bits  [5-2]                   │
-             * │   • isInline              1 bit   [1]                     │
+             * │ packed 32 bits, 4 bytes:                                  │
+             * │   • encoding              3 bits  [31-29]                 │
+             * │   • operator              5 bits  [28-24]                 │
+             * │   • childCount           10 bits  [23-14]                 │
+             * │   • inlinedSize          13 bits  [13-1]                  │
              * │   • hasCompValue          1 bit   [0]                     │
              * └───────────────────────────────────────────────────────────┘
              */
-            uint256 packed = (uint256(encoding) << 21) |
-                (uint256(condition.operator) << 16) |
-                (childCount << 6) |
-                (isInline ? 2 : 0) |
+            uint256 packed = (uint256(encoding) << 29) |
+                (uint256(condition.operator) << 24) |
+                (childCount << 14) |
+                ((inlinedSize / 32) << 1) |
                 (hasCompValue ? 1 : 0);
 
             /*
-             * The or with mload preserves bytes 3-31 (compValues written in
-             * previous iterations) while writing our 3 bytes at positions 0-2.
+             * The or with mload preserves bytes 4-31 (compValues written in
+             * previous iterations) while writing our 4 bytes at positions 0-3.
              */
             assembly {
                 let dest := add(add(buffer, 0x20), offset)
-                mstore(dest, or(mload(dest), shl(232, packed)))
+                mstore(dest, or(mload(dest), shl(224, packed)))
             }
             offset += NODE_BYTES;
 
@@ -178,7 +178,7 @@ library ConditionPacker {
              */
             if (
                 conditions[i].operator == Operator.EqualTo &&
-                !TypeTree.isInlined(conditions, i)
+                !Topology.isInlined(conditions, i)
             ) {
                 bytes memory compValue = conditions[i].compValue;
                 assembly {

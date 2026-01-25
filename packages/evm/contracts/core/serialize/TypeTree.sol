@@ -2,6 +2,7 @@
 pragma solidity >=0.8.17 <0.9.0;
 
 import "../../types/Types.sol";
+import "./Topology.sol";
 
 /**
  * @title  TypeTree
@@ -13,52 +14,106 @@ import "../../types/Types.sol";
  */
 library TypeTree {
     /**
+     * @notice Resolves through transparent (non-variant) And/Or chains to find actual encoding
+     */
+    function resolvesTo(
+        ConditionFlat[] memory conditions,
+        uint256 index
+    ) internal pure returns (Encoding) {
+        return inspect(conditions, index).encoding;
+    }
+
+    /**
      * @notice Extracts type tree for flat node at index
      */
     function inspect(
         ConditionFlat[] memory conditions,
-        uint256 index
-    ) internal pure returns (Layout memory node) {
-        bool isLogical = _isLogical(conditions, index);
-        bool variant = isVariant(conditions, index);
+        uint256 i
+    ) internal pure returns (Layout memory layout) {
+        bool isLogical = _isLogical(conditions, i);
+        bool isNonVariant = !isVariant(conditions, i);
+        (uint256 childStart, uint256 childCount) = Topology.childBounds(
+            conditions,
+            i
+        );
 
-        /*
-         * Type trees only include structural children
-         */
-        (uint256 childStart, , uint256 sChildCount) = childBounds(
+        if (isLogical && isNonVariant) {
+            /*
+             * Non-variant logical nodes: first structural child defines the type tree
+             */
+            for (uint256 j; j < childCount; ++j) {
+                if (id(conditions, childStart + j) != bytes32(0)) {
+                    return inspect(conditions, childStart + j);
+                }
+            }
+            return layout;
+        }
+
+        layout.encoding = conditions[i].paramType == Encoding.EtherValue
+            ? Encoding.None
+            : conditions[i].paramType;
+        layout.children = new Layout[](childCount);
+
+        uint256 length;
+        for (uint256 j; j < layout.children.length; ++j) {
+            if (id(conditions, childStart + j) != bytes32(0)) {
+                layout.children[length++] = inspect(conditions, childStart + j);
+
+                /*
+                 * For non-variant arrays, the first child serves as a template for
+                 * all elements. For all other nodes, traverse all structural children
+                 */
+                if (layout.encoding == Encoding.Array && isNonVariant) {
+                    break;
+                }
+            }
+        }
+        assembly {
+            mstore(mload(add(layout, 0x40)), length)
+        }
+
+        layout.inlined = Topology.isInlined(conditions, i);
+    }
+
+    /**
+     * @notice Checks if a node is a variant (children have different type trees)
+     */
+    function isVariant(
+        ConditionFlat[] memory conditions,
+        uint256 index
+    ) internal pure returns (bool) {
+        Encoding encoding = conditions[index].paramType;
+        Operator operator = conditions[index].operator;
+        if (
+            encoding != Encoding.Array &&
+            operator != Operator.And &&
+            operator != Operator.Or
+        ) {
+            return false;
+        }
+
+        (uint256 childStart, uint256 childCount) = Topology.childBounds(
             conditions,
             index
         );
 
-        /*
-         * Non-variant logical nodes: first child defines the type tree,
-         * others have the same structure and don't influence the result
-         */
-        if (isLogical && !variant) {
-            return inspect(conditions, childStart);
+        bytes32 baseline;
+        for (uint256 i; i < childCount; ++i) {
+            bytes32 childHash = id(conditions, childStart + i);
+
+            if (childHash == bytes32(0)) {
+                continue;
+            }
+
+            if (baseline == bytes32(0)) {
+                baseline = childHash;
+            }
+
+            if (baseline != childHash) {
+                return true;
+            }
         }
-
-        /*
-         * Nodes that are Logical and Variant use Dynamic as a container to
-         * indicate the variant. All other nodes use their declared paramType
-         */
-        node.encoding = (isLogical && variant)
-            ? Encoding.Dynamic
-            : conditions[index].paramType;
-
-        /*
-         * For non-variant arrays, the first child serves as a template for
-         * all elements. For all other nodes, traverse all structural children
-         */
-        node.children = new Layout[](
-            node.encoding == Encoding.Array && !variant ? 1 : sChildCount
-        );
-
-        for (uint256 i = 0; i < node.children.length; ++i) {
-            node.children[i] = inspect(conditions, childStart + i);
-        }
-
-        node.inlined = isInlined(conditions, index);
+        return false;
     }
 
     /**
@@ -74,132 +129,23 @@ library TypeTree {
     /**
      * @notice Computes a unique hash for a Layout tree
      */
-    function hashTree(Layout memory tree) internal pure returns (bytes32) {
+    function hashTree(Layout memory tree) private pure returns (bytes32) {
+        Encoding encoding = tree.encoding == Encoding.EtherValue
+            ? Encoding.None
+            : tree.encoding;
+
         if (tree.children.length == 0) {
-            return bytes32(uint256(tree.encoding));
+            return bytes32(uint256(encoding));
         }
 
-        bytes32[] memory childHashes = new bytes32[](tree.children.length);
-        for (uint256 i = 0; i < tree.children.length; i++) {
-            childHashes[i] = hashTree(tree.children[i]);
-        }
-
-        return
-            keccak256(
-                abi.encodePacked(bytes32(uint256(tree.encoding)), childHashes)
-            );
-    }
-
-    /**
-     * @notice Gets the bounds and counts of children for a given node
-     * @param conditions The flat array of conditions
-     * @param index The index of the parent node
-     *
-     * @return childStart The index of the first child (0 if no children)
-     * @return childCount The total number of children (structural + non-structural)
-     * @return sChildCount The number of structural children only
-     */
-    function childBounds(
-        ConditionFlat[] memory conditions,
-        uint256 index
-    )
-        internal
-        pure
-        returns (uint256 childStart, uint256 childCount, uint256 sChildCount)
-    {
-        uint256 len = conditions.length;
-
-        for (uint256 i = index + 1; i < len; ++i) {
-            uint256 parent = conditions[i].parent;
-
-            if (parent == index) {
-                if (childCount == 0) childStart = i;
-                ++childCount;
-
-                // Count structural children
-                if (isStructural(conditions, i)) {
-                    ++sChildCount;
-                }
-            } else if (parent > index) {
-                break;
+        bytes32 hash = bytes32(uint256(encoding));
+        for (uint256 i; i < tree.children.length; ++i) {
+            bytes32 childHash = hashTree(tree.children[i]);
+            if (childHash != bytes32(0)) {
+                hash = keccak256(abi.encodePacked(hash, childHash));
             }
         }
-    }
-
-    /**
-     * @notice Checks if a node is a variant (children have different type trees)
-     */
-    function isVariant(
-        ConditionFlat[] memory conditions,
-        uint256 index
-    ) internal pure returns (bool) {
-        bool isArray = conditions[index].paramType == Encoding.Array;
-        bool isLogical = _isLogical(conditions, index);
-
-        if (!isArray && !isLogical) {
-            return false;
-        }
-
-        (uint256 childStart, , uint256 sChildCount) = childBounds(
-            conditions,
-            index
-        );
-        if (sChildCount <= 1) return false;
-
-        bytes32 idHash = id(conditions, childStart);
-        for (uint256 i = 1; i < sChildCount; ++i) {
-            if (idHash != id(conditions, childStart + i)) return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * @notice Determines if a node is structural
-     * @dev A node is structural if it has paramType != None OR any descendant has paramType != None
-     */
-    function isStructural(
-        ConditionFlat[] memory conditions,
-        uint256 index
-    ) internal pure returns (bool) {
-        // EtherValue is an alias for None
-        Encoding encoding = conditions[index].paramType;
-        if (encoding != Encoding.None && encoding != Encoding.EtherValue) {
-            return true;
-        }
-
-        // Check all direct children
-        for (uint256 i = index + 1; i < conditions.length; ++i) {
-            uint256 parent = conditions[i].parent;
-            if (parent == index) {
-                // Recursively check if child is structural
-                if (isStructural(conditions, i)) {
-                    return true;
-                }
-            } else if (parent > index) {
-                break;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * @notice Resolves through transparent (non-variant) And/Or chains to find actual encoding
-     */
-    function resolvesTo(
-        ConditionFlat[] memory conditions,
-        uint256 index
-    ) internal pure returns (Encoding) {
-        while (
-            conditions[index].paramType == Encoding.None ||
-            conditions[index].paramType == Encoding.EtherValue
-        ) {
-            (uint256 childStart, , ) = childBounds(conditions, index);
-            index = childStart;
-        }
-
-        return conditions[index].paramType;
+        return hash;
     }
 
     function _isLogical(
@@ -209,29 +155,5 @@ library TypeTree {
         return
             conditions[index].operator == Operator.And ||
             conditions[index].operator == Operator.Or;
-    }
-
-    function isInlined(
-        ConditionFlat[] memory conditions,
-        uint256 index
-    ) internal pure returns (bool) {
-        Encoding encoding = conditions[index].paramType;
-        if (
-            encoding == Encoding.Dynamic ||
-            encoding == Encoding.Array ||
-            encoding == Encoding.AbiEncoded
-        ) {
-            return false;
-        }
-
-        for (uint256 i = index + 1; i < conditions.length; ++i) {
-            uint256 parent = conditions[i].parent;
-            if (parent == index && !isInlined(conditions, i)) {
-                return false;
-            } else if (parent > index) {
-                break;
-            }
-        }
-        return true;
     }
 }

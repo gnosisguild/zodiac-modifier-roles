@@ -107,7 +107,7 @@ describe("PackerUnpacker", () => {
       expect(result[3].parent).to.equal(1); // child of first Tuple
     });
 
-    it("computes inlined correctly for Static", async () => {
+    it("computes size correctly for Static", async () => {
       const { mock } = await loadFixture(setup);
 
       const [result] = await mock.roundtrip(
@@ -117,10 +117,10 @@ describe("PackerUnpacker", () => {
         }),
       );
 
-      expect(result[0].inlined).to.equal(true);
+      expect(result[0].size).to.equal(32);
     });
 
-    it("computes inlined correctly for Dynamic", async () => {
+    it("computes size correctly for Dynamic", async () => {
       const { mock } = await loadFixture(setup);
 
       const [result] = await mock.roundtrip(
@@ -130,10 +130,10 @@ describe("PackerUnpacker", () => {
         }),
       );
 
-      expect(result[0].inlined).to.equal(false);
+      expect(result[0].size).to.equal(0);
     });
 
-    it("computes inlined correctly for Tuple with all Static children", async () => {
+    it("computes size correctly for Tuple with all Static children", async () => {
       const { mock } = await loadFixture(setup);
 
       const [result] = await mock.roundtrip(
@@ -147,12 +147,12 @@ describe("PackerUnpacker", () => {
         }),
       );
 
-      expect(result[0].inlined).to.equal(true);
-      expect(result[1].inlined).to.equal(true);
-      expect(result[2].inlined).to.equal(true);
+      expect(result[0].size).to.equal(64); // 2 static children * 32
+      expect(result[1].size).to.equal(32);
+      expect(result[2].size).to.equal(32);
     });
 
-    it("computes inlined correctly for Tuple with Dynamic child", async () => {
+    it("computes size correctly for Tuple with Dynamic child", async () => {
       const { mock } = await loadFixture(setup);
 
       const [result] = await mock.roundtrip(
@@ -166,9 +166,9 @@ describe("PackerUnpacker", () => {
         }),
       );
 
-      expect(result[0].inlined).to.equal(false);
-      expect(result[1].inlined).to.equal(true);
-      expect(result[2].inlined).to.equal(false);
+      expect(result[0].size).to.equal(0); // not inlined due to dynamic child
+      expect(result[1].size).to.equal(32);
+      expect(result[2].size).to.equal(0);
     });
 
     it("Array is never inlined", async () => {
@@ -182,7 +182,7 @@ describe("PackerUnpacker", () => {
         }),
       );
 
-      expect(result[0].inlined).to.equal(false);
+      expect(result[0].size).to.equal(0);
     });
 
     it("tracks maxPluckValue", async () => {

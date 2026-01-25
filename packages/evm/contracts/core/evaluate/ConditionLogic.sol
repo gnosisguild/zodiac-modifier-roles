@@ -219,17 +219,11 @@ library ConditionLogic {
         uint256 childrenStart = location + payload.leadingBytes;
 
         // Decode children locations - all children are structural
-        (uint256[] memory childLocations, bool overflow) = AbiDecoder
-            .getChildLocations(data, childrenStart, condition);
-        if (overflow) {
-            return
-                _violation(
-                    Status.ParameterNotAMatch,
-                    condition,
-                    location,
-                    consumptions
-                );
-        }
+        uint256[] memory childLocations = AbiDecoder.getChildLocations(
+            data,
+            childrenStart,
+            condition
+        );
 
         result.consumptions = consumptions;
         for (uint256 i; i < childLocations.length; ++i) {
@@ -310,7 +304,7 @@ library ConditionLogic {
         Context memory context
     ) private view returns (Result memory result) {
         // Decode array element locations
-        (uint256[] memory childLocations, ) = AbiDecoder.getChildLocations(
+        uint256[] memory childLocations = AbiDecoder.getChildLocations(
             data,
             location,
             condition
@@ -349,7 +343,7 @@ library ConditionLogic {
         Context memory context
     ) private view returns (Result memory result) {
         // Decode array element locations
-        (uint256[] memory childLocations, ) = AbiDecoder.getChildLocations(
+        uint256[] memory childLocations = AbiDecoder.getChildLocations(
             data,
             location,
             condition
@@ -381,7 +375,7 @@ library ConditionLogic {
         Context memory context
     ) private view returns (Result memory result) {
         // Decode array element locations
-        (uint256[] memory childLocations, ) = AbiDecoder.getChildLocations(
+        uint256[] memory childLocations = AbiDecoder.getChildLocations(
             data,
             location,
             condition

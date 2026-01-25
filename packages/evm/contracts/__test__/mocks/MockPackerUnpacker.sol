@@ -12,6 +12,7 @@ contract MockPackerUnpacker {
         bytes compValue;
         Encoding encoding;
         bool inlined;
+        uint256 size;
     }
 
     function roundtrip(
@@ -57,7 +58,8 @@ contract MockPackerUnpacker {
                 operator: node.operator,
                 compValue: node.compValue,
                 encoding: node.payload.encoding,
-                inlined: node.payload.inlined
+                inlined: node.payload.inlined,
+                size: node.payload.size
             });
 
             for (uint256 i = 0; i < node.children.length; ++i) {

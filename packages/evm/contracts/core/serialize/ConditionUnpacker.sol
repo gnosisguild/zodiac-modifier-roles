@@ -17,7 +17,7 @@ import "../../types/Types.sol";
  */
 library ConditionUnpacker {
     uint256 private constant HEADER_BYTES = 3;
-    uint256 private constant NODE_BYTES = 3;
+    uint256 private constant NODE_BYTES = 4;
 
     function unpack(
         bytes memory buffer
@@ -59,27 +59,26 @@ library ConditionUnpacker {
         for (uint256 c; c < conditions.length; ++c) {
             /*
              * ┌───────────────────────────────────────────────────────────┐
-             * │ packed 24 bits, 3 bytes:                                  │
-             * │   • encoding              3 bits  [23-21]                 │
-             * │   • operator              5 bits  [20-16]                 │
-             * │   • childCount           10 bits  [15-6]                  │
-             * │   • (reserved)            4 bits  [5-2]                   │
-             * │   • isInline              1 bit   [1]                     │
+             * │ packed 32 bits, 4 bytes:                                  │
+             * │   • encoding              3 bits  [31-29]                 │
+             * │   • operator              5 bits  [28-24]                 │
+             * │   • childCount           10 bits  [23-14]                 │
+             * │   • inlinedSize          13 bits  [13-1]                  │
              * │   • hasCompValue          1 bit   [0]                     │
              * └───────────────────────────────────────────────────────────┘
              */
             uint256 packed;
             assembly {
-                packed := shr(232, mload(offset))
+                packed := shr(224, mload(offset))
                 offset := add(offset, NODE_BYTES)
             }
 
             Condition memory condition = conditions[c];
             condition.index = c;
-            condition.operator = Operator((packed >> 16) & 0x1F);
+            condition.operator = Operator((packed >> 24) & 0x1F);
 
             {
-                uint256 childCount = (packed >> 6) & 0x3FF;
+                uint256 childCount = (packed >> 14) & 0x3FF;
                 if (childCount > 0) {
                     /*
                      * shallowCopy children array
@@ -104,7 +103,7 @@ library ConditionUnpacker {
                 }
             }
 
-            uint256 encoding = (packed >> 21);
+            uint256 encoding = (packed >> 29);
 
             uint256 leadingBytes;
             // hasCompValue
@@ -149,7 +148,9 @@ library ConditionUnpacker {
             if (encoding == 6) encoding = 0;
 
             condition.payload.encoding = Encoding(encoding);
-            condition.payload.inlined = (packed & 2) != 0;
+            uint256 size = ((packed >> 1) & 0x1FFF) * 32;
+            condition.payload.inlined = size > 0;
+            condition.payload.size = size;
             condition.payload.leadingBytes = leadingBytes;
 
             if (condition.operator == Operator.EqualToAvatar) {
