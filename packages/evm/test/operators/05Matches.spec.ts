@@ -67,7 +67,6 @@ describe("Operator - Matches", () => {
           ConditionViolationStatus.ParameterNotAllowed,
           2, // EqualTo node
           anyValue,
-          anyValue,
         );
     });
   });
@@ -113,7 +112,6 @@ describe("Operator - Matches", () => {
           ConditionViolationStatus.LeadingBytesNotAMatch,
           1, // Matches node with prefix
           anyValue,
-          anyValue,
         );
     });
 
@@ -151,7 +149,6 @@ describe("Operator - Matches", () => {
         .withArgs(
           ConditionViolationStatus.ParameterNotAllowed,
           2, // EqualTo node
-          anyValue,
           anyValue,
         );
     });
@@ -200,7 +197,6 @@ describe("Operator - Matches", () => {
           ConditionViolationStatus.LeadingBytesNotAMatch,
           1, // Matches node with prefix
           anyValue,
-          anyValue,
         );
 
       // Correct prefix + wrong param fails with ParameterNotAllowed
@@ -211,7 +207,6 @@ describe("Operator - Matches", () => {
         .withArgs(
           ConditionViolationStatus.ParameterNotAllowed,
           2, // EqualTo node
-          anyValue,
           anyValue,
         );
     });
@@ -259,7 +254,6 @@ describe("Operator - Matches", () => {
         .withArgs(
           ConditionViolationStatus.LeadingBytesNotAMatch,
           1, // Matches node with prefix
-          anyValue,
           anyValue,
         );
     });
@@ -333,7 +327,6 @@ describe("Operator - Matches", () => {
           ConditionViolationStatus.ParameterNotAllowed,
           1, // First EqualTo node
           anyValue,
-          anyValue,
         );
 
       // Second param wrong - fails
@@ -352,7 +345,6 @@ describe("Operator - Matches", () => {
           ConditionViolationStatus.ParameterNotAllowed,
           2, // Second EqualTo node
           anyValue,
-          anyValue,
         );
 
       // Third param wrong - fails
@@ -370,7 +362,6 @@ describe("Operator - Matches", () => {
         .withArgs(
           ConditionViolationStatus.ParameterNotAllowed,
           3, // Third EqualTo node
-          anyValue,
           anyValue,
         );
     });
@@ -415,7 +406,6 @@ describe("Operator - Matches", () => {
         .withArgs(
           ConditionViolationStatus.ParameterNotAllowed,
           2, // EtherValue EqualTo node (BFS: And=0, Matches=1, EtherValue=2, Static=3)
-          anyValue,
           anyValue,
         );
     });
@@ -465,7 +455,6 @@ describe("Operator - Matches", () => {
           ConditionViolationStatus.AllowanceExceeded,
           2, // Second WithinAllowance node
           anyValue,
-          anyValue,
         );
     });
   });
@@ -499,7 +488,6 @@ describe("Operator - Matches", () => {
           ConditionViolationStatus.ParameterNotAllowed,
           2, // EqualTo child node at BFS index 2
           anyValue,
-          anyValue,
         );
     });
 
@@ -531,7 +519,6 @@ describe("Operator - Matches", () => {
           ConditionViolationStatus.ParameterNotAllowed,
           anyValue,
           36, // payloadLocation: second param starts at byte 36 (4 + 32)
-          32, // payloadSize: uint256 is 32 bytes
         );
     });
   });

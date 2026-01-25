@@ -86,33 +86,22 @@ library ConditionLogic {
             }
         } else {
             if (operator <= Operator.LessThan) {
-                uint256 payloadSize = condition.payload.size != 0
-                    ? condition.payload.size
-                    : AbiDecoder.getSize(data, location, condition);
                 return
                     _result(
                         _compare(data, location, condition, context),
                         condition,
                         location,
-                        payloadSize,
                         consumptions
                     );
             } else if (operator <= Operator.SignedIntLessThan) {
-                uint256 payloadSize = condition.payload.size != 0
-                    ? condition.payload.size
-                    : AbiDecoder.getSize(data, location, condition);
                 return
                     _result(
                         _compareSignedInt(data, location, condition, context),
                         condition,
                         location,
-                        payloadSize,
                         consumptions
                     );
             } else if (operator == Operator.Bitmask) {
-                uint256 payloadSize = condition.payload.size != 0
-                    ? condition.payload.size
-                    : AbiDecoder.getSize(data, location, condition);
                 return
                     _result(
                         BitmaskChecker.check(
@@ -123,7 +112,6 @@ library ConditionLogic {
                         ),
                         condition,
                         location,
-                        payloadSize,
                         consumptions
                     );
             } else if (operator == Operator.WithinAllowance) {
@@ -132,11 +120,10 @@ library ConditionLogic {
                         uint256(__input(data, location, condition, context)),
                         condition,
                         location,
-                        consumptions,
-                        data
+                        consumptions
                     );
             } else if (operator == Operator.CallWithinAllowance) {
-                return __allowance(1, condition, location, consumptions, data);
+                return __allowance(1, condition, location, consumptions);
             } else if (operator == Operator.WithinRatio) {
                 // WithinRatio uses plucked values, not a direct payload location
                 return
@@ -150,9 +137,6 @@ library ConditionLogic {
                     );
             } else {
                 assert(operator == Operator.Custom);
-                uint256 payloadSize = condition.payload.size != 0
-                    ? condition.payload.size
-                    : AbiDecoder.getSize(data, location, condition);
                 return
                     _result(
                         CustomConditionChecker.check(
@@ -162,12 +146,11 @@ library ConditionLogic {
                             data,
                             context.operation,
                             location,
-                            payloadSize,
+                            condition,
                             context.pluckedValues
                         ),
                         condition,
                         location,
-                        payloadSize,
                         consumptions
                     );
             }
@@ -284,16 +267,8 @@ library ConditionLogic {
             }
         }
 
-        // Use the last child's payloadSize for the Or violation
-        // (all children see the same payload, so any child's size works)
         return
-            _violation(
-                Status.OrViolation,
-                condition,
-                location,
-                result.payloadSize,
-                consumptions
-            );
+            _violation(Status.OrViolation, condition, location, consumptions);
     }
 
     function _arraySome(
@@ -324,13 +299,11 @@ library ConditionLogic {
             }
         }
 
-        uint256 payloadSize = AbiDecoder.getSize(data, location, condition);
         return
             _violation(
                 Status.NoArrayElementPasses,
                 condition,
                 location,
-                payloadSize,
                 consumptions
             );
     }
@@ -453,11 +426,6 @@ library ConditionLogic {
         // Restore original size (in case condition is reused)
         childCondition.payload.size = originalSize;
 
-        // If child violated, override payloadSize with the actual slice size
-        if (result.status != Status.Ok) {
-            result.payloadSize = size;
-        }
-
         return result;
     }
 
@@ -512,8 +480,7 @@ library ConditionLogic {
         uint256 value,
         Condition memory condition,
         uint256 location,
-        Consumption[] memory consumptions,
-        bytes calldata data
+        Consumption[] memory consumptions
     ) private view returns (Result memory) {
         (
             Status status,
@@ -524,11 +491,7 @@ library ConditionLogic {
                 condition.compValue
             );
 
-        uint256 payloadSize = condition.payload.size != 0
-            ? condition.payload.size
-            : AbiDecoder.getSize(data, location, condition);
-        return
-            _result(status, condition, location, payloadSize, nextConsumptions);
+        return _result(status, condition, location, nextConsumptions);
     }
 
     /**
@@ -612,25 +575,6 @@ library ConditionLogic {
                 : _violation(status, condition, location, consumptions);
     }
 
-    function _result(
-        Status status,
-        Condition memory condition,
-        uint256 location,
-        uint256 payloadSize,
-        Consumption[] memory consumptions
-    ) private pure returns (Result memory) {
-        return
-            status == Status.Ok
-                ? _ok(consumptions)
-                : _violation(
-                    status,
-                    condition,
-                    location,
-                    payloadSize,
-                    consumptions
-                );
-    }
-
     function _ok(
         Consumption[] memory consumptions
     ) private pure returns (Result memory) {
@@ -639,7 +583,6 @@ library ConditionLogic {
                 status: Status.Ok,
                 violatedNodeIndex: 0,
                 payloadLocation: 0,
-                payloadSize: 0,
                 consumptions: consumptions
             });
     }
@@ -655,24 +598,6 @@ library ConditionLogic {
                 status: status,
                 violatedNodeIndex: condition.index,
                 payloadLocation: location,
-                payloadSize: 0,
-                consumptions: consumptions
-            });
-    }
-
-    function _violation(
-        Status status,
-        Condition memory condition,
-        uint256 location,
-        uint256 payloadSize,
-        Consumption[] memory consumptions
-    ) private pure returns (Result memory) {
-        return
-            Result({
-                status: status,
-                violatedNodeIndex: condition.index,
-                payloadLocation: location,
-                payloadSize: payloadSize,
                 consumptions: consumptions
             });
     }

@@ -63,7 +63,6 @@ describe("Operator - LessThan", () => {
         ConditionViolationStatus.ParameterGreaterThanAllowed,
         1,
         anyValue,
-        anyValue,
       );
 
     // 101 > 100 fails
@@ -72,7 +71,6 @@ describe("Operator - LessThan", () => {
       .withArgs(
         ConditionViolationStatus.ParameterGreaterThanAllowed,
         1,
-        anyValue,
         anyValue,
       );
   });
@@ -113,7 +111,6 @@ describe("Operator - LessThan", () => {
       .withArgs(
         ConditionViolationStatus.ParameterGreaterThanAllowed,
         2,
-        anyValue,
         anyValue,
       );
   });
@@ -169,7 +166,6 @@ describe("Operator - LessThan", () => {
         ConditionViolationStatus.ParameterGreaterThanAllowed,
         0,
         anyValue,
-        anyValue,
       );
   });
 
@@ -198,7 +194,6 @@ describe("Operator - LessThan", () => {
           ConditionViolationStatus.ParameterGreaterThanAllowed,
           1, // LessThan node at BFS index 1
           anyValue,
-          anyValue,
         );
     });
 
@@ -226,7 +221,6 @@ describe("Operator - LessThan", () => {
           ConditionViolationStatus.ParameterGreaterThanAllowed,
           anyValue,
           4, // payloadLocation: parameter starts at byte 4
-          32, // payloadSize: uint256 is 32 bytes
         );
     });
   });

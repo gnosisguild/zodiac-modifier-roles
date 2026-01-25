@@ -119,7 +119,6 @@ describe("Operator - WithinRatio", () => {
               ConditionViolationStatus.RatioAboveMax,
               2, // WithinRatio node
               anyValue,
-              anyValue,
             );
         });
 
@@ -217,7 +216,6 @@ describe("Operator - WithinRatio", () => {
               ConditionViolationStatus.RatioBelowMin,
               2, // WithinRatio node
               anyValue,
-              anyValue,
             );
         });
 
@@ -289,7 +287,6 @@ describe("Operator - WithinRatio", () => {
             ConditionViolationStatus.RatioBelowMin,
             2, // WithinRatio node
             anyValue,
-            anyValue,
           );
       });
 
@@ -334,7 +331,6 @@ describe("Operator - WithinRatio", () => {
           .withArgs(
             ConditionViolationStatus.RatioAboveMax,
             2, // WithinRatio node
-            anyValue,
             anyValue,
           );
       });
@@ -382,7 +378,6 @@ describe("Operator - WithinRatio", () => {
             ConditionViolationStatus.RatioAboveMax,
             2, // WithinRatio node
             anyValue,
-            anyValue,
           );
       });
     });
@@ -424,7 +419,6 @@ describe("Operator - WithinRatio", () => {
           .withArgs(
             ConditionViolationStatus.RatioBelowMin,
             2, // WithinRatio node
-            anyValue,
             anyValue,
           );
       });
@@ -469,7 +463,6 @@ describe("Operator - WithinRatio", () => {
           .withArgs(
             ConditionViolationStatus.RatioBelowMin,
             2, // WithinRatio node
-            anyValue,
             anyValue,
           );
       });
@@ -517,7 +510,6 @@ describe("Operator - WithinRatio", () => {
           .withArgs(
             ConditionViolationStatus.RatioAboveMax,
             2, // WithinRatio node
-            anyValue,
             anyValue,
           );
       });
@@ -626,7 +618,6 @@ describe("Operator - WithinRatio", () => {
             ConditionViolationStatus.PricingAdapterNotAContract,
             2, // WithinRatio node
             anyValue,
-            anyValue,
           );
       });
 
@@ -656,7 +647,6 @@ describe("Operator - WithinRatio", () => {
           .withArgs(
             ConditionViolationStatus.PricingAdapterNotAContract,
             2, // WithinRatio node
-            anyValue,
             anyValue,
           );
       });
@@ -689,7 +679,6 @@ describe("Operator - WithinRatio", () => {
           .withArgs(
             ConditionViolationStatus.PricingAdapterReverted,
             2, // WithinRatio node
-            anyValue,
             anyValue,
           );
       });
@@ -726,7 +715,6 @@ describe("Operator - WithinRatio", () => {
             ConditionViolationStatus.PricingAdapterReverted,
             2, // WithinRatio node
             anyValue,
-            anyValue,
           );
       });
 
@@ -761,7 +749,6 @@ describe("Operator - WithinRatio", () => {
             ConditionViolationStatus.PricingAdapterInvalidResult,
             2, // WithinRatio node
             anyValue,
-            anyValue,
           );
       });
 
@@ -792,7 +779,6 @@ describe("Operator - WithinRatio", () => {
           .withArgs(
             ConditionViolationStatus.PricingAdapterZeroPrice,
             2, // WithinRatio node
-            anyValue,
             anyValue,
           );
       });
@@ -836,7 +822,6 @@ describe("Operator - WithinRatio", () => {
           ConditionViolationStatus.RatioBelowMin,
           2, // WithinRatio node
           anyValue,
-          anyValue,
         );
 
       // Selling 10 ETH for 20,120 USD → 100.6% > 100.5%
@@ -845,7 +830,6 @@ describe("Operator - WithinRatio", () => {
         .withArgs(
           ConditionViolationStatus.RatioAboveMax,
           2, // WithinRatio node
-          anyValue,
           anyValue,
         );
     });
@@ -887,7 +871,6 @@ describe("Operator - WithinRatio", () => {
           ConditionViolationStatus.RatioBelowMin,
           2, // WithinRatio node
           anyValue,
-          anyValue,
         );
 
       // Selling 75 ETH for 1.06 BTC → 106% > 105%
@@ -896,7 +879,6 @@ describe("Operator - WithinRatio", () => {
         .withArgs(
           ConditionViolationStatus.RatioAboveMax,
           2, // WithinRatio node
-          anyValue,
           anyValue,
         );
     });
@@ -937,7 +919,6 @@ describe("Operator - WithinRatio", () => {
           ConditionViolationStatus.RatioBelowMin,
           2, // WithinRatio node
           anyValue,
-          anyValue,
         );
     });
 
@@ -965,7 +946,6 @@ describe("Operator - WithinRatio", () => {
         .withArgs(
           ConditionViolationStatus.RatioBelowMin,
           2, // WithinRatio node
-          anyValue,
           anyValue,
         );
 
@@ -1012,7 +992,6 @@ describe("Operator - WithinRatio", () => {
           ConditionViolationStatus.RatioAboveMax,
           2, // WithinRatio node
           anyValue,
-          anyValue,
         );
     });
 
@@ -1053,7 +1032,6 @@ describe("Operator - WithinRatio", () => {
         .withArgs(
           ConditionViolationStatus.RatioBelowMin,
           2, // WithinRatio node
-          anyValue,
           anyValue,
         );
     });
@@ -1097,7 +1075,6 @@ describe("Operator - WithinRatio", () => {
           ConditionViolationStatus.RatioBelowMin,
           2, // WithinRatio node
           anyValue,
-          anyValue,
         );
 
       // Relative: 1.051 WBTC → 78.825 / 75 = 105.1% → fail
@@ -1106,7 +1083,6 @@ describe("Operator - WithinRatio", () => {
         .withArgs(
           ConditionViolationStatus.RatioAboveMax,
           2, // WithinRatio node
-          anyValue,
           anyValue,
         );
     });
@@ -1152,7 +1128,6 @@ describe("Operator - WithinRatio", () => {
           ConditionViolationStatus.RatioBelowMin,
           2, // WithinRatio node
           anyValue,
-          anyValue,
         );
 
       // Relative: 50,600 FunkyToken × $2 = $101,200 → 101.2% > 101%
@@ -1161,7 +1136,6 @@ describe("Operator - WithinRatio", () => {
         .withArgs(
           ConditionViolationStatus.RatioAboveMax,
           2, // WithinRatio node
-          anyValue,
           anyValue,
         );
     });
@@ -1235,7 +1209,6 @@ describe("Operator - WithinRatio", () => {
         .withArgs(
           ConditionViolationStatus.RatioAboveMax,
           2, // WithinRatio node (And=0, Matches=1, WithinRatio=2)
-          anyValue,
           anyValue,
         );
     });
@@ -1323,7 +1296,6 @@ describe("Operator - WithinRatio", () => {
           ConditionViolationStatus.RatioAboveMax,
           2, // WithinRatio node: And[0] -> Matches[1], WithinRatio[2]
           anyValue,
-          anyValue,
         );
     });
 
@@ -1407,7 +1379,6 @@ describe("Operator - WithinRatio", () => {
           ConditionViolationStatus.RatioAboveMax,
           2, // WithinRatio node: And[0] -> Matches[1], WithinRatio[2]
           anyValue,
-          anyValue,
         );
     });
 
@@ -1488,7 +1459,6 @@ describe("Operator - WithinRatio", () => {
           ConditionViolationStatus.RatioAboveMax,
           4, // WithinRatio: Matches[0] -> Pluck[1], And[2] -> Pluck[3], WithinRatio[4]
           anyValue,
-          anyValue,
         );
     });
 
@@ -1563,7 +1533,6 @@ describe("Operator - WithinRatio", () => {
         .withArgs(
           ConditionViolationStatus.RatioAboveMax,
           2, // WithinRatio node: And[0] -> Matches[1], WithinRatio[2]
-          anyValue,
           anyValue,
         );
     });
@@ -1658,7 +1627,6 @@ describe("Operator - WithinRatio", () => {
           ConditionViolationStatus.RatioAboveMax,
           3, // WithinRatio node: And[0] -> Matches[1], Pluck[2], WithinRatio[3]
           anyValue,
-          anyValue,
         );
     });
   });
@@ -1688,7 +1656,6 @@ describe("Operator - WithinRatio", () => {
           ConditionViolationStatus.RatioBelowMin,
           2, // WithinRatio node at BFS index 3
           anyValue,
-          anyValue,
         );
     });
 
@@ -1716,7 +1683,6 @@ describe("Operator - WithinRatio", () => {
           ConditionViolationStatus.RatioAboveMax,
           anyValue,
           0, // payloadLocation: WithinRatio uses plucked values, no direct payload
-          0, // payloadSize: no direct payload
         );
     });
   });

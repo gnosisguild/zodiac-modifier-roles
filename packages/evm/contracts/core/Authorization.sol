@@ -142,8 +142,7 @@ abstract contract Authorization is RolesStorage {
             revert ConditionViolation(
                 result.status,
                 result.violatedNodeIndex,
-                result.payloadLocation,
-                result.payloadSize
+                result.payloadLocation
             );
         }
 

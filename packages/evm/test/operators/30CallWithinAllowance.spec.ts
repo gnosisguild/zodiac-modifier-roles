@@ -106,7 +106,6 @@ describe("Operator - CallWithinAllowance", async () => {
           ConditionViolationStatus.AllowanceExceeded,
           0, // CallWithinAllowance node (root)
           anyValue,
-          anyValue,
         );
     });
 
@@ -131,7 +130,6 @@ describe("Operator - CallWithinAllowance", async () => {
           ConditionViolationStatus.AllowanceExceeded,
           0, // CallWithinAllowance node (root)
           anyValue,
-          anyValue,
         );
     });
 
@@ -148,7 +146,6 @@ describe("Operator - CallWithinAllowance", async () => {
           ConditionViolationStatus.AllowanceExceeded,
           0, // CallWithinAllowance node (root)
           anyValue,
-          anyValue,
         );
     });
 
@@ -163,7 +160,6 @@ describe("Operator - CallWithinAllowance", async () => {
         .withArgs(
           ConditionViolationStatus.AllowanceExceeded,
           0, // CallWithinAllowance node (root)
-          anyValue,
           anyValue,
         );
     });
@@ -249,7 +245,6 @@ describe("Operator - CallWithinAllowance", async () => {
           ConditionViolationStatus.OrViolation,
           0, // Or node
           anyValue,
-          anyValue,
         );
 
       await expect(invoke(value1))
@@ -257,7 +252,6 @@ describe("Operator - CallWithinAllowance", async () => {
         .withArgs(
           ConditionViolationStatus.OrViolation,
           0, // Or node
-          anyValue,
           anyValue,
         );
 
@@ -267,7 +261,6 @@ describe("Operator - CallWithinAllowance", async () => {
         .withArgs(
           ConditionViolationStatus.OrViolation,
           0, // Or node
-          anyValue,
           anyValue,
         );
     });
@@ -318,7 +311,6 @@ describe("Operator - CallWithinAllowance", async () => {
           ConditionViolationStatus.ParameterNotAllowed,
           3, // EqualTo node
           anyValue,
-          anyValue,
         );
 
       // Correct param - should succeed (3 times)
@@ -337,7 +329,6 @@ describe("Operator - CallWithinAllowance", async () => {
         .withArgs(
           ConditionViolationStatus.AllowanceExceeded,
           2, // CallWithinAllowance node
-          anyValue,
           anyValue,
         );
     });
@@ -401,7 +392,6 @@ describe("Operator - CallWithinAllowance", async () => {
           ConditionViolationStatus.OrViolation,
           3, // Or node
           anyValue,
-          anyValue,
         );
 
       // Allowed value A - should succeed
@@ -427,14 +417,12 @@ describe("Operator - CallWithinAllowance", async () => {
           ConditionViolationStatus.AllowanceExceeded,
           2, // CallWithinAllowance node
           anyValue,
-          anyValue,
         );
       await expect(invoke(allowedValueB))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.AllowanceExceeded,
           2, // CallWithinAllowance node
-          anyValue,
           anyValue,
         );
     });
@@ -513,7 +501,6 @@ describe("Operator - CallWithinAllowance", async () => {
           ConditionViolationStatus.ParameterNotAllowed,
           3, // EqualTo: Matches[0] -> Pass[1], And[2] -> EqualTo[3], CallWithinAllowance[4]
           anyValue,
-          anyValue,
         );
 
       // Correct second param (42) - should succeed and consume allowance
@@ -529,7 +516,6 @@ describe("Operator - CallWithinAllowance", async () => {
         .withArgs(
           ConditionViolationStatus.AllowanceExceeded,
           4, // CallWithinAllowance node
-          anyValue,
           anyValue,
         );
     });
@@ -615,7 +601,6 @@ describe("Operator - CallWithinAllowance", async () => {
           ConditionViolationStatus.AllowanceExceeded,
           0, // CallWithinAllowance as root node
           anyValue,
-          anyValue,
         );
     });
 
@@ -681,7 +666,6 @@ describe("Operator - CallWithinAllowance", async () => {
           ConditionViolationStatus.AllowanceExceeded,
           0, // CallWithinAllowance as root node
           anyValue,
-          anyValue,
         );
     });
   });
@@ -728,7 +712,6 @@ describe("Operator - CallWithinAllowance", async () => {
           ConditionViolationStatus.AllowanceExceeded,
           0, // CallWithinAllowance node (root)
           anyValue,
-          anyValue,
         );
     });
 
@@ -773,7 +756,6 @@ describe("Operator - CallWithinAllowance", async () => {
           ConditionViolationStatus.AllowanceExceeded,
           anyValue,
           0, // payloadLocation: CallWithinAllowance has no payload
-          0, // payloadSize: no payload
         );
     });
   });

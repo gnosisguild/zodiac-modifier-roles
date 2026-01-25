@@ -90,7 +90,6 @@ describe("Operator - WithinAllowance", async () => {
           ConditionViolationStatus.AllowanceExceeded,
           1, // WithinAllowance node
           anyValue,
-          anyValue,
         );
 
       await expect(invoke(1000)).to.not.be.reverted;
@@ -99,7 +98,6 @@ describe("Operator - WithinAllowance", async () => {
         .withArgs(
           ConditionViolationStatus.AllowanceExceeded,
           1, // WithinAllowance node
-          anyValue,
           anyValue,
         );
     });
@@ -138,7 +136,6 @@ describe("Operator - WithinAllowance", async () => {
           ConditionViolationStatus.AllowanceExceeded,
           1, // WithinAllowance node
           anyValue,
-          anyValue,
         );
       await expect(invoke(333)).to.not.be.reverted;
       await expect(invoke(1))
@@ -146,7 +143,6 @@ describe("Operator - WithinAllowance", async () => {
         .withArgs(
           ConditionViolationStatus.AllowanceExceeded,
           1, // WithinAllowance node
-          anyValue,
           anyValue,
         );
     });
@@ -185,7 +181,6 @@ describe("Operator - WithinAllowance", async () => {
           ConditionViolationStatus.AllowanceExceeded,
           1, // WithinAllowance node
           anyValue,
-          anyValue,
         );
 
       await expect(invoke(350)).to.not.be.reverted;
@@ -194,7 +189,6 @@ describe("Operator - WithinAllowance", async () => {
         .withArgs(
           ConditionViolationStatus.AllowanceExceeded,
           1, // WithinAllowance node
-          anyValue,
           anyValue,
         );
     });
@@ -232,7 +226,6 @@ describe("Operator - WithinAllowance", async () => {
           ConditionViolationStatus.AllowanceExceeded,
           1, // WithinAllowance node
           anyValue,
-          anyValue,
         );
 
       await expect(invoke(250)).to.not.be.reverted;
@@ -241,7 +234,6 @@ describe("Operator - WithinAllowance", async () => {
         .withArgs(
           ConditionViolationStatus.AllowanceExceeded,
           1, // WithinAllowance node
-          anyValue,
           anyValue,
         );
     });
@@ -282,7 +274,6 @@ describe("Operator - WithinAllowance", async () => {
           ConditionViolationStatus.AllowanceExceeded,
           1, // WithinAllowance node
           anyValue,
-          anyValue,
         );
 
       await expect(invoke(1000)).to.not.be.reverted;
@@ -321,7 +312,6 @@ describe("Operator - WithinAllowance", async () => {
         .withArgs(
           ConditionViolationStatus.AllowanceExceeded,
           1, // WithinAllowance node
-          anyValue,
           anyValue,
         );
 
@@ -363,7 +353,6 @@ describe("Operator - WithinAllowance", async () => {
         .withArgs(
           ConditionViolationStatus.AllowanceValueOverflow,
           1, // WithinAllowance node
-          anyValue,
           anyValue,
         );
     });
@@ -413,7 +402,6 @@ describe("Operator - WithinAllowance", async () => {
         .withArgs(
           ConditionViolationStatus.AllowanceExceeded,
           1, // First WithinAllowance node
-          anyValue,
           anyValue,
         );
       allowance = await roles.accruedAllowance(allowanceKey);
@@ -514,7 +502,6 @@ describe("Operator - WithinAllowance", async () => {
         .withArgs(
           ConditionViolationStatus.AllowanceExceeded,
           2, // Second WithinAllowance node (first consumes 3000, second fails with 1)
-          anyValue,
           anyValue,
         );
       allowance = await roles.accruedAllowance(allowanceKey);
@@ -773,7 +760,6 @@ describe("Operator - WithinAllowance", async () => {
           ConditionViolationStatus.AllowanceExceeded,
           1, // WithinAllowance node
           anyValue,
-          anyValue,
         );
     });
 
@@ -925,7 +911,6 @@ describe("Operator - WithinAllowance", async () => {
           ConditionViolationStatus.AllowanceExceeded,
           1, // WithinAllowance node
           anyValue,
-          anyValue,
         );
     });
 
@@ -1010,7 +995,6 @@ describe("Operator - WithinAllowance", async () => {
         .withArgs(
           ConditionViolationStatus.AllowanceExceeded,
           1, // WithinAllowance node
-          anyValue,
           anyValue,
         );
     });
@@ -1099,7 +1083,6 @@ describe("Operator - WithinAllowance", async () => {
           ConditionViolationStatus.AllowanceExceeded,
           1, // WithinAllowance node
           anyValue,
-          anyValue,
         );
     });
 
@@ -1184,7 +1167,6 @@ describe("Operator - WithinAllowance", async () => {
         .withArgs(
           ConditionViolationStatus.AllowanceExceeded,
           1, // WithinAllowance node
-          anyValue,
           anyValue,
         );
     });
@@ -1340,7 +1322,6 @@ describe("Operator - WithinAllowance", async () => {
         .withArgs(
           ConditionViolationStatus.AllowanceExceeded,
           1, // First WithinAllowance node
-          anyValue,
           anyValue,
         );
     });
@@ -1501,7 +1482,6 @@ describe("Operator - WithinAllowance", async () => {
           ConditionViolationStatus.PricingAdapterNotAContract,
           1, // WithinAllowance node
           anyValue,
-          anyValue,
         );
     });
 
@@ -1546,7 +1526,6 @@ describe("Operator - WithinAllowance", async () => {
         .withArgs(
           ConditionViolationStatus.PricingAdapterReverted,
           1, // WithinAllowance node
-          anyValue,
           anyValue,
         );
     });
@@ -1593,7 +1572,6 @@ describe("Operator - WithinAllowance", async () => {
           ConditionViolationStatus.PricingAdapterReverted,
           1, // WithinAllowance node
           anyValue,
-          anyValue,
         );
     });
 
@@ -1639,7 +1617,6 @@ describe("Operator - WithinAllowance", async () => {
           ConditionViolationStatus.PricingAdapterInvalidResult,
           1, // WithinAllowance node
           anyValue,
-          anyValue,
         );
     });
 
@@ -1682,7 +1659,6 @@ describe("Operator - WithinAllowance", async () => {
         .withArgs(
           ConditionViolationStatus.PricingAdapterZeroPrice,
           1, // WithinAllowance node
-          anyValue,
           anyValue,
         );
     });
@@ -1766,7 +1742,6 @@ describe("Operator - WithinAllowance", async () => {
           ConditionViolationStatus.AllowanceExceeded,
           2, // WithinAllowance node: And[0] -> Matches[1], WithinAllowance[2]
           anyValue,
-          anyValue,
         );
 
       // Within allowance
@@ -1785,7 +1760,6 @@ describe("Operator - WithinAllowance", async () => {
         .withArgs(
           ConditionViolationStatus.AllowanceExceeded,
           2, // WithinAllowance node: And[0] -> Matches[1], WithinAllowance[2]
-          anyValue,
           anyValue,
         );
     });
@@ -1826,7 +1800,6 @@ describe("Operator - WithinAllowance", async () => {
           ConditionViolationStatus.AllowanceExceeded,
           1, // WithinAllowance node at BFS index 1
           anyValue,
-          anyValue,
         );
     });
 
@@ -1864,7 +1837,6 @@ describe("Operator - WithinAllowance", async () => {
           ConditionViolationStatus.AllowanceExceeded,
           anyValue,
           4, // payloadLocation: parameter starts at byte 4
-          32, // payloadSize: uint256 is 32 bytes
         );
     });
   });

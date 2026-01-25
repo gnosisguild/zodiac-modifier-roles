@@ -42,8 +42,7 @@ interface IRolesError {
     error ConditionViolation(
         Status status,
         uint256 violatedNodeIndex,
-        uint256 payloadLocation,
-        uint256 payloadSize
+        uint256 location
     );
 
     /// Target address is not allowed for this role

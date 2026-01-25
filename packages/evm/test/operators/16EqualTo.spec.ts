@@ -71,7 +71,6 @@ describe("Operator - EqualTo", () => {
           ConditionViolationStatus.ParameterNotAllowed,
           1, // EqualTo node
           anyValue,
-          anyValue,
         );
     });
 
@@ -111,7 +110,6 @@ describe("Operator - EqualTo", () => {
         .withArgs(
           ConditionViolationStatus.ParameterNotAllowed,
           2, // EqualTo node under Slice
-          anyValue,
           anyValue,
         );
     });
@@ -154,7 +152,6 @@ describe("Operator - EqualTo", () => {
         .withArgs(
           ConditionViolationStatus.ParameterNotAllowed,
           2, // EtherValue/EqualTo node: And[0] -> Matches[1], EqualTo[2]
-          anyValue,
           anyValue,
         );
     });
@@ -288,7 +285,6 @@ describe("Operator - EqualTo", () => {
           ConditionViolationStatus.ParameterNotAllowed,
           1, // EqualTo node
           anyValue,
-          anyValue,
         );
     });
   });
@@ -317,12 +313,7 @@ describe("Operator - EqualTo", () => {
 
       await expect(invoke("0xaa"))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(
-          ConditionViolationStatus.ParameterNotAllowed,
-          1,
-          anyValue,
-          anyValue,
-        );
+        .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1, anyValue);
     });
 
     it("matches 10-byte dynamic value", async () => {
@@ -350,12 +341,7 @@ describe("Operator - EqualTo", () => {
 
       await expect(invoke("0x00112233445566778800"))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(
-          ConditionViolationStatus.ParameterNotAllowed,
-          1,
-          anyValue,
-          anyValue,
-        );
+        .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1, anyValue);
     });
 
     it("matches 32-byte dynamic value", async () => {
@@ -383,12 +369,7 @@ describe("Operator - EqualTo", () => {
 
       await expect(invoke("0x" + "ff".repeat(32)))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(
-          ConditionViolationStatus.ParameterNotAllowed,
-          1,
-          anyValue,
-          anyValue,
-        );
+        .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1, anyValue);
     });
 
     it("matches 33-byte dynamic value and fails on length mismatch", async () => {
@@ -417,12 +398,7 @@ describe("Operator - EqualTo", () => {
 
       await expect(invoke(bytes32))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(
-          ConditionViolationStatus.ParameterNotAllowed,
-          1,
-          anyValue,
-          anyValue,
-        );
+        .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1, anyValue);
     });
 
     it("matches 100-byte dynamic value", async () => {
@@ -452,12 +428,7 @@ describe("Operator - EqualTo", () => {
 
       await expect(invoke("0x" + "ff".repeat(100)))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(
-          ConditionViolationStatus.ParameterNotAllowed,
-          1,
-          anyValue,
-          anyValue,
-        );
+        .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1, anyValue);
     });
   });
 
@@ -756,12 +727,7 @@ describe("Operator - EqualTo", () => {
             ),
         )
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
-          .withArgs(
-            ConditionViolationStatus.ParameterNotAllowed,
-            1,
-            anyValue,
-            anyValue,
-          );
+          .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1, anyValue);
       });
 
       it("fails when array length differs", async () => {
@@ -811,12 +777,7 @@ describe("Operator - EqualTo", () => {
             ),
         )
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
-          .withArgs(
-            ConditionViolationStatus.ParameterNotAllowed,
-            1,
-            anyValue,
-            anyValue,
-          );
+          .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1, anyValue);
       });
     });
 
@@ -1096,12 +1057,7 @@ describe("Operator - EqualTo", () => {
             ),
         )
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
-          .withArgs(
-            ConditionViolationStatus.ParameterNotAllowed,
-            1,
-            anyValue,
-            anyValue,
-          );
+          .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1, anyValue);
       });
     });
 
@@ -1345,12 +1301,7 @@ describe("Operator - EqualTo", () => {
             ),
         )
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
-          .withArgs(
-            ConditionViolationStatus.ParameterNotAllowed,
-            1,
-            anyValue,
-            anyValue,
-          );
+          .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1, anyValue);
       });
     });
   });
@@ -1592,12 +1543,7 @@ describe("Operator - EqualTo", () => {
             ),
         )
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
-          .withArgs(
-            ConditionViolationStatus.ParameterNotAllowed,
-            1,
-            anyValue,
-            anyValue,
-          );
+          .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1, anyValue);
       });
 
       it("fails when last tuple field differs", async () => {
@@ -1670,12 +1616,7 @@ describe("Operator - EqualTo", () => {
             ),
         )
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
-          .withArgs(
-            ConditionViolationStatus.ParameterNotAllowed,
-            1,
-            anyValue,
-            anyValue,
-          );
+          .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1, anyValue);
       });
     });
 
@@ -1974,12 +1915,7 @@ describe("Operator - EqualTo", () => {
             ),
         )
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
-          .withArgs(
-            ConditionViolationStatus.ParameterNotAllowed,
-            1,
-            anyValue,
-            anyValue,
-          );
+          .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1, anyValue);
       });
     });
 
@@ -2244,12 +2180,7 @@ describe("Operator - EqualTo", () => {
             ),
         )
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
-          .withArgs(
-            ConditionViolationStatus.ParameterNotAllowed,
-            1,
-            anyValue,
-            anyValue,
-          );
+          .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1, anyValue);
       });
     });
   });
@@ -2521,12 +2452,7 @@ describe("Operator - EqualTo", () => {
             ),
         )
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
-          .withArgs(
-            ConditionViolationStatus.ParameterNotAllowed,
-            1,
-            anyValue,
-            anyValue,
-          );
+          .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1, anyValue);
       });
     });
 
@@ -2795,12 +2721,7 @@ describe("Operator - EqualTo", () => {
             ),
         )
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
-          .withArgs(
-            ConditionViolationStatus.ParameterNotAllowed,
-            1,
-            anyValue,
-            anyValue,
-          );
+          .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1, anyValue);
       });
 
       it("fails when tuple array field length differs", async () => {
@@ -2868,12 +2789,7 @@ describe("Operator - EqualTo", () => {
             ),
         )
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
-          .withArgs(
-            ConditionViolationStatus.ParameterNotAllowed,
-            1,
-            anyValue,
-            anyValue,
-          );
+          .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1, anyValue);
       });
     });
 
@@ -3164,12 +3080,7 @@ describe("Operator - EqualTo", () => {
             ),
         )
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
-          .withArgs(
-            ConditionViolationStatus.ParameterNotAllowed,
-            1,
-            anyValue,
-            anyValue,
-          );
+          .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1, anyValue);
       });
     });
 
@@ -3698,12 +3609,7 @@ describe("Operator - EqualTo", () => {
           ),
         )
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
-          .withArgs(
-            ConditionViolationStatus.ParameterNotAllowed,
-            1,
-            anyValue,
-            anyValue,
-          );
+          .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1, anyValue);
       });
     });
   });
@@ -4004,7 +3910,6 @@ describe("Operator - EqualTo", () => {
           ConditionViolationStatus.ParameterNotAllowed,
           1, // EqualTo node at BFS index 1
           anyValue,
-          anyValue,
         );
     });
 
@@ -4032,7 +3937,6 @@ describe("Operator - EqualTo", () => {
           ConditionViolationStatus.ParameterNotAllowed,
           anyValue,
           4, // payloadLocation: parameter starts at byte 4 (after selector)
-          32, // payloadSize: uint256 is 32 bytes
         );
     });
   });
