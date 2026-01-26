@@ -52,6 +52,16 @@ library TypeTree {
         layout.encoding = conditions[i].paramType == Encoding.EtherValue
             ? Encoding.None
             : conditions[i].paramType;
+
+        // Extract leadingBytes for AbiEncoded from compValue, first 2 bytes
+        // Default is 4 (selector size) when compValue is empty
+        if (layout.encoding == Encoding.AbiEncoded) {
+            bytes memory compValue = conditions[i].compValue;
+            layout.leadingBytes = compValue.length >= 2
+                ? uint16(bytes2(compValue))
+                : 4;
+        }
+
         layout.children = new Layout[](childCount);
 
         uint256 length;
@@ -69,7 +79,8 @@ library TypeTree {
             }
         }
         assembly {
-            mstore(mload(add(layout, 0x40)), length)
+            // layout.children is at offset 0x20 (second field)
+            mstore(mload(add(layout, 0x20)), length)
         }
 
         layout.inlined = Topology.isInlined(conditions, i);

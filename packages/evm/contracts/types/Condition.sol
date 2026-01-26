@@ -17,10 +17,14 @@ enum Encoding {
 struct Condition {
     /// @dev BFS index from unpacking - identifies this node in the flattened tree
     uint256 index;
+    Encoding encoding;
     Operator operator;
     bytes compValue;
     Condition[] children;
-    Payload payload;
+    /* meta fields */
+    bool inlined;
+    uint256 size;
+    uint256 leadingBytes;
 }
 
 // This struct is a flattened version of Condition
@@ -33,24 +37,26 @@ struct ConditionFlat {
     bytes compValue;
 }
 
-/// @dev Payload describes how to decode this node's data from calldata.
-///      Set during unpacking from storage.
-struct Payload {
-    Encoding encoding;
-    uint256 leadingBytes;
-    bool inlined;
-    uint256 size; // Pre-computed size for inlined nodes, or override for Slice
-}
-
-/// @dev Layout is a type tree used for EIP712 encoding and type hashing.
-///      Built at runtime by TypeTree library.
+/// @dev Layout is a type tree used for AbiDecoder and EIP712 encoding.
 struct Layout {
     Encoding encoding;
-    bool inlined;
     Layout[] children;
+    uint256 leadingBytes;
+    bool inlined;
 }
 
 struct LayoutFlat {
     uint256 parent;
     Encoding encoding;
+}
+
+/// @dev Payload is the result of AbiDecoder.inspect() - maps parameter locations.
+struct Payload {
+    uint256 location;
+    uint256 size;
+    Payload[] children;
+    /* meta flags */
+    bool inlined;
+    bool variant;
+    bool overflow;
 }

@@ -74,38 +74,30 @@ library ConditionUnpacker {
             }
 
             Condition memory condition = conditions[c];
-            condition.index = c;
-            condition.operator = Operator((packed >> 24) & 0x1F);
 
-            {
-                uint256 childCount = (packed >> 14) & 0x3FF;
-                if (childCount > 0) {
-                    /*
-                     * shallowCopy children array
-                     */
-                    assembly {
-                        let size := mul(childCount, 0x20)
-                        // free mem pointer: load
-                        let dest := mload(0x40)
-                        // free mem pointer: advance
-                        mstore(0x40, add(add(dest, 0x20), size))
-
-                        // new array: store length
-                        mstore(dest, childCount)
-                        // new array: shallow copy body
-                        mcopy(add(dest, 0x20), childConditionPtr, size)
-
-                        //condition: point to copied array
-                        mstore(add(condition, 0x60), dest)
-                        // advance child pointer
-                        childConditionPtr := add(childConditionPtr, size)
-                    }
-                }
-            }
-
+            // Extract fields from packed bits
             uint256 encoding = (packed >> 29);
+            if (encoding == 6) encoding = 0; // EtherValue -> None
+            uint256 childCount = (packed >> 14) & 0x3FF;
+            uint256 inlinedSize = ((packed >> 1) & 0x1FFF) * 32;
 
-            uint256 leadingBytes;
+            /*
+             * Set Condition fields in struct order:
+             *   0x00 index
+             *   0x20 encoding
+             *   0x40 operator
+             *   0x60 compValue     (set via assembly below)
+             *   0x80 children      (set via assembly below)
+             *   0xa0 inlined
+             *   0xc0 size
+             *   0xe0 leadingBytes  (set when parsing compValue)
+             */
+            condition.index = c;
+            condition.encoding = Encoding(encoding);
+            condition.operator = Operator((packed >> 24) & 0x1F);
+            condition.inlined = inlinedSize > 0;
+            condition.size = inlinedSize;
+
             // hasCompValue
             if ((packed & 1) != 0) {
                 uint256 length;
@@ -114,15 +106,18 @@ library ConditionUnpacker {
                     compValueOffset := add(compValueOffset, 2)
                 }
 
-                // Encoding.AbiEncoded(5)
+                // Encoding.AbiEncoded(5): first 2 bytes are leadingBytes
                 if (encoding == 5) {
+                    uint256 leadingBytes;
                     assembly {
                         leadingBytes := shr(240, mload(compValueOffset))
                         compValueOffset := add(compValueOffset, 2)
                         length := sub(length, 2)
                     }
+                    condition.leadingBytes = leadingBytes;
                 }
 
+                // parse compValue
                 if (length > 0) {
                     assembly {
                         // free mem pointer: load
@@ -135,24 +130,36 @@ library ConditionUnpacker {
                         // new buffer: copy body
                         mcopy(add(compValue, 0x20), compValueOffset, length)
 
-                        //condition: point to copied buffer
-                        mstore(add(condition, 0x40), compValue)
+                        //condition: point to copied buffer (compValue at offset 0x60)
+                        mstore(add(condition, 0x60), compValue)
                         // advance pointer
                         compValueOffset := add(compValueOffset, length)
                     }
                 }
             }
 
-            // Set payload properties directly on condition
-            // EtherValue(6) maps to None(0) for reading context.value
-            if (encoding == 6) encoding = 0;
+            // Parse children
+            if (childCount > 0) {
+                assembly {
+                    let size := mul(childCount, 0x20)
+                    // free mem pointer: load
+                    let dest := mload(0x40)
+                    // free mem pointer: advance
+                    mstore(0x40, add(add(dest, 0x20), size))
 
-            condition.payload.encoding = Encoding(encoding);
-            uint256 size = ((packed >> 1) & 0x1FFF) * 32;
-            condition.payload.inlined = size > 0;
-            condition.payload.size = size;
-            condition.payload.leadingBytes = leadingBytes;
+                    // new array: store length
+                    mstore(dest, childCount)
+                    // new array: shallow copy body
+                    mcopy(add(dest, 0x20), childConditionPtr, size)
 
+                    // condition: point to copied array (children at offset 0x80)
+                    mstore(add(condition, 0x80), dest)
+                    // advance child pointer
+                    childConditionPtr := add(childConditionPtr, size)
+                }
+            }
+
+            // EqualToAvatar: replace with EqualTo + avatar address
             if (condition.operator == Operator.EqualToAvatar) {
                 condition.operator = Operator.EqualTo;
                 address avatar;

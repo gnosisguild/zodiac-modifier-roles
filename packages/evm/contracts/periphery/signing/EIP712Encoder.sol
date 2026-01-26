@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0
 pragma solidity >=0.8.21 <0.9.0;
 
-import {Encoding, LayoutFlat} from "../../types/Condition.sol";
+import "../../common/AbiDecoder.sol";
+import {Encoding, Layout, LayoutFlat, Payload} from "../../types/Condition.sol";
 
 /**
  * @title EIP712Encoder - Encodes and hashes EIP-712 typed structured data
@@ -78,9 +79,11 @@ library EIP712Encoder {
         uint256 index
     ) private pure returns (bytes32) {
         LayoutWithIndex memory layoutWithIndex = _toTree(types.layout, index);
+        Payload memory payload = AbiDecoder
+            .inspect(data, _cast(layoutWithIndex))
+            .children[0];
 
-        // Start at location 0 for AbiEncoded data
-        return _hashBlock(data, types, layoutWithIndex.children[0], 0);
+        return _hashBlock(data, types, layoutWithIndex.children[0], payload);
     }
 
     /**
@@ -89,29 +92,22 @@ library EIP712Encoder {
      * @param data     Encoded input data.
      * @param types    Type definitions.
      * @param layout   The layout node (with index for typeHashes lookup).
-     * @param location The location of this block in calldata.
+     * @param _block   The block's location and size in calldata.
      */
     function _hashBlock(
         bytes calldata data,
         Types calldata types,
         LayoutWithIndex memory layout,
-        uint256 location
+        Payload memory _block
     ) private pure returns (bytes32) {
-        // Decode children locations
-        uint256[] memory childLocations = _getChildLocations(
-            data,
-            location,
-            layout
-        );
+        bytes32[] memory result = new bytes32[](_block.children.length);
 
-        bytes32[] memory result = new bytes32[](childLocations.length);
-
-        for (uint256 i = 0; i < childLocations.length; i++) {
+        for (uint256 i = 0; i < _block.children.length; i++) {
             result[i] = _encodeField(
                 data,
                 types,
                 layout.children[layout.encoding == Encoding.Array ? 0 : i],
-                childLocations[i]
+                _block.children[i]
             );
         }
 
@@ -125,38 +121,38 @@ library EIP712Encoder {
 
     /**
      * @dev Hashes Dynamic field
-     * @param data     Encoded input data.
-     * @param location The location of this dynamic field.
+     * @param data    Encoded input data.
+     * @param dynamic The field's location and size in calldata.
      */
     function _hashDynamic(
         bytes calldata data,
-        uint256 location
+        Payload memory dynamic
     ) private pure returns (bytes32) {
-        uint256 left = location + 32;
-        uint256 length = uint256(bytes32(data[location:]));
+        uint256 left = dynamic.location + 32;
+        uint256 length = uint256(bytes32(data[dynamic.location:]));
         return keccak256(data[left:left + length]);
     }
 
     /**
      * @dev Encodes (Static) or hashes (Dynamic, Block) a field
-     * @param data     Encoded input data.
-     * @param types    Type definitions.
-     * @param layout   The layout node for this field.
-     * @param location The location of this field in calldata.
+     * @param data   Encoded input data.
+     * @param types  Type definitions.
+     * @param layout The layout node for this field.
+     * @param field  The field's location and size in calldata.
      */
     function _encodeField(
         bytes calldata data,
         Types calldata types,
         LayoutWithIndex memory layout,
-        uint256 location
+        Payload memory field
     ) private pure returns (bytes32) {
         Encoding encoding = layout.encoding;
         if (encoding == Encoding.Static) {
-            return bytes32(data[location:]);
+            return bytes32(data[field.location:]);
         } else if (encoding == Encoding.Dynamic) {
-            return _hashDynamic(data, location);
+            return _hashDynamic(data, field);
         } else {
-            return _hashBlock(data, types, layout, location);
+            return _hashBlock(data, types, layout, field);
         }
     }
 
@@ -226,55 +222,14 @@ library EIP712Encoder {
     }
 
     /**
-     * @dev Gets the locations of all direct children for a LayoutWithIndex.
+     * @dev Casts LayoutWithIndex to Layout. Safe because Layout fields are
+     *      at the same memory offsets (index is last and ignored).
      */
-    function _getChildLocations(
-        bytes calldata data,
-        uint256 location,
-        LayoutWithIndex memory layout
-    ) private pure returns (uint256[] memory childLocations) {
-        Encoding enc = layout.encoding;
-
-        uint256 childCount;
-        uint256 blockStart;
-
-        if (enc == Encoding.Array) {
-            if (location + 32 > data.length) {
-                return new uint256[](0);
-            }
-            childCount = uint256(bytes32(data[location:]));
-            blockStart = location + 32;
-        } else if (enc == Encoding.Tuple || enc == Encoding.AbiEncoded) {
-            childCount = layout.children.length;
-            blockStart = location;
-        } else {
-            return new uint256[](0);
+    function _cast(
+        LayoutWithIndex memory layoutWithIndex
+    ) private pure returns (Layout memory layout) {
+        assembly {
+            layout := layoutWithIndex
         }
-
-        if (childCount == 0) {
-            return new uint256[](0);
-        }
-
-        childLocations = new uint256[](childCount);
-        uint256 headOffset;
-
-        for (uint256 i; i < childCount; ++i) {
-            LayoutWithIndex memory child = layout.children[
-                enc == Encoding.Array ? 0 : i
-            ];
-
-            if (child.inlined) {
-                childLocations[i] = blockStart + headOffset;
-                headOffset += 32; // Static children are always 32 bytes
-            } else {
-                uint256 pointer = uint256(
-                    bytes32(data[blockStart + headOffset:])
-                );
-                childLocations[i] = blockStart + pointer;
-                headOffset += 32;
-            }
-        }
-
-        return childLocations;
     }
 }

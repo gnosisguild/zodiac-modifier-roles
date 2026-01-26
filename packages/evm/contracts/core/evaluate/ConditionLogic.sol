@@ -6,8 +6,9 @@ import "./CustomConditionChecker.sol";
 import "./WithinAllowanceChecker.sol";
 import "./WithinRatioChecker.sol";
 
+import "../../common/AbiLocator.sol";
+
 import "../../types/Types.sol";
-import "../../common/AbiDecoder.sol";
 
 /**
  * @title ConditionLogic
@@ -29,7 +30,7 @@ library ConditionLogic {
                 return _ok(consumptions);
             } else if (operator == Operator.Matches) {
                 location = location > 0 &&
-                    condition.payload.encoding == Encoding.AbiEncoded
+                    condition.encoding == Encoding.AbiEncoded
                     ? location + 32
                     : location;
                 return
@@ -53,6 +54,7 @@ library ConditionLogic {
                     _result(
                         data.length == 0 ? Status.Ok : Status.CalldataNotEmpty,
                         condition,
+                        0,
                         consumptions
                     );
             } else if (operator == Operator.ArraySome) {
@@ -108,7 +110,7 @@ library ConditionLogic {
                             data,
                             location,
                             condition.compValue,
-                            condition.payload
+                            condition.inlined
                         ),
                         condition,
                         location,
@@ -133,6 +135,7 @@ library ConditionLogic {
                             context.pluckedValues
                         ),
                         condition,
+                        0,
                         consumptions
                     );
             } else {
@@ -164,8 +167,6 @@ library ConditionLogic {
         Consumption[] memory consumptions,
         Context memory context
     ) private view returns (Result memory result) {
-        Payload memory payload = condition.payload;
-
         uint256 shift = 32 - condition.compValue.length;
         if (shift < 32) {
             /*
@@ -198,13 +199,10 @@ library ConditionLogic {
             }
         }
 
-        // For AbiEncoded, children start after leadingBytes
-        uint256 childrenStart = location + payload.leadingBytes;
-
         // Decode children locations - all children are structural
-        uint256[] memory childLocations = AbiDecoder.getChildLocations(
+        uint256[] memory childLocations = AbiLocator.getChildLocations(
             data,
-            childrenStart,
+            location + condition.leadingBytes,
             condition
         );
 
@@ -279,7 +277,7 @@ library ConditionLogic {
         Context memory context
     ) private view returns (Result memory result) {
         // Decode array element locations
-        uint256[] memory childLocations = AbiDecoder.getChildLocations(
+        uint256[] memory childLocations = AbiLocator.getChildLocations(
             data,
             location,
             condition
@@ -316,7 +314,7 @@ library ConditionLogic {
         Context memory context
     ) private view returns (Result memory result) {
         // Decode array element locations
-        uint256[] memory childLocations = AbiDecoder.getChildLocations(
+        uint256[] memory childLocations = AbiLocator.getChildLocations(
             data,
             location,
             condition
@@ -348,7 +346,7 @@ library ConditionLogic {
         Context memory context
     ) private view returns (Result memory result) {
         // Decode array element locations
-        uint256[] memory childLocations = AbiDecoder.getChildLocations(
+        uint256[] memory childLocations = AbiLocator.getChildLocations(
             data,
             location,
             condition
@@ -401,32 +399,26 @@ library ConditionLogic {
         Consumption[] memory consumptions,
         Context memory context
     ) private view returns (Result memory result) {
-        Payload memory payload = condition.payload;
-
         // compValue layout: | 2 bytes: shift | 1 byte: size (1-32)
         uint16 shift = uint16(bytes2(condition.compValue));
         uint8 size = uint8(condition.compValue[2]);
 
         // Compute sliced location
-        uint256 childLocation = location + (payload.inlined ? 0 : 32) + shift;
+        uint256 childLocation = location + (condition.inlined ? 0 : 32) + shift;
 
-        // Modify the child's layout size directly
-        Condition memory childCondition = condition.children[0];
-        uint256 originalSize = childCondition.payload.size;
-        childCondition.payload.size = size;
+        Condition memory child = condition.children[0];
+        Condition memory sliced;
 
-        result = evaluate(
-            data,
-            childCondition,
-            childLocation,
-            consumptions,
-            context
-        );
+        assembly {
+            // Shallow copy child condition
+            sliced := mload(0x40)
 
-        // Restore original size (in case condition is reused)
-        childCondition.payload.size = originalSize;
+            mstore(0x40, add(sliced, 0x100))
+            mcopy(sliced, child, 0x100)
+        }
+        sliced.size = size;
 
-        return result;
+        return evaluate(data, sliced, childLocation, consumptions, context);
     }
 
     function _compare(
@@ -512,16 +504,19 @@ library ConditionLogic {
         Condition memory condition,
         Context memory context
     ) private pure returns (bytes32 result) {
-        Payload memory payload = condition.payload;
-
-        if (payload.encoding == Encoding.None) {
+        /*
+         * Integrity rules map Encoding.EtherValue -> Encoding.None during packing.
+         * If we encounter Encoding.None here (in a comparison context), it acts as
+         * a virtual static parameter representing the transaction value.
+         */
+        if (condition.encoding == Encoding.None) {
             return bytes32(context.value);
         }
 
-        // Check if layout has size set (e.g., from Slice), otherwise get from decoder
-        uint256 size = payload.size != 0
-            ? payload.size
-            : AbiDecoder.getSize(data, location, condition);
+        // Check if condition has size set (e.g., from Slice), otherwise get from decoder
+        uint256 size = condition.size != 0
+            ? condition.size
+            : AbiLocator.getSize(data, location, condition);
 
         // Clamp size to available data (handles bounds)
         if (location < data.length) {
@@ -550,17 +545,6 @@ library ConditionLogic {
         }
 
         return bytes32(0);
-    }
-
-    function _result(
-        Status status,
-        Condition memory condition,
-        Consumption[] memory consumptions
-    ) private pure returns (Result memory) {
-        return
-            status == Status.Ok
-                ? _ok(consumptions)
-                : _violation(status, condition, consumptions);
     }
 
     function _result(
@@ -600,13 +584,5 @@ library ConditionLogic {
                 payloadLocation: location,
                 consumptions: consumptions
             });
-    }
-
-    function _violation(
-        Status status,
-        Condition memory condition,
-        Consumption[] memory consumptions
-    ) private pure returns (Result memory) {
-        return _violation(status, condition, 0, consumptions);
     }
 }

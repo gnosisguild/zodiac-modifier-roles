@@ -57,9 +57,9 @@ contract MockPackerUnpacker {
                 parent: parent,
                 operator: node.operator,
                 compValue: node.compValue,
-                encoding: node.payload.encoding,
-                inlined: node.payload.inlined,
-                size: node.payload.size
+                encoding: node.encoding,
+                inlined: node.inlined,
+                size: node.size
             });
 
             for (uint256 i = 0; i < node.children.length; ++i) {
