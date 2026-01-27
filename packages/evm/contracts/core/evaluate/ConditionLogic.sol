@@ -6,7 +6,7 @@ import "./CustomConditionChecker.sol";
 import "./WithinAllowanceChecker.sol";
 import "./WithinRatioChecker.sol";
 
-import "../../common/AbiLocator.sol";
+import "../../common/AbiLocation.sol";
 
 import "../../types/Types.sol";
 
@@ -128,13 +128,13 @@ library ConditionLogic {
                         consumptions
                     );
             } else if (operator == Operator.WithinAllowance) {
-                (bytes32 allowanceValue, bool allowanceOverflow) = __input(
+                (bytes32 allowanceValue, bool overflow) = __input(
                     data,
                     location,
                     condition,
                     context
                 );
-                if (allowanceOverflow) {
+                if (overflow) {
                     return
                         _violation(
                             Status.CalldataOverflow,
@@ -229,12 +229,11 @@ library ConditionLogic {
         }
 
         // Decode children locations - all children are structural
-        (uint256[] memory childLocations, bool overflow) = AbiLocator
-            .getChildLocations(
-                data,
-                location + condition.leadingBytes,
-                condition
-            );
+        (uint256[] memory childLocations, bool overflow) = AbiLocation.children(
+            data,
+            location + condition.leadingBytes,
+            condition
+        );
 
         if (overflow) {
             return _violation(Status.CalldataOverflow, location, condition);
@@ -314,8 +313,11 @@ library ConditionLogic {
         Context memory context
     ) private view returns (Result memory result) {
         // Decode array element locations
-        (uint256[] memory childLocations, bool overflow) = AbiLocator
-            .getChildLocations(data, location, condition);
+        (uint256[] memory childLocations, bool overflow) = AbiLocation.children(
+            data,
+            location,
+            condition
+        );
 
         if (overflow) {
             return _violation(Status.CalldataOverflow, location, condition);
@@ -346,8 +348,11 @@ library ConditionLogic {
         Context memory context
     ) private view returns (Result memory result) {
         // Decode array element locations
-        (uint256[] memory childLocations, bool overflow) = AbiLocator
-            .getChildLocations(data, location, condition);
+        (uint256[] memory childLocations, bool overflow) = AbiLocation.children(
+            data,
+            location,
+            condition
+        );
 
         if (overflow) {
             return _violation(Status.CalldataOverflow, location, condition);
@@ -379,8 +384,11 @@ library ConditionLogic {
         Context memory context
     ) private view returns (Result memory result) {
         // Decode array element locations
-        (uint256[] memory childLocations, bool overflow) = AbiLocator
-            .getChildLocations(data, location, condition);
+        (uint256[] memory childLocations, bool overflow) = AbiLocation.children(
+            data,
+            location,
+            condition
+        );
 
         if (overflow) {
             return _violation(Status.CalldataOverflow, location, condition);
@@ -556,7 +564,7 @@ library ConditionLogic {
         // Check if condition has size set (e.g., from Slice), otherwise get from decoder
         uint256 size = condition.size != 0
             ? condition.size
-            : AbiLocator.getSize(data, location, condition);
+            : AbiLocation.size(data, location, condition);
 
         if (location + size > data.length) {
             return (0, true);

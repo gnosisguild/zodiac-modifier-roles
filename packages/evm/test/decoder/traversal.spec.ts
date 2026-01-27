@@ -39,7 +39,6 @@ describe("AbiDecoder - Traversal", () => {
         defaultAbiCoder.encode(["uint256"], [value]),
       );
 
-      // Verify AbiLocator matches AbiDecoder
       const [childLocations] = await locator.getChildLocations(
         data,
         0,
@@ -73,7 +72,6 @@ describe("AbiDecoder - Traversal", () => {
         encode(["bytes"], [value], true),
       );
 
-      // Verify AbiLocator matches AbiDecoder
       const [childLocations] = await locator.getChildLocations(
         data,
         0,
@@ -106,7 +104,6 @@ describe("AbiDecoder - Traversal", () => {
         encode(["bytes"], [value], true),
       );
 
-      // Verify AbiLocator matches AbiDecoder
       const [childLocations] = await locator.getChildLocations(
         data,
         0,
@@ -139,7 +136,6 @@ describe("AbiDecoder - Traversal", () => {
         encode(["bytes"], ["0x"], true),
       );
 
-      // Verify AbiLocator matches AbiDecoder
       const [childLocations] = await locator.getChildLocations(
         data,
         0,
@@ -206,7 +202,6 @@ describe("AbiDecoder - Traversal", () => {
           ),
         ).to.equal(defaultAbiCoder.encode(["uint256"], [value[1]]));
 
-        // Verify AbiLocator matches AbiDecoder - root children
         const [rootChildLocations] = await locator.getChildLocations(
           data,
           0,
@@ -216,7 +211,6 @@ describe("AbiDecoder - Traversal", () => {
         expect(rootChildLocations.length).to.equal(root.children.length);
         expect(Number(rootChildLocations[0])).to.equal(tupleNode.location);
 
-        // Verify AbiLocator matches AbiDecoder - tuple children
         const [tupleChildLocations] = await locator.getChildLocations(
           data,
           tupleNode.location,
@@ -279,7 +273,6 @@ describe("AbiDecoder - Traversal", () => {
           await decoder.pluck(data, bytesNode.location, bytesNode.size),
         ).to.equal(encode(["bytes"], [value[0]], true));
 
-        // Verify AbiLocator matches AbiDecoder - root children
         const [rootChildLocations] = await locator.getChildLocations(
           data,
           0,
@@ -289,7 +282,6 @@ describe("AbiDecoder - Traversal", () => {
         expect(rootChildLocations.length).to.equal(root.children.length);
         expect(Number(rootChildLocations[0])).to.equal(tupleNode.location);
 
-        // Verify AbiLocator matches AbiDecoder - tuple children
         const [tupleChildLocations] = await locator.getChildLocations(
           data,
           tupleNode.location,
@@ -347,7 +339,6 @@ describe("AbiDecoder - Traversal", () => {
           ).to.equal(defaultAbiCoder.encode(["uint256"], [value[i]]));
         }
 
-        // Verify AbiLocator matches AbiDecoder - root children
         const [rootChildLocations] = await locator.getChildLocations(
           data,
           0,
@@ -357,7 +348,6 @@ describe("AbiDecoder - Traversal", () => {
         expect(rootChildLocations.length).to.equal(root.children.length);
         expect(Number(rootChildLocations[0])).to.equal(arrayNode.location);
 
-        // Verify AbiLocator matches AbiDecoder - array children
         const [elementLocations] = await locator.getChildLocations(
           data,
           arrayNode.location,
@@ -415,7 +405,6 @@ describe("AbiDecoder - Traversal", () => {
           ).to.equal(encode(["bytes"], [value[i]], true));
         }
 
-        // Verify AbiLocator matches AbiDecoder - root children
         const [rootChildLocations] = await locator.getChildLocations(
           data,
           0,
@@ -425,7 +414,6 @@ describe("AbiDecoder - Traversal", () => {
         expect(rootChildLocations.length).to.equal(root.children.length);
         expect(Number(rootChildLocations[0])).to.equal(arrayNode.location);
 
-        // Verify AbiLocator matches AbiDecoder - array children
         const [elementLocations] = await locator.getChildLocations(
           data,
           arrayNode.location,
@@ -470,7 +458,6 @@ describe("AbiDecoder - Traversal", () => {
         expect(arrayNode.size).to.equal(32);
         expect(arrayNode.children).to.have.length(0);
 
-        // Verify AbiLocator matches AbiDecoder - root children
         const [rootChildLocations] = await locator.getChildLocations(
           data,
           0,
@@ -488,7 +475,6 @@ describe("AbiDecoder - Traversal", () => {
         );
         expect(Number(size)).to.equal(arrayNode.size);
 
-        // Verify AbiLocator matches AbiDecoder - array children (empty)
         const [elementLocations] = await locator.getChildLocations(
           data,
           arrayNode.location,
@@ -558,8 +544,7 @@ describe("AbiDecoder - Traversal", () => {
           await decoder.pluck(data, secondParam.location, secondParam.size),
         ).to.equal(defaultAbiCoder.encode(["uint256"], [67890]));
 
-        // Verify AbiLocator matches AbiDecoder - root children
-        // AbiLocator expects location to point at the head region start,
+        // AbiLocation expects location to point at the head region start,
         // which for AbiEncoded is after leadingBytes
         const [rootChildLocations] = await locator.getChildLocations(
           data,
@@ -570,8 +555,7 @@ describe("AbiDecoder - Traversal", () => {
         expect(rootChildLocations.length).to.equal(root.children.length);
         expect(Number(rootChildLocations[0])).to.equal(arrayNode.location);
 
-        // Verify AbiLocator matches AbiDecoder - array children
-        // Array elements are AbiEncoded (bytes), so AbiLocator returns tail offset
+        // Array elements are AbiEncoded (bytes), so AbiLocation returns tail offset
         // (to length prefix), but AbiDecoder's location points AFTER length prefix (+32)
         const [elementLocations] = await locator.getChildLocations(
           data,
@@ -644,8 +628,7 @@ describe("AbiDecoder - Traversal", () => {
           await decoder.pluck(data, innerNode.location, innerNode.size),
         ).to.equal(defaultAbiCoder.encode(["uint256"], [innerValue]));
 
-        // Verify AbiLocator matches AbiDecoder - root children
-        // For AbiEncoded children, AbiLocator returns location of length prefix,
+        // For AbiEncoded children, AbiLocation returns location of length prefix,
         // but AbiDecoder's payload.location points AFTER length prefix (+32)
         const [outerChildLocations] = await locator.getChildLocations(
           data,
@@ -654,12 +637,11 @@ describe("AbiDecoder - Traversal", () => {
           0,
         );
         expect(outerChildLocations.length).to.equal(root.children.length);
-        // AbiLocator returns tail offset (to length prefix), add 32 to get payload.location
+        // AbiLocation returns tail offset (to length prefix), add 32 to get payload.location
         expect(Number(outerChildLocations[0]) + 32).to.equal(
           innerAbiEncoded.location,
         );
 
-        // Verify AbiLocator matches AbiDecoder - inner AbiEncoded children
         // Pass location + leadingBytes to get to head region
         const [innerChildLocations] = await locator.getChildLocations(
           data,
@@ -716,8 +698,7 @@ describe("AbiDecoder - Traversal", () => {
           await decoder.pluck(data, innerNode.location, innerNode.size),
         ).to.equal(defaultAbiCoder.encode(["uint256"], [innerValue]));
 
-        // Verify AbiLocator matches AbiDecoder - root children
-        // For AbiEncoded children, AbiLocator returns location of length prefix,
+        // For AbiEncoded children, AbiLocation returns location of length prefix,
         // but AbiDecoder's payload.location points AFTER length prefix (+32)
         const [outerChildLocations] = await locator.getChildLocations(
           data,
@@ -726,12 +707,11 @@ describe("AbiDecoder - Traversal", () => {
           0,
         );
         expect(outerChildLocations.length).to.equal(root.children.length);
-        // AbiLocator returns tail offset (to length prefix), add 32 to get payload.location
+        // AbiLocation returns tail offset (to length prefix), add 32 to get payload.location
         expect(Number(outerChildLocations[0]) + 32).to.equal(
           innerAbiEncoded.location,
         );
 
-        // Verify AbiLocator matches AbiDecoder - inner AbiEncoded children
         // Pass location + leadingBytes to get to head region
         const [innerChildLocations] = await locator.getChildLocations(
           data,
@@ -791,8 +771,7 @@ describe("AbiDecoder - Traversal", () => {
           await decoder.pluck(data, innerNode.location, innerNode.size),
         ).to.equal(defaultAbiCoder.encode(["uint256"], [innerValue]));
 
-        // Verify AbiLocator matches AbiDecoder - root children
-        // For AbiEncoded children, AbiLocator returns location of length prefix,
+        // For AbiEncoded children, AbiLocation returns location of length prefix,
         // but AbiDecoder's payload.location points AFTER length prefix (+32)
         const [outerChildLocations] = await locator.getChildLocations(
           data,
@@ -801,12 +780,11 @@ describe("AbiDecoder - Traversal", () => {
           0,
         );
         expect(outerChildLocations.length).to.equal(root.children.length);
-        // AbiLocator returns tail offset (to length prefix), add 32 to get payload.location
+        // AbiLocation returns tail offset (to length prefix), add 32 to get payload.location
         expect(Number(outerChildLocations[0]) + 32).to.equal(
           innerAbiEncoded.location,
         );
 
-        // Verify AbiLocator matches AbiDecoder - inner AbiEncoded children
         // For AbiEncoded, location points after length prefix,
         // but head region starts at location + leadingBytes
         const [innerChildLocations] = await locator.getChildLocations(
@@ -888,7 +866,6 @@ describe("AbiDecoder - Traversal", () => {
         ),
       ).to.equal(defaultAbiCoder.encode(["uint256"], [value[0][0]]));
 
-      // Verify AbiLocator matches AbiDecoder - root children
       const [rootChildLocations] = await locator.getChildLocations(
         data,
         0,
@@ -898,7 +875,6 @@ describe("AbiDecoder - Traversal", () => {
       expect(rootChildLocations.length).to.equal(root.children.length);
       expect(Number(rootChildLocations[0])).to.equal(arrayNode.location);
 
-      // Verify AbiLocator matches AbiDecoder - array children
       const [tupleLocations] = await locator.getChildLocations(
         data,
         arrayNode.location,
@@ -908,7 +884,6 @@ describe("AbiDecoder - Traversal", () => {
       expect(tupleLocations.length).to.equal(arrayNode.children.length);
       expect(Number(tupleLocations[0])).to.equal(firstTuple.location);
 
-      // Verify AbiLocator matches AbiDecoder - tuple children
       const [tupleElementLocations] = await locator.getChildLocations(
         data,
         firstTuple.location,
@@ -956,7 +931,6 @@ describe("AbiDecoder - Traversal", () => {
         await decoder.pluck(data, arrayNode.location, arrayNode.size),
       ).to.equal(encode(["uint256[]"], [value[0]], true));
 
-      // Verify AbiLocator matches AbiDecoder - root children
       const [rootChildLocations] = await locator.getChildLocations(
         data,
         0,
@@ -966,7 +940,6 @@ describe("AbiDecoder - Traversal", () => {
       expect(rootChildLocations.length).to.equal(root.children.length);
       expect(Number(rootChildLocations[0])).to.equal(tupleNode.location);
 
-      // Verify AbiLocator matches AbiDecoder - tuple children
       const [tupleChildLocations] = await locator.getChildLocations(
         data,
         tupleNode.location,
@@ -976,7 +949,6 @@ describe("AbiDecoder - Traversal", () => {
       expect(tupleChildLocations.length).to.equal(tupleNode.children.length);
       expect(Number(tupleChildLocations[0])).to.equal(arrayNode.location);
 
-      // Verify AbiLocator matches AbiDecoder - array children
       const [arrayElementLocations] = await locator.getChildLocations(
         data,
         arrayNode.location,
@@ -1031,7 +1003,6 @@ describe("AbiDecoder - Traversal", () => {
         await decoder.pluck(data, innerArray2.location, innerArray2.size),
       ).to.equal(encode(["uint256[]"], [value[1]], true));
 
-      // Verify AbiLocator matches AbiDecoder - root children
       const [rootChildLocations] = await locator.getChildLocations(
         data,
         0,
@@ -1041,7 +1012,6 @@ describe("AbiDecoder - Traversal", () => {
       expect(rootChildLocations.length).to.equal(root.children.length);
       expect(Number(rootChildLocations[0])).to.equal(outerArray.location);
 
-      // Verify AbiLocator matches AbiDecoder - outer array children
       const [innerArrayLocations] = await locator.getChildLocations(
         data,
         outerArray.location,
@@ -1052,7 +1022,6 @@ describe("AbiDecoder - Traversal", () => {
       expect(Number(innerArrayLocations[0])).to.equal(innerArray1.location);
       expect(Number(innerArrayLocations[1])).to.equal(innerArray2.location);
 
-      // Verify AbiLocator matches AbiDecoder - inner array 1 children
       const [innerArray1Elements] = await locator.getChildLocations(
         data,
         innerArray1.location,
@@ -1113,7 +1082,6 @@ describe("AbiDecoder - Traversal", () => {
         encode(["uint256[]"], [[1, 2, 3]], true),
       );
 
-      // Verify AbiLocator matches AbiDecoder at each level
       const [l1Locations] = await locator.getChildLocations(
         data,
         0,
@@ -1197,7 +1165,6 @@ describe("AbiDecoder - Traversal", () => {
         await decoder.pluck(data, dynamicNode.location, dynamicNode.size),
       ).to.equal(encode(["bytes"], [dynamicValue], true));
 
-      // Verify AbiLocator matches AbiDecoder
       const [childLocations] = await locator.getChildLocations(
         data,
         0,
@@ -1256,7 +1223,6 @@ describe("AbiDecoder - Traversal", () => {
         await decoder.pluck(data, staticNode.location, staticNode.size),
       ).to.equal(defaultAbiCoder.encode(["uint256"], [staticValue]));
 
-      // Verify AbiLocator matches AbiDecoder
       const [childLocations] = await locator.getChildLocations(
         data,
         0,
@@ -1313,7 +1279,6 @@ describe("AbiDecoder - Traversal", () => {
         ),
       ).to.equal(defaultAbiCoder.encode(["uint256"], [values[2]]));
 
-      // Verify AbiLocator matches AbiDecoder
       const [childLocations] = await locator.getChildLocations(
         data,
         0,
@@ -1363,7 +1328,6 @@ describe("AbiDecoder - Traversal", () => {
         ),
       ).to.equal(encode(["bytes"], [values[1]], true));
 
-      // Verify AbiLocator matches AbiDecoder
       const [childLocations] = await locator.getChildLocations(
         data,
         0,
@@ -1416,7 +1380,6 @@ describe("AbiDecoder - Traversal", () => {
         ),
       ).to.equal(defaultAbiCoder.encode(["uint256"], [amount]));
 
-      // Verify AbiLocator matches AbiDecoder
       const [childLocations] = await locator.getChildLocations(
         data,
         leadingBytes,
@@ -1458,7 +1421,6 @@ describe("AbiDecoder - Traversal", () => {
         ),
       ).to.equal(defaultAbiCoder.encode(["address"], [spender]));
 
-      // Verify AbiLocator matches AbiDecoder
       const [childLocations] = await locator.getChildLocations(
         data,
         leadingBytes,
@@ -1514,7 +1476,6 @@ describe("AbiDecoder - Traversal", () => {
         ),
       ).to.equal(encode(["bytes"], [innerCalls[1]], true));
 
-      // Verify AbiLocator matches AbiDecoder - root children
       const [rootChildLocations] = await locator.getChildLocations(
         data,
         leadingBytes,
@@ -1524,7 +1485,6 @@ describe("AbiDecoder - Traversal", () => {
       expect(rootChildLocations.length).to.equal(root.children.length);
       expect(Number(rootChildLocations[0])).to.equal(arrayNode.location);
 
-      // Verify AbiLocator matches AbiDecoder - array children
       const [elementLocations] = await locator.getChildLocations(
         data,
         arrayNode.location,
@@ -1611,7 +1571,6 @@ describe("AbiDecoder - Traversal", () => {
         ),
       ).to.equal(encode(["bytes"], [params[9]], true));
 
-      // Verify AbiLocator matches AbiDecoder
       const [childLocations] = await locator.getChildLocations(
         data,
         leadingBytes,

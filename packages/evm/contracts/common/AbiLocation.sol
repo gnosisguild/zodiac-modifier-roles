@@ -5,15 +5,15 @@ import {Condition, Encoding} from "../types/Condition.sol";
 import {Operator} from "../types/Operator.sol";
 
 /**
- * @title AbiLocator - Locates ABI-encoded parameters on-demand
+ * @title AbiLocation - Locates ABI-encoded parameters on-demand
  * @author gnosisguild
  */
-library AbiLocator {
+library AbiLocation {
     /**
      * @dev Gets the locations of all direct children for Tuple/Array/AbiEncoded.
      *      Returns overflow=true if calldata bounds are exceeded.
      */
-    function getChildLocations(
+    function children(
         bytes calldata data,
         uint256 location,
         Condition memory condition
@@ -60,7 +60,7 @@ library AbiLocator {
      * @dev Computes the encoded size of a value at location.
      *      Returns 0 on overflow (caller should check bounds separately).
      */
-    function getSize(
+    function size(
         bytes calldata data,
         uint256 location,
         Condition memory condition
@@ -76,13 +76,13 @@ library AbiLocator {
          * About Encoding.AbiEncoded
          *
          * AbiEncoded types are wrapped in dynamic 'bytes'. ConditionEvaluation logic
-         * skips the 32-byte length prefix. Thus, calling getSize on a *root* AbiEncoded
+         * skips the 32-byte length prefix. Thus, calling size on a *root* AbiEncoded
          * fails, as it expects the prefix. This is intentional: AbiEncoded do not
          * support 'EqualTo', only 'Matches'. On traversal, we patch the location
          * because we make no distinction between top-level and nested types on
          * the condition side.
          *
-         * TLDR: you can call getSize on nested AbiEncoded, but not on root ones
+         * TLDR: you can call size on nested AbiEncoded, but not on root ones
          */
         if (enc == Encoding.Dynamic || enc == Encoding.AbiEncoded) {
             // Dynamic types: length prefix + padded content
@@ -93,7 +93,7 @@ library AbiLocator {
         if (enc == Encoding.None) {
             // Transparent And/Or: delegate to first child
             for (uint256 i; i < condition.children.length; i++) {
-                result = getSize(data, location, condition.children[i]);
+                result = size(data, location, condition.children[i]);
                 if (result > 0) return result;
             }
             return 0;
@@ -135,7 +135,7 @@ library AbiLocator {
                     bytes32(data[location + headOffset:])
                 );
                 sizeAtHead = 32;
-                sizeAtTail = getSize(data, location + tailOffset, child);
+                sizeAtTail = size(data, location + tailOffset, child);
 
                 if (sizeAtTail == 0) return 0;
             }

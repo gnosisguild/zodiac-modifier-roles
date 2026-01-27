@@ -3,7 +3,7 @@ pragma solidity >=0.8.17 <0.9.0;
 
 import "../../periphery/interfaces/ICustomCondition.sol";
 import "../../types/Types.sol";
-import "../../common/AbiLocator.sol";
+import "../../common/AbiLocation.sol";
 
 /**
  * @title CustomConditionChecker
@@ -49,7 +49,7 @@ library CustomConditionChecker {
 
         uint256 size = condition.size != 0
             ? condition.size
-            : AbiLocator.getSize(data, location, condition);
+            : AbiLocation.size(data, location, condition);
 
         bytes memory extra;
         if (compValue.length > 20) {

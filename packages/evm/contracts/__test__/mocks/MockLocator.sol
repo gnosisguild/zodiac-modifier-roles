@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "../../common/AbiLocator.sol";
+import "../../common/AbiLocation.sol";
 import "../../core/serialize/Integrity.sol";
 import "../../core/serialize/ConditionPacker.sol";
 import "../../core/serialize/ConditionUnpacker.sol";
@@ -15,7 +15,7 @@ contract MockLocator {
     ) public view returns (uint256[] memory, bool overflow) {
         Integrity.enforce(conditions);
         Condition memory condition = _unpackAndFind(conditions, conditionIndex);
-        return AbiLocator.getChildLocations(data, location, condition);
+        return AbiLocation.children(data, location, condition);
     }
 
     function getSize(
@@ -26,7 +26,7 @@ contract MockLocator {
     ) public view returns (uint256) {
         Integrity.enforce(conditions);
         Condition memory condition = _unpackAndFind(conditions, conditionIndex);
-        return AbiLocator.getSize(data, location, condition);
+        return AbiLocation.size(data, location, condition);
     }
 
     function pluck(

@@ -1,6 +1,3 @@
-/**
- * AbiLocator - Bounds & Overflow Tests
- */
 import hre from "hardhat";
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
@@ -77,7 +74,7 @@ async function invoke(
 // Tests
 // ============================================================================
 
-describe("AbiLocator - Bounds & Overflow", () => {
+describe("AbiLocation - Bounds & Overflow", () => {
   describe("Head Bounds", () => {
     it("should detect calldata shorter than 32 bytes", async () => {
       const fixture = await loadFixture(setupRoles);
