@@ -103,7 +103,6 @@ describe("Operator - Custom", () => {
           ConditionViolationStatus.CustomConditionViolation,
           1, // Custom node
           anyValue,
-          anyValue,
         );
     });
 
@@ -139,7 +138,6 @@ describe("Operator - Custom", () => {
         .withArgs(
           ConditionViolationStatus.CustomConditionViolation,
           1, // Custom node
-          anyValue,
           anyValue,
         );
     });
@@ -200,7 +198,6 @@ describe("Operator - Custom", () => {
           ConditionViolationStatus.CustomConditionViolation,
           1, // Custom node
           anyValue,
-          anyValue,
         );
     });
   });
@@ -231,7 +228,6 @@ describe("Operator - Custom", () => {
         .withArgs(
           ConditionViolationStatus.CustomConditionNotAContract,
           1, // Custom node
-          anyValue,
           anyValue,
         );
     });
@@ -269,7 +265,6 @@ describe("Operator - Custom", () => {
           ConditionViolationStatus.CustomConditionReverted,
           1, // Custom node
           anyValue,
-          anyValue,
         );
     });
 
@@ -304,7 +299,6 @@ describe("Operator - Custom", () => {
         .withArgs(
           ConditionViolationStatus.CustomConditionReverted,
           1, // Custom node
-          anyValue,
           anyValue,
         );
     });
@@ -341,7 +335,6 @@ describe("Operator - Custom", () => {
         .withArgs(
           ConditionViolationStatus.CustomConditionInvalidResult,
           1, // Custom node
-          anyValue,
           anyValue,
         );
     });
@@ -396,7 +389,6 @@ describe("Operator - Custom", () => {
           ConditionViolationStatus.CustomConditionViolation,
           1, // Custom node at BFS index 1
           anyValue,
-          anyValue,
         );
     });
 
@@ -424,7 +416,6 @@ describe("Operator - Custom", () => {
           ConditionViolationStatus.CustomConditionViolation,
           anyValue,
           4, // payloadLocation: parameter starts at byte 4
-          32, // payloadSize: uint256 is 32 bytes
         );
     });
   });

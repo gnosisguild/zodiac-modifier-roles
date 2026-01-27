@@ -3,6 +3,7 @@ pragma solidity >=0.8.17 <0.9.0;
 
 import "../../periphery/interfaces/ICustomCondition.sol";
 import "../../types/Types.sol";
+import "../../common/AbiLocation.sol";
 
 /**
  * @title CustomConditionChecker
@@ -30,7 +31,7 @@ library CustomConditionChecker {
      * @param data Calldata of the transaction
      * @param operation Call or DelegateCall
      * @param location Byte offset into calldata
-     * @param size Byte length of the parameter
+     * @param condition The condition with payload info for size computation
      * @param pluckedValues Array of previously plucked values
      * @return status Ok if condition passes, error status otherwise
      */
@@ -41,10 +42,18 @@ library CustomConditionChecker {
         bytes calldata data,
         Operation operation,
         uint256 location,
-        uint256 size,
+        Condition memory condition,
         bytes32[] memory pluckedValues
     ) internal view returns (Status status) {
         address adapter = address(bytes20(compValue));
+
+        uint256 size;
+        {
+            bool overflow;
+            (size, overflow) = condition.size != 0
+                ? (condition.size, false)
+                : AbiLocation.size(data, location, condition);
+        }
 
         bytes memory extra;
         if (compValue.length > 20) {

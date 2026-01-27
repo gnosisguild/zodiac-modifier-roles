@@ -5,7 +5,6 @@ import "../../common/ImmutableStorage.sol";
 
 import "./ConditionPacker.sol";
 import "./Integrity.sol";
-import "./Topology.sol";
 
 import "../../types/Types.sol";
 
@@ -25,9 +24,8 @@ library ConditionStorer {
     function pack(
         ConditionFlat[] memory conditions
     ) external pure returns (bytes memory buffer) {
-        Topology[] memory topology = TopologyLib.resolve(conditions);
-        Integrity.enforce(conditions, topology);
-        return ConditionPacker.pack(conditions, topology);
+        Integrity.enforce(conditions);
+        return ConditionPacker.pack(conditions);
     }
 
     /**

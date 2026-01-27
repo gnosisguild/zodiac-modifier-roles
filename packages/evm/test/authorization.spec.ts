@@ -190,7 +190,6 @@ describe("Authorization", () => {
             ConditionViolationStatus.ParameterNotAllowed,
             1, // EqualTo node
             anyValue,
-            anyValue,
           );
 
         // twoParamsStatic with first param 100 - should pass
@@ -219,7 +218,6 @@ describe("Authorization", () => {
           .withArgs(
             ConditionViolationStatus.ParameterNotAllowed,
             1, // EqualTo node
-            anyValue,
             anyValue,
           );
       });
@@ -372,7 +370,6 @@ describe("Authorization", () => {
           .withArgs(
             ConditionViolationStatus.ParameterNotAllowed,
             1, // EqualTo node
-            anyValue,
             anyValue,
           );
       });

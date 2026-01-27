@@ -63,22 +63,12 @@ describe("Operator - SignedIntGreaterThan", () => {
     // 100 == 100 fails
     await expect(invoke(100))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(
-        ConditionViolationStatus.ParameterLessThanAllowed,
-        1,
-        anyValue,
-        anyValue,
-      );
+      .withArgs(ConditionViolationStatus.ParameterLessThanAllowed, 1, anyValue);
 
     // 99 < 100 fails
     await expect(invoke(99))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(
-        ConditionViolationStatus.ParameterLessThanAllowed,
-        1,
-        anyValue,
-        anyValue,
-      );
+      .withArgs(ConditionViolationStatus.ParameterLessThanAllowed, 1, anyValue);
   });
 
   it("handles negative numbers correctly", async () => {
@@ -109,22 +99,12 @@ describe("Operator - SignedIntGreaterThan", () => {
     // -50 == -50 fails
     await expect(invoke(-50))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(
-        ConditionViolationStatus.ParameterLessThanAllowed,
-        1,
-        anyValue,
-        anyValue,
-      );
+      .withArgs(ConditionViolationStatus.ParameterLessThanAllowed, 1, anyValue);
 
     // -51 < -50 fails
     await expect(invoke(-51))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(
-        ConditionViolationStatus.ParameterLessThanAllowed,
-        1,
-        anyValue,
-        anyValue,
-      );
+      .withArgs(ConditionViolationStatus.ParameterLessThanAllowed, 1, anyValue);
   });
 
   it("integrates with Slice operator", async () => {
@@ -159,12 +139,7 @@ describe("Operator - SignedIntGreaterThan", () => {
     // 0x00000000 = 0 <= 0 fails
     await expect(invoke("0x00000000"))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(
-        ConditionViolationStatus.ParameterLessThanAllowed,
-        2,
-        anyValue,
-        anyValue,
-      );
+      .withArgs(ConditionViolationStatus.ParameterLessThanAllowed, 2, anyValue);
 
     // 2. Slice 32 bytes (full int256) at offset 0, then SignedIntGreaterThan -100
     // We must use 32 bytes to preserve the sign bit for int256 comparison
@@ -197,23 +172,13 @@ describe("Operator - SignedIntGreaterThan", () => {
     const neg100 = solidityPacked(["int256"], [-100]);
     await expect(invoke(neg100))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(
-        ConditionViolationStatus.ParameterLessThanAllowed,
-        2,
-        anyValue,
-        anyValue,
-      );
+      .withArgs(ConditionViolationStatus.ParameterLessThanAllowed, 2, anyValue);
 
     // -101 (32 bytes) > -100 -> Fail (Less)
     const neg101 = solidityPacked(["int256"], [-101]);
     await expect(invoke(neg101))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(
-        ConditionViolationStatus.ParameterLessThanAllowed,
-        2,
-        anyValue,
-        anyValue,
-      );
+      .withArgs(ConditionViolationStatus.ParameterLessThanAllowed, 2, anyValue);
   });
 
   it("compares ether value (msg.value)", async () => {
@@ -263,12 +228,7 @@ describe("Operator - SignedIntGreaterThan", () => {
         ),
     )
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
-      .withArgs(
-        ConditionViolationStatus.ParameterLessThanAllowed,
-        0,
-        anyValue,
-        anyValue,
-      );
+      .withArgs(ConditionViolationStatus.ParameterLessThanAllowed, 0, anyValue);
   });
 
   describe("violation context", () => {
@@ -295,7 +255,6 @@ describe("Operator - SignedIntGreaterThan", () => {
         .withArgs(
           ConditionViolationStatus.ParameterLessThanAllowed,
           1, // SignedIntGreaterThan node at BFS index 1
-          anyValue,
           anyValue,
         );
     });
@@ -324,7 +283,6 @@ describe("Operator - SignedIntGreaterThan", () => {
           ConditionViolationStatus.ParameterLessThanAllowed,
           anyValue,
           4, // payloadLocation: parameter starts at byte 4
-          32, // payloadSize: int256 is 32 bytes
         );
     });
   });

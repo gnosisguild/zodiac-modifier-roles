@@ -71,7 +71,6 @@ describe("Operator - EqualTo", () => {
           ConditionViolationStatus.ParameterNotAllowed,
           1, // EqualTo node
           anyValue,
-          anyValue,
         );
     });
 
@@ -112,7 +111,6 @@ describe("Operator - EqualTo", () => {
           ConditionViolationStatus.ParameterNotAllowed,
           2, // EqualTo node under Slice
           anyValue,
-          anyValue,
         );
     });
 
@@ -122,12 +120,18 @@ describe("Operator - EqualTo", () => {
       // EqualTo on EtherValue: msg.value must equal 1000 wei
       await allowFunction(
         flattenCondition({
-          paramType: Encoding.AbiEncoded,
-          operator: Operator.Matches,
+          paramType: Encoding.None,
+          operator: Operator.And,
           children: [
             {
-              paramType: Encoding.Static,
-              operator: Operator.Pass,
+              paramType: Encoding.AbiEncoded,
+              operator: Operator.Matches,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.Pass,
+                },
+              ],
             },
             {
               paramType: Encoding.EtherValue,
@@ -147,8 +151,7 @@ describe("Operator - EqualTo", () => {
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.ParameterNotAllowed,
-          2, // EtherValue/EqualTo node
-          anyValue,
+          2, // EtherValue/EqualTo node: And[0] -> Matches[1], EqualTo[2]
           anyValue,
         );
     });
@@ -282,7 +285,6 @@ describe("Operator - EqualTo", () => {
           ConditionViolationStatus.ParameterNotAllowed,
           1, // EqualTo node
           anyValue,
-          anyValue,
         );
     });
   });
@@ -311,12 +313,7 @@ describe("Operator - EqualTo", () => {
 
       await expect(invoke("0xaa"))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(
-          ConditionViolationStatus.ParameterNotAllowed,
-          1,
-          anyValue,
-          anyValue,
-        );
+        .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1, anyValue);
     });
 
     it("matches 10-byte dynamic value", async () => {
@@ -344,12 +341,7 @@ describe("Operator - EqualTo", () => {
 
       await expect(invoke("0x00112233445566778800"))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(
-          ConditionViolationStatus.ParameterNotAllowed,
-          1,
-          anyValue,
-          anyValue,
-        );
+        .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1, anyValue);
     });
 
     it("matches 32-byte dynamic value", async () => {
@@ -377,12 +369,7 @@ describe("Operator - EqualTo", () => {
 
       await expect(invoke("0x" + "ff".repeat(32)))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(
-          ConditionViolationStatus.ParameterNotAllowed,
-          1,
-          anyValue,
-          anyValue,
-        );
+        .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1, anyValue);
     });
 
     it("matches 33-byte dynamic value and fails on length mismatch", async () => {
@@ -411,12 +398,7 @@ describe("Operator - EqualTo", () => {
 
       await expect(invoke(bytes32))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(
-          ConditionViolationStatus.ParameterNotAllowed,
-          1,
-          anyValue,
-          anyValue,
-        );
+        .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1, anyValue);
     });
 
     it("matches 100-byte dynamic value", async () => {
@@ -446,12 +428,7 @@ describe("Operator - EqualTo", () => {
 
       await expect(invoke("0x" + "ff".repeat(100)))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(
-          ConditionViolationStatus.ParameterNotAllowed,
-          1,
-          anyValue,
-          anyValue,
-        );
+        .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1, anyValue);
     });
   });
 
@@ -750,12 +727,7 @@ describe("Operator - EqualTo", () => {
             ),
         )
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
-          .withArgs(
-            ConditionViolationStatus.ParameterNotAllowed,
-            1,
-            anyValue,
-            anyValue,
-          );
+          .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1, anyValue);
       });
 
       it("fails when array length differs", async () => {
@@ -805,12 +777,7 @@ describe("Operator - EqualTo", () => {
             ),
         )
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
-          .withArgs(
-            ConditionViolationStatus.ParameterNotAllowed,
-            1,
-            anyValue,
-            anyValue,
-          );
+          .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1, anyValue);
       });
     });
 
@@ -1090,12 +1057,7 @@ describe("Operator - EqualTo", () => {
             ),
         )
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
-          .withArgs(
-            ConditionViolationStatus.ParameterNotAllowed,
-            1,
-            anyValue,
-            anyValue,
-          );
+          .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1, anyValue);
       });
     });
 
@@ -1339,12 +1301,7 @@ describe("Operator - EqualTo", () => {
             ),
         )
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
-          .withArgs(
-            ConditionViolationStatus.ParameterNotAllowed,
-            1,
-            anyValue,
-            anyValue,
-          );
+          .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1, anyValue);
       });
     });
   });
@@ -1586,12 +1543,7 @@ describe("Operator - EqualTo", () => {
             ),
         )
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
-          .withArgs(
-            ConditionViolationStatus.ParameterNotAllowed,
-            1,
-            anyValue,
-            anyValue,
-          );
+          .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1, anyValue);
       });
 
       it("fails when last tuple field differs", async () => {
@@ -1664,12 +1616,7 @@ describe("Operator - EqualTo", () => {
             ),
         )
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
-          .withArgs(
-            ConditionViolationStatus.ParameterNotAllowed,
-            1,
-            anyValue,
-            anyValue,
-          );
+          .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1, anyValue);
       });
     });
 
@@ -1968,12 +1915,7 @@ describe("Operator - EqualTo", () => {
             ),
         )
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
-          .withArgs(
-            ConditionViolationStatus.ParameterNotAllowed,
-            1,
-            anyValue,
-            anyValue,
-          );
+          .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1, anyValue);
       });
     });
 
@@ -2238,12 +2180,7 @@ describe("Operator - EqualTo", () => {
             ),
         )
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
-          .withArgs(
-            ConditionViolationStatus.ParameterNotAllowed,
-            1,
-            anyValue,
-            anyValue,
-          );
+          .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1, anyValue);
       });
     });
   });
@@ -2515,12 +2452,7 @@ describe("Operator - EqualTo", () => {
             ),
         )
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
-          .withArgs(
-            ConditionViolationStatus.ParameterNotAllowed,
-            1,
-            anyValue,
-            anyValue,
-          );
+          .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1, anyValue);
       });
     });
 
@@ -2789,12 +2721,7 @@ describe("Operator - EqualTo", () => {
             ),
         )
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
-          .withArgs(
-            ConditionViolationStatus.ParameterNotAllowed,
-            1,
-            anyValue,
-            anyValue,
-          );
+          .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1, anyValue);
       });
 
       it("fails when tuple array field length differs", async () => {
@@ -2862,12 +2789,7 @@ describe("Operator - EqualTo", () => {
             ),
         )
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
-          .withArgs(
-            ConditionViolationStatus.ParameterNotAllowed,
-            1,
-            anyValue,
-            anyValue,
-          );
+          .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1, anyValue);
       });
     });
 
@@ -3158,12 +3080,7 @@ describe("Operator - EqualTo", () => {
             ),
         )
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
-          .withArgs(
-            ConditionViolationStatus.ParameterNotAllowed,
-            1,
-            anyValue,
-            anyValue,
-          );
+          .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1, anyValue);
       });
     });
 
@@ -3692,13 +3609,631 @@ describe("Operator - EqualTo", () => {
           ),
         )
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
-          .withArgs(
-            ConditionViolationStatus.ParameterNotAllowed,
-            1,
-            anyValue,
-            anyValue,
-          );
+          .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1, anyValue);
       });
+    });
+  });
+
+  describe("EqualTo with And-typed children", () => {
+    it("tuple with And(Static, None) child", async () => {
+      const iface = new Interface(["function fn((uint256, uint256))"]);
+      const fn = iface.getFunction("fn")!;
+      const { roles, member, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      const targetTuple = [100, 200];
+
+      const packed = await packConditions(
+        roles,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Tuple,
+              operator: Operator.EqualTo,
+              compValue: abiCoder.encode(["(uint256,uint256)"], [targetTuple]),
+              children: [
+                {
+                  paramType: Encoding.None,
+                  operator: Operator.And,
+                  children: [
+                    {
+                      paramType: Encoding.Static,
+                      operator: Operator.Pass,
+                    },
+                    {
+                      paramType: Encoding.None,
+                      operator: Operator.Pass,
+                    },
+                  ],
+                },
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.Pass,
+                },
+              ],
+            },
+          ],
+        }),
+      );
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
+        packed,
+        ExecutionOptions.Both,
+      );
+
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            testContractAddress,
+            0,
+            iface.encodeFunctionData(fn, [targetTuple]),
+            0,
+          ),
+      ).to.not.be.reverted;
+
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            testContractAddress,
+            0,
+            iface.encodeFunctionData(fn, [[999, 200]]),
+            0,
+          ),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1, anyValue);
+    });
+
+    it("dynamic tuple with And(Static, None) child", async () => {
+      const iface = new Interface(["function fn((bytes, uint256))"]);
+      const fn = iface.getFunction("fn")!;
+      const { roles, member, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      const targetTuple = ["0xdeadbeef", 42];
+
+      const packed = await packConditions(
+        roles,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Tuple,
+              operator: Operator.EqualTo,
+              compValue: abiCoder.encode(["(bytes,uint256)"], [targetTuple]),
+              children: [
+                {
+                  paramType: Encoding.None,
+                  operator: Operator.And,
+                  children: [
+                    {
+                      paramType: Encoding.None,
+                      operator: Operator.Pass,
+                    },
+                    {
+                      paramType: Encoding.Dynamic,
+                      operator: Operator.Pass,
+                    },
+                  ],
+                },
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.Pass,
+                },
+              ],
+            },
+          ],
+        }),
+      );
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
+        packed,
+        ExecutionOptions.Both,
+      );
+
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            testContractAddress,
+            0,
+            iface.encodeFunctionData(fn, [targetTuple]),
+            0,
+          ),
+      ).to.not.be.reverted;
+
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            testContractAddress,
+            0,
+            iface.encodeFunctionData(fn, [["0xdeadbeef", 99]]),
+            0,
+          ),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1, anyValue);
+    });
+
+    it("AbiEncoded with And(None, Static) child", async () => {
+      const { roles, allowFunction, invoke } = await loadFixture(setupOneParam);
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.None,
+          operator: Operator.And,
+          children: [
+            {
+              paramType: Encoding.None,
+              operator: Operator.Pass,
+            },
+            {
+              paramType: Encoding.AbiEncoded,
+              operator: Operator.Matches,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [12345]),
+                },
+              ],
+            },
+          ],
+        }),
+        ExecutionOptions.None,
+      );
+
+      await expect(invoke(12345)).to.not.be.reverted;
+
+      await expect(invoke(99999))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.ParameterNotAllowed, 3, anyValue);
+    });
+
+    it("array with And(None, Static) child", async () => {
+      const iface = new Interface(["function fn(uint256[])"]);
+      const fn = iface.getFunction("fn")!;
+      const { roles, member, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      const targetArray = [10, 20, 30];
+
+      const packed = await packConditions(
+        roles,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Array,
+              operator: Operator.EqualTo,
+              compValue: abiCoder.encode(["uint256[]"], [targetArray]),
+              children: [
+                {
+                  paramType: Encoding.None,
+                  operator: Operator.And,
+                  children: [
+                    {
+                      paramType: Encoding.None,
+                      operator: Operator.Pass,
+                    },
+                    {
+                      paramType: Encoding.Static,
+                      operator: Operator.Pass,
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        }),
+      );
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
+        packed,
+        ExecutionOptions.Both,
+      );
+
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            testContractAddress,
+            0,
+            iface.encodeFunctionData(fn, [targetArray]),
+            0,
+          ),
+      ).to.not.be.reverted;
+
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            testContractAddress,
+            0,
+            iface.encodeFunctionData(fn, [[10, 20, 99]]),
+            0,
+          ),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1, anyValue);
+    });
+
+    it("array with And(None, DynamicTuple) child", async () => {
+      const iface = new Interface(["function fn((bytes, uint256)[])"]);
+      const fn = iface.getFunction("fn")!;
+      const { roles, member, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      const targetArray = [
+        ["0xaabb", 1],
+        ["0xccdd", 2],
+      ];
+
+      const packed = await packConditions(
+        roles,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Array,
+              operator: Operator.EqualTo,
+              compValue: abiCoder.encode(["(bytes,uint256)[]"], [targetArray]),
+              children: [
+                {
+                  paramType: Encoding.None,
+                  operator: Operator.And,
+                  children: [
+                    {
+                      paramType: Encoding.None,
+                      operator: Operator.Pass,
+                    },
+                    {
+                      paramType: Encoding.Tuple,
+                      operator: Operator.Pass,
+                      children: [
+                        {
+                          paramType: Encoding.Dynamic,
+                          operator: Operator.Pass,
+                        },
+                        {
+                          paramType: Encoding.Static,
+                          operator: Operator.Pass,
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        }),
+      );
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
+        packed,
+        ExecutionOptions.Both,
+      );
+
+      await expect(
+        roles.connect(member).execTransactionFromModule(
+          testContractAddress,
+          0,
+          iface.encodeFunctionData(fn, [
+            [
+              ["0xaabb", 1],
+              ["0xccdd", 2],
+            ],
+          ]),
+          0,
+        ),
+      ).to.not.be.reverted;
+
+      await expect(
+        roles.connect(member).execTransactionFromModule(
+          testContractAddress,
+          0,
+          iface.encodeFunctionData(fn, [
+            [
+              ["0xaabb", 1],
+              ["0xccdd", 999],
+            ],
+          ]),
+          0,
+        ),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1, anyValue);
+    });
+
+    it("array with Dynamic and AbiEncoded elements", async () => {
+      const iface = new Interface(["function fn(bytes[])"]);
+      const fn = iface.getFunction("fn")!;
+      const { roles, member, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      const innerEncoded1 = abiCoder.encode(
+        ["uint256", "address"],
+        [100, "0x1111111111111111111111111111111111111111"],
+      );
+      const innerEncoded2 = abiCoder.encode(
+        ["uint256", "address"],
+        [200, "0x2222222222222222222222222222222222222222"],
+      );
+      const targetArray = [innerEncoded1, innerEncoded2];
+
+      const packed = await packConditions(
+        roles,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Array,
+              operator: Operator.EqualTo,
+              compValue: abiCoder.encode(["bytes[]"], [targetArray]),
+              children: [
+                {
+                  paramType: Encoding.None,
+                  operator: Operator.And,
+                  children: [
+                    {
+                      paramType: Encoding.Dynamic,
+                      operator: Operator.Pass,
+                    },
+                    {
+                      paramType: Encoding.AbiEncoded,
+                      operator: Operator.Pass,
+                      children: [
+                        {
+                          paramType: Encoding.Static,
+                          operator: Operator.Pass,
+                        },
+                        {
+                          paramType: Encoding.Static,
+                          operator: Operator.Pass,
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        }),
+      );
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
+        packed,
+        ExecutionOptions.Both,
+      );
+
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            testContractAddress,
+            0,
+            iface.encodeFunctionData(fn, [targetArray]),
+            0,
+          ),
+      ).to.not.be.reverted;
+
+      const badInner = abiCoder.encode(
+        ["uint256", "address"],
+        [999, "0x1111111111111111111111111111111111111111"],
+      );
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            testContractAddress,
+            0,
+            iface.encodeFunctionData(fn, [[badInner, innerEncoded2]]),
+            0,
+          ),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1, anyValue);
+    });
+
+    it("nested tuple - EqualTo on inner tuple", async () => {
+      const iface = new Interface([
+        "function fn(((uint256, uint256), uint256))",
+      ]);
+      const fn = iface.getFunction("fn")!;
+      const { roles, member, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      const innerTuple = [10, 20];
+      const targetTuple = [innerTuple, 300];
+
+      const packed = await packConditions(
+        roles,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Tuple,
+              operator: Operator.Matches,
+              children: [
+                {
+                  paramType: Encoding.Tuple,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(
+                    ["(uint256,uint256)"],
+                    [innerTuple],
+                  ),
+                  children: [
+                    {
+                      paramType: Encoding.Static,
+                      operator: Operator.Pass,
+                    },
+                    {
+                      paramType: Encoding.Static,
+                      operator: Operator.Pass,
+                    },
+                  ],
+                },
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.Pass,
+                },
+              ],
+            },
+          ],
+        }),
+      );
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
+        packed,
+        ExecutionOptions.Both,
+      );
+
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            testContractAddress,
+            0,
+            iface.encodeFunctionData(fn, [targetTuple]),
+            0,
+          ),
+      ).to.not.be.reverted;
+
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            testContractAddress,
+            0,
+            iface.encodeFunctionData(fn, [[[99, 20], 300]]),
+            0,
+          ),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.ParameterNotAllowed, 2, anyValue);
+    });
+
+    it("array of AbiEncoded elements - EqualTo on array", async () => {
+      const iface = new Interface(["function fn(bytes[], uint256)"]);
+      const fn = iface.getFunction("fn")!;
+      const { roles, member, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      const innerEncoded1 = abiCoder.encode(
+        ["uint256", "bytes"],
+        [50, "0xaabbccdd"],
+      );
+      const innerEncoded2 = abiCoder.encode(
+        ["uint256", "bytes"],
+        [60, "0xeeff0011"],
+      );
+      const targetArray = [innerEncoded1, innerEncoded2];
+      const targetDynamic = 777;
+
+      const packed = await packConditions(
+        roles,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Array,
+              operator: Operator.EqualTo,
+              compValue: abiCoder.encode(["bytes[]"], [targetArray]),
+              children: [
+                {
+                  paramType: Encoding.None,
+                  operator: Operator.And,
+                  children: [
+                    {
+                      paramType: Encoding.Dynamic,
+                      operator: Operator.Pass,
+                    },
+                    {
+                      paramType: Encoding.AbiEncoded,
+                      operator: Operator.Pass,
+                      children: [
+                        {
+                          paramType: Encoding.Static,
+                          operator: Operator.Pass,
+                        },
+                        {
+                          paramType: Encoding.Dynamic,
+                          operator: Operator.Pass,
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              paramType: Encoding.Static,
+              operator: Operator.Pass,
+            },
+          ],
+        }),
+      );
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
+        packed,
+        ExecutionOptions.Both,
+      );
+
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            testContractAddress,
+            0,
+            iface.encodeFunctionData(fn, [targetArray, targetDynamic]),
+            0,
+          ),
+      ).to.not.be.reverted;
+
+      const badInner = abiCoder.encode(
+        ["uint256", "bytes"],
+        [999, "0xaabbccdd"],
+      );
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            testContractAddress,
+            0,
+            iface.encodeFunctionData(fn, [
+              [badInner, innerEncoded2],
+              targetDynamic,
+            ]),
+            0,
+          ),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1, anyValue);
     });
   });
 
@@ -3884,7 +4419,6 @@ describe("Operator - EqualTo", () => {
             },
           ],
         }),
-        ExecutionOptions.Both,
       );
 
       await expect(
@@ -3999,7 +4533,6 @@ describe("Operator - EqualTo", () => {
           ConditionViolationStatus.ParameterNotAllowed,
           1, // EqualTo node at BFS index 1
           anyValue,
-          anyValue,
         );
     });
 
@@ -4027,7 +4560,6 @@ describe("Operator - EqualTo", () => {
           ConditionViolationStatus.ParameterNotAllowed,
           anyValue,
           4, // payloadLocation: parameter starts at byte 4 (after selector)
-          32, // payloadSize: uint256 is 32 bytes
         );
     });
   });
