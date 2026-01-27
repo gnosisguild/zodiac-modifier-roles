@@ -30,8 +30,11 @@ library TypeTree {
         ConditionFlat[] memory conditions,
         uint256 i
     ) internal pure returns (Layout memory layout) {
-        bool isLogical = _isLogical(conditions, i);
-        bool isNonVariant = !isVariant(conditions, i);
+        bool isArray = conditions[i].paramType == Encoding.Array;
+        bool isLogical = conditions[i].operator == Operator.And ||
+            conditions[i].operator == Operator.Or;
+        bool isNonVariant = isVariant(conditions, i) == false;
+
         (uint256 childStart, uint256 childCount) = Topology.childBounds(
             conditions,
             i
@@ -46,6 +49,10 @@ library TypeTree {
                     return inspect(conditions, childStart + j);
                 }
             }
+
+            /*
+             * No structural child was found. This returns zero unassigned layout node
+             */
             return layout;
         }
 
@@ -53,8 +60,10 @@ library TypeTree {
             ? Encoding.None
             : conditions[i].paramType;
 
-        // Extract leadingBytes for AbiEncoded from compValue, first 2 bytes
-        // Default is 4 (selector size) when compValue is empty
+        /*
+         * Extract leadingBytes for AbiEncoded from compValue, first 2 bytes
+         * Default is 4 (selector size) when compValue is empty
+         */
         if (layout.encoding == Encoding.AbiEncoded) {
             bytes memory compValue = conditions[i].compValue;
             layout.leadingBytes = compValue.length >= 2
@@ -73,7 +82,7 @@ library TypeTree {
                  * For non-variant arrays, the first child serves as a template for
                  * all elements. For all other nodes, traverse all structural children
                  */
-                if (layout.encoding == Encoding.Array && isNonVariant) {
+                if (isArray && isNonVariant) {
                     break;
                 }
             }
@@ -157,14 +166,5 @@ library TypeTree {
             }
         }
         return hash;
-    }
-
-    function _isLogical(
-        ConditionFlat[] memory conditions,
-        uint256 index
-    ) private pure returns (bool) {
-        return
-            conditions[index].operator == Operator.And ||
-            conditions[index].operator == Operator.Or;
     }
 }

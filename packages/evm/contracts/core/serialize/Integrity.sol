@@ -589,27 +589,6 @@ library Integrity {
     }
 
     // --- Helpers ---
-
-    function _sChildBounds(
-        ConditionFlat[] memory conditions,
-        uint256 index
-    )
-        private
-        pure
-        returns (uint256 childStart, uint256 childCount, uint256 sChildCount)
-    {
-        (childStart, childCount) = Topology.childBounds(conditions, index);
-        for (uint256 i; i < childCount; ++i) {
-            if (Topology.isStructural(conditions, childStart + i)) {
-                ++sChildCount;
-            }
-        }
-    }
-
-    function _isWordish(Encoding encoding) private pure returns (bool) {
-        return encoding == Encoding.Static || encoding == Encoding.EtherValue;
-    }
-
     function _isTypeEquivalence(
         ConditionFlat[] memory conditions,
         uint256 index
@@ -628,5 +607,52 @@ library Integrity {
             }
         }
         return true;
+    }
+
+    function _sChildBounds(
+        ConditionFlat[] memory conditions,
+        uint256 index
+    )
+        private
+        pure
+        returns (uint256 childStart, uint256 childCount, uint256 sChildCount)
+    {
+        (childStart, childCount) = Topology.childBounds(conditions, index);
+        for (uint256 i; i < childCount; ++i) {
+            if (_isStructural(conditions, childStart + i)) {
+                ++sChildCount;
+            }
+        }
+    }
+
+    /**
+     * @notice Determines if a node is structural
+     * @dev A node is structural if it has paramType != None OR any descendant has paramType != None
+     */
+    function _isStructural(
+        ConditionFlat[] memory conditions,
+        uint256 index
+    ) private pure returns (bool) {
+        // EtherValue is an alias for None
+        Encoding encoding = conditions[index].paramType;
+        if (encoding != Encoding.None && encoding != Encoding.EtherValue) {
+            return true;
+        }
+
+        // Check if any child is structural
+        (uint256 childStart, uint256 childCount) = Topology.childBounds(
+            conditions,
+            index
+        );
+        for (uint256 i; i < childCount; ++i) {
+            if (_isStructural(conditions, childStart + i)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function _isWordish(Encoding encoding) private pure returns (bool) {
+        return encoding == Encoding.Static || encoding == Encoding.EtherValue;
     }
 }
