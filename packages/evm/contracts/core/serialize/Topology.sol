@@ -74,8 +74,9 @@ library Topology {
         assert(isInlined(conditions, index) == true);
 
         /*
-         * Will not be called if Dynamic, Array or AbiEncoded somewhere in the
-         * tree
+         * Dynamic, Array, and AbiEncoded types are never inlined, so this
+         * function is guaranteed to only process Static, Tuple, or None types
+         * (enforced by the assertion above).
          */
         Encoding encoding = conditions[index].paramType;
 

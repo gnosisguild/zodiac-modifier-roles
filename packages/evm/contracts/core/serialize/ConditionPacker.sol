@@ -98,7 +98,7 @@ library ConditionPacker {
             uint256 packed = (uint256(encoding) << 29) |
                 (uint256(condition.operator) << 24) |
                 (childCount << 14) |
-                ((inlinedSize / 32) << 1) |
+                (inlinedSize << 1) |
                 (hasCompValue ? 1 : 0);
 
             /*

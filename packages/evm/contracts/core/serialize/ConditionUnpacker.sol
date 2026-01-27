@@ -5,8 +5,8 @@ import "../../types/Types.sol";
 
 /**
  * @title  ConditionUnpacker
- * @notice A library that provides unpacking functions for reconstructing
- *         Condition trees with payload annotations from a memory-optimized buffer.
+ * @notice A library that provides unpacking functions for reconstructing the
+ *         Condition tree from a memory-optimized buffer.
  *
  * @dev    This is performance-critical code. Every transaction execution
  *         begins by loading packed conditions from contract storage
@@ -79,7 +79,7 @@ library ConditionUnpacker {
             uint256 encoding = (packed >> 29);
             if (encoding == 6) encoding = 0; // EtherValue -> None
             uint256 childCount = (packed >> 14) & 0x3FF;
-            uint256 inlinedSize = ((packed >> 1) & 0x1FFF) * 32;
+            uint256 inlinedSize = (packed >> 1) & 0x1FFF;
 
             /*
              * Set Condition fields in struct order:

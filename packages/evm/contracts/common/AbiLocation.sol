@@ -12,17 +12,19 @@ library AbiLocation {
     uint256 private constant _OVERFLOW = type(uint256).max;
 
     /**
-     * @dev Gets the locations of all direct children for Tuple/Array/AbiEncoded.
-     *      Returns overflow=true if calldata bounds are exceeded.
+     * @dev Resolves absolute calldata locations for direct children of a
+     *      container. Supports Tuple, Array, and AbiEncoded types.
+     *
+     * @param data      The calldata buffer being inspected.
+     * @param location  The absolute start position of the container block.
+     *
      */
     function children(
         bytes calldata data,
         uint256 location,
         Condition memory condition
     ) internal pure returns (uint256[] memory empty, bool overflow) {
-        Encoding enc = condition.encoding;
-
-        bool isArray = enc == Encoding.Array;
+        bool isArray = condition.encoding == Encoding.Array;
         uint256 childCount;
 
         if (isArray) {
@@ -68,32 +70,31 @@ library AbiLocation {
         uint256 location,
         Condition memory condition
     ) internal pure returns (uint256 result, bool overflow) {
-        Encoding enc = condition.encoding;
+        Encoding encoding = condition.encoding;
 
         // Static is always 32 bytes
-        if (enc == Encoding.Static) {
+        if (encoding == Encoding.Static) {
             return (32, false);
         }
 
         /*
-         * About Encoding.AbiEncoded
+         * About AbiEncoded
          *
-         * AbiEncoded types are wrapped in dynamic 'bytes'. ConditionEvaluation logic
-         * skips the 32-byte length prefix. Thus, calling size on a *root* AbiEncoded
-         * fails, as it expects the prefix. This is intentional: AbiEncoded do not
-         * support 'EqualTo', only 'Matches'. On traversal, we patch the location
-         * because we make no distinction between top-level and nested types on
-         * the condition side.
-         *
-         * TLDR: you can call size on nested AbiEncoded, but not on root ones
+         * AbiEncoded location is patched during ConditionEvaluation
+         * so that top-level and nested AbiEncoded nodes are treated
+         * uniformly by the evaluator. As a consequence, this function
+         * only supports nested AbiEncoded nodes – calling it on a
+         * root one would fail. This is fine because the entry point
+         * for size is always via EqualTo, and AbiEncoded cannot be
+         * paired with that operator.
          */
-        if (enc == Encoding.Dynamic || enc == Encoding.AbiEncoded) {
+        if (encoding == Encoding.Dynamic || encoding == Encoding.AbiEncoded) {
             // Dynamic types: length prefix + padded content
             if (location + 32 > data.length) return (0, true);
             return (32 + _ceil32(uint256(bytes32(data[location:]))), false);
         }
 
-        if (enc == Encoding.None) {
+        if (encoding == Encoding.None) {
             // Transparent And/Or: delegate to first child
             for (uint256 i; i < condition.children.length; i++) {
                 (result, overflow) = size(
@@ -109,7 +110,7 @@ library AbiLocation {
         /*
          * Tuple or Array
          */
-        bool isArray = enc == Encoding.Array;
+        bool isArray = encoding == Encoding.Array;
         uint256 childCount;
         if (isArray) {
             if (location + 32 > data.length) return (0, true);
@@ -120,17 +121,17 @@ library AbiLocation {
             childCount = condition.children.length;
         }
 
-        /*
-         * HEAD + TAIL block encoding
-         *
-         * Process the HEAD region. ABI encoding stores static elements inline and
-         * dynamic elements as 32-byte offsets to the TAIL region. We sum the
-         * HEAD footprint (element size or offset) and recursive TAIL sizes.
-         */
         uint256 headOffset;
         for (uint256 i; i < childCount; ++i) {
             Condition memory child = condition.children[isArray ? 0 : i];
-
+            /*
+             * HEAD + TAIL block encoding
+             *
+             * Process the HEAD region. ABI encoding stores static elements
+             * inline and dynamic elements as 32-byte offsets to the TAIL
+             * region. We sum the HEAD footprint (element size or offset) and
+             * recursive TAIL sizes.
+             */
             uint256 sizeAtHead;
             uint256 sizeAtTail;
             if (child.inlined) {
