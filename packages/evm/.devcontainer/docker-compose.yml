@@ -2,7 +2,7 @@
 # Provides a sandboxed environment for Solidity development with Claude Code
 
 services:
-  app:
+  evm:
     build:
       context: .
       dockerfile: Dockerfile
@@ -17,10 +17,6 @@ services:
     # Run setup on first start, then keep container alive
     entrypoint: /workspace/.devcontainer/entrypoint.sh
     command: ["sleep", "infinity"]
-    # Load secrets from .env file
-    env_file:
-      - path: .env
-        required: false
     environment:
       # Node environment
       NODE_ENV: development

@@ -1,7 +1,7 @@
 {
   "name": "zodiac-modifier-roles-evm",
   "dockerComposeFile": "docker-compose.yml",
-  "service": "app",
+  "service": "evm",
   "workspaceFolder": "/workspace",
   "postCreateCommand": "bash .devcontainer/postCreateCommand.sh",
   "portsAttributes": {

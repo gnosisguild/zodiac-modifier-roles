@@ -116,7 +116,7 @@ fi
 docker compose -f "$COMPOSE_FILE" run --rm \
   -v "$PWD":/workspace \
   -w /workspace \
-  app \
+  evm \
   bash -c 'echo "Setup check complete"' || true
 
 # Now run Claude directly as node, bypassing the entrypoint
@@ -125,5 +125,5 @@ exec docker compose -f "$COMPOSE_FILE" run --rm \
   --entrypoint "" \
   -v "$PWD":/workspace \
   -w /workspace \
-  app \
+  evm \
   bash -lc 'claude --dangerously-skip-permissions --append-system-prompt "$(cat CLAUDE.md)"'
