@@ -27,7 +27,7 @@ library AbiLocator {
             if (location + 32 > data.length) {
                 return (empty, true);
             }
-            childCount = uint256(_word(data, location));
+            childCount = uint256(bytes32(data[location:]));
             location += 32;
         } else {
             childCount = condition.children.length;
@@ -49,7 +49,7 @@ library AbiLocator {
 
                 result[i] =
                     location +
-                    uint256(_word(data, location + headOffset));
+                    uint256(uint256(bytes32(data[location + headOffset:])));
                 headOffset += 32;
             }
         }
@@ -87,7 +87,7 @@ library AbiLocator {
         if (enc == Encoding.Dynamic || enc == Encoding.AbiEncoded) {
             // Dynamic types: length prefix + padded content
             if (location + 32 > data.length) return 0;
-            return 32 + _ceil32(uint256(_word(data, location)));
+            return 32 + _ceil32(uint256(bytes32(data[location:])));
         }
 
         if (enc == Encoding.None) {
@@ -106,7 +106,7 @@ library AbiLocator {
         uint256 childCount;
         if (isArray) {
             if (location + 32 > data.length) return 0;
-            childCount = uint256(_word(data, location));
+            childCount = uint256(bytes32(data[location:]));
             location += 32;
             result = 32;
         } else {
@@ -132,7 +132,7 @@ library AbiLocator {
             } else {
                 if (location + headOffset + 32 > data.length) return 0;
                 uint256 tailOffset = uint256(
-                    _word(data, location + headOffset)
+                    bytes32(data[location + headOffset:])
                 );
                 sizeAtHead = 32;
                 sizeAtTail = getSize(data, location + tailOffset, child);
@@ -142,15 +142,6 @@ library AbiLocator {
 
             result += sizeAtHead + sizeAtTail;
             headOffset += sizeAtHead;
-        }
-    }
-
-    function _word(
-        bytes calldata data,
-        uint256 location
-    ) private pure returns (bytes32 result) {
-        assembly {
-            result := calldataload(add(data.offset, location))
         }
     }
 
