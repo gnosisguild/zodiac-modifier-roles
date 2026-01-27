@@ -523,6 +523,882 @@ describe("Operator - Matches", () => {
     });
   });
 
+  describe("Tuple traversal", () => {
+    it("passes when all tuple children match", async () => {
+      const { roles, member, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      const iface = new Interface(["function fn((uint256,uint256))"]);
+      const fn = iface.getFunction("fn")!;
+
+      const packed = await packConditions(
+        roles,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Tuple,
+              operator: Operator.Matches,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [100]),
+                },
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [200]),
+                },
+              ],
+            },
+          ],
+        }),
+      );
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
+        packed,
+        ExecutionOptions.Both,
+      );
+
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            testContractAddress,
+            0,
+            iface.encodeFunctionData(fn, [[100, 200]]),
+            0,
+          ),
+      ).to.not.be.reverted;
+    });
+
+    it("reverts CalldataOverflow when tuple head is truncated", async () => {
+      const { roles, member, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      const selector = "0xaabbccdd";
+
+      const packed = await packConditions(
+        roles,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Tuple,
+              operator: Operator.Matches,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [0]),
+                },
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [0]),
+                },
+              ],
+            },
+          ],
+        }),
+      );
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        selector,
+        packed,
+        ExecutionOptions.Both,
+      );
+
+      // Only 32 bytes but tuple needs 64
+      const truncatedData = selector + "00".repeat(32);
+
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(testContractAddress, 0, truncatedData, 0),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.CalldataOverflow,
+          anyValue,
+          anyValue,
+        );
+    });
+
+    it("reverts CalldataOverflow when inline element exceeds bounds", async () => {
+      const { roles, member, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      const selector = "0xaabbccdd";
+
+      const packed = await packConditions(
+        roles,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Tuple,
+              operator: Operator.Matches,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [0]),
+                },
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [0]),
+                },
+              ],
+            },
+          ],
+        }),
+      );
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        selector,
+        packed,
+        ExecutionOptions.Both,
+      );
+
+      // 48 bytes - first element OK, second element truncated
+      const truncatedData = selector + "00".repeat(48);
+
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(testContractAddress, 0, truncatedData, 0),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.CalldataOverflow,
+          anyValue,
+          anyValue,
+        );
+    });
+
+    it("reverts ParameterNotAllowed when tuple child value mismatches", async () => {
+      const { roles, member, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      const iface = new Interface(["function fn((uint256,uint256))"]);
+      const fn = iface.getFunction("fn")!;
+
+      const packed = await packConditions(
+        roles,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Tuple,
+              operator: Operator.Matches,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [100]),
+                },
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [200]),
+                },
+              ],
+            },
+          ],
+        }),
+      );
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
+        packed,
+        ExecutionOptions.Both,
+      );
+
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            testContractAddress,
+            0,
+            iface.encodeFunctionData(fn, [[100, 999]]),
+            0,
+          ),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          anyValue,
+          anyValue,
+        );
+    });
+  });
+
+  describe("Array traversal", () => {
+    it("reverts CalldataOverflow when array length slot is truncated", async () => {
+      const { roles, member, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      const selector = "0xaabbccdd";
+
+      const packed = await packConditions(
+        roles,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Array,
+              operator: Operator.Matches,
+              children: [
+                { paramType: Encoding.Static, operator: Operator.Pass },
+              ],
+            },
+          ],
+        }),
+      );
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        selector,
+        packed,
+        ExecutionOptions.Both,
+      );
+
+      // Pointer to offset 32, but only 16 bytes at that location
+      const truncatedData =
+        selector +
+        "0000000000000000000000000000000000000000000000000000000000000020" +
+        "00".repeat(16);
+
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(testContractAddress, 0, truncatedData, 0),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.CalldataOverflow,
+          anyValue,
+          anyValue,
+        );
+    });
+
+    it("reverts CalldataOverflow when element exceeds bounds", async () => {
+      const { roles, member, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      const selector = "0xaabbccdd";
+
+      const packed = await packConditions(
+        roles,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Array,
+              operator: Operator.Matches,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [0]),
+                },
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [0]),
+                },
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [0]),
+                },
+              ],
+            },
+          ],
+        }),
+      );
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        selector,
+        packed,
+        ExecutionOptions.Both,
+      );
+
+      // Array claims 3 elements but only 2 slots of data provided
+      const truncatedData =
+        selector +
+        "0000000000000000000000000000000000000000000000000000000000000020" +
+        "0000000000000000000000000000000000000000000000000000000000000003" +
+        "00".repeat(64);
+
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(testContractAddress, 0, truncatedData, 0),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.CalldataOverflow,
+          anyValue,
+          anyValue,
+        );
+    });
+
+    it("reverts with ParameterNotAMatch when array shorter than expected", async () => {
+      const { roles, member, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      const iface = new Interface(["function fn(uint256[])"]);
+      const fn = iface.getFunction("fn")!;
+
+      // Condition expects exactly 2 elements
+      const packed = await packConditions(
+        roles,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Array,
+              operator: Operator.Matches,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [100]),
+                },
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [200]),
+                },
+              ],
+            },
+          ],
+        }),
+      );
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
+        packed,
+        ExecutionOptions.Both,
+      );
+
+      // Array with only 1 element - expects 2
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            testContractAddress,
+            0,
+            iface.encodeFunctionData(fn, [[100]]),
+            0,
+          ),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAMatch,
+          anyValue,
+          anyValue,
+        );
+    });
+
+    it("reverts with ParameterNotAMatch when array longer than expected", async () => {
+      const { roles, member, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      const iface = new Interface(["function fn(uint256[])"]);
+      const fn = iface.getFunction("fn")!;
+
+      // Condition expects exactly 2 elements
+      const packed = await packConditions(
+        roles,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Array,
+              operator: Operator.Matches,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [100]),
+                },
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [200]),
+                },
+              ],
+            },
+          ],
+        }),
+      );
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
+        packed,
+        ExecutionOptions.Both,
+      );
+
+      // Array with 3 elements - first two match, but third element exceeds condition count
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            testContractAddress,
+            0,
+            iface.encodeFunctionData(fn, [[100, 200, 300]]),
+            0,
+          ),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAMatch,
+          anyValue,
+          anyValue,
+        );
+    });
+
+    it("reverts with ParameterNotAllowed when one item does not match", async () => {
+      const { roles, member, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      const iface = new Interface(["function fn(uint256[])"]);
+      const fn = iface.getFunction("fn")!;
+
+      // Condition expects exactly 2 elements with specific values
+      const packed = await packConditions(
+        roles,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Array,
+              operator: Operator.Matches,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [100]),
+                },
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [200]),
+                },
+              ],
+            },
+          ],
+        }),
+      );
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
+        packed,
+        ExecutionOptions.Both,
+      );
+
+      // Array with correct length but wrong value for second element
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            testContractAddress,
+            0,
+            iface.encodeFunctionData(fn, [[100, 999]]),
+            0,
+          ),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.ParameterNotAllowed, 3, anyValue);
+    });
+  });
+
+  describe("AbiEncoded traversal", () => {
+    it("passes when nested AbiEncoded matches", async () => {
+      const { allowFunction, invoke } = await loadFixture(setupDynamicParam);
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.AbiEncoded,
+              operator: Operator.Matches,
+              compValue: "0x0004deadbeef",
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [42]),
+                },
+              ],
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
+      );
+
+      const payload =
+        "0xdeadbeef" + abiCoder.encode(["uint256"], [42]).slice(2);
+      await expect(invoke(payload)).to.not.be.reverted;
+    });
+
+    it("reverts CalldataOverflow when nested payload is truncated", async () => {
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupDynamicParam);
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.AbiEncoded,
+              operator: Operator.Matches,
+              compValue: "0x0004deadbeef",
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [0]),
+                },
+              ],
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
+      );
+
+      // 4-byte selector + only 16 bytes (need 32)
+      const truncatedPayload = "0xdeadbeef" + "00".repeat(16);
+      await expect(invoke(truncatedPayload))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.CalldataOverflow,
+          anyValue,
+          anyValue,
+        );
+    });
+
+    it("reverts LeadingBytesNotAMatch when prefix does not match", async () => {
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupDynamicParam);
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.AbiEncoded,
+              operator: Operator.Matches,
+              compValue: "0x0004deadbeef",
+              children: [
+                { paramType: Encoding.Static, operator: Operator.Pass },
+              ],
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
+      );
+
+      const wrongPrefixPayload =
+        "0xcafebabe" + abiCoder.encode(["uint256"], [42]).slice(2);
+      await expect(invoke(wrongPrefixPayload))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.LeadingBytesNotAMatch,
+          anyValue,
+          anyValue,
+        );
+    });
+
+    it("reverts ParameterNotAllowed when decoded child mismatches", async () => {
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupDynamicParam);
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.AbiEncoded,
+              operator: Operator.Matches,
+              compValue: "0x0004deadbeef",
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [42]),
+                },
+              ],
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
+      );
+
+      const wrongValuePayload =
+        "0xdeadbeef" + abiCoder.encode(["uint256"], [999]).slice(2);
+      await expect(invoke(wrongValuePayload))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.ParameterNotAllowed,
+          anyValue,
+          anyValue,
+        );
+    });
+  });
+
+  describe("Or branches", () => {
+    it("passes when one branch succeeds", async () => {
+      const { roles, member, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      const iface = new Interface(["function fn(uint256)"]);
+      const fn = iface.getFunction("fn")!;
+
+      const packed = await packConditions(
+        roles,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.None,
+              operator: Operator.Or,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [100]),
+                },
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [200]),
+                },
+              ],
+            },
+          ],
+        }),
+      );
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
+        packed,
+        ExecutionOptions.Both,
+      );
+
+      // First branch matches
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            testContractAddress,
+            0,
+            iface.encodeFunctionData(fn, [100]),
+            0,
+          ),
+      ).to.not.be.reverted;
+
+      // Second branch matches
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            testContractAddress,
+            0,
+            iface.encodeFunctionData(fn, [200]),
+            0,
+          ),
+      ).to.not.be.reverted;
+    });
+
+    it("passes when one branch overflows and other succeeds", async () => {
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupDynamicParam);
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.None,
+              operator: Operator.Or,
+              children: [
+                // Branch 1: expects 2 static params (will overflow with 1)
+                {
+                  paramType: Encoding.AbiEncoded,
+                  operator: Operator.Matches,
+                  compValue: "0x0000",
+                  children: [
+                    { paramType: Encoding.Static, operator: Operator.Pass },
+                    { paramType: Encoding.Static, operator: Operator.Pass },
+                  ],
+                },
+                // Branch 2: expects 1 static param (will succeed)
+                {
+                  paramType: Encoding.AbiEncoded,
+                  operator: Operator.Matches,
+                  compValue: "0x0000",
+                  children: [
+                    { paramType: Encoding.Static, operator: Operator.Pass },
+                  ],
+                },
+              ],
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
+      );
+
+      // Single uint256 - first branch overflows, second succeeds
+      const payload = abiCoder.encode(["uint256"], [42]);
+      await expect(invoke(payload)).to.not.be.reverted;
+    });
+
+    it("reverts OrViolation when all branches fail validation", async () => {
+      const { roles, member, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      const iface = new Interface(["function fn(uint256)"]);
+      const fn = iface.getFunction("fn")!;
+
+      const packed = await packConditions(
+        roles,
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.None,
+              operator: Operator.Or,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [100]),
+                },
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [200]),
+                },
+              ],
+            },
+          ],
+        }),
+      );
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
+        packed,
+        ExecutionOptions.Both,
+      );
+
+      // Neither branch matches
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            testContractAddress,
+            0,
+            iface.encodeFunctionData(fn, [999]),
+            0,
+          ),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.OrViolation, anyValue, anyValue);
+    });
+
+    it("reverts OrViolation when all branches overflow", async () => {
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupDynamicParam);
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.None,
+              operator: Operator.Or,
+              children: [
+                // Branch 1: expects 1 static param
+                {
+                  paramType: Encoding.AbiEncoded,
+                  operator: Operator.Matches,
+                  compValue: "0x0000",
+                  children: [
+                    {
+                      paramType: Encoding.Static,
+                      operator: Operator.EqualTo,
+                      compValue: abiCoder.encode(["uint256"], [0]),
+                    },
+                  ],
+                },
+                // Branch 2: expects 2 static params
+                {
+                  paramType: Encoding.AbiEncoded,
+                  operator: Operator.Matches,
+                  compValue: "0x0000",
+                  children: [
+                    {
+                      paramType: Encoding.Static,
+                      operator: Operator.EqualTo,
+                      compValue: abiCoder.encode(["uint256"], [0]),
+                    },
+                    {
+                      paramType: Encoding.Static,
+                      operator: Operator.EqualTo,
+                      compValue: abiCoder.encode(["uint256"], [0]),
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
+      );
+
+      // Empty bytes - both branches will overflow
+      const emptyPayload = "0x";
+      await expect(invoke(emptyPayload))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.OrViolation, anyValue, anyValue);
+    });
+  });
+
   describe("integrity", () => {
     it("reverts UnsuitableParameterType for invalid encodings", async () => {
       const { roles } = await loadFixture(setupTestContract);
@@ -623,7 +1499,11 @@ describe("Operator - Matches", () => {
       const allowanceKey = hexlify(randomBytes(32));
 
       // Tuple and Array require structural children (AbiEncoded does not)
-      for (const encoding of [Encoding.Tuple, Encoding.Array]) {
+      for (const encoding of [
+        Encoding.Tuple,
+        Encoding.Array,
+        Encoding.AbiEncoded,
+      ]) {
         await expect(
           packConditions(roles, [
             {

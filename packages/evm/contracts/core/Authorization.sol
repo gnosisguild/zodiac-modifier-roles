@@ -127,8 +127,8 @@ abstract contract Authorization is RolesStorage {
 
         Result memory result = ConditionLogic.evaluate(
             data,
-            condition,
             0,
+            condition,
             consumptions,
             Context(
                 transaction.to,
