@@ -99,12 +99,7 @@ describe("Operator - EqualToAvatar", () => {
           ),
       )
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(
-          ConditionViolationStatus.ParameterNotAllowed,
-          1n,
-          anyValue,
-          anyValue,
-        );
+        .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1n, anyValue);
 
       // Zero address fails
       const zeroAddress = "0x0000000000000000000000000000000000000000";
@@ -119,12 +114,7 @@ describe("Operator - EqualToAvatar", () => {
           ),
       )
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(
-          ConditionViolationStatus.ParameterNotAllowed,
-          1n,
-          anyValue,
-          anyValue,
-        );
+        .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1n, anyValue);
     });
   });
 
@@ -187,12 +177,7 @@ describe("Operator - EqualToAvatar", () => {
           ),
       )
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(
-          ConditionViolationStatus.ParameterNotAllowed,
-          1n,
-          anyValue,
-          anyValue,
-        );
+        .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1n, anyValue);
 
       // New avatar now passes
       await expect(
@@ -252,7 +237,6 @@ describe("Operator - EqualToAvatar", () => {
           ConditionViolationStatus.ParameterNotAllowed,
           1, // EqualToAvatar node at BFS index 1
           anyValue,
-          anyValue,
         );
     });
 
@@ -299,7 +283,6 @@ describe("Operator - EqualToAvatar", () => {
           ConditionViolationStatus.ParameterNotAllowed,
           anyValue,
           4, // payloadLocation: parameter starts at byte 4
-          32, // payloadSize: address is 32 bytes (padded)
         );
     });
   });

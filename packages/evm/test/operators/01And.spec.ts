@@ -93,7 +93,6 @@ describe("Operator - And", () => {
           ConditionViolationStatus.ParameterLessThanAllowed,
           2, // GreaterThan node
           anyValue,
-          anyValue,
         );
     });
 
@@ -133,7 +132,6 @@ describe("Operator - And", () => {
         .withArgs(
           ConditionViolationStatus.ParameterGreaterThanAllowed,
           3, // LessThan node
-          anyValue,
           anyValue,
         );
     });
@@ -248,7 +246,6 @@ describe("Operator - And", () => {
           ConditionViolationStatus.ParameterNotAllowed,
           4, // EqualTo node in first Matches child
           anyValue,
-          anyValue,
         );
 
       // Wrong second bytes - fails child 2
@@ -261,7 +258,6 @@ describe("Operator - And", () => {
         .withArgs(
           ConditionViolationStatus.ParameterNotAllowed,
           6, // Second EqualTo in second Matches child
-          anyValue,
           anyValue,
         );
     });
@@ -308,7 +304,6 @@ describe("Operator - And", () => {
           ConditionViolationStatus.ParameterNotAllowed,
           2, // EqualTo node for param
           anyValue,
-          anyValue,
         );
 
       // Wrong ether value
@@ -317,7 +312,6 @@ describe("Operator - And", () => {
         .withArgs(
           ConditionViolationStatus.ParameterNotAllowed,
           3, // EtherValue/EqualTo node
-          anyValue,
           anyValue,
         );
     });
@@ -394,7 +388,6 @@ describe("Operator - And", () => {
           ConditionViolationStatus.AllowanceExceeded,
           6, // Second WithinAllowance node
           anyValue,
-          anyValue,
         );
     });
   });
@@ -435,7 +428,6 @@ describe("Operator - And", () => {
           ConditionViolationStatus.ParameterLessThanAllowed,
           2, // GreaterThan node at BFS index 2
           anyValue,
-          anyValue,
         );
     });
 
@@ -473,7 +465,6 @@ describe("Operator - And", () => {
           ConditionViolationStatus.ParameterLessThanAllowed,
           anyValue,
           4, // payloadLocation: parameter starts at byte 4
-          32, // payloadSize: uint256 is 32 bytes
         );
     });
   });

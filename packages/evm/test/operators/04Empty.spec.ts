@@ -75,7 +75,6 @@ describe("Operator - Empty", () => {
           ConditionViolationStatus.CalldataNotEmpty,
           0, // Empty node
           anyValue,
-          anyValue,
         );
     });
   });
@@ -97,7 +96,6 @@ describe("Operator - Empty", () => {
           ConditionViolationStatus.CalldataNotEmpty,
           0, // Empty node at BFS index 0
           anyValue,
-          anyValue,
         );
     });
 
@@ -117,7 +115,6 @@ describe("Operator - Empty", () => {
           ConditionViolationStatus.CalldataNotEmpty,
           anyValue,
           0, // payloadLocation: Empty checks entire calldata
-          0, // payloadSize: Empty node has no specific size
         );
     });
   });

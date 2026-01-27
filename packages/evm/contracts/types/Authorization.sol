@@ -62,6 +62,5 @@ struct Result {
     Status status;
     uint256 violatedNodeIndex;
     uint256 payloadLocation;
-    uint256 payloadSize;
     Consumption[] consumptions;
 }

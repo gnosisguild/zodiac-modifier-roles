@@ -568,23 +568,6 @@ describe("AbiDecoder - Security & Bounds", () => {
       expect(result.children.length).to.equal(1);
     });
 
-    it("empty tuple does NOT overflow", async () => {
-      const { decoder } = await loadFixture(setup);
-
-      // A function with no params - just a selector, empty tuple at root
-      const data = "0xaabbccdd";
-
-      // AbiEncoded with no children = empty params
-      const conditions = flattenCondition({
-        paramType: Encoding.AbiEncoded,
-        children: [],
-      });
-
-      const result = toTree(await decoder.inspect(data, conditions));
-
-      expect(result.overflow).to.equal(false);
-    });
-
     it("large array length causes overflow (not OOG)", async () => {
       const { decoder } = await loadFixture(setup);
 

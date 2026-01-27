@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "../common/AbiDecoder.sol";
-
 import "./evaluate/ConditionLogic.sol";
 import "./serialize/ConditionLoader.sol";
 import "./Storage.sol";
@@ -124,21 +122,13 @@ abstract contract Authorization is RolesStorage {
         Consumption[] memory consumptions,
         Transaction memory transaction
     ) private view returns (Consumption[] memory) {
-        (
-            Condition memory condition,
-            Layout memory layout,
-            uint256 maxPluckIndex
-        ) = ConditionLoader.load(scopeConfig);
-
-        Payload memory payload;
-        if (layout.encoding != Encoding.None) {
-            payload = AbiDecoder.inspect(data, layout);
-        }
+        (Condition memory condition, uint256 maxPluckIndex) = ConditionLoader
+            .load(scopeConfig);
 
         Result memory result = ConditionLogic.evaluate(
             data,
+            0,
             condition,
-            payload,
             consumptions,
             Context(
                 transaction.to,
@@ -152,8 +142,7 @@ abstract contract Authorization is RolesStorage {
             revert ConditionViolation(
                 result.status,
                 result.violatedNodeIndex,
-                result.payloadLocation,
-                result.payloadSize
+                result.payloadLocation
             );
         }
 
