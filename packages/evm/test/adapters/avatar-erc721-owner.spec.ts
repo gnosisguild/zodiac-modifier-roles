@@ -129,7 +129,6 @@ describe("AvatarIsOwnerOfERC721", () => {
         ConditionViolationStatus.CustomConditionViolation,
         1, // Custom node
         anyValue,
-        anyValue,
       );
   });
 });

@@ -16,8 +16,7 @@ import "../../types/Types.sol";
 library ConditionLoader {
     /**
      * @param scopeConfig Packed scopeSonfig (options << 160 | pointer).
-     * @return condition The unpacked condition tree.
-     * @return layout The unpacked type tree for ABI decoding.
+     * @return condition The unpacked condition tree with embedded layout.
      * @return maxPluckIndex Maximum pluck index for pluck bag allocation.
      */
     function load(
@@ -25,11 +24,7 @@ library ConditionLoader {
     )
         internal
         view
-        returns (
-            Condition memory condition,
-            Layout memory layout,
-            uint256 maxPluckIndex
-        )
+        returns (Condition memory condition, uint256 maxPluckIndex)
     {
         address pointer = address(uint160(scopeConfig));
         bytes memory buffer = ImmutableStorage.load(pointer);

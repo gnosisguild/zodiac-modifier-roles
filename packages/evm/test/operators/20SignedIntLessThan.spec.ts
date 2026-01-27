@@ -67,7 +67,6 @@ describe("Operator - SignedIntLessThan", () => {
         ConditionViolationStatus.ParameterGreaterThanAllowed,
         1,
         anyValue,
-        anyValue,
       );
 
     // 101 > 100 fails
@@ -76,7 +75,6 @@ describe("Operator - SignedIntLessThan", () => {
       .withArgs(
         ConditionViolationStatus.ParameterGreaterThanAllowed,
         1,
-        anyValue,
         anyValue,
       );
   });
@@ -113,7 +111,6 @@ describe("Operator - SignedIntLessThan", () => {
         ConditionViolationStatus.ParameterGreaterThanAllowed,
         1,
         anyValue,
-        anyValue,
       );
 
     // -49 > -50 fails
@@ -123,7 +120,6 @@ describe("Operator - SignedIntLessThan", () => {
         ConditionViolationStatus.ParameterGreaterThanAllowed,
         1,
         anyValue,
-        anyValue,
       );
 
     // 0 > -50 fails
@@ -132,7 +128,6 @@ describe("Operator - SignedIntLessThan", () => {
       .withArgs(
         ConditionViolationStatus.ParameterGreaterThanAllowed,
         1,
-        anyValue,
         anyValue,
       );
   });
@@ -173,7 +168,6 @@ describe("Operator - SignedIntLessThan", () => {
         ConditionViolationStatus.ParameterGreaterThanAllowed,
         2,
         anyValue,
-        anyValue,
       );
 
     // 2. Slice 32 bytes (full int256) at offset 0, then SignedIntLessThan -100
@@ -210,7 +204,6 @@ describe("Operator - SignedIntLessThan", () => {
         ConditionViolationStatus.ParameterGreaterThanAllowed,
         2,
         anyValue,
-        anyValue,
       );
 
     // -99 (32 bytes) < -100 -> Fail (Greater)
@@ -220,7 +213,6 @@ describe("Operator - SignedIntLessThan", () => {
       .withArgs(
         ConditionViolationStatus.ParameterGreaterThanAllowed,
         2,
-        anyValue,
         anyValue,
       );
   });
@@ -276,7 +268,6 @@ describe("Operator - SignedIntLessThan", () => {
         ConditionViolationStatus.ParameterGreaterThanAllowed,
         0n,
         anyValue,
-        anyValue,
       );
   });
 
@@ -305,7 +296,6 @@ describe("Operator - SignedIntLessThan", () => {
           ConditionViolationStatus.ParameterGreaterThanAllowed,
           1, // SignedIntLessThan node at BFS index 1
           anyValue,
-          anyValue,
         );
     });
 
@@ -333,7 +323,6 @@ describe("Operator - SignedIntLessThan", () => {
           ConditionViolationStatus.ParameterGreaterThanAllowed,
           anyValue,
           4, // payloadLocation: parameter starts at byte 4
-          32, // payloadSize: int256 is 32 bytes
         );
     });
   });

@@ -55,22 +55,12 @@ describe("Operator - Slice", () => {
       // Wrong value at the slice position
       await expect(invoke("0x00000000cafebabe00000000"))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(
-          ConditionViolationStatus.ParameterNotAllowed,
-          2,
-          anyValue,
-          anyValue,
-        );
+        .withArgs(ConditionViolationStatus.ParameterNotAllowed, 2, anyValue);
 
       // Value at wrong position (shift 0 instead of 4) - fails
       await expect(invoke("0xdeadbeef0000000000000000"))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(
-          ConditionViolationStatus.ParameterNotAllowed,
-          2,
-          anyValue,
-          anyValue,
-        );
+        .withArgs(ConditionViolationStatus.ParameterNotAllowed, 2, anyValue);
     });
 
     it("extracts 1-byte size from compValue (size 1)", async () => {
@@ -107,12 +97,7 @@ describe("Operator - Slice", () => {
       // bytes starting with 0xcd - fails
       await expect(invoke("0xcd00000000000000"))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(
-          ConditionViolationStatus.ParameterNotAllowed,
-          2,
-          anyValue,
-          anyValue,
-        );
+        .withArgs(ConditionViolationStatus.ParameterNotAllowed, 2, anyValue);
     });
 
     it("extracts 1-byte size from compValue (size 32)", async () => {
@@ -149,12 +134,7 @@ describe("Operator - Slice", () => {
       // 32 bytes encoding different value - fails
       await expect(invoke(abiCoder.encode(["uint256"], [12346])))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(
-          ConditionViolationStatus.ParameterNotAllowed,
-          2,
-          anyValue,
-          anyValue,
-        );
+        .withArgs(ConditionViolationStatus.ParameterNotAllowed, 2, anyValue);
     });
   });
 
@@ -195,7 +175,6 @@ describe("Operator - Slice", () => {
         .withArgs(
           ConditionViolationStatus.ParameterLessThanAllowed,
           2,
-          anyValue,
           anyValue,
         );
     });
@@ -274,7 +253,6 @@ describe("Operator - Slice", () => {
           ConditionViolationStatus.ParameterNotAllowed,
           2, // EqualTo node at BFS index 2
           anyValue,
-          anyValue,
         );
     });
 
@@ -309,7 +287,6 @@ describe("Operator - Slice", () => {
           ConditionViolationStatus.ParameterNotAllowed,
           anyValue,
           68, // payloadLocation: bytes data at byte 68 (4 + 32 + 32)
-          4, // payloadSize: 4 bytes sliced
         );
     });
   });
