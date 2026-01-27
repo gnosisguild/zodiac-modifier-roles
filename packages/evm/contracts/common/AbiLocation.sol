@@ -9,6 +9,8 @@ import {Operator} from "../types/Operator.sol";
  * @author gnosisguild
  */
 library AbiLocation {
+    uint256 private constant _OVERFLOW = type(uint256).max;
+
     /**
      * @dev Gets the locations of all direct children for Tuple/Array/AbiEncoded.
      *      Returns overflow=true if calldata bounds are exceeded.
@@ -43,13 +45,14 @@ library AbiLocation {
                 result[i] = location + headOffset;
                 headOffset += child.size;
             } else {
-                if (location + headOffset + 32 > data.length) {
-                    return (empty, true);
-                }
+                uint256 childLocation = _tailLocation(
+                    data,
+                    location,
+                    headOffset
+                );
+                if (childLocation == _OVERFLOW) return (empty, true);
 
-                result[i] =
-                    location +
-                    uint256(uint256(bytes32(data[location + headOffset:])));
+                result[i] = childLocation;
                 headOffset += 32;
             }
         }
@@ -58,18 +61,18 @@ library AbiLocation {
 
     /**
      * @dev Computes the encoded size of a value at location.
-     *      Returns 0 on overflow (caller should check bounds separately).
+     *      Returns overflow=true if calldata bounds are exceeded.
      */
     function size(
         bytes calldata data,
         uint256 location,
         Condition memory condition
-    ) internal pure returns (uint256 result) {
+    ) internal pure returns (uint256 result, bool overflow) {
         Encoding enc = condition.encoding;
 
         // Static is always 32 bytes
         if (enc == Encoding.Static) {
-            return 32;
+            return (32, false);
         }
 
         /*
@@ -86,17 +89,21 @@ library AbiLocation {
          */
         if (enc == Encoding.Dynamic || enc == Encoding.AbiEncoded) {
             // Dynamic types: length prefix + padded content
-            if (location + 32 > data.length) return 0;
-            return 32 + _ceil32(uint256(bytes32(data[location:])));
+            if (location + 32 > data.length) return (0, true);
+            return (32 + _ceil32(uint256(bytes32(data[location:]))), false);
         }
 
         if (enc == Encoding.None) {
             // Transparent And/Or: delegate to first child
             for (uint256 i; i < condition.children.length; i++) {
-                result = size(data, location, condition.children[i]);
-                if (result > 0) return result;
+                (result, overflow) = size(
+                    data,
+                    location,
+                    condition.children[i]
+                );
+                if (!overflow && result > 0) return (result, false);
             }
-            return 0;
+            return (0, true);
         }
 
         /*
@@ -105,7 +112,7 @@ library AbiLocation {
         bool isArray = enc == Encoding.Array;
         uint256 childCount;
         if (isArray) {
-            if (location + 32 > data.length) return 0;
+            if (location + 32 > data.length) return (0, true);
             childCount = uint256(bytes32(data[location:]));
             location += 32;
             result = 32;
@@ -130,19 +137,59 @@ library AbiLocation {
                 sizeAtHead = child.size;
                 sizeAtTail = 0;
             } else {
-                if (location + headOffset + 32 > data.length) return 0;
-                uint256 tailOffset = uint256(
-                    bytes32(data[location + headOffset:])
+                uint256 childLocation = _tailLocation(
+                    data,
+                    location,
+                    headOffset
                 );
-                sizeAtHead = 32;
-                sizeAtTail = size(data, location + tailOffset, child);
+                if (childLocation == _OVERFLOW) return (0, true);
 
-                if (sizeAtTail == 0) return 0;
+                sizeAtHead = 32;
+                (sizeAtTail, overflow) = size(data, childLocation, child);
+
+                if (overflow) return (0, true);
             }
 
             result += sizeAtHead + sizeAtTail;
             headOffset += sizeAtHead;
         }
+    }
+
+    /**
+     * @dev Computes the absolute position of a dynamic (non-inline) element.
+     *      Reads the relative offset from HEAD and adds it to the block start
+     *      to locate the element in the TAIL region.
+     *
+     * @param data       The calldata being inspected.
+     * @param location   Absolute start position of the current ABI block.
+     * @param headOffset Byte offset within HEAD where the pointer resides.
+     * @return           Absolute position, or type(uint256).max on overflow.
+     */
+    function _tailLocation(
+        bytes calldata data,
+        uint256 location,
+        uint256 headOffset
+    ) private pure returns (uint256) {
+        if (location + headOffset + 32 > data.length) {
+            return type(uint256).max;
+        }
+
+        uint256 tailOffset;
+        assembly {
+            tailOffset := calldataload(
+                add(data.offset, add(location, headOffset))
+            )
+        }
+
+        if (tailOffset <= headOffset) {
+            return type(uint256).max;
+        }
+
+        if (location + tailOffset + 32 > data.length) {
+            return type(uint256).max;
+        }
+
+        return location + tailOffset;
     }
 
     function _ceil32(uint256 x) private pure returns (uint256) {

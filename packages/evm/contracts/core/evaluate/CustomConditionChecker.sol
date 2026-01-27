@@ -47,9 +47,14 @@ library CustomConditionChecker {
     ) internal view returns (Status status) {
         address adapter = address(bytes20(compValue));
 
-        uint256 size = condition.size != 0
-            ? condition.size
-            : AbiLocation.size(data, location, condition);
+        uint256 size;
+        if (condition.size != 0) {
+            size = condition.size;
+        } else {
+            bool overflow;
+            (size, overflow) = AbiLocation.size(data, location, condition);
+            if (overflow) return Status.ParameterNotAllowed;
+        }
 
         bytes memory extra;
         if (compValue.length > 20) {

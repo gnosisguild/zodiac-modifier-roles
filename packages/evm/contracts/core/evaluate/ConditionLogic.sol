@@ -562,9 +562,13 @@ library ConditionLogic {
         }
 
         // Check if condition has size set (e.g., from Slice), otherwise get from decoder
-        uint256 size = condition.size != 0
-            ? condition.size
-            : AbiLocation.size(data, location, condition);
+        uint256 size;
+        if (condition.size != 0) {
+            size = condition.size;
+        } else {
+            (size, overflow) = AbiLocation.size(data, location, condition);
+            if (overflow) return (0, true);
+        }
 
         if (location + size > data.length) {
             return (0, true);
@@ -575,11 +579,6 @@ library ConditionLogic {
                 result := calldataload(add(data.offset, location))
             }
             return (result, false);
-        }
-
-        // align the word for slicing
-        if (size == 0) {
-            return (0, true);
         }
 
         // align the word for slicing
