@@ -551,7 +551,7 @@ library ConditionLogic {
         uint256 location,
         Condition memory condition,
         Context memory context
-    ) private pure returns (bytes32 result, bool overflow) {
+    ) private pure returns (bytes32 result, bool) {
         /*
          * Integrity rules map Encoding.EtherValue -> Encoding.None during packing.
          * If we encounter Encoding.None here (in a comparison context), it acts as
@@ -562,13 +562,11 @@ library ConditionLogic {
         }
 
         // Check if condition has size set (e.g., from Slice), otherwise get from decoder
-        uint256 size;
-        if (condition.size != 0) {
-            size = condition.size;
-        } else {
-            (size, overflow) = AbiLocation.size(data, location, condition);
-            if (overflow) return (0, true);
-        }
+        (uint256 size, bool overflow) = condition.size != 0
+            ? (condition.size, false)
+            : AbiLocation.size(data, location, condition);
+
+        if (overflow) return (0, true);
 
         if (location + size > data.length) {
             return (0, true);
