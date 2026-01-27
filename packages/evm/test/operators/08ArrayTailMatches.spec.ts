@@ -92,7 +92,6 @@ describe("Operator - ArrayTailMatches", () => {
           ConditionViolationStatus.ParameterNotAllowed,
           3, // Second EqualTo (last tail element)
           anyValue,
-          anyValue,
         );
 
       // Second-to-last element wrong
@@ -101,7 +100,6 @@ describe("Operator - ArrayTailMatches", () => {
         .withArgs(
           ConditionViolationStatus.ParameterNotAllowed,
           2, // First EqualTo (second-to-last tail element)
-          anyValue,
           anyValue,
         );
     });
@@ -144,7 +142,6 @@ describe("Operator - ArrayTailMatches", () => {
           ConditionViolationStatus.ParameterNotAMatch,
           1, // ArrayTailMatches node
           anyValue,
-          anyValue,
         );
 
       // Empty array
@@ -153,7 +150,6 @@ describe("Operator - ArrayTailMatches", () => {
         .withArgs(
           ConditionViolationStatus.ParameterNotAMatch,
           1, // ArrayTailMatches node
-          anyValue,
           anyValue,
         );
     });
@@ -244,7 +240,6 @@ describe("Operator - ArrayTailMatches", () => {
           ConditionViolationStatus.ParameterLessThanAllowed,
           2, // GreaterThan node
           anyValue,
-          anyValue,
         );
 
       // Array [20, 99, 80] - wrong middle element
@@ -255,7 +250,6 @@ describe("Operator - ArrayTailMatches", () => {
           ConditionViolationStatus.ParameterNotAllowed,
           3, // EqualTo node
           anyValue,
-          anyValue,
         );
 
       // Array [20, 50, 150] - last element too big
@@ -265,7 +259,6 @@ describe("Operator - ArrayTailMatches", () => {
         .withArgs(
           ConditionViolationStatus.ParameterGreaterThanAllowed,
           4, // LessThan node
-          anyValue,
           anyValue,
         );
     });
@@ -352,7 +345,6 @@ describe("Operator - ArrayTailMatches", () => {
           ConditionViolationStatus.ParameterNotAMatch,
           1, // ArrayTailMatches node at BFS index 1
           anyValue,
-          anyValue,
         );
     });
 
@@ -391,7 +383,6 @@ describe("Operator - ArrayTailMatches", () => {
           ConditionViolationStatus.ParameterNotAllowed,
           anyValue,
           132, // payloadLocation: last element at byte 132
-          32, // payloadSize: uint256 element is 32 bytes
         );
     });
   });
