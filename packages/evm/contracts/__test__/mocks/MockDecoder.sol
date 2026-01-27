@@ -2,8 +2,7 @@
 pragma solidity >=0.8.17 <0.9.0;
 
 import "../../common/AbiDecoder.sol";
-import "../../core/serialize/ConditionPacker.sol";
-import "../../core/serialize/ConditionUnpacker.sol";
+import "../../core/serialize/TypeTree.sol";
 import "../../core/serialize/Integrity.sol";
 import "../../core/serialize/Topology.sol";
 
@@ -11,11 +10,9 @@ contract MockDecoder {
     function inspect(
         bytes calldata data,
         ConditionFlat[] memory conditions
-    ) public view returns (FlatPayload[] memory) {
-        Topology[] memory topology = TopologyLib.resolve(conditions);
-        Integrity.enforce(conditions, topology);
-        bytes memory packed = ConditionPacker.pack(conditions, topology);
-        (, Layout memory layout, ) = ConditionUnpacker.unpack(packed);
+    ) public pure returns (FlatPayload[] memory) {
+        Integrity.enforce(conditions);
+        Layout memory layout = TypeTree.inspect(conditions, 0);
         return flattenTree(AbiDecoder.inspect(data, layout));
     }
 

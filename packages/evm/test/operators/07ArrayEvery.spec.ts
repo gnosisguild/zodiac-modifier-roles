@@ -79,7 +79,6 @@ describe("Operator - ArrayEvery", () => {
           ConditionViolationStatus.NotEveryArrayElementPasses,
           2, // LessThan node (failing element's child)
           anyValue,
-          anyValue,
         );
     });
 
@@ -134,7 +133,6 @@ describe("Operator - ArrayEvery", () => {
         .withArgs(
           ConditionViolationStatus.NotEveryArrayElementPasses,
           3, // LessThan node (failing element's child)
-          anyValue,
           anyValue,
         );
 
@@ -246,7 +244,6 @@ describe("Operator - ArrayEvery", () => {
           ConditionViolationStatus.NotEveryArrayElementPasses,
           2, // EqualTo node at BFS index 2
           anyValue,
-          anyValue,
         );
     });
 
@@ -280,7 +277,6 @@ describe("Operator - ArrayEvery", () => {
           ConditionViolationStatus.NotEveryArrayElementPasses,
           anyValue,
           68, // payloadLocation: first element at byte 68 (4 + 32 + 32)
-          32, // payloadSize: uint256 element is 32 bytes
         );
     });
   });

@@ -42,8 +42,7 @@ interface IRolesError {
     error ConditionViolation(
         Status status,
         uint256 violatedNodeIndex,
-        uint256 payloadLocation,
-        uint256 payloadSize
+        uint256 location
     );
 
     /// Target address is not allowed for this role
@@ -95,9 +94,6 @@ interface IRolesError {
 
     /// Child type tree is unsuitable for the node at given index
     error UnsuitableChildTypeTree(uint256 index);
-
-    /// Non-structural children must appear after all structural children
-    error NonStructuralChildrenMustComeLast(uint256 index);
 
     /// WithinRatio target must resolve to a Static type
     error WithinRatioTargetNotStatic(uint256 index);

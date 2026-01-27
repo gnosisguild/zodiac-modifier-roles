@@ -137,9 +137,6 @@ library AbiDecoder {
         if (encoding == Encoding.Static) {
             payload.size = 32;
         } else if (encoding == Encoding.Dynamic) {
-            if (layout.children.length > 0) {
-                _variant(data, location, layout, payload);
-            }
             payload.size = 32 + _ceil32(uint256(word(data, location)));
         } else if (encoding == Encoding.Tuple) {
             __block__(data, location, layout.children.length, layout, payload);
@@ -152,8 +149,7 @@ library AbiDecoder {
                 payload
             );
             payload.size += 32;
-        } else {
-            assert(encoding == Encoding.AbiEncoded);
+        } else if (encoding == Encoding.AbiEncoded) {
             __block__(
                 data,
                 location + 32 + layout.leadingBytes,
@@ -163,44 +159,28 @@ library AbiDecoder {
             );
             payload.location = location + 32;
             payload.size = 32 + _ceil32(uint256(word(data, location)));
-        }
-
-        if (location + payload.size > data.length) {
+        } else {
+            // None encoding indicates a variant (Or/And with different child types)
+            assert(encoding == Encoding.None);
+            uint256 length = layout.children.length;
+            payload.variant = true;
             payload.overflow = true;
-        }
-    }
+            payload.children = new Payload[](length);
 
-    /**
-     * @dev Tries multiple type interpretations for the same bytes location.
-     *      Handles cases where a dynamic parameter's content has multiple valid
-     *      decodings.
-     *
-     * @param data     The calldata being inspected.
-     * @param location Byte position to interpret.
-     * @param layout   Type tree node with variant children.
-     * @param payload  Output: marked as variant, with one child per interpretation.
-     *
-     * @notice Sets overflow=false if at least one interpretation succeeds.
-     */
-    function _variant(
-        bytes calldata data,
-        uint256 location,
-        Layout memory layout,
-        Payload memory payload
-    ) private pure {
-        uint256 length = layout.children.length;
-
-        payload.variant = true;
-        payload.overflow = true;
-        payload.children = new Payload[](length);
-
-        unchecked {
             for (uint256 i; i < length; ++i) {
                 _walk(data, location, layout.children[i], payload.children[i]);
+                // overflow as a whole if all overflow
                 payload.overflow =
                     payload.overflow &&
                     payload.children[i].overflow;
             }
+            // variants are always encoded embedded within a Dynamic bytes,
+            // this simply reads length
+            payload.size = 32 + _ceil32(uint256(word(data, location)));
+        }
+
+        if (location + payload.size > data.length) {
+            payload.overflow = true;
         }
     }
 

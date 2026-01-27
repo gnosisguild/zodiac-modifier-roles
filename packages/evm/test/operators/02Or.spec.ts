@@ -122,7 +122,6 @@ describe("Operator - Or", () => {
           ConditionViolationStatus.OrViolation,
           1, // Or node
           anyValue,
-          anyValue,
         );
     });
   });
@@ -171,7 +170,6 @@ describe("Operator - Or", () => {
         .withArgs(
           ConditionViolationStatus.OrViolation,
           1, // Or node
-          anyValue,
           anyValue,
         );
     });
@@ -248,7 +246,6 @@ describe("Operator - Or", () => {
           ConditionViolationStatus.OrViolation,
           1, // Or node
           anyValue,
-          anyValue,
         );
     });
 
@@ -296,7 +293,6 @@ describe("Operator - Or", () => {
         .withArgs(
           ConditionViolationStatus.OrViolation,
           1, // Or node
-          anyValue,
           anyValue,
         );
     });
@@ -497,7 +493,6 @@ describe("Operator - Or", () => {
           ConditionViolationStatus.OrViolation,
           1, // Or node at BFS index 1
           anyValue,
-          anyValue,
         );
     });
 
@@ -535,7 +530,6 @@ describe("Operator - Or", () => {
           ConditionViolationStatus.OrViolation,
           anyValue,
           4, // payloadLocation: parameter starts at byte 4
-          32, // payloadSize: uint256 is 32 bytes
         );
     });
   });

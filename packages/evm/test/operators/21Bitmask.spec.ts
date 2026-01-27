@@ -79,12 +79,7 @@ describe("Operator - Bitmask", () => {
       // 32 bytes -> fails (crosses into second word but data only has one word)
       await expect(invoke("0x" + "ab".repeat(32)))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(
-          ConditionViolationStatus.BitmaskOverflow,
-          1,
-          anyValue,
-          anyValue,
-        );
+        .withArgs(ConditionViolationStatus.BitmaskOverflow, 1, anyValue);
     });
   });
 
@@ -131,12 +126,7 @@ describe("Operator - Bitmask", () => {
 
       await expect(invoke("0xaacc"))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(
-          ConditionViolationStatus.BitmaskNotAllowed,
-          1,
-          anyValue,
-          anyValue,
-        );
+        .withArgs(ConditionViolationStatus.BitmaskNotAllowed, 1, anyValue);
     });
 
     it("ignores bits outside the mask and rinses trailing garbage", async () => {
@@ -168,12 +158,7 @@ describe("Operator - Bitmask", () => {
       // 0xbb & 0xf0 = 0xb0 != 0xa0 -> fails
       await expect(invoke("0xbb"))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(
-          ConditionViolationStatus.BitmaskNotAllowed,
-          1,
-          anyValue,
-          anyValue,
-        );
+        .withArgs(ConditionViolationStatus.BitmaskNotAllowed, 1, anyValue);
     });
   });
 
@@ -223,22 +208,12 @@ describe("Operator - Bitmask", () => {
       // First byte wrong (first chunk mismatch)
       await expect(invoke("0xcd" + "ab".repeat(63)))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(
-          ConditionViolationStatus.BitmaskNotAllowed,
-          1,
-          anyValue,
-          anyValue,
-        );
+        .withArgs(ConditionViolationStatus.BitmaskNotAllowed, 1, anyValue);
 
       // Last byte wrong (second chunk mismatch)
       await expect(invoke("0x" + "ab".repeat(63) + "cd"))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(
-          ConditionViolationStatus.BitmaskNotAllowed,
-          1,
-          anyValue,
-          anyValue,
-        );
+        .withArgs(ConditionViolationStatus.BitmaskNotAllowed, 1, anyValue);
     });
   });
 
@@ -269,12 +244,7 @@ describe("Operator - Bitmask", () => {
       // byte[5] = 0xab -> fails
       await expect(invoke("0x0000000000ab"))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(
-          ConditionViolationStatus.BitmaskNotAllowed,
-          1,
-          anyValue,
-          anyValue,
-        );
+        .withArgs(ConditionViolationStatus.BitmaskNotAllowed, 1, anyValue);
     });
   });
 
@@ -302,7 +272,6 @@ describe("Operator - Bitmask", () => {
         .withArgs(
           ConditionViolationStatus.BitmaskNotAllowed,
           1, // Bitmask node at BFS index 1
-          anyValue,
           anyValue,
         );
     });
@@ -334,7 +303,6 @@ describe("Operator - Bitmask", () => {
           ConditionViolationStatus.BitmaskNotAllowed,
           anyValue,
           36, // payloadLocation: dynamic param at byte 36 (4 + 32)
-          96, // payloadSize: 32 (length) + 64 (50 bytes padded to 64) = 96
         );
     });
   });
