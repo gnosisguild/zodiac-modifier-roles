@@ -82,7 +82,6 @@ describe("Operator - ArraySome", () => {
           ConditionViolationStatus.NoArrayElementPasses,
           1, // ArraySome node
           anyValue,
-          anyValue,
         );
     });
 
@@ -118,7 +117,6 @@ describe("Operator - ArraySome", () => {
         .withArgs(
           ConditionViolationStatus.NoArrayElementPasses,
           1, // ArraySome node
-          anyValue,
           anyValue,
         );
     });
@@ -251,7 +249,6 @@ describe("Operator - ArraySome", () => {
           ConditionViolationStatus.NoArrayElementPasses,
           1, // ArraySome node at BFS index 1
           anyValue,
-          anyValue,
         );
     });
 
@@ -285,7 +282,6 @@ describe("Operator - ArraySome", () => {
           ConditionViolationStatus.NoArrayElementPasses,
           anyValue,
           36, // payloadLocation: array data starts at byte 36
-          128, // payloadSize: 32 (length) + 3*32 (elements) = 128
         );
     });
   });

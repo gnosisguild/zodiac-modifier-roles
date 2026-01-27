@@ -705,7 +705,6 @@ describe("AllowanceTracking", () => {
           ConditionViolationStatus.AllowanceExceeded,
           1, // WithinAllowance node
           anyValue,
-          anyValue,
         );
 
       // Balance unchanged
