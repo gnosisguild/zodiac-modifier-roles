@@ -42,27 +42,7 @@ library ConditionLogic {
             } else if (operator == Operator.Slice) {
                 return _slice(data, location, condition, consumptions, context);
             } else if (operator == Operator.Pluck) {
-                uint256 index = uint256(uint8(condition.compValue[0]));
-                if (condition.encoding == Encoding.Array) {
-                    context.pluckedLocations[index] = location;
-                } else {
-                    (bytes32 pluckedValue, bool overflow) = __input(
-                        data,
-                        location,
-                        condition,
-                        context
-                    );
-                    if (overflow) {
-                        return
-                            _violation(
-                                Status.CalldataOverflow,
-                                location,
-                                condition
-                            );
-                    }
-                    context.pluckedValues[index] = pluckedValue;
-                }
-                return _ok(consumptions);
+                return _pluck(data, location, condition, consumptions, context);
             } else if (operator == Operator.Empty) {
                 return
                     _result(
@@ -98,13 +78,19 @@ library ConditionLogic {
                         consumptions,
                         context
                     );
-            } else if (operator == Operator.ZipSome) {
-                return
-                    _zipSome(data, location, condition, consumptions, context);
             } else {
-                assert(operator == Operator.ZipEvery);
+                assert(
+                    operator == Operator.ZipSome ||
+                        operator == Operator.ZipEvery
+                );
                 return
-                    _zipEvery(data, location, condition, consumptions, context);
+                    _zipIterator(
+                        data,
+                        location,
+                        condition,
+                        consumptions,
+                        context
+                    );
             }
         } else {
             if (operator <= Operator.LessThan) {
@@ -161,7 +147,6 @@ library ConditionLogic {
             } else if (operator == Operator.CallWithinAllowance) {
                 return __allowance(1, location, condition, consumptions);
             } else if (operator == Operator.WithinRatio) {
-                // WithinRatio uses plucked values, not a direct payload location
                 return
                     _result(
                         WithinRatioChecker.check(
@@ -314,6 +299,31 @@ library ConditionLogic {
         return _violation(Status.OrViolation, location, condition);
     }
 
+    function _pluck(
+        bytes calldata data,
+        uint256 location,
+        Condition memory condition,
+        Consumption[] memory consumptions,
+        Context memory context
+    ) private pure returns (Result memory) {
+        uint256 index = uint256(uint8(condition.compValue[0]));
+        if (condition.encoding == Encoding.Array) {
+            context.pluckedLocations[index] = location;
+        } else {
+            (bytes32 pluckedValue, bool overflow) = __input(
+                data,
+                location,
+                condition,
+                context
+            );
+            if (overflow) {
+                return _violation(Status.CalldataOverflow, location, condition);
+            }
+            context.pluckedValues[index] = pluckedValue;
+        }
+        return _ok(consumptions);
+    }
+
     function _arraySome(
         bytes calldata data,
         uint256 location,
@@ -349,89 +359,49 @@ library ConditionLogic {
         return _violation(Status.NoArrayElementPasses, location, condition);
     }
 
-    function _zipSome(
+    function _zipIterator(
         bytes calldata data,
         uint256 location,
         Condition memory condition,
         Consumption[] memory consumptions,
         Context memory context
     ) private view returns (Result memory result) {
-        (
-            uint256[][] memory locations,
-            uint256 length,
-            bool lengthMismatch,
-            bool overflow
-        ) = _pluckedArrayLocations(data, condition, context);
+        bool every = condition.operator == Operator.ZipEvery;
 
-        if (overflow) {
-            return _violation(Status.CalldataOverflow, location, condition);
-        }
-        if (lengthMismatch) {
-            return
-                _violation(
-                    Status.ZippedArrayLengthMismatch,
-                    location,
-                    condition
-                );
-        }
+        uint256[][] memory locations;
+        uint256 length;
+        {
+            bool lengthMismatch;
+            bool overflow;
+            (
+                locations,
+                length,
+                lengthMismatch,
+                overflow
+            ) = _pluckedArrayLocations(data, condition, context);
 
-        Condition memory tuple = condition.children[0];
-
-        for (uint256 i; i < length; ++i) {
-            result.consumptions = consumptions;
-            bool tuplePasses = true;
-            for (uint256 j; j < locations.length; ++j) {
-                result = evaluate(
-                    data,
-                    locations[j][i],
-                    tuple.children[j],
-                    result.consumptions,
-                    context
-                );
-                if (result.status != Status.Ok) {
-                    tuplePasses = false;
-                    break;
-                }
+            if (overflow) {
+                return _violation(Status.CalldataOverflow, location, condition);
             }
-
-            if (tuplePasses) {
-                return result;
+            if (lengthMismatch) {
+                return
+                    _violation(
+                        Status.ZippedArrayLengthMismatch,
+                        location,
+                        condition
+                    );
             }
-        }
-
-        return _violation(Status.NoZippedElementPasses, location, condition);
-    }
-
-    function _zipEvery(
-        bytes calldata data,
-        uint256 location,
-        Condition memory condition,
-        Consumption[] memory consumptions,
-        Context memory context
-    ) private view returns (Result memory result) {
-        (
-            uint256[][] memory locations,
-            uint256 length,
-            bool lengthMismatch,
-            bool overflow
-        ) = _pluckedArrayLocations(data, condition, context);
-
-        if (overflow) {
-            return _violation(Status.CalldataOverflow, location, condition);
-        }
-        if (lengthMismatch) {
-            return
-                _violation(
-                    Status.ZippedArrayLengthMismatch,
-                    location,
-                    condition
-                );
         }
 
         Condition memory tuple = condition.children[0];
 
         result.consumptions = consumptions;
         for (uint256 i; i < length; ++i) {
+            if (!every) {
+                // if we are doing some, reset consumptions
+                result.consumptions = consumptions;
+            }
+
             bool tuplePasses = true;
             for (uint256 j; j < locations.length; ++j) {
                 result = evaluate(
@@ -447,12 +417,28 @@ library ConditionLogic {
                 }
             }
 
-            if (!tuplePasses) {
-                result.status = Status.NotEveryZippedElementPasses;
-                return result;
+            if (every) {
+                /*
+                 * ZipEvery
+                 */
+                if (!tuplePasses) {
+                    result.status = Status.NotEveryZippedElementPasses;
+                    return result;
+                }
+            } else {
+                /*
+                 * ZipSome
+                 */
+                if (tuplePasses) {
+                    return result;
+                }
             }
         }
-        return result;
+
+        return
+            every
+                ? result
+                : _violation(Status.NoZippedElementPasses, location, condition);
     }
 
     function _arrayEvery(
