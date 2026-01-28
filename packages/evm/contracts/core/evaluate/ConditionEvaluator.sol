@@ -87,22 +87,27 @@ library ConditionEvaluator {
                     );
             }
         } else {
-            if (operator <= Operator.LessThan) {
-                return
-                    _result(
-                        _compare(data, location, condition, context),
-                        location,
-                        condition,
-                        consumptions
-                    );
-            } else if (operator <= Operator.SignedIntLessThan) {
-                return
-                    _result(
-                        _compareSignedInt(data, location, condition, context),
-                        location,
-                        condition,
-                        consumptions
-                    );
+            if (operator <= Operator.SignedIntLessThan) {
+                (bytes32 value, bool overflow) = __input(
+                    data,
+                    location,
+                    condition,
+                    context
+                );
+                if (overflow) {
+                    return
+                        _violation(
+                            Status.CalldataOverflow,
+                            location,
+                            condition
+                        );
+                }
+
+                Status status = operator <= Operator.LessThan
+                    ? _compare(value, condition)
+                    : _compareSignedInt(value, condition);
+
+                return _result(status, location, condition, consumptions);
             } else if (operator == Operator.Bitmask) {
                 return
                     _result(
@@ -507,62 +512,37 @@ library ConditionEvaluator {
     }
 
     function _compare(
-        bytes calldata data,
-        uint256 location,
-        Condition memory condition,
-        Context memory context
+        bytes32 value,
+        Condition memory condition
     ) private pure returns (Status) {
-        Operator operator = condition.operator;
-
         bytes32 compValue = condition.compValue.length > 32
             ? keccak256(condition.compValue)
             : bytes32(condition.compValue);
-        (bytes32 value, bool overflow) = __input(
-            data,
-            location,
-            condition,
-            context
-        );
-        if (overflow) return Status.CalldataOverflow;
 
-        if (operator == Operator.EqualTo && value != compValue) {
-            return Status.ParameterNotAllowed;
-        } else if (operator == Operator.GreaterThan && value <= compValue) {
-            return Status.ParameterLessThanAllowed;
-        } else if (operator == Operator.LessThan && value >= compValue) {
-            return Status.ParameterGreaterThanAllowed;
-        } else {
-            return Status.Ok;
+        if (condition.operator == Operator.EqualTo) {
+            return value == compValue ? Status.Ok : Status.ParameterNotAllowed;
         }
+        if (condition.operator == Operator.GreaterThan) {
+            return
+                value > compValue ? Status.Ok : Status.ParameterLessThanAllowed;
+        }
+        return
+            value < compValue ? Status.Ok : Status.ParameterGreaterThanAllowed;
     }
 
     function _compareSignedInt(
-        bytes calldata data,
-        uint256 location,
-        Condition memory condition,
-        Context memory context
+        bytes32 rawValue,
+        Condition memory condition
     ) private pure returns (Status) {
-        Operator operator = condition.operator;
-        int256 compValue = int256(uint256(bytes32(condition.compValue)));
-        (bytes32 rawValue, bool overflow) = __input(
-            data,
-            location,
-            condition,
-            context
-        );
-        if (overflow) return Status.CalldataOverflow;
-
         int256 value = int256(uint256(rawValue));
+        int256 compValue = int256(uint256(bytes32(condition.compValue)));
 
-        if (operator == Operator.SignedIntGreaterThan && value <= compValue) {
-            return Status.ParameterLessThanAllowed;
-        } else if (
-            operator == Operator.SignedIntLessThan && value >= compValue
-        ) {
-            return Status.ParameterGreaterThanAllowed;
-        } else {
-            return Status.Ok;
+        if (condition.operator == Operator.SignedIntGreaterThan) {
+            return
+                value > compValue ? Status.Ok : Status.ParameterLessThanAllowed;
         }
+        return
+            value < compValue ? Status.Ok : Status.ParameterGreaterThanAllowed;
     }
 
     function __allowance(
@@ -724,7 +704,5 @@ library ConditionEvaluator {
                 return (locations, Status.ZippedArrayLengthMismatch);
             }
         }
-
-        //return (locations, Status.Ok);
     }
 }
