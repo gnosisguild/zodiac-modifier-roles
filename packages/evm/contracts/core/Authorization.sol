@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.17 <0.9.0;
 
-import "./evaluate/ConditionLogic.sol";
+import "./evaluate/ConditionEvaluator.sol";
 import "./serialize/ConditionLoader.sol";
 import "./Storage.sol";
 
@@ -125,7 +125,7 @@ abstract contract Authorization is RolesStorage {
         (Condition memory condition, uint256 maxPluckIndex) = ConditionLoader
             .load(scopeConfig);
 
-        Result memory result = ConditionLogic.evaluate(
+        Result memory result = ConditionEvaluator.evaluate(
             data,
             0,
             condition,

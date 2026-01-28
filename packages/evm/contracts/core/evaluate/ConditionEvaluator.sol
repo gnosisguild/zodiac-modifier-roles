@@ -11,11 +11,11 @@ import "../../common/AbiLocation.sol";
 import "../../types/Types.sol";
 
 /**
- * @title ConditionLogic
+ * @title ConditionEvaluator
  * @notice Evaluates condition trees on scoped function calls.
  * @author gnosisguild
  */
-library ConditionLogic {
+library ConditionEvaluator {
     function evaluate(
         bytes calldata data,
         uint256 location,
