@@ -626,13 +626,14 @@ library Integrity {
             condition.operator == Operator.ZipSome ||
             condition.operator == Operator.ZipEvery
         ) {
-            uint8 leftIndex = uint8(condition.compValue[0]);
-            if ((visited & (1 << leftIndex)) == 0) {
-                revert IRolesError.PluckNotVisitedBeforeRef(index, leftIndex);
-            }
-            uint8 rightIndex = uint8(condition.compValue[1]);
-            if ((visited & (1 << rightIndex)) == 0) {
-                revert IRolesError.PluckNotVisitedBeforeRef(index, rightIndex);
+            for (uint256 k; k < condition.compValue.length; ++k) {
+                uint8 pluckIndex = uint8(condition.compValue[k]);
+                if ((visited & (1 << pluckIndex)) == 0) {
+                    revert IRolesError.PluckNotVisitedBeforeRef(
+                        index,
+                        pluckIndex
+                    );
+                }
             }
         }
 
