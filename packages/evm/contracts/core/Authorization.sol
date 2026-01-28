@@ -99,30 +99,23 @@ abstract contract Authorization is RolesStorage {
         /*
          * Check ExecutionOptions
          */
-        uint256 options = scopeConfig >> 160;
-        if (options & 1 == 0 && transaction.value > 0) {
-            revert SendNotAllowed(transaction.to);
-        }
-        if (
-            options & 2 == 0 && transaction.operation == Operation.DelegateCall
-        ) {
-            revert DelegateCallNotAllowed(transaction.to);
+        {
+            uint256 options = scopeConfig >> 160;
+            if (options & 1 == 0 && transaction.value > 0) {
+                revert SendNotAllowed(transaction.to);
+            }
+            if (
+                options & 2 == 0 &&
+                transaction.operation == Operation.DelegateCall
+            ) {
+                revert DelegateCallNotAllowed(transaction.to);
+            }
         }
 
         /*
          * Load and Evaluate Condition
          */
-        return _evaluate(scopeConfig, data, consumptions, transaction);
-    }
-
-    /// @dev Loads condition and evaluates against calldata.
-    function _evaluate(
-        uint256 scopeConfig,
-        bytes calldata data,
-        Consumption[] memory consumptions,
-        Transaction memory transaction
-    ) private view returns (Consumption[] memory) {
-        (Condition memory condition, uint256 maxPluckIndex) = ConditionLoader
+        (Condition memory condition, uint256 maxPluckCount) = ConditionLoader
             .load(scopeConfig);
 
         Result memory result = ConditionEvaluator.evaluate(
@@ -134,8 +127,8 @@ abstract contract Authorization is RolesStorage {
                 transaction.to,
                 transaction.value,
                 transaction.operation,
-                new bytes32[](maxPluckIndex + 1),
-                new uint256[](maxPluckIndex + 1)
+                new bytes32[](maxPluckCount),
+                new uint256[](maxPluckCount)
             )
         );
 
