@@ -659,7 +659,7 @@ library Integrity {
             bool isArray = conditions[i].paramType == Encoding.Array;
             if (!isLogical && !isArray) continue;
 
-            (uint256 childStart, uint256 childCount, ) = _sChildBounds(
+            (uint256 childStart, uint256 childCount) = Topology.childBounds(
                 conditions,
                 i
             );
@@ -670,7 +670,7 @@ library Integrity {
                     conditions,
                     childStart + j
                 );
-                if (TypeTree.hash(right) == (0)) continue;
+                if (TypeTree.hash(right) == 0) continue;
 
                 if (TypeTree.hash(left) == 0) left = right;
 
