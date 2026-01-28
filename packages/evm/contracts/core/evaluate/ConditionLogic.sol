@@ -421,35 +421,25 @@ library ConditionLogic {
         Consumption[] memory consumptions,
         Context memory context
     ) private view returns (Result memory result) {
-        bool every = condition.operator == Operator.ZipEvery;
+        (uint256[][] memory locations, Status status) = _resolveZippedLocations(
+            data,
+            condition,
+            context
+        );
 
-        uint256[][] memory locations;
-        {
-            bool mismatch;
-            bool overflow;
-            (locations, mismatch, overflow) = _pluckedArrayLocations(
-                data,
-                condition,
-                context
-            );
-
-            if (mismatch || overflow) {
-                return
-                    _violation(
-                        mismatch
-                            ? Status.ZippedArrayLengthMismatch
-                            : Status.CalldataOverflow,
-                        location,
-                        condition
-                    );
-            }
+        if (status != Status.Ok) {
+            return _violation(status, location, condition);
         }
 
+        bool every = condition.operator == Operator.ZipEvery;
+        uint256 length = locations[0].length;
         Condition memory tuple = condition.children[0];
 
-        uint256 length = locations[0].length;
+        // Initialize result with base consumptions
         result.consumptions = consumptions;
+
         for (uint256 i; i < length; ++i) {
+            // For ZipSome, we always start from base consumptions.
             if (!every) result.consumptions = consumptions;
 
             bool tuplePasses = true;
@@ -468,17 +458,11 @@ library ConditionLogic {
             }
 
             if (every) {
-                /*
-                 * ZipEvery
-                 */
                 if (!tuplePasses) {
                     result.status = Status.NotEveryZippedElementPasses;
                     return result;
                 }
             } else {
-                /*
-                 * ZipSome
-                 */
                 if (tuplePasses) {
                     return result;
                 }
@@ -737,21 +721,14 @@ library ConditionLogic {
      *
      * @return locations One uint256[] per pluck – each entry is the calldata
      *                   location of an array element.
-     * @return mismatch True when arrays have different lengths.
-     * @return overflow True when a calldata bounds check failed.
+     * @return status    Status.Ok if successful, or an error status.
      */
-    function _pluckedArrayLocations(
+    function _resolveZippedLocations(
         bytes calldata data,
         Condition memory condition,
         Context memory context
-    )
-        private
-        pure
-        returns (uint256[][] memory locations, bool mismatch, bool overflow)
-    {
+    ) private pure returns (uint256[][] memory locations, Status status) {
         Condition memory tuple = condition.children[0];
-        // assert(tuple.encoding == Encoding.Tuple);
-
         uint256 n = condition.compValue.length;
         locations = new uint256[][](n);
 
@@ -760,6 +737,8 @@ library ConditionLogic {
         arrayStub.children = new Condition[](1);
 
         uint256 length;
+        bool overflow;
+
         for (uint256 k; k < n; ++k) {
             arrayStub.children[0] = tuple.children[k];
             (locations[k], overflow) = AbiLocation.children(
@@ -767,13 +746,16 @@ library ConditionLogic {
                 context.pluckedLocations[uint8(condition.compValue[k])],
                 arrayStub
             );
-            if (overflow) return (locations, false, true);
+
+            if (overflow) return (locations, Status.CalldataOverflow);
 
             if (k == 0) {
                 length = locations[0].length;
             } else if (locations[k].length != length) {
-                return (locations, true, false);
+                return (locations, Status.ZippedArrayLengthMismatch);
             }
         }
+
+        //return (locations, Status.Ok);
     }
 }
