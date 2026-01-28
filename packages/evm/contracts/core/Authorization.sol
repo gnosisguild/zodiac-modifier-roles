@@ -134,7 +134,8 @@ abstract contract Authorization is RolesStorage {
                 transaction.to,
                 transaction.value,
                 transaction.operation,
-                new bytes32[](maxPluckIndex + 1)
+                new bytes32[](maxPluckIndex + 1),
+                new uint256[](maxPluckIndex + 1)
             )
         );
 

@@ -42,23 +42,26 @@ library ConditionLogic {
             } else if (operator == Operator.Slice) {
                 return _slice(data, location, condition, consumptions, context);
             } else if (operator == Operator.Pluck) {
-                (bytes32 pluckedValue, bool overflow) = __input(
-                    data,
-                    location,
-                    condition,
-                    context
-                );
-                if (overflow) {
-                    return
-                        _violation(
-                            Status.CalldataOverflow,
-                            location,
-                            condition
-                        );
+                uint256 index = uint256(uint8(condition.compValue[0]));
+                if (condition.encoding == Encoding.Array) {
+                    context.pluckedLocations[index] = location;
+                } else {
+                    (bytes32 pluckedValue, bool overflow) = __input(
+                        data,
+                        location,
+                        condition,
+                        context
+                    );
+                    if (overflow) {
+                        return
+                            _violation(
+                                Status.CalldataOverflow,
+                                location,
+                                condition
+                            );
+                    }
+                    context.pluckedValues[index] = pluckedValue;
                 }
-                context.pluckedValues[
-                    uint8(condition.compValue[0])
-                ] = pluckedValue;
                 return _ok(consumptions);
             } else if (operator == Operator.Empty) {
                 return
@@ -86,8 +89,7 @@ library ConditionLogic {
                         consumptions,
                         context
                     );
-            } else {
-                assert(operator == Operator.ArrayTailMatches);
+            } else if (operator == Operator.ArrayTailMatches) {
                 return
                     _arrayTailMatches(
                         data,
@@ -96,6 +98,13 @@ library ConditionLogic {
                         consumptions,
                         context
                     );
+            } else if (operator == Operator.ZipSome) {
+                return
+                    _zipSome(data, location, condition, consumptions, context);
+            } else {
+                assert(operator == Operator.ZipEvery);
+                return
+                    _zipEvery(data, location, condition, consumptions, context);
             }
         } else {
             if (operator <= Operator.LessThan) {
@@ -338,6 +347,112 @@ library ConditionLogic {
         }
 
         return _violation(Status.NoArrayElementPasses, location, condition);
+    }
+
+    function _zipSome(
+        bytes calldata data,
+        uint256 location,
+        Condition memory condition,
+        Consumption[] memory consumptions,
+        Context memory context
+    ) private view returns (Result memory result) {
+        (
+            uint256[][] memory locations,
+            uint256 length,
+            bool lengthMismatch,
+            bool overflow
+        ) = _pluckedArrayLocations(data, condition, context);
+
+        if (overflow) {
+            return _violation(Status.CalldataOverflow, location, condition);
+        }
+        if (lengthMismatch) {
+            return
+                _violation(
+                    Status.ZippedArrayLengthMismatch,
+                    location,
+                    condition
+                );
+        }
+
+        Condition memory tuple = condition.children[0];
+
+        for (uint256 i; i < length; ++i) {
+            result.consumptions = consumptions;
+            bool tuplePasses = true;
+            for (uint256 j; j < locations.length; ++j) {
+                result = evaluate(
+                    data,
+                    locations[j][i],
+                    tuple.children[j],
+                    result.consumptions,
+                    context
+                );
+                if (result.status != Status.Ok) {
+                    tuplePasses = false;
+                    break;
+                }
+            }
+
+            if (tuplePasses) {
+                return result;
+            }
+        }
+
+        return _violation(Status.NoZippedElementPasses, location, condition);
+    }
+
+    function _zipEvery(
+        bytes calldata data,
+        uint256 location,
+        Condition memory condition,
+        Consumption[] memory consumptions,
+        Context memory context
+    ) private view returns (Result memory result) {
+        (
+            uint256[][] memory locations,
+            uint256 length,
+            bool lengthMismatch,
+            bool overflow
+        ) = _pluckedArrayLocations(data, condition, context);
+
+        if (overflow) {
+            return _violation(Status.CalldataOverflow, location, condition);
+        }
+        if (lengthMismatch) {
+            return
+                _violation(
+                    Status.ZippedArrayLengthMismatch,
+                    location,
+                    condition
+                );
+        }
+
+        Condition memory tuple = condition.children[0];
+
+        result.consumptions = consumptions;
+        for (uint256 i; i < length; ++i) {
+            bool tuplePasses = true;
+            for (uint256 j; j < locations.length; ++j) {
+                result = evaluate(
+                    data,
+                    locations[j][i],
+                    tuple.children[j],
+                    result.consumptions,
+                    context
+                );
+                if (result.status != Status.Ok) {
+                    tuplePasses = false;
+                    break;
+                }
+            }
+
+            if (!tuplePasses) {
+                result.status = Status.NotEveryZippedElementPasses;
+                return result;
+            }
+        }
+        return result;
     }
 
     function _arrayEvery(
@@ -628,5 +743,66 @@ library ConditionLogic {
                 payloadLocation: location,
                 consumptions: empty
             });
+    }
+
+    /**
+     * @dev Decodes element locations for each plucked array referenced by
+     *      a Zip condition. Uses the Zip's child tuple fields as element
+     *      type descriptors for ABI decoding.
+     *
+     * @param data      The calldata being evaluated.
+     * @param condition The Zip condition (ZipSome / ZipEvery).
+     * @param context   Evaluation context carrying pluckedLocations.
+     *
+     * @return arrays   One uint256[] per pluck – each entry is the calldata
+     *                  location of an array element.
+     * @return length   The common array length (0 when arrays are empty).
+     * @return lengthMismatch True when arrays have different lengths.
+     * @return overflow True when a calldata bounds check failed.
+     */
+    function _pluckedArrayLocations(
+        bytes calldata data,
+        Condition memory condition,
+        Context memory context
+    )
+        private
+        pure
+        returns (
+            uint256[][] memory arrays,
+            uint256 length,
+            bool lengthMismatch,
+            bool overflow
+        )
+    {
+        Condition memory tuple = condition.children[0];
+
+        uint256 n = condition.compValue.length;
+        arrays = new uint256[][](n);
+
+        Condition memory arrayStub;
+        assembly {
+            arrayStub := mload(0x40)
+            mstore(0x40, add(arrayStub, 0x100))
+        }
+        arrayStub.encoding = Encoding.Array;
+        arrayStub.children = new Condition[](1);
+
+        for (uint256 k; k < n; ++k) {
+            arrayStub.children[0] = tuple.children[k];
+            (arrays[k], overflow) = AbiLocation.children(
+                data,
+                context.pluckedLocations[
+                    uint256(uint8(condition.compValue[k]))
+                ],
+                arrayStub
+            );
+            if (overflow) return (arrays, 0, false, true);
+
+            if (k == 0) {
+                length = arrays[0].length;
+            } else if (arrays[k].length != length) {
+                return (arrays, 0, true, false);
+            }
+        }
     }
 }

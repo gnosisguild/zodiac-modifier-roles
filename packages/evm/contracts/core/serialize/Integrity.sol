@@ -24,6 +24,7 @@ library Integrity {
         // Inter Node Constraints
         _validatePluckOrder(conditions, 0, 0);
         _validateTypeTrees(conditions);
+        _validatePluckZipTypes(conditions);
     }
 
     function _validateBFS(ConditionFlat[] memory conditions) private pure {
@@ -64,6 +65,8 @@ library Integrity {
             _checkMatches(conditions, index);
         } else if (op == Operator.ArraySome || op == Operator.ArrayEvery) {
             _checkArrayIterator(conditions, index);
+        } else if (op == Operator.ZipSome || op == Operator.ZipEvery) {
+            _checkZipIterator(conditions, index);
         } else if (op == Operator.ArrayTailMatches) {
             _checkArrayTail(conditions, index);
         } else if (op == Operator.Slice) {
@@ -269,6 +272,64 @@ library Integrity {
         }
     }
 
+    function _checkZipIterator(
+        ConditionFlat[] memory conditions,
+        uint256 index
+    ) private pure {
+        ConditionFlat memory node = conditions[index];
+        // ZipSome / ZipEvery
+        // ParamType: None
+        if (node.paramType != Encoding.None) {
+            revert IRolesError.UnsuitableParameterType(index);
+        }
+        // CompValue: at least 2 bytes (one per plucked array)
+        if (node.compValue.length < 2) {
+            revert IRolesError.UnsuitableCompValue(index);
+        }
+
+        // Validate pluck references: no duplicates, each must exist and be Array
+        uint256 seen;
+        for (uint256 k = 0; k < node.compValue.length; ++k) {
+            uint8 pluckIndex = uint8(node.compValue[k]);
+            uint256 mask = 1 << pluckIndex;
+            if ((seen & mask) != 0) {
+                revert IRolesError.UnsuitableCompValue(index);
+            }
+            seen |= mask;
+
+            (bool found, uint256 pluckNode) = _findPluckedArray(
+                conditions,
+                pluckIndex
+            );
+            if (!found || conditions[pluckNode].paramType != Encoding.Array) {
+                revert IRolesError.UnsuitableCompValue(index);
+            }
+        }
+
+        // Children: Exactly 1 child
+        (
+            uint256 childStart,
+            uint256 childCount,
+            uint256 sChildCount
+        ) = _sChildBounds(conditions, index);
+        if (childCount != 1 || sChildCount != 1) {
+            revert IRolesError.UnsuitableChildCount(index);
+        }
+
+        // Child must resolve to a Tuple
+        Layout memory layout = TypeTree.inspect(conditions, childStart);
+        if (layout.encoding != Encoding.Tuple) {
+            revert IRolesError.UnsuitableChildTypeTree(index);
+        }
+        // Tuple field count must match compValue length
+        if (layout.children.length != node.compValue.length) {
+            revert IRolesError.UnsuitableCompValue(index);
+        }
+
+        // No Pluck allowed in zip descendants
+        _validateNoPluckDescendant(conditions, childStart);
+    }
+
     function _checkArrayTail(
         ConditionFlat[] memory conditions,
         uint256 index
@@ -339,8 +400,8 @@ library Integrity {
         uint256 index
     ) private pure {
         ConditionFlat memory node = conditions[index];
-        // ParamType: Static / EtherValue
-        if (!_isWordish(node.paramType)) {
+        // ParamType: Static / EtherValue / Array
+        if (!_isWordish(node.paramType) && node.paramType != Encoding.Array) {
             revert IRolesError.UnsuitableParameterType(index);
         }
         // CompValue: 1 byte
@@ -561,6 +622,20 @@ library Integrity {
             }
         }
 
+        if (
+            condition.operator == Operator.ZipSome ||
+            condition.operator == Operator.ZipEvery
+        ) {
+            uint8 leftIndex = uint8(condition.compValue[0]);
+            if ((visited & (1 << leftIndex)) == 0) {
+                revert IRolesError.PluckNotVisitedBeforeRef(index, leftIndex);
+            }
+            uint8 rightIndex = uint8(condition.compValue[1]);
+            if ((visited & (1 << rightIndex)) == 0) {
+                revert IRolesError.PluckNotVisitedBeforeRef(index, rightIndex);
+            }
+        }
+
         (uint256 childStart, uint256 childCount) = Topology.childBounds(
             conditions,
             index
@@ -576,38 +651,70 @@ library Integrity {
     function _validateTypeTrees(
         ConditionFlat[] memory conditions
     ) private pure {
+        // Logical & Array loop
         for (uint256 i = 0; i < conditions.length; ++i) {
-            // If not variant, children have matching type trees (same typeHash)
-            // If variant, must check type equivalence (all resolve to Dynamic/AbiEncoded)
-            if (
-                TypeTree.isVariant(conditions, i) &&
-                !_isTypeEquivalence(conditions, i)
-            ) {
-                revert IRolesError.UnsuitableChildTypeTree(i);
+            bool isLogical = conditions[i].operator == Operator.And ||
+                conditions[i].operator == Operator.Or;
+            bool isArray = conditions[i].paramType == Encoding.Array;
+            if (!isLogical && !isArray) continue;
+
+            (uint256 childStart, uint256 childCount, ) = _sChildBounds(
+                conditions,
+                i
+            );
+
+            Layout memory left;
+            for (uint256 j = 0; j < childCount; ++j) {
+                Layout memory right = TypeTree.inspect(
+                    conditions,
+                    childStart + j
+                );
+                if (TypeTree.hash(right) == (0)) continue;
+
+                if (TypeTree.hash(left) == 0) left = right;
+
+                if (!_isTypeCompatible(left, right)) {
+                    revert IRolesError.UnsuitableChildTypeTree(i);
+                }
+            }
+        }
+    }
+
+    function _validatePluckZipTypes(
+        ConditionFlat[] memory conditions
+    ) private pure {
+        for (uint256 i = 0; i < conditions.length; ++i) {
+            Operator op = conditions[i].operator;
+            if (op != Operator.ZipSome && op != Operator.ZipEvery) continue;
+
+            (uint256 childStart, ) = Topology.childBounds(conditions, i);
+
+            Layout memory tupleLayout = TypeTree.inspect(
+                conditions,
+                childStart
+            );
+
+            for (uint256 j = 0; j < tupleLayout.children.length; ++j) {
+                (, uint256 pluckNode) = _findPluckedArray(
+                    conditions,
+                    uint8(conditions[i].compValue[j])
+                );
+                Layout memory arrayLayout = TypeTree.inspect(
+                    conditions,
+                    pluckNode
+                );
+
+                Layout memory entry = arrayLayout.children[0];
+                Layout memory field = tupleLayout.children[j];
+
+                if (!_isTypeCompatible(entry, field)) {
+                    revert IRolesError.UnsuitableChildTypeTree(i);
+                }
             }
         }
     }
 
     // --- Helpers ---
-    function _isTypeEquivalence(
-        ConditionFlat[] memory conditions,
-        uint256 index
-    ) private pure returns (bool) {
-        (uint256 childStart, , uint256 sChildCount) = _sChildBounds(
-            conditions,
-            index
-        );
-
-        for (uint256 i = 0; i < sChildCount; ++i) {
-            Encoding encoding = TypeTree.resolvesTo(conditions, childStart + i);
-            if (
-                encoding != Encoding.Dynamic && encoding != Encoding.AbiEncoded
-            ) {
-                return false;
-            }
-        }
-        return true;
-    }
 
     function _sChildBounds(
         ConditionFlat[] memory conditions,
@@ -652,7 +759,73 @@ library Integrity {
         return false;
     }
 
+    function _validateNoPluckDescendant(
+        ConditionFlat[] memory conditions,
+        uint256 index
+    ) private pure {
+        if (conditions[index].operator == Operator.Pluck) {
+            revert IRolesError.UnsupportedOperator(index);
+        }
+        (uint256 childStart, uint256 childCount) = Topology.childBounds(
+            conditions,
+            index
+        );
+        for (uint256 i = 0; i < childCount; ++i) {
+            _validateNoPluckDescendant(conditions, childStart + i);
+        }
+    }
+
     function _isWordish(Encoding encoding) private pure returns (bool) {
         return encoding == Encoding.Static || encoding == Encoding.EtherValue;
+    }
+
+    /**
+     * @notice Checks if two layouts are type-compatible: either exact type
+     *         hash match, or type equivalence (both resolve to Dynamic or
+     *         AbiEncoded).
+     */
+    function _isTypeCompatible(
+        Layout memory a,
+        Layout memory b
+    ) private pure returns (bool) {
+        bytes32 hashA = TypeTree.hash(a);
+        assert(hashA != 0);
+
+        bytes32 hashB = TypeTree.hash(b);
+        assert(hashB != 0);
+
+        if (hashA == hashB) {
+            return true;
+        }
+        return _isDynamicish(a) && _isDynamicish(b);
+    }
+
+    /**
+     * @notice Finds the conditions index of the Pluck node with the given
+     *         pluck index.
+     */
+    function _findPluckedArray(
+        ConditionFlat[] memory conditions,
+        uint8 pluckIndex
+    ) private pure returns (bool found, uint256 nodeIndex) {
+        for (uint256 i = 0; i < conditions.length; ++i) {
+            if (
+                conditions[i].operator == Operator.Pluck &&
+                uint8(conditions[i].compValue[0]) == pluckIndex
+            ) {
+                return (true, i);
+            }
+        }
+    }
+
+    function _isDynamicish(Layout memory layout) private pure returns (bool) {
+        /*
+         * None on a resolved type tree means a Variant placeholder. Such
+         * fields equate to Dynamic
+         */
+        return
+            layout.encoding == Encoding.Dynamic ||
+            layout.encoding == Encoding.AbiEncoded ||
+            layout.encoding == Encoding.None;
     }
 }

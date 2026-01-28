@@ -16,17 +16,17 @@ contract MockTypeTree {
         return _flattenLayout(TypeTree.inspect(conditions, 0));
     }
 
-    function id(
+    function hash(
         ConditionFlat[] memory conditions
     ) public pure returns (bytes32) {
-        return TypeTree.id(conditions, 0);
+        return TypeTree.hash(conditions, 0);
     }
 
-    function id(
+    function hash(
         ConditionFlat[] memory conditions,
         uint256 index
     ) public pure returns (bytes32) {
-        return TypeTree.id(conditions, index);
+        return TypeTree.hash(conditions, index);
     }
 
     function _flattenLayout(
