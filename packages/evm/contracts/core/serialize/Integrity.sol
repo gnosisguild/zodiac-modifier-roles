@@ -605,19 +605,19 @@ library Integrity {
         }
 
         if (condition.operator == Operator.WithinRatio) {
-            uint8 referenceIndex = uint8(condition.compValue[0]);
-            if ((visited & (1 << referenceIndex)) == 0) {
+            uint8 referencePluckIndex = uint8(condition.compValue[0]);
+            if ((visited & (1 << referencePluckIndex)) == 0) {
                 revert IRolesError.PluckNotVisitedBeforeRef(
                     index,
-                    referenceIndex
+                    referencePluckIndex
                 );
             }
 
-            uint8 relativeIndex = uint8(condition.compValue[2]);
-            if ((visited & (1 << relativeIndex)) == 0) {
+            uint8 relativePluckIndex = uint8(condition.compValue[2]);
+            if ((visited & (1 << relativePluckIndex)) == 0) {
                 revert IRolesError.PluckNotVisitedBeforeRef(
                     index,
-                    relativeIndex
+                    relativePluckIndex
                 );
             }
         }
