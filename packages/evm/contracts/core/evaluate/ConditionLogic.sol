@@ -519,21 +519,20 @@ library ConditionLogic {
         Consumption[] memory consumptions,
         Context memory context
     ) private pure returns (Result memory) {
-        uint256 index = uint256(uint8(condition.compValue[0]));
-        if (condition.encoding == Encoding.Array) {
-            context.pluckedLocations[index] = location;
-        } else {
-            (bytes32 pluckedValue, bool overflow) = __input(
-                data,
-                location,
-                condition,
-                context
-            );
-            if (overflow) {
-                return _violation(Status.CalldataOverflow, location, condition);
-            }
-            context.pluckedValues[index] = pluckedValue;
+        (bytes32 pluckedValue, bool overflow) = __input(
+            data,
+            location,
+            condition,
+            context
+        );
+        if (overflow) {
+            return _violation(Status.CalldataOverflow, location, condition);
         }
+
+        uint256 index = uint256(uint8(condition.compValue[0]));
+        context.pluckedLocations[index] = location;
+        context.pluckedValues[index] = pluckedValue;
+
         return _ok(consumptions);
     }
 
