@@ -369,24 +369,21 @@ library ConditionLogic {
         bool every = condition.operator == Operator.ZipEvery;
 
         uint256[][] memory locations;
-        uint256 length;
         {
-            bool lengthMismatch;
+            bool mismatch;
             bool overflow;
-            (
-                locations,
-                length,
-                lengthMismatch,
-                overflow
-            ) = _pluckedArrayLocations(data, condition, context);
+            (locations, mismatch, overflow) = _pluckedArrayLocations(
+                data,
+                condition,
+                context
+            );
 
-            if (overflow) {
-                return _violation(Status.CalldataOverflow, location, condition);
-            }
-            if (lengthMismatch) {
+            if (mismatch || overflow) {
                 return
                     _violation(
-                        Status.ZippedArrayLengthMismatch,
+                        mismatch
+                            ? Status.ZippedArrayLengthMismatch
+                            : Status.CalldataOverflow,
                         location,
                         condition
                     );
@@ -395,12 +392,10 @@ library ConditionLogic {
 
         Condition memory tuple = condition.children[0];
 
+        uint256 length = locations[0].length;
         result.consumptions = consumptions;
         for (uint256 i; i < length; ++i) {
-            if (!every) {
-                // if we are doing some, reset consumptions
-                result.consumptions = consumptions;
-            }
+            if (!every) result.consumptions = consumptions;
 
             bool tuplePasses = true;
             for (uint256 j; j < locations.length; ++j) {
@@ -740,10 +735,9 @@ library ConditionLogic {
      * @param condition The Zip condition (ZipSome / ZipEvery).
      * @param context   Evaluation context carrying pluckedLocations.
      *
-     * @return arrays   One uint256[] per pluck – each entry is the calldata
-     *                  location of an array element.
-     * @return length   The common array length (0 when arrays are empty).
-     * @return lengthMismatch True when arrays have different lengths.
+     * @return locations One uint256[] per pluck – each entry is the calldata
+     *                   location of an array element.
+     * @return mismatch True when arrays have different lengths.
      * @return overflow True when a calldata bounds check failed.
      */
     function _pluckedArrayLocations(
@@ -753,41 +747,32 @@ library ConditionLogic {
     )
         private
         pure
-        returns (
-            uint256[][] memory arrays,
-            uint256 length,
-            bool lengthMismatch,
-            bool overflow
-        )
+        returns (uint256[][] memory locations, bool mismatch, bool overflow)
     {
         Condition memory tuple = condition.children[0];
+        // assert(tuple.encoding == Encoding.Tuple);
 
         uint256 n = condition.compValue.length;
-        arrays = new uint256[][](n);
+        locations = new uint256[][](n);
 
         Condition memory arrayStub;
-        assembly {
-            arrayStub := mload(0x40)
-            mstore(0x40, add(arrayStub, 0x100))
-        }
         arrayStub.encoding = Encoding.Array;
         arrayStub.children = new Condition[](1);
 
+        uint256 length;
         for (uint256 k; k < n; ++k) {
             arrayStub.children[0] = tuple.children[k];
-            (arrays[k], overflow) = AbiLocation.children(
+            (locations[k], overflow) = AbiLocation.children(
                 data,
-                context.pluckedLocations[
-                    uint256(uint8(condition.compValue[k]))
-                ],
+                context.pluckedLocations[uint8(condition.compValue[k])],
                 arrayStub
             );
-            if (overflow) return (arrays, 0, false, true);
+            if (overflow) return (locations, false, true);
 
             if (k == 0) {
-                length = arrays[0].length;
-            } else if (arrays[k].length != length) {
-                return (arrays, 0, true, false);
+                length = locations[0].length;
+            } else if (locations[k].length != length) {
+                return (locations, true, false);
             }
         }
     }
