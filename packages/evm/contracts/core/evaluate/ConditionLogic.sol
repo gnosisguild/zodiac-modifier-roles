@@ -51,18 +51,12 @@ library ConditionLogic {
                         condition,
                         consumptions
                     );
-            } else if (operator == Operator.ArraySome) {
+            } else if (
+                operator == Operator.ArraySome ||
+                operator == Operator.ArrayEvery
+            ) {
                 return
-                    _arraySome(
-                        data,
-                        location,
-                        condition,
-                        consumptions,
-                        context
-                    );
-            } else if (operator == Operator.ArrayEvery) {
-                return
-                    _arrayEvery(
+                    _arrayIterator(
                         data,
                         location,
                         condition,
@@ -299,49 +293,15 @@ library ConditionLogic {
         return _violation(Status.OrViolation, location, condition);
     }
 
-    function _arraySome(
+    function _arrayIterator(
         bytes calldata data,
         uint256 location,
         Condition memory condition,
         Consumption[] memory consumptions,
         Context memory context
     ) private view returns (Result memory result) {
-        // Decode array element locations
-        (uint256[] memory childLocations, bool overflow) = AbiLocation.children(
-            data,
-            location,
-            condition
-        );
+        bool every = condition.operator == Operator.ArrayEvery;
 
-        if (overflow) {
-            return _violation(Status.CalldataOverflow, location, condition);
-        }
-
-        for (uint256 i; i < childLocations.length; ++i) {
-            result = evaluate(
-                data,
-                childLocations[i],
-                condition.children[0],
-                consumptions,
-                context
-            );
-
-            if (result.status == Status.Ok) {
-                return result;
-            }
-        }
-
-        return _violation(Status.NoArrayElementPasses, location, condition);
-    }
-
-    function _arrayEvery(
-        bytes calldata data,
-        uint256 location,
-        Condition memory condition,
-        Consumption[] memory consumptions,
-        Context memory context
-    ) private view returns (Result memory result) {
-        // Decode array element locations
         (uint256[] memory childLocations, bool overflow) = AbiLocation.children(
             data,
             location,
@@ -358,16 +318,26 @@ library ConditionLogic {
                 data,
                 childLocations[i],
                 condition.children[0],
-                result.consumptions,
+                every ? result.consumptions : consumptions,
                 context
             );
 
-            if (result.status != Status.Ok) {
-                result.status = Status.NotEveryArrayElementPasses;
-                return result;
+            if (every) {
+                if (result.status != Status.Ok) {
+                    result.status = Status.NotEveryArrayElementPasses;
+                    return result;
+                }
+            } else {
+                if (result.status == Status.Ok) {
+                    return result;
+                }
             }
         }
-        return result;
+
+        return
+            every
+                ? result
+                : _violation(Status.NoArrayElementPasses, location, condition);
     }
 
     function _arrayTailMatches(
