@@ -10,23 +10,17 @@ describe("Operator - Pluck", () => {
       const { roles } = await loadFixture(setupTestContract);
 
       // Note: Array is now allowed for Pluck (used by Zip operators)
-      for (const encoding of [
-        Encoding.None,
-        Encoding.AbiEncoded,
-        Encoding.Tuple,
-        Encoding.Dynamic,
-      ]) {
-        await expect(
-          packConditions(roles, [
-            {
-              parent: 0,
-              paramType: encoding,
-              operator: Operator.Pluck,
-              compValue: "0x00",
-            },
-          ]),
-        ).to.be.revertedWithCustomError(roles, "UnsuitableParameterType");
-      }
+
+      await expect(
+        packConditions(roles, [
+          {
+            parent: 0,
+            paramType: Encoding.None,
+            operator: Operator.Pluck,
+            compValue: "0x00",
+          },
+        ]),
+      ).to.be.revertedWithCustomError(roles, "UnsuitableParameterType");
     });
 
     describe("compValue", () => {

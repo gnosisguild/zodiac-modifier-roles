@@ -401,11 +401,7 @@ library Integrity {
         ConditionFlat memory condition = conditions[index];
         Encoding encoding = condition.paramType;
         // ParamType: Static / EtherValue / Array
-        if (
-            encoding != Encoding.Static &&
-            encoding != Encoding.EtherValue &&
-            encoding != Encoding.Array
-        ) {
+        if (encoding == Encoding.None) {
             revert IRolesError.UnsuitableParameterType(index);
         }
         // CompValue: 1 byte
