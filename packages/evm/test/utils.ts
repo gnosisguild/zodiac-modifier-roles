@@ -69,8 +69,8 @@ export enum Operator {
   /* 07: */ ArrayEvery,
   /* 08: */ ArrayTailMatches,
   /* 09: */ _Placeholder09,
-  /* 10: */ _Placeholder10,
-  /* 11: */ _Placeholder11,
+  /* 10: */ ZipSome, // paramType: None, compValue: 2 bytes (two pluck indexes)
+  /* 11: */ ZipEvery, // paramType: None, compValue: 2 bytes (two pluck indexes)
   /* 12: */ _Placeholder12,
   // ------------------------------------------------------------
   // 13-14: EXTRACTION EXPRESSIONS
@@ -152,6 +152,12 @@ export enum ConditionViolationStatus {
   CalldataNotEmpty,
   // Leading bytes do not match expected value
   LeadingBytesNotAMatch,
+  // Zipped arrays have different lengths
+  ZippedArrayLengthMismatch,
+  // No zipped element pair passes
+  NoZippedElementPasses,
+  // Not every zipped element pair passes
+  NotEveryZippedElementPasses,
 }
 
 export function removeTrailingOffset(data: string) {
