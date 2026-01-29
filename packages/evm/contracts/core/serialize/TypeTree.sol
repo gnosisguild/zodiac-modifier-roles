@@ -23,7 +23,7 @@ library TypeTree {
         bool isArray = conditions[i].paramType == Encoding.Array;
         bool isLogical = conditions[i].operator == Operator.And ||
             conditions[i].operator == Operator.Or;
-        bool isNonVariant = isVariant(conditions, i) == false;
+        bool isNonVariant = _isVariant(conditions, i) == false;
 
         (uint256 childStart, uint256 childCount) = Topology.childBounds(
             conditions,
@@ -89,10 +89,10 @@ library TypeTree {
     /**
      * @notice Checks if a node is a variant (children have different type trees)
      */
-    function isVariant(
+    function _isVariant(
         ConditionFlat[] memory conditions,
         uint256 index
-    ) internal pure returns (bool) {
+    ) private pure returns (bool) {
         Encoding encoding = conditions[index].paramType;
         Operator operator = conditions[index].operator;
         if (
