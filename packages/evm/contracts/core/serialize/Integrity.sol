@@ -206,17 +206,18 @@ library Integrity {
         uint256 index
     ) private pure {
         ConditionFlat memory condition = conditions[index];
+        Encoding encoding = condition.paramType;
         // ParamType: Tuple, Array, AbiEncoded
         if (
-            condition.paramType != Encoding.Tuple &&
-            condition.paramType != Encoding.Array &&
-            condition.paramType != Encoding.AbiEncoded
+            encoding != Encoding.Tuple &&
+            encoding != Encoding.Array &&
+            encoding != Encoding.AbiEncoded
         ) {
             revert IRolesError.UnsuitableParameterType(index);
         }
 
         // CompValue Validation
-        if (condition.paramType == Encoding.AbiEncoded) {
+        if (encoding == Encoding.AbiEncoded) {
             uint16 leadingBytes = condition.compValue.length >= 2
                 ? uint16(bytes2(condition.compValue))
                 : 0;
@@ -359,11 +360,9 @@ library Integrity {
         uint256 index
     ) private pure {
         ConditionFlat memory condition = conditions[index];
+        Encoding encoding = condition.paramType;
         // ParamType: Static / Dynamic
-        if (
-            condition.paramType != Encoding.Static &&
-            condition.paramType != Encoding.Dynamic
-        ) {
+        if (encoding != Encoding.Static && encoding != Encoding.Dynamic) {
             revert IRolesError.UnsuitableParameterType(index);
         }
         // CompValue: 3 bytes
@@ -400,10 +399,12 @@ library Integrity {
         uint256 index
     ) private pure {
         ConditionFlat memory condition = conditions[index];
+        Encoding encoding = condition.paramType;
         // ParamType: Static / EtherValue / Array
         if (
-            !_isWordish(condition.paramType) &&
-            condition.paramType != Encoding.Array
+            encoding != Encoding.Static &&
+            encoding != Encoding.EtherValue &&
+            encoding != Encoding.Array
         ) {
             revert IRolesError.UnsuitableParameterType(index);
         }
@@ -444,7 +445,7 @@ library Integrity {
 
         // CompValue check
         bool unsuitable;
-        if (_isWordish(enc)) {
+        if (enc == Encoding.Static || enc == Encoding.EtherValue) {
             unsuitable = condition.compValue.length != 32;
         }
 
@@ -462,8 +463,9 @@ library Integrity {
         uint256 index
     ) private pure {
         ConditionFlat memory condition = conditions[index];
+        Encoding encoding = condition.paramType;
         // ParamType: WordLike
-        if (!_isWordish(condition.paramType)) {
+        if (encoding != Encoding.Static && encoding != Encoding.EtherValue) {
             revert IRolesError.UnsuitableParameterType(index);
         }
         // CompValue: 32 bytes
@@ -477,11 +479,9 @@ library Integrity {
         uint256 index
     ) private pure {
         ConditionFlat memory condition = conditions[index];
+        Encoding encoding = condition.paramType;
         // ParamType: Static / Dynamic
-        if (
-            condition.paramType != Encoding.Static &&
-            condition.paramType != Encoding.Dynamic
-        ) {
+        if (encoding != Encoding.Static && encoding != Encoding.Dynamic) {
             revert IRolesError.UnsuitableParameterType(index);
         }
         // CompValue: 2 shift + 2N
@@ -544,8 +544,9 @@ library Integrity {
         uint256 index
     ) private pure {
         ConditionFlat memory condition = conditions[index];
+        Encoding encoding = condition.paramType;
         // ParamType: WordLike
-        if (!_isWordish(condition.paramType)) {
+        if (encoding != Encoding.Static && encoding != Encoding.EtherValue) {
             revert IRolesError.UnsuitableParameterType(index);
         }
         // CompValue: 32, 34, 54
@@ -734,10 +735,6 @@ library Integrity {
         for (uint256 i = 0; i < childCount; ++i) {
             _validateNoPluckDescendant(conditions, childStart + i);
         }
-    }
-
-    function _isWordish(Encoding encoding) private pure returns (bool) {
-        return encoding == Encoding.Static || encoding == Encoding.EtherValue;
     }
 
     function _sChildBounds(
