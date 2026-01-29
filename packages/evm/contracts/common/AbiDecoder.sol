@@ -16,7 +16,7 @@ import {Encoding, Layout, Payload} from "../types/Condition.sol";
  *         values. It only identifies WHERE parameters are, not WHAT they
  *         contain.
  *
- *         The resulting Payload is used by ConditionLogic for efficient
+ *         The resulting Payload is used by ConditionEvaluator for efficient
  *         calldata slicing during condition evaluation.
  */
 library AbiDecoder {

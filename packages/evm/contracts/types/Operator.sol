@@ -31,15 +31,15 @@ enum Operator {
     /* 07: */ ArrayEvery,
     /* 08: */ ArrayTailMatches,
     /* 09: */ _Placeholder09,
-    /* 10: */ _Placeholder10,
-    /* 11: */ _Placeholder11,
+    /* 10: */ ZipSome, // paramType: None, compValue: at least 2 bytes, one per plucked array
+    /* 11: */ ZipEvery, // paramType: None, compValue: at least 2 bytes, one per plucked array
     /* 12: */ _Placeholder12,
     // ------------------------------------------------------------
     // 13-14: EXTRACTION EXPRESSIONS
     //          ❓ children (at most one child, must resolve to Static)
     //          ✅ compValue
     /* 13: */ Slice, // paramType: Static / Dynamic, compValue: 3 bytes (2 bytes shift + 1 byte size, 1-32)
-    /* 14: */ Pluck, // paramType: Static / EtherValue, compValue: 1 byte (index into pluckedValues, 0-255)
+    /* 14: */ Pluck, // paramType: Static / EtherValue / Array, compValue: 1 byte (index into pluckedValues, 0-255)
     // ------------------------------------------------------------
     // 15:    SPECIAL COMPARISON (without compValue)
     //          paramType: Static
