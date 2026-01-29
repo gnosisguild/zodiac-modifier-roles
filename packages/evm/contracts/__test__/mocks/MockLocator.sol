@@ -23,7 +23,7 @@ contract MockLocator {
         uint256 location,
         ConditionFlat[] memory conditions,
         uint256 conditionIndex
-    ) public view returns (uint256, bool overflow) {
+    ) public view returns (uint256) {
         Integrity.enforce(conditions);
         Condition memory condition = _unpackAndFind(conditions, conditionIndex);
         return AbiLocation.size(data, location, condition);

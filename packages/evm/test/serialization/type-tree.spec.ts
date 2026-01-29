@@ -18,15 +18,15 @@ describe("TypeTree", () => {
       }));
     }
 
-    // Helper to get ID
-    async function getId(condition: Parameters<typeof flattenCondition>[0]) {
-      return mockTypeTree["id((uint16,uint8,uint8,bytes)[],uint256)"](
+    // Helper to get hash
+    async function getHash(condition: Parameters<typeof flattenCondition>[0]) {
+      return mockTypeTree["hash((uint16,uint8,uint8,bytes)[],uint256)"](
         flattenCondition(condition),
         0,
       );
     }
 
-    return { mockTypeTree, inspect, getId };
+    return { mockTypeTree, inspect, getHash };
   }
 
   describe("inspect", () => {
@@ -378,20 +378,38 @@ describe("TypeTree", () => {
     });
   });
 
-  describe("id", () => {
+  describe("hash", () => {
+    it("returns zero for a non-structural tree", async () => {
+      const { getHash } = await loadFixture(setup);
+      const tree = {
+        paramType: Encoding.None,
+        operator: Operator.And,
+        children: [
+          {
+            paramType: Encoding.None,
+            operator: Operator.WithinAllowance,
+            children: [],
+          },
+        ],
+      };
+      expect(await getHash(tree)).to.equal(
+        "0x0000000000000000000000000000000000000000000000000000000000000000",
+      );
+    });
+
     it("returns the same hash for structurally identical trees", async () => {
-      const { getId } = await loadFixture(setup);
+      const { getHash } = await loadFixture(setup);
       const tree1 = {
         paramType: Encoding.Tuple,
         operator: Operator.Matches,
         children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
       };
       const tree2 = { ...tree1 };
-      expect(await getId(tree1)).to.equal(await getId(tree2));
+      expect(await getHash(tree1)).to.equal(await getHash(tree2));
     });
 
     it("returns different hashes for different encodings", async () => {
-      const { getId } = await loadFixture(setup);
+      const { getHash } = await loadFixture(setup);
       const staticTree = {
         paramType: Encoding.Static,
         operator: Operator.Pass,
@@ -400,11 +418,13 @@ describe("TypeTree", () => {
         paramType: Encoding.Dynamic,
         operator: Operator.Pass,
       };
-      expect(await getId(staticTree)).to.not.equal(await getId(dynamicTree));
+      expect(await getHash(staticTree)).to.not.equal(
+        await getHash(dynamicTree),
+      );
     });
 
     it("returns different hashes for variant vs non-variant structures", async () => {
-      const { getId } = await loadFixture(setup);
+      const { getHash } = await loadFixture(setup);
       // Non-variant And (transparent) -> Static
       const nonVariant = {
         paramType: Encoding.None,
@@ -420,11 +440,11 @@ describe("TypeTree", () => {
           { paramType: Encoding.Dynamic, operator: Operator.Pass },
         ],
       };
-      expect(await getId(nonVariant)).to.not.equal(await getId(variant));
+      expect(await getHash(nonVariant)).to.not.equal(await getHash(variant));
     });
 
     it("is sensitive to child order and count", async () => {
-      const { getId } = await loadFixture(setup);
+      const { getHash } = await loadFixture(setup);
       const order1 = {
         paramType: Encoding.Tuple,
         operator: Operator.Matches,
@@ -441,11 +461,11 @@ describe("TypeTree", () => {
           { paramType: Encoding.Static, operator: Operator.Pass },
         ],
       };
-      expect(await getId(order1)).to.not.equal(await getId(order2));
+      expect(await getHash(order1)).to.not.equal(await getHash(order2));
     });
 
     it("hashes all children correctly, not just the first or last", async () => {
-      const { getId } = await loadFixture(setup);
+      const { getHash } = await loadFixture(setup);
       // These differ only in the first child (same last child)
       const tree1 = {
         paramType: Encoding.Tuple,
@@ -463,7 +483,7 @@ describe("TypeTree", () => {
           { paramType: Encoding.Static, operator: Operator.Pass },
         ],
       };
-      expect(await getId(tree1)).to.not.equal(await getId(tree2));
+      expect(await getHash(tree1)).to.not.equal(await getHash(tree2));
 
       // These differ only in the second child (same first child)
       const tree3 = {
@@ -474,11 +494,11 @@ describe("TypeTree", () => {
           { paramType: Encoding.Dynamic, operator: Operator.Pass },
         ],
       };
-      expect(await getId(tree2)).to.not.equal(await getId(tree3));
+      expect(await getHash(tree2)).to.not.equal(await getHash(tree3));
     });
 
     it("returns different hashes for different parent encodings with same children", async () => {
-      const { getId } = await loadFixture(setup);
+      const { getHash } = await loadFixture(setup);
       const arrayTree = {
         paramType: Encoding.Array,
         operator: Operator.Matches,
@@ -489,7 +509,7 @@ describe("TypeTree", () => {
         operator: Operator.Matches,
         children: [{ paramType: Encoding.Static, operator: Operator.Pass }],
       };
-      expect(await getId(arrayTree)).to.not.equal(await getId(tupleTree));
+      expect(await getHash(arrayTree)).to.not.equal(await getHash(tupleTree));
     });
   });
 });
