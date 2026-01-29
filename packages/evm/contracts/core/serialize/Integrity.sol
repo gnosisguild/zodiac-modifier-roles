@@ -374,21 +374,16 @@ library Integrity {
             revert IRolesError.UnsuitableCompValue(index);
         }
 
+        (uint256 childStart, uint256 childCount) = Topology.childBounds(
+            conditions,
+            index
+        );
         // Children: At most 1 child
-        (
-            uint256 childStart,
-            uint256 childCount,
-            uint256 sChildCount
-        ) = _sChildBounds(conditions, index);
         if (childCount != 1) {
             revert IRolesError.UnsuitableChildCount(index);
         }
 
         // If it has a structural child, it must resolve to Static
-        if (sChildCount != 1) {
-            revert IRolesError.SliceChildNotStatic(index);
-        }
-
         if (conditions[childStart].paramType != Encoding.Static) {
             revert IRolesError.SliceChildNotStatic(index);
         }
