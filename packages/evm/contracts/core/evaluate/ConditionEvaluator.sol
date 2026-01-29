@@ -147,7 +147,7 @@ library ConditionEvaluator {
                             condition.compValue,
                             context.pluckedValues
                         ),
-                        0,
+                        location,
                         condition,
                         consumptions
                     );
