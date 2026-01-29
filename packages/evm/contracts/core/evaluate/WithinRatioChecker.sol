@@ -19,19 +19,20 @@ library WithinRatioChecker {
     /**
      * @dev Configuration decoded from compValue bytes.
      *
+     *
      * Layout (12 or 52 bytes):
-     * ┌─────────┬─────────┬─────────┬─────────┬──────────┬──────────┬─────────────────┬─────────────────┐
-     * │  refIdx │ refDec  │ relIdx  │ relDec  │ minRatio │ maxRatio │   refAdapter    │   relAdapter    │
-     * │ (uint8) │ (uint8) │ (uint8) │ (uint8) │ (uint32) │ (uint32) │    (address)    │    (address)    │
-     * ├─────────┼─────────┼─────────┼─────────┼──────────┼──────────┼─────────────────┼─────────────────┤
-     * │    0    │    1    │    2    │    3    │   4–7    │   8–11   │     12–31       │     32–51       │
-     * └─────────┴─────────┴─────────┴─────────┴──────────┴──────────┴─────────────────┴─────────────────┘
-     *                                                               └────────────── optional ──────────┘
+     * ┌───────────────────┬───────────────────┬───────────────────┬───────────────────┬────────────┬────────────┬───────────────────┬───────────────────┐
+     * │ referencePluckIdx │ referenceDecimals │ relativePluckIdx  │ relativeDecimals  │  minRatio  │  maxRatio  │ referenceAdapter  │ relativeAdapter   │
+     * │      (uint8)      │      (uint8)      │      (uint8)      │      (uint8)      │  (uint32)  │  (uint32)  │     (address)     │     (address)     │
+     * ├───────────────────┼───────────────────┼───────────────────┼───────────────────┼────────────┼────────────┼───────────────────┼───────────────────┤
+     * │         0         │         1         │         2         │         3         │    4–7     │    8–11    │      12–31        │      32–51        │
+     * └───────────────────┴───────────────────┴───────────────────┴───────────────────┴────────────┴────────────┴───────────────────┴───────────────────┘
+     *                                                                                                          └─────────────────── optional ──────────┘
      */
     struct CompValue {
-        uint8 referenceIndex;
+        uint8 referencePluckIndex;
         uint8 referenceDecimals;
-        uint8 relativeIndex;
+        uint8 relativePluckIndex;
         uint8 relativeDecimals;
         uint32 minRatio;
         uint32 maxRatio;
@@ -98,7 +99,7 @@ library WithinRatioChecker {
             : config.relativeDecimals;
 
         (status, referenceAmount) = _scaleAndPrice(
-            uint256(pluckedValues[config.referenceIndex]),
+            uint256(pluckedValues[config.referencePluckIndex]),
             config.referenceDecimals,
             precision,
             config.referenceAdapter
@@ -106,7 +107,7 @@ library WithinRatioChecker {
         if (status != Status.Ok) return (status, 0, 0);
 
         (status, relativeAmount) = _scaleAndPrice(
-            uint256(pluckedValues[config.relativeIndex]),
+            uint256(pluckedValues[config.relativePluckIndex]),
             config.relativeDecimals,
             precision,
             config.relativeAdapter
@@ -132,9 +133,9 @@ library WithinRatioChecker {
     ) private pure returns (CompValue memory config) {
         bytes32 packed = bytes32(compValue);
 
-        config.referenceIndex = uint8(bytes1(packed));
+        config.referencePluckIndex = uint8(bytes1(packed));
         config.referenceDecimals = uint8(bytes1(packed << 8));
-        config.relativeIndex = uint8(bytes1(packed << 16));
+        config.relativePluckIndex = uint8(bytes1(packed << 16));
         config.relativeDecimals = uint8(bytes1(packed << 24));
         config.minRatio = uint32(bytes4(packed << 32));
         config.maxRatio = uint32(bytes4(packed << 64));
