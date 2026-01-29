@@ -73,10 +73,7 @@ library ConditionEvaluator {
                         context
                     );
             } else {
-                assert(
-                    operator == Operator.ZipSome ||
-                        operator == Operator.ZipEvery
-                );
+                // ZipSome or ZipEvery
                 return
                     _zipIterator(
                         data,
@@ -94,20 +91,18 @@ library ConditionEvaluator {
                     condition,
                     context
                 );
-                if (overflow) {
-                    return
-                        _violation(
-                            Status.CalldataOverflow,
-                            location,
-                            condition
-                        );
-                }
 
-                Status status = operator <= Operator.LessThan
-                    ? _compare(value, condition)
-                    : _compareSignedInt(value, condition);
-
-                return _result(status, location, condition, consumptions);
+                return
+                    _result(
+                        overflow
+                            ? Status.CalldataOverflow
+                            : operator <= Operator.LessThan
+                                ? _compare(value, condition)
+                                : _compareSignedInt(value, condition),
+                        location,
+                        condition,
+                        consumptions
+                    );
             } else if (operator == Operator.Bitmask) {
                 return
                     _result(
@@ -122,7 +117,7 @@ library ConditionEvaluator {
                         consumptions
                     );
             } else if (operator == Operator.WithinAllowance) {
-                (bytes32 allowanceValue, bool overflow) = __input(
+                (bytes32 value, bool overflow) = __input(
                     data,
                     location,
                     condition,
@@ -138,7 +133,7 @@ library ConditionEvaluator {
                 }
                 return
                     __allowance(
-                        uint256(allowanceValue),
+                        uint256(value),
                         location,
                         condition,
                         consumptions
@@ -157,7 +152,7 @@ library ConditionEvaluator {
                         consumptions
                     );
             } else {
-                assert(operator == Operator.Custom);
+                // Custom
                 return
                     _result(
                         CustomConditionChecker.check(
@@ -370,9 +365,9 @@ library ConditionEvaluator {
             return _violation(Status.ParameterNotAMatch, location, condition);
         }
 
-        result.consumptions = consumptions;
         uint256 tailOffset = childCount - conditionCount;
 
+        result.consumptions = consumptions;
         for (uint256 i; i < conditionCount; ++i) {
             result = evaluate(
                 data,
@@ -410,9 +405,7 @@ library ConditionEvaluator {
         uint256 length = locations[0].length;
         Condition memory tuple = condition.children[0];
 
-        // Initialize result with base consumptions
         result.consumptions = consumptions;
-
         for (uint256 i; i < length; ++i) {
             // For ZipSome, we always start from base consumptions.
             if (!every) result.consumptions = consumptions;
@@ -504,7 +497,7 @@ library ConditionEvaluator {
             return _violation(Status.CalldataOverflow, location, condition);
         }
 
-        uint256 index = uint256(uint8(condition.compValue[0]));
+        uint256 index = uint8(condition.compValue[0]);
         context.pluckedLocations[index] = location;
         context.pluckedValues[index] = pluckedValue;
 
@@ -580,7 +573,7 @@ library ConditionEvaluator {
         uint256 location,
         Condition memory condition,
         Context memory context
-    ) private pure returns (bytes32 result, bool) {
+    ) private pure returns (bytes32 result, bool overflow) {
         /*
          * Integrity rules map Encoding.EtherValue -> Encoding.None during packing.
          * If we encounter Encoding.None here (in a comparison context), it acts as
@@ -591,13 +584,12 @@ library ConditionEvaluator {
         }
 
         // Check if condition has size set (e.g., from Slice), otherwise get from decoder
-        (uint256 size, bool overflow) = condition.size != 0
+        uint256 size;
+        (size, overflow) = condition.size != 0
             ? (condition.size, false)
             : AbiLocation.size(data, location, condition);
 
-        if (overflow) return (0, true);
-
-        if (location + size > data.length) {
+        if (overflow || location + size > data.length) {
             return (0, true);
         }
 
@@ -618,18 +610,6 @@ library ConditionEvaluator {
 
         // size > 32
         return (keccak256(data[location:location + size]), false);
-    }
-
-    function _result(
-        Status status,
-        uint256 location,
-        Condition memory condition,
-        Consumption[] memory consumptions
-    ) private pure returns (Result memory) {
-        return
-            status == Status.Ok
-                ? _ok(consumptions)
-                : _violation(status, location, condition);
     }
 
     function _ok(
@@ -657,6 +637,18 @@ library ConditionEvaluator {
                 payloadLocation: location,
                 consumptions: empty
             });
+    }
+
+    function _result(
+        Status status,
+        uint256 location,
+        Condition memory condition,
+        Consumption[] memory consumptions
+    ) private pure returns (Result memory) {
+        return
+            status == Status.Ok
+                ? _ok(consumptions)
+                : _violation(status, location, condition);
     }
 
     /**
