@@ -22,17 +22,15 @@ library AbiLocation {
         uint256 location,
         Condition memory condition
     ) internal pure returns (uint256[] memory none, bool overflow) {
-        bool isArray = condition.encoding == Encoding.Array;
-        uint256 childCount;
+        uint256 childCount = condition.children.length;
 
+        bool isArray = condition.encoding == Encoding.Array;
         if (isArray) {
-            if (location + 32 > data.length) {
-                return (none, true);
+            if (location + 32 > data.length) return (none, true);
+            assembly {
+                childCount := calldataload(add(data.offset, location))
             }
-            childCount = uint256(bytes32(data[location:]));
             location += 32;
-        } else {
-            childCount = condition.children.length;
         }
 
         uint256[] memory result = new uint256[](childCount);
@@ -66,9 +64,17 @@ library AbiLocation {
     ) internal pure returns (uint256 result) {
         Encoding encoding = condition.encoding;
 
-        // Static is always 32 bytes
         if (encoding == Encoding.Static) {
             return 32;
+        }
+
+        /*
+         * Read first word, detect overflow
+         */
+        if (location + 32 > data.length) return data.length;
+        uint256 word;
+        assembly {
+            word := calldataload(add(data.offset, location))
         }
 
         /*
@@ -83,29 +89,28 @@ library AbiLocation {
          * paired with that operator.
          */
         if (encoding == Encoding.Dynamic || encoding == Encoding.AbiEncoded) {
-            // Dynamic types: length prefix + padded content
-            if (location + 32 > data.length) return data.length;
-            return 32 + _ceil32(uint256(bytes32(data[location:])));
+            // Dynamic types: length prefix + padded content (ceil32)
+            return 32 + ((word + 31) & ~uint256(31));
         }
 
         uint256 childCount = condition.children.length;
         if (encoding == Encoding.None) {
-            // Transparent And/Or: delegate to first child
+            // Transparent And/Or: delegate size to first child
             for (uint256 i; i < childCount; ++i) {
                 result = size(data, location, condition.children[i]);
+                // children can overflow or be non structural
                 if (result > 0 && result < data.length) return result;
             }
-            // overflow
+            // if we reached here, just mark overflow
             return data.length;
         }
 
         /*
-         * Tuple, Array
+         * Tuple / Array
          */
         bool isArray = encoding == Encoding.Array;
         if (isArray) {
-            if (location + 32 > data.length) return data.length;
-            childCount = uint256(bytes32(data[location:]));
+            childCount = word;
             location += 32;
             result = 32;
         }
@@ -175,9 +180,5 @@ library AbiLocation {
         }
 
         return location + tailOffset;
-    }
-
-    function _ceil32(uint256 x) private pure returns (uint256) {
-        return (x + 31) & ~uint256(31);
     }
 }
