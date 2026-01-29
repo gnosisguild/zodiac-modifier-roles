@@ -113,8 +113,8 @@ library Integrity {
         ConditionFlat[] memory conditions,
         uint256 index
     ) private pure {
-        ConditionFlat memory node = conditions[index];
-        Encoding encoding = node.paramType;
+        ConditionFlat memory condition = conditions[index];
+        Encoding encoding = condition.paramType;
 
         (, uint256 childCount, uint256 sChildCount) = _sChildBounds(
             conditions,
@@ -125,7 +125,7 @@ library Integrity {
             (encoding == Encoding.Static ||
                 encoding == Encoding.Dynamic ||
                 encoding == Encoding.EtherValue) &&
-            (node.operator != Operator.Slice)
+            (condition.operator != Operator.Slice)
         ) {
             // Slice is a special case: uses Static/Dynamic but requires a child
             // Leaf types cannot have children
@@ -152,10 +152,10 @@ library Integrity {
         ConditionFlat[] memory conditions,
         uint256 index
     ) private pure {
-        ConditionFlat memory node = conditions[index];
+        ConditionFlat memory condition = conditions[index];
         // Encoding: Any
         // CompValue: Must be empty
-        if (node.compValue.length != 0) {
+        if (condition.compValue.length != 0) {
             revert IRolesError.UnsuitableCompValue(index);
         }
     }
@@ -164,14 +164,14 @@ library Integrity {
         ConditionFlat[] memory conditions,
         uint256 index
     ) private pure {
-        ConditionFlat memory node = conditions[index];
+        ConditionFlat memory condition = conditions[index];
         // And/Or
         // ParamType: None
-        if (node.paramType != Encoding.None) {
+        if (condition.paramType != Encoding.None) {
             revert IRolesError.UnsuitableParameterType(index);
         }
         // CompValue: Empty
-        if (node.compValue.length != 0) {
+        if (condition.compValue.length != 0) {
             revert IRolesError.UnsuitableCompValue(index);
         }
         // Children: Must have children
@@ -185,13 +185,13 @@ library Integrity {
         ConditionFlat[] memory conditions,
         uint256 index
     ) private pure {
-        ConditionFlat memory node = conditions[index];
+        ConditionFlat memory condition = conditions[index];
         // ParamType: None
-        if (node.paramType != Encoding.None) {
+        if (condition.paramType != Encoding.None) {
             revert IRolesError.UnsuitableParameterType(index);
         }
         // CompValue: Empty
-        if (node.compValue.length != 0) {
+        if (condition.compValue.length != 0) {
             revert IRolesError.UnsuitableCompValue(index);
         }
         // Children: None
@@ -205,30 +205,30 @@ library Integrity {
         ConditionFlat[] memory conditions,
         uint256 index
     ) private pure {
-        ConditionFlat memory node = conditions[index];
+        ConditionFlat memory condition = conditions[index];
         // ParamType: Tuple, Array, AbiEncoded
         if (
-            node.paramType != Encoding.Tuple &&
-            node.paramType != Encoding.Array &&
-            node.paramType != Encoding.AbiEncoded
+            condition.paramType != Encoding.Tuple &&
+            condition.paramType != Encoding.Array &&
+            condition.paramType != Encoding.AbiEncoded
         ) {
             revert IRolesError.UnsuitableParameterType(index);
         }
 
         // CompValue Validation
-        if (node.paramType == Encoding.AbiEncoded) {
-            uint16 leadingBytes = node.compValue.length >= 2
-                ? uint16(bytes2(node.compValue))
+        if (condition.paramType == Encoding.AbiEncoded) {
+            uint16 leadingBytes = condition.compValue.length >= 2
+                ? uint16(bytes2(condition.compValue))
                 : 0;
-            bool valid = node.compValue.length == 0 ||
-                node.compValue.length == 2 ||
-                (node.compValue.length == 2 + leadingBytes &&
+            bool valid = condition.compValue.length == 0 ||
+                condition.compValue.length == 2 ||
+                (condition.compValue.length == 2 + leadingBytes &&
                     leadingBytes <= 32);
             if (!valid) {
                 revert IRolesError.UnsuitableCompValue(index);
             }
         } else {
-            if (node.compValue.length != 0) {
+            if (condition.compValue.length != 0) {
                 revert IRolesError.UnsuitableCompValue(index);
             }
         }
@@ -247,14 +247,14 @@ library Integrity {
         ConditionFlat[] memory conditions,
         uint256 index
     ) private pure {
-        ConditionFlat memory node = conditions[index];
+        ConditionFlat memory condition = conditions[index];
         // ArraySome / ArrayEvery
         // ParamType: Array
-        if (node.paramType != Encoding.Array) {
+        if (condition.paramType != Encoding.Array) {
             revert IRolesError.UnsuitableParameterType(index);
         }
         // CompValue: Empty
-        if (node.compValue.length != 0) {
+        if (condition.compValue.length != 0) {
             revert IRolesError.UnsuitableCompValue(index);
         }
         // Children: Exactly 1 child
@@ -262,7 +262,7 @@ library Integrity {
             conditions,
             index
         );
-        if (childCount != 1 || sChildCount != 1) {
+        if (sChildCount != 1 || sChildCount != childCount) {
             revert IRolesError.UnsuitableChildCount(index);
         }
     }
@@ -271,14 +271,14 @@ library Integrity {
         ConditionFlat[] memory conditions,
         uint256 index
     ) private pure {
-        ConditionFlat memory node = conditions[index];
+        ConditionFlat memory condition = conditions[index];
         // ArrayTailMatches
         // ParamType: Array
-        if (node.paramType != Encoding.Array) {
+        if (condition.paramType != Encoding.Array) {
             revert IRolesError.UnsuitableParameterType(index);
         }
         // CompValue: Empty
-        if (node.compValue.length != 0) {
+        if (condition.compValue.length != 0) {
             revert IRolesError.UnsuitableCompValue(index);
         }
         // Children: All children must be structural
@@ -295,32 +295,34 @@ library Integrity {
         ConditionFlat[] memory conditions,
         uint256 index
     ) private pure {
-        ConditionFlat memory node = conditions[index];
+        ConditionFlat memory condition = conditions[index];
         // ZipSome / ZipEvery
         // ParamType: None
-        if (node.paramType != Encoding.None) {
+        if (condition.paramType != Encoding.None) {
             revert IRolesError.UnsuitableParameterType(index);
         }
         // CompValue: at least 2 bytes (one per plucked array)
-        if (node.compValue.length < 2) {
+        if (condition.compValue.length < 2) {
             revert IRolesError.UnsuitableCompValue(index);
         }
 
         // Validate pluck references: no duplicates, each must exist and be Array
         uint256 seen;
-        for (uint256 k = 0; k < node.compValue.length; ++k) {
-            uint8 pluckIndex = uint8(node.compValue[k]);
+        for (uint256 k = 0; k < condition.compValue.length; ++k) {
+            uint8 pluckIndex = uint8(condition.compValue[k]);
             uint256 mask = 1 << pluckIndex;
             if ((seen & mask) != 0) {
                 revert IRolesError.UnsuitableCompValue(index);
             }
             seen |= mask;
 
-            (bool found, uint256 pluckNode) = _findPluckedArray(
+            (bool found, uint256 pluckCondition) = _findPluckedArray(
                 conditions,
                 pluckIndex
             );
-            if (!found || conditions[pluckNode].paramType != Encoding.Array) {
+            if (
+                !found || conditions[pluckCondition].paramType != Encoding.Array
+            ) {
                 revert IRolesError.UnsuitableCompValue(index);
             }
         }
@@ -331,17 +333,20 @@ library Integrity {
             uint256 childCount,
             uint256 sChildCount
         ) = _sChildBounds(conditions, index);
-        if (childCount != 1 || sChildCount != 1) {
+        if (sChildCount != 1 || sChildCount != childCount) {
             revert IRolesError.UnsuitableChildCount(index);
+        }
+
+        if (conditions[childStart].paramType != Encoding.Tuple) {
+            revert IRolesError.UnsuitableChildTypeTree(index);
         }
 
         // Child must resolve to a Tuple
         Layout memory layout = TypeTree.inspect(conditions, childStart);
-        if (layout.encoding != Encoding.Tuple) {
-            revert IRolesError.UnsuitableChildTypeTree(index);
-        }
+        assert(layout.encoding == Encoding.Tuple);
+
         // Tuple field count must match compValue length
-        if (layout.children.length != node.compValue.length) {
+        if (layout.children.length != condition.compValue.length) {
             revert IRolesError.UnsuitableCompValue(index);
         }
 
@@ -353,19 +358,19 @@ library Integrity {
         ConditionFlat[] memory conditions,
         uint256 index
     ) private pure {
-        ConditionFlat memory node = conditions[index];
+        ConditionFlat memory condition = conditions[index];
         // ParamType: Static / Dynamic
         if (
-            node.paramType != Encoding.Static &&
-            node.paramType != Encoding.Dynamic
+            condition.paramType != Encoding.Static &&
+            condition.paramType != Encoding.Dynamic
         ) {
             revert IRolesError.UnsuitableParameterType(index);
         }
         // CompValue: 3 bytes
-        if (node.compValue.length != 3) {
+        if (condition.compValue.length != 3) {
             revert IRolesError.UnsuitableCompValue(index);
         }
-        uint8 size = uint8(node.compValue[2]);
+        uint8 size = uint8(condition.compValue[2]);
         if (size == 0 || size > 32) {
             revert IRolesError.UnsuitableCompValue(index);
         }
@@ -394,13 +399,19 @@ library Integrity {
         ConditionFlat[] memory conditions,
         uint256 index
     ) private pure {
-        ConditionFlat memory node = conditions[index];
+        ConditionFlat memory condition = conditions[index];
         // ParamType: Static / EtherValue / Array
-        if (!_isWordish(node.paramType) && node.paramType != Encoding.Array) {
+        if (
+            !_isWordish(condition.paramType) &&
+            condition.paramType != Encoding.Array
+        ) {
             revert IRolesError.UnsuitableParameterType(index);
         }
         // CompValue: 1 byte
-        if (node.compValue.length != 1 || uint8(node.compValue[0]) == 255) {
+        if (
+            condition.compValue.length != 1 ||
+            uint8(condition.compValue[0]) == 255
+        ) {
             revert IRolesError.UnsuitableCompValue(index);
         }
     }
@@ -409,13 +420,13 @@ library Integrity {
         ConditionFlat[] memory conditions,
         uint256 index
     ) private pure {
-        ConditionFlat memory node = conditions[index];
+        ConditionFlat memory condition = conditions[index];
         // ParamType: Static
-        if (node.paramType != Encoding.Static) {
+        if (condition.paramType != Encoding.Static) {
             revert IRolesError.UnsuitableParameterType(index);
         }
         // CompValue: Empty
-        if (node.compValue.length != 0) {
+        if (condition.compValue.length != 0) {
             revert IRolesError.UnsuitableCompValue(index);
         }
     }
@@ -424,8 +435,8 @@ library Integrity {
         ConditionFlat[] memory conditions,
         uint256 index
     ) private pure {
-        ConditionFlat memory node = conditions[index];
-        Encoding enc = node.paramType;
+        ConditionFlat memory condition = conditions[index];
+        Encoding enc = condition.paramType;
         // ParamType: Static, Dynamic, Tuple, Array, EtherValue
         if (enc == Encoding.None || enc == Encoding.AbiEncoded) {
             revert IRolesError.UnsuitableParameterType(index);
@@ -434,11 +445,11 @@ library Integrity {
         // CompValue check
         bool unsuitable;
         if (_isWordish(enc)) {
-            unsuitable = node.compValue.length != 32;
+            unsuitable = condition.compValue.length != 32;
         }
 
         if (enc == Encoding.Tuple || enc == Encoding.Array) {
-            unsuitable = node.compValue.length < 32;
+            unsuitable = condition.compValue.length < 32;
         }
 
         if (unsuitable) {
@@ -450,13 +461,13 @@ library Integrity {
         ConditionFlat[] memory conditions,
         uint256 index
     ) private pure {
-        ConditionFlat memory node = conditions[index];
+        ConditionFlat memory condition = conditions[index];
         // ParamType: WordLike
-        if (!_isWordish(node.paramType)) {
+        if (!_isWordish(condition.paramType)) {
             revert IRolesError.UnsuitableParameterType(index);
         }
         // CompValue: 32 bytes
-        if (node.compValue.length != 32) {
+        if (condition.compValue.length != 32) {
             revert IRolesError.UnsuitableCompValue(index);
         }
     }
@@ -465,16 +476,19 @@ library Integrity {
         ConditionFlat[] memory conditions,
         uint256 index
     ) private pure {
-        ConditionFlat memory node = conditions[index];
+        ConditionFlat memory condition = conditions[index];
         // ParamType: Static / Dynamic
         if (
-            node.paramType != Encoding.Static &&
-            node.paramType != Encoding.Dynamic
+            condition.paramType != Encoding.Static &&
+            condition.paramType != Encoding.Dynamic
         ) {
             revert IRolesError.UnsuitableParameterType(index);
         }
         // CompValue: 2 shift + 2N
-        if (node.compValue.length < 4 || (node.compValue.length - 2) % 2 != 0) {
+        if (
+            condition.compValue.length < 4 ||
+            (condition.compValue.length - 2) % 2 != 0
+        ) {
             revert IRolesError.UnsuitableCompValue(index);
         }
     }
@@ -483,9 +497,9 @@ library Integrity {
         ConditionFlat[] memory conditions,
         uint256 index
     ) private pure {
-        ConditionFlat memory node = conditions[index];
+        ConditionFlat memory condition = conditions[index];
         // CompValue: >= 20 bytes
-        if (node.compValue.length < 20) {
+        if (condition.compValue.length < 20) {
             revert IRolesError.UnsuitableCompValue(index);
         }
     }
@@ -494,23 +508,23 @@ library Integrity {
         ConditionFlat[] memory conditions,
         uint256 index
     ) private pure {
-        ConditionFlat memory node = conditions[index];
+        ConditionFlat memory condition = conditions[index];
         // ParamType: None
-        if (node.paramType != Encoding.None) {
+        if (condition.paramType != Encoding.None) {
             revert IRolesError.UnsuitableParameterType(index);
         }
         // CompValue: 12, 32 or 52 bytes (12 base + 0, 1, or 2 adapters)
         if (
-            node.compValue.length != 12 &&
-            node.compValue.length != 32 &&
-            node.compValue.length != 52
+            condition.compValue.length != 12 &&
+            condition.compValue.length != 32 &&
+            condition.compValue.length != 52
         ) {
             revert IRolesError.UnsuitableCompValue(index);
         }
         // Check ratio bounds
         uint32 minRatio;
         uint32 maxRatio;
-        bytes memory cv = node.compValue;
+        bytes memory cv = condition.compValue;
         assembly {
             minRatio := shr(224, mload(add(cv, 0x24)))
             maxRatio := shr(224, mload(add(cv, 0x28)))
@@ -529,22 +543,23 @@ library Integrity {
         ConditionFlat[] memory conditions,
         uint256 index
     ) private pure {
-        ConditionFlat memory node = conditions[index];
+        ConditionFlat memory condition = conditions[index];
         // ParamType: WordLike
-        if (!_isWordish(node.paramType)) {
+        if (!_isWordish(condition.paramType)) {
             revert IRolesError.UnsuitableParameterType(index);
         }
         // CompValue: 32, 34, 54
         if (
-            node.compValue.length != 32 &&
-            node.compValue.length != 34 &&
-            node.compValue.length != 54
+            condition.compValue.length != 32 &&
+            condition.compValue.length != 34 &&
+            condition.compValue.length != 54
         ) {
             revert IRolesError.UnsuitableCompValue(index);
         }
-        if (node.compValue.length > 32) {
+        if (condition.compValue.length > 32) {
             if (
-                uint8(node.compValue[32]) > 27 || uint8(node.compValue[33]) > 27
+                uint8(condition.compValue[32]) > 27 ||
+                uint8(condition.compValue[33]) > 27
             ) {
                 revert IRolesError.AllowanceDecimalsExceedMax(index);
             }
@@ -555,13 +570,13 @@ library Integrity {
         ConditionFlat[] memory conditions,
         uint256 index
     ) private pure {
-        ConditionFlat memory node = conditions[index];
+        ConditionFlat memory condition = conditions[index];
         // ParamType: None
-        if (node.paramType != Encoding.None) {
+        if (condition.paramType != Encoding.None) {
             revert IRolesError.UnsuitableParameterType(index);
         }
         // CompValue: 32 bytes
-        if (node.compValue.length != 32) {
+        if (condition.compValue.length != 32) {
             revert IRolesError.UnsuitableCompValue(index);
         }
         // Children: None
@@ -617,13 +632,13 @@ library Integrity {
             );
 
             for (uint256 j = 0; j < tupleLayout.children.length; ++j) {
-                (, uint256 pluckNode) = _findPluckedArray(
+                (, uint256 pluckCondition) = _findPluckedArray(
                     conditions,
                     uint8(conditions[i].compValue[j])
                 );
                 Layout memory arrayLayout = TypeTree.inspect(
                     conditions,
-                    pluckNode
+                    pluckCondition
                 );
 
                 Layout memory entry = arrayLayout.children[0];
@@ -646,7 +661,7 @@ library Integrity {
      *      first), this function traverses the tree in DFS order to track the
      *      `visited` state of plucked variables. This ensures that a
      *      `WithinRatio` check can only reference variables that have been
-     *      "plucked" by a preceding node in the execution flow.
+     *      "plucked" by a preceding condition in the execution flow.
      */
     function _validatePluckOrder(
         ConditionFlat[] memory conditions,
@@ -742,8 +757,8 @@ library Integrity {
     }
 
     /**
-     * @notice Determines if a node is structural
-     * @dev A node is structural if it has paramType != None OR any descendant has paramType != None
+     * @notice Determines if a condition is structural
+     * @dev A condition is structural if it has paramType != None OR any descendant has paramType != None
      */
     function _isStructural(
         ConditionFlat[] memory conditions,
@@ -790,13 +805,13 @@ library Integrity {
     }
 
     /**
-     * @notice Finds the conditions index of the Pluck node with the given
+     * @notice Finds the conditions index of the Pluck condition with the given
      *         pluck index.
      */
     function _findPluckedArray(
         ConditionFlat[] memory conditions,
         uint8 pluckIndex
-    ) private pure returns (bool found, uint256 nodeIndex) {
+    ) private pure returns (bool found, uint256 conditionIndex) {
         for (uint256 i = 0; i < conditions.length; ++i) {
             if (
                 conditions[i].operator == Operator.Pluck &&
