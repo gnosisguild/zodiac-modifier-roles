@@ -47,7 +47,7 @@ library AbiLocation {
                 headOffset += 32;
             }
 
-            if (result[i] >= data.length) {
+            if (result[i] > data.length) {
                 return (none, true);
             }
         }
@@ -71,7 +71,7 @@ library AbiLocation {
         /*
          * Read first word, detect overflow
          */
-        if (location + 32 > data.length) return data.length;
+        if (location + 32 > data.length) return data.length + 1;
         uint256 word;
         assembly {
             word := calldataload(add(data.offset, location))
@@ -99,10 +99,10 @@ library AbiLocation {
             for (uint256 i; i < childCount; ++i) {
                 result = size(data, location, condition.children[i]);
                 // children can overflow or be non structural
-                if (result > 0 && result < data.length) return result;
+                if (result > 0 && result <= data.length) return result;
             }
             // if we reached here, just mark overflow
-            return data.length;
+            return data.length + 1;
         }
 
         /*
@@ -159,7 +159,7 @@ library AbiLocation {
     ) private pure returns (uint256) {
         // HEAD overflows buffer
         if (location + headOffset + 32 > data.length) {
-            return data.length;
+            return data.length + 1;
         }
 
         uint256 tailOffset;
@@ -171,12 +171,12 @@ library AbiLocation {
 
         // TAIL points backwards
         if (tailOffset <= headOffset) {
-            return data.length;
+            return data.length + 1;
         }
 
         // TAIL overflows buffer
         if (location + tailOffset + 32 > data.length) {
-            return data.length;
+            return data.length + 1;
         }
 
         return location + tailOffset;
