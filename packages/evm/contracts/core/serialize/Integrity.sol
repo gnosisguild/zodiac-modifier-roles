@@ -747,37 +747,10 @@ library Integrity {
     {
         (childStart, childCount) = Topology.childBounds(conditions, index);
         for (uint256 i; i < childCount; ++i) {
-            if (_isStructural(conditions, childStart + i)) {
+            if (TypeTree.hash(conditions, childStart + i) != 0) {
                 ++sChildCount;
             }
         }
-    }
-
-    /**
-     * @notice Determines if a condition is structural
-     * @dev A condition is structural if it has paramType != None OR any descendant has paramType != None
-     */
-    function _isStructural(
-        ConditionFlat[] memory conditions,
-        uint256 index
-    ) private pure returns (bool) {
-        // EtherValue is an alias for None
-        Encoding encoding = conditions[index].paramType;
-        if (encoding != Encoding.None && encoding != Encoding.EtherValue) {
-            return true;
-        }
-
-        // Check if any child is structural
-        (uint256 childStart, uint256 childCount) = Topology.childBounds(
-            conditions,
-            index
-        );
-        for (uint256 i; i < childCount; ++i) {
-            if (_isStructural(conditions, childStart + i)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /**
