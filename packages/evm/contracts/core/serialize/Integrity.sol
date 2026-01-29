@@ -21,7 +21,7 @@ library Integrity {
             _validateEncoding(conditions, i);
         }
 
-        _validateTypeTrees(conditions);
+        _validateVariantTypes(conditions);
         _validatePluckZipTypes(conditions);
         _validatePluckOrder(conditions, 0, 0);
     }
@@ -583,7 +583,7 @@ library Integrity {
         }
     }
 
-    function _validateTypeTrees(
+    function _validateVariantTypes(
         ConditionFlat[] memory conditions
     ) private pure {
         for (uint256 i = 0; i < conditions.length; ++i) {
