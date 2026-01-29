@@ -315,3 +315,144 @@ export async function setupArrayParam() {
     invoke,
   };
 }
+
+export async function setupTwoArrayParams() {
+  const iface = new Interface(["function fn(uint256[], uint256[])"]);
+  const fn = iface.getFunction("fn")!;
+  const { owner, roles, member, testContractAddress, roleKey } =
+    await setupTestContract();
+
+  const allowFunction = async (
+    conditions: ConditionFlatStruct[],
+    options = ExecutionOptions.None,
+  ) => {
+    const packed = await packConditions(roles, conditions);
+    return roles.allowFunction(
+      roleKey,
+      testContractAddress,
+      fn.selector,
+      packed,
+      options,
+    );
+  };
+
+  const invoke = (
+    arr1: (bigint | number)[],
+    arr2: (bigint | number)[],
+    options?: { value?: bigint | number; operation?: number },
+  ) =>
+    roles
+      .connect(member)
+      .execTransactionFromModule(
+        testContractAddress,
+        options?.value ?? 0,
+        iface.encodeFunctionData(fn, [arr1, arr2]),
+        options?.operation ?? 0,
+      );
+
+  return {
+    roles,
+    owner,
+    member,
+    testContractAddress,
+    roleKey,
+    fn,
+    allowFunction,
+    invoke,
+  };
+}
+
+export async function setupThreeArrayParams(type = "uint256") {
+  const iface = new Interface([`function fn(${type}[], ${type}[], ${type}[])`]);
+  const fn = iface.getFunction("fn")!;
+  const { owner, roles, member, testContractAddress, roleKey } =
+    await setupTestContract();
+
+  const allowFunction = async (
+    conditions: ConditionFlatStruct[],
+    options = ExecutionOptions.None,
+  ) => {
+    const packed = await packConditions(roles, conditions);
+    return roles.allowFunction(
+      roleKey,
+      testContractAddress,
+      fn.selector,
+      packed,
+      options,
+    );
+  };
+
+  const invoke = (
+    arr1: (bigint | number | string)[],
+    arr2: (bigint | number | string)[],
+    arr3: (bigint | number | string)[],
+    options?: { value?: bigint | number; operation?: number },
+  ) =>
+    roles
+      .connect(member)
+      .execTransactionFromModule(
+        testContractAddress,
+        options?.value ?? 0,
+        iface.encodeFunctionData(fn, [arr1, arr2, arr3]),
+        options?.operation ?? 0,
+      );
+
+  return {
+    roles,
+    owner,
+    member,
+    testContractAddress,
+    roleKey,
+    fn,
+    allowFunction,
+    invoke,
+  };
+}
+
+export async function setupTwoTupleArrayParams() {
+  const iface = new Interface([
+    "function fn((uint256, uint256)[], (uint256, uint256)[])",
+  ]);
+  const fn = iface.getFunction("fn")!;
+  const { owner, roles, member, testContractAddress, roleKey } =
+    await setupTestContract();
+
+  const allowFunction = async (
+    conditions: ConditionFlatStruct[],
+    options = ExecutionOptions.None,
+  ) => {
+    const packed = await packConditions(roles, conditions);
+    return roles.allowFunction(
+      roleKey,
+      testContractAddress,
+      fn.selector,
+      packed,
+      options,
+    );
+  };
+
+  const invoke = (
+    arr1: [bigint | number, bigint | number][],
+    arr2: [bigint | number, bigint | number][],
+    options?: { value?: bigint | number; operation?: number },
+  ) =>
+    roles
+      .connect(member)
+      .execTransactionFromModule(
+        testContractAddress,
+        options?.value ?? 0,
+        iface.encodeFunctionData(fn, [arr1, arr2]),
+        options?.operation ?? 0,
+      );
+
+  return {
+    roles,
+    owner,
+    member,
+    testContractAddress,
+    roleKey,
+    fn,
+    allowFunction,
+    invoke,
+  };
+}

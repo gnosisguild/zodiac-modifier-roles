@@ -45,15 +45,16 @@ library TypeTree {
              * Non-variant logical nodes: first structural child defines the type tree
              */
             for (uint256 j; j < childCount; ++j) {
-                if (id(conditions, childStart + j) != bytes32(0)) {
+                if (hash(conditions, childStart + j) != bytes32(0)) {
                     return inspect(conditions, childStart + j);
                 }
             }
 
             /*
-             * No structural child was found. This returns zero unassigned layout node
+             * No structural child was found.
              */
-            return layout;
+            Layout memory none;
+            return none;
         }
 
         layout.encoding = conditions[i].paramType == Encoding.EtherValue
@@ -75,7 +76,7 @@ library TypeTree {
 
         uint256 length;
         for (uint256 j; j < layout.children.length; ++j) {
-            if (id(conditions, childStart + j) != bytes32(0)) {
+            if (hash(conditions, childStart + j) != bytes32(0)) {
                 layout.children[length++] = inspect(conditions, childStart + j);
 
                 /*
@@ -119,7 +120,7 @@ library TypeTree {
 
         bytes32 baseline;
         for (uint256 i; i < childCount; ++i) {
-            bytes32 childHash = id(conditions, childStart + i);
+            bytes32 childHash = hash(conditions, childStart + i);
 
             if (childHash == bytes32(0)) {
                 continue;
@@ -139,17 +140,17 @@ library TypeTree {
     /**
      * @notice Computes a unique hash for a type tree structure
      */
-    function id(
+    function hash(
         ConditionFlat[] memory conditions,
         uint256 index
     ) internal pure returns (bytes32) {
-        return hashTree(inspect(conditions, index));
+        return hash(inspect(conditions, index));
     }
 
     /**
      * @notice Computes a unique hash for a Layout tree
      */
-    function hashTree(Layout memory tree) private pure returns (bytes32) {
+    function hash(Layout memory tree) internal pure returns (bytes32 result) {
         Encoding encoding = tree.encoding == Encoding.EtherValue
             ? Encoding.None
             : tree.encoding;
@@ -158,13 +159,12 @@ library TypeTree {
             return bytes32(uint256(encoding));
         }
 
-        bytes32 hash = bytes32(uint256(encoding));
+        result = bytes32(uint256(encoding));
         for (uint256 i; i < tree.children.length; ++i) {
-            bytes32 childHash = hashTree(tree.children[i]);
+            bytes32 childHash = hash(tree.children[i]);
             if (childHash != bytes32(0)) {
-                hash = keccak256(abi.encodePacked(hash, childHash));
+                result = keccak256(abi.encodePacked(result, childHash));
             }
         }
-        return hash;
     }
 }

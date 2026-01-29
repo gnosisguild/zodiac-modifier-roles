@@ -11,11 +11,11 @@ import "../../common/AbiLocation.sol";
 import "../../types/Types.sol";
 
 /**
- * @title ConditionLogic
+ * @title ConditionEvaluator
  * @notice Evaluates condition trees on scoped function calls.
  * @author gnosisguild
  */
-library ConditionLogic {
+library ConditionEvaluator {
     function evaluate(
         bytes calldata data,
         uint256 location,
@@ -42,24 +42,7 @@ library ConditionLogic {
             } else if (operator == Operator.Slice) {
                 return _slice(data, location, condition, consumptions, context);
             } else if (operator == Operator.Pluck) {
-                (bytes32 pluckedValue, bool overflow) = __input(
-                    data,
-                    location,
-                    condition,
-                    context
-                );
-                if (overflow) {
-                    return
-                        _violation(
-                            Status.CalldataOverflow,
-                            location,
-                            condition
-                        );
-                }
-                context.pluckedValues[
-                    uint8(condition.compValue[0])
-                ] = pluckedValue;
-                return _ok(consumptions);
+                return _pluck(data, location, condition, consumptions, context);
             } else if (operator == Operator.Empty) {
                 return
                     _result(
@@ -68,26 +51,19 @@ library ConditionLogic {
                         condition,
                         consumptions
                     );
-            } else if (operator == Operator.ArraySome) {
+            } else if (
+                operator == Operator.ArraySome ||
+                operator == Operator.ArrayEvery
+            ) {
                 return
-                    _arraySome(
+                    _arrayIterator(
                         data,
                         location,
                         condition,
                         consumptions,
                         context
                     );
-            } else if (operator == Operator.ArrayEvery) {
-                return
-                    _arrayEvery(
-                        data,
-                        location,
-                        condition,
-                        consumptions,
-                        context
-                    );
-            } else {
-                assert(operator == Operator.ArrayTailMatches);
+            } else if (operator == Operator.ArrayTailMatches) {
                 return
                     _arrayTailMatches(
                         data,
@@ -96,20 +72,33 @@ library ConditionLogic {
                         consumptions,
                         context
                     );
-            }
-        } else {
-            if (operator <= Operator.LessThan) {
+            } else {
+                // ZipSome or ZipEvery
                 return
-                    _result(
-                        _compare(data, location, condition, context),
+                    _zipIterator(
+                        data,
                         location,
                         condition,
-                        consumptions
+                        consumptions,
+                        context
                     );
-            } else if (operator <= Operator.SignedIntLessThan) {
+            }
+        } else {
+            if (operator <= Operator.SignedIntLessThan) {
+                (bytes32 value, bool overflow) = __input(
+                    data,
+                    location,
+                    condition,
+                    context
+                );
+
                 return
                     _result(
-                        _compareSignedInt(data, location, condition, context),
+                        overflow
+                            ? Status.CalldataOverflow
+                            : operator <= Operator.LessThan
+                                ? _compare(value, condition)
+                                : _compareSignedInt(value, condition),
                         location,
                         condition,
                         consumptions
@@ -128,7 +117,7 @@ library ConditionLogic {
                         consumptions
                     );
             } else if (operator == Operator.WithinAllowance) {
-                (bytes32 allowanceValue, bool overflow) = __input(
+                (bytes32 value, bool overflow) = __input(
                     data,
                     location,
                     condition,
@@ -144,7 +133,7 @@ library ConditionLogic {
                 }
                 return
                     __allowance(
-                        uint256(allowanceValue),
+                        uint256(value),
                         location,
                         condition,
                         consumptions
@@ -152,19 +141,18 @@ library ConditionLogic {
             } else if (operator == Operator.CallWithinAllowance) {
                 return __allowance(1, location, condition, consumptions);
             } else if (operator == Operator.WithinRatio) {
-                // WithinRatio uses plucked values, not a direct payload location
                 return
                     _result(
                         WithinRatioChecker.check(
                             condition.compValue,
                             context.pluckedValues
                         ),
-                        0,
+                        location,
                         condition,
                         consumptions
                     );
             } else {
-                assert(operator == Operator.Custom);
+                // Custom
                 return
                     _result(
                         CustomConditionChecker.check(
@@ -305,49 +293,15 @@ library ConditionLogic {
         return _violation(Status.OrViolation, location, condition);
     }
 
-    function _arraySome(
+    function _arrayIterator(
         bytes calldata data,
         uint256 location,
         Condition memory condition,
         Consumption[] memory consumptions,
         Context memory context
     ) private view returns (Result memory result) {
-        // Decode array element locations
-        (uint256[] memory childLocations, bool overflow) = AbiLocation.children(
-            data,
-            location,
-            condition
-        );
+        bool every = condition.operator == Operator.ArrayEvery;
 
-        if (overflow) {
-            return _violation(Status.CalldataOverflow, location, condition);
-        }
-
-        for (uint256 i; i < childLocations.length; ++i) {
-            result = evaluate(
-                data,
-                childLocations[i],
-                condition.children[0],
-                consumptions,
-                context
-            );
-
-            if (result.status == Status.Ok) {
-                return result;
-            }
-        }
-
-        return _violation(Status.NoArrayElementPasses, location, condition);
-    }
-
-    function _arrayEvery(
-        bytes calldata data,
-        uint256 location,
-        Condition memory condition,
-        Consumption[] memory consumptions,
-        Context memory context
-    ) private view returns (Result memory result) {
-        // Decode array element locations
         (uint256[] memory childLocations, bool overflow) = AbiLocation.children(
             data,
             location,
@@ -364,16 +318,26 @@ library ConditionLogic {
                 data,
                 childLocations[i],
                 condition.children[0],
-                result.consumptions,
+                every ? result.consumptions : consumptions,
                 context
             );
 
-            if (result.status != Status.Ok) {
-                result.status = Status.NotEveryArrayElementPasses;
-                return result;
+            if (every) {
+                if (result.status != Status.Ok) {
+                    result.status = Status.NotEveryArrayElementPasses;
+                    return result;
+                }
+            } else {
+                if (result.status == Status.Ok) {
+                    return result;
+                }
             }
         }
-        return result;
+
+        return
+            every
+                ? result
+                : _violation(Status.NoArrayElementPasses, location, condition);
     }
 
     function _arrayTailMatches(
@@ -401,9 +365,9 @@ library ConditionLogic {
             return _violation(Status.ParameterNotAMatch, location, condition);
         }
 
-        result.consumptions = consumptions;
         uint256 tailOffset = childCount - conditionCount;
 
+        result.consumptions = consumptions;
         for (uint256 i; i < conditionCount; ++i) {
             result = evaluate(
                 data,
@@ -418,6 +382,65 @@ library ConditionLogic {
             }
         }
         return result;
+    }
+
+    function _zipIterator(
+        bytes calldata data,
+        uint256 location,
+        Condition memory condition,
+        Consumption[] memory consumptions,
+        Context memory context
+    ) private view returns (Result memory result) {
+        bool every = condition.operator == Operator.ZipEvery;
+
+        (
+            uint256[][] memory locations,
+            uint256 length,
+            Status status
+        ) = _zipLocations(data, condition, context);
+
+        if (status != Status.Ok) {
+            return _violation(status, location, condition);
+        }
+
+        Condition[] memory fields = condition.children[0].children;
+
+        result.consumptions = consumptions;
+        for (uint256 i; i < length; ++i) {
+            // For ZipSome, we always start from base consumptions.
+            if (!every) result.consumptions = consumptions;
+
+            bool tuplePasses = true;
+            for (uint256 f; f < fields.length; ++f) {
+                result = evaluate(
+                    data,
+                    locations[f][i],
+                    fields[f],
+                    result.consumptions,
+                    context
+                );
+                if (result.status != Status.Ok) {
+                    tuplePasses = false;
+                    break;
+                }
+            }
+
+            if (every) {
+                if (!tuplePasses) {
+                    result.status = Status.NotEveryZippedElementPasses;
+                    return result;
+                }
+            } else {
+                if (tuplePasses) {
+                    return result;
+                }
+            }
+        }
+
+        return
+            every
+                ? result
+                : _violation(Status.NoZippedElementPasses, location, condition);
     }
 
     /*
@@ -457,63 +480,62 @@ library ConditionLogic {
         return evaluate(data, childLocation, sliced, consumptions, context);
     }
 
-    function _compare(
+    function _pluck(
         bytes calldata data,
         uint256 location,
         Condition memory condition,
+        Consumption[] memory consumptions,
         Context memory context
-    ) private pure returns (Status) {
-        Operator operator = condition.operator;
+    ) private pure returns (Result memory) {
+        (bytes32 pluckedValue, bool overflow) = __input(
+            data,
+            location,
+            condition,
+            context
+        );
+        if (overflow) {
+            return _violation(Status.CalldataOverflow, location, condition);
+        }
 
+        uint256 index = uint8(condition.compValue[0]);
+        context.pluckedLocations[index] = location;
+        context.pluckedValues[index] = pluckedValue;
+
+        return _ok(consumptions);
+    }
+
+    function _compare(
+        bytes32 value,
+        Condition memory condition
+    ) private pure returns (Status) {
         bytes32 compValue = condition.compValue.length > 32
             ? keccak256(condition.compValue)
             : bytes32(condition.compValue);
-        (bytes32 value, bool overflow) = __input(
-            data,
-            location,
-            condition,
-            context
-        );
-        if (overflow) return Status.CalldataOverflow;
 
-        if (operator == Operator.EqualTo && value != compValue) {
-            return Status.ParameterNotAllowed;
-        } else if (operator == Operator.GreaterThan && value <= compValue) {
-            return Status.ParameterLessThanAllowed;
-        } else if (operator == Operator.LessThan && value >= compValue) {
-            return Status.ParameterGreaterThanAllowed;
-        } else {
-            return Status.Ok;
+        if (condition.operator == Operator.EqualTo) {
+            return value == compValue ? Status.Ok : Status.ParameterNotAllowed;
         }
+        if (condition.operator == Operator.GreaterThan) {
+            return
+                value > compValue ? Status.Ok : Status.ParameterLessThanAllowed;
+        }
+        return
+            value < compValue ? Status.Ok : Status.ParameterGreaterThanAllowed;
     }
 
     function _compareSignedInt(
-        bytes calldata data,
-        uint256 location,
-        Condition memory condition,
-        Context memory context
+        bytes32 rawValue,
+        Condition memory condition
     ) private pure returns (Status) {
-        Operator operator = condition.operator;
-        int256 compValue = int256(uint256(bytes32(condition.compValue)));
-        (bytes32 rawValue, bool overflow) = __input(
-            data,
-            location,
-            condition,
-            context
-        );
-        if (overflow) return Status.CalldataOverflow;
-
         int256 value = int256(uint256(rawValue));
+        int256 compValue = int256(uint256(bytes32(condition.compValue)));
 
-        if (operator == Operator.SignedIntGreaterThan && value <= compValue) {
-            return Status.ParameterLessThanAllowed;
-        } else if (
-            operator == Operator.SignedIntLessThan && value >= compValue
-        ) {
-            return Status.ParameterGreaterThanAllowed;
-        } else {
-            return Status.Ok;
+        if (condition.operator == Operator.SignedIntGreaterThan) {
+            return
+                value > compValue ? Status.Ok : Status.ParameterLessThanAllowed;
         }
+        return
+            value < compValue ? Status.Ok : Status.ParameterGreaterThanAllowed;
     }
 
     function __allowance(
@@ -551,7 +573,7 @@ library ConditionLogic {
         uint256 location,
         Condition memory condition,
         Context memory context
-    ) private pure returns (bytes32 result, bool) {
+    ) private pure returns (bytes32 result, bool overflow) {
         /*
          * Integrity rules map Encoding.EtherValue -> Encoding.None during packing.
          * If we encounter Encoding.None here (in a comparison context), it acts as
@@ -562,11 +584,9 @@ library ConditionLogic {
         }
 
         // Check if condition has size set (e.g., from Slice), otherwise get from decoder
-        (uint256 size, bool overflow) = condition.size != 0
-            ? (condition.size, false)
+        uint256 size = condition.size != 0
+            ? condition.size
             : AbiLocation.size(data, location, condition);
-
-        if (overflow) return (0, true);
 
         if (location + size > data.length) {
             return (0, true);
@@ -589,18 +609,6 @@ library ConditionLogic {
 
         // size > 32
         return (keccak256(data[location:location + size]), false);
-    }
-
-    function _result(
-        Status status,
-        uint256 location,
-        Condition memory condition,
-        Consumption[] memory consumptions
-    ) private pure returns (Result memory) {
-        return
-            status == Status.Ok
-                ? _ok(consumptions)
-                : _violation(status, location, condition);
     }
 
     function _ok(
@@ -628,5 +636,66 @@ library ConditionLogic {
                 payloadLocation: location,
                 consumptions: empty
             });
+    }
+
+    function _result(
+        Status status,
+        uint256 location,
+        Condition memory condition,
+        Consumption[] memory consumptions
+    ) private pure returns (Result memory) {
+        return
+            status == Status.Ok
+                ? _ok(consumptions)
+                : _violation(status, location, condition);
+    }
+
+    /**
+     * @dev Resolves element locations for arrays being zipped together.
+     *
+     * @param data      The calldata being evaluated.
+     * @param condition The Zip condition (ZipSome / ZipEvery).
+     * @param context   Evaluation context with pluckedLocations.
+     *
+     * @return result One uint256[] per array – element locations in calldata.
+     * @return length The common length of all zipped arrays.
+     * @return status Status.Ok, or an error
+     */
+    function _zipLocations(
+        bytes calldata data,
+        Condition memory condition,
+        Context memory context
+    )
+        private
+        pure
+        returns (uint256[][] memory result, uint256 length, Status status)
+    {
+        Condition[] memory fields = condition.children[0].children;
+        Condition memory stub;
+        stub.encoding = Encoding.Array;
+        stub.children = new Condition[](1);
+
+        result = new uint256[][](fields.length);
+
+        for (uint256 f; f < fields.length; ++f) {
+            stub.children[0] = fields[f];
+            (uint256[] memory locations, bool overflow) = AbiLocation.children(
+                data,
+                context.pluckedLocations[uint8(condition.compValue[f])],
+                stub
+            );
+
+            if (overflow) return (result, 0, Status.CalldataOverflow);
+
+            if (f == 0) {
+                length = locations.length;
+            } else {
+                if (length != locations.length) {
+                    return (result, 0, Status.ZippedArrayLengthMismatch);
+                }
+            }
+
+            result[f] = locations;
+        }
     }
 }
