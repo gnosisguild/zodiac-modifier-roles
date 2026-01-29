@@ -9,8 +9,6 @@ import {Operator} from "../types/Operator.sol";
  * @author gnosisguild
  */
 library AbiLocation {
-    uint256 private constant _OVERFLOW = type(uint256).max;
-
     /**
      * @dev Resolves absolute calldata locations for direct children of a
      *      container. Supports Tuple, Array, and AbiEncoded types.
@@ -23,13 +21,13 @@ library AbiLocation {
         bytes calldata data,
         uint256 location,
         Condition memory condition
-    ) internal pure returns (uint256[] memory empty, bool overflow) {
+    ) internal pure returns (uint256[] memory none, bool overflow) {
         bool isArray = condition.encoding == Encoding.Array;
         uint256 childCount;
 
         if (isArray) {
             if (location + 32 > data.length) {
-                return (empty, true);
+                return (none, true);
             }
             childCount = uint256(bytes32(data[location:]));
             location += 32;
@@ -47,15 +45,12 @@ library AbiLocation {
                 result[i] = location + headOffset;
                 headOffset += child.size;
             } else {
-                uint256 childLocation = _tailLocation(
-                    data,
-                    location,
-                    headOffset
-                );
-                if (childLocation == _OVERFLOW) return (empty, true);
-
-                result[i] = childLocation;
+                result[i] = _tailLocation(data, location, headOffset);
                 headOffset += 32;
+            }
+
+            if (result[i] >= data.length) {
+                return (none, true);
             }
         }
         return (result, false);
@@ -63,18 +58,17 @@ library AbiLocation {
 
     /**
      * @dev Computes the encoded size of a value at location.
-     *      Returns overflow=true if calldata bounds are exceeded.
      */
     function size(
         bytes calldata data,
         uint256 location,
         Condition memory condition
-    ) internal pure returns (uint256 result, bool overflow) {
+    ) internal pure returns (uint256 result) {
         Encoding encoding = condition.encoding;
 
         // Static is always 32 bytes
         if (encoding == Encoding.Static) {
-            return (32, false);
+            return 32;
         }
 
         /*
@@ -90,35 +84,30 @@ library AbiLocation {
          */
         if (encoding == Encoding.Dynamic || encoding == Encoding.AbiEncoded) {
             // Dynamic types: length prefix + padded content
-            if (location + 32 > data.length) return (0, true);
-            return (32 + _ceil32(uint256(bytes32(data[location:]))), false);
+            if (location + 32 > data.length) return data.length;
+            return 32 + _ceil32(uint256(bytes32(data[location:])));
         }
 
+        uint256 childCount = condition.children.length;
         if (encoding == Encoding.None) {
             // Transparent And/Or: delegate to first child
-            for (uint256 i; i < condition.children.length; i++) {
-                (result, overflow) = size(
-                    data,
-                    location,
-                    condition.children[i]
-                );
-                if (!overflow && result > 0) return (result, false);
+            for (uint256 i; i < childCount; ++i) {
+                result = size(data, location, condition.children[i]);
+                if (result > 0 && result < data.length) return result;
             }
-            return (0, true);
+            // overflow
+            return data.length;
         }
 
         /*
-         * Tuple or Array
+         * Tuple, Array, or None (logical And/Or)
          */
         bool isArray = encoding == Encoding.Array;
-        uint256 childCount;
         if (isArray) {
-            if (location + 32 > data.length) return (0, true);
+            if (location + 32 > data.length) return data.length;
             childCount = uint256(bytes32(data[location:]));
             location += 32;
             result = 32;
-        } else {
-            childCount = condition.children.length;
         }
 
         uint256 headOffset;
@@ -132,27 +121,19 @@ library AbiLocation {
              * region. We sum the HEAD footprint (element size or offset) and
              * recursive TAIL sizes.
              */
-            uint256 sizeAtHead;
-            uint256 sizeAtTail;
             if (child.inlined) {
-                sizeAtHead = child.size;
-                sizeAtTail = 0;
+                result += child.size;
+                headOffset += child.size;
             } else {
-                uint256 childLocation = _tailLocation(
-                    data,
-                    location,
-                    headOffset
-                );
-                if (childLocation == _OVERFLOW) return (0, true);
-
-                sizeAtHead = 32;
-                (sizeAtTail, overflow) = size(data, childLocation, child);
-
-                if (overflow) return (0, true);
+                result +=
+                    32 +
+                    size(
+                        data,
+                        _tailLocation(data, location, headOffset),
+                        child
+                    );
+                headOffset += 32;
             }
-
-            result += sizeAtHead + sizeAtTail;
-            headOffset += sizeAtHead;
         }
     }
 
@@ -172,7 +153,7 @@ library AbiLocation {
         uint256 headOffset
     ) private pure returns (uint256) {
         if (location + headOffset + 32 > data.length) {
-            return type(uint256).max;
+            return data.length;
         }
 
         uint256 tailOffset;
@@ -183,11 +164,11 @@ library AbiLocation {
         }
 
         if (tailOffset <= headOffset) {
-            return type(uint256).max;
+            return data.length;
         }
 
         if (location + tailOffset + 32 > data.length) {
-            return type(uint256).max;
+            return data.length;
         }
 
         return location + tailOffset;

@@ -584,12 +584,11 @@ library ConditionEvaluator {
         }
 
         // Check if condition has size set (e.g., from Slice), otherwise get from decoder
-        uint256 size;
-        (size, overflow) = condition.size != 0
-            ? (condition.size, false)
+        uint256 size = condition.size != 0
+            ? condition.size
             : AbiLocation.size(data, location, condition);
 
-        if (overflow || location + size > data.length) {
+        if (location + size > data.length) {
             return (0, true);
         }
 
