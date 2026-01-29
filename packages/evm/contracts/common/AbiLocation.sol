@@ -100,7 +100,7 @@ library AbiLocation {
         }
 
         /*
-         * Tuple, Array, or None (logical And/Or)
+         * Tuple, Array
          */
         bool isArray = encoding == Encoding.Array;
         if (isArray) {
@@ -152,6 +152,7 @@ library AbiLocation {
         uint256 location,
         uint256 headOffset
     ) private pure returns (uint256) {
+        // HEAD overflows buffer
         if (location + headOffset + 32 > data.length) {
             return data.length;
         }
@@ -163,10 +164,12 @@ library AbiLocation {
             )
         }
 
+        // TAIL points backwards
         if (tailOffset <= headOffset) {
             return data.length;
         }
 
+        // TAIL overflows buffer
         if (location + tailOffset + 32 > data.length) {
             return data.length;
         }
