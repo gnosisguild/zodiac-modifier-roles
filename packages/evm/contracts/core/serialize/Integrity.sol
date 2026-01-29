@@ -343,7 +343,7 @@ library Integrity {
         }
 
         // Child must resolve to a Tuple
-        Layout memory layout = TypeTree.inspect(conditions, childStart);
+        Layout memory layout = TypeTree.resolve(conditions, childStart);
         assert(layout.encoding == Encoding.Tuple);
 
         // Tuple field count must match compValue length
@@ -389,7 +389,7 @@ library Integrity {
             revert IRolesError.SliceChildNotStatic(index);
         }
 
-        if (TypeTree.resolvesTo(conditions, childStart) != Encoding.Static) {
+        if (conditions[childStart].paramType != Encoding.Static) {
             revert IRolesError.SliceChildNotStatic(index);
         }
     }
@@ -606,7 +606,7 @@ library Integrity {
 
             Layout memory a;
             for (uint256 j = 0; j < childCount; ++j) {
-                Layout memory b = TypeTree.inspect(conditions, childStart + j);
+                Layout memory b = TypeTree.resolve(conditions, childStart + j);
                 if (TypeTree.hash(b) == 0) continue;
 
                 if (TypeTree.hash(a) == 0) a = b;
@@ -627,7 +627,7 @@ library Integrity {
 
             (uint256 childStart, ) = Topology.childBounds(conditions, i);
 
-            Layout memory tupleLayout = TypeTree.inspect(
+            Layout memory tupleLayout = TypeTree.resolve(
                 conditions,
                 childStart
             );
@@ -637,7 +637,7 @@ library Integrity {
                     conditions,
                     uint8(conditions[i].compValue[j])
                 );
-                Layout memory arrayLayout = TypeTree.inspect(
+                Layout memory arrayLayout = TypeTree.resolve(
                     conditions,
                     pluckCondition
                 );

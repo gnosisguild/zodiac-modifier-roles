@@ -14,19 +14,9 @@ import "./Topology.sol";
  */
 library TypeTree {
     /**
-     * @notice Resolves through transparent (non-variant) And/Or chains to find actual encoding
+     * @notice Resolves type tree for condition at an index
      */
-    function resolvesTo(
-        ConditionFlat[] memory conditions,
-        uint256 index
-    ) internal pure returns (Encoding) {
-        return inspect(conditions, index).encoding;
-    }
-
-    /**
-     * @notice Extracts type tree for flat node at index
-     */
-    function inspect(
+    function resolve(
         ConditionFlat[] memory conditions,
         uint256 i
     ) internal pure returns (Layout memory layout) {
@@ -46,7 +36,7 @@ library TypeTree {
              */
             for (uint256 j; j < childCount; ++j) {
                 if (hash(conditions, childStart + j) != bytes32(0)) {
-                    return inspect(conditions, childStart + j);
+                    return resolve(conditions, childStart + j);
                 }
             }
 
@@ -77,7 +67,7 @@ library TypeTree {
         uint256 length;
         for (uint256 j; j < layout.children.length; ++j) {
             if (hash(conditions, childStart + j) != bytes32(0)) {
-                layout.children[length++] = inspect(conditions, childStart + j);
+                layout.children[length++] = resolve(conditions, childStart + j);
 
                 /*
                  * For non-variant arrays, the first child serves as a template for
@@ -144,7 +134,7 @@ library TypeTree {
         ConditionFlat[] memory conditions,
         uint256 index
     ) internal pure returns (bytes32) {
-        return hash(inspect(conditions, index));
+        return hash(resolve(conditions, index));
     }
 
     /**
