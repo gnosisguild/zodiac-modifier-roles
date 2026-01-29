@@ -55,9 +55,9 @@ describe("Operator - WithinRatio", () => {
 
           // Swapped: param0→relative, param1→reference
           const compValue = encodeWithinRatioCompValue({
-            referenceIndex: 7,
+            referencePluckIndex: 7,
             referenceDecimals: 0,
-            relativeIndex: 3,
+            relativePluckIndex: 3,
             relativeDecimals: 0,
             minRatio: 0,
             maxRatio: 9500, // 95%
@@ -75,9 +75,9 @@ describe("Operator - WithinRatio", () => {
           const { allowFunction, invoke } = await loadFixture(setupTwoParams);
 
           const compValue = encodeWithinRatioCompValue({
-            referenceIndex: 5,
+            referencePluckIndex: 5,
             referenceDecimals: 0,
-            relativeIndex: 2,
+            relativePluckIndex: 2,
             relativeDecimals: 0,
             minRatio: 0,
             maxRatio: 9500,
@@ -97,9 +97,9 @@ describe("Operator - WithinRatio", () => {
 
           // Swapped order: relative plucked before reference
           const compValue = encodeWithinRatioCompValue({
-            referenceIndex: 4,
+            referencePluckIndex: 4,
             referenceDecimals: 0,
-            relativeIndex: 12,
+            relativePluckIndex: 12,
             relativeDecimals: 0,
             minRatio: 0,
             maxRatio: 9500,
@@ -126,9 +126,9 @@ describe("Operator - WithinRatio", () => {
           const { allowFunction, invoke } = await loadFixture(setupTwoParams);
 
           const compValue = encodeWithinRatioCompValue({
-            referenceIndex: 8,
+            referencePluckIndex: 8,
             referenceDecimals: 0,
-            relativeIndex: 15,
+            relativePluckIndex: 15,
             relativeDecimals: 0,
             minRatio: 1000, // 10% lower bound (at least one bound required)
             maxRatio: 0, // no upper bound
@@ -151,9 +151,9 @@ describe("Operator - WithinRatio", () => {
 
           // Swapped: param0→relative, param1→reference
           const compValue = encodeWithinRatioCompValue({
-            referenceIndex: 20,
+            referencePluckIndex: 20,
             referenceDecimals: 0,
-            relativeIndex: 10,
+            relativePluckIndex: 10,
             relativeDecimals: 0,
             minRatio: 9000, // 90%
             maxRatio: 0,
@@ -174,9 +174,9 @@ describe("Operator - WithinRatio", () => {
 
           // Swapped order: relative plucked before reference
           const compValue = encodeWithinRatioCompValue({
-            referenceIndex: 6,
+            referencePluckIndex: 6,
             referenceDecimals: 0,
-            relativeIndex: 1,
+            relativePluckIndex: 1,
             relativeDecimals: 0,
             minRatio: 9000,
             maxRatio: 0,
@@ -195,9 +195,9 @@ describe("Operator - WithinRatio", () => {
             await loadFixture(setupTwoParams);
 
           const compValue = encodeWithinRatioCompValue({
-            referenceIndex: 25,
+            referencePluckIndex: 25,
             referenceDecimals: 0,
-            relativeIndex: 30,
+            relativePluckIndex: 30,
             relativeDecimals: 0,
             minRatio: 9000,
             maxRatio: 0,
@@ -224,9 +224,9 @@ describe("Operator - WithinRatio", () => {
 
           // Swapped: param0→pluckedValues[50]=relative, param1→pluckedValues[100]=reference
           const compValue = encodeWithinRatioCompValue({
-            referenceIndex: 100,
+            referencePluckIndex: 100,
             referenceDecimals: 0,
-            relativeIndex: 50,
+            relativePluckIndex: 50,
             relativeDecimals: 0,
             minRatio: 0, // no lower bound
             maxRatio: 10000,
@@ -257,9 +257,9 @@ describe("Operator - WithinRatio", () => {
 
         const compValue = encodeWithinRatioCompValue({
           relativeAdapter: await usdcEthAdapter.getAddress(),
-          referenceIndex: 9,
+          referencePluckIndex: 9,
           referenceDecimals: 18,
-          relativeIndex: 14,
+          relativePluckIndex: 14,
           relativeDecimals: 6,
           minRatio: 9900,
           maxRatio: 10100,
@@ -302,9 +302,9 @@ describe("Operator - WithinRatio", () => {
 
         const compValue = encodeWithinRatioCompValue({
           referenceAdapter: await wbtcEthAdapter.getAddress(),
-          referenceIndex: 22,
+          referencePluckIndex: 22,
           referenceDecimals: 8,
-          relativeIndex: 11,
+          relativePluckIndex: 11,
           relativeDecimals: 18,
           minRatio: 9900,
           maxRatio: 10100,
@@ -349,9 +349,9 @@ describe("Operator - WithinRatio", () => {
         const compValue = encodeWithinRatioCompValue({
           referenceAdapter: await usdcUsdAdapter.getAddress(),
           relativeAdapter: await exoticUsdAdapter.getAddress(),
-          referenceIndex: 77,
+          referencePluckIndex: 77,
           referenceDecimals: 6,
-          relativeIndex: 88,
+          relativePluckIndex: 88,
           relativeDecimals: 37,
           minRatio: 9900,
           maxRatio: 10100,
@@ -394,9 +394,9 @@ describe("Operator - WithinRatio", () => {
 
         const compValue = encodeWithinRatioCompValue({
           referenceAdapter: await refAdapter.getAddress(),
-          referenceIndex: 44,
+          referencePluckIndex: 44,
           referenceDecimals: 18,
-          relativeIndex: 33,
+          relativePluckIndex: 33,
           relativeDecimals: 18,
           minRatio: 9900, // 99%
           maxRatio: 10100, // 101%
@@ -434,9 +434,9 @@ describe("Operator - WithinRatio", () => {
         // Swapped order: relative plucked before reference
         const compValue = encodeWithinRatioCompValue({
           relativeAdapter: await relAdapter.getAddress(),
-          referenceIndex: 55,
+          referencePluckIndex: 55,
           referenceDecimals: 18,
-          relativeIndex: 17,
+          relativePluckIndex: 17,
           relativeDecimals: 8, // WBTC uses 8 decimals
           minRatio: 9900,
           maxRatio: 10100,
@@ -480,9 +480,9 @@ describe("Operator - WithinRatio", () => {
         const compValue = encodeWithinRatioCompValue({
           referenceAdapter: await ethUsdAdapter.getAddress(),
           relativeAdapter: await btcUsdAdapter.getAddress(),
-          referenceIndex: 200,
+          referencePluckIndex: 200,
           referenceDecimals: 18, // ETH
-          relativeIndex: 150,
+          relativePluckIndex: 150,
           relativeDecimals: 8, // BTC
           minRatio: 9950,
           maxRatio: 10050,
@@ -526,9 +526,9 @@ describe("Operator - WithinRatio", () => {
         const compValue = solidityPacked(
           ["uint8", "uint8", "uint8", "uint8", "uint32", "uint32", "address"],
           [
-            44, // referenceIndex
+            44, // referencePluckIndex
             18, // referenceDecimals
-            33, // relativeIndex
+            33, // relativePluckIndex
             18, // relativeDecimals
             9900, // minRatio (99%)
             10100, // maxRatio (101%)
@@ -568,9 +568,9 @@ describe("Operator - WithinRatio", () => {
             "address",
           ],
           [
-            55, // referenceIndex (USD)
+            55, // referencePluckIndex (USD)
             18, // referenceDecimals
-            17, // relativeIndex (WBTC)
+            17, // relativePluckIndex (WBTC)
             8, // relativeDecimals
             9900, // minRatio
             10100, // maxRatio
@@ -600,9 +600,9 @@ describe("Operator - WithinRatio", () => {
 
         const compValue = encodeWithinRatioCompValue({
           referenceAdapter: randomEOA.address,
-          referenceIndex: 41,
+          referencePluckIndex: 41,
           referenceDecimals: 18,
-          relativeIndex: 82,
+          relativePluckIndex: 82,
           relativeDecimals: 18,
           minRatio: 9000,
           maxRatio: 11000,
@@ -630,9 +630,9 @@ describe("Operator - WithinRatio", () => {
         // Swapped order: relative plucked before reference
         const compValue = encodeWithinRatioCompValue({
           relativeAdapter: randomEOA.address,
-          referenceIndex: 99,
+          referencePluckIndex: 99,
           referenceDecimals: 18,
-          relativeIndex: 13,
+          relativePluckIndex: 13,
           relativeDecimals: 18,
           minRatio: 9000,
           maxRatio: 11000,
@@ -662,9 +662,9 @@ describe("Operator - WithinRatio", () => {
 
         const compValue = encodeWithinRatioCompValue({
           referenceAdapter: await noInterfaceAdapter.getAddress(),
-          referenceIndex: 63,
+          referencePluckIndex: 63,
           referenceDecimals: 18,
-          relativeIndex: 27,
+          relativePluckIndex: 27,
           relativeDecimals: 18,
           minRatio: 9000,
           maxRatio: 11000,
@@ -695,9 +695,9 @@ describe("Operator - WithinRatio", () => {
         // Swapped order: relative plucked before reference
         const compValue = encodeWithinRatioCompValue({
           referenceAdapter: await revertingAdapter.getAddress(),
-          referenceIndex: 180,
+          referencePluckIndex: 180,
           referenceDecimals: 18,
-          relativeIndex: 45,
+          relativePluckIndex: 45,
           relativeDecimals: 18,
           minRatio: 9000,
           maxRatio: 11000,
@@ -729,9 +729,9 @@ describe("Operator - WithinRatio", () => {
 
         const compValue = encodeWithinRatioCompValue({
           referenceAdapter: await wrongReturnAdapter.getAddress(),
-          referenceIndex: 72,
+          referencePluckIndex: 72,
           referenceDecimals: 18,
-          relativeIndex: 108,
+          relativePluckIndex: 108,
           relativeDecimals: 18,
           minRatio: 9000,
           maxRatio: 11000,
@@ -762,9 +762,9 @@ describe("Operator - WithinRatio", () => {
         // Swapped order: relative plucked before reference
         const compValue = encodeWithinRatioCompValue({
           referenceAdapter: await zeroAdapter.getAddress(),
-          referenceIndex: 56,
+          referencePluckIndex: 56,
           referenceDecimals: 18,
-          relativeIndex: 23,
+          relativePluckIndex: 23,
           relativeDecimals: 18,
           minRatio: 9000,
           maxRatio: 11000,
@@ -798,9 +798,9 @@ describe("Operator - WithinRatio", () => {
       const compValue = encodeWithinRatioCompValue({
         referenceAdapter: await ethUsdAdapter.getAddress(),
         relativeAdapter: ZeroAddress,
-        referenceIndex: 19,
+        referencePluckIndex: 19,
         referenceDecimals: 18, // ETH
-        relativeIndex: 7,
+        relativePluckIndex: 7,
         relativeDecimals: 18, // USD stablecoin
         minRatio: 9950, // 99.5% (0.5% tolerance)
         maxRatio: 10050, // 100.5%
@@ -848,9 +848,9 @@ describe("Operator - WithinRatio", () => {
       const compValue = encodeWithinRatioCompValue({
         referenceAdapter: await ethUsdAdapter.getAddress(),
         relativeAdapter: await btcUsdAdapter.getAddress(),
-        referenceIndex: 91,
+        referencePluckIndex: 91,
         referenceDecimals: 18, // ETH
-        relativeIndex: 42,
+        relativePluckIndex: 42,
         relativeDecimals: 8, // WBTC
         minRatio: 9500, // 95%
         maxRatio: 10500, // 105% (5% slippage)
@@ -895,9 +895,9 @@ describe("Operator - WithinRatio", () => {
       const compValue = encodeWithinRatioCompValue({
         referenceAdapter: ZeroAddress,
         relativeAdapter: await exoticUsdcAdapter.getAddress(),
-        referenceIndex: 83,
+        referencePluckIndex: 83,
         referenceDecimals: 6, // USDC
-        relativeIndex: 61,
+        relativePluckIndex: 61,
         relativeDecimals: 37, // ExoticToken
         minRatio: 9975, // 99.75%
         maxRatio: 10025, // 100.25%
@@ -928,9 +928,9 @@ describe("Operator - WithinRatio", () => {
 
       // No price adapters - direct token ratio comparison
       const compValue = encodeWithinRatioCompValue({
-        referenceIndex: 37,
+        referencePluckIndex: 37,
         referenceDecimals: 18,
-        relativeIndex: 53,
+        relativePluckIndex: 53,
         relativeDecimals: 18,
         minRatio: 2500, // 25%
         maxRatio: 0, // no upper bound
@@ -964,9 +964,9 @@ describe("Operator - WithinRatio", () => {
 
       // Swapped: param0→relative, param1→reference
       const compValue = encodeWithinRatioCompValue({
-        referenceIndex: 64,
+        referencePluckIndex: 64,
         referenceDecimals: 18,
-        relativeIndex: 28,
+        relativePluckIndex: 28,
         relativeDecimals: 18,
         minRatio: 0, // no lower bound
         maxRatio: 50000, // 500%
@@ -1006,9 +1006,9 @@ describe("Operator - WithinRatio", () => {
       const compValue = encodeWithinRatioCompValue({
         referenceAdapter: ZeroAddress, // USD stablecoin is the base (no conversion)
         relativeAdapter: await wbtcUsdAdapter.getAddress(),
-        referenceIndex: 71,
+        referencePluckIndex: 71,
         referenceDecimals: 18, // USD stablecoin
-        relativeIndex: 18,
+        relativePluckIndex: 18,
         relativeDecimals: 8, // WBTC uses 8 decimals
         minRatio: 9900, // 99%
         maxRatio: 10100, // 101% (1% slippage)
@@ -1048,9 +1048,9 @@ describe("Operator - WithinRatio", () => {
       const compValue = encodeWithinRatioCompValue({
         referenceAdapter: ZeroAddress, // ETH is the base
         relativeAdapter: await wbtcEthAdapter.getAddress(),
-        referenceIndex: 95,
+        referencePluckIndex: 95,
         referenceDecimals: 18, // ETH
-        relativeIndex: 33,
+        relativePluckIndex: 33,
         relativeDecimals: 8, // WBTC
         minRatio: 9500, // 95%
         maxRatio: 10500, // 105% (5% slippage)
@@ -1099,9 +1099,9 @@ describe("Operator - WithinRatio", () => {
       const compValue = encodeWithinRatioCompValue({
         referenceAdapter: await wbtcAdapter.getAddress(),
         relativeAdapter: await funkyAdapter.getAddress(),
-        referenceIndex: 3,
+        referencePluckIndex: 3,
         referenceDecimals: 8,
-        relativeIndex: 7,
+        relativePluckIndex: 7,
         relativeDecimals: 27,
         minRatio: 9900,
         maxRatio: 10100,
@@ -1151,9 +1151,9 @@ describe("Operator - WithinRatio", () => {
         await loadFixture(setupTestContract);
 
       const compValue = encodeWithinRatioCompValue({
-        referenceIndex: 0,
+        referencePluckIndex: 0,
         referenceDecimals: 0,
-        relativeIndex: 1,
+        relativePluckIndex: 1,
         relativeDecimals: 0,
         minRatio: 0,
         maxRatio: 12000, // 120%
@@ -1220,9 +1220,9 @@ describe("Operator - WithinRatio", () => {
         await loadFixture(setupTestContract);
 
       const compValue = encodeWithinRatioCompValue({
-        referenceIndex: 0,
+        referencePluckIndex: 0,
         referenceDecimals: 0,
-        relativeIndex: 1,
+        relativePluckIndex: 1,
         relativeDecimals: 0,
         minRatio: 0,
         maxRatio: 8000, // 80%
@@ -1308,9 +1308,9 @@ describe("Operator - WithinRatio", () => {
         await loadFixture(setupTestContract);
 
       const compValue = encodeWithinRatioCompValue({
-        referenceIndex: 0,
+        referencePluckIndex: 0,
         referenceDecimals: 0,
-        relativeIndex: 1,
+        relativePluckIndex: 1,
         relativeDecimals: 0,
         minRatio: 0,
         maxRatio: 15000, // 150%
@@ -1391,9 +1391,9 @@ describe("Operator - WithinRatio", () => {
         await loadFixture(setupTestContract);
 
       const compValue = encodeWithinRatioCompValue({
-        referenceIndex: 0,
+        referencePluckIndex: 0,
         referenceDecimals: 0,
-        relativeIndex: 1,
+        relativePluckIndex: 1,
         relativeDecimals: 0,
         minRatio: 0,
         maxRatio: 15000, // 150%
@@ -1469,9 +1469,9 @@ describe("Operator - WithinRatio", () => {
         await loadFixture(setupTestContract);
 
       const compValue = encodeWithinRatioCompValue({
-        referenceIndex: 0,
+        referencePluckIndex: 0,
         referenceDecimals: 0,
-        relativeIndex: 1,
+        relativePluckIndex: 1,
         relativeDecimals: 0,
         minRatio: 0,
         maxRatio: 12000, // 120%
@@ -1537,6 +1537,116 @@ describe("Operator - WithinRatio", () => {
         );
     });
 
+    it("extracts sliced values from bytes parameter", async () => {
+      const iface = new Interface(["function dynamicParam(bytes)"]);
+      const fn = iface.getFunction("dynamicParam")!;
+      const { roles, member, testContractAddress, roleKey } =
+        await loadFixture(setupTestContract);
+
+      // Slice compValue: 2 bytes shift + 1 byte size
+      const sliceCompValue = (shift: number, size: number) =>
+        solidityPacked(["uint16", "uint8"], [shift, size]);
+
+      const compValue = encodeWithinRatioCompValue({
+        referencePluckIndex: 0,
+        referenceDecimals: 0,
+        relativePluckIndex: 1,
+        relativeDecimals: 0,
+        minRatio: 9000, // 90%
+        maxRatio: 11000, // 110%
+      });
+
+      // Structure: And[Matches[And[Slice[Pluck], Slice[Pluck]]], WithinRatio]
+      // Extract two 4-byte values from bytes at different offsets
+      const packed = await packConditions(
+        roles,
+        flattenCondition({
+          paramType: Encoding.None,
+          operator: Operator.And,
+          children: [
+            {
+              paramType: Encoding.AbiEncoded,
+              operator: Operator.Matches,
+              children: [
+                {
+                  // And inside the Dynamic param to apply multiple slices
+                  paramType: Encoding.None,
+                  operator: Operator.And,
+                  children: [
+                    {
+                      // Slice bytes 0-3 → pluckedValues[0] (reference)
+                      paramType: Encoding.Dynamic,
+                      operator: Operator.Slice,
+                      compValue: sliceCompValue(0, 4),
+                      children: [
+                        {
+                          paramType: Encoding.Static,
+                          operator: Operator.Pluck,
+                          compValue: "0x00",
+                        },
+                      ],
+                    },
+                    {
+                      // Slice bytes 4-7 → pluckedValues[1] (relative)
+                      paramType: Encoding.Dynamic,
+                      operator: Operator.Slice,
+                      compValue: sliceCompValue(4, 4),
+                      children: [
+                        {
+                          paramType: Encoding.Static,
+                          operator: Operator.Pluck,
+                          compValue: "0x01",
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              paramType: Encoding.None,
+              operator: Operator.WithinRatio,
+              compValue,
+            },
+          ],
+        }),
+      );
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
+        packed,
+        ExecutionOptions.None,
+      );
+
+      const invoke = (bytesData: string) =>
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            testContractAddress,
+            0,
+            iface.encodeFunctionData(fn, [bytesData]),
+            0,
+          );
+
+      // bytes: [reference: 4 bytes][relative: 4 bytes]
+      // reference = 0x000003e8 (1000), relative = 0x000003e8 (1000) → 100%
+      await expect(invoke("0x000003e8000003e8")).to.not.be.reverted;
+
+      // reference = 0x000003e8 (1000), relative = 0x00000384 (900) → 90%
+      await expect(invoke("0x000003e800000384")).to.not.be.reverted;
+
+      // reference = 0x000003e8 (1000), relative = 0x00000379 (889) → 88.9% < 90%
+      await expect(invoke("0x000003e800000379"))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.RatioBelowMin, anyValue, anyValue);
+
+      // reference = 0x000003e8 (1000), relative = 0x00000451 (1105) → 110.5% > 110%
+      await expect(invoke("0x000003e800000451"))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.RatioAboveMax, anyValue, anyValue);
+    });
+
     it("extracts EtherValue", async () => {
       // Different pattern - uses single param + ether value, keep inline
       const iface = new Interface(["function fn(uint256)"]);
@@ -1547,9 +1657,9 @@ describe("Operator - WithinRatio", () => {
       // Pluck ether value → pluckedValues[0]
       // Pluck param → pluckedValues[1]
       const compValue = encodeWithinRatioCompValue({
-        referenceIndex: 0,
+        referencePluckIndex: 0,
         referenceDecimals: 18,
-        relativeIndex: 1,
+        relativePluckIndex: 1,
         relativeDecimals: 18,
         minRatio: 0,
         maxRatio: 20000, // 200%
@@ -1637,9 +1747,9 @@ describe("Operator - WithinRatio", () => {
         await loadFixture(setupTwoParams);
 
       const compValue = encodeWithinRatioCompValue({
-        referenceIndex: 7,
+        referencePluckIndex: 7,
         referenceDecimals: 0,
-        relativeIndex: 3,
+        relativePluckIndex: 3,
         relativeDecimals: 0,
         minRatio: 9000, // 90%
         maxRatio: 11000, // 110%
@@ -1664,9 +1774,9 @@ describe("Operator - WithinRatio", () => {
         await loadFixture(setupTwoParams);
 
       const compValue = encodeWithinRatioCompValue({
-        referenceIndex: 7,
+        referencePluckIndex: 7,
         referenceDecimals: 0,
-        relativeIndex: 3,
+        relativePluckIndex: 3,
         relativeDecimals: 0,
         minRatio: 0,
         maxRatio: 9000, // 90%
@@ -1692,18 +1802,18 @@ describe("Operator - WithinRatio", () => {
 function encodeWithinRatioCompValue({
   referenceAdapter = "0x0000000000000000000000000000000000000000",
   relativeAdapter = "0x0000000000000000000000000000000000000000",
-  referenceIndex,
+  referencePluckIndex,
   referenceDecimals,
-  relativeIndex,
+  relativePluckIndex,
   relativeDecimals,
   minRatio,
   maxRatio,
 }: {
   referenceAdapter?: string;
   relativeAdapter?: string;
-  referenceIndex: number;
+  referencePluckIndex: number;
   referenceDecimals: number;
-  relativeIndex: number;
+  relativePluckIndex: number;
   relativeDecimals: number;
   minRatio: number;
   maxRatio: number;
@@ -1720,9 +1830,9 @@ function encodeWithinRatioCompValue({
       "address",
     ],
     [
-      referenceIndex,
+      referencePluckIndex,
       referenceDecimals,
-      relativeIndex,
+      relativePluckIndex,
       relativeDecimals,
       minRatio,
       maxRatio,
@@ -1737,9 +1847,9 @@ describe("integrity", () => {
     const { roles } = await loadFixture(setupTestContract);
 
     const compValue = encodeWithinRatioCompValue({
-      referenceIndex: 0,
+      referencePluckIndex: 0,
       referenceDecimals: 0,
-      relativeIndex: 1,
+      relativePluckIndex: 1,
       relativeDecimals: 0,
       minRatio: 9000,
       maxRatio: 11000,
@@ -1770,7 +1880,7 @@ describe("integrity", () => {
     it("accepts 12-byte compValue (no adapters)", async () => {
       const { roles } = await loadFixture(setupTestContract);
 
-      // 12 bytes: referenceIndex(1) + referenceDecimals(1) + relativeIndex(1) + relativeDecimals(1) + minRatio(4) + maxRatio(4)
+      // 12 bytes: referencePluckIndex(1) + referenceDecimals(1) + relativePluckIndex(1) + relativeDecimals(1) + minRatio(4) + maxRatio(4)
       const compValue12 = solidityPacked(
         ["uint8", "uint8", "uint8", "uint8", "uint32", "uint32"],
         [0, 0, 1, 0, 9000, 11000],
@@ -1972,9 +2082,9 @@ describe("integrity", () => {
       const { roles } = await loadFixture(setupTestContract);
 
       const compValue = encodeWithinRatioCompValue({
-        referenceIndex: 3,
+        referencePluckIndex: 3,
         referenceDecimals: 0,
-        relativeIndex: 7,
+        relativePluckIndex: 7,
         relativeDecimals: 0,
         minRatio: 0,
         maxRatio: 0, // Both zero is invalid
@@ -2021,9 +2131,9 @@ describe("integrity", () => {
     const { roles } = await loadFixture(setupTestContract);
 
     const compValue = encodeWithinRatioCompValue({
-      referenceIndex: 3,
+      referencePluckIndex: 3,
       referenceDecimals: 0,
-      relativeIndex: 7,
+      relativePluckIndex: 7,
       relativeDecimals: 0,
       minRatio: 9000,
       maxRatio: 11000,

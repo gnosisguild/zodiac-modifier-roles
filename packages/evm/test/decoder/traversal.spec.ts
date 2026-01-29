@@ -48,7 +48,7 @@ describe("AbiDecoder - Traversal", () => {
       expect(childLocations.length).to.equal(root.children.length);
       expect(Number(childLocations[0])).to.equal(node.location);
 
-      const [size] = await locator.getSize(data, node.location, conditions, 1);
+      const size = await locator.getSize(data, node.location, conditions, 1);
       expect(Number(size)).to.equal(node.size);
     });
 
@@ -81,7 +81,7 @@ describe("AbiDecoder - Traversal", () => {
       expect(childLocations.length).to.equal(root.children.length);
       expect(Number(childLocations[0])).to.equal(node.location);
 
-      const [size] = await locator.getSize(data, node.location, conditions, 1);
+      const size = await locator.getSize(data, node.location, conditions, 1);
       expect(Number(size)).to.equal(node.size);
     });
 
@@ -113,7 +113,7 @@ describe("AbiDecoder - Traversal", () => {
       expect(childLocations.length).to.equal(root.children.length);
       expect(Number(childLocations[0])).to.equal(node.location);
 
-      const [size] = await locator.getSize(data, node.location, conditions, 1);
+      const size = await locator.getSize(data, node.location, conditions, 1);
       expect(Number(size)).to.equal(node.size);
     });
 
@@ -145,7 +145,7 @@ describe("AbiDecoder - Traversal", () => {
       expect(childLocations.length).to.equal(root.children.length);
       expect(Number(childLocations[0])).to.equal(node.location);
 
-      const [size] = await locator.getSize(data, node.location, conditions, 1);
+      const size = await locator.getSize(data, node.location, conditions, 1);
       expect(Number(size)).to.equal(node.size);
     });
   });
@@ -225,13 +225,13 @@ describe("AbiDecoder - Traversal", () => {
           tupleNode.children[1].location,
         );
 
-        const [size1] = await locator.getSize(
+        const size1 = await locator.getSize(
           data,
           tupleNode.children[0].location,
           conditions,
           2,
         );
-        const [size2] = await locator.getSize(
+        const size2 = await locator.getSize(
           data,
           tupleNode.children[1].location,
           conditions,
@@ -291,7 +291,7 @@ describe("AbiDecoder - Traversal", () => {
         expect(tupleChildLocations.length).to.equal(tupleNode.children.length);
         expect(Number(tupleChildLocations[0])).to.equal(bytesNode.location);
 
-        const [dynamicSize] = await locator.getSize(
+        const dynamicSize = await locator.getSize(
           data,
           bytesNode.location,
           conditions,
@@ -359,7 +359,7 @@ describe("AbiDecoder - Traversal", () => {
           expect(Number(elementLocations[i])).to.equal(
             arrayNode.children[i].location,
           );
-          const [size] = await locator.getSize(
+          const size = await locator.getSize(
             data,
             arrayNode.children[i].location,
             conditions,
@@ -425,7 +425,7 @@ describe("AbiDecoder - Traversal", () => {
           expect(Number(elementLocations[i])).to.equal(
             arrayNode.children[i].location,
           );
-          const [size] = await locator.getSize(
+          const size = await locator.getSize(
             data,
             arrayNode.children[i].location,
             conditions,
@@ -467,7 +467,7 @@ describe("AbiDecoder - Traversal", () => {
         expect(rootChildLocations.length).to.equal(root.children.length);
         expect(Number(rootChildLocations[0])).to.equal(arrayNode.location);
 
-        const [size] = await locator.getSize(
+        const size = await locator.getSize(
           data,
           arrayNode.location,
           conditions,
@@ -583,7 +583,7 @@ describe("AbiDecoder - Traversal", () => {
           firstParam.location,
         );
 
-        const [firstParamSize] = await locator.getSize(
+        const firstParamSize = await locator.getSize(
           data,
           firstParam.location,
           conditions,
@@ -654,7 +654,7 @@ describe("AbiDecoder - Traversal", () => {
         );
         expect(Number(innerChildLocations[0])).to.equal(innerNode.location);
 
-        const [staticParamSize] = await locator.getSize(
+        const staticParamSize = await locator.getSize(
           data,
           innerNode.location,
           conditions,
@@ -724,7 +724,7 @@ describe("AbiDecoder - Traversal", () => {
         );
         expect(Number(innerChildLocations[0])).to.equal(innerNode.location);
 
-        const [staticParamSize] = await locator.getSize(
+        const staticParamSize = await locator.getSize(
           data,
           innerNode.location,
           conditions,
@@ -798,7 +798,7 @@ describe("AbiDecoder - Traversal", () => {
         );
         expect(Number(innerChildLocations[0])).to.equal(innerNode.location);
 
-        const [staticParamSize] = await locator.getSize(
+        const staticParamSize = await locator.getSize(
           data,
           innerNode.location,
           conditions,
@@ -1175,13 +1175,13 @@ describe("AbiDecoder - Traversal", () => {
       expect(Number(childLocations[0])).to.equal(staticNode.location);
       expect(Number(childLocations[1])).to.equal(dynamicNode.location);
 
-      const [staticSize] = await locator.getSize(
+      const staticSize = await locator.getSize(
         data,
         staticNode.location,
         conditions,
         1,
       );
-      const [dynamicSize] = await locator.getSize(
+      const dynamicSize = await locator.getSize(
         data,
         dynamicNode.location,
         conditions,

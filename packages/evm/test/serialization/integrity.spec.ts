@@ -329,9 +329,9 @@ describe("Integrity", () => {
 
         const withinRatioCompValue =
           "0x" +
-          "00" + // referenceIndex = 0
+          "00" + // referencePluckIndex = 0
           "00" + // referenceDecimals = 0
-          "01" + // relativeIndex = 1
+          "01" + // relativePluckIndex = 1
           "00" + // relativeDecimals = 0
           "00002328" + // minRatio = 9000
           "00002af8"; // maxRatio = 11000
@@ -601,13 +601,13 @@ describe("Integrity", () => {
     it("reverts PluckNotVisitedBeforeRef when WithinRatio references unvisited pluck index", async () => {
       const { roles, pack } = await loadFixture(setup);
 
-      // WithinRatio compValue: referenceIndex(1) + referenceDecimals(1) + relativeIndex(1) + relativeDecimals(1) + minRatio(4) + maxRatio(4) = 12 bytes minimum
+      // WithinRatio compValue: referencePluckIndex(1) + referenceDecimals(1) + relativePluckIndex(1) + relativeDecimals(1) + minRatio(4) + maxRatio(4) = 12 bytes minimum
       // Reference index 5, relative index 7 - but no Pluck nodes visited before
       const withinRatioCompValue =
         "0x" +
-        "05" + // referenceIndex = 5 (not visited)
+        "05" + // referencePluckIndex = 5 (not visited)
         "00" + // referenceDecimals = 0
-        "07" + // relativeIndex = 7
+        "07" + // relativePluckIndex = 7
         "00" + // relativeDecimals = 0
         "00002328" + // minRatio = 9000
         "00002af8" + // maxRatio = 11000
@@ -653,9 +653,9 @@ describe("Integrity", () => {
 
       const withinRatioCompValue =
         "0x" +
-        "00" + // referenceIndex = 0 (first pluck)
+        "00" + // referencePluckIndex = 0 (first pluck)
         "12" + // referenceDecimals = 18
-        "01" + // relativeIndex = 1 (second pluck)
+        "01" + // relativePluckIndex = 1 (second pluck)
         "12" + // relativeDecimals = 18
         "00002328" + // minRatio = 9000 (90%)
         "00002af8" + // maxRatio = 11000 (110%)
@@ -711,9 +711,9 @@ describe("Integrity", () => {
 
       const withinRatioCompValue =
         "0x" +
-        "00" + // referenceIndex = 0 (first pluck - amountIn)
+        "00" + // referencePluckIndex = 0 (first pluck - amountIn)
         "12" + // referenceDecimals = 18
-        "01" + // relativeIndex = 1 (second pluck - amountOutMin)
+        "01" + // relativePluckIndex = 1 (second pluck - amountOutMin)
         "12" + // relativeDecimals = 18
         "00002328" + // minRatio = 9000 (90%)
         "00002af8" + // maxRatio = 11000 (110%)
@@ -773,9 +773,9 @@ describe("Integrity", () => {
 
       const withinRatioCompValue =
         "0x" +
-        "00" + // referenceIndex = 0
+        "00" + // referencePluckIndex = 0
         "12" + // referenceDecimals = 18
-        "01" + // relativeIndex = 1
+        "01" + // relativePluckIndex = 1
         "12" + // relativeDecimals = 18
         "00002328" + // minRatio = 9000 (90%)
         "00002af8" + // maxRatio = 11000 (110%)
