@@ -307,27 +307,6 @@ library Integrity {
             revert IRolesError.UnsuitableCompValue(index);
         }
 
-        // Validate pluck references: no duplicates, each must exist and be Array
-        uint256 seen;
-        for (uint256 k = 0; k < condition.compValue.length; ++k) {
-            uint8 pluckIndex = uint8(condition.compValue[k]);
-            uint256 mask = 1 << pluckIndex;
-            if ((seen & mask) != 0) {
-                revert IRolesError.UnsuitableCompValue(index);
-            }
-            seen |= mask;
-
-            (bool found, uint256 pluckCondition) = _findPluckedArray(
-                conditions,
-                pluckIndex
-            );
-            if (
-                !found || conditions[pluckCondition].paramType != Encoding.Array
-            ) {
-                revert IRolesError.UnsuitableCompValue(index);
-            }
-        }
-
         // Children: Exactly 1 child
         (
             uint256 childStart,
@@ -349,6 +328,27 @@ library Integrity {
         // Tuple field count must match compValue length
         if (layout.children.length != condition.compValue.length) {
             revert IRolesError.UnsuitableCompValue(index);
+        }
+
+        // Validate pluck references: no duplicates, each must exist and be Array
+        uint256 seen;
+        for (uint256 k = 0; k < condition.compValue.length; ++k) {
+            uint8 pluckIndex = uint8(condition.compValue[k]);
+            uint256 mask = 1 << pluckIndex;
+            if ((seen & mask) != 0) {
+                revert IRolesError.UnsuitableCompValue(index);
+            }
+            seen |= mask;
+
+            (bool found, uint256 pluckCondition) = _findPluckedArray(
+                conditions,
+                pluckIndex
+            );
+            if (
+                !found || conditions[pluckCondition].paramType != Encoding.Array
+            ) {
+                revert IRolesError.UnsuitableCompValue(index);
+            }
         }
 
         // No Pluck allowed in zip descendants
@@ -623,25 +623,22 @@ library Integrity {
 
             (uint256 childStart, ) = Topology.childBounds(conditions, i);
 
-            Layout memory tupleLayout = TypeTree.resolve(
-                conditions,
-                childStart
-            );
+            Layout memory tuple = TypeTree.resolve(conditions, childStart);
 
-            for (uint256 j = 0; j < tupleLayout.children.length; ++j) {
+            for (uint256 j = 0; j < tuple.children.length; ++j) {
                 (, uint256 pluckCondition) = _findPluckedArray(
                     conditions,
                     uint8(conditions[i].compValue[j])
                 );
-                Layout memory arrayLayout = TypeTree.resolve(
+                Layout memory array = TypeTree.resolve(
                     conditions,
                     pluckCondition
                 );
 
-                Layout memory entry = arrayLayout.children[0];
-                Layout memory field = tupleLayout.children[j];
+                Layout memory arrayEntry = array.children[0];
+                Layout memory tupleField = tuple.children[j];
 
-                if (!_isTypeCompatible(entry, field)) {
+                if (!_isTypeCompatible(arrayEntry, tupleField)) {
                     revert IRolesError.UnsuitableChildTypeTree(i);
                 }
             }
