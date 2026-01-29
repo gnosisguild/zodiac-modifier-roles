@@ -391,19 +391,19 @@ library ConditionEvaluator {
         Consumption[] memory consumptions,
         Context memory context
     ) private view returns (Result memory result) {
-        (uint256[][] memory locations, Status status) = _resolveZippedLocations(
-            data,
-            condition,
-            context
-        );
+        bool every = condition.operator == Operator.ZipEvery;
+
+        (
+            uint256[][] memory locations,
+            uint256 length,
+            Status status
+        ) = _zipLocations(data, condition, context);
 
         if (status != Status.Ok) {
             return _violation(status, location, condition);
         }
 
-        bool every = condition.operator == Operator.ZipEvery;
-        uint256 length = locations[0].length;
-        Condition memory tuple = condition.children[0];
+        Condition[] memory fields = condition.children[0].children;
 
         result.consumptions = consumptions;
         for (uint256 i; i < length; ++i) {
@@ -411,11 +411,11 @@ library ConditionEvaluator {
             if (!every) result.consumptions = consumptions;
 
             bool tuplePasses = true;
-            for (uint256 j; j < locations.length; ++j) {
+            for (uint256 f; f < fields.length; ++f) {
                 result = evaluate(
                     data,
-                    locations[j][i],
-                    tuple.children[j],
+                    locations[f][i],
+                    fields[f],
                     result.consumptions,
                     context
                 );
@@ -651,49 +651,51 @@ library ConditionEvaluator {
     }
 
     /**
-     * @dev Decodes element locations for each plucked array referenced by
-     *      a Zip condition. Uses the Zip's child tuple fields as element
-     *      type descriptors for ABI decoding.
+     * @dev Resolves element locations for arrays being zipped together.
      *
      * @param data      The calldata being evaluated.
      * @param condition The Zip condition (ZipSome / ZipEvery).
-     * @param context   Evaluation context carrying pluckedLocations.
+     * @param context   Evaluation context with pluckedLocations.
      *
-     * @return locations One uint256[] per pluck – each entry is the calldata
-     *                   location of an array element.
-     * @return status    Status.Ok if successful, or an error status.
+     * @return result One uint256[] per array – element locations in calldata.
+     * @return length The common length of all zipped arrays.
+     * @return status Status.Ok, or an error
      */
-    function _resolveZippedLocations(
+    function _zipLocations(
         bytes calldata data,
         Condition memory condition,
         Context memory context
-    ) private pure returns (uint256[][] memory locations, Status status) {
-        Condition memory tuple = condition.children[0];
-        uint256 n = condition.compValue.length;
-        locations = new uint256[][](n);
+    )
+        private
+        pure
+        returns (uint256[][] memory result, uint256 length, Status status)
+    {
+        Condition[] memory fields = condition.children[0].children;
+        Condition memory stub;
+        stub.encoding = Encoding.Array;
+        stub.children = new Condition[](1);
 
-        Condition memory arrayStub;
-        arrayStub.encoding = Encoding.Array;
-        arrayStub.children = new Condition[](1);
+        result = new uint256[][](fields.length);
 
-        uint256 length;
-        bool overflow;
-
-        for (uint256 k; k < n; ++k) {
-            arrayStub.children[0] = tuple.children[k];
-            (locations[k], overflow) = AbiLocation.children(
+        for (uint256 f; f < fields.length; ++f) {
+            stub.children[0] = fields[f];
+            (uint256[] memory locations, bool overflow) = AbiLocation.children(
                 data,
-                context.pluckedLocations[uint8(condition.compValue[k])],
-                arrayStub
+                context.pluckedLocations[uint8(condition.compValue[f])],
+                stub
             );
 
-            if (overflow) return (locations, Status.CalldataOverflow);
+            if (overflow) return (result, 0, Status.CalldataOverflow);
 
-            if (k == 0) {
-                length = locations[0].length;
-            } else if (locations[k].length != length) {
-                return (locations, Status.ZippedArrayLengthMismatch);
+            if (f == 0) {
+                length = locations.length;
+            } else {
+                if (length != locations.length) {
+                    return (result, 0, Status.ZippedArrayLengthMismatch);
+                }
             }
+
+            result[f] = locations;
         }
     }
 }
