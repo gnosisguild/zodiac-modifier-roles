@@ -5,50 +5,73 @@ import {Condition, Encoding} from "../types/Condition.sol";
 import {Operator} from "../types/Operator.sol";
 
 /**
- * @title AbiLocation - Locates ABI-encoded parameters on-demand
+ * @title AbiLocation
+ * @notice Resolves calldata locations and sizes for ABI-encoded structures.
+ *
  * @author gnosisguild
  */
 library AbiLocation {
     /**
-     * @dev Resolves absolute calldata locations for direct children of a
-     *      container. Supports Tuple, Array, and AbiEncoded types.
+     * @dev Resolves calldata locations for each child of a block type.
+     *      Supports Tuple, Array, and AbiEncoded.
      *
-     * @param data      The calldata buffer being inspected.
-     * @param location  The absolute start position of the container block.
+     * @param data      Calldata buffer.
+     * @param location  Start of the container block.
+     * @param condition Condition defining structure.
      *
+     * @return result   Absolute location for each child element.
+     * @return overflow True if any location exceeds data bounds.
      */
+
     function children(
         bytes calldata data,
         uint256 location,
         Condition memory condition
-    ) internal pure returns (uint256[] memory none, bool overflow) {
-        uint256 childCount = condition.children.length;
-
+    ) internal pure returns (uint256[] memory result, bool overflow) {
         bool isArray = condition.encoding == Encoding.Array;
+
+        uint256 childCount = condition.children.length;
         if (isArray) {
-            if (location + 32 > data.length) return (none, true);
+            /*
+             * Arrays prefix their block with an element count word. Read it
+             * and advance location to the actual beginning of the block. Treat
+             * the rest like a tuple.
+             */
+            if (location + 32 > data.length) return (result, true);
             assembly {
                 childCount := calldataload(add(data.offset, location))
             }
             location += 32;
         }
+        result = new uint256[](childCount);
 
-        uint256[] memory result = new uint256[](childCount);
-
+        /*
+         * HEAD + TAIL encoding for block types (tuples, arrays):
+         *
+         * HEAD: Fixed-size region at block start. Each element occupies a
+         *       slot here - static children store values inline (possibly
+         *       multi-word), dynamic children store a 32-byte offset pointing
+         *       into TAIL.
+         *
+         * TAIL: Variable-size region after HEAD with actual dynamic data,
+         *       in declaration order. Offsets are relative to block start.
+         */
         uint256 headOffset;
         for (uint256 i; i < childCount; ++i) {
             Condition memory child = condition.children[isArray ? 0 : i];
 
             if (child.inlined) {
+                /* Static elements */
                 result[i] = location + headOffset;
                 headOffset += child.size;
             } else {
+                /* Dynamic elements */
                 result[i] = _tailLocation(data, location, headOffset);
                 headOffset += 32;
             }
 
             if (result[i] > data.length) {
-                return (none, true);
+                return (result, true);
             }
         }
         return (result, false);
@@ -62,23 +85,26 @@ library AbiLocation {
         uint256 location,
         Condition memory condition
     ) internal pure returns (uint256 result) {
-        Encoding encoding = condition.encoding;
+        // Every ABI-encoded element occupies at least one word.
+        if (location + 32 > data.length) return data.length + 1;
 
+        Encoding encoding = condition.encoding;
         if (encoding == Encoding.Static) {
             return 32;
         }
 
         /*
-         * Read first word, detect overflow
+         * Always preload the first word - its meaning depends on encoding:
+         * - Dynamic: byte length of content
+         * - Array: element count
          */
-        if (location + 32 > data.length) return data.length + 1;
         uint256 word;
         assembly {
             word := calldataload(add(data.offset, location))
         }
 
         /*
-         * About AbiEncoded
+         * A Note on AbiEncoded and this function:
          *
          * AbiEncoded location is patched during ConditionEvaluation
          * so that top-level and nested AbiEncoded nodes are treated
@@ -95,41 +121,56 @@ library AbiLocation {
 
         uint256 childCount = condition.children.length;
         if (encoding == Encoding.None) {
-            // Transparent And/Or: delegate size to first child
+            /*
+             * Logical nodes (And/Or) are transparent. We delegate the size
+             * calculation to the first valid (non-empty, non-overflowing)
+             * child subtree.
+             *
+             * This works for both:
+             * - Non-Variant: All children share the same type tree.
+             * - Variant: Children have different types, but variants are
+             *            always Dynamic-encoded, so size is deterministic.
+             */
             for (uint256 i; i < childCount; ++i) {
                 result = size(data, location, condition.children[i]);
-                // children can overflow or be non structural
                 if (result > 0 && result <= data.length) return result;
             }
-            // if we reached here, just mark overflow
             return data.length + 1;
         }
 
-        /*
-         * Tuple / Array
-         */
         bool isArray = encoding == Encoding.Array;
         if (isArray) {
+            /*
+             * Arrays prefix their block with an element count word. Read it
+             * and advance location to the actual beginning of the block. Treat
+             * the rest like a tuple.
+             */
             childCount = word;
             location += 32;
             result = 32;
         }
 
+        /*
+         * HEAD + TAIL encoding for block types (tuples, arrays):
+         *
+         * HEAD: Fixed-size region at block start. Each element occupies a
+         *       slot here - static children store values inline (possibly
+         *       multi-word), dynamic children store a 32-byte offset pointing
+         *       into TAIL.
+         *
+         * TAIL: Variable-size region after HEAD with actual dynamic data,
+         *       in declaration order. Offsets are relative to block start.
+         */
         uint256 headOffset;
         for (uint256 i; i < childCount; ++i) {
             Condition memory child = condition.children[isArray ? 0 : i];
-            /*
-             * HEAD + TAIL block encoding
-             *
-             * Process the HEAD region. ABI encoding stores static elements
-             * inline and dynamic elements as 32-byte offsets to the TAIL
-             * region. We sum the HEAD footprint (element size or offset) and
-             * recursive TAIL sizes.
-             */
+
             if (child.inlined) {
+                /* Static elements */
                 result += child.size;
                 headOffset += child.size;
             } else {
+                /* Dynamic elements */
                 result +=
                     32 +
                     size(
@@ -150,7 +191,7 @@ library AbiLocation {
      * @param data       The calldata being inspected.
      * @param location   Absolute start position of the current ABI block.
      * @param headOffset Byte offset within HEAD where the pointer resides.
-     * @return           Absolute position, or type(uint256).max on overflow.
+     * @return           Absolute position, or data.length + 1 on overflow.
      */
     function _tailLocation(
         bytes calldata data,
@@ -169,7 +210,7 @@ library AbiLocation {
             )
         }
 
-        // TAIL points backwards
+        // TAIL points backwards (malicious or malformed)
         if (tailOffset <= headOffset) {
             return data.length + 1;
         }

@@ -97,8 +97,8 @@ library ConditionEvaluator {
                         overflow
                             ? Status.CalldataOverflow
                             : operator <= Operator.LessThan
-                                ? _compare(value, condition)
-                                : _compareSignedInt(value, condition),
+                                ? __compare(value, condition)
+                                : __compareSigned(value, condition),
                         location,
                         condition,
                         consumptions
@@ -462,22 +462,18 @@ library ConditionEvaluator {
         uint16 shift = uint16(bytes2(condition.compValue));
         uint8 size = uint8(condition.compValue[2]);
 
-        // Compute sliced location
-        uint256 childLocation = location + (condition.inlined ? 0 : 32) + shift;
-
-        Condition memory child = condition.children[0];
-        Condition memory sliced;
-
-        assembly {
-            // Shallow copy child condition
-            sliced := mload(0x40)
-
-            mstore(0x40, add(sliced, 0x100))
-            mcopy(sliced, child, 0x100)
-        }
+        Condition memory sliced = condition.children[0];
         sliced.size = size;
 
-        return evaluate(data, childLocation, sliced, consumptions, context);
+        return
+            evaluate(
+                data,
+                // compute the slices location
+                location + (condition.inlined ? 0 : 32) + shift,
+                sliced,
+                consumptions,
+                context
+            );
     }
 
     function _pluck(
@@ -504,7 +500,7 @@ library ConditionEvaluator {
         return _ok(consumptions);
     }
 
-    function _compare(
+    function __compare(
         bytes32 value,
         Condition memory condition
     ) private pure returns (Status) {
@@ -523,7 +519,7 @@ library ConditionEvaluator {
             value < compValue ? Status.Ok : Status.ParameterGreaterThanAllowed;
     }
 
-    function _compareSignedInt(
+    function __compareSigned(
         bytes32 rawValue,
         Condition memory condition
     ) private pure returns (Status) {
