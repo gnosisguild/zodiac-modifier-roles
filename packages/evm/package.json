@@ -1,5 +1,5 @@
 {
-  "name": "@gnosis-guild/zodiac-core-modifier-roles",
+  "name": "@gnosis-guild/zodiac-modifier-roles",
   "version": "3.0.0",
   "description": "A Zodiac modifier that allows avatars to enforce granular, role-based, permissions for attached modules.",
   "directories": {
@@ -13,17 +13,21 @@
     }
   },
   "scripts": {
-    "build": "hardhat compile",
+    "build": "forge build && hardhat compile",
     "clean": "hardhat clean",
-    "test": "hardhat test",
+    "test": "forge test",
+    "test:hardhat": "hardhat test",
+    "test:forge": "forge test",
     "extract:mastercopy": "yarn run build && yarn hardhat extract:mastercopy",
     "deploy:mastercopies": "yarn hardhat deploy:mastercopies --network",
     "deploy:mastercopy": "yarn hardhat deploy:mastercopy --network",
     "verify:mastercopies": "yarn hardhat verify:mastercopies --network",
     "verify:mastercopy": "yarn hardhat verify:mastercopy --network",
-    "coverage": "hardhat coverage",
+    "coverage": "forge coverage --report lcov",
+    "coverage:hardhat": "hardhat coverage",
+    "gas-report": "forge test --gas-report",
     "fmt": "yarn fmt:sol && yarn fmt:ts",
-    "fmt:sol": "prettier 'contracts/**/*.sol' -w",
+    "fmt:sol": "forge fmt",
     "fmt:ts": "prettier '(test|src)/**/*.ts' -w",
     "prepack": "yarn build",
     "agent:launch": "bash scripts/launch-agent.sh",

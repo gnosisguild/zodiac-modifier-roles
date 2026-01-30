@@ -29,6 +29,9 @@ jobs:
           node-version: 24
         # ensure that a publication only occurs when a new release is created:
         if: ${{ steps.release.outputs.releases_created }}
+      - uses: foundry-rs/foundry-toolchain@v1
+        # ensure that a publication only occurs when a new release is created:
+        if: ${{ steps.release.outputs.releases_created }}
       - uses: actions/cache@v3
         with:
           path: |

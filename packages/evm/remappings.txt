@@ -1,0 +1,4 @@
+forge-std/=lib/forge-std/src/
+@openzeppelin/contracts/=node_modules/@openzeppelin/contracts/
+@openzeppelin/contracts-upgradeable/=node_modules/@openzeppelin/contracts-upgradeable/
+@gnosis-guild/zodiac-core/=node_modules/@gnosis-guild/zodiac-core/
