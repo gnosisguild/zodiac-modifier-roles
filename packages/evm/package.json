@@ -1,5 +1,5 @@
 {
-  "name": "@gnosis-guild/zodiac-core-modifier-roles",
+  "name": "@gnosis-guild/zodiac-modifier-roles",
   "version": "3.0.0",
   "description": "A Zodiac modifier that allows avatars to enforce granular, role-based, permissions for attached modules.",
   "directories": {
