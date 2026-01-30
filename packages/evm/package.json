@@ -25,7 +25,10 @@
     "fmt": "yarn fmt:sol && yarn fmt:ts",
     "fmt:sol": "prettier 'contracts/**/*.sol' -w",
     "fmt:ts": "prettier '(test|src)/**/*.ts' -w",
-    "prepack": "yarn build"
+    "prepack": "yarn build",
+    "agent:launch": "bash scripts/launch-agent.sh",
+    "agent:attach": "bash scripts/attach-agent.sh",
+    "agent:stop": "bash scripts/stop-agent.sh"
   },
   "devDependencies": {
     "@gnosis-guild/typechain-ethers-v6": "^0.5.5",
