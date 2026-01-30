@@ -8,8 +8,6 @@
 
 .yarn/cache
 .yarn/install-state.gz
-.devcontainer
-.idea/
 
 packages/evm/typechain-types
 packages/sdk/eth-sdk/tmp
