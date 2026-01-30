@@ -2,7 +2,7 @@ import { BigNumberish, isHexString, ParamType } from "ethers"
 import {
   Condition,
   Operator,
-  Encoding as ParameterType,
+  Encoding,
 } from "zodiac-roles-deployments"
 
 import { coercePermission } from "../../../permission/coercePermission"
@@ -133,7 +133,7 @@ const calldataMatchesScopings =
     assertCompatibleParamTypes(conditions, paramTypes)
 
     const matchesCondition = {
-      paramType: ParameterType.AbiEncoded,
+      paramType: Encoding.AbiEncoded,
       operator: Operator.Matches,
       children: conditions.map(
         (condition, index) => condition || describeStructure(paramTypes[index])
@@ -142,7 +142,7 @@ const calldataMatchesScopings =
 
     if (callWithinAllowance) {
       matchesCondition.children.push({
-        paramType: ParameterType.None,
+        paramType: Encoding.None,
         operator: Operator.CallWithinAllowance,
         compValue: callWithinAllowance,
       })
@@ -177,12 +177,12 @@ const calldataMatchesFunctionPermission =
     if (condition) {
       if (
         condition.operator !== Operator.Matches ||
-        condition.paramType !== ParameterType.AbiEncoded
+        condition.paramType !== Encoding.AbiEncoded
       ) {
         throw new Error(
           `calldataMatches expects a function permission with an \`Operator.matches\`, \`ParamType.AbiEncoded\` condition, got: \`Operator.${
             Operator[condition.operator]
-          }\`, \`ParamType.${ParameterType[condition.paramType]}\``
+          }\`, \`ParamType.${Encoding[condition.paramType]}\``
         )
       }
     }
@@ -275,7 +275,7 @@ export const abiEncodedMatches =
     assertCompatibleParamTypes(conditions, paramTypes)
 
     return {
-      paramType: ParameterType.AbiEncoded,
+      paramType: Encoding.AbiEncoded,
       operator: Operator.Matches,
       children: conditions.map(
         (condition, index) => condition || describeStructure(paramTypes[index])
@@ -401,30 +401,30 @@ const assertCompatibleParamTypes = (
 
     // allow dynamic type values to be interpreted as abi encoded
     if (
-      expectedType === ParameterType.Dynamic &&
-      scopedType === ParameterType.AbiEncoded
+      expectedType === Encoding.Dynamic &&
+      scopedType === Encoding.AbiEncoded
     ) {
       return
     }
 
     const fieldReference = type.name ? `'${type.name}'` : `at index ${index}`
     throw new Error(
-      `Condition for field ${fieldReference} has wrong paramType \`${ParameterType[scopedType]}\` (expected: \`${ParameterType[expectedType]}\`)`
+      `Condition for field ${fieldReference} has wrong paramType \`${Encoding[scopedType]}\` (expected: \`${Encoding[expectedType]}\`)`
     )
   })
 }
 
 /**
- * Returns `condition.paramType` if it is not `ParameterType.None`, otherwise returns the scoped param type of its children, if any.
+ * Returns `condition.paramType` if it is not `Encoding.None`, otherwise returns the scoped param type of its children, if any.
  * Throws if the children have mixed scoped param types.
  * @param condition The condition to get the scoped param type of.
- * @returns the `ParameterType` the condition is applied to.
+ * @returns the `Encoding` the condition is applied to.
  */
-const checkScopedType = (condition: Condition): ParameterType => {
-  if (condition.paramType === ParameterType.None) {
+const checkScopedType = (condition: Condition): Encoding => {
+  if (condition.paramType === Encoding.None) {
     if (!condition.children || condition.children.length === 0) {
       // e.g.: Operator.CallWithinAllowance
-      return ParameterType.None
+      return Encoding.None
     }
 
     const [first, ...rest] = condition.children
