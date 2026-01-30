@@ -20,15 +20,16 @@ library TypeTree {
         ConditionFlat[] memory conditions,
         uint256 i
     ) internal pure returns (Layout memory layout) {
+        bool isLogical = conditions[i].operator == Operator.And ||
+            conditions[i].operator == Operator.Or;
+        bool isVariant = _isVariant(conditions, i);
+
         (uint256 childStart, uint256 childCount) = Topology.childBounds(
             conditions,
             i
         );
 
-        bool isLogical = conditions[i].operator == Operator.And ||
-            conditions[i].operator == Operator.Or;
-
-        if (isLogical && !_isVariant(conditions, i)) {
+        if (isLogical && !isVariant) {
             /*
              * Non-variant logical nodes: first structural child defines the type tree
              */
@@ -72,7 +73,7 @@ library TypeTree {
                  * For non-variant arrays, the first child serves as a template for
                  * all elements. For all other nodes, traverse all structural children
                  */
-                if (isArray && !_isVariant(conditions, childStart + j)) {
+                if (isArray && !isVariant) {
                     break;
                 }
             }

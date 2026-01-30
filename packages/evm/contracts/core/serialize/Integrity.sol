@@ -595,14 +595,18 @@ library Integrity {
                 i
             );
 
-            Layout memory a;
+            Layout memory prev;
             for (uint256 j = 0; j < childCount; ++j) {
-                Layout memory b = TypeTree.resolve(conditions, childStart + j);
-                if (TypeTree.hash(b) == 0) continue;
+                Layout memory next = TypeTree.resolve(
+                    conditions,
+                    childStart + j
+                );
 
-                if (TypeTree.hash(a) == 0) a = b;
+                if (TypeTree.hash(prev) == 0) prev = next;
 
-                if (!_isTypeCompatible(a, b)) {
+                if (TypeTree.hash(next) == 0) continue;
+
+                if (!_isTypeCompatible(prev, next)) {
                     revert IRolesError.UnsuitableChildTypeTree(i);
                 }
             }
