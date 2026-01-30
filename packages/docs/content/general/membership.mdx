@@ -1,0 +1,40 @@
+# Membership
+
+Roles are granted to members — addresses that are allowed to execute transactions through the Roles Modifier on behalf of the controlled account.
+Each membership links an address to a specific role and can optionally be constrained by time bounds and usage limits.
+
+## Granting Roles
+
+The owner grants a role to an address by creating a membership.
+A membership associates a member address with a role and defines the terms under which the member may use it.
+
+## Time-Bound Memberships
+
+Memberships can optionally specify start and end timestamps:
+
+- **start** — The earliest point in time at which the membership becomes active. Before this timestamp, the member cannot execute transactions under this role.
+- **end** — The point in time at which the membership expires. After this timestamp, the member can no longer use the role.
+
+If no timestamps are set, the membership is active indefinitely (until explicitly revoked).
+
+## Usage-Limited Memberships
+
+Memberships can optionally cap the number of times a member may execute transactions under a role:
+
+- By default, memberships allow unlimited uses.
+- When a use count is configured, each successful execution decrements the remaining count.
+- Once the count reaches zero, the membership is effectively exhausted and the member can no longer execute transactions under that role.
+
+## Automatic Expiry
+
+A membership automatically becomes inactive when either condition is met:
+
+- The current time is past the configured **end** timestamp.
+- The configured use count has been fully consumed.
+
+No explicit revocation transaction is needed — the Roles Modifier enforces these constraints at execution time.
+
+## Self-Revocation
+
+A member can revoke their own role at any time.
+This is useful in scenarios where a member's key may have been compromised: the member can immediately remove access without waiting for the owner to act.
