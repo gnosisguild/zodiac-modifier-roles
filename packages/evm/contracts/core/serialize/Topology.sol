@@ -104,6 +104,5 @@ library Topology {
             if (encoding == Encoding.None && childSize > 0) return childSize;
             size += childSize;
         }
-        return size;
     }
 }

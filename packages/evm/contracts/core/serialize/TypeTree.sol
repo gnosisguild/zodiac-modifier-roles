@@ -14,39 +14,28 @@ import "./Topology.sol";
  */
 library TypeTree {
     /**
-     * @notice Resolves through transparent (non-variant) And/Or chains to find actual encoding
+     * @notice Resolves type tree for condition at an index
      */
-    function resolvesTo(
-        ConditionFlat[] memory conditions,
-        uint256 index
-    ) internal pure returns (Encoding) {
-        return inspect(conditions, index).encoding;
-    }
-
-    /**
-     * @notice Extracts type tree for flat node at index
-     */
-    function inspect(
+    function resolve(
         ConditionFlat[] memory conditions,
         uint256 i
     ) internal pure returns (Layout memory layout) {
-        bool isArray = conditions[i].paramType == Encoding.Array;
         bool isLogical = conditions[i].operator == Operator.And ||
             conditions[i].operator == Operator.Or;
-        bool isNonVariant = isVariant(conditions, i) == false;
+        bool isVariant = _isVariant(conditions, i);
 
         (uint256 childStart, uint256 childCount) = Topology.childBounds(
             conditions,
             i
         );
 
-        if (isLogical && isNonVariant) {
+        if (isLogical && !isVariant) {
             /*
              * Non-variant logical nodes: first structural child defines the type tree
              */
             for (uint256 j; j < childCount; ++j) {
-                if (hash(conditions, childStart + j) != bytes32(0)) {
-                    return inspect(conditions, childStart + j);
+                if (hash(conditions, childStart + j) != 0) {
+                    return resolve(conditions, childStart + j);
                 }
             }
 
@@ -72,18 +61,19 @@ library TypeTree {
                 : 4;
         }
 
+        bool isArray = conditions[i].paramType == Encoding.Array;
         layout.children = new Layout[](childCount);
 
         uint256 length;
         for (uint256 j; j < layout.children.length; ++j) {
             if (hash(conditions, childStart + j) != bytes32(0)) {
-                layout.children[length++] = inspect(conditions, childStart + j);
+                layout.children[length++] = resolve(conditions, childStart + j);
 
                 /*
                  * For non-variant arrays, the first child serves as a template for
                  * all elements. For all other nodes, traverse all structural children
                  */
-                if (isArray && isNonVariant) {
+                if (isArray && !isVariant) {
                     break;
                 }
             }
@@ -97,54 +87,13 @@ library TypeTree {
     }
 
     /**
-     * @notice Checks if a node is a variant (children have different type trees)
-     */
-    function isVariant(
-        ConditionFlat[] memory conditions,
-        uint256 index
-    ) internal pure returns (bool) {
-        Encoding encoding = conditions[index].paramType;
-        Operator operator = conditions[index].operator;
-        if (
-            encoding != Encoding.Array &&
-            operator != Operator.And &&
-            operator != Operator.Or
-        ) {
-            return false;
-        }
-
-        (uint256 childStart, uint256 childCount) = Topology.childBounds(
-            conditions,
-            index
-        );
-
-        bytes32 baseline;
-        for (uint256 i; i < childCount; ++i) {
-            bytes32 childHash = hash(conditions, childStart + i);
-
-            if (childHash == bytes32(0)) {
-                continue;
-            }
-
-            if (baseline == bytes32(0)) {
-                baseline = childHash;
-            }
-
-            if (baseline != childHash) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
      * @notice Computes a unique hash for a type tree structure
      */
     function hash(
         ConditionFlat[] memory conditions,
         uint256 index
     ) internal pure returns (bytes32) {
-        return hash(inspect(conditions, index));
+        return hash(resolve(conditions, index));
     }
 
     /**
@@ -162,9 +111,32 @@ library TypeTree {
         result = bytes32(uint256(encoding));
         for (uint256 i; i < tree.children.length; ++i) {
             bytes32 childHash = hash(tree.children[i]);
-            if (childHash != bytes32(0)) {
+            if (childHash != 0) {
                 result = keccak256(abi.encodePacked(result, childHash));
             }
         }
+    }
+
+    /**
+     * @notice Checks if a node is a variant. Ignores non structural subtrees
+     */
+    function _isVariant(
+        ConditionFlat[] memory conditions,
+        uint256 index
+    ) private pure returns (bool) {
+        (uint256 childStart, uint256 childCount) = Topology.childBounds(
+            conditions,
+            index
+        );
+
+        bytes32 prevHash;
+        for (uint256 i; i < childCount; ++i) {
+            bytes32 nextHash = hash(conditions, childStart + i);
+
+            if (prevHash == 0) prevHash = nextHash;
+            if (nextHash == 0) continue;
+            else if (prevHash != nextHash) return true;
+        }
+        return false;
     }
 }

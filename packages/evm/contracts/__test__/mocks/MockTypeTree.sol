@@ -13,7 +13,7 @@ contract MockTypeTree {
     function inspect(
         ConditionFlat[] memory conditions
     ) public pure returns (FlatLayoutForTest[] memory) {
-        return _flattenLayout(TypeTree.inspect(conditions, 0));
+        return _flattenLayout(TypeTree.resolve(conditions, 0));
     }
 
     function hash(

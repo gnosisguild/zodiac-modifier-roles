@@ -12,7 +12,7 @@ contract MockDecoder {
         ConditionFlat[] memory conditions
     ) public pure returns (FlatPayload[] memory) {
         Integrity.enforce(conditions);
-        Layout memory layout = TypeTree.inspect(conditions, 0);
+        Layout memory layout = TypeTree.resolve(conditions, 0);
         return flattenTree(AbiDecoder.inspect(data, layout));
     }
 
