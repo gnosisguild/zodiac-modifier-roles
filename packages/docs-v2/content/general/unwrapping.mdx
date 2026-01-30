@@ -28,23 +28,12 @@ Addresses of the official MultiSend deployments on all chains are listed at http
 Custom transaction unwrapping logic can be implemented as contracts conforming to the `ITransactionUnwrapper` interface.
 
 ```solidity
-struct UnwrappedTransaction {
-    Operation operation;
-    address to;
-    uint256 value;
-    uint256 dataLocation;
-    uint256 dataSize;
-}
-
 interface ITransactionUnwrapper {
     function unwrap(
         address to,
         uint256 value,
         bytes calldata data,
-        Operation operation
+        Enum.Operation operation
     ) external view returns (UnwrappedTransaction[] memory result);
 }
 ```
-
-The `UnwrappedTransaction` struct uses `dataLocation` and `dataSize` to reference a slice of the original calldata rather than copying the data bytes.
-This design avoids unnecessary memory allocation when unwrapping batch transactions.
