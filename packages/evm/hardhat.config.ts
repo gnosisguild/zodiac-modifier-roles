@@ -202,6 +202,11 @@ const config: HardhatUserConfig = {
       chainId: 14,
       url: "https://flare-api.flare.network/ext/C/rpc",
     },
+    katana: {
+      ...sharedNetworkConfig,
+      chainId: 747474,
+      url: "https://rpc.katana.network",
+    },
     // waiting for PUSH0 support
     linea: {
       ...sharedNetworkConfig,
@@ -346,6 +351,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://api.flarescan.com/api",
           browserURL: "https://flarescan.com",
+        },
+      },
+      {
+        network: "katana",
+        chainId: 747474,
+        urls: {
+          apiURL: "https://api.katanascan.com/api",
+          browserURL: "https://katanascan.com",
         },
       },
       {
