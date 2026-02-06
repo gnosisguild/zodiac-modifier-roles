@@ -114,6 +114,8 @@ const ApplyUpdateInteractive: React.FC<Props> = ({
           open={modalOpen}
           onClose={() => setModalOpen(false)}
           onAppend={handleAppend}
+          address={address}
+          chainId={chainId}
         />
         <WalletProvider>{applyElement}</WalletProvider>
       </Flex>

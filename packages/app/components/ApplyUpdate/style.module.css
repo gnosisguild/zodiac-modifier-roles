@@ -49,6 +49,12 @@
   color: rgba(252, 248, 217, 0.8);
 }
 
+.presetButton {
+  font-size: 12px;
+  padding: 4px 8px;
+  width: auto;
+}
+
 .backdrop {
   z-index: 11;
   position: fixed;

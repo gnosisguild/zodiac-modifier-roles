@@ -1,9 +1,16 @@
 "use client"
 import { useState } from "react"
 import * as Headless from "@headlessui/react"
+import { Interface } from "ethers"
+import { rolesAbi, ChainId } from "zodiac-roles-sdk"
 import Flex from "@/ui/Flex"
 import Button from "@/ui/Button"
 import { parseCalls } from "./parseCalls"
+import {
+  MORPHO_BUNDLER3,
+  MORPHO_BUNDLER_ADAPTER,
+  MORPHO_BUNDLER_SELECTOR,
+} from "./const"
 import classes from "./style.module.css"
 
 type Call = { to: `0x${string}`; data: `0x${string}` }
@@ -12,9 +19,40 @@ interface Props {
   open: boolean
   onClose: () => void
   onAppend: (calls: Call[]) => void
+  address: `0x${string}`
+  chainId: ChainId
 }
 
-const AppendCallsModal: React.FC<Props> = ({ open, onClose, onAppend }) => {
+const rolesInterface = new Interface(rolesAbi)
+
+function encodeMorphoBundlerUnwrapper(
+  rolesModifier: `0x${string}`,
+  chainId: ChainId
+): string | null {
+  const bundler = MORPHO_BUNDLER3[chainId]
+  if (!bundler) return null
+
+  return JSON.stringify(
+    {
+      to: rolesModifier,
+      data: rolesInterface.encodeFunctionData("setTransactionUnwrapper", [
+        bundler,
+        MORPHO_BUNDLER_SELECTOR,
+        MORPHO_BUNDLER_ADAPTER,
+      ]),
+    },
+    null,
+    2
+  )
+}
+
+const AppendCallsModal: React.FC<Props> = ({
+  open,
+  onClose,
+  onAppend,
+  address,
+  chainId,
+}) => {
   const [value, setValue] = useState("")
   const [errorMessage, setErrorMessage] = useState("")
 
@@ -53,6 +91,7 @@ const AppendCallsModal: React.FC<Props> = ({ open, onClose, onAppend }) => {
     onClose()
   }
 
+  const morphoPreset = encodeMorphoBundlerUnwrapper(address, chainId)
   const isValid = value.trim() !== "" && errorMessage === ""
 
   return (
@@ -67,6 +106,16 @@ const AppendCallsModal: React.FC<Props> = ({ open, onClose, onAppend }) => {
                 Paste a Safe Transaction Builder JSON, an array of{" "}
                 {"{to, data}"} objects, or a single {"{to, data}"} object.
               </p>
+              {morphoPreset && (
+                <Flex gap={2}>
+                  <Button
+                    className={classes.presetButton}
+                    onClick={() => handleChange(morphoPreset)}
+                  >
+                    Enable MorphoBundlerUnwrapper
+                  </Button>
+                </Flex>
+              )}
               <textarea
                 className={classes.textarea}
                 value={value}
