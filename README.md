@@ -105,4 +105,33 @@ All contracts are WITHOUT ANY WARRANTY; without even the implied warranty of MER
 
 ### License
 
-Created under the [LGPL-3.0+ license](LICENSE).
+This repository is dual-licensed as follows:
+
+#### Contracts and App
+
+All smart contracts and the web app in this repository are licensed under the **Business Source License 1.1 (BUSL-1.1)**.
+
+- Production use is restricted until **March 1, 2030**.
+- On that date, these components will automatically convert to **LGPL-3.0-or-later**.
+
+See `LICENSE.md` for full terms.
+
+---
+
+### SDK and Developer Tooling
+
+The SDK included in this repository is licensed under the **GNU Lesser General Public License v3.0 or later (LGPL-3.0-or-later)** and is available under open-source terms immediately.
+
+These components are not subject to the BUSL restrictions.
+
+The SDK package includes its own LICENSE file.
+
+---
+
+#### Summary
+
+| Component Type | License Now | License After 2030-03-01 |
+|----------------|-------------|---------------------------|
+| Contracts | BUSL-1.1 | LGPL-3.0-or-later |
+| App | BUSL-1.1 | LGPL-3.0-or-later |
+| SDK  | LGPL-3.0-or-later | LGPL-3.0-or-later |
