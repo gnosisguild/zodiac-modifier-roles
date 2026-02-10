@@ -1329,9 +1329,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@gnosis-guild/zodiac-core-modifier-roles@workspace:*, @gnosis-guild/zodiac-core-modifier-roles@workspace:packages/evm":
+"@gnosis-guild/zodiac-core@npm:^3.0.1":
+  version: 3.0.1
+  resolution: "@gnosis-guild/zodiac-core@npm:3.0.1"
+  dependencies:
+    "@openzeppelin/contracts": 5.0.2
+    "@openzeppelin/contracts-upgradeable": 5.0.2
+    ethers: ^6.13.2
+    semver: ^7.6.3
+  checksum: ddc8454a7b15aeca86542f8ef4534d8a5cb42a16af5878a2672c46cfd27806f82a76b5bcc68096884d02ebb4694f10dee1d7a60b4f0be5d56956a6c6dd52b151
+  languageName: node
+  linkType: hard
+
+"@gnosis-guild/zodiac-modifier-roles@workspace:*, @gnosis-guild/zodiac-modifier-roles@workspace:packages/evm":
   version: 0.0.0-use.local
-  resolution: "@gnosis-guild/zodiac-core-modifier-roles@workspace:packages/evm"
+  resolution: "@gnosis-guild/zodiac-modifier-roles@workspace:packages/evm"
   dependencies:
     "@gnosis-guild/typechain-ethers-v6": ^0.5.5
     "@gnosis-guild/zodiac-core": ^3.0.1
@@ -1363,18 +1375,6 @@ __metadata:
     typescript: 5.9.3
   languageName: unknown
   linkType: soft
-
-"@gnosis-guild/zodiac-core@npm:^3.0.1":
-  version: 3.0.1
-  resolution: "@gnosis-guild/zodiac-core@npm:3.0.1"
-  dependencies:
-    "@openzeppelin/contracts": 5.0.2
-    "@openzeppelin/contracts-upgradeable": 5.0.2
-    ethers: ^6.13.2
-    semver: ^7.6.3
-  checksum: ddc8454a7b15aeca86542f8ef4534d8a5cb42a16af5878a2672c46cfd27806f82a76b5bcc68096884d02ebb4694f10dee1d7a60b4f0be5d56956a6c6dd52b151
-  languageName: node
-  linkType: hard
 
 "@headlessui/react@npm:^2.1.2, @headlessui/react@npm:^2.2.0":
   version: 2.2.1
@@ -19258,7 +19258,7 @@ __metadata:
     "@gnosis-guild/eth-sdk": ^0.3.7
     "@gnosis-guild/eth-sdk-client": ^0.1.6
     "@gnosis-guild/typechain-ethers-v6": ^0.5.5
-    "@gnosis-guild/zodiac-core-modifier-roles": "workspace:*"
+    "@gnosis-guild/zodiac-modifier-roles": "workspace:*"
     "@types/node": ^20.9.0
     "@typescript-eslint/eslint-plugin": ^5.62.0
     "@typescript-eslint/parser": ^5.62.0

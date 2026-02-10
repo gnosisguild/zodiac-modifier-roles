@@ -9,12 +9,12 @@
     "pre-commit": "yarn workspaces foreach run pre-commit",
     "test": "turbo test",
     "build": "turbo build",
-    "build:evm": "turbo build --filter=@gnosis-guild/zodiac-core-modifier-roles",
+    "build:evm": "turbo build --filter=@gnosis-guild/zodiac-modifier-roles",
     "build:deployments": "turbo build --filter=zodiac-roles-deployments",
     "build:sdk": "turbo build --filter=zodiac-roles-sdk",
     "build:app": "turbo build --filter=zodiac-roles-app",
     "build:docs": "turbo build --filter=zodiac-roles-docs",
-    "coverage": "yarn workspace @gnosis-guild/zodiac-core-modifier-roles run coverage",
+    "coverage": "yarn workspace @gnosis-guild/zodiac-modifier-roles run coverage",
     "dev": "turbo run dev"
   },
   "repository": {
