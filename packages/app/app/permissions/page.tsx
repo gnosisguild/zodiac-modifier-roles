@@ -14,6 +14,7 @@ import Flex from "@/ui/Flex"
 import Button from "@/ui/Button"
 import Layout from "@/components/Layout"
 import {
+  zAddress,
   zAnnotation,
   zPermission,
   zTarget,
@@ -38,17 +39,22 @@ export default function PermissionsPage() {
     }
   }
 
-  let targets: Target[] | null = null
-  let annotations: Annotation[] = []
+  let targets: Target[] | undefined = undefined
+  let annotations: Annotation[] | undefined = undefined
+  let members: `0x${string}`[] | undefined = undefined
   if (json) {
     try {
-      // {targets: [...], annotations: [...]}
-      ;({ targets, annotations } = z
+      // {targets: [...], annotations: [...], members: [...] }
+      ;({ targets, annotations, members } = z
         .object({
-          targets: z.array(zTarget),
-          annotations: z.array(zAnnotation),
+          targets: z.array(zTarget).optional(),
+          annotations: z.array(zAnnotation).optional(),
+          members: z.array(zAddress).optional(),
         })
         .parse(json))
+      if (!targets && !annotations && !members) {
+        throw new Error("Try interpret as targets or permissions array")
+      }
     } catch (e) {
       try {
         // [...targets]
@@ -62,7 +68,7 @@ export default function PermissionsPage() {
           annotations = result.annotations
         } catch (eP) {
           console.error(
-            "not parsable as `{targets: [...], annotations: [...]}`",
+            "not parsable as `{targets: [...], annotations: [...], members: [...]}`",
             e
           )
           console.error("not parsable as `[...targets]`", eT)
@@ -89,7 +95,7 @@ export default function PermissionsPage() {
     setSubmitPending(true)
     const res = await fetch("/api/permissions", {
       method: "POST",
-      body: JSON.stringify({ targets, annotations }),
+      body: JSON.stringify({ targets, annotations, members }),
     })
     const { hash } = await res.json()
     if (hash) {

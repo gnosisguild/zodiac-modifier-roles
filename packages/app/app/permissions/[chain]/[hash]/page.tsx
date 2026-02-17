@@ -28,16 +28,17 @@ export default async function PermissionPage(props: {
   }
 
   const entry = await kv.get<{
-    targets: Target[]
+    targets?: Target[]
     annotations?: Annotation[]
+    members?: `0x${string}`[]
   }>(hash)
   if (!entry) {
     notFound()
   }
 
-  const { targets, annotations = [] } = entry
+  const { targets, annotations, members } = entry
 
-  const hasAnnotations = annotations.length > 0
+  const hasAnnotations = annotations && annotations.length > 0
   const showAnnotations = searchParams.annotations !== "false"
 
   return (
@@ -59,8 +60,8 @@ export default async function PermissionPage(props: {
             </div>
           )}
           <PermissionsList
-            targets={targets}
-            annotations={showAnnotations ? annotations : []}
+            targets={targets ?? []}
+            annotations={showAnnotations ? (annotations ?? []) : []}
             chainId={chainId}
           />
         </div>
