@@ -10,6 +10,10 @@ import {
   MORPHO_BUNDLER3,
   MORPHO_BUNDLER_ADAPTER,
   MORPHO_BUNDLER_SELECTOR,
+  MULTISEND_141,
+  MULTISEND_CALLONLY_141,
+  MULTISEND_SELECTOR,
+  MULTISEND_UNWRAPPER,
 } from "./const"
 import classes from "./style.module.css"
 
@@ -25,22 +29,52 @@ interface Props {
 
 const rolesInterface = new Interface(rolesAbi)
 
+function encodeSetUnwrapper(
+  rolesModifier: `0x${string}`,
+  to: `0x${string}`,
+  selector: string,
+  adapter: `0x${string}`
+): string {
+  return JSON.stringify(
+    {
+      to: rolesModifier,
+      data: rolesInterface.encodeFunctionData("setTransactionUnwrapper", [
+        to,
+        selector,
+        adapter,
+      ]),
+    },
+    null,
+    2
+  )
+}
+
 function encodeMorphoBundlerUnwrapper(
   rolesModifier: `0x${string}`,
   chainId: ChainId
 ): string | null {
   const bundler = MORPHO_BUNDLER3[chainId]
   if (!bundler) return null
+  return encodeSetUnwrapper(
+    rolesModifier,
+    bundler,
+    MORPHO_BUNDLER_SELECTOR,
+    MORPHO_BUNDLER_ADAPTER
+  )
+}
 
+function encodeMultiSendUnwrapper(rolesModifier: `0x${string}`): string {
   return JSON.stringify(
-    {
-      to: rolesModifier,
-      data: rolesInterface.encodeFunctionData("setTransactionUnwrapper", [
-        bundler,
-        MORPHO_BUNDLER_SELECTOR,
-        MORPHO_BUNDLER_ADAPTER,
-      ]),
-    },
+    [MULTISEND_141, MULTISEND_CALLONLY_141].map((addr) =>
+      JSON.parse(
+        encodeSetUnwrapper(
+          rolesModifier,
+          addr,
+          MULTISEND_SELECTOR,
+          MULTISEND_UNWRAPPER
+        )
+      )
+    ),
     null,
     2
   )
@@ -92,6 +126,7 @@ const AppendCallsModal: React.FC<Props> = ({
   }
 
   const morphoPreset = encodeMorphoBundlerUnwrapper(address, chainId)
+  const multiSendPreset = encodeMultiSendUnwrapper(address)
   const isValid = value.trim() !== "" && errorMessage === ""
 
   return (
@@ -106,16 +141,22 @@ const AppendCallsModal: React.FC<Props> = ({
                 Paste a Safe Transaction Builder JSON, an array of{" "}
                 {"{to, data}"} objects, or a single {"{to, data}"} object.
               </p>
-              {morphoPreset && (
-                <Flex gap={2}>
+              <Flex gap={2}>
+                <Button
+                  className={classes.presetButton}
+                  onClick={() => handleChange(multiSendPreset)}
+                >
+                  Enable MultiSendUnwrapper
+                </Button>
+                {morphoPreset && (
                   <Button
                     className={classes.presetButton}
                     onClick={() => handleChange(morphoPreset)}
                   >
                     Enable MorphoBundlerUnwrapper
                   </Button>
-                </Flex>
-              )}
+                )}
+              </Flex>
               <textarea
                 className={classes.textarea}
                 value={value}
