@@ -1,5 +1,19 @@
 # Changelog
 
+## [3.4.2](https://github.com/gnosisguild/zodiac-modifier-roles/compare/zodiac-roles-sdk-v3.4.1...zodiac-roles-sdk-v3.4.2) (2026-02-19)
+
+
+### Bug Fixes
+
+* ban `Nor`, `ArraySome`, `ArraySubset` operators ([#446](https://github.com/gnosisguild/zodiac-modifier-roles/issues/446)) ([458b13b](https://github.com/gnosisguild/zodiac-modifier-roles/commit/458b13b2d039c99b779a2ca221a3debd3cbf29e1))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * zodiac-roles-deployments bumped to 3.2.1
+
 ## [3.4.1](https://github.com/gnosisguild/zodiac-modifier-roles/compare/zodiac-roles-sdk-v3.4.0...zodiac-roles-sdk-v3.4.1) (2026-01-22)
 
 
