@@ -72,6 +72,8 @@ const checkConditionIntegrityRecursive = (condition: Condition): void => {
   checkParamTypeIntegrity(condition)
   checkCompValueIntegrity(condition)
   checkChildrenIntegrity(condition)
+  banNorCondition(condition)
+  banArraySomeCondition(condition)
 }
 
 const checkParamTypeIntegrity = (condition: Condition): void => {
@@ -221,5 +223,17 @@ const checkChildrenIntegrity = (condition: Condition): void => {
         `\`${Operator[condition.operator]}\` condition must have children`
       )
     }
+  }
+}
+
+const banNorCondition = (condition: Condition): void => {
+  if (condition.operator === Operator.Nor) {
+    throw new Error(`\`Nor\` condition operator is deprecated`)
+  }
+}
+
+const banArraySomeCondition = (condition: Condition): void => {
+  if (condition.operator === Operator.ArraySome) {
+    throw new Error(`\`ArraySome\` condition operator is deprecated`)
   }
 }
