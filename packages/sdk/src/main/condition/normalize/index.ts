@@ -101,12 +101,11 @@ const flattenNestedBranches = (condition: Condition): Condition => {
   return condition
 }
 
-/** remove duplicate child branches in AND/OR/NOR */
+/** remove duplicate child branches in AND/OR */
 const dedupeChildren = (condition: Condition): Condition => {
   if (
     condition.operator === Operator.And ||
-    condition.operator === Operator.Or ||
-    condition.operator === Operator.Nor
+    condition.operator === Operator.Or
   ) {
     const seen = new Set<string>()
     const uniqueChildren = condition.children?.filter((child) => {
@@ -135,12 +134,11 @@ const unwrapSingleChild = (condition: Condition): Condition => {
   return condition
 }
 
-/** enforce a canonical order of AND/OR/NOR branches */
+/** enforce a canonical order of AND/OR branches */
 const sortBranchesCanonical = (condition: Condition): Condition => {
   if (
     condition.operator === Operator.And ||
-    condition.operator === Operator.Or ||
-    condition.operator === Operator.Nor
+    condition.operator === Operator.Or
   ) {
     if (!condition.children) return condition
 

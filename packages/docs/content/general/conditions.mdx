@@ -33,8 +33,8 @@ An array of sub conditions, used for any of the following purposes:
 
 - Inform the decoding of complex types by defining types of their fields or elements (required for `ParamType.AbiEncoded`, `ParamType.Calldata`, `ParamType.Tuple`, `ParamType.Array`)
 - Set conditions on specific fields of a tuple type value (via `Operator.Matches`)
-- Set conditions on elements of an array type value (via `Operator.ArraySome`, `Operator.ArrayEvery`, `Operator.ArraySubset`)
-- Define branch conditions for n-ary logical operators (`Operator.And`, `Operator.Or`, `Operator.Nor`)
+- Set conditions on elements of an array type value (via `Operator.ArrayEvery`)
+- Define branch conditions for n-ary logical operators (`Operator.And`, `Operator.Or`)
 
 ### `operator`
 
@@ -96,18 +96,9 @@ The bitmask is packed into a `bytes32` `compValue` in the following way:
 
 ### Array Expressions
 
-#### `ArraySome`
-
-Checks that at least one element of the array matches the condition.
-
 #### `ArrayEvery`
 
 Checks that every element of the array matches the condition.
-
-#### `ArraySubset`
-
-Checks that every element of the array passes at least one child condition.
-Every child condition must only be taken into account once, meaning that if multiple elements are supposed to match the same condition that condition must appear multiple times in the children.
 
 ### Logical Expressions
 
@@ -121,10 +112,6 @@ Checks that every child condition evaluates to `true`.
 #### `Or`
 
 Checks that at least one of the child conditions evaluates to `true`.
-
-#### `Nor`
-
-Checks that every child condition evaluates to `false`.
 
 ### Allowance Expressions
 
