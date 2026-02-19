@@ -99,15 +99,6 @@ describe("Simulate Transactions Test", async () => {
     // make sure the mod uses the right avatar address (important for EqualToAvatar conditions)
     await modifier.setAvatar(config.AVATAR)
 
-    // const transactionsData = await applyTargets(
-    //   ROLE_KEY,
-    //   processPermissions(permissions).targets,
-    //   {
-    //     currentTargets: [],
-    //     mode: "replace",
-    //   }
-    // )
-
     const transactionsData = await planApplyRole(
       {
         key: ROLE_KEY,
