@@ -72,6 +72,7 @@ const checkConditionIntegrityRecursive = (condition: Condition): void => {
   checkParamTypeIntegrity(condition)
   checkCompValueIntegrity(condition)
   checkChildrenIntegrity(condition)
+  banDeprecatedCondition(condition)
 }
 
 const checkParamTypeIntegrity = (condition: Condition): void => {
@@ -87,7 +88,6 @@ const checkParamTypeIntegrity = (condition: Condition): void => {
 
     [Operator.And]: [ParameterType.None],
     [Operator.Or]: [ParameterType.None],
-    [Operator.Nor]: [ParameterType.None],
 
     [Operator.Matches]: [
       ParameterType.Calldata,
@@ -96,9 +96,7 @@ const checkParamTypeIntegrity = (condition: Condition): void => {
       ParameterType.Array,
     ],
 
-    [Operator.ArraySome]: [ParameterType.Array],
     [Operator.ArrayEvery]: [ParameterType.Array],
-    [Operator.ArraySubset]: [ParameterType.Array],
 
     [Operator.EqualToAvatar]: [ParameterType.Static],
     [Operator.EqualTo]: [
@@ -170,10 +168,7 @@ const checkChildrenIntegrity = (condition: Condition): void => {
     }
   }
 
-  if (
-    condition.operator === Operator.ArraySome ||
-    condition.operator === Operator.ArrayEvery
-  ) {
+  if (condition.operator === Operator.ArrayEvery) {
     if (condition.children?.length !== 1) {
       throw new Error(
         `\`${
@@ -183,10 +178,7 @@ const checkChildrenIntegrity = (condition: Condition): void => {
     }
   }
 
-  if (
-    condition.operator === Operator.Matches ||
-    condition.operator === Operator.ArraySubset
-  ) {
+  if (condition.operator === Operator.Matches) {
     if (!condition.children || condition.children.length === 0) {
       throw new Error(
         `\`${Operator[condition.operator]}\` conditions must have children`
@@ -213,13 +205,24 @@ const checkChildrenIntegrity = (condition: Condition): void => {
 
   if (
     condition.operator === Operator.And ||
-    condition.operator === Operator.Or ||
-    condition.operator === Operator.Nor
+    condition.operator === Operator.Or
   ) {
     if (!condition.children || condition.children.length === 0) {
       throw new Error(
         `\`${Operator[condition.operator]}\` condition must have children`
       )
     }
+  }
+}
+
+const DEPRECATED_OPERATORS = [
+  3, // Nor
+  6, // ArraySome
+  8, // ArraySubset
+]
+
+const banDeprecatedCondition = (condition: Condition): void => {
+  if (DEPRECATED_OPERATORS.includes(condition.operator)) {
+    throw new Error(`Condition operator ${condition.operator} is deprecated`)
   }
 }

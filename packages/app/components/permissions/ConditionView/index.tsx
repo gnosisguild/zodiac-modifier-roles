@@ -41,10 +41,7 @@ const ConditionView: React.FC<Props> = ({ condition, paramIndex, abi }) => {
     )
   }
 
-  if (
-    condition.operator >= Operator.And &&
-    condition.operator <= Operator.Nor
-  ) {
+  if (condition.operator >= Operator.And && condition.operator <= Operator.Or) {
     return (
       <LogicalConditionView
         condition={condition}
@@ -56,7 +53,7 @@ const ConditionView: React.FC<Props> = ({ condition, paramIndex, abi }) => {
 
   if (
     condition.operator >= Operator.Matches &&
-    condition.operator <= Operator.ArraySubset
+    condition.operator <= Operator.ArrayEvery
   ) {
     return (
       <ComplexConditionView
@@ -130,10 +127,7 @@ const LogicalConditionView: React.FC<Props> = ({
 }) => {
   const { operator, children } = condition
   const childrenLength = children?.length || 0
-  const operatorLabel =
-    operator === Operator.Nor && childrenLength === 1
-      ? "Not"
-      : Operator[operator]
+  const operatorLabel = Operator[operator]
 
   return (
     <div
@@ -187,8 +181,7 @@ export const ChildConditions: React.FC<
   const { children, operator } = condition
   const childrenLength = children?.length || 0
   const isCalldataCondition = condition.paramType === ParameterType.Calldata
-  const isLogicalCondition =
-    operator >= Operator.And && operator <= Operator.Nor
+  const isLogicalCondition = operator >= Operator.And && operator <= Operator.Or
 
   return (
     <div

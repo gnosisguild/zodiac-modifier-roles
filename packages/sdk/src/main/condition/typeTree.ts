@@ -57,7 +57,7 @@ export function createTypeTree(condition: Condition): TypeTree | null {
 }
 
 export function isLogical({ operator }: { operator: Operator }) {
-  return [Operator.And, Operator.Or, Operator.Nor].includes(operator)
+  return [Operator.And, Operator.Or].includes(operator)
 }
 
 export function isComplex({ paramType }: { paramType: ParameterType }) {

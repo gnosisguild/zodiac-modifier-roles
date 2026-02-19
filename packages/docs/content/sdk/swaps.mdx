@@ -32,7 +32,6 @@ Before your role can execute swaps, you need to configure the appropriate permis
 import {
   allowCowOrderSigning,
   processPermissions,
-  applyTargets,
 } from "zodiac-roles-sdk/swaps";
 
 // Define the tokens your role should be able to swap
@@ -90,7 +89,7 @@ const calls = await planExtendRole(
     chainId: 1, // Ethereum mainnet
     address: "0x27d8bb2e33Bc38A9CE93fdD90C80677b8436aFfb", // Your Roles Modifier address
     log: true, // Optional: log the planned changes
-  }
+  },
 );
 
 // Execute the calls (requires owner permissions on the Roles Modifier)

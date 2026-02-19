@@ -9,6 +9,7 @@ import {
 
 import { type Call, encodeCalls, logCall } from "./calls"
 import { diff, diffRole, spreadPartial } from "./diff"
+import { targetIntegrity } from "./integrity"
 import { enforceLicenseTerms, fetchLicense } from "../licensing"
 
 type Options = {
@@ -63,6 +64,10 @@ export async function planApply(
   const prev = current || (await fetchRolesMod({ chainId, address }))
   const next = spreadPartial(prev, desired)
 
+  for (const role of next.roles) {
+    targetIntegrity(role.targets)
+  }
+
   const roleModConfig = await fetchRolesModConfig({ chainId, address })
   if (roleModConfig) {
     const license = await fetchLicense({ chainId, owner: roleModConfig.owner })
@@ -91,6 +96,9 @@ export function callsPlannedForApply(
   prev: { roles: Role[]; allowances: Allowance[] },
   next: { roles: Role[]; allowances: Allowance[] }
 ): Call[] {
+  for (const role of next.roles) {
+    targetIntegrity(role.targets)
+  }
   const { minus, plus } = diff({ prev, next })
   return [...minus, ...plus]
 }
@@ -130,6 +138,8 @@ export async function planApplyRole(
     ...clean(desired),
   }
 
+  targetIntegrity(next.targets)
+
   const rolesModConfig = await fetchRolesModConfig({ chainId, address })
   if (rolesModConfig) {
     const license = await fetchLicense({
@@ -153,6 +163,7 @@ export async function planApplyRole(
 }
 
 export function callsPlannedForApplyRole(prev: Role, next: Role): Call[] {
+  targetIntegrity(next.targets)
   const { minus, plus } = diffRole({ prev, next })
   return [...minus, ...plus]
 }
@@ -195,6 +206,8 @@ export async function planExtendRole(
     ...(prev || { members: [], targets: [], annotations: [], lastUpdate: 0 }),
     ...clean(desired),
   }
+
+  targetIntegrity(next.targets)
 
   const roleModConfig = await fetchRolesModConfig({ chainId, address })
   if (roleModConfig) {

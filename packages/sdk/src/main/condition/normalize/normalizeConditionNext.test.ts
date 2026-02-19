@@ -46,12 +46,6 @@ const OR = (...children: Condition[]): Condition => ({
   children,
 })
 
-const NOR = (...children: Condition[]): Condition => ({
-  paramType: ParameterType.None,
-  operator: Operator.Nor,
-  children,
-})
-
 const ETHER_ALLOWANCE = (): Condition => ({
   paramType: ParameterType.None,
   operator: Operator.EtherWithinAllowance,
@@ -192,26 +186,6 @@ describe("normalizeCondition", () => {
           ],
         })
       })
-
-      it("does NOT flatten NOR conditions", () => {
-        const input = NOR(COMP(1), NOR(COMP(2), COMP(3)), COMP(4))
-
-        const result = normalizeCondition(input)
-
-        expect(result).toEqual({
-          paramType: ParameterType.None,
-          operator: Operator.Nor,
-          children: [
-            COMP(1),
-            COMP(4),
-            {
-              paramType: ParameterType.None,
-              operator: Operator.Nor,
-              children: [COMP(2), COMP(3)],
-            },
-          ],
-        })
-      })
     })
 
     describe("dedupeBranches", () => {
@@ -235,18 +209,6 @@ describe("normalizeCondition", () => {
         expect(result).toEqual({
           paramType: ParameterType.None,
           operator: Operator.Or,
-          children: [COMP(1), COMP(2), COMP(3)],
-        })
-      })
-
-      it("removes duplicate children in NOR conditions", () => {
-        const input = NOR(COMP(1), COMP(2), COMP(1), COMP(3))
-
-        const result = normalizeCondition(input)
-
-        expect(result).toEqual({
-          paramType: ParameterType.None,
-          operator: Operator.Nor,
           children: [COMP(1), COMP(2), COMP(3)],
         })
       })
@@ -280,18 +242,6 @@ describe("normalizeCondition", () => {
         const result = normalizeCondition(input)
 
         expect(result).toEqual(COMP(1))
-      })
-
-      it("does NOT unwrap NOR with single child", () => {
-        const input = NOR(COMP(1))
-
-        const result = normalizeCondition(input)
-
-        expect(result).toEqual({
-          paramType: ParameterType.None,
-          operator: Operator.Nor,
-          children: [COMP(1)],
-        })
       })
 
       it("handles unwrapping after deduplication", () => {
@@ -545,7 +495,7 @@ describe("normalizeCondition", () => {
       const input = OR(
         AND(COMP(1), COMP(1)),
         MATCHES(ParameterType.Calldata, COMP(2), PASS()),
-        NOR(COMP(3))
+        COMP(3)
       )
 
       const result1 = normalizeCondition(input)

@@ -79,17 +79,9 @@ c.bitmask(params: {
 
 ### Array conditions
 
-#### `c.some`
-
-See [`ArraySome`](/general/conditions#arraysome) operator
-
 #### `c.every`
 
 See [`ArrayEvery`](/general/conditions#arrayevery) operator
-
-#### `c.subset`
-
-See [`ArraySubset`](/general/conditions#arraysubset) operator
 
 ### Branch conditions
 
@@ -100,10 +92,6 @@ See [`And`](/general/conditions#and) operator
 #### `c.or`
 
 See [`Or`](/general/conditions#or) operator
-
-#### `c.nor`
-
-See [`Nor`](/general/conditions#nor) operator
 
 ### Tuple matching
 
@@ -130,7 +118,7 @@ Example:
 // Checks that bytes param in scope matches the calldata to the `claim_rewards(address)` function
 // with the nested `address` param being equal to the address of the avatar
 c.calldataMatches(
-  allow.curve.stETH_ETH_gauge["claim_rewards(address)"](c.avatar)
+  allow.curve.stETH_ETH_gauge["claim_rewards(address)"](c.avatar),
 );
 ```
 

@@ -38,16 +38,13 @@ export enum Operator {
   //          🚫 compValue
   And = 1,
   Or = 2,
-  Nor = 3,
   // ------------------------------------------------------------
   // 05-14: COMPLEX EXPRESSIONS
   //          paramType: Calldata / AbiEncoded / Tuple / Array,
   //          ✅ children
   //          🚫 compValue
   Matches = 5,
-  ArraySome = 6,
   ArrayEvery = 7,
-  ArraySubset = 8,
   // ------------------------------------------------------------
   // 15:    SPECIAL COMPARISON (without compValue)
   //          paramType: Static
