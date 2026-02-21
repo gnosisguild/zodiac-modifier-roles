@@ -207,6 +207,11 @@ const config: HardhatUserConfig = {
       chainId: 747474,
       url: "https://rpc.katana.network",
     },
+    megaeth: {
+      ...sharedNetworkConfig,
+      chainId: 4326,
+      url: "https://mainnet.megaeth.com/rpc",
+    },
     // waiting for PUSH0 support
     linea: {
       ...sharedNetworkConfig,
@@ -359,6 +364,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://api.katanascan.com/api",
           browserURL: "https://katanascan.com",
+        },
+      },
+      {
+        network: "megaeth",
+        chainId: 4326,
+        urls: {
+          apiURL: "https://api-mega.etherscan.io/api",
+          browserURL: "https://mega.etherscan.io",
         },
       },
       {
