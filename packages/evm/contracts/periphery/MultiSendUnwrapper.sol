@@ -54,9 +54,9 @@ contract MultiSendUnwrapper is ITransactionUnwrapper {
         bytes calldata data
     ) private pure returns (uint256 count) {
         uint256 offset = OFFSET_START;
+        uint256 end = OFFSET_START + uint256(bytes32(data[36:]));
 
-        // data is padded to 32 bytes we can't simply do offset < data.length
-        for (; offset + 32 < data.length; ) {
+        for (; offset < end; ) {
             // Per transaction:
             // Operation   1  bytes
             // To          20 bytes
@@ -69,7 +69,7 @@ contract MultiSendUnwrapper is ITransactionUnwrapper {
             }
 
             uint256 length = uint256(bytes32(data[offset + 53:]));
-            if (offset + 85 + length > data.length) {
+            if (offset + 85 + length > end) {
                 revert MalformedBody();
             }
 
