@@ -65,7 +65,7 @@ The contracts have been developed with [Solidity 0.8.21](https://github.com/ethe
 | Roles                   | Main roles modifier contract                                                    | `0x9646fDAD06d3e24444381f44362a3B0eB343D337` |
 | Integrity               | Library contract for condition integrity checks                                 | `0x6a6Af4b16458Bc39817e4019fB02BD3b26d41049` |
 | Packer                  | Library contract for optimized condition storage                                | `0x61C5B1bE435391fDd7BC6703F3740C0d11728a8C` |
-| MultiSendUnwrapper      | Transaction unwrapper for Safe's MultiSend                                      | `0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0` |
+| MultiSendUnwrapper      | Transaction unwrapper for Safe's MultiSend                                      | `0xB4Cd4bb764C089f20DA18700CE8bc5e49F369efD` |
 | AvatarIsOwnerOfERC721   | Custom condition useful for permissioned interaction with Uniswap NFT positions | `0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1` |
 | MorphoBundler3Unwrapper | Transaction unwrapper for Morpho's Bundler3                                     | `0x7533922A155DC6b4Cc0ae4E74D70a73bc86dD3E8` |
 
