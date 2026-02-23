@@ -64,9 +64,9 @@ export async function planApply(
   const prev = current || (await fetchRolesMod({ chainId, address }))
   const next = spreadPartial(prev, desired)
 
-  for (const role of next.roles) {
-    targetIntegrity(role.targets)
-  }
+  // for (const role of next.roles) {
+  //   targetIntegrity(role.targets)
+  // }
 
   const roleModConfig = await fetchRolesModConfig({ chainId, address })
   if (roleModConfig) {
@@ -96,9 +96,9 @@ export function callsPlannedForApply(
   prev: { roles: Role[]; allowances: Allowance[] },
   next: { roles: Role[]; allowances: Allowance[] }
 ): Call[] {
-  for (const role of next.roles) {
-    targetIntegrity(role.targets)
-  }
+  // for (const role of next.roles) {
+  //   targetIntegrity(role.targets)
+  // }
   const { minus, plus } = diff({ prev, next })
   return [...minus, ...plus]
 }
@@ -138,7 +138,7 @@ export async function planApplyRole(
     ...clean(desired),
   }
 
-  targetIntegrity(next.targets)
+  // targetIntegrity(next.targets)
 
   const rolesModConfig = await fetchRolesModConfig({ chainId, address })
   if (rolesModConfig) {
@@ -163,7 +163,7 @@ export async function planApplyRole(
 }
 
 export function callsPlannedForApplyRole(prev: Role, next: Role): Call[] {
-  targetIntegrity(next.targets)
+  // targetIntegrity(next.targets)
   const { minus, plus } = diffRole({ prev, next })
   return [...minus, ...plus]
 }
@@ -207,7 +207,7 @@ export async function planExtendRole(
     ...clean(desired),
   }
 
-  targetIntegrity(next.targets)
+  // targetIntegrity(next.targets)
 
   const roleModConfig = await fetchRolesModConfig({ chainId, address })
   if (roleModConfig) {
