@@ -2,6 +2,7 @@ import { getRoleId } from "./ids"
 import { fetchFromSubgraph, FetchOptions } from "./subgraph"
 import {
   ChainId,
+  Condition,
   Role,
   Clearance,
   ExecutionOptions,
@@ -80,6 +81,16 @@ export const fetchRole = async (
   return mapGraphQl(role)
 }
 
+/** Replace empty `0x` compValues from the subgraph with `undefined` */
+const cleanCondition = (condition: Condition): Condition => ({
+  ...condition,
+  compValue:
+    !condition.compValue || condition.compValue === "0x"
+      ? undefined
+      : condition.compValue,
+  children: condition.children?.map(cleanCondition),
+})
+
 export const mapGraphQl = (role: any): Role => ({
   ...role,
   members: role.members.map((assignment: any) => assignment.member.address),
@@ -99,7 +110,8 @@ export const mapGraphQl = (role: any): Role => ({
               func.executionOptions as keyof typeof ExecutionOptions
             ],
           wildcarded: func.wildcarded,
-          condition: func.condition && JSON.parse(func.condition.json),
+          condition:
+            func.condition && cleanCondition(JSON.parse(func.condition.json)),
         })
       ),
     })
