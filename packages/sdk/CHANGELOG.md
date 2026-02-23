@@ -1,5 +1,19 @@
 # Changelog
 
+## [3.4.3](https://github.com/gnosisguild/zodiac-modifier-roles/compare/zodiac-roles-sdk-v3.4.2...zodiac-roles-sdk-v3.4.3) (2026-02-23)
+
+
+### Bug Fixes
+
+* disable broken targetIntegrity checks in SDK again ([#449](https://github.com/gnosisguild/zodiac-modifier-roles/issues/449)) ([92eadf8](https://github.com/gnosisguild/zodiac-modifier-roles/commit/92eadf8e419ada3d2b94c559656357efe8cf1e43))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * zodiac-roles-deployments bumped to 3.2.2
+
 ## [3.4.2](https://github.com/gnosisguild/zodiac-modifier-roles/compare/zodiac-roles-sdk-v3.4.1...zodiac-roles-sdk-v3.4.2) (2026-02-19)
 
 
