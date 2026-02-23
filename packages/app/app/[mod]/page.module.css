@@ -30,3 +30,11 @@
 .header .modAddress {
   font-size: 20px;
 }
+
+.details {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--spacing-4);
+}
+

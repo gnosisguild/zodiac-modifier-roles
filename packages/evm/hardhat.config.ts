@@ -107,7 +107,7 @@ const config: HardhatUserConfig = {
     polygon: {
       ...sharedNetworkConfig,
       chainId: 137,
-      url: "https://polygon-rpc.com",
+      url: "https://polygon.gateway.tenderly.co",
     },
     arbitrum: {
       ...sharedNetworkConfig,
@@ -117,7 +117,7 @@ const config: HardhatUserConfig = {
     avalanche: {
       ...sharedNetworkConfig,
       chainId: 43114,
-      url: "https://0xrpc.io/avax",
+      url: "https://avalanche-mainnet.gateway.tenderly.co",
     },
     zkevm: {
       ...sharedNetworkConfig,
@@ -132,7 +132,7 @@ const config: HardhatUserConfig = {
     celo: {
       ...sharedNetworkConfig,
       chainId: 42220,
-      url: "https://celo.drpc.org",
+      url: "https://forno.celo.org",
     },
     lisk: {
       ...sharedNetworkConfig,
@@ -206,6 +206,11 @@ const config: HardhatUserConfig = {
       ...sharedNetworkConfig,
       chainId: 747474,
       url: "https://rpc.katana.network",
+    },
+    megaeth: {
+      ...sharedNetworkConfig,
+      chainId: 4326,
+      url: "https://mainnet.megaeth.com/rpc",
     },
     // waiting for PUSH0 support
     linea: {
@@ -359,6 +364,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://api.katanascan.com/api",
           browserURL: "https://katanascan.com",
+        },
+      },
+      {
+        network: "megaeth",
+        chainId: 4326,
+        urls: {
+          apiURL: "https://api-mega.etherscan.io/api",
+          browserURL: "https://mega.etherscan.io",
         },
       },
       {

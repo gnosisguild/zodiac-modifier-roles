@@ -8,20 +8,17 @@ import {
   useChainId,
 } from "wagmi"
 import { ConnectButton } from "@/components/Wallet/ConnectButton"
-import { isGovernor } from "./isGovernor"
 
 interface Props {
   calls: { to: `0x${string}`; data: `0x${string}` }[]
   owner: `0x${string}`
-  rolesModifier: `0x${string}`
-  roleKey: `0x${string}`
+  description: string
   chainId: ChainId
 }
 
 const ApplyViaGovernor: React.FC<Props> = ({
   calls,
-  rolesModifier,
-  roleKey,
+  description,
   owner,
   chainId,
 }) => {
@@ -41,9 +38,6 @@ const ApplyViaGovernor: React.FC<Props> = ({
     const targets = calls.map((call) => call.to)
     const values = calls.map(() => 0n) // All calls have 0 value
     const calldatas = calls.map((call) => call.data)
-    const description = `Update permissions of the ${decodeKey(
-      roleKey
-    )} role. Review the update at ${window.location.href}`
 
     // Call the governor's propose function
     writeContract({

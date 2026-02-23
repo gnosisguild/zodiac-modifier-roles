@@ -77,7 +77,8 @@ const mapGraphQl = (rolesModifier: any): RolesModifier => ({
     .filter(
       ({ selector, adapterAddress }: any) =>
         selector === "0x8d80ff0a" &&
-        adapterAddress === "0x93b7fcbc63ed8a3a24b59e1c3e6649d50b7427c0"
+        (adapterAddress === "0x93b7fcbc63ed8a3a24b59e1c3e6649d50b7427c0" ||
+          adapterAddress === "0xB4Cd4bb764C089f20DA18700CE8bc5e49F369efD")
     )
     .map((adapter: any) => adapter.targetAddress),
 })

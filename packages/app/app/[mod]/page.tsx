@@ -43,12 +43,41 @@ export default async function ModPage(props: {
               />
             </h1>
           </LabeledData>
-          <LabeledData label="Chain">
-            <Flex gap={2} alignItems="center">
-              <ChainIcon chainId={mod.chainId} width={20} />
-              {CHAINS[mod.chainId].name}
-            </Flex>
-          </LabeledData>
+          <div className={classes.details}>
+            <LabeledData label="Chain">
+              <Flex gap={2} alignItems="center">
+                <ChainIcon chainId={mod.chainId} width={30} />
+                {CHAINS[mod.chainId].name}
+              </Flex>
+            </LabeledData>
+            <LabeledData label="Owner">
+              <Address
+                address={data.owner}
+                chainId={mod.chainId}
+                explorerLink
+                copyToClipboard
+                small
+              />
+            </LabeledData>
+            <LabeledData label="Target">
+              <Address
+                address={data.target}
+                chainId={mod.chainId}
+                explorerLink
+                copyToClipboard
+                small
+              />
+            </LabeledData>
+            <LabeledData label="Avatar">
+              <Address
+                address={data.avatar}
+                chainId={mod.chainId}
+                explorerLink
+                copyToClipboard
+                small
+              />
+            </LabeledData>
+          </div>
         </div>
         <RolesList roles={data.roles} mod={mod} />
       </main>

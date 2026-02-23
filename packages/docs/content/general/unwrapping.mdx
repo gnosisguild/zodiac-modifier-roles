@@ -1,6 +1,6 @@
 # Transaction Unwrapping
 
-In certain scenarios, the raw transaction data might not lend itself to be checked against the configured role permissions directly. 
+In certain scenarios, the raw transaction data might not lend itself to be checked against the configured role permissions directly.
 An example are batch transactions through the [MultiSend contract](https://github.com/safe-global/safe-smart-account/blob/main/contracts/libraries/MultiSendCallOnly.sol).
 Instead of scoping the data encoding the full batch of transactions, permissions should be checked individually for each call in the batch.
 
@@ -9,7 +9,7 @@ The unwrapping logic is implemented in adapter contracts.
 
 ## `MultiSendUnwrapper`
 
-The `MultiSendUnwrapper` adapter contract at the official deployment address `0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0` can be used to support unwrapping of batch transaction through the [MultiSend contract](https://github.com/safe-global/safe-smart-account/blob/main/contracts/libraries/MultiSendCallOnly.sol).
+The `MultiSendUnwrapper` adapter contract at the official deployment address `0xB4Cd4bb764C089f20DA18700CE8bc5e49F369efD` can be used to support unwrapping of batch transaction through the [MultiSend contract](https://github.com/safe-global/safe-smart-account/blob/main/contracts/libraries/MultiSendCallOnly.sol).
 
 To enable multi-send unwrapping call the `setTransactionUnwrapper` function as the owner of the Roles mod:
 
@@ -17,7 +17,7 @@ To enable multi-send unwrapping call the `setTransactionUnwrapper` function as t
 rolesMod.setTransactionUnwrapper(
     address(0x9641d764fc13c8B624c04430C7356C1C7C8102e2)),  // offical MultiSendCallOnly deployment on mainnet
     bytes4(keccak256('multiSend(bytes)'),  // multiSend function selectot
-    address(0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0)  // address of the MultiSendUnwrapper
+    address(0xB4Cd4bb764C089f20DA18700CE8bc5e49F369efD)  // address of the MultiSendUnwrapper
 )
 ```
 
