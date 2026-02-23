@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.2.2](https://github.com/gnosisguild/zodiac-modifier-roles/compare/zodiac-roles-deployments-v3.2.1...zodiac-roles-deployments-v3.2.2) (2026-02-23)
+
+
+### Bug Fixes
+
+* properly fix broken `targetIntegrity` checks in SDK ([#451](https://github.com/gnosisguild/zodiac-modifier-roles/issues/451)) ([9d4ece0](https://github.com/gnosisguild/zodiac-modifier-roles/commit/9d4ece00dbe4bdbee9cd4000e57897286f03e8f3))
+* Simplify Loop Bounds ([#448](https://github.com/gnosisguild/zodiac-modifier-roles/issues/448)) ([1ddde84](https://github.com/gnosisguild/zodiac-modifier-roles/commit/1ddde84db9024c6c1898d1f4cf5dabded3e824f1))
+
 ## [3.2.1](https://github.com/gnosisguild/zodiac-modifier-roles/compare/zodiac-roles-deployments-v3.2.0...zodiac-roles-deployments-v3.2.1) (2026-02-19)
 
 
