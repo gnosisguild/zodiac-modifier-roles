@@ -1,7 +1,7 @@
 "use client"
 import { useState, useMemo } from "react"
 import { MdOutlineFileDownload, MdAdd } from "react-icons/md"
-import { ChainId } from "zodiac-roles-sdk"
+import { ChainId, decodeKey } from "zodiac-roles-sdk"
 
 import Box from "@/ui/Box"
 import Flex from "@/ui/Flex"
@@ -66,18 +66,13 @@ const ApplyUpdateInteractive: React.FC<Props> = ({
       <ApplyViaGovernor
         calls={allCalls}
         owner={owner}
-        rolesModifier={address}
-        roleKey={roleKey as `0x${string}`}
+        description={`Update permissions of the ${decodeKey(
+          roleKey
+        )} role. Review the update at ${window.location.href}`}
         chainId={chainId}
       />
     ) : (
-      <ApplyViaSafe
-        calls={allCalls}
-        owner={owner}
-        rolesModifier={address}
-        roleKey={roleKey as `0x${string}`}
-        chainId={chainId}
-      />
+      <ApplyViaSafe calls={allCalls} owner={owner} />
     )
 
   return (
@@ -103,11 +98,20 @@ const ApplyUpdateInteractive: React.FC<Props> = ({
             <MdAdd />
           </button>
         </Flex>
-        <CallList calls={initialCalls} startIndex={0} address={address} comments={comments} />
+        <CallList
+          calls={initialCalls}
+          startIndex={0}
+          address={address}
+          comments={comments}
+        />
         {appendedCalls.length > 0 && (
           <>
             <h5 className={styles.separator}>Additional calls</h5>
-            <CallList calls={appendedCalls} startIndex={initialCalls.length} address={address} />
+            <CallList
+              calls={appendedCalls}
+              startIndex={initialCalls.length}
+              address={address}
+            />
           </>
         )}
         <AppendCallsModal
