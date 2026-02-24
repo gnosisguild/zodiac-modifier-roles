@@ -34,6 +34,8 @@ query RolesMod($id: ID!, $blockNumber: Int) {
     }
     unwrapAdapters {
       targetAddress
+      selector
+      adapterAddress
     }
   }
 }
