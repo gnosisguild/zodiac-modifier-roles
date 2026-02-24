@@ -3,7 +3,7 @@ import { notFound } from "next/navigation"
 import { createPublicClient, http, pad, toHex } from "viem"
 
 import Layout from "@/components/Layout"
-import { parseModParam, parseRoleParam } from "@/app/params"
+import { parseModParam } from "@/app/params"
 import { CHAINS } from "@/app/chains"
 import PageBreadcrumbs from "../breadcrumbs"
 import {
@@ -36,34 +36,40 @@ function unwrapperKey(
   return toHex(toBytes32 | shifted, { size: 32 })
 }
 
-async function fetchUnwrapper(
+const unwrappersAbi = [
+  {
+    name: "unwrappers",
+    type: "function",
+    inputs: [{ name: "", type: "bytes32" }],
+    outputs: [{ name: "", type: "address" }],
+    stateMutability: "view",
+  },
+] as const
+
+async function fetchUnwrappers(
   chainId: number,
   rolesAddress: `0x${string}`,
-  multisendAddress: `0x${string}`
-): Promise<`0x${string}`> {
+  multisendAddresses: `0x${string}`[]
+): Promise<`0x${string}`[]> {
   const client = createPublicClient({
     chain: CHAINS[chainId as keyof typeof CHAINS],
     transport: http(),
   })
 
-  const key = unwrapperKey(multisendAddress, MULTISEND_SELECTOR)
-
-  const result = await client.readContract({
-    address: rolesAddress,
-    abi: [
-      {
-        name: "unwrappers",
-        type: "function",
-        inputs: [{ name: "", type: "bytes32" }],
-        outputs: [{ name: "", type: "address" }],
-        stateMutability: "view",
-      },
-    ] as const,
-    functionName: "unwrappers",
-    args: [key],
+  const results = await client.multicall({
+    contracts: multisendAddresses.map((addr) => ({
+      address: rolesAddress,
+      abi: unwrappersAbi,
+      functionName: "unwrappers" as const,
+      args: [unwrapperKey(addr, MULTISEND_SELECTOR)],
+    })),
   })
 
-  return result as `0x${string}`
+  return results.map((r) =>
+    r.status === "success"
+      ? (r.result as `0x${string}`)
+      : ("0x0000000000000000000000000000000000000000" as `0x${string}`)
+  )
 }
 
 export type UnwrapperStatus = "correct" | "legacy" | "missing"
@@ -78,7 +84,7 @@ function getStatus(address: `0x${string}`): UnwrapperStatus {
 }
 
 export default async function MultisendPage(props: {
-  params: Promise<{ mod: string; role: string }>
+  params: Promise<{ mod: string }>
 }) {
   const params = await props.params
   const mod = parseModParam(params.mod)
@@ -92,21 +98,25 @@ export default async function MultisendPage(props: {
     notFound()
   }
 
-  const [unwrapper141, unwrapperCallOnly141] = await Promise.all([
-    fetchUnwrapper(mod.chainId, mod.address, MULTISEND_141),
-    fetchUnwrapper(mod.chainId, mod.address, MULTISEND_CALLONLY_141),
-  ])
+  const addresses: `0x${string}`[] =
+    modInfo.multiSendAddresses.length > 0
+      ? modInfo.multiSendAddresses
+      : [MULTISEND_141, MULTISEND_CALLONLY_141]
 
-  const status141 = getStatus(unwrapper141)
-  const statusCallOnly141 = getStatus(unwrapperCallOnly141)
+  const results = await fetchUnwrappers(mod.chainId, mod.address, addresses)
 
-  // Determine the overall status — worst of the two
-  const overallStatus: UnwrapperStatus =
-    status141 === "correct" && statusCallOnly141 === "correct"
-      ? "correct"
-      : status141 === "missing" || statusCallOnly141 === "missing"
-        ? "missing"
-        : "legacy"
+  const unwrappers = addresses.map((addr, i) => ({
+    address: addr,
+    status: getStatus(results[i]),
+  }))
+
+  const overallStatus: UnwrapperStatus = unwrappers.every(
+    (u) => u.status === "correct"
+  )
+    ? "correct"
+    : unwrappers.some((u) => u.status === "missing")
+      ? "missing"
+      : "legacy"
 
   let applyType: "safe" | "governor" | "rethink" = "safe"
   if (overallStatus !== "correct") {
@@ -119,8 +129,7 @@ export default async function MultisendPage(props: {
     <Layout head={<PageBreadcrumbs mod={mod} />}>
       <main>
         <MultisendStatus
-          status141={status141}
-          statusCallOnly141={statusCallOnly141}
+          unwrappers={unwrappers}
           overallStatus={overallStatus}
           rolesAddress={mod.address}
           owner={modInfo.owner}

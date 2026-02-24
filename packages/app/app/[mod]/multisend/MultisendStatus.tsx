@@ -10,8 +10,6 @@ import ApplyViaSafe from "@/components/ApplyUpdate/ApplyViaSafe"
 import ApplyViaGovernor from "@/components/ApplyUpdate/ApplyViaGovernor"
 import ApplyViaRethinkFactory from "@/components/ApplyUpdate/ApplyViaRethinkFactory"
 import {
-  MULTISEND_141,
-  MULTISEND_CALLONLY_141,
   MULTISEND_SELECTOR,
   MULTISEND_UNWRAPPER,
 } from "@/components/ApplyUpdate/const"
@@ -20,10 +18,18 @@ import styles from "./style.module.css"
 
 type Call = { to: `0x${string}`; data: `0x${string}` }
 
+export interface UnwrapperEntry {
+  address: `0x${string}`
+  status: UnwrapperStatus
+}
+
 const rolesInterface = new Interface(rolesAbi)
 
-function buildSetUnwrapperCalls(rolesModifier: `0x${string}`): Call[] {
-  return [MULTISEND_141, MULTISEND_CALLONLY_141].map((addr) => ({
+function buildSetUnwrapperCalls(
+  rolesModifier: `0x${string}`,
+  addresses: `0x${string}`[]
+): Call[] {
+  return addresses.map((addr) => ({
     to: rolesModifier,
     data: rolesInterface.encodeFunctionData("setTransactionUnwrapper", [
       addr,
@@ -34,8 +40,7 @@ function buildSetUnwrapperCalls(rolesModifier: `0x${string}`): Call[] {
 }
 
 interface Props {
-  status141: UnwrapperStatus
-  statusCallOnly141: UnwrapperStatus
+  unwrappers: UnwrapperEntry[]
   overallStatus: UnwrapperStatus
   rolesAddress: `0x${string}`
   owner: `0x${string}`
@@ -50,17 +55,21 @@ const STATUS_LABELS: Record<string, { label: string; className: string }> = {
 }
 
 const MultisendStatus: React.FC<Props> = ({
-  status141,
-  statusCallOnly141,
+  unwrappers,
   overallStatus,
   rolesAddress,
   owner,
   chainId,
   applyType,
 }) => {
+  const addresses = useMemo(
+    () => unwrappers.map((u) => u.address),
+    [unwrappers]
+  )
+
   const calls = useMemo(
-    () => buildSetUnwrapperCalls(rolesAddress),
-    [rolesAddress]
+    () => buildSetUnwrapperCalls(rolesAddress, addresses),
+    [rolesAddress, addresses]
   )
 
   const applyElement =
@@ -87,16 +96,13 @@ const MultisendStatus: React.FC<Props> = ({
       <h2>MultiSend Unwrapper</h2>
 
       <Flex direction="column" gap={2}>
-        <UnwrapperRow
-          label="MultiSend (v1.4.1)"
-          address={MULTISEND_141}
-          status={status141}
-        />
-        <UnwrapperRow
-          label="MultiSend CallOnly (v1.4.1)"
-          address={MULTISEND_CALLONLY_141}
-          status={statusCallOnly141}
-        />
+        {unwrappers.map((u) => (
+          <UnwrapperRow
+            key={u.address}
+            address={u.address}
+            status={u.status}
+          />
+        ))}
       </Flex>
 
       {overallStatus === "correct" ? (
@@ -105,7 +111,7 @@ const MultisendStatus: React.FC<Props> = ({
             <span className={styles.checkmark}>&#x2713;</span>
             <span>
               MultiSend unwrappers are correctly configured. Batched execution
-              through this role is fully supported.
+              is fully supported.
             </span>
           </Flex>
         </Box>
@@ -128,8 +134,8 @@ const MultisendStatus: React.FC<Props> = ({
             <Flex gap={2} alignItems="center">
               <span className={styles.warningIcon}>&#x26A0;</span>
               <span>
-                No MultiSend unwrapper is configured. Batched execution through
-                this role won&apos;t be possible until the unwrapper is set up.
+                No MultiSend unwrapper is configured. Batched execution
+                won&apos;t be possible until the unwrapper is set up.
               </span>
             </Flex>
           </Box>
@@ -143,18 +149,14 @@ const MultisendStatus: React.FC<Props> = ({
 export default MultisendStatus
 
 const UnwrapperRow: React.FC<{
-  label: string
   address: string
   status: UnwrapperStatus
-}> = ({ label, address, status }) => {
+}> = ({ address, status }) => {
   const { label: statusLabel, className } = STATUS_LABELS[status]
   return (
     <Box p={2}>
       <Flex gap={3} alignItems="center">
-        <div className={styles.contractLabel}>
-          <div className={styles.contractName}>{label}</div>
-          <code className={styles.contractAddress}>{address}</code>
-        </div>
+        <code className={styles.contractAddress}>{address}</code>
         <span className={className}>{statusLabel}</span>
       </Flex>
     </Box>
