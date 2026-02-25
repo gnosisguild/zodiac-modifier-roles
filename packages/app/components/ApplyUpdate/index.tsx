@@ -15,6 +15,8 @@ import { isGovernor } from "./ApplyViaGovernor/isGovernor"
 import { isRethinkFactory } from "./ApplyViaRethinkFactory/isRethinkFactory"
 import ApplyUpdateInteractive from "./ApplyUpdateInteractive"
 
+type Call = { to: `0x${string}`; data: `0x${string}` }
+
 interface Props {
   chainId: ChainId
   address: `0x${string}`
@@ -24,6 +26,9 @@ interface Props {
   members?: `0x${string}`[]
   targets?: Target[]
   annotations?: Annotation[]
+
+  appendCalls?: Call[]
+  appendComments?: string[]
 }
 
 const ApplyUpdates: React.FC<Props> = async ({
@@ -34,6 +39,8 @@ const ApplyUpdates: React.FC<Props> = async ({
   members,
   targets,
   annotations,
+  appendCalls,
+  appendComments,
 }) => {
   const comments: string[] = []
   const logCall = (log: string) => comments.push(log)
@@ -78,6 +85,8 @@ const ApplyUpdates: React.FC<Props> = async ({
 
   return (
     <ApplyUpdateInteractive
+      appendCalls={appendCalls}
+      appendComments={appendComments}
       initialCalls={calls}
       comments={comments}
       address={address}

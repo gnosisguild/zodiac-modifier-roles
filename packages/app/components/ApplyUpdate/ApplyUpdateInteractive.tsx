@@ -18,6 +18,8 @@ import styles from "./style.module.css"
 type Call = { to: `0x${string}`; data: `0x${string}` }
 
 interface Props {
+  appendCalls?: Call[]
+  appendComments?: string[]
   initialCalls: Call[]
   comments: string[]
   address: `0x${string}`
@@ -28,6 +30,8 @@ interface Props {
 }
 
 const ApplyUpdateInteractive: React.FC<Props> = ({
+  appendCalls = [],
+  appendComments = [],
   initialCalls,
   comments,
   address,
@@ -40,8 +44,8 @@ const ApplyUpdateInteractive: React.FC<Props> = ({
   const [modalOpen, setModalOpen] = useState(false)
 
   const allCalls = useMemo(
-    () => [...initialCalls, ...appendedCalls],
-    [initialCalls, appendedCalls]
+    () => [...initialCalls, ...appendedCalls, ...appendCalls],
+    [initialCalls, appendedCalls, appendCalls]
   )
 
   const txBuilderJson = exportToSafeTransactionBuilder(
@@ -111,6 +115,17 @@ const ApplyUpdateInteractive: React.FC<Props> = ({
               calls={appendedCalls}
               startIndex={initialCalls.length}
               address={address}
+            />
+          </>
+        )}
+        {appendCalls.length > 0 && (
+          <>
+            <h5 className={styles.separator}>Unwrapper update calls</h5>
+            <CallList
+              calls={appendCalls}
+              startIndex={initialCalls.length + appendedCalls.length}
+              address={address}
+              comments={appendComments}
             />
           </>
         )}

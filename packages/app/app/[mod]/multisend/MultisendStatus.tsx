@@ -1,7 +1,6 @@
 "use client"
 import { useMemo } from "react"
-import { Interface } from "ethers"
-import { rolesAbi, ChainId } from "zodiac-roles-sdk"
+import { ChainId } from "zodiac-roles-sdk"
 
 import Box from "@/ui/Box"
 import Flex from "@/ui/Flex"
@@ -9,35 +8,9 @@ import { WalletProvider } from "@/components/Wallet"
 import ApplyViaSafe from "@/components/ApplyUpdate/ApplyViaSafe"
 import ApplyViaGovernor from "@/components/ApplyUpdate/ApplyViaGovernor"
 import ApplyViaRethinkFactory from "@/components/ApplyUpdate/ApplyViaRethinkFactory"
-import {
-  MULTISEND_SELECTOR,
-  MULTISEND_UNWRAPPER,
-} from "@/components/ApplyUpdate/const"
-import type { UnwrapperStatus } from "./page"
+import type { UnwrapperStatus, UnwrapperEntry } from "./checkUnwrappers"
+import { buildSetUnwrapperCalls } from "./checkUnwrappers"
 import styles from "./style.module.css"
-
-type Call = { to: `0x${string}`; data: `0x${string}` }
-
-export interface UnwrapperEntry {
-  address: `0x${string}`
-  status: UnwrapperStatus
-}
-
-const rolesInterface = new Interface(rolesAbi)
-
-function buildSetUnwrapperCalls(
-  rolesModifier: `0x${string}`,
-  addresses: `0x${string}`[]
-): Call[] {
-  return addresses.map((addr) => ({
-    to: rolesModifier,
-    data: rolesInterface.encodeFunctionData("setTransactionUnwrapper", [
-      addr,
-      MULTISEND_SELECTOR,
-      MULTISEND_UNWRAPPER,
-    ]) as `0x${string}`,
-  }))
-}
 
 interface Props {
   unwrappers: UnwrapperEntry[]
@@ -62,14 +35,9 @@ const MultisendStatus: React.FC<Props> = ({
   chainId,
   applyType,
 }) => {
-  const addresses = useMemo(
-    () => unwrappers.map((u) => u.address),
-    [unwrappers]
-  )
-
   const calls = useMemo(
-    () => buildSetUnwrapperCalls(rolesAddress, addresses),
-    [rolesAddress, addresses]
+    () => buildSetUnwrapperCalls(rolesAddress, unwrappers),
+    [rolesAddress, unwrappers]
   )
 
   const applyElement =
