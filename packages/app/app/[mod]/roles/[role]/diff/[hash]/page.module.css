@@ -44,3 +44,14 @@
   font-size: 12px;
   padding: var(--spacing-2) var(--spacing-4);
 }
+
+.unwrapperWarning {
+  background-color: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+.warningIcon {
+  color: #fbbf24;
+  font-size: 18px;
+  flex-shrink: 0;
+}

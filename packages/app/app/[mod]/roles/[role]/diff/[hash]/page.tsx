@@ -6,10 +6,17 @@ import Layout from "@/components/Layout"
 import { parseModParam, parseRoleParam } from "@/app/params"
 import PageBreadcrumbs from "./breadcrumbs"
 import Flex from "@/ui/Flex"
+import Box from "@/ui/Box"
 import ApplyUpdates from "@/components/ApplyUpdate"
 import { fetchOrInitRole } from "../../fetching"
 import { zPermissionsPost } from "@/app/api/permissions/types"
 import DiffView from "@/components/DiffView"
+import {
+  checkUnwrappers,
+  getOverallStatus,
+  buildSetUnwrapperCalls,
+} from "../../../../multisend/checkUnwrappers"
+import styles from "./page.module.css"
 
 export default async function DiffPage(props: {
   params: Promise<{ mod: string; role: string; hash: string }>
@@ -38,10 +45,35 @@ export default async function DiffPage(props: {
     notFound()
   }
 
+  // Check if legacy multisend unwrappers need updating
+  const unwrapperEntries = await checkUnwrappers(
+    mod.chainId,
+    mod.address,
+    modInfo.multiSendAddresses
+  )
+  const hasLegacy = getOverallStatus(unwrapperEntries) === "legacy"
+  const unwrapperFixCalls = hasLegacy
+    ? buildSetUnwrapperCalls(mod.address, unwrapperEntries)
+    : []
+  const unwrapperFixComments = unwrapperFixCalls.map(
+    () => "📦 Update MultiSend unwrapper to latest version"
+  )
+
   return (
     <Layout head={<PageBreadcrumbs {...params} mod={mod} />}>
       <main>
         <Flex direction="column" gap={3}>
+          {hasLegacy && (
+            <Box p={2} className={styles.unwrapperWarning}>
+              <Flex gap={2} alignItems="center">
+                <span className={styles.warningIcon}>&#x26A0;</span>
+                <span>
+                  This Roles instance uses an outdated MultiSend unwrapper.
+                  Calls to update the unwrapper have been appended below.
+                </span>
+              </Flex>
+            </Box>
+          )}
           <DiffView
             left={roleData}
             right={post}
@@ -55,6 +87,8 @@ export default async function DiffPage(props: {
             targets={post.targets}
             annotations={post.annotations}
             members={post.members}
+            appendCalls={unwrapperFixCalls}
+            appendComments={unwrapperFixComments}
           />
         </Flex>
       </main>
