@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.2.3](https://github.com/gnosisguild/zodiac-modifier-roles/compare/zodiac-roles-deployments-v3.2.2...zodiac-roles-deployments-v3.2.3) (2026-02-24)
+
+
+### Bug Fixes
+
+* `fetchRolesMod` now correctly returns `multiSendAddresses` ([#452](https://github.com/gnosisguild/zodiac-modifier-roles/issues/452)) ([1b16d0e](https://github.com/gnosisguild/zodiac-modifier-roles/commit/1b16d0e8a8ce1670600fc86686cec29b796c02ee))
+
 ## [3.2.2](https://github.com/gnosisguild/zodiac-modifier-roles/compare/zodiac-roles-deployments-v3.2.1...zodiac-roles-deployments-v3.2.2) (2026-02-23)
 
 
