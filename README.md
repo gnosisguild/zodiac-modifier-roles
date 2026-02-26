@@ -55,7 +55,6 @@ The contracts have been developed with [Solidity 0.8.21](https://github.com/ethe
 - [Berachain](https://berascan.com/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
 - [HyperEVM](https://www.hyperscan.com/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
 - [World Chain](https://worldscan.org/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
-- [MegaETH](https://mega.etherscan.io/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
 - [Base Sepolia](https://sepolia.basescan.org/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
 - [Sepolia](https://sepolia.etherscan.io/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
 
@@ -66,9 +65,8 @@ The contracts have been developed with [Solidity 0.8.21](https://github.com/ethe
 | Roles                   | Main roles modifier contract                                                    | `0x9646fDAD06d3e24444381f44362a3B0eB343D337` |
 | Integrity               | Library contract for condition integrity checks                                 | `0x6a6Af4b16458Bc39817e4019fB02BD3b26d41049` |
 | Packer                  | Library contract for optimized condition storage                                | `0x61C5B1bE435391fDd7BC6703F3740C0d11728a8C` |
-| MultiSendUnwrapper      | Transaction unwrapper for Safe's MultiSend                                      | `0xB4Cd4bb764C089f20DA18700CE8bc5e49F369efD` |
+| MultiSendUnwrapper      | Transaction unwrapper for Safe's MultiSend                                      | `0x93B7fCbc63ED8a3a24B59e1C3e6649D50B7427c0` |
 | AvatarIsOwnerOfERC721   | Custom condition useful for permissioned interaction with Uniswap NFT positions | `0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1` |
-| MorphoBundler3Unwrapper | Transaction unwrapper for Morpho's Bundler3                                     | `0x7533922A155DC6b4Cc0ae4E74D70a73bc86dD3E8` |
 
 #### Subgraphs
 
@@ -107,4 +105,33 @@ All contracts are WITHOUT ANY WARRANTY; without even the implied warranty of MER
 
 ### License
 
-Created under the [LGPL-3.0+ license](LICENSE).
+This repository is dual-licensed as follows:
+
+#### Contracts and App
+
+All smart contracts and the web app in this repository are licensed under the **Business Source License 1.1 (BUSL-1.1)**.
+
+- Production use is restricted until **March 1, 2030**.
+- On that date, these components will automatically convert to **LGPL-3.0-or-later**.
+
+See `LICENSE.md` for full terms.
+
+---
+
+### SDK and Developer Tooling
+
+The SDK included in this repository is licensed under the **GNU Lesser General Public License v3.0 or later (LGPL-3.0-or-later)** and is available under open-source terms immediately.
+
+These components are not subject to the BUSL restrictions.
+
+The SDK package includes its own LICENSE file.
+
+---
+
+#### Summary
+
+| Component Type | License Now | License After 2030-03-01 |
+|----------------|-------------|---------------------------|
+| Contracts | BUSL-1.1 | LGPL-3.0-or-later |
+| App | BUSL-1.1 | LGPL-3.0-or-later |
+| SDK  | LGPL-3.0-or-later | LGPL-3.0-or-later |
