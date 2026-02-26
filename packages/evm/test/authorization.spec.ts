@@ -1441,13 +1441,13 @@ describe("Authorization", () => {
       };
     }
 
-    it("allowFunctionEverywhere emits event", async () => {
+    it("allowFunctionGlobally emits event", async () => {
       const { roles, roleKey } = await loadFixture(setupEverywhere);
 
       const selector = iface.getFunction("doNothing")!.selector;
 
-      await expect(roles.allowFunctionEverywhere(roleKey, selector, "0x"))
-        .to.emit(roles, "AllowFunctionEverywhere")
+      await expect(roles.allowFunctionGlobally(roleKey, selector, "0x"))
+        .to.emit(roles, "AllowFunctionGlobally")
         .withArgs(roleKey, selector, "0x");
     });
 
@@ -1463,7 +1463,7 @@ describe("Authorization", () => {
       } = await loadFixture(setupEverywhere);
 
       const selector = iface.getFunction("doNothing")!.selector;
-      await roles.allowFunctionEverywhere(roleKey, selector, "0x");
+      await roles.allowFunctionGlobally(roleKey, selector, "0x");
 
       await expect(
         roles
@@ -1497,7 +1497,7 @@ describe("Authorization", () => {
         await loadFixture(setupEverywhere);
 
       const selector = iface.getFunction("doNothing")!.selector;
-      await roles.allowFunctionEverywhere(roleKey, selector, "0x");
+      await roles.allowFunctionGlobally(roleKey, selector, "0x");
 
       await expect(
         roles.connect(member).execTransactionFromModule(
@@ -1530,7 +1530,7 @@ describe("Authorization", () => {
         await loadFixture(setupEverywhere);
 
       const selector = iface.getFunction("doNothing")!.selector;
-      await roles.allowFunctionEverywhere(roleKey, selector, "0x");
+      await roles.allowFunctionGlobally(roleKey, selector, "0x");
 
       await expect(
         roles.connect(member).execTransactionFromModule(
@@ -1591,7 +1591,7 @@ describe("Authorization", () => {
       );
 
       // Global: no conditions
-      await roles.allowFunctionEverywhere(roleKey, selector, "0x");
+      await roles.allowFunctionGlobally(roleKey, selector, "0x");
 
       // param = 42 passes via target rule (first hit)
       await expect(
@@ -1636,7 +1636,7 @@ describe("Authorization", () => {
       );
 
       // Global for oneParamStatic
-      await roles.allowFunctionEverywhere(roleKey, oneParamSelector, "0x");
+      await roles.allowFunctionGlobally(roleKey, oneParamSelector, "0x");
 
       await expect(
         roles
@@ -1658,7 +1658,7 @@ describe("Authorization", () => {
 
       const selector = iface.getFunction("oneParamStatic")!.selector;
 
-      await roles.allowFunctionEverywhere(
+      await roles.allowFunctionGlobally(
         roleKey,
         selector,
         await packConditions(roles, [
@@ -1705,10 +1705,11 @@ describe("Authorization", () => {
         .withArgs(ConditionViolationStatus.ParameterNotAllowed, 1, anyValue);
     });
 
-    it("revokeFunction clears both target-specific and global", async () => {
+    it("revokeFunction clears only target-specific, not global", async () => {
       const {
         roles,
         member,
+        testContractA,
         testContractAddressA,
         testContractAddressB,
         roleKey,
@@ -1724,11 +1725,11 @@ describe("Authorization", () => {
         "0x",
         ExecutionOptions.None,
       );
-      await roles.allowFunctionEverywhere(roleKey, selector, "0x");
+      await roles.allowFunctionGlobally(roleKey, selector, "0x");
 
       await roles.revokeFunction(roleKey, testContractAddressA, selector);
 
-      // Target-specific no longer works
+      // Target-specific no longer works — but global fallback kicks in
       await expect(
         roles
           .connect(member)
@@ -1738,9 +1739,62 @@ describe("Authorization", () => {
             iface.encodeFunctionData("doNothing"),
             0,
           ),
-      ).to.be.revertedWithCustomError(roles, "TransactionNotAllowed");
+      )
+        .to.emit(testContractA, "Invoked")
+        .withArgs(selector);
 
-      // Global no longer works on other targets either
+      // Global still works on other targets
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            testContractAddressB,
+            0,
+            iface.encodeFunctionData("doNothing"),
+            0,
+          ),
+      ).to.not.be.reverted;
+    });
+
+    it("revokeFunctionGlobally clears only the global entry", async () => {
+      const {
+        roles,
+        member,
+        testContractA,
+        testContractAddressA,
+        testContractAddressB,
+        roleKey,
+      } = await loadFixture(setupEverywhere);
+
+      const selector = iface.getFunction("doNothing")!.selector;
+
+      await roles.scopeTarget(roleKey, testContractAddressA);
+      await roles.allowFunction(
+        roleKey,
+        testContractAddressA,
+        selector,
+        "0x",
+        ExecutionOptions.None,
+      );
+      await roles.allowFunctionGlobally(roleKey, selector, "0x");
+
+      await roles.revokeFunctionGlobally(roleKey, selector);
+
+      // Target-specific still works
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(
+            testContractAddressA,
+            0,
+            iface.encodeFunctionData("doNothing"),
+            0,
+          ),
+      )
+        .to.emit(testContractA, "Invoked")
+        .withArgs(selector);
+
+      // Global no longer works on other targets
       await expect(
         roles
           .connect(member)

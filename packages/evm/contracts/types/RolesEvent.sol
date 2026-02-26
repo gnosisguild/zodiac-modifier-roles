@@ -76,8 +76,8 @@ interface IRolesEvent {
         ExecutionOptions options
     );
 
-    /// Emitted when a function is allowed everywhere (applies to all targets)
-    event AllowFunctionEverywhere(
+    /// Emitted when a function is allowed globally (applies to all targets)
+    event AllowFunctionGlobally(
         bytes32 roleKey,
         bytes4 selector,
         bytes conditions
@@ -89,6 +89,9 @@ interface IRolesEvent {
         address targetAddress,
         bytes4 selector
     );
+
+    /// Emitted when a globally allowed function is revoked
+    event RevokeFunctionGlobally(bytes32 roleKey, bytes4 selector);
 
     /// Emitted when an allowance is configured
     event SetAllowance(

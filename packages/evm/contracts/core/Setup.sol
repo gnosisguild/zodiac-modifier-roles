@@ -224,11 +224,10 @@ abstract contract Setup is RolesStorage {
     /// @dev Allows a function selector on all targets.
     ///      Always enforces no send and no delegatecall.
     ///      Target-specific rules take precedence.
-    ///      Use revokeFunction(roleKey, address(0), selector) to revoke.
     /// @param roleKey identifier of the role to be modified.
     /// @param selector 4 byte function selector.
     /// @param packedConditions Pre-packed condition buffer (use packConditions() or empty bytes for pass-through).
-    function allowFunctionEverywhere(
+    function allowFunctionGlobally(
         bytes32 roleKey,
         bytes4 selector,
         bytes memory packedConditions
@@ -236,10 +235,10 @@ abstract contract Setup is RolesStorage {
         roles[roleKey].scopeConfig[_key(address(0), selector)] = ConditionStorer
             .store(_conditionsOrPass(packedConditions), ExecutionOptions.None);
 
-        emit AllowFunctionEverywhere(roleKey, selector, packedConditions);
+        emit AllowFunctionGlobally(roleKey, selector, packedConditions);
     }
 
-    /// @dev Removes a function permission for a target and its global counterpart.
+    /// @dev Removes a function permission for a target.
     /// @param roleKey identifier of the role to be modified.
     /// @param targetAddress Destination address of transaction.
     /// @param selector 4 byte function selector.
@@ -248,9 +247,19 @@ abstract contract Setup is RolesStorage {
         address targetAddress,
         bytes4 selector
     ) external onlyOwner {
-        delete roles[roleKey].scopeConfig[_key(address(0), selector)];
         delete roles[roleKey].scopeConfig[_key(targetAddress, selector)];
         emit RevokeFunction(roleKey, targetAddress, selector);
+    }
+
+    /// @dev Removes a globally allowed function permission.
+    /// @param roleKey identifier of the role to be modified.
+    /// @param selector 4 byte function selector.
+    function revokeFunctionGlobally(
+        bytes32 roleKey,
+        bytes4 selector
+    ) external onlyOwner {
+        delete roles[roleKey].scopeConfig[_key(address(0), selector)];
+        emit RevokeFunctionGlobally(roleKey, selector);
     }
 
     /*//////////////////////////////////////////////////////////////
