@@ -7,6 +7,13 @@ pragma solidity >=0.8.17 <0.9.0;
 import "@openzeppelin/contracts/interfaces/IERC721.sol";
 import "./interfaces/ICustomCondition.sol";
 
+/**
+ * @title   AvatarIsOwnerOfERC721
+ * @notice  Custom condition that validates if the avatar owns a specific ERC721
+ *          token.
+ *
+ * @author  gnosisguild
+ */
 interface IModifier {
     function avatar() external view returns (address);
 

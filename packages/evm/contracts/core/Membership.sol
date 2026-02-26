@@ -9,10 +9,12 @@ import "./Storage.sol";
 /**
  * @title   Membership
  * @notice  Validates that a module holds an active role membership before
- *          authorizing transactions. Memberships can be time-bound and usage-limited.
+ *          authorizing transactions. Memberships can be time-bound and
+ *          usage-limited.
  *
- * @dev     moduleOnly reverts if the call is not sent or signed by an enabled module.
- *          Membership packs timestamps and uses into a single uint256. See layout below.
+ * @dev     moduleOnly reverts if the call is not sent or signed by an enabled
+ *          module. Membership packs timestamps and uses into a single uint256.
+ *          See layout below.
  *
  * @author  gnosisguild
  */

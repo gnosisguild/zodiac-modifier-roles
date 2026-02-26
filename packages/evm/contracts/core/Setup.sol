@@ -45,7 +45,7 @@ import {Clearance} from "../types/Permission.sol";
 /**
  * @title Setup - Configuration and setup functions for Zodiac Roles Mod.
  *
- * @author gnosisguild
+ * @author  gnosisguild
  */
 abstract contract Setup is RolesStorage {
     /*//////////////////////////////////////////////////////////////
@@ -248,8 +248,8 @@ abstract contract Setup is RolesStorage {
         address targetAddress,
         bytes4 selector
     ) external onlyOwner {
-        delete roles[roleKey].scopeConfig[_key(targetAddress, selector)];
         delete roles[roleKey].scopeConfig[_key(address(0), selector)];
+        delete roles[roleKey].scopeConfig[_key(targetAddress, selector)];
         emit RevokeFunction(roleKey, targetAddress, selector);
     }
 

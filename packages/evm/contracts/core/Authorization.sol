@@ -11,17 +11,23 @@ import "./Storage.sol";
 import "../periphery/interfaces/ITransactionUnwrapper.sol";
 
 /**
- * @title Authorization
- * @notice Authorizes transactions by evaluating role permissions.
- *         Permissions are additive — target-specific rules are tried first,
- *         global function rules serve as fallback:
- *         1. Resolve scope config (target-specific, then global)
- *         2. ExecutionOptions - can it send value or delegatecall?
- *         3. Condition tree - do parameters satisfy the constraints?
+ * @title   Authorization
  *
- * @dev Handles unwrapping of transaction bundles if an adapter is registered.
+ * @notice  Authorizes transactions by evaluating role permissions and condition
+ *          trees. Implements a hierarchical lookup where target-specific rules
+ *          take precedence over global function fallbacks.
  *
- * @author gnosisguild
+ * @dev     The authorization pipeline consists of three primary stages:
+ *          1. Scope Resolution: Resolves the permission configuration for
+ *             the target.
+ *          2. Mode Validation: Checks for value transfer and call type
+ *             permissions.
+ *          3. Payload Validation: Evaluates condition trees against
+ *             transaction data.
+ *
+ *          Bundles are supported via adapter-based unwrapping.
+ *
+ * @author  gnosisguild
  */
 abstract contract Authorization is RolesStorage {
     function _authorize(
