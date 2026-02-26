@@ -116,7 +116,6 @@ contract MultiSendUnwrapper is ITransactionUnwrapper {
     }
 
     function _ceil32(uint256 length) private pure returns (uint256) {
-        // pad size. Source: http://www.cs.nott.ac.uk/~psarb2/G51MPC/slides/NumberLogic.pdf
-        return ((length + 32 - 1) / 32) * 32;
+        return (length + 31) & ~uint256(31);
     }
 }
