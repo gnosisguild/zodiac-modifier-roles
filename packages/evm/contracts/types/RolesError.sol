@@ -109,4 +109,7 @@ interface IRolesError {
 
     /// WithinRatio references a Pluck index that hasn't been visited yet in DFS order
     error PluckNotVisitedBeforeRef(uint256 index, uint8 pluckIndex);
+
+    /// address(0) is not allowed
+    error ZeroAddressNotAllowed();
 }

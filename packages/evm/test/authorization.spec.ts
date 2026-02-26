@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { hexlify, Interface, randomBytes, ZeroHash } from "ethers";
+import { hexlify, Interface, randomBytes, ZeroAddress } from "ethers";
 
 import {
   encodeMultisendPayload,
@@ -1805,6 +1805,23 @@ describe("Authorization", () => {
             0,
           ),
       ).to.be.revertedWithCustomError(roles, "TransactionNotAllowed");
+    });
+  });
+
+  describe("ZeroAddressNotAllowed", () => {
+    it("allowFunction reverts for address(0)", async () => {
+      const { roles, roleKey } = await loadFixture(setup);
+      const selector = iface.getFunction("doNothing")!.selector;
+
+      await expect(
+        roles.allowFunction(
+          roleKey,
+          ZeroAddress,
+          selector,
+          "0x",
+          ExecutionOptions.None,
+        ),
+      ).to.be.revertedWithCustomError(roles, "ZeroAddressNotAllowed");
     });
   });
 });

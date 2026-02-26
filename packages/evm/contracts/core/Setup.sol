@@ -208,6 +208,7 @@ abstract contract Setup is RolesStorage {
         bytes memory packedConditions,
         ExecutionOptions options
     ) external onlyOwner {
+        if (targetAddress == address(0)) revert ZeroAddressNotAllowed();
         roles[roleKey].scopeConfig[
             _key(targetAddress, selector)
         ] = ConditionStorer.store(_conditionsOrPass(packedConditions), options);
