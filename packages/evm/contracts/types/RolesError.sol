@@ -48,11 +48,8 @@ interface IRolesError {
         uint256 location
     );
 
-    /// Target address is not allowed for this role
-    error TargetAddressNotAllowed(address target);
-
-    /// Function selector is not allowed for this role on the target
-    error FunctionNotAllowed(address target, bytes4 selector);
+    /// No matching permission found for the transaction
+    error TransactionNotAllowed(address to, bytes4 selector);
 
     /// Sending value is not allowed
     error SendNotAllowed(address target);

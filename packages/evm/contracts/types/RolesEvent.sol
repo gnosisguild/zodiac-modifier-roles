@@ -76,6 +76,13 @@ interface IRolesEvent {
         ExecutionOptions options
     );
 
+    /// Emitted when a function is allowed everywhere (applies to all targets)
+    event AllowFunctionEverywhere(
+        bytes32 roleKey,
+        bytes4 selector,
+        bytes conditions
+    );
+
     /// Emitted when a function is revoked from a role
     event RevokeFunction(
         bytes32 roleKey,

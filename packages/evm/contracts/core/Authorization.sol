@@ -12,8 +12,10 @@ import "../periphery/interfaces/ITransactionUnwrapper.sol";
 
 /**
  * @title Authorization
- * @notice Authorizes transactions by evaluating role permissions:
- *         1. Target Clearance - is the target address allowed?
+ * @notice Authorizes transactions by evaluating role permissions.
+ *         Permissions are additive — target-specific rules are tried first,
+ *         global function rules serve as fallback:
+ *         1. Resolve scope config (target-specific, then global)
  *         2. ExecutionOptions - can it send value or delegatecall?
  *         3. Condition tree - do parameters satisfy the constraints?
  *
@@ -73,19 +75,15 @@ abstract contract Authorization is RolesStorage {
         }
 
         Role storage role = roles[roleKey];
-        /*
-         * Check Clearance
-         */
-        Clearance clearance = role.clearance[transaction.to];
-        if (clearance == Clearance.None) {
-            revert TargetAddressNotAllowed(transaction.to);
-        }
 
-        /*
-         * Check that some Condition is defined
-         */
+        Clearance clearance = role.clearance[transaction.to];
+
         uint256 scopeConfig;
-        {
+        /*
+         * Resolve scope config.
+         * Permissions are additive: first try target-specific, then global.
+         */
+        if (clearance != Clearance.None) {
             bytes32 key = bytes32(bytes20(transaction.to)) |
                 (
                     clearance == Clearance.Target
@@ -94,9 +92,17 @@ abstract contract Authorization is RolesStorage {
                 );
 
             scopeConfig = role.scopeConfig[key];
-            if (scopeConfig == 0) {
-                revert FunctionNotAllowed(transaction.to, bytes4(data));
-            }
+        }
+
+        /*
+         * Fall back to global function (selector on address(0)).
+         */
+        if (scopeConfig == 0 && data.length != 0) {
+            scopeConfig = role.scopeConfig[bytes32(bytes4(data)) >> 160];
+        }
+
+        if (scopeConfig == 0) {
+            revert TransactionNotAllowed(transaction.to, bytes4(data));
         }
 
         /*
