@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.3.0](https://github.com/gnosisguild/zodiac-modifier-roles/compare/zodiac-roles-deployments-v3.2.3...zodiac-roles-deployments-v3.3.0) (2026-02-27)
+
+
+### Features
+
+* add megaeth support ([#458](https://github.com/gnosisguild/zodiac-modifier-roles/issues/458)) ([4765d57](https://github.com/gnosisguild/zodiac-modifier-roles/commit/4765d57e66bb78e4982c633f7a62ea52b402accc))
+
 ## [3.2.3](https://github.com/gnosisguild/zodiac-modifier-roles/compare/zodiac-roles-deployments-v3.2.2...zodiac-roles-deployments-v3.2.3) (2026-02-24)
 
 

@@ -1,5 +1,14 @@
 # Changelog
 
+## [3.4.5](https://github.com/gnosisguild/zodiac-modifier-roles/compare/zodiac-roles-sdk-v3.4.4...zodiac-roles-sdk-v3.4.5) (2026-02-27)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * zodiac-roles-deployments bumped to 3.3.0
+
 ## [3.4.4](https://github.com/gnosisguild/zodiac-modifier-roles/compare/zodiac-roles-sdk-v3.4.3...zodiac-roles-sdk-v3.4.4) (2026-02-24)
 
 
