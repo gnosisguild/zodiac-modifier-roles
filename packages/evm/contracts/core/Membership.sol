@@ -70,4 +70,16 @@ abstract contract Membership is RolesStorage {
                 : ((membership >> 128) << 128) | (usesLeft - 1)
         );
     }
+
+    function _hasActiveMembership(
+        bytes32 roleKey,
+        address module
+    ) internal view returns (bool) {
+        if (roleKey == 0) return false;
+        uint256 membership = roles[roleKey].members[module];
+        if (membership == 0) return false;
+        if (block.timestamp < uint64(membership >> 192)) return false;
+        if (block.timestamp > uint64(membership >> 128)) return false;
+        return true;
+    }
 }
