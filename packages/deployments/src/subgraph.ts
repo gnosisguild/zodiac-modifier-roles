@@ -22,7 +22,6 @@ export const fetchFromSubgraph = async (
     body: JSON.stringify(request),
   })
 
-  // TODO: adjust error handling
   const { data, error, errors } = await res.json()
 
   const foundError = error || (errors && errors[0])
