@@ -95,4 +95,8 @@ export const chains = {
     name: "plasma",
     prefix: "plasma",
   },
+  [4326]: {
+    name: "megaeth",
+    prefix: "megaeth",
+  },
 } as const
