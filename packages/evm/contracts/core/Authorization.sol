@@ -11,15 +11,19 @@ import "./Storage.sol";
 import "../periphery/interfaces/ITransactionUnwrapper.sol";
 
 /**
- * @title Authorization
- * @notice Authorizes transactions by evaluating role permissions:
- *         1. Target Clearance - is the target address allowed?
- *         2. ExecutionOptions - can it send value or delegatecall?
- *         3. Condition tree - do parameters satisfy the constraints?
+ * @title   Authorization
  *
- * @dev Handles unwrapping of transaction bundles if an adapter is registered.
+ * @notice Authorizes transactions by evaluating role permissions and condition
+ *         trees.
  *
- * @author gnosisguild
+ * @dev    The authorization follows three steps:
+ *         1. Scope Resolution: Resolves the permission configuration
+ *         2. Mode Validation: Checks for value transfer and tx operation
+ *         3. Payload Validation: Evaluates condition trees against tx data
+ *
+ *         Transaction bundles are supported via adapter-based unwrapping.
+ *
+ * @author  gnosisguild
  */
 abstract contract Authorization is RolesStorage {
     function _authorize(
@@ -68,25 +72,28 @@ abstract contract Authorization is RolesStorage {
         Consumption[] memory consumptions,
         Transaction memory transaction
     ) private view returns (Consumption[] memory) {
+        Role storage role = roles[roleKey];
+
         if (data.length != 0 && data.length < 4) {
             revert FunctionSignatureTooShort();
         }
 
-        Role storage role = roles[roleKey];
-        /*
-         * Check Clearance
-         */
         Clearance clearance = role.clearance[transaction.to];
-        if (clearance == Clearance.None) {
-            revert TargetAddressNotAllowed(transaction.to);
-        }
 
         /*
-         * Check that some Condition is defined
+         * Resolve scopeConfig:
+         * 1- look up target-specific entry
+         * 2- fallback on global entry
          */
+
+        // Target entry
         uint256 scopeConfig;
-        {
+        if (clearance != Clearance.None) {
             bytes32 key = bytes32(bytes20(transaction.to)) |
+                /*
+                 * Clearance.Target:   set lower 12 bytes to 0xFF..FF
+                 * Clearance.Function: set lower 12 bytes to selector
+                 */
                 (
                     clearance == Clearance.Target
                         ? (~bytes32(0) >> 160)
@@ -94,9 +101,15 @@ abstract contract Authorization is RolesStorage {
                 );
 
             scopeConfig = role.scopeConfig[key];
-            if (scopeConfig == 0) {
-                revert FunctionNotAllowed(transaction.to, bytes4(data));
-            }
+        }
+
+        // Global entry
+        if (scopeConfig == 0 && data.length != 0) {
+            scopeConfig = role.scopeConfig[bytes32(bytes4(data)) >> 160];
+        }
+
+        if (scopeConfig == 0) {
+            revert TransactionNotAllowed(transaction.to, bytes4(data));
         }
 
         /*

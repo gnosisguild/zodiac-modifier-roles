@@ -382,9 +382,7 @@ describe("Setup", () => {
         roles
           .connect(member)
           .execTransactionFromModule(testContractAddress, 0, "0x", 0),
-      )
-        .to.be.revertedWithCustomError(roles, "TargetAddressNotAllowed")
-        .withArgs(testContractAddress);
+      ).to.be.revertedWithCustomError(roles, "TransactionNotAllowed");
 
       await roles.allowTarget(
         ROLE_KEY,
@@ -529,7 +527,7 @@ describe("Setup", () => {
             iface.encodeFunctionData("doNothing"),
             0,
           ),
-      ).to.be.revertedWithCustomError(roles, "FunctionNotAllowed");
+      ).to.be.revertedWithCustomError(roles, "TransactionNotAllowed");
     });
 
     it("emits ScopeTarget event", async () => {
@@ -568,9 +566,7 @@ describe("Setup", () => {
         roles
           .connect(member)
           .execTransactionFromModule(testContractAddress, 0, "0x", 0),
-      )
-        .to.be.revertedWithCustomError(roles, "TargetAddressNotAllowed")
-        .withArgs(testContractAddress);
+      ).to.be.revertedWithCustomError(roles, "TransactionNotAllowed");
     });
 
     it("emits RevokeTarget event", async () => {
@@ -617,9 +613,7 @@ describe("Setup", () => {
             iface.encodeFunctionData("doNothing"),
             0,
           ),
-      )
-        .to.be.revertedWithCustomError(roles, "TargetAddressNotAllowed")
-        .withArgs(testContractAddress);
+      ).to.be.revertedWithCustomError(roles, "TransactionNotAllowed");
 
       // Re-scope - function should still be allowed (scopeConfig preserved)
       await roles.scopeTarget(ROLE_KEY, testContractAddress);
@@ -914,7 +908,7 @@ describe("Setup", () => {
             iface.encodeFunctionData("doNothing"),
             0,
           ),
-      ).to.be.revertedWithCustomError(roles, "FunctionNotAllowed");
+      ).to.be.revertedWithCustomError(roles, "TransactionNotAllowed");
     });
 
     it("emits RevokeFunction event", async () => {
@@ -975,7 +969,7 @@ describe("Setup", () => {
             iface.encodeFunctionData("doNothing"),
             0,
           ),
-      ).to.be.revertedWithCustomError(roles, "FunctionNotAllowed");
+      ).to.be.revertedWithCustomError(roles, "TransactionNotAllowed");
 
       // selector2 should still be allowed
       await expect(
@@ -1284,9 +1278,7 @@ describe("Setup", () => {
         roles
           .connect(member)
           .execTransactionFromModule(testContract2Address, 0, "0x", 0),
-      )
-        .to.be.revertedWithCustomError(roles, "TargetAddressNotAllowed")
-        .withArgs(testContract2Address);
+      ).to.be.revertedWithCustomError(roles, "TransactionNotAllowed");
     });
 
     it("allowing one function does not allow other functions on same target", async () => {
@@ -1331,7 +1323,7 @@ describe("Setup", () => {
             iface.encodeFunctionData("fnThatReverts"),
             0,
           ),
-      ).to.be.revertedWithCustomError(roles, "FunctionNotAllowed");
+      ).to.be.revertedWithCustomError(roles, "TransactionNotAllowed");
     });
 
     it("allowing a function on one target does not allow it on another target", async () => {
@@ -1380,7 +1372,7 @@ describe("Setup", () => {
             iface.encodeFunctionData("doNothing"),
             0,
           ),
-      ).to.be.revertedWithCustomError(roles, "FunctionNotAllowed");
+      ).to.be.revertedWithCustomError(roles, "TransactionNotAllowed");
     });
 
     it("multiple roles can have different permissions on same target", async () => {
@@ -1441,7 +1433,7 @@ describe("Setup", () => {
             iface.encodeFunctionData("doEvenLess"),
             0,
           ),
-      ).to.be.revertedWithCustomError(roles, "FunctionNotAllowed");
+      ).to.be.revertedWithCustomError(roles, "TransactionNotAllowed");
 
       // With ROLE_KEY_2 as default, can call selector2 but not selector1
       await roles.setDefaultRole(member.address, ROLE_KEY_2);
@@ -1455,7 +1447,7 @@ describe("Setup", () => {
             iface.encodeFunctionData("doNothing"),
             0,
           ),
-      ).to.be.revertedWithCustomError(roles, "FunctionNotAllowed");
+      ).to.be.revertedWithCustomError(roles, "TransactionNotAllowed");
 
       // selector2 is now allowed
       await expect(

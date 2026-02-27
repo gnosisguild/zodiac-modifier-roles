@@ -7,20 +7,17 @@ pragma solidity >=0.8.17 <0.9.0;
 import {Encoding, Layout, Payload} from "../types/Condition.sol";
 
 /**
- * @title AbiDecoder - Locates parameters within ABI-encoded calldata
+ * @title   AbiDecoder - Locates parameters within ABI-encoded calldata
  *
- * @author gnosisguild
+ * @notice  Locates parameters within ABI-encoded calldata. Given a type tree
+ *          (Layout), this library produces a Payload tree mapping parameters
+ *          to their calldata locations and sizes.
  *
- * @notice Given ABI-encoded calldata and a type tree (Layout) describing its
- *         structure, this library produces a Payload tree that maps each
- *         parameter to its location and size (how many bytes it spans).
+ * @dev     The decoder validates memory bounds but does not interpret values.
+ *          The resulting Payload is used by ConditionEvaluator for efficient
+ *          calldata slicing during condition evaluation.
  *
- *         The decoder validates bounds but does NOT extract or interpret
- *         values. It only identifies WHERE parameters are, not WHAT they
- *         contain.
- *
- *         The resulting Payload is used by ConditionEvaluator for efficient
- *         calldata slicing during condition evaluation.
+ * @author  gnosisguild
  */
 library AbiDecoder {
     /**
