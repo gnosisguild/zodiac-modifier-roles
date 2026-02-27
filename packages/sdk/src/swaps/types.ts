@@ -15,7 +15,7 @@ export enum SupportedChainId {
   POLYGON = 137,
   BNB = 56,
   PLASMA = 9745,
-  LINEA = 59144,
+  // LINEA = 59144,
   SEPOLIA = 11155111,
 }
 
