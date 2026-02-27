@@ -68,8 +68,7 @@
     "generate": "yarn eth-sdk"
   },
   "dependencies": {
-    "@cowprotocol/sdk-config": "^0.6.3",
-    "@cowprotocol/sdk-order-book": "^0.5.1",
+    "@cowprotocol/sdk-order-book": "^1.0.0",
     "abitype": "^1.0.8",
     "ethers": "^6.16.0"
   },

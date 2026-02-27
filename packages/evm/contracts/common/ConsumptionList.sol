@@ -7,10 +7,10 @@ pragma solidity >=0.8.17 <0.9.0;
 import {Consumption} from "../types/Allowance.sol";
 
 /**
- * @title ConsumptionList
- * @notice Provides copy-on-write array operations for Consumption entries.
+ * @title   ConsumptionList
+ * @notice  Provides copy-on-write array operations for Consumption entries.
  *
- * @author gnosisguild
+ * @author  gnosisguild
  */
 library ConsumptionList {
     /**
