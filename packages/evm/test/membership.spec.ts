@@ -437,4 +437,99 @@ describe("Membership", () => {
       });
     });
   });
+
+  describe("isMember", () => {
+    it("returns false for zero role key", async () => {
+      const { roles, member } = await loadFixture(setup);
+
+      expect(await roles.isMember(hre.ethers.ZeroHash, member.address)).to.be
+        .false;
+    });
+
+    it("returns false when module has no membership", async () => {
+      const { roles, member, ROLE_KEY } = await loadFixture(setup);
+
+      expect(await roles.isMember(ROLE_KEY, member.address)).to.be.false;
+    });
+
+    it("returns true for active unlimited membership", async () => {
+      const { roles, member, ROLE_KEY } = await loadFixture(setup);
+
+      await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
+
+      expect(await roles.isMember(ROLE_KEY, member.address)).to.be.true;
+    });
+
+    it("returns true for active finite membership", async () => {
+      const { roles, member, ROLE_KEY } = await loadFixture(setup);
+
+      await roles.grantRole(member.address, ROLE_KEY, 0, 0, 5);
+
+      expect(await roles.isMember(ROLE_KEY, member.address)).to.be.true;
+    });
+
+    it("returns false after membership is revoked", async () => {
+      const { roles, member, ROLE_KEY } = await loadFixture(setup);
+
+      await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
+      expect(await roles.isMember(ROLE_KEY, member.address)).to.be.true;
+
+      await roles.revokeRole(member.address, ROLE_KEY);
+      expect(await roles.isMember(ROLE_KEY, member.address)).to.be.false;
+    });
+
+    it("returns false before start timestamp", async () => {
+      const { roles, member, ROLE_KEY } = await loadFixture(setup);
+
+      const futureStart = (await time.latest()) + 3600;
+      await roles.grantRole(member.address, ROLE_KEY, futureStart, 0, 0);
+
+      expect(await roles.isMember(ROLE_KEY, member.address)).to.be.false;
+    });
+
+    it("returns true at exactly start timestamp", async () => {
+      const { roles, member, ROLE_KEY } = await loadFixture(setup);
+
+      const start = (await time.latest()) + 100;
+      await roles.grantRole(member.address, ROLE_KEY, start, 0, 0);
+
+      await time.increaseTo(start);
+
+      expect(await roles.isMember(ROLE_KEY, member.address)).to.be.true;
+    });
+
+    it("returns false after end timestamp", async () => {
+      const { roles, member, ROLE_KEY } = await loadFixture(setup);
+
+      const end = (await time.latest()) + 100;
+      await roles.grantRole(member.address, ROLE_KEY, 0, end, 0);
+
+      await time.increaseTo(end + 1);
+
+      expect(await roles.isMember(ROLE_KEY, member.address)).to.be.false;
+    });
+
+    it("returns true at exactly end timestamp", async () => {
+      const { roles, member, ROLE_KEY } = await loadFixture(setup);
+
+      const end = (await time.latest()) + 100;
+      await roles.grantRole(member.address, ROLE_KEY, 0, end, 0);
+
+      await time.setNextBlockTimestamp(end);
+      // Mine a block so time.latest() reflects the new timestamp
+      await hre.network.provider.send("evm_mine");
+
+      expect(await roles.isMember(ROLE_KEY, member.address)).to.be.true;
+    });
+
+    it("callable by anyone, not just modules", async () => {
+      const { roles, member, other, ROLE_KEY } = await loadFixture(setup);
+
+      await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
+
+      // other is not a module but can still call isMember
+      expect(await roles.connect(other).isMember(ROLE_KEY, member.address)).to
+        .be.true;
+    });
+  });
 });
