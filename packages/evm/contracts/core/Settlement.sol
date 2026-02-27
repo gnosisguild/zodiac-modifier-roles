@@ -9,12 +9,13 @@ import "./Storage.sol";
 import {Consumption} from "../types/Allowance.sol";
 
 /**
- * @title Settlement - Persists allowance consumption and membership updates to storage.
+ * @title   Settlement
+ * @notice  Persists allowance consumption and membership updates to storage.
  *
- * @dev Called after successful execution. Reentrancy is prevented by the
- *      nonReentrant modifier in RolesStorage on execution entry points.
+ * @dev     Invoked after successful execution. Reentrancy is prevented by the
+ *          nonReentrant modifier on execution entry points.
  *
- * @author gnosisguild
+ * @author  gnosisguild
  */
 abstract contract Settlement is RolesStorage {
     /**
