@@ -25,6 +25,17 @@ contract Roles is RolesStorage, Setup, Membership, Authorization, Settlement {
         setUp(initParams);
     }
 
+    /// @dev Checks whether a module holds an active membership for a role.
+    /// @param roleKey Identifier of the role
+    /// @param module Address of the module to check
+    /// @return True if the module currently has a valid membership for the role
+    function isMember(
+        bytes32 roleKey,
+        address module
+    ) external view returns (bool) {
+        return _hasActiveMembership(roleKey, module);
+    }
+
     /// @dev Passes a transaction to the modifier using the caller's default role.
     /// @param to Destination address of module transaction
     /// @param value Ether value of module transaction

@@ -1837,12 +1837,7 @@ describe("Authorization", () => {
       const { roles, roleKey } = await loadFixture(setup);
 
       await expect(
-        roles.allowTarget(
-          roleKey,
-          ZeroAddress,
-          "0x",
-          ExecutionOptions.None,
-        ),
+        roles.allowTarget(roleKey, ZeroAddress, "0x", ExecutionOptions.None),
       ).to.be.revertedWithCustomError(roles, "ZeroAddressNotAllowed");
     });
 
