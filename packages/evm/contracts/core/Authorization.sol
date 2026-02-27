@@ -13,19 +13,15 @@ import "../periphery/interfaces/ITransactionUnwrapper.sol";
 /**
  * @title   Authorization
  *
- * @notice  Authorizes transactions by evaluating role permissions and condition
- *          trees. Implements a hierarchical lookup where target-specific rules
- *          take precedence over global function fallbacks.
+ * @notice Authorizes transactions by evaluating role permissions and condition
+ *         trees.
  *
- * @dev     The authorization pipeline consists of three primary stages:
- *          1. Scope Resolution: Resolves the permission configuration for
- *             the target.
- *          2. Mode Validation: Checks for value transfer and call type
- *             permissions.
- *          3. Payload Validation: Evaluates condition trees against
- *             transaction data.
+ * @dev    The authorization follows three steps:
+ *         1. Scope Resolution: Resolves the permission configuration
+ *         2. Mode Validation: Checks for value transfer and tx operation
+ *         3. Payload Validation: Evaluates condition trees against tx data
  *
- *          Bundles are supported via adapter-based unwrapping.
+ *         Transaction bundles are supported via adapter-based unwrapping.
  *
  * @author  gnosisguild
  */
@@ -76,21 +72,28 @@ abstract contract Authorization is RolesStorage {
         Consumption[] memory consumptions,
         Transaction memory transaction
     ) private view returns (Consumption[] memory) {
+        Role storage role = roles[roleKey];
+
         if (data.length != 0 && data.length < 4) {
             revert FunctionSignatureTooShort();
         }
 
-        Role storage role = roles[roleKey];
-
         Clearance clearance = role.clearance[transaction.to];
 
-        uint256 scopeConfig;
         /*
-         * Resolve scope config.
-         * Permissions are additive: first try target-specific, then global.
+         * Resolve scopeConfig:
+         * 1- look up target-specific entry
+         * 2- fallback on global entry
          */
+
+        // Target entry
+        uint256 scopeConfig;
         if (clearance != Clearance.None) {
             bytes32 key = bytes32(bytes20(transaction.to)) |
+                /*
+                 * Clearance.Target:   set lower 12 bytes to 0xFF..FF
+                 * Clearance.Function: set lower 12 bytes to selector
+                 */
                 (
                     clearance == Clearance.Target
                         ? (~bytes32(0) >> 160)
@@ -100,9 +103,7 @@ abstract contract Authorization is RolesStorage {
             scopeConfig = role.scopeConfig[key];
         }
 
-        /*
-         * Fall back to global function (selector on address(0)).
-         */
+        // Global entry
         if (scopeConfig == 0 && data.length != 0) {
             scopeConfig = role.scopeConfig[bytes32(bytes4(data)) >> 160];
         }

@@ -1823,5 +1823,43 @@ describe("Authorization", () => {
         ),
       ).to.be.revertedWithCustomError(roles, "ZeroAddressNotAllowed");
     });
+
+    it("revokeFunction reverts for address(0)", async () => {
+      const { roles, roleKey } = await loadFixture(setup);
+      const selector = iface.getFunction("doNothing")!.selector;
+
+      await expect(
+        roles.revokeFunction(roleKey, ZeroAddress, selector),
+      ).to.be.revertedWithCustomError(roles, "ZeroAddressNotAllowed");
+    });
+
+    it("allowTarget reverts for address(0)", async () => {
+      const { roles, roleKey } = await loadFixture(setup);
+
+      await expect(
+        roles.allowTarget(
+          roleKey,
+          ZeroAddress,
+          "0x",
+          ExecutionOptions.None,
+        ),
+      ).to.be.revertedWithCustomError(roles, "ZeroAddressNotAllowed");
+    });
+
+    it("revokeTarget reverts for address(0)", async () => {
+      const { roles, roleKey } = await loadFixture(setup);
+
+      await expect(
+        roles.revokeTarget(roleKey, ZeroAddress),
+      ).to.be.revertedWithCustomError(roles, "ZeroAddressNotAllowed");
+    });
+
+    it("scopeTarget reverts for address(0)", async () => {
+      const { roles, roleKey } = await loadFixture(setup);
+
+      await expect(
+        roles.scopeTarget(roleKey, ZeroAddress),
+      ).to.be.revertedWithCustomError(roles, "ZeroAddressNotAllowed");
+    });
   });
 });

@@ -158,6 +158,7 @@ abstract contract Setup is RolesStorage {
         bytes memory packedConditions,
         ExecutionOptions options
     ) external onlyOwner {
+        if (targetAddress == address(0)) revert ZeroAddressNotAllowed();
         bytes32 key = bytes32(bytes20(targetAddress)) | (~bytes32(0) >> 160);
 
         roles[roleKey].clearance[targetAddress] = Clearance.Target;
@@ -176,6 +177,7 @@ abstract contract Setup is RolesStorage {
         bytes32 roleKey,
         address targetAddress
     ) external onlyOwner {
+        if (targetAddress == address(0)) revert ZeroAddressNotAllowed();
         roles[roleKey].clearance[targetAddress] = Clearance.Function;
         emit ScopeTarget(roleKey, targetAddress);
     }
@@ -187,6 +189,7 @@ abstract contract Setup is RolesStorage {
         bytes32 roleKey,
         address targetAddress
     ) external onlyOwner {
+        if (targetAddress == address(0)) revert ZeroAddressNotAllowed();
         delete roles[roleKey].clearance[targetAddress];
         emit RevokeTarget(roleKey, targetAddress);
     }
@@ -248,6 +251,7 @@ abstract contract Setup is RolesStorage {
         address targetAddress,
         bytes4 selector
     ) external onlyOwner {
+        if (targetAddress == address(0)) revert ZeroAddressNotAllowed();
         delete roles[roleKey].scopeConfig[_key(targetAddress, selector)];
         emit RevokeFunction(roleKey, targetAddress, selector);
     }
