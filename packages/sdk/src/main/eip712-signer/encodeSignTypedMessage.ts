@@ -1,5 +1,5 @@
 import { TypedData, TypedDataDomain } from "abitype"
-import { Interface, keccak256 } from "ethers"
+import { Interface, keccak256, toUtf8Bytes } from "ethers"
 
 import {
   encodeAbiTypes,
@@ -9,11 +9,8 @@ import {
 } from "./encode"
 
 const iface = Interface.from([
-  "function hashSafeMessage(bytes message) view returns (bytes32)",
-  "function hashTypedDomain(bytes data, ((uint256 parent, uint8 encoding)[] layout, bytes32[] typeHashes) types) pure returns (bytes32)",
-  "function hashTypedMessage(bytes domain, bytes message, ((uint256 parent, uint8 encoding)[] layout, bytes32[] typeHashes) types) pure returns (bytes32 result)",
-  "function hashTypedSafeMessage(bytes domain, bytes message, ((uint256 parent, uint8 encoding)[] layout, bytes32[] typeHashes) types) view returns (bytes32)",
   "function signMessage(bytes message)",
+  "function personalSign(bytes message)",
   "function signTypedMessage(bytes domain, bytes message, ((uint256 parent, uint8 encoding)[] layout, bytes32[] typeHashes) types)",
 ])
 
@@ -43,4 +40,10 @@ export function encodeSignTypedMessage({
 
 export function encodeSignMessage({ message }: { message: string }) {
   return iface.encodeFunctionData("signMessage", [message])
+}
+
+export function encodePersonalSign({ message }: { message: string }) {
+  return iface.encodeFunctionData("personalSign", [
+    toUtf8Bytes(message),
+  ])
 }
