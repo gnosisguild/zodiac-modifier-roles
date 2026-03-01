@@ -14,9 +14,14 @@ export const scopePersonalSign = ({
 }: {
   startsWith: string
 }): { selector: `0x${string}`; condition: Condition } => {
+  if (!startsWith) {
+    throw new Error("startsWith must not be empty")
+  }
+
   const startsWithHex = hexlify(toUtf8Bytes(startsWith)).slice(2)
   const shift = "0000"
   const mask = "ff".repeat(startsWithHex.length / 2)
+  const compValue = `0x${shift}${mask}${startsWithHex}` as `0x${string}`
 
   return {
     selector: "0x641e3d2b", // personalSign(bytes)
@@ -27,7 +32,7 @@ export const scopePersonalSign = ({
         {
           paramType: Encoding.Dynamic,
           operator: Operator.Bitmask,
-          compValue: `0x${shift}${mask}${startsWithHex}`
+          compValue,
         },
       ],
     },
