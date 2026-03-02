@@ -9,6 +9,7 @@ import {
   hexlify,
   Interface,
   parseEther,
+  parseUnits,
   randomBytes,
   solidityPacked,
 } from "ethers";
@@ -802,6 +803,47 @@ describe("Operator - WithinAllowance", async () => {
 
       const allowance = await roles.accruedAllowance(allowanceKey);
       expect(allowance.balance).to.equal(500n * 10n ** 6n); // 500 USDC remaining
+    });
+
+    it("should cumulatively charge dust-sized calls", async () => {
+      const { owner, roles, allowFunction, invoke } =
+        await loadFixture(setupOneParam);
+
+      await setAllowance(await roles.connect(owner), allowanceKey, {
+        balance: 10n,
+        period: 0,
+        refill: 0,
+        timestamp: 0,
+      });
+
+      await allowFunction([
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: encodeDecimalsOnly({
+            allowanceKey,
+            targetDecimals: 6,
+            sourceDecimals: 18,
+          }),
+        },
+      ]);
+
+      const dust = parseUnits("0.0000009", 18);
+      await expect(invoke(dust)).to.not.be.reverted; // consumed 0.9
+      await expect(invoke(dust)).to.not.be.reverted; // consumed 1.8
+      await expect(invoke(dust)).to.not.be.reverted; // consumed 2.7
+      await expect(invoke(dust)).to.not.be.reverted; // consumed 3.6
+
+      const allowance = await roles.accruedAllowance(allowanceKey);
+      // Expected behavior: split calls should at least as much as the same as an aggregated call.
+      expect(allowance.balance).to.be.lessThanOrEqual(10n - 4n);
     });
   });
 
