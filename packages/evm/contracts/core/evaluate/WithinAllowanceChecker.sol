@@ -120,9 +120,16 @@ library WithinAllowanceChecker {
 
         // Scale decimals
         if (baseDecimals >= paramDecimals) {
+            /*
+             * Scale Up
+             */
             value = value * (10 ** (baseDecimals - paramDecimals));
         } else {
-            value = value / (10 ** (paramDecimals - baseDecimals));
+            /*
+             * Scale Down
+             * round up - dust amounts always consume at least 1 in target precision
+             */
+            value = _ceilDiv(value, 10 ** (paramDecimals - baseDecimals));
         }
 
         address adapter;
@@ -133,5 +140,11 @@ library WithinAllowanceChecker {
         }
 
         return PriceConversion.convert(value, adapter);
+    }
+
+    /// @dev Ceiling division. Returns 0 for 0, otherwise ⌈a / b⌉.
+    function _ceilDiv(uint256 a, uint256 b) private pure returns (uint256) {
+        if (a == 0) return 0;
+        return (a - 1) / b + 1;
     }
 }
