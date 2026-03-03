@@ -43,7 +43,7 @@ const config: HardhatUserConfig = {
         version: "0.8.30",
         settings: {
           evmVersion: "cancun",
-          viaIR: true,
+          viaIR: !process.env.SOLIDITY_COVERAGE,
           optimizer: {
             enabled: true,
             runs: 100,
