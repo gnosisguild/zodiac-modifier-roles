@@ -1,7 +1,14 @@
 import { expect } from "chai"
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers"
-import { concat, randomBytes, toUtf8Bytes } from "ethers"
-import hre, { ethers } from "hardhat"
+import {
+  AbiCoder,
+  concat,
+  hashMessage,
+  keccak256,
+  randomBytes,
+  toUtf8Bytes,
+} from "ethers"
+import { ethers } from "hardhat"
 import {
   ExecutionOptions,
   encodePersonalSign,
@@ -72,6 +79,7 @@ describe("scopePersonalSign()", () => {
       condition,
       executionOptions: ExecutionOptions.Both,
     })
+
 
     return {
       relayer,
@@ -147,15 +155,19 @@ describe("scopePersonalSign()", () => {
 
     const message = startsWith + " with session abc"
 
-    // EOA: dapp hashes the EIP-191 prefixed message and ecrecovers the signer.
-    // Safe: dapp passes the prefixed message (not hashed) to isValidSignature,
-    // which internally hashes it and checks signedMessages. "0x" means onchain
+    // The CompatibilityFallbackHandler bridges isValidSignature(bytes32,bytes)
+    // to isValidSignature(bytes,bytes) by passing abi.encode(dataHash) as data.
+    // So for the legacy bytes path, we pass abi.encode(keccak256(eip191Preimage))
     const messageBytes = toUtf8Bytes(message)
-    const preimage = concat([
+    const eip191Preimage = concat([
       toUtf8Bytes("\x19Ethereum Signed Message:\n"),
       toUtf8Bytes(String(messageBytes.length)),
       messageBytes,
     ])
+    const messageData = AbiCoder.defaultAbiCoder().encode(
+      ["bytes32"],
+      [keccak256(eip191Preimage)]
+    )
 
     // Before signing, isValidSignature should revert
     await expect(
@@ -163,7 +175,7 @@ describe("scopePersonalSign()", () => {
         to: safe,
         data: ifaceFallback.encodeFunctionData(
           "isValidSignature(bytes,bytes)",
-          [preimage, "0x"]
+          [messageData, "0x"]
         ),
       })
     ).to.be.revertedWith("Hash not approved")
@@ -179,7 +191,7 @@ describe("scopePersonalSign()", () => {
     const resultData = await relayer.call({
       to: safe,
       data: ifaceFallback.encodeFunctionData("isValidSignature(bytes,bytes)", [
-        preimage,
+        messageData,
         "0x",
       ]),
     })
@@ -190,6 +202,48 @@ describe("scopePersonalSign()", () => {
     )
 
     expect(result).to.deep.equal([EIP712_MAGIC_VALUE])
+  })
+
+  it("signs a message and verifies via isValidSignature(bytes32,bytes)", async () => {
+    const { relayer, lib, safe, startsWith, execTransactionFromRoles } =
+      await loadFixture(setup)
+
+    const message = startsWith + " with session abc"
+    const messageHash = hashMessage(message)
+
+    // Before signing, isValidSignature(bytes32,bytes) should revert
+    await expect(
+      relayer.call({
+        to: safe,
+        data: ifaceFallback.encodeFunctionData("isValidSignature(bytes32,bytes)", [
+          messageHash,
+          "0x",
+        ]),
+      })
+    ).to.be.revertedWith("Hash not approved")
+
+    // Sign the message through roles
+    await execTransactionFromRoles({
+      to: lib,
+      data: encodePersonalSign({ message }),
+      operation: 1,
+    })
+
+    // After signing, isValidSignature(bytes32,bytes) should return magic value
+    const resultData = await relayer.call({
+      to: safe,
+      data: ifaceFallback.encodeFunctionData("isValidSignature(bytes32,bytes)", [
+        messageHash,
+        "0x",
+      ]),
+    })
+
+    const result = ifaceFallback.decodeFunctionResult(
+      "isValidSignature(bytes32,bytes)",
+      resultData
+    )
+
+    expect(result).to.deep.equal(["0x1626ba7e"])
   })
 })
 

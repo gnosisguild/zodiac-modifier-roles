@@ -32,14 +32,35 @@ contract SignTypedMessageLib is SafeStorage {
     /**
      * @notice Marks a message as signed
      * @dev The message hash is marked as approved in SafeStorage
-     * @dev Can be verified using EIP-1271 validation method by passing the
-     *      message and empty bytes as the signature. Empty bytes as signature
-     *      represent an on-chain signature
+     * @dev Can be verified using EIP-1271 validation by passing the
+     *      message and empty bytes as the signature
      * @param message The message to be signed
      */
     function signMessage(bytes calldata message) external {
         require(address(this) != deployedAt);
         bytes32 safeMessageHash = keccak256(safeMessagePreimage(message));
+
+        signedMessages[safeMessageHash] = 1;
+        emit SignMsg(safeMessageHash);
+    }
+
+    /**
+     * @notice Marks a personal_sign message as signed
+     * @dev Wraps the message with the EIP-191 prefix before hashing
+     * @dev Can be verified using EIP-1271 validation by passing the EIP-191
+     *      hash and empty bytes as the signature
+     * @param message The raw message text to be signed
+     */
+    function personalSign(bytes calldata message) external {
+        require(address(this) != deployedAt);
+        bytes memory wrapped = abi.encodePacked(
+            "\x19Ethereum Signed Message:\n",
+            Strings.toString(message.length),
+            message
+        );
+        bytes32 safeMessageHash = keccak256(
+            safeMessagePreimage(abi.encode(keccak256(wrapped)))
+        );
 
         signedMessages[safeMessageHash] = 1;
         emit SignMsg(safeMessageHash);
@@ -64,26 +85,6 @@ contract SignTypedMessageLib is SafeStorage {
         bytes32 safeMessageHash = keccak256(
             safeTypedMessagePreimage(domain, message, types)
         );
-
-        signedMessages[safeMessageHash] = 1;
-        emit SignMsg(safeMessageHash);
-    }
-
-    /**
-     * @notice Marks a personal_sign message as signed
-     * @dev Wraps the message with the EIP-191 prefix before hashing
-     * @dev Can be verified using EIP-1271 validation by passing the EIP-191
-     *      wrapped bytes and empty bytes as the signature
-     * @param message The raw message text to be signed
-     */
-    function personalSign(bytes calldata message) external {
-        require(address(this) != deployedAt);
-        bytes memory wrapped = abi.encodePacked(
-            "\x19Ethereum Signed Message:\n",
-            Strings.toString(message.length),
-            message
-        );
-        bytes32 safeMessageHash = keccak256(safeMessagePreimage(wrapped));
 
         signedMessages[safeMessageHash] = 1;
         emit SignMsg(safeMessageHash);

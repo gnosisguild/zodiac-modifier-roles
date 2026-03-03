@@ -48,7 +48,6 @@ export {
   encodeSignMessage,
   encodeSignTypedMessage,
   scopePersonalSign,
-  scopeSignMessage,
   scopeSignTypedMessage,
 } from "./eip712-signer"
 export { encodeKey, decodeKey } from "./keys"

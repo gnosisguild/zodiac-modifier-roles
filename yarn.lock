@@ -19470,7 +19470,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"viem@npm:^2.21.26, viem@npm:^2.46.2":
+"viem@npm:^2.21.26, viem@npm:^2.46.2, viem@npm:^2.46.3":
   version: 2.46.3
   resolution: "viem@npm:2.46.3"
   dependencies:
@@ -20536,6 +20536,7 @@ __metadata:
     ts-node: ^10.9.2
     typechain: ^8.3.2
     typescript: ^5.7.3
+    viem: ^2.46.3
     zodiac-roles-deployments: "workspace:*"
     zodiac-roles-sdk: "workspace:*"
   languageName: unknown

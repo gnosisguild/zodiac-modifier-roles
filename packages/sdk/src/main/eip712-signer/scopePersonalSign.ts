@@ -5,7 +5,7 @@ import { Condition, Operator, Encoding } from "zodiac-roles-sdk"
  * Scopes a role to only allow signing personal_sign messages whose text
  * starts with the given string.
  *
- * Uses the `signPersonalMessage(bytes)` entrypoint which handles EIP-191
+ * Uses the `personalSign(bytes)` entrypoint which handles EIP-191
  * wrapping internally. The condition is a single bitmask on the raw
  * message bytes.
  */

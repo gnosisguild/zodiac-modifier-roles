@@ -43,7 +43,5 @@ export function encodeSignMessage({ message }: { message: string }) {
 }
 
 export function encodePersonalSign({ message }: { message: string }) {
-  return iface.encodeFunctionData("personalSign", [
-    toUtf8Bytes(message),
-  ])
+  return iface.encodeFunctionData("personalSign", [toUtf8Bytes(message)])
 }
