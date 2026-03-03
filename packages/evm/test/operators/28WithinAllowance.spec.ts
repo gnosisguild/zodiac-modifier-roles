@@ -9,6 +9,7 @@ import {
   hexlify,
   Interface,
   parseEther,
+  parseUnits,
   randomBytes,
   solidityPacked,
 } from "ethers";
@@ -803,6 +804,122 @@ describe("Operator - WithinAllowance", async () => {
       const allowance = await roles.accruedAllowance(allowanceKey);
       expect(allowance.balance).to.equal(500n * 10n ** 6n); // 500 USDC remaining
     });
+
+    it("should cumulatively charge dust-sized calls", async () => {
+      const { owner, roles, allowFunction, invoke } =
+        await loadFixture(setupOneParam);
+
+      await setAllowance(await roles.connect(owner), allowanceKey, {
+        balance: 10n,
+        period: 0,
+        refill: 0,
+        timestamp: 0,
+      });
+
+      await allowFunction([
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: encodeDecimalsOnly({
+            allowanceKey,
+            targetDecimals: 6,
+            sourceDecimals: 18,
+          }),
+        },
+      ]);
+
+      const dust = parseUnits("0.0000009", 18);
+      await expect(invoke(dust)).to.not.be.reverted; // consumed 0.9
+      await expect(invoke(dust)).to.not.be.reverted; // consumed 1.8
+      await expect(invoke(dust)).to.not.be.reverted; // consumed 2.7
+      await expect(invoke(dust)).to.not.be.reverted; // consumed 3.6
+
+      const allowance = await roles.accruedAllowance(allowanceKey);
+      // Expected behavior: split calls should at least as much as the same as an aggregated call.
+      expect(allowance.balance).to.be.lessThanOrEqual(10n - 4n);
+    });
+
+    it("sub-unit dust consumes exactly 1 in target precision", async () => {
+      const { owner, roles, allowFunction, invoke } =
+        await loadFixture(setupOneParam);
+
+      // 100 USDC allowance (6 decimals)
+      await setAllowance(await roles.connect(owner), allowanceKey, {
+        balance: 100 * 10 ** 5,
+        period: 0,
+        refill: 0,
+        timestamp: 0,
+      });
+
+      await allowFunction([
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: encodeDecimalsOnly({
+            allowanceKey,
+            targetDecimals: 5,
+            sourceDecimals: 18,
+          }),
+        },
+      ]);
+
+      // 1 wei – far below 1 micro-unit (10^12 wei)
+      await expect(invoke(1n)).to.not.be.reverted;
+
+      const allowance = await roles.accruedAllowance(allowanceKey);
+      // consumed exactly 0.000001 USDC (1 in 6 dec precision)
+      expect(allowance.balance).to.equal(parseUnits("99.99999", 5));
+    });
+
+    it("zero value consumes nothing", async () => {
+      const { owner, roles, allowFunction, invoke } =
+        await loadFixture(setupOneParam);
+
+      await setAllowance(await roles.connect(owner), allowanceKey, {
+        balance: parseUnits("100", 6),
+        period: 0,
+        refill: 0,
+        timestamp: 0,
+      });
+
+      await allowFunction([
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: encodeDecimalsOnly({
+            allowanceKey,
+            targetDecimals: 6,
+            sourceDecimals: 18,
+          }),
+        },
+      ]);
+
+      await expect(invoke(0n)).to.not.be.reverted;
+
+      const allowance = await roles.accruedAllowance(allowanceKey);
+      expect(allowance.balance).to.equal(parseUnits("100", 6));
+    });
   });
 
   describe("WithinAllowance - Price Adapter", () => {
@@ -1335,8 +1452,8 @@ describe("Operator - WithinAllowance", async () => {
 
       // 1.123456789123456789 in 18 decimals
       const valueInParamDecimals = 1123456789123456789n;
-      // Expected: 1.123456 in 6 decimals (truncates after 6 decimals)
-      const valueInAccrueDecimals = 1123456n;
+      // Expected: 1.123457 in 6 decimals (rounds up after 6 decimals)
+      const valueInAccrueDecimals = 1123457n;
 
       await setAllowance(await roles.connect(owner), allowanceKey, {
         balance: valueInAccrueDecimals,
