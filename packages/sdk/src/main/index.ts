@@ -55,7 +55,13 @@ export { normalizeCondition } from "./condition/normalize"
  *
  */
 export { rolesAbi, posterAbi } from "./abi"
-export { encodeSignTypedMessage, scopeSignTypedMessage } from "./eip712-signer"
+export {
+  encodePersonalSign,
+  encodeSignMessage,
+  encodeSignTypedMessage,
+  scopePersonalSign,
+  scopeSignTypedMessage,
+} from "./eip712-signer"
 export { encodeKey, decodeKey } from "./keys"
 export { postRole } from "./postRole"
 export { fetchLicense, License, LicenseError } from "./licensing"
