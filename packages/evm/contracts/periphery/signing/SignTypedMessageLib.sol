@@ -8,6 +8,8 @@ import "./EIP712Encoder.sol";
 
 import "../interfaces/SafeStorage.sol";
 
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
+
 /**
  * @title SignTypedMessageLib - Marks (typed) messages as signed in SafeStorage
  * @author gnosisguild
@@ -30,13 +32,35 @@ contract SignTypedMessageLib is SafeStorage {
     /**
      * @notice Marks a message as signed
      * @dev The message hash is marked as approved in SafeStorage
-     * @dev Can be verified using EIP-1271 validation method by passing the
-     *      message and empty bytes as the signature. Empty bytes as signature
-     *      represent an on-chain signature
+     * @dev Can be verified using EIP-1271 validation by passing the
+     *      message and empty bytes as the signature
      * @param message The message to be signed
      */
     function signMessage(bytes calldata message) external {
-        bytes32 safeMessageHash = hashSafeMessage(message);
+        require(address(this) != deployedAt);
+        bytes32 safeMessageHash = keccak256(safeMessagePreimage(message));
+
+        signedMessages[safeMessageHash] = 1;
+        emit SignMsg(safeMessageHash);
+    }
+
+    /**
+     * @notice Marks a personal_sign message as signed
+     * @dev Wraps the message with the EIP-191 prefix before hashing
+     * @dev Can be verified using EIP-1271 validation by passing the EIP-191
+     *      hash and empty bytes as the signature
+     * @param message The raw message text to be signed
+     */
+    function personalSign(bytes calldata message) external {
+        require(address(this) != deployedAt);
+        bytes memory wrapped = abi.encodePacked(
+            "\x19Ethereum Signed Message:\n",
+            Strings.toString(message.length),
+            message
+        );
+        bytes32 safeMessageHash = keccak256(
+            safeMessagePreimage(abi.encode(keccak256(wrapped)))
+        );
 
         signedMessages[safeMessageHash] = 1;
         emit SignMsg(safeMessageHash);
@@ -58,50 +82,48 @@ contract SignTypedMessageLib is SafeStorage {
         EIP712Encoder.Types calldata types
     ) public {
         require(address(this) != deployedAt);
-        bytes32 safeMessageHash = hashTypedSafeMessage(domain, message, types);
+        bytes32 safeMessageHash = keccak256(
+            safeTypedMessagePreimage(domain, message, types)
+        );
 
         signedMessages[safeMessageHash] = 1;
         emit SignMsg(safeMessageHash);
     }
 
     /**
-     * @notice Packs a message, and produces the SafeMessage hash for it
+     * @notice Builds the EIP-712 preimage for a SafeMessage
      * @dev Follows Safe's internal type schema for signing messages
      *
-     * @param message  The message to hash
-     * @return bytes32 The resulting hash
+     * @param message  The message to build the preimage for
+     * @return bytes   The EIP-712 preimage (hash it to get the SafeMessage hash)
      */
-    function hashSafeMessage(
+    function safeMessagePreimage(
         bytes memory message
-    ) public view returns (bytes32) {
+    ) public view returns (bytes memory) {
         return
-            keccak256(
-                abi.encodePacked(
-                    bytes2(0x1901),
-                    ISafe(address(this)).domainSeparator(),
-                    keccak256(
-                        abi.encode(safeMessageTypeHash, keccak256(message))
-                    )
-                )
+            abi.encodePacked(
+                bytes2(0x1901),
+                ISafe(address(this)).domainSeparator(),
+                keccak256(abi.encode(safeMessageTypeHash, keccak256(message)))
             );
     }
 
     /**
-     * @notice Packs a typed message, and produces the SafeMessage hash for it
+     * @notice Builds the EIP-712 preimage for a typed SafeMessage
      * @dev Follows Safe's internal type schema for signing messages
      *
      * @param domain   The encoded EIP712 domain
      * @param message  The encoded EIP712 message
      * @param types    The flattened EIP712 type definitions
-     * @return bytes32 The resulting hash
+     * @return bytes   The EIP-712 preimage (hash it to get the SafeMessage hash)
      */
-    function hashTypedSafeMessage(
+    function safeTypedMessagePreimage(
         bytes calldata domain,
         bytes calldata message,
         EIP712Encoder.Types calldata types
-    ) public view returns (bytes32) {
+    ) public view returns (bytes memory) {
         return
-            hashSafeMessage(
+            safeMessagePreimage(
                 abi.encode(
                     EIP712Encoder.hashTypedMessage(domain, message, types)
                 )

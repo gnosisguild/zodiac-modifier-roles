@@ -21,7 +21,7 @@
     "deploy:mastercopy": "yarn hardhat deploy:mastercopy --network",
     "verify:mastercopies": "yarn hardhat verify:mastercopies --network",
     "verify:mastercopy": "yarn hardhat verify:mastercopy --network",
-    "coverage": "hardhat coverage",
+    "coverage": "SOLIDITY_COVERAGE=true hardhat coverage",
     "fmt": "yarn fmt:sol && yarn fmt:ts",
     "fmt:sol": "prettier 'contracts/**/*.sol' -w",
     "fmt:ts": "prettier '(test|src)/**/*.ts' -w",
