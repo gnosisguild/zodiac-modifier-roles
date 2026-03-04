@@ -98,14 +98,14 @@ library WithinAllowanceChecker {
         bytes memory compValue
     ) private view returns (Status, uint256) {
         /**
-         * CompValue Layout (32, 34, or 54 bytes):
-         * ┌─────────────────────────┬──────────┬──────────┬─────────────────────┐
-         * │      allowanceKey       │   base   │  param   │       adapter       │
-         * │        (bytes32)        │ decimals │ decimals │      (address)      │
-         * ├─────────────────────────┼──────────┼──────────┼─────────────────────┤
-         * │         0 - 31          │    32    │    33    │       34 - 53       │
-         * └─────────────────────────┴──────────┴──────────┴─────────────────────┘
-         *                           └── optional ─────────┴───── optional ──────┘
+         * CompValue Layout (32, 34, or >=54 bytes):
+         * ┌─────────────────────────┬──────────┬──────────┬─────────┬─────────────────┐
+         * │      allowanceKey       │   base   │  param   │ adapter │  pricingParams  │
+         * │        (bytes32)        │ decimals │ decimals │(address)│      (bytes)    │
+         * ├─────────────────────────┼──────────┼──────────┼─────────┼─────────────────┤
+         * │         0 - 31          │    32    │    33    │ 34 - 53 │    54 - end     │
+         * └─────────────────────────┴──────────┴──────────┴─────────┴─────────────────┘
+         *                           └── optional ─────────┴──── optional ──────────────┘
          *
          * baseDecimals: decimals of the allowance unit  (how it's accounted)
          * paramDecimals: decimals of the parameter value (from calldata)
@@ -133,13 +133,26 @@ library WithinAllowanceChecker {
         }
 
         address adapter;
+        bytes memory pricingParams = "";
         if (compValue.length > 34) {
+            if (compValue.length < 54) {
+                return (Status.PricingAdapterInvalidResult, 0);
+            }
+
             assembly {
                 adapter := shr(96, mload(add(compValue, 0x42)))
             }
+
+            uint256 paramsLength = compValue.length - 54;
+            if (paramsLength > 0) {
+                pricingParams = new bytes(paramsLength);
+                assembly {
+                    mcopy(add(pricingParams, 0x20), add(compValue, 0x56), paramsLength)
+                }
+            }
         }
 
-        return PriceConversion.convert(value, adapter);
+        return PriceConversion.convert(value, adapter, pricingParams);
     }
 
     /// @dev Ceiling division. Returns 0 for 0, otherwise ⌈a / b⌉.

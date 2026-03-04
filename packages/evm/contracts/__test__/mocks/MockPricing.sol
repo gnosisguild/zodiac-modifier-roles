@@ -11,7 +11,7 @@ contract MockPricing {
         _price = price;
     }
 
-    function getPrice() external view returns (uint256) {
+    function getPrice(bytes calldata) external view returns (uint256) {
         return _price;
     }
 }
@@ -25,14 +25,14 @@ contract MockPricingNoInterface {
 
 /// @dev Contract that implements IPricing but always reverts
 contract MockPricingReverting {
-    function getPrice() external pure returns (uint256) {
+    function getPrice(bytes calldata) external pure returns (uint256) {
         revert("MockPricing: intentional revert");
     }
 }
 
 /// @dev Contract with matching selector but wrong return type
 contract MockPricingWrongReturn {
-    function getPrice() external pure returns (uint256, uint256) {
+    function getPrice(bytes calldata) external pure returns (uint256, uint256) {
         return (123, 456);
     }
 }

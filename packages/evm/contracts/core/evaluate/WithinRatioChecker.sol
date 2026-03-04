@@ -127,7 +127,8 @@ library WithinRatioChecker {
         return
             PriceConversion.convert(
                 value * (10 ** (precision - decimals)),
-                adapter
+                adapter,
+                ""
             );
     }
 
