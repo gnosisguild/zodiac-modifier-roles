@@ -158,7 +158,7 @@ abstract contract Setup is RolesStorage {
         bytes memory packedConditions,
         ExecutionOptions options
     ) external onlyOwner {
-        if (targetAddress == address(0)) revert ZeroAddressNotAllowed();
+        _requireNonZeroAddress(targetAddress);
         bytes32 key = bytes32(bytes20(targetAddress)) | (~bytes32(0) >> 160);
 
         roles[roleKey].clearance[targetAddress] = Clearance.Target;
@@ -177,7 +177,7 @@ abstract contract Setup is RolesStorage {
         bytes32 roleKey,
         address targetAddress
     ) external onlyOwner {
-        if (targetAddress == address(0)) revert ZeroAddressNotAllowed();
+        _requireNonZeroAddress(targetAddress);
         roles[roleKey].clearance[targetAddress] = Clearance.Function;
         emit ScopeTarget(roleKey, targetAddress);
     }
@@ -189,7 +189,7 @@ abstract contract Setup is RolesStorage {
         bytes32 roleKey,
         address targetAddress
     ) external onlyOwner {
-        if (targetAddress == address(0)) revert ZeroAddressNotAllowed();
+        _requireNonZeroAddress(targetAddress);
         delete roles[roleKey].clearance[targetAddress];
         emit RevokeTarget(roleKey, targetAddress);
     }
@@ -211,7 +211,7 @@ abstract contract Setup is RolesStorage {
         bytes memory packedConditions,
         ExecutionOptions options
     ) external onlyOwner {
-        if (targetAddress == address(0)) revert ZeroAddressNotAllowed();
+        _requireNonZeroAddress(targetAddress);
         roles[roleKey].scopeConfig[
             _key(targetAddress, selector)
         ] = ConditionStorer.store(_conditionsOrPass(packedConditions), options);
@@ -251,7 +251,7 @@ abstract contract Setup is RolesStorage {
         address targetAddress,
         bytes4 selector
     ) external onlyOwner {
-        if (targetAddress == address(0)) revert ZeroAddressNotAllowed();
+        _requireNonZeroAddress(targetAddress);
         delete roles[roleKey].scopeConfig[_key(targetAddress, selector)];
         emit RevokeFunction(roleKey, targetAddress, selector);
     }
@@ -365,5 +365,9 @@ abstract contract Setup is RolesStorage {
             return ConditionStorer.pack(new ConditionFlat[](1));
         }
         return buffer;
+    }
+
+    function _requireNonZeroAddress(address targetAddress) private pure {
+        if (targetAddress == address(0)) revert ZeroAddressNotAllowed();
     }
 }
