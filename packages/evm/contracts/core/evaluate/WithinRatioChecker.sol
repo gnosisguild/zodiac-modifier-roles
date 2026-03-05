@@ -22,7 +22,6 @@ library WithinRatioChecker {
     /**
      * @dev Configuration decoded from compValue bytes.
      *
-     *
      * Base layout (12 bytes, always present):
      * ┌───────────────────┬───────────────────┬───────────────────┬───────────────────┬────────────┬────────────┐
      * │ referencePluckIdx │ referenceDecimals │ relativePluckIdx  │ relativeDecimals  │  minRatio  │  maxRatio  │
@@ -66,9 +65,9 @@ library WithinRatioChecker {
      * @return Status Ok if within bounds, error status otherwise
      */
     function check(
-        bytes memory compValue,
-        bytes32[] memory pluckedValues
-    ) internal view returns (Status) {
+        bytes calldata compValue,
+        bytes32[] calldata pluckedValues
+    ) external view returns (Status) {
         CompValue memory config = _unpack(compValue);
         (
             Status status,
@@ -105,7 +104,7 @@ library WithinRatioChecker {
      */
     function _convert(
         CompValue memory config,
-        bytes32[] memory pluckedValues
+        bytes32[] calldata pluckedValues
     )
         private
         view
@@ -150,7 +149,7 @@ library WithinRatioChecker {
     }
 
     function _unpack(
-        bytes memory compValue
+        bytes calldata compValue
     ) private pure returns (CompValue memory config) {
         bytes32 packed = bytes32(compValue);
 
