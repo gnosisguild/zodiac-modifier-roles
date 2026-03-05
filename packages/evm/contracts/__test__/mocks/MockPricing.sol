@@ -11,7 +11,41 @@ contract MockPricing {
         _price = price;
     }
 
-    function getPrice() external view returns (uint256) {
+    function getPrice(bytes calldata) external view returns (uint256) {
+        return _price;
+    }
+}
+
+/// @dev Mock that requires specific params, reverts otherwise
+contract MockPricingParameterized {
+    mapping(bytes32 => uint256) private _prices;
+    mapping(bytes32 => bool) private _set;
+
+    function setPrice(bytes calldata params, uint256 price) external {
+        _prices[keccak256(params)] = price;
+        _set[keccak256(params)] = true;
+    }
+
+    function getPrice(bytes calldata params) external view returns (uint256) {
+        bytes32 key = keccak256(params);
+        require(_set[key], "MockPricingParameterized: unknown params");
+        return _prices[key];
+    }
+}
+
+/// @dev Mock that requires empty params, reverts otherwise
+contract MockPricingEmptyParams {
+    uint256 private immutable _price;
+
+    constructor(uint256 price) {
+        _price = price;
+    }
+
+    function getPrice(bytes calldata params) external view returns (uint256) {
+        require(
+            params.length == 0,
+            "MockPricingEmptyParams: expected empty params"
+        );
         return _price;
     }
 }
@@ -25,14 +59,14 @@ contract MockPricingNoInterface {
 
 /// @dev Contract that implements IPricing but always reverts
 contract MockPricingReverting {
-    function getPrice() external pure returns (uint256) {
+    function getPrice(bytes calldata) external pure returns (uint256) {
         revert("MockPricing: intentional revert");
     }
 }
 
 /// @dev Contract with matching selector but wrong return type
 contract MockPricingWrongReturn {
-    function getPrice() external pure returns (uint256, uint256) {
+    function getPrice(bytes calldata) external pure returns (uint256, uint256) {
         return (123, 456);
     }
 }

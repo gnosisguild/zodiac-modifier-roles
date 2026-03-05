@@ -23,14 +23,26 @@ library WithinRatioChecker {
      * @dev Configuration decoded from compValue bytes.
      *
      *
-     * Layout (12 or 52 bytes):
-     * ┌───────────────────┬───────────────────┬───────────────────┬───────────────────┬────────────┬────────────┬───────────────────┬───────────────────┐
-     * │ referencePluckIdx │ referenceDecimals │ relativePluckIdx  │ relativeDecimals  │  minRatio  │  maxRatio  │ referenceAdapter  │ relativeAdapter   │
-     * │      (uint8)      │      (uint8)      │      (uint8)      │      (uint8)      │  (uint32)  │  (uint32)  │     (address)     │     (address)     │
-     * ├───────────────────┼───────────────────┼───────────────────┼───────────────────┼────────────┼────────────┼───────────────────┼───────────────────┤
-     * │         0         │         1         │         2         │         3         │    4–7     │    8–11    │      12–31        │      32–51        │
-     * └───────────────────┴───────────────────┴───────────────────┴───────────────────┴────────────┴────────────┴───────────────────┴───────────────────┘
-     *                                                                                                          └─────────────────── optional ──────────┘
+     * Base layout (12 bytes, always present):
+     * ┌───────────────────┬───────────────────┬───────────────────┬───────────────────┬────────────┬────────────┐
+     * │ referencePluckIdx │ referenceDecimals │ relativePluckIdx  │ relativeDecimals  │  minRatio  │  maxRatio  │
+     * │      (uint8)      │      (uint8)      │      (uint8)      │      (uint8)      │  (uint32)  │  (uint32)  │
+     * ├───────────────────┼───────────────────┼───────────────────┼───────────────────┼────────────┼────────────┤
+     * │         0         │         1         │         2         │         3         │    4–7     │    8–11    │
+     * └───────────────────┴───────────────────┴───────────────────┴───────────────────┴────────────┴────────────┘
+     *
+     * Optionally followed by a ref adapter blob, then a rel adapter blob.
+     
+     * Adapter blob structure:
+     * ┌──────────┬─────────────┬──────────────────────┐
+     * │ blobLen  │   adapter   │       params         │
+     * │ (uint8)  │  (address)  │ (blobLen - 20) bytes │
+     * └──────────┴─────────────┴──────────────────────┘
+     *
+     * blobLen is the length of the blob excluding the prefix byte itself (0 or >= 20).
+     * A blobLen of 0 means no adapter.
+     * To include a rel blob without a ref adapter, set ref blobLen to 0.
+     * Valid sizes: 12, 13 + refBlobLen, 14 + refBlobLen + relBlobLen
      */
     struct CompValue {
         uint8 referencePluckIndex;
@@ -41,6 +53,8 @@ library WithinRatioChecker {
         uint32 maxRatio;
         address referenceAdapter;
         address relativeAdapter;
+        bytes referenceParams;
+        bytes relativeParams;
     }
 
     uint256 private constant BPS = 10000;
@@ -105,7 +119,8 @@ library WithinRatioChecker {
             uint256(pluckedValues[config.referencePluckIndex]),
             config.referenceDecimals,
             precision,
-            config.referenceAdapter
+            config.referenceAdapter,
+            config.referenceParams
         );
         if (status != Status.Ok) return (status, 0, 0);
 
@@ -113,7 +128,8 @@ library WithinRatioChecker {
             uint256(pluckedValues[config.relativePluckIndex]),
             config.relativeDecimals,
             precision,
-            config.relativeAdapter
+            config.relativeAdapter,
+            config.relativeParams
         );
         if (status != Status.Ok) return (status, 0, 0);
     }
@@ -122,12 +138,14 @@ library WithinRatioChecker {
         uint256 value,
         uint256 decimals,
         uint256 precision,
-        address adapter
+        address adapter,
+        bytes memory params
     ) private view returns (Status, uint256) {
         return
             PriceConversion.convert(
                 value * (10 ** (precision - decimals)),
-                adapter
+                adapter,
+                params
             );
     }
 
@@ -142,12 +160,50 @@ library WithinRatioChecker {
         config.relativeDecimals = uint8(bytes1(packed << 24));
         config.minRatio = uint32(bytes4(packed << 32));
         config.maxRatio = uint32(bytes4(packed << 64));
-        config.referenceAdapter = address(bytes20(packed << 96));
 
-        if (compValue.length > 32) {
-            assembly {
-                mstore(add(config, 0xe0), shr(96, mload(add(compValue, 0x40))))
-            }
+        uint256 offset = 12;
+        (
+            config.referenceAdapter,
+            config.referenceParams,
+            offset
+        ) = _unpackAdapterBlob(compValue, offset);
+
+        (config.relativeAdapter, config.relativeParams, ) = _unpackAdapterBlob(
+            compValue,
+            offset
+        );
+    }
+
+    /// @dev Reads an adapter blob at the given offset: blobLen(1) + adapter(20) + params(blobLen - 20).
+    ///      blobLen is the total blob length excluding the prefix byte itself.
+    ///      Returns the adapter address, params bytes, and the offset after the blob.
+    function _unpackAdapterBlob(
+        bytes memory buffer,
+        uint256 offset
+    ) private pure returns (address adapter, bytes memory params, uint256) {
+        uint256 blobLen;
+        if (offset < buffer.length) {
+            blobLen = uint8(buffer[offset]);
+            offset += 1;
         }
+
+        if (blobLen >= 20) {
+            assembly {
+                // 0x20 skips the memory length prefix
+                adapter := shr(96, mload(add(add(buffer, 0x20), offset)))
+            }
+            offset += 20;
+        }
+
+        if (blobLen > 20) {
+            uint256 length = blobLen - 20;
+            params = new bytes(length);
+            assembly {
+                mcopy(add(params, 0x20), add(add(buffer, 0x20), offset), length)
+            }
+            offset += length;
+        }
+
+        return (adapter, params, offset);
     }
 }
