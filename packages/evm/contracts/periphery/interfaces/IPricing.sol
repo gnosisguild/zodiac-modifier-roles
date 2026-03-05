@@ -9,5 +9,7 @@ pragma solidity >=0.8.17 <0.9.0;
  * @dev Returns a price with 18 decimals precision
  */
 interface IPricing {
-    function getPrice() external view returns (uint256 price);
+    function getPrice(
+        bytes calldata params
+    ) external view returns (uint256 price);
 }

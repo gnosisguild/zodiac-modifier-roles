@@ -49,6 +49,18 @@ task(
   });
   writeMastercopyFromBuild({
     contractVersion: packageJson.version,
+    contractName: "WithinRatioChecker",
+    compilerInput: await hre.run("verify:etherscan-get-minimal-input", {
+      sourceName: "contracts/core/evaluate/WithinRatioChecker.sol",
+    }),
+    constructorArgs: {
+      types: [],
+      values: [],
+    },
+    salt: ZeroHash,
+  });
+  writeMastercopyFromBuild({
+    contractVersion: packageJson.version,
     contractName: "Roles",
     compilerInput: await hre.run("verify:etherscan-get-minimal-input", {
       sourceName: "contracts/Roles.sol",
