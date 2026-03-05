@@ -80,9 +80,19 @@ export async function deployRolesMod(
     provider,
   });
 
+  const withinRatioChecker =
+    await hre.artifacts.readArtifact("WithinRatioChecker");
+  const { address: withinRatioCheckerAddress } = await deployMastercopy({
+    bytecode: withinRatioChecker.bytecode,
+    constructorArgs: { types: [], values: [] },
+    salt: ZeroHash,
+    provider,
+  });
+
   const Modifier = await hre.ethers.getContractFactory("Roles", {
     libraries: {
       ConditionStorer: conditionStorerAddress,
+      WithinRatioChecker: withinRatioCheckerAddress,
     },
   });
   const modifier = await Modifier.deploy(owner, avatar, target);

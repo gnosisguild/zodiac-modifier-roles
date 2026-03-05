@@ -507,13 +507,22 @@ library Integrity {
         if (condition.paramType != Encoding.None) {
             revert IRolesError.UnsuitableParameterType(index);
         }
-        // CompValue: 12, 32 or 52 bytes (12 base + 0, 1, or 2 adapters)
-        if (
-            condition.compValue.length != 12 &&
-            condition.compValue.length != 32 &&
-            condition.compValue.length != 52
-        ) {
-            revert IRolesError.UnsuitableCompValue(index);
+        // CompValue: 12 base, optionally followed by adapter blobs.
+        {
+            uint256 len = condition.compValue.length;
+            if (len < 12) {
+                revert IRolesError.UnsuitableCompValue(index);
+            }
+            uint256 offset = 12;
+            if (len > offset) {
+                offset = _checkAdapterBlob(condition.compValue, offset, index);
+            }
+            if (len > offset) {
+                offset = _checkAdapterBlob(condition.compValue, offset, index);
+            }
+            if (len != offset) {
+                revert IRolesError.UnsuitableCompValue(index);
+            }
         }
         // Check ratio bounds
         uint32 minRatio;
@@ -543,11 +552,11 @@ library Integrity {
         if (encoding != Encoding.Static && encoding != Encoding.EtherValue) {
             revert IRolesError.UnsuitableParameterType(index);
         }
-        // CompValue: 32, 34, 54
+        // CompValue: 32, 34, or >= 54
         if (
             condition.compValue.length != 32 &&
             condition.compValue.length != 34 &&
-            condition.compValue.length != 54
+            condition.compValue.length < 54
         ) {
             revert IRolesError.UnsuitableCompValue(index);
         }
@@ -730,6 +739,24 @@ library Integrity {
         for (uint256 i = 0; i < childCount; ++i) {
             _validateNoPluckDescendant(conditions, childStart + i);
         }
+    }
+
+    /// @dev Validates an adapter blob at the given offset: blobLen(1) + adapter(20) + params(blobLen - 20).
+    ///      blobLen must be 0 (no adapter) or >= 20. Returns the offset after the blob.
+    function _checkAdapterBlob(
+        bytes memory buffer,
+        uint256 offset,
+        uint256 index
+    ) private pure returns (uint256) {
+        uint256 blobLen = uint8(buffer[offset]);
+        if (blobLen != 0 && blobLen < 20) {
+            revert IRolesError.UnsuitableCompValue(index);
+        }
+        offset += 1 + blobLen;
+        if (offset > buffer.length) {
+            revert IRolesError.UnsuitableCompValue(index);
+        }
+        return offset;
     }
 
     function _sChildBounds(

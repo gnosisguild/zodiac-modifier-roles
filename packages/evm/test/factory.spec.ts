@@ -25,14 +25,30 @@ describe("Module works with factory", () => {
     const Factory = await hre.ethers.getContractFactory("ModuleProxyFactory");
     const factory = await Factory.deploy();
 
-    const ConditionStorer =
-      await hre.ethers.getContractFactory("ConditionStorer");
+    const conditionStorerArtifact =
+      await hre.artifacts.readArtifact("ConditionStorer");
+    const ConditionStorer = new ethers.ContractFactory(
+      [],
+      conditionStorerArtifact.bytecode,
+      deployer,
+    );
     const conditionStorer = await ConditionStorer.deploy();
     const conditionStorerAddress = await conditionStorer.getAddress();
+
+    const withinRatioCheckerArtifact =
+      await hre.artifacts.readArtifact("WithinRatioChecker");
+    const WithinRatioChecker = new ethers.ContractFactory(
+      [],
+      withinRatioCheckerArtifact.bytecode,
+      deployer,
+    );
+    const withinRatioChecker = await WithinRatioChecker.deploy();
+    const withinRatioCheckerAddress = await withinRatioChecker.getAddress();
 
     const Modifier = await hre.ethers.getContractFactory("Roles", {
       libraries: {
         ConditionStorer: conditionStorerAddress,
+        WithinRatioChecker: withinRatioCheckerAddress,
       },
     });
     const masterCopy = await Modifier.deploy(

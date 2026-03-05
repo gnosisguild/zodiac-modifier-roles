@@ -30,9 +30,10 @@ library PriceConversion {
      */
     function convert(
         uint256 amount,
-        address adapter
+        address adapter,
+        bytes memory params
     ) internal view returns (Status, uint256) {
-        (Status status, uint256 price) = _getPrice(adapter);
+        (Status status, uint256 price) = _getPrice(adapter, params);
         if (status != Status.Ok) {
             return (status, 0);
         }
@@ -54,7 +55,10 @@ library PriceConversion {
      *
      */
 
-    function _getPrice(address adapter) private view returns (Status, uint256) {
+    function _getPrice(
+        address adapter,
+        bytes memory params
+    ) private view returns (Status, uint256) {
         if (adapter == address(0)) {
             return (Status.Ok, ONE);
         }
@@ -68,7 +72,7 @@ library PriceConversion {
         }
 
         (bool success, bytes memory returnData) = adapter.staticcall(
-            abi.encodeCall(IPricing.getPrice, ())
+            abi.encodeCall(IPricing.getPrice, (params))
         );
 
         if (!success) {
