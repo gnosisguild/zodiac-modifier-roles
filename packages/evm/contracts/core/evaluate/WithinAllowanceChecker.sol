@@ -98,17 +98,18 @@ library WithinAllowanceChecker {
         bytes memory compValue
     ) private view returns (Status, uint256) {
         /**
-         * CompValue Layout (32, 34, or 54 bytes):
-         * ┌─────────────────────────┬──────────┬──────────┬─────────────────────┐
-         * │      allowanceKey       │   base   │  param   │       adapter       │
-         * │        (bytes32)        │ decimals │ decimals │      (address)      │
-         * ├─────────────────────────┼──────────┼──────────┼─────────────────────┤
-         * │         0 - 31          │    32    │    33    │       34 - 53       │
-         * └─────────────────────────┴──────────┴──────────┴─────────────────────┘
-         *                           └── optional ─────────┴───── optional ──────┘
+         * CompValue Layout (32, 34, 54, or 54+ bytes):
+         * ┌─────────────────────────┬──────────┬──────────┬─────────────────────┬─────────────────────┐
+         * │      allowanceKey       │   base   │  param   │       adapter       │    adapterParams    │
+         * │        (bytes32)        │ decimals │ decimals │      (address)      │       (bytes)       │
+         * ├─────────────────────────┼──────────┼──────────┼─────────────────────┼─────────────────────┤
+         * │         0 - 31          │    32    │    33    │       34 - 53       │        54+          │
+         * └─────────────────────────┴──────────┴──────────┴─────────────────────┴─────────────────────┘
+         *                           └── optional ─────────┴───── optional ──────┴──── optional ───────┘
          *
          * baseDecimals: decimals of the allowance unit  (how it's accounted)
          * paramDecimals: decimals of the parameter value (from calldata)
+         * adapterParams: optional trailing bytes passed to IPricing.getPrice(params)
          */
 
         if (compValue.length == 32) {
@@ -139,7 +140,17 @@ library WithinAllowanceChecker {
             }
         }
 
-        return PriceConversion.convert(value, adapter);
+        bytes memory params;
+        if (compValue.length > 54) {
+            uint256 length = compValue.length - 54;
+            params = new bytes(length);
+            assembly {
+                // 0x56 = 0x20 (memory length prefix) + 0x36 (byte 54)
+                mcopy(add(params, 0x20), add(compValue, 0x56), length)
+            }
+        }
+
+        return PriceConversion.convert(value, adapter, params);
     }
 
     /// @dev Ceiling division. Returns 0 for 0, otherwise ⌈a / b⌉.

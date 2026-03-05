@@ -1540,6 +1540,152 @@ describe("Operator - WithinAllowance", async () => {
     });
   });
 
+  describe("parameterized adapter", () => {
+    const allowanceKey =
+      "0x0000000000000000000000000000000000000000000000000000000000000001";
+
+    it("adapter receives encoded params from compValue", async () => {
+      const { owner, roles, allowFunction, invoke } =
+        await loadFixture(setupOneParam);
+
+      // Adapter that requires specific params, reverts otherwise
+      const adapter = await (
+        await hre.ethers.getContractFactory("MockPricingParameterized")
+      ).deploy();
+
+      const params = "0xdeadbeef";
+      await adapter.setPrice(params, 2n * 10n ** 18n); // 2x multiplier
+
+      await setAllowance(await roles.connect(owner), allowanceKey, {
+        balance: 2000n,
+        period: 0,
+        refill: 0,
+        timestamp: 0,
+      });
+
+      // compValue: allowanceKey(32) + baseDecimals(1) + paramDecimals(1) + adapter(20) + params(4)
+      const compValue = solidityPacked(
+        ["bytes32", "uint8", "uint8", "address", "bytes"],
+        [allowanceKey, 0, 0, await adapter.getAddress(), params],
+      );
+
+      // wrong params → adapter reverts, we check it is extracting and passing correctly
+      const wrongCompValue = solidityPacked(
+        ["bytes32", "uint8", "uint8", "address", "bytes"],
+        [allowanceKey, 0, 0, await adapter.getAddress(), "0xcafebabe"],
+      );
+      await allowFunction([
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: wrongCompValue,
+        },
+      ]);
+      await expect(invoke(500))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.PricingAdapterReverted, 1, anyValue);
+
+      // correct params → works
+      await allowFunction([
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue,
+        },
+      ]);
+
+      // value=500, price=2x → consumed=1000, within 2000 balance
+      await expect(invoke(500)).to.not.be.reverted;
+
+      const allowance = await roles.accruedAllowance(allowanceKey);
+      expect(allowance.balance).to.equal(1000n); // 2000 - 1000
+
+      // value=600 → consumed=1200, total=2200 > 2000 → fail
+      await expect(invoke(600))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.AllowanceExceeded, 1, anyValue);
+    });
+
+    it("adapter receives empty params when compValue has no trailing bytes", async () => {
+      const { owner, roles, allowFunction, invoke } =
+        await loadFixture(setupOneParam);
+
+      // Adapter that requires empty params, reverts if non-empty
+      const adapter = await (
+        await hre.ethers.getContractFactory("MockPricingEmptyParams")
+      ).deploy(10n ** 18n); // 1:1 price
+
+      await setAllowance(await roles.connect(owner), allowanceKey, {
+        balance: 1000n,
+        period: 0,
+        refill: 0,
+        timestamp: 0,
+      });
+
+      // counterfactual: non-empty params → adapter reverts
+      const wrongCompValue = solidityPacked(
+        ["bytes32", "uint8", "uint8", "address", "bytes"],
+        [allowanceKey, 0, 0, await adapter.getAddress(), "0xdeadbeef"],
+      );
+      await allowFunction([
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: wrongCompValue,
+        },
+      ]);
+      await expect(invoke(500))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.PricingAdapterReverted, 1, anyValue);
+
+      // correct: exactly 54 bytes (no trailing params)
+      const compValue = solidityPacked(
+        ["bytes32", "uint8", "uint8", "address"],
+        [allowanceKey, 0, 0, await adapter.getAddress()],
+      );
+      await allowFunction([
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue,
+        },
+      ]);
+
+      // 1:1 price, value=500 → consumed=500
+      await expect(invoke(500)).to.not.be.reverted;
+      const allowance = await roles.accruedAllowance(allowanceKey);
+      expect(allowance.balance).to.equal(500n);
+    });
+  });
+
   describe("adapter call safety", () => {
     function encodeAllowanceCompValue({
       allowanceKey,
@@ -2018,6 +2164,33 @@ describe("Operator - WithinAllowance", async () => {
             },
           ]),
         ).to.be.revertedWithCustomError(roles, "UnsuitableCompValue");
+      });
+
+      it("accepts compValue longer than 54 bytes (with adapter params)", async () => {
+        const { roles } = await loadFixture(setupTestContract);
+
+        const allowanceKey = hexlify(randomBytes(32));
+        // 54 bytes + 4 bytes trailing params
+        const compValue = solidityPacked(
+          ["bytes32", "uint8", "uint8", "address", "bytes"],
+          [
+            allowanceKey,
+            18,
+            6,
+            "0x0000000000000000000000000000000000000001",
+            "0xdeadbeef",
+          ],
+        );
+
+        // Should succeed without reverting
+        await roles.packConditions([
+          {
+            parent: 0,
+            paramType: Encoding.Static,
+            operator: Operator.WithinAllowance,
+            compValue,
+          },
+        ]);
       });
 
       it("reverts UnsuitableCompValue when compValue is 33 bytes", async () => {
