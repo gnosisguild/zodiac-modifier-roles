@@ -178,7 +178,7 @@ const applyOptions = (
     condition = applyGlobalAllowance(condition, {
       paramType: ParameterType.None,
       operator: Operator.CallWithinAllowance,
-      compValue: options.etherWithinAllowance,
+      compValue: options.callWithinAllowance,
     })
   }
 
