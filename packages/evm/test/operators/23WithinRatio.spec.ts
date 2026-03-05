@@ -514,17 +514,25 @@ describe("Operator - WithinRatio", () => {
           );
       });
 
-      it("applies reference adapter only (32-byte compValue)", async () => {
-        const { roles, allowFunction, invoke } =
-          await loadFixture(setupTwoParams);
+      it("applies reference adapter only (33-byte compValue)", async () => {
+        const { allowFunction, invoke } = await loadFixture(setupTwoParams);
 
         // Reference adapter: 1 token = 2000 USD, no relative adapter
         const MockPricing = await hre.ethers.getContractFactory("MockPricing");
         const refAdapter = await MockPricing.deploy(2000n * 10n ** 18n);
 
-        // 32-byte encoding: no relativeAdapter included
+        // 33-byte encoding: base(12) + refLen(1) + refAdapter(20)
         const compValue = solidityPacked(
-          ["uint8", "uint8", "uint8", "uint8", "uint32", "uint32", "address"],
+          [
+            "uint8",
+            "uint8",
+            "uint8",
+            "uint8",
+            "uint32",
+            "uint32",
+            "uint8",
+            "address",
+          ],
           [
             44, // referencePluckIndex
             18, // referenceDecimals
@@ -532,6 +540,7 @@ describe("Operator - WithinRatio", () => {
             18, // relativeDecimals
             9900, // minRatio (99%)
             10100, // maxRatio (101%)
+            20, // refBlobLen (address only, no params)
             await refAdapter.getAddress(),
           ],
         );
@@ -547,7 +556,7 @@ describe("Operator - WithinRatio", () => {
           .reverted;
       });
 
-      it("applies relative adapter only (52-byte compValue)", async () => {
+      it("applies relative adapter only (54-byte compValue)", async () => {
         const { roles, allowFunction, invoke } =
           await loadFixture(setupTwoParams);
 
@@ -555,7 +564,7 @@ describe("Operator - WithinRatio", () => {
         const MockPricing = await hre.ethers.getContractFactory("MockPricing");
         const relAdapter = await MockPricing.deploy(150000n * 10n ** 18n);
 
-        // 52-byte encoding: referenceAdapter = address(0), relativeAdapter set
+        // 54-byte encoding: base(12) + refLen(1) + refAdapter(20) + relLen(1) + relAdapter(20)
         const compValue = solidityPacked(
           [
             "uint8",
@@ -564,7 +573,9 @@ describe("Operator - WithinRatio", () => {
             "uint8",
             "uint32",
             "uint32",
+            "uint8",
             "address",
+            "uint8",
             "address",
           ],
           [
@@ -574,7 +585,9 @@ describe("Operator - WithinRatio", () => {
             8, // relativeDecimals
             9900, // minRatio
             10100, // maxRatio
+            20, // refBlobLen (address only, no params)
             "0x0000000000000000000000000000000000000000", // no reference adapter
+            20, // relBlobLen (address only, no params)
             await relAdapter.getAddress(),
           ],
         );
@@ -782,6 +795,179 @@ describe("Operator - WithinRatio", () => {
             anyValue,
           );
       });
+    });
+  });
+
+  describe("parameterized adapters", () => {
+    it("ref with params, rel with params", async () => {
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupTwoParams);
+
+      const MockPricingParameterized = await hre.ethers.getContractFactory(
+        "MockPricingParameterized",
+      );
+      const refAdapter = await MockPricingParameterized.deploy();
+      const relAdapter = await MockPricingParameterized.deploy();
+
+      const refParams = "0xaaaa";
+      const relParams = "0xbbbbcccc";
+
+      await refAdapter.setPrice(refParams, 2000n * 10n ** 18n);
+      await relAdapter.setPrice(relParams, 1n * 10n ** 18n);
+
+      // counterfactual: wrong rel params → adapter reverts
+      const wrongCompValue = encodeWithinRatioCompValue({
+        referencePluckIndex: 3,
+        referenceDecimals: 0,
+        relativePluckIndex: 7,
+        relativeDecimals: 0,
+        minRatio: 9000,
+        maxRatio: 11000,
+        referenceAdapter: await refAdapter.getAddress(),
+        relativeAdapter: await relAdapter.getAddress(),
+        referenceParams: refParams,
+        relativeParams: "0xffff",
+      });
+      await allowFunction(
+        flattenCondition(
+          matchesWithRatio([pluck(3), pluck(7)], wrongCompValue),
+        ),
+      );
+      await expect(invoke(1, 2000))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.PricingAdapterReverted, 2, anyValue);
+
+      // correct params
+      const compValue = encodeWithinRatioCompValue({
+        referencePluckIndex: 3,
+        referenceDecimals: 0,
+        relativePluckIndex: 7,
+        relativeDecimals: 0,
+        minRatio: 9000,
+        maxRatio: 11000,
+        referenceAdapter: await refAdapter.getAddress(),
+        relativeAdapter: await relAdapter.getAddress(),
+        referenceParams: refParams,
+        relativeParams: relParams,
+      });
+      await allowFunction(
+        flattenCondition(matchesWithRatio([pluck(3), pluck(7)], compValue)),
+      );
+
+      // ref=1 * 2000 = 2000, rel=2000 * 1 = 2000, ratio=10000 (100%) → pass
+      await expect(invoke(1, 2000)).to.not.be.reverted;
+
+      // ref=1 * 2000 = 2000, rel=1600 * 1 = 1600, ratio=8000 (80%) < 90% → fail
+      await expect(invoke(1, 1600))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.RatioBelowMin, 2, anyValue);
+    });
+
+    it("ref with adapter no params, rel with params", async () => {
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupTwoParams);
+
+      const MockPricingParameterized = await hre.ethers.getContractFactory(
+        "MockPricingParameterized",
+      );
+      const relAdapter = await MockPricingParameterized.deploy();
+      const relParams = "0xdeadbeef";
+      await relAdapter.setPrice(relParams, 3n * 10n ** 18n); // 3x
+
+      // ref adapter requires empty params
+      const refAdapter = await (
+        await hre.ethers.getContractFactory("MockPricingEmptyParams")
+      ).deploy(2n * 10n ** 18n); // 2x
+
+      // counterfactual: wrong rel params → adapter reverts
+      const wrongCompValue = encodeWithinRatioCompValue({
+        referencePluckIndex: 3,
+        referenceDecimals: 0,
+        relativePluckIndex: 7,
+        relativeDecimals: 0,
+        minRatio: 9000,
+        maxRatio: 11000,
+        referenceAdapter: await refAdapter.getAddress(),
+        relativeAdapter: await relAdapter.getAddress(),
+        relativeParams: "0xcafebabe",
+      });
+      await allowFunction(
+        flattenCondition(
+          matchesWithRatio([pluck(3), pluck(7)], wrongCompValue),
+        ),
+      );
+      await expect(invoke(100, 60))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.PricingAdapterReverted, 2, anyValue);
+
+      // correct params
+      const compValue = encodeWithinRatioCompValue({
+        referencePluckIndex: 3,
+        referenceDecimals: 0,
+        relativePluckIndex: 7,
+        relativeDecimals: 0,
+        minRatio: 9000,
+        maxRatio: 11000,
+        referenceAdapter: await refAdapter.getAddress(),
+        relativeAdapter: await relAdapter.getAddress(),
+        relativeParams: relParams,
+      });
+      await allowFunction(
+        flattenCondition(matchesWithRatio([pluck(3), pluck(7)], compValue)),
+      );
+
+      // ref=100 * 2 = 200, rel=60 * 3 = 180, ratio=9000 (90%) → pass
+      await expect(invoke(100, 60)).to.not.be.reverted;
+    });
+
+    it("ref without adapter, rel with params", async () => {
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupTwoParams);
+
+      const MockPricingParameterized = await hre.ethers.getContractFactory(
+        "MockPricingParameterized",
+      );
+      const relAdapter = await MockPricingParameterized.deploy();
+      const relParams = "0xdeadbeef";
+      await relAdapter.setPrice(relParams, 2n * 10n ** 18n); // 2x
+
+      // counterfactual: wrong rel params → adapter reverts
+      const wrongCompValue = encodeWithinRatioCompValue({
+        referencePluckIndex: 3,
+        referenceDecimals: 0,
+        relativePluckIndex: 7,
+        relativeDecimals: 0,
+        minRatio: 9000,
+        maxRatio: 11000,
+        relativeAdapter: await relAdapter.getAddress(),
+        relativeParams: "0xcafebabe",
+      });
+      await allowFunction(
+        flattenCondition(
+          matchesWithRatio([pluck(3), pluck(7)], wrongCompValue),
+        ),
+      );
+      await expect(invoke(1000, 500))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.PricingAdapterReverted, 2, anyValue);
+
+      // correct params, ref blobLen=0 (no adapter)
+      const compValue = encodeWithinRatioCompValue({
+        referencePluckIndex: 3,
+        referenceDecimals: 0,
+        relativePluckIndex: 7,
+        relativeDecimals: 0,
+        minRatio: 9000,
+        maxRatio: 11000,
+        relativeAdapter: await relAdapter.getAddress(),
+        relativeParams: relParams,
+      });
+      await allowFunction(
+        flattenCondition(matchesWithRatio([pluck(3), pluck(7)], compValue)),
+      );
+
+      // ref=1000 * 1 = 1000, rel=500 * 2 = 1000, ratio=10000 → pass
+      await expect(invoke(1000, 500)).to.not.be.reverted;
     });
   });
 
@@ -1799,15 +1985,20 @@ describe("Operator - WithinRatio", () => {
 });
 
 // Helper function to encode compValue for WithinRatio operator
+//
+// Layout: base(12) [ + refBlob [ + relBlob ] ]
+// Each adapter blob: len(1) + address(20) + params(len)
 function encodeWithinRatioCompValue({
-  referenceAdapter = "0x0000000000000000000000000000000000000000",
-  relativeAdapter = "0x0000000000000000000000000000000000000000",
+  referenceAdapter,
+  relativeAdapter,
   referencePluckIndex,
   referenceDecimals,
   relativePluckIndex,
   relativeDecimals,
   minRatio,
   maxRatio,
+  referenceParams,
+  relativeParams,
 }: {
   referenceAdapter?: string;
   relativeAdapter?: string;
@@ -1817,18 +2008,11 @@ function encodeWithinRatioCompValue({
   relativeDecimals: number;
   minRatio: number;
   maxRatio: number;
+  referenceParams?: string;
+  relativeParams?: string;
 }): string {
-  return solidityPacked(
-    [
-      "uint8",
-      "uint8",
-      "uint8",
-      "uint8",
-      "uint32",
-      "uint32",
-      "address",
-      "address",
-    ],
+  const base = solidityPacked(
+    ["uint8", "uint8", "uint8", "uint8", "uint32", "uint32"],
     [
       referencePluckIndex,
       referenceDecimals,
@@ -1836,10 +2020,37 @@ function encodeWithinRatioCompValue({
       relativeDecimals,
       minRatio,
       maxRatio,
-      referenceAdapter,
-      relativeAdapter,
     ],
   );
+
+  if (!referenceAdapter && !relativeAdapter) return base;
+
+  let result = base;
+
+  if (referenceAdapter) {
+    const refParamsBytes = referenceParams || "0x";
+    const refParamsLen = (refParamsBytes.length - 2) / 2;
+    // ref blob: blobLen(1) + address(20) + params(blobLen - 20)
+    result = solidityPacked(
+      ["bytes", "uint8", "address", "bytes"],
+      [result, 20 + refParamsLen, referenceAdapter, refParamsBytes],
+    );
+  } else {
+    // blobLen=0: no ref adapter
+    result = solidityPacked(["bytes", "uint8"], [result, 0]);
+  }
+
+  if (relativeAdapter) {
+    const relParamsBytes = relativeParams || "0x";
+    const relParamsLen = (relParamsBytes.length - 2) / 2;
+    // rel blob: blobLen(1) + address(20) + params(blobLen - 20)
+    result = solidityPacked(
+      ["bytes", "uint8", "address", "bytes"],
+      [result, 20 + relParamsLen, relativeAdapter, relParamsBytes],
+    );
+  }
+
+  return result;
 }
 
 describe("integrity", () => {
@@ -1921,13 +2132,22 @@ describe("integrity", () => {
       ]);
     });
 
-    it("accepts 32-byte compValue (one adapter)", async () => {
+    it("accepts 33-byte compValue (one adapter, no params)", async () => {
       const { roles } = await loadFixture(setupTestContract);
 
-      // 32 bytes: 12 bytes + referenceAdapter(20)
-      const compValue32 = solidityPacked(
-        ["uint8", "uint8", "uint8", "uint8", "uint32", "uint32", "address"],
-        [0, 0, 1, 0, 9000, 11000, ZeroAddress],
+      // 33 bytes: 12 base + refLen(1) + refAdapter(20)
+      const compValue33 = solidityPacked(
+        [
+          "uint8",
+          "uint8",
+          "uint8",
+          "uint8",
+          "uint32",
+          "uint32",
+          "uint8",
+          "address",
+        ],
+        [0, 0, 1, 0, 9000, 11000, 20, ZeroAddress],
       );
 
       // Should succeed without reverting
@@ -1948,7 +2168,7 @@ describe("integrity", () => {
           parent: 0,
           paramType: Encoding.None,
           operator: Operator.WithinRatio,
-          compValue: compValue32,
+          compValue: compValue33,
         },
         {
           parent: 1,
@@ -1965,11 +2185,11 @@ describe("integrity", () => {
       ]);
     });
 
-    it("accepts 52-byte compValue (two adapters)", async () => {
+    it("accepts 54-byte compValue (two adapters, no params)", async () => {
       const { roles } = await loadFixture(setupTestContract);
 
-      // 52 bytes: 12 bytes + referenceAdapter(20) + relativeAdapter(20)
-      const compValue52 = solidityPacked(
+      // 54 bytes: 12 base + refLen(1) + refAdapter(20) + relLen(1) + relAdapter(20)
+      const compValue54 = solidityPacked(
         [
           "uint8",
           "uint8",
@@ -1977,10 +2197,12 @@ describe("integrity", () => {
           "uint8",
           "uint32",
           "uint32",
+          "uint8",
           "address",
+          "uint8",
           "address",
         ],
-        [0, 0, 1, 0, 9000, 11000, ZeroAddress, ZeroAddress],
+        [0, 0, 1, 0, 9000, 11000, 20, ZeroAddress, 20, ZeroAddress],
       );
 
       // Should succeed without reverting
@@ -2001,7 +2223,7 @@ describe("integrity", () => {
           parent: 0,
           paramType: Encoding.None,
           operator: Operator.WithinRatio,
-          compValue: compValue52,
+          compValue: compValue54,
         },
         {
           parent: 1,
@@ -2033,7 +2255,7 @@ describe("integrity", () => {
       ).to.be.revertedWithCustomError(roles, "UnsuitableCompValue");
     });
 
-    it("reverts UnsuitableCompValue when compValue is between 12 and 32 bytes", async () => {
+    it("reverts UnsuitableCompValue when compValue is between 12 and 33 bytes", async () => {
       const { roles } = await loadFixture(setupTestContract);
 
       await expect(
@@ -2048,34 +2270,75 @@ describe("integrity", () => {
       ).to.be.revertedWithCustomError(roles, "UnsuitableCompValue");
     });
 
-    it("reverts UnsuitableCompValue when compValue is between 32 and 52 bytes", async () => {
+    it("accepts compValue with adapter params", async () => {
       const { roles } = await loadFixture(setupTestContract);
 
-      await expect(
-        packConditions(roles, [
-          {
-            parent: 0,
-            paramType: Encoding.None,
-            operator: Operator.WithinRatio,
-            compValue: "0x" + "ab".repeat(40), // 40 bytes - invalid
-          },
-        ]),
-      ).to.be.revertedWithCustomError(roles, "UnsuitableCompValue");
-    });
+      // 12 base + refBlobLen(1) + refAdapter(20) + refParams(2)
+      //        + relBlobLen(1) + relAdapter(20) + relParams(2) = 58
+      const compValue = solidityPacked(
+        [
+          "uint8",
+          "uint8",
+          "uint8",
+          "uint8",
+          "uint32",
+          "uint32",
+          "uint8",
+          "address",
+          "bytes",
+          "uint8",
+          "address",
+          "bytes",
+        ],
+        [
+          0,
+          0,
+          1,
+          0,
+          9000,
+          11000,
+          22, // blobLen = 20 (address) + 2 (params)
+          "0x0000000000000000000000000000000000000001",
+          "0xaabb",
+          22, // blobLen = 20 (address) + 2 (params)
+          "0x0000000000000000000000000000000000000002",
+          "0xccdd",
+        ],
+      );
 
-    it("reverts UnsuitableCompValue when compValue exceeds 52 bytes", async () => {
-      const { roles } = await loadFixture(setupTestContract);
-
-      await expect(
-        packConditions(roles, [
-          {
-            parent: 0,
-            paramType: Encoding.None,
-            operator: Operator.WithinRatio,
-            compValue: "0x" + "ab".repeat(53), // 53 bytes
-          },
-        ]),
-      ).to.be.revertedWithCustomError(roles, "UnsuitableCompValue");
+      // Should succeed without reverting
+      await roles.packConditions([
+        {
+          parent: 0,
+          paramType: Encoding.None,
+          operator: Operator.And,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.None,
+          operator: Operator.WithinRatio,
+          compValue,
+        },
+        {
+          parent: 1,
+          paramType: Encoding.Static,
+          operator: Operator.Pluck,
+          compValue: "0x00",
+        },
+        {
+          parent: 1,
+          paramType: Encoding.Static,
+          operator: Operator.Pluck,
+          compValue: "0x01",
+        },
+      ]);
     });
 
     it("reverts WithinRatioNoRatioProvided when both minRatio and maxRatio are zero", async () => {

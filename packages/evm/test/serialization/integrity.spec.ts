@@ -611,7 +611,9 @@ describe("Integrity", () => {
         "00" + // relativeDecimals = 0
         "00002328" + // minRatio = 9000
         "00002af8" + // maxRatio = 11000
+        "14" + // refBlobLen = 20 (address only, no params)
         "0000000000000000000000000000000000000000" + // referenceAdapter
+        "14" + // relBlobLen = 20 (address only, no params)
         "0000000000000000000000000000000000000000"; // relativeAdapter
 
       await expect(
@@ -659,7 +661,9 @@ describe("Integrity", () => {
         "12" + // relativeDecimals = 18
         "00002328" + // minRatio = 9000 (90%)
         "00002af8" + // maxRatio = 11000 (110%)
+        "14" + // refBlobLen = 20 (address only, no params)
         "0000000000000000000000000000000000000000" + // referenceAdapter
+        "14" + // relBlobLen = 20 (address only, no params)
         "0000000000000000000000000000000000000000"; // relativeAdapter
 
       await expect(
@@ -717,7 +721,9 @@ describe("Integrity", () => {
         "12" + // relativeDecimals = 18
         "00002328" + // minRatio = 9000 (90%)
         "00002af8" + // maxRatio = 11000 (110%)
+        "14" + // refBlobLen = 20 (address only, no params)
         "0000000000000000000000000000000000000000" + // referenceAdapter
+        "14" + // relBlobLen = 20 (address only, no params)
         "0000000000000000000000000000000000000000"; // relativeAdapter
 
       // DFS order: And(0) -> Matches(1) -> Pass -> Pass -> Pluck -> Pluck -> WithinRatio(2)
@@ -779,7 +785,9 @@ describe("Integrity", () => {
         "12" + // relativeDecimals = 18
         "00002328" + // minRatio = 9000 (90%)
         "00002af8" + // maxRatio = 11000 (110%)
+        "14" + // refBlobLen = 20 (address only, no params)
         "0000000000000000000000000000000000000000" + // referenceAdapter
+        "14" + // relBlobLen = 20 (address only, no params)
         "0000000000000000000000000000000000000000"; // relativeAdapter
 
       await expect(
