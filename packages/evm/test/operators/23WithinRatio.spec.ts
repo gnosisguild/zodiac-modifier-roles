@@ -835,11 +835,7 @@ describe("Operator - WithinRatio", () => {
       );
       await expect(invoke(1, 2000))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(
-          ConditionViolationStatus.PricingAdapterReverted,
-          2,
-          anyValue,
-        );
+        .withArgs(ConditionViolationStatus.PricingAdapterReverted, 2, anyValue);
 
       // correct params
       const compValue = encodeWithinRatioCompValue({
@@ -902,11 +898,7 @@ describe("Operator - WithinRatio", () => {
       );
       await expect(invoke(100, 60))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(
-          ConditionViolationStatus.PricingAdapterReverted,
-          2,
-          anyValue,
-        );
+        .withArgs(ConditionViolationStatus.PricingAdapterReverted, 2, anyValue);
 
       // correct params
       const compValue = encodeWithinRatioCompValue({
@@ -957,11 +949,7 @@ describe("Operator - WithinRatio", () => {
       );
       await expect(invoke(1000, 500))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(
-          ConditionViolationStatus.PricingAdapterReverted,
-          2,
-          anyValue,
-        );
+        .withArgs(ConditionViolationStatus.PricingAdapterReverted, 2, anyValue);
 
       // correct params, ref blobLen=0 (no adapter)
       const compValue = encodeWithinRatioCompValue({
