@@ -1,7 +1,7 @@
 import { expect, test } from "vitest"
 import { BigNumberish } from "ethers"
 import { c } from "zodiac-roles-sdk"
-import { Operator, ParameterType } from "zodiac-roles-deployments"
+import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
 
 import { Scoping } from "../main/target/authoring/types"
 import { allow } from "./typings"
@@ -60,7 +60,7 @@ test("callWithinAllowance sets correct compValue", () => {
     "0x0000000000000000000000000000000000000000000000000000000000000001" as `0x${string}`
 
   // Use any allow kit function — they all go through applyOptions
-  const permission = allow.mainnet.lido.steth.submit(c.pass, {
+  const permission = allow.mainnet.lido.stETH.submit(c.pass, {
     callWithinAllowance: allowanceKey,
   })
 
@@ -78,7 +78,9 @@ test("callWithinAllowance sets correct compValue", () => {
   expect(callWithinAllowanceNode!.compValue).toBe(allowanceKey)
 
   // The condition should pass the SDK's own integrity check
-  expect(() => checkRootConditionIntegrity(condition)).not.toThrow()
+  expect(() =>
+    checkRootConditionIntegrity(condition as Condition)
+  ).not.toThrow()
 })
 
 test("callWithinAllowance without etherWithinAllowance does not throw", () => {
@@ -89,9 +91,9 @@ test("callWithinAllowance without etherWithinAllowance does not throw", () => {
   // passing callWithinAllowance WITHOUT etherWithinAllowance caused
   // compValue to be undefined (it read options.etherWithinAllowance by mistake)
   expect(() => {
-    const permission = allow.mainnet.lido.steth.submit(c.pass, {
+    const permission = allow.mainnet.lido.stETH.submit(c.pass, {
       callWithinAllowance: allowanceKey,
     })
-    checkRootConditionIntegrity(permission.condition!)
+    checkRootConditionIntegrity(permission.condition as Condition)
   }).not.toThrow()
 })
