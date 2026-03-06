@@ -1,8 +1,8 @@
-import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
+import { Encoding, Condition, Operator } from "zodiac-roles-deployments"
 
 export interface ConditionFlat {
   parent: number
-  paramType: ParameterType
+  paramType: Encoding
   operator: Operator
   compValue?: string
 }

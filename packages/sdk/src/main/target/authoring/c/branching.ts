@@ -1,5 +1,5 @@
 import { ParamType } from "ethers"
-import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
+import { Encoding, Condition, Operator } from "zodiac-roles-deployments"
 
 import { mapScoping } from "./matches"
 
@@ -16,7 +16,7 @@ export const or =
     ...branches: Branches
   ): ConditionFunction<T> =>
   (abiType: ParamType) => ({
-    paramType: ParameterType.None,
+    paramType: Encoding.None,
     operator: Operator.Or,
     children: branches.map((branch) => {
       if (branch === undefined) {
@@ -35,7 +35,7 @@ export const and =
     ...branches: Branches
   ): ConditionFunction<T> =>
   (abiType: ParamType) => ({
-    paramType: ParameterType.None,
+    paramType: Encoding.None,
     operator: Operator.And,
     children: branches.map((branch) => {
       if (branch === undefined) {
@@ -44,3 +44,4 @@ export const and =
       return mapScoping(branch, abiType) as Condition // cast is safe because of earlier branch check
     }),
   })
+

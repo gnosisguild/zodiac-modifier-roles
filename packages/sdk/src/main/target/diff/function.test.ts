@@ -4,7 +4,7 @@ import {
   ExecutionOptions,
   Function,
   Operator,
-  ParameterType,
+  Encoding,
 } from "zodiac-roles-deployments"
 
 import { diffFunction, diffFunctions } from "./function"
@@ -16,7 +16,7 @@ const targetAddress = ZeroAddress as `0x${string}`
 const selector: `0x${string}` = "0xaabbccdd"
 
 const staticComp = (id: number) => ({
-  paramType: ParameterType.Static,
+  paramType: Encoding.Static,
   operator: Operator.Custom,
   compValue: abiEncode(["uint256"], [id]),
 })
@@ -36,7 +36,7 @@ suite("diffFunction", () => {
     expect(plus).toHaveLength(1)
     expect(plus).toEqual([
       {
-        call: "scopeFunction",
+        call: "allowFunction",
         roleKey,
         targetAddress,
         selector,
@@ -165,7 +165,7 @@ suite("diffFunction", () => {
     expect(plus).toHaveLength(0)
     expect(minus).toEqual([
       {
-        call: "scopeFunction",
+        call: "allowFunction",
         roleKey,
         targetAddress,
         selector,
@@ -200,7 +200,7 @@ suite("diffFunction", () => {
     expect(plus).toHaveLength(1)
     expect(plus).toEqual([
       {
-        call: "scopeFunction",
+        call: "allowFunction",
         roleKey,
         targetAddress,
         selector,
@@ -235,12 +235,12 @@ suite("diffFunction", () => {
   })
   it("was scoped, now is scoped, equivalent conditions (normalize to same)", () => {
     const condition1 = {
-      paramType: ParameterType.None,
+      paramType: Encoding.None,
       operator: Operator.And,
       children: [staticComp(0), staticComp(0), staticComp(1)],
     }
     const condition2 = {
-      paramType: ParameterType.None,
+      paramType: Encoding.None,
       operator: Operator.And,
       children: [staticComp(0), staticComp(1)],
     }
@@ -299,7 +299,7 @@ suite("diffFunction", () => {
     expect(plus).toHaveLength(1)
     expect(plus).toEqual([
       {
-        call: "scopeFunction",
+        call: "allowFunction",
         roleKey,
         targetAddress,
         selector,
@@ -335,7 +335,7 @@ suite("diffFunction", () => {
     expect(plus).toHaveLength(0)
     expect(minus).toEqual([
       {
-        call: "scopeFunction",
+        call: "allowFunction",
         roleKey,
         targetAddress,
         selector,

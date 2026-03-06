@@ -1,11 +1,11 @@
 import { expect, it, describe } from "vitest"
 import {
-  Condition,
-  Operator,
-  ParameterType,
-  Target,
-  ExecutionOptions,
+  Encoding,
   Clearance,
+  Condition,
+  ExecutionOptions,
+  Operator,
+  Target,
 } from "zodiac-roles-deployments"
 
 import { abiEncode } from "../abiEncode"
@@ -14,7 +14,7 @@ import { targetIncludes } from "./targetIncludes"
 const AddressOne = "0x0000000000000000000000000000000000000001"
 
 const COMP = (id: number) => ({
-  paramType: ParameterType.Static,
+  paramType: Encoding.Static,
   operator: Operator.EqualTo,
   compValue: abiEncode(["uint256"], [id]),
 })
@@ -522,7 +522,7 @@ describe("targetIncludes()", () => {
     it("conditions are normalized before comparison", () => {
       // Test that equivalent but differently structured conditions are considered equal
       const condition1: Condition = {
-        paramType: ParameterType.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         compValue: "0x",
         children: [
@@ -530,14 +530,14 @@ describe("targetIncludes()", () => {
           COMP(1),
           {
             compValue: "0x",
-            paramType: ParameterType.Static,
+            paramType: Encoding.Static,
             operator: Operator.Pass,
           },
         ],
       }
 
       const condition2: Condition = {
-        paramType: ParameterType.Calldata,
+        paramType: Encoding.AbiEncoded,
         operator: Operator.Matches,
         children: [COMP(2), COMP(1)],
       }
@@ -577,13 +577,13 @@ describe("targetIncludes()", () => {
     it("conditional includes subset conditional (OR variant)", () => {
       // Left condition has OR(1, 2, 3), right has OR(1, 2) - should include
       const leftCondition: Condition = {
-        paramType: ParameterType.None,
+        paramType: Encoding.None,
         operator: Operator.Or,
         children: [COMP(1), COMP(2), COMP(3)],
       }
 
       const rightCondition: Condition = {
-        paramType: ParameterType.None,
+        paramType: Encoding.None,
         operator: Operator.Or,
         children: [COMP(1), COMP(2)],
       }
@@ -623,13 +623,13 @@ describe("targetIncludes()", () => {
     it("conditional does NOT include superset conditional", () => {
       // Left condition has OR(1, 2), right has OR(1, 2, 3) - should NOT include
       const leftCondition: Condition = {
-        paramType: ParameterType.None,
+        paramType: Encoding.None,
         operator: Operator.Or,
         children: [COMP(1), COMP(2)],
       }
 
       const rightCondition: Condition = {
-        paramType: ParameterType.None,
+        paramType: Encoding.None,
         operator: Operator.Or,
         children: [COMP(1), COMP(2), COMP(3)],
       }

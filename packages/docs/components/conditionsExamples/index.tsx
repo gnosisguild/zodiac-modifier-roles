@@ -1,5 +1,5 @@
 "use client";
-import { Condition, Operator, ParameterType } from "zodiac-roles-sdk";
+import { Encoding, Condition, Operator } from "zodiac-roles-sdk";
 import AbiTree from "@/components/tree/AbiTree";
 import ConditionTree, { gatherNodeIds } from "@/components/tree/ConditionTree";
 import clsx from "clsx";
@@ -144,37 +144,37 @@ const balancerSwapInputs = [
 ];
 
 const balancerSwapCondition: Condition = {
-  paramType: ParameterType.Calldata,
+  paramType: Encoding.AbiEncoded,
   operator: Operator.Matches,
   children: [
     {
-      paramType: ParameterType.Tuple,
+      paramType: Encoding.Tuple,
       operator: Operator.Matches,
       children: [
         {
           // poolId
-          paramType: ParameterType.Static,
+          paramType: Encoding.Static,
           operator: Operator.EqualTo,
           compValue:
             "0x0b09dea16768f0799065c475be02919503cb2a3500020000000000000000001a",
         },
         {
           // kind
-          paramType: ParameterType.Static,
+          paramType: Encoding.Static,
           operator: Operator.Pass,
         },
         {
           // assetIn
-          paramType: ParameterType.None,
+          paramType: Encoding.None,
           operator: Operator.Or,
           children: [
             {
-              paramType: ParameterType.Static,
+              paramType: Encoding.Static,
               operator: Operator.EqualTo,
               compValue: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
             }, // WETH
             {
-              paramType: ParameterType.Static,
+              paramType: Encoding.Static,
               operator: Operator.EqualTo,
               compValue: "0x6b175474e89094c44da98b954eedeac495271d0f",
             }, // DAI
@@ -182,16 +182,16 @@ const balancerSwapCondition: Condition = {
         },
         {
           // assetOut
-          paramType: ParameterType.None,
+          paramType: Encoding.None,
           operator: Operator.Or,
           children: [
             {
-              paramType: ParameterType.Static,
+              paramType: Encoding.Static,
               operator: Operator.EqualTo,
               compValue: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
             }, // WETH
             {
-              paramType: ParameterType.Static,
+              paramType: Encoding.Static,
               operator: Operator.EqualTo,
               compValue: "0x6b175474e89094c44da98b954eedeac495271d0f",
             }, // DAI
@@ -199,38 +199,38 @@ const balancerSwapCondition: Condition = {
         },
         {
           // amount
-          paramType: ParameterType.Static,
+          paramType: Encoding.Static,
           operator: Operator.Pass,
         },
         {
           // userDatq
-          paramType: ParameterType.Dynamic,
+          paramType: Encoding.Dynamic,
           operator: Operator.Pass,
         },
       ],
     },
     {
-      paramType: ParameterType.Tuple,
+      paramType: Encoding.Tuple,
       operator: Operator.Matches,
       children: [
         {
           // sender
-          paramType: ParameterType.Static,
+          paramType: Encoding.Static,
           operator: Operator.EqualToAvatar,
         },
         {
           // fromInternalBalance
-          paramType: ParameterType.Static,
+          paramType: Encoding.Static,
           operator: Operator.Pass,
         },
         {
           // recipient
-          paramType: ParameterType.Static,
+          paramType: Encoding.Static,
           operator: Operator.EqualToAvatar,
         },
         {
           // toInternalBalance
-          paramType: ParameterType.Static,
+          paramType: Encoding.Static,
           operator: Operator.Pass,
         },
       ],

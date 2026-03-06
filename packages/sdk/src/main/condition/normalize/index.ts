@@ -1,4 +1,4 @@
-import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
+import { Encoding, Condition, Operator } from "zodiac-roles-deployments"
 
 import { conditionId, rawConditionId } from "../conditionId"
 import { padToMatchTypeTree } from "./padToMatchTypeTree"
@@ -34,28 +34,24 @@ export function normalizeCondition(condition: Condition): Condition {
   return result
 }
 
-/** Removes trailing Pass nodes from Matches on Calldata, AbiEncoded, and dynamic tuples (as long as the tuple stays marked dynamic) */
+/** Removes trailing Pass nodes from Matches on AbiEncoded and dynamic tuples (as long as the tuple stays marked dynamic) */
 const prunePassNodes = (condition: Condition): Condition => {
   if (!condition.children) return condition
   if (condition.operator !== Operator.Matches) return condition
 
   const isDynamicTuple =
-    condition.paramType === ParameterType.Tuple && isDynamicParamType(condition)
+    condition.paramType === Encoding.Tuple && isDynamicParamType(condition)
 
   // We must not apply this to static tuples since removing Static Pass nodes would cause word shifts in the encoding.
-  const canPrune =
-    condition.paramType === ParameterType.Calldata ||
-    condition.paramType === ParameterType.AbiEncoded ||
-    isDynamicTuple
+  const canPrune = condition.paramType === Encoding.AbiEncoded || isDynamicTuple
 
   if (!canPrune) return condition
 
   const isGlobalAllowance = (child: Condition) =>
-    child.operator === Operator.EtherWithinAllowance ||
     child.operator === Operator.CallWithinAllowance
 
-  // keep all children nodes with ParameterType.None
-  // (EtherWithinAllowance, CallWithinAllowance conditions appear as children of Calldata.Matches)
+  // keep all children nodes with Encoding.None
+  // (CallWithinAllowance conditions appear as children of AbiEncoded.Matches)
   const tailChildren = condition.children.filter(isGlobalAllowance)
   const prunableChildren = condition.children.filter(
     (child) => !isGlobalAllowance(child)
@@ -150,18 +146,12 @@ const sortBranchesCanonical = (condition: Condition): Condition => {
       .sort((a, b) => (BigInt(a.id) < BigInt(b.id) ? -1 : 1))
       .map(({ condition }) => condition)
 
-    // in case of mixed-type children (dynamic & calldata/abiEncoded), those with children must come first
+    // in case of mixed-type children (dynamic & abiEncoded), those with children must come first
     const front = sorted.filter(
-      (child) =>
-        child.paramType === ParameterType.Calldata ||
-        child.paramType === ParameterType.AbiEncoded
+      (child) => child.paramType === Encoding.AbiEncoded
     )
     const back = sorted.filter(
-      (child) =>
-        !(
-          child.paramType === ParameterType.Calldata ||
-          child.paramType === ParameterType.AbiEncoded
-        )
+      (child) => child.paramType !== Encoding.AbiEncoded
     )
     return {
       ...condition,
@@ -181,15 +171,14 @@ const cleanEmptyFields = (condition: Condition): Condition => {
 
 const isDynamicParamType = (condition: Condition): boolean => {
   switch (condition.paramType) {
-    case ParameterType.Static:
+    case Encoding.Static:
       return false
-    case ParameterType.Dynamic:
-    case ParameterType.Array:
+    case Encoding.Dynamic:
+    case Encoding.Array:
       return true
-    case ParameterType.Tuple:
-    case ParameterType.Calldata:
-    case ParameterType.AbiEncoded:
-    case ParameterType.None:
+    case Encoding.Tuple:
+    case Encoding.AbiEncoded:
+    case Encoding.None:
       return condition.children?.some(isDynamicParamType) ?? false
     default:
       throw new Error(`Unknown paramType: ${condition.paramType}`)

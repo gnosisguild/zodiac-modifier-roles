@@ -1,5 +1,6 @@
 import assert from "assert";
 import { BigNumberish, solidityPacked } from "ethers";
+import { ConditionFlatStruct, Roles } from "../typechain-types/contracts/Roles";
 
 export const logGas = async (
   message: string,
@@ -32,14 +33,15 @@ export interface SafeTransaction extends MetaTransaction {
   nonce: string | number;
 }
 
-export enum AbiType {
+export enum Encoding {
   None = 0,
   Static,
   Dynamic,
   Tuple,
   Array,
-  Calldata,
   AbiEncoded,
+  /* Entries bellow get aliased to None */
+  EtherValue,
 }
 
 export enum Operator {
@@ -49,29 +51,33 @@ export enum Operator {
   //          🚫 compValue
   /* 00: */ Pass = 0,
   // ------------------------------------------------------------
-  // 01-04: LOGICAL EXPRESSIONS
+  // 01-03: LOGICAL EXPRESSIONS
   //          paramType: None
   //          ✅ children
   //          🚫 compValue
   /* 01: */ And,
   /* 02: */ Or,
-  /* 03: */ Nor,
-  /* 04: */ _Placeholder04,
+  /* 03: */ _Placeholder03,
+  /* 04: */ Empty,
   // ------------------------------------------------------------
-  // 05-14: COMPLEX EXPRESSIONS
-  //          paramType: Calldata / Tuple / Array,
+  // 05-12: COMPLEX EXPRESSIONS
+  //          paramType: AbiEncoded / Tuple / Array,
   //          ✅ children
   //          🚫 compValue
   /* 05: */ Matches,
   /* 06: */ ArraySome,
   /* 07: */ ArrayEvery,
-  /* 08: */ ArraySubset,
+  /* 08: */ ArrayTailMatches,
   /* 09: */ _Placeholder09,
-  /* 10: */ _Placeholder10,
-  /* 11: */ _Placeholder11,
+  /* 10: */ ZipSome, // paramType: None, compValue: 2 bytes (two pluck indexes)
+  /* 11: */ ZipEvery, // paramType: None, compValue: 2 bytes (two pluck indexes)
   /* 12: */ _Placeholder12,
-  /* 13: */ _Placeholder13,
-  /* 14: */ _Placeholder14,
+  // ------------------------------------------------------------
+  // 13-14: EXTRACTION EXPRESSIONS
+  //          ❓ children (at most one child, must resolve to Static)
+  //          ✅ compValue
+  /* 13: */ Slice, // paramType: Static / Dynamic, compValue: 3 bytes (2 bytes shift + 1 byte size, 1-32)
+  /* 14: */ Pluck, // paramType: Static / EtherValue, compValue: 1 byte (index into pluckedValues, 0-255)
   // ------------------------------------------------------------
   // 15:    SPECIAL COMPARISON (without compValue)
   //          paramType: Static
@@ -80,23 +86,23 @@ export enum Operator {
   /* 15: */ EqualToAvatar,
   // ------------------------------------------------------------
   // 16-31: COMPARISON EXPRESSIONS
-  //          paramType: Static / Dynamic / Tuple / Array
+  //          paramType: Static / Dynamic / Tuple / Array / EtherValue
   //          ❓ children (only for paramType: Tuple / Array to describe their structure)
   //          ✅ compValue
-  /* 16: */ EqualTo, // paramType: Static / Dynamic / Tuple / Array
-  /* 17: */ GreaterThan, // paramType: Static
-  /* 18: */ LessThan, // paramType: Static
-  /* 19: */ SignedIntGreaterThan, // paramType: Static
-  /* 20: */ SignedIntLessThan, // paramType: Static
+  /* 16: */ EqualTo, // paramType: Static / Dynamic / Tuple / Array / EtherValue
+  /* 17: */ GreaterThan, // paramType: Static / EtherValue
+  /* 18: */ LessThan, // paramType: Static / EtherValue
+  /* 19: */ SignedIntGreaterThan, // paramType: Static / EtherValue
+  /* 20: */ SignedIntLessThan, // paramType: Static / EtherValue
   /* 21: */ Bitmask, // paramType: Static / Dynamic
-  /* 22: */ Custom, // paramType: Static / Dynamic / Tuple / Array
-  /* 23: */ _Placeholder23,
+  /* 22: */ Custom, // paramType: Static / Dynamic / Tuple / Array / EtherValue
+  /* 23: */ WithinRatio, // paramType: None
   /* 24: */ _Placeholder24,
   /* 25: */ _Placeholder25,
   /* 26: */ _Placeholder26,
   /* 27: */ _Placeholder27,
-  /* 28: */ WithinAllowance, // paramType: Static
-  /* 29: */ EtherWithinAllowance, // paramType: None
+  /* 28: */ WithinAllowance, // paramType: Static / EtherValue
+  /* 29: */ _Placeholder29,
   /* 30: */ CallWithinAllowance, // paramType: None
   /* 31: */ _Placeholder31,
 }
@@ -108,20 +114,10 @@ export enum ExecutionOptions {
   Both,
 }
 
-export enum PermissionCheckerStatus {
+export enum ConditionViolationStatus {
   Ok,
-  /// Role not allowed to delegate call to target address
-  DelegateCallNotAllowed,
-  /// Role not allowed to call target address
-  TargetAddressNotAllowed,
-  /// Role not allowed to call this function on target address
-  FunctionNotAllowed,
-  /// Role not allowed to send to target address
-  SendNotAllowed,
   /// Or condition not met
   OrViolation,
-  /// Nor condition not met
-  NorViolation,
   /// Parameter value is not equal to allowed
   ParameterNotAllowed,
   /// Parameter value less than allowed
@@ -134,19 +130,34 @@ export enum PermissionCheckerStatus {
   NotEveryArrayElementPasses,
   /// Array elements do not meet allowed criteria for at least one element
   NoArrayElementPasses,
-  /// Parameter value not a subset of allowed
-  ParameterNotSubsetOfAllowed,
   /// Bitmask exceeded value length
   BitmaskOverflow,
   /// Bitmask not an allowed value
   BitmaskNotAllowed,
   CustomConditionViolation,
-  /// TODO
+  CustomConditionNotAContract,
+  CustomConditionReverted,
+  CustomConditionInvalidResult,
+  PricingAdapterNotAContract,
+  PricingAdapterReverted,
+  PricingAdapterInvalidResult,
+  PricingAdapterZeroPrice,
   AllowanceExceeded,
-  /// TODO
-  CallAllowanceExceeded,
-  /// TODO
-  EtherAllowanceExceeded,
+  AllowanceValueOverflow,
+  // A Payload overflow was found by the Checker flow
+  CalldataOverflow,
+  RatioBelowMin,
+  RatioAboveMax,
+  // Calldata is not empty when it should be
+  CalldataNotEmpty,
+  // Leading bytes do not match expected value
+  LeadingBytesNotAMatch,
+  // Zipped arrays have different lengths
+  ZippedArrayLengthMismatch,
+  // No zipped element pair passes
+  NoZippedElementPasses,
+  // Not every zipped element pair passes
+  NotEveryZippedElementPasses,
 }
 
 export function removeTrailingOffset(data: string) {
@@ -171,22 +182,15 @@ export const BYTES32_ZERO =
   "0x0000000000000000000000000000000000000000000000000000000000000000";
 
 interface Condition {
-  paramType: AbiType;
-  operator: Operator;
-  compValue?: `0x${string}`;
-  children?: readonly Condition[];
+  paramType: Encoding;
+  operator?: Operator;
+  compValue?: string;
+  children?: Condition[];
 }
 
-interface ConditionFlat {
-  parent: number;
-  paramType: AbiType;
-  operator: Operator;
-  compValue: string;
-}
-
-export function flattenCondition(root: Condition): ConditionFlat[] {
+export function flattenCondition(root: Condition): ConditionFlatStruct[] {
   let queue = [{ node: root, parent: 0 }];
-  let result: ConditionFlat[] = [];
+  let result: ConditionFlatStruct[] = [];
 
   for (let bfsOrder = 0; queue.length > 0; bfsOrder++) {
     const entry = queue.shift();
@@ -198,8 +202,9 @@ export function flattenCondition(root: Condition): ConditionFlat[] {
       ...result,
       {
         parent,
-        compValue: "0x",
-        ...node,
+        operator: node.operator || Operator.Pass,
+        paramType: node.paramType,
+        compValue: node.compValue || "0x",
       },
     ];
 
@@ -213,4 +218,16 @@ export function flattenCondition(root: Condition): ConditionFlat[] {
   }
 
   return result;
+}
+
+/**
+ * Packs conditions into bytes format for allowTarget/allowFunction.
+ * Returns "0x" for empty conditions (the contract will use Pass condition).
+ */
+export async function packConditions(
+  roles: Roles,
+  conditions: ConditionFlatStruct[],
+): Promise<string> {
+  if (conditions.length === 0) return "0x";
+  return roles.packConditions(conditions);
 }

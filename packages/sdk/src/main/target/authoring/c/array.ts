@@ -1,5 +1,5 @@
 import { ParamType } from "ethers"
-import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
+import { Encoding, Condition, Operator } from "zodiac-roles-deployments"
 
 import { mapScoping } from "./matches"
 
@@ -21,10 +21,36 @@ export const every =
       throw new Error("every() element condition must not be undefined")
     }
     return {
-      paramType: ParameterType.Array,
+      paramType: Encoding.Array,
       operator: Operator.ArrayEvery,
       children: [
         mapScoping(elementScoping, abiType.arrayChildren!) as Condition, // cast is safe because of earlier elementScoping check
       ],
     }
   }
+
+/**
+ * Passes if at least one element of the array matches the given condition.
+ * @param elementScoping The condition on the array elements
+ */
+export const some =
+  <S extends Scoping<ArrayElement<T>>, T extends any[]>(
+    elementScoping: S
+  ): ConditionFunction<T> =>
+  (abiType: ParamType) => {
+    if (abiType.baseType !== "array") {
+      throw new Error("some() can only be used on array types")
+    }
+    if (elementScoping === undefined) {
+      throw new Error("some() element condition must not be undefined")
+    }
+    return {
+      paramType: Encoding.Array,
+      operator: Operator.ArraySome,
+      children: [
+        mapScoping(elementScoping, abiType.arrayChildren!) as Condition, // cast is safe because of earlier elementScoping check
+      ],
+    }
+  }
+
+

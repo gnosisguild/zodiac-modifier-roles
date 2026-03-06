@@ -15,14 +15,13 @@ export enum Clearance {
   Function = 2,
 }
 
-export enum ParameterType {
+export enum Encoding {
   None = 0,
   Static = 1,
   Dynamic = 2,
   Tuple = 3,
-  Array = 4,
-  Calldata = 5,
-  AbiEncoded = 6,
+  Array = 4,  
+  AbiEncoded = 5,
 }
 
 export enum Operator {
@@ -32,19 +31,32 @@ export enum Operator {
   //          🚫 compValue
   Pass = 0,
   // ------------------------------------------------------------
-  // 01-04: LOGICAL EXPRESSIONS
+  // 01-03: LOGICAL EXPRESSIONS
   //          paramType: None
   //          ✅ children
   //          🚫 compValue
   And = 1,
   Or = 2,
   // ------------------------------------------------------------
-  // 05-14: COMPLEX EXPRESSIONS
-  //          paramType: Calldata / AbiEncoded / Tuple / Array,
-  //          ✅ children
+  // 04:    EMPTY CHECK (passes if data.length == 0)
+  //          paramType: None
+  //          🚫 children
   //          🚫 compValue
+  Empty = 4,
+  // ------------------------------------------------------------
+  // 05-12: COMPLEX EXPRESSIONS
+  //          paramType: AbiEncoded / Tuple / Array,
+  //          ✅ children
+  //          🚫 compValue (exception AbiEncoded.Matches uses compValue to define leading bytes)
   Matches = 5,
   ArrayEvery = 7,
+  ArrayTailMatches = 8,
+  // ------------------------------------------------------------
+  // 13-14: EXTRACTION EXPRESSIONS
+  //          paramType: Dynamic
+  //          ❓ children (at most one child, must resolve to Static)
+  //          ✅ compValue (3 bytes: 2 bytes shift + 1 byte size, 1-32)
+  Slice = 13,
   // ------------------------------------------------------------
   // 15:    SPECIAL COMPARISON (without compValue)
   //          paramType: Static
@@ -54,7 +66,7 @@ export enum Operator {
   // ------------------------------------------------------------
   // 16-31: COMPARISON EXPRESSIONS
   //          paramType: Static / Dynamic / Tuple / Array
-  //          🚫 children
+  //          ❓ children (only for paramType: Tuple / Array to describe their structure)
   //          ✅ compValue
   EqualTo = 16, // paramType: Static / Dynamic / Tuple / Array
   GreaterThan = 17, // paramType: Static
@@ -63,25 +75,15 @@ export enum Operator {
   SignedIntLessThan = 20, // paramType: Static
   Bitmask = 21, // paramType: Static / Dynamic
   Custom = 22, // paramType: Static / Dynamic / Tuple / Array
+  WithinRatio = 23, // paramType: None
   WithinAllowance = 28, // paramType: Static
-  EtherWithinAllowance = 29, // paramType: None
   CallWithinAllowance = 30, // paramType: None
 }
 
 export enum Status {
   Ok,
-  /** Role not allowed to delegate call to target address */
-  DelegateCallNotAllowed,
-  /** Role not allowed to call target address */
-  TargetAddressNotAllowed,
-  /** Role not allowed to call this function on target address */
-  FunctionNotAllowed,
-  /** Role not allowed to send to target address */
-  SendNotAllowed,
   /** Or condition not met */
   OrViolation,
-  /** Nor condition not met */
-  NorViolation,
   /** Parameter value is not equal to allowed */
   ParameterNotAllowed,
   /** Parameter value less than allowed */
@@ -94,16 +96,21 @@ export enum Status {
   NotEveryArrayElementPasses,
   /** Array elements do not meet allowed criteria for at least one element */
   NoArrayElementPasses,
-  /** Parameter value not a subset of allowed */
-  ParameterNotSubsetOfAllowed,
   /** Bitmask exceeded value length */
   BitmaskOverflow,
   /** Bitmask not an allowed value */
   BitmaskNotAllowed,
   CustomConditionViolation,
   AllowanceExceeded,
-  CallAllowanceExceeded,
-  EtherAllowanceExceeded,
+  AllowanceValueOverflow,
+  /** Payload overflow found by Checker */
+  CalldataOverflow,
+  RatioBelowMin,
+  RatioAboveMax,
+  /** Calldata is not empty when it should be */
+  CalldataNotEmpty,
+  /** Leading bytes do not match expected value */
+  LeadingBytesNotAMatch,
 }
 
 export interface Role {
@@ -129,7 +136,7 @@ export interface Function {
 }
 
 export interface Condition {
-  paramType: ParameterType
+  paramType: Encoding
   operator: Operator
   compValue?: `0x${string}`
   children?: readonly Condition[]

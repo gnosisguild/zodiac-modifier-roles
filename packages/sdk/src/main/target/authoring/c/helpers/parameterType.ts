@@ -1,16 +1,16 @@
 import { ParamType } from "ethers"
-import { ParameterType } from "zodiac-roles-deployments"
+import { Encoding } from "zodiac-roles-deployments"
 
-export const parameterType = (type: ParamType): ParameterType => {
+export const parameterType = (type: ParamType): Encoding => {
   switch (type.baseType) {
     case "tuple":
-      return ParameterType.Tuple
+      return Encoding.Tuple
     case "array":
-      return ParameterType.Array
+      return Encoding.Array
     case "string":
     case "bytes":
-      return ParameterType.Dynamic
+      return Encoding.Dynamic
     default:
-      return ParameterType.Static
+      return Encoding.Static
   }
 }

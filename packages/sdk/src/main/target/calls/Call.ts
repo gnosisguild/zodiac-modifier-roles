@@ -5,7 +5,6 @@ export type Call =
   | ScopeTargetCall
   | RevokeTargetCall
   | AllowFunctionCall
-  | ScopeFunctionCall
   | RevokeFunctionCall
   | AssignRolesCall
   | SetAllowanceCall
@@ -34,15 +33,7 @@ interface AllowFunctionCall {
   roleKey: `0x${string}`
   targetAddress: `0x${string}`
   selector: `0x${string}`
-  executionOptions: ExecutionOptions
-}
-
-interface ScopeFunctionCall {
-  call: "scopeFunction"
-  roleKey: `0x${string}`
-  targetAddress: `0x${string}`
-  selector: `0x${string}`
-  condition: Condition
+  condition?: Condition
   executionOptions: ExecutionOptions
 }
 

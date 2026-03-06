@@ -1,0 +1,375 @@
+import assert from "assert";
+import { expect } from "chai";
+import hre from "hardhat";
+import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+
+import { BigNumberish, getAddress, Interface, solidityPacked } from "ethers";
+import { encodeMultisendPayload } from "../utils";
+
+const AddressOne = "0x0000000000000000000000000000000000000001";
+
+enum Operation {
+  Call = 0,
+  DelegateCall = 1,
+}
+
+const iface = new Interface([
+  "function simple(uint256)",
+  "function staticDynamicDynamic32(address, bytes, uint32[])",
+]);
+
+describe("MultiSendUnwrapper", () => {
+  async function setup() {
+    const MultiSend = await hre.ethers.getContractFactory("MultiSend");
+    const multisend = await MultiSend.deploy();
+
+    const MultiSendUnwrapper =
+      await hre.ethers.getContractFactory("MultiSendUnwrapper");
+    const unwrapper = await MultiSendUnwrapper.deploy();
+
+    return {
+      multisend,
+      unwrapper,
+    };
+  }
+
+  it("reverts if wrong selector used", async () => {
+    const { unwrapper, multisend } = await loadFixture(setup);
+
+    const simpleCalldata = iface.encodeFunctionData("simple", [1]);
+
+    const { data } = await multisend.multiSend.populateTransaction(
+      encodeMultisendPayload([
+        {
+          to: AddressOne,
+          value: 0,
+          operation: Operation.Call,
+          data: simpleCalldata,
+        },
+      ]),
+    );
+    assert(data);
+
+    const selectorWrong = "bbccddee";
+    const selectorOk = "8d80ff0a";
+
+    await expect(
+      unwrapper.unwrap(
+        AddressOne,
+        0,
+        `${data.slice(0, 2)}${selectorWrong}${data.slice(10)}`,
+        Operation.DelegateCall,
+      ),
+    ).to.be.reverted;
+
+    await expect(
+      unwrapper.unwrap(
+        AddressOne,
+        0,
+        `${data.slice(0, 2)}${selectorOk}${data.slice(10)}`,
+        Operation.DelegateCall,
+      ),
+    ).to.not.be.reverted;
+  });
+
+  it("reverts if header offset incorrect", async () => {
+    const { unwrapper, multisend } = await loadFixture(setup);
+
+    const simpleCalldata = iface.encodeFunctionData("simple", [1]);
+
+    const { data } = await multisend.multiSend.populateTransaction(
+      encodeMultisendPayload([
+        {
+          to: AddressOne,
+          value: 0,
+          operation: Operation.DelegateCall,
+          data: simpleCalldata,
+        },
+      ]),
+    );
+    assert(data);
+
+    const offsetOk =
+      "0000000000000000000000000000000000000000000000000000000000000020";
+    const offsetWrong =
+      "f000000000000000000000000000000000000000000000000000000000000020";
+
+    await expect(
+      unwrapper.unwrap(
+        AddressOne,
+        0,
+        `${data.slice(0, 10)}${offsetWrong}${data.slice(74)}`,
+        Operation.DelegateCall,
+      ),
+    ).to.be.reverted;
+
+    await expect(
+      unwrapper.unwrap(
+        AddressOne,
+        0,
+        `${data.slice(0, 10)}${offsetOk}${data.slice(74)}`,
+        Operation.DelegateCall,
+      ),
+    ).to.not.be.reverted;
+  });
+
+  it("reverts if calldata length incorrect", async () => {
+    const { unwrapper, multisend } = await loadFixture(setup);
+
+    const simpleCalldata = iface.encodeFunctionData("simple", [1]);
+
+    const { data } = await multisend.multiSend.populateTransaction(
+      encodeMultisendPayload([
+        {
+          to: AddressOne,
+          value: 0,
+          operation: Operation.DelegateCall,
+          data: simpleCalldata,
+        },
+      ]),
+    );
+    assert(data);
+
+    const lengthWrong =
+      "0000000000000000000000000000000000000000000000000000000000000000";
+
+    await expect(
+      unwrapper.unwrap(
+        AddressOne,
+        0,
+        `${data.slice(0, 74)}${lengthWrong}${data.slice(140)}`,
+        Operation.DelegateCall,
+      ),
+    ).to.be.reverted;
+
+    await expect(unwrapper.unwrap(AddressOne, 0, data, Operation.DelegateCall))
+      .to.not.be.reverted;
+  });
+
+  it("reverts if value not zero", async () => {
+    const { unwrapper, multisend } = await loadFixture(setup);
+
+    const txData = iface.encodeFunctionData("simple", [1]);
+
+    const { data } = await multisend.multiSend.populateTransaction(
+      encodeMultisendPayload([
+        {
+          to: "0xaaff330000000000000000000aa0000ff0000000",
+          value: 999444555,
+          operation: Operation.Call,
+          data: txData,
+        },
+      ]),
+    );
+    assert(data);
+
+    await expect(unwrapper.unwrap(AddressOne, 1, data, Operation.DelegateCall))
+      .to.be.reverted;
+    await expect(unwrapper.unwrap(AddressOne, 0, data, Operation.DelegateCall))
+      .to.not.be.reverted;
+  });
+
+  it("reverts if operation not delegate call", async () => {
+    const { unwrapper, multisend } = await loadFixture(setup);
+
+    const txData = iface.encodeFunctionData("simple", [1]);
+
+    const { data } = await multisend.multiSend.populateTransaction(
+      encodeMultisendPayload([
+        {
+          to: "0xaaff330000000000000000000aa0000ff0000000",
+          value: 999444555,
+          operation: Operation.Call,
+          data: txData,
+        },
+      ]),
+    );
+    assert(data);
+
+    await expect(unwrapper.unwrap(AddressOne, 0, data, Operation.Call)).to.be
+      .reverted;
+    await expect(unwrapper.unwrap(AddressOne, 0, data, Operation.DelegateCall))
+      .to.not.be.reverted;
+  });
+
+  it("reverts if no transaction encoded", async () => {
+    const { unwrapper, multisend } = await loadFixture(setup);
+
+    const { data } = await multisend.multiSend.populateTransaction("0x");
+    assert(data);
+
+    await expect(unwrapper.unwrap(AddressOne, 0, data, Operation.DelegateCall))
+      .to.be.reverted;
+  });
+
+  it("reverts if single transaction length wrong", async () => {
+    const { unwrapper, multisend } = await loadFixture(setup);
+
+    const simpleCalldata = iface.encodeFunctionData("simple", [1]);
+
+    const { data } = await multisend.multiSend.populateTransaction(
+      encodeMultisendWrongLength([
+        {
+          to: AddressOne,
+          value: 0,
+          operation: Operation.DelegateCall,
+          data: simpleCalldata,
+        },
+      ]),
+    );
+
+    await expect(
+      unwrapper.unwrap(AddressOne, 0, data as string, Operation.DelegateCall),
+    ).to.be.reverted;
+  });
+
+  it("unwraps a single transaction", async () => {
+    const { unwrapper, multisend } = await loadFixture(setup);
+
+    const txData = iface.encodeFunctionData("simple", [1]);
+
+    const { data } = await multisend.multiSend.populateTransaction(
+      encodeMultisendPayload([
+        {
+          to: "0xaaff330000000000000000000aa0000ff0000000",
+          value: 999444555,
+          operation: Operation.DelegateCall,
+          data: txData,
+        },
+      ]),
+    );
+    assert(data);
+
+    const result = await unwrapper.unwrap(
+      AddressOne,
+      0,
+      data,
+      Operation.DelegateCall,
+    );
+
+    expect(result).to.have.lengthOf(1);
+    expect(getAddress(result[0].to)).to.equal(
+      getAddress("0xaaff330000000000000000000aa0000ff0000000"),
+    );
+    expect(result[0].value).to.equal(BigInt(999444555));
+
+    const { left, right } = location(result[0]);
+    expect(data.slice(2).slice(left, right)).to.equal(txData.slice(2));
+  });
+
+  it("unwraps multiple transactions", async () => {
+    const { unwrapper, multisend } = await loadFixture(setup);
+
+    const txData1 = iface.encodeFunctionData("simple", [1]);
+    const txData2 = iface.encodeFunctionData("staticDynamicDynamic32", [
+      AddressOne,
+      "0xaabbcc",
+      [1, 2, 3],
+    ]);
+
+    const { data } = await multisend.multiSend.populateTransaction(
+      encodeMultisendPayload([
+        {
+          to: "0x0000000000000000000000000000000000000002",
+          value: 999444555,
+          operation: Operation.DelegateCall,
+          data: txData1,
+        },
+        {
+          to: "0x0000000000000000000000000000000000000003",
+          value: 7654,
+          operation: Operation.Call,
+          data: txData2,
+        },
+      ]),
+    );
+    assert(data);
+
+    const result = await unwrapper.unwrap(
+      AddressOne,
+      0,
+      data,
+      Operation.DelegateCall,
+    );
+
+    expect(result).to.have.lengthOf(2);
+    expect(result[0].to).to.equal("0x0000000000000000000000000000000000000002");
+    expect(result[0].value).to.equal(BigInt(999444555));
+    expect(result[0].operation).to.equal(Operation.DelegateCall);
+
+    expect(result[1].to).to.equal("0x0000000000000000000000000000000000000003");
+    expect(result[1].value).to.equal(BigInt(7654));
+    expect(result[1].operation).to.equal(Operation.Call);
+
+    let { left, right } = location(result[0]);
+    expect(data.slice(2).slice(left, right)).to.equal(txData1.slice(2));
+    ({ left, right } = location(result[1]));
+    expect(data.slice(2).slice(left, right)).to.equal(txData2.slice(2));
+  });
+
+  it("reverts if inner transaction operation incorrect", async () => {
+    const { unwrapper, multisend } = await loadFixture(setup);
+
+    const txData = iface.encodeFunctionData("simple", [1]);
+
+    // operation = 2 is invalid
+    let { data } = await multisend.multiSend.populateTransaction(
+      encodeMultisendPayload([
+        {
+          to: "0xaaff330000000000000000000aa0000ff0000000",
+          value: 999444555,
+          operation: 2,
+          data: txData,
+        },
+      ]),
+    );
+    await expect(
+      unwrapper.unwrap(AddressOne, 0, data as string, Operation.DelegateCall),
+    ).to.be.reverted;
+
+    // operation = 1 (DelegateCall) is valid
+    ({ data } = await multisend.multiSend.populateTransaction(
+      encodeMultisendPayload([
+        {
+          to: "0xaaff330000000000000000000aa0000ff0000000",
+          value: 999444555,
+          operation: Operation.DelegateCall,
+          data: txData,
+        },
+      ]),
+    ));
+    await expect(
+      unwrapper.unwrap(AddressOne, 0, data as string, Operation.DelegateCall),
+    ).to.not.be.reverted;
+  });
+});
+
+interface MetaTransaction {
+  to: string;
+  value: BigNumberish;
+  data: string;
+  operation: number;
+}
+
+const encodeMultisendWrongLength = (txs: MetaTransaction[]): string => {
+  return (
+    "0x" +
+    txs
+      .map((tx) =>
+        solidityPacked(
+          ["uint8", "address", "uint256", "uint256", "bytes"],
+          [tx.operation, tx.to, tx.value, 4000000, tx.data],
+        ).slice(2),
+      )
+      .join("")
+  );
+};
+
+function location(result: any) {
+  const offset = Number(result.dataLocation);
+  const length = Number(result.dataSize);
+  const left = offset * 2;
+  const right = (offset + length) * 2;
+
+  return { left, right };
+}

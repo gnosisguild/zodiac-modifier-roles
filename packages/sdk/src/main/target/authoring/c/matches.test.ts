@@ -1,22 +1,22 @@
 import { describe, expect, it } from "vitest"
-import { Operator, ParameterType } from "zodiac-roles-deployments"
+import { Operator, Encoding } from "zodiac-roles-deployments"
 
 import { calldataMatches } from "./matches"
 import { encodeKey } from "../../../keys"
 
 describe("calldataMatches", () => {
-  it("correctly encodes EtherWithinAllowance conditions", () => {
+  it("correctly encodes CallWithinAllowance conditions", () => {
     const result = calldataMatches([], [], {
-      etherWithinAllowance: encodeKey("test-allowance"),
+      callWithinAllowance: encodeKey("test-allowance"),
     })()
 
     expect(result).toEqual({
-      paramType: ParameterType.Calldata,
+      paramType: Encoding.AbiEncoded,
       operator: Operator.Matches,
       children: [
         {
-          paramType: ParameterType.None,
-          operator: Operator.EtherWithinAllowance,
+          paramType: Encoding.None,
+          operator: Operator.CallWithinAllowance,
           compValue: encodeKey("test-allowance"),
         },
       ],

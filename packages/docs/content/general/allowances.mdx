@@ -50,16 +50,25 @@ Upon consumption of an allowance, the `balance` and `timestamp` fields will auto
 
 ## Usage
 
-There are three different ways allowances can be used:
+There are two different ways allowances can be used:
 
-### Allowance on a `uint` field
+### Allowance on a `uint` field or Ether value
 
 To define an allowance on any `uint` field in the transaction calldata, use a [`WithinAllowance`](/general/conditions#withinallowance) condition.
 
-### Allowance on the Ether `value`
-
-To define an allowance on the Ether `value` sent with the transaction, use an [`EtherWithinAllowance`](/general/conditions#etherwithinallowance) condition.
+To define an allowance on the Ether `value` sent with the transaction, use [`WithinAllowance`](/general/conditions#withinallowance) with `Encoding.EtherValue` parameter type.
 
 ### Call Rate Limits
 
 To enforce a rate limit on the number of calls to a function, use a [`CallWithinAllowance`](/general/conditions#callwithinallowance) condition. Each call to the function will decrement the allowance balance by `1`.
+
+## Consumption Tracking
+
+Allowances consumed during condition evaluation are tracked per transaction and only settled after the transaction has been successfully executed.
+If the condition evaluation fails or the underlying call reverts, no allowance balances are updated.
+This ensures that allowances accurately reflect actual spending rather than attempted spending.
+
+## Denominated Allowances
+
+For use cases where a single allowance should cover multiple tokens, allowances can be combined with [price adapters](/general/price-adapters) to convert token amounts into a shared denomination before consumption.
+This enables unified spending caps across different assets — for example, a single USD-denominated budget that applies regardless of which token is being transferred.

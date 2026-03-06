@@ -27,7 +27,7 @@ task(
     contractVersion: packageJson.version,
     contractName: "MultiSendUnwrapper",
     compilerInput: await hre.run("verify:etherscan-get-minimal-input", {
-      sourceName: "contracts/periphery/MultiSendUnwrapper.sol",
+      sourceName: "contracts/periphery/unwrappers/MultiSendUnwrapper.sol",
     }),
     constructorArgs: {
       types: [],
@@ -37,40 +37,27 @@ task(
   });
   writeMastercopyFromBuild({
     contractVersion: packageJson.version,
-    contractName: "MorphoBundler3Unwrapper",
+    contractName: "ConditionStorer",
     compilerInput: await hre.run("verify:etherscan-get-minimal-input", {
-      sourceName: "contracts/periphery/MorphoBundler3Unwrapper.sol",
+      sourceName: "contracts/core/serialize/ConditionStorer.sol",
+    }),
+    constructorArgs: {
+      types: [],
+      values: [],
+    },
+    salt: "0x0000000000000000000000000000000000000000000000000000000000000000",
+  });
+  writeMastercopyFromBuild({
+    contractVersion: packageJson.version,
+    contractName: "WithinRatioChecker",
+    compilerInput: await hre.run("verify:etherscan-get-minimal-input", {
+      sourceName: "contracts/core/evaluate/WithinRatioChecker.sol",
     }),
     constructorArgs: {
       types: [],
       values: [],
     },
     salt: ZeroHash,
-  });
-  writeMastercopyFromBuild({
-    contractVersion: packageJson.version,
-    contractName: "Packer",
-    compilerInput: await hre.run("verify:etherscan-get-minimal-input", {
-      sourceName: "contracts/packers/Packer.sol",
-    }),
-    constructorArgs: {
-      types: [],
-      values: [],
-    },
-    salt: "0x0000000000000000000000000000000000000000000000000000000000000000",
-  });
-
-  writeMastercopyFromBuild({
-    contractVersion: packageJson.version,
-    contractName: "Integrity",
-    compilerInput: await hre.run("verify:etherscan-get-minimal-input", {
-      sourceName: "contracts/Integrity.sol",
-    }),
-    constructorArgs: {
-      types: [],
-      values: [],
-    },
-    salt: "0x0000000000000000000000000000000000000000000000000000000000000000",
   });
   writeMastercopyFromBuild({
     contractVersion: packageJson.version,
