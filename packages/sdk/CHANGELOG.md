@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.4.6](https://github.com/gnosisguild/zodiac-modifier-roles/compare/zodiac-roles-sdk-v3.4.5...zodiac-roles-sdk-v3.4.6) (2026-03-06)
+
+
+### Bug Fixes
+
+* **sdk:** use correct compValue for CallWithinAllowance in applyOptions ([#464](https://github.com/gnosisguild/zodiac-modifier-roles/issues/464)) ([d39eccc](https://github.com/gnosisguild/zodiac-modifier-roles/commit/d39eccc9b93bb2370072dcfcd85128671a4a6dda))
+
 ## [3.4.5](https://github.com/gnosisguild/zodiac-modifier-roles/compare/zodiac-roles-sdk-v3.4.4...zodiac-roles-sdk-v3.4.5) (2026-02-27)
 
 
