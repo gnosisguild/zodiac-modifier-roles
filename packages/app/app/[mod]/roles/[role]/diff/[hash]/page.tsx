@@ -69,7 +69,12 @@ export default async function DiffPage(props: {
                 <span className={styles.warningIcon}>&#x26A0;</span>
                 <span>
                   This Roles instance uses an outdated MultiSend unwrapper.
-                  Calls to update the unwrapper have been appended below.
+                  Calls to update the unwrapper have been appended below. You
+                  can also{" "}
+                  <a href={`/${params.mod}/multisend`}>
+                    update the unwrapper separately
+                  </a>
+                  .
                 </span>
               </Flex>
             </Box>
