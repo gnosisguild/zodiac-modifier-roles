@@ -58,6 +58,15 @@ const ApplyUpdates: React.FC<Props> = async ({
     )
   } catch (error) {
     if (error instanceof LicenseError) {
+      if (error.status === "BLOCKED") {
+        return (
+          <Alert title="Subscription expired">
+            Permissions updates are blocked. To proceed, renew your Zodiac
+            subscription. For support contact us at ops@gnosisguild.org
+          </Alert>
+        )
+      }
+
       return (
         <Flex direction="column" gap={3}>
           <Alert title="Zodiac OS account required">
