@@ -1,6 +1,5 @@
 import {
   ChainId,
-  decodeKey,
   posterAbi,
   rolesAbi,
 } from "zodiac-roles-sdk"
@@ -18,14 +17,14 @@ import { POSTER_ADDRESS } from "./const"
 export const exportToSafeTransactionBuilder = (
   calls: { to: `0x${string}`; data: `0x${string}` }[],
   chainId: ChainId,
-  roleKey: string
+  name: string
 ) => {
   return {
     version: "1.0",
     chainId: chainId.toString(10),
     createdAt: Date.now(),
     meta: {
-      name: `Update permissions of ${decodeKey(roleKey)} role`,
+      name,
       description: "",
       txBuilderVersion: "1.16.2",
     },

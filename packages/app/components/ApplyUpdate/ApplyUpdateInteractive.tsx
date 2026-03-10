@@ -51,7 +51,7 @@ const ApplyUpdateInteractive: React.FC<Props> = ({
   const txBuilderJson = exportToSafeTransactionBuilder(
     allCalls,
     chainId,
-    roleKey
+    `Update permissions of ${decodeKey(roleKey)} role`
   )
 
   const handleAppend = (calls: Call[]) => {
