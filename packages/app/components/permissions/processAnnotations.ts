@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache"
 import { Annotation, Target } from "zodiac-roles-sdk"
 import { processAnnotations as processAnnotationsBase } from "zodiac-roles-sdk/annotations"
 import { z } from "zod"
@@ -19,10 +20,16 @@ const fetchPermissions = async (uri: string) => {
   return z.array(zPermission).parse(json)
 }
 
-const fetchSchema = async (schemaUrl: string) => {
-  const res = await fetch(schemaUrl, { next: { revalidate: 3600 } })
+// Using unstable_cache instead of fetch cache because the OpenAPI schema
+// response for DeFi Kit exceeds Next.js's 2MB fetch cache limit.
+const fetchSchemaUncached = async (schemaUrl: string) => {
+  const res = await fetch(schemaUrl, { cache: "no-store" })
   return await validateJsonResponse(res)
 }
+
+const fetchSchema = unstable_cache(fetchSchemaUncached, ["openapi-schema"], {
+  revalidate: 3600,
+})
 
 async function validateJsonResponse(res: Response) {
   if (res.ok) {
