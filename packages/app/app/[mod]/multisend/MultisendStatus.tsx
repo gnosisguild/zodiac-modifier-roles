@@ -4,10 +4,12 @@ import { ChainId } from "zodiac-roles-sdk"
 
 import Box from "@/ui/Box"
 import Flex from "@/ui/Flex"
+import CopyButton from "@/ui/CopyButton"
 import { WalletProvider } from "@/components/Wallet"
 import ApplyViaSafe from "@/components/ApplyUpdate/ApplyViaSafe"
 import ApplyViaGovernor from "@/components/ApplyUpdate/ApplyViaGovernor"
 import ApplyViaRethinkFactory from "@/components/ApplyUpdate/ApplyViaRethinkFactory"
+import { exportToSafeTransactionBuilder } from "@/components/ApplyUpdate/txBuilder"
 import type { UnwrapperStatus, UnwrapperEntry } from "./checkUnwrappers"
 import { buildSetUnwrapperCalls } from "./checkUnwrappers"
 import styles from "./style.module.css"
@@ -38,6 +40,16 @@ const MultisendStatus: React.FC<Props> = ({
   const calls = useMemo(
     () => buildSetUnwrapperCalls(rolesAddress, unwrappers),
     [rolesAddress, unwrappers]
+  )
+
+  const txBuilderJson = useMemo(
+    () =>
+      JSON.stringify(
+        exportToSafeTransactionBuilder(calls, chainId, "Update MultiSend unwrapper"),
+        null,
+        2
+      ),
+    [calls, chainId]
   )
 
   const applyElement =
@@ -94,7 +106,12 @@ const MultisendStatus: React.FC<Props> = ({
               </span>
             </Flex>
           </Box>
-          <WalletProvider>{applyElement}</WalletProvider>
+          <WalletProvider>
+            <Flex gap={2} alignItems="center">
+              {applyElement}
+              <CopyButton value={txBuilderJson} />
+            </Flex>
+          </WalletProvider>
         </>
       ) : (
         <>
@@ -107,7 +124,12 @@ const MultisendStatus: React.FC<Props> = ({
               </span>
             </Flex>
           </Box>
-          <WalletProvider>{applyElement}</WalletProvider>
+          <WalletProvider>
+            <Flex gap={2} alignItems="center">
+              {applyElement}
+              <CopyButton value={txBuilderJson} />
+            </Flex>
+          </WalletProvider>
         </>
       )}
     </Flex>

@@ -11,13 +11,21 @@ import { decodeKey } from "./keys"
 /**
  * Error class for license-related errors
  */
+type LicenseErrorStatus = "BLOCKED" | "UNLICENSED_FEATURE"
+
 export class LicenseError extends Error {
   owner: PrefixedAddress
+  status: LicenseErrorStatus
 
-  constructor(message: string, owner: PrefixedAddress) {
+  constructor(
+    message: string,
+    owner: PrefixedAddress,
+    status: LicenseErrorStatus
+  ) {
     super(message)
     this.name = "LicenseError"
     this.owner = owner
+    this.status = status
   }
 }
 
@@ -32,6 +40,7 @@ export enum License {
   None = "none",
   Free = "free",
   Enterprise = "enterprise",
+  Blocked = "blocked",
 }
 
 export const fetchLicense = async ({
@@ -65,6 +74,14 @@ export const enforceLicenseTerms = ({
   role: Role
   license: License
 }) => {
+  if (license === License.Blocked) {
+    throw new LicenseError(
+      "Permissions updates are blocked. To proceed, renew your Zodiac subscription.",
+      prefixAddress(chainId, owner),
+      "BLOCKED"
+    )
+  }
+
   if (license === License.None) {
     assertPublicFeatureScope(role, prefixAddress(chainId, owner))
   }
@@ -85,7 +102,8 @@ const assertPublicFeatureScope = (role: Role, owner: PrefixedAddress) => {
   ) {
     throw new LicenseError(
       `Role ${decodeKey(role.key)} is using allowances. Add the owner of the Roles Modifier to your Zodiac OS organization to proceed: https://app.zodiac.eco/create/${owner}`,
-      owner
+      owner,
+      "UNLICENSED_FEATURE"
     )
   }
 }
