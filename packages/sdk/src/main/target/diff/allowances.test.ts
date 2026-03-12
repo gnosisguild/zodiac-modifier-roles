@@ -17,7 +17,7 @@ const Zeroes = {
 }
 
 suite("applyAllowances", () => {
-  it("all insertions when passed in no previous allowances", async () => {
+  it("all insertions when passed in no previous allowances", () => {
     const next: Allowance[] = [
       {
         key: key2,
@@ -57,7 +57,7 @@ suite("applyAllowances", () => {
       { call: "setAllowance", ...next[1] },
     ])
   })
-  it("all deletions when passed in no current allowances", async () => {
+  it("all deletions when passed in no current allowances", () => {
     const prev: Allowance[] = [
       {
         key: key1,
@@ -97,7 +97,7 @@ suite("applyAllowances", () => {
     ])
   })
 
-  it("when overlapping, it preserves timestamp and balance", async () => {
+  it("when overlapping, it preserves timestamp and balance", () => {
     const prev: Allowance[] = [
       {
         key: key1,
@@ -109,22 +109,22 @@ suite("applyAllowances", () => {
       },
       {
         key: key2,
-        balance: 2n,
+        balance: 0n,
         maxRefill: 2n,
         refill: 2n,
         period: 2n,
-        timestamp: 2n,
+        timestamp: 22n,
       },
     ]
 
     const next: Allowance[] = [
       {
         key: key2,
-        balance: 3n,
-        maxRefill: 3n,
-        refill: 3n,
-        period: 3n,
-        timestamp: 3n,
+        balance: 2n,
+        maxRefill: 2n,
+        refill: 2n,
+        period: 2n,
+        timestamp: 2n,
       },
       {
         key: key3,
@@ -138,19 +138,10 @@ suite("applyAllowances", () => {
 
     const { minus, plus } = diffAllowances({ prev, next })
     expect(minus).toHaveLength(1)
-    expect(plus).toHaveLength(2)
+    expect(plus).toHaveLength(1)
 
     expect(minus).toEqual([{ call: "setAllowance", key: key1, ...Zeroes }])
     expect(plus).toEqual([
-      {
-        call: "setAllowance",
-        key: key2,
-        balance: 2n,
-        maxRefill: 3n,
-        refill: 3n,
-        period: 3n,
-        timestamp: 2n,
-      },
       {
         call: "setAllowance",
         key: key3,
@@ -159,6 +150,44 @@ suite("applyAllowances", () => {
         refill: 4n,
         period: 4n,
         timestamp: 4n,
+      },
+    ])
+  })
+
+  it("resets balance and timestamp when updating allowance", () => {
+    const prev: Allowance[] = [
+      {
+        key: key1,
+        balance: 0n,
+        maxRefill: 1n,
+        refill: 1n,
+        period: 1n,
+        timestamp: 11n,
+      },
+    ]
+
+    const next: Allowance[] = [
+      {
+        key: key1,
+        balance: 2n,
+        maxRefill: 2n,
+        refill: 2n,
+        period: 2n,
+        timestamp: 0n,
+      },
+    ]
+
+    const { minus, plus } = diffAllowances({ prev, next })
+    expect(minus).toHaveLength(0)
+    expect(plus).toEqual([
+      {
+        call: "setAllowance",
+        key: key1,
+        balance: 2n,
+        maxRefill: 2n,
+        refill: 2n,
+        period: 2n,
+        timestamp: 0n,
       },
     ])
   })

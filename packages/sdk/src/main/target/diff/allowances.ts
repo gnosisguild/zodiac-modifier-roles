@@ -14,11 +14,15 @@ export function diffAllowances({
 
   const toUpdate = next
     .filter((allowance) => prev.some((a) => a.key == allowance.key))
-    .map((allowance) => ({
-      ...allowance,
-      balance: prev.find((a) => a.key == allowance.key)!.balance,
-      timestamp: prev.find((a) => a.key == allowance.key)!.timestamp,
-    }))
+    // only update allowances with updated refill terms, don't mess with the dynamically updated balance and timestamp fields
+    .filter((allowance) => {
+      const existing = prev.find((a) => a.key == allowance.key)!
+      return (
+        allowance.refill !== existing.refill ||
+        allowance.maxRefill !== existing.maxRefill ||
+        allowance.period !== existing.period
+      )
+    })
 
   const toCreate = next.filter((allowance) =>
     prev.every((a) => a.key !== allowance.key)
