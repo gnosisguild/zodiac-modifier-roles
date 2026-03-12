@@ -114,34 +114,25 @@ describe("scopeSignTypedMessage()", () => {
       compValue: "0x0000", // leadingBytes = 0
       children: [
         {
-          paramType: Encoding.Tuple,
-          operator: Operator.Matches,
-          children: [
-            {
-              paramType: Encoding.Dynamic,
-              operator: Operator.Pass,
-            },
-            {
-              paramType: Encoding.Dynamic,
-              operator: Operator.Pass,
-            },
-            {
-              paramType: Encoding.Static,
-              operator: Operator.EqualTo,
-              compValue: AbiCoder.defaultAbiCoder().encode(
-                ["uint256"],
-                [1]
-              ) as any,
-            },
-            {
-              paramType: Encoding.Static,
-              operator: Operator.EqualTo,
-              compValue: AbiCoder.defaultAbiCoder().encode(
-                ["address"],
-                ["0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC"]
-              ) as any,
-            },
-          ],
+          paramType: Encoding.Dynamic,
+          operator: Operator.Pass,
+        },
+        {
+          paramType: Encoding.Dynamic,
+          operator: Operator.Pass,
+        },
+        {
+          paramType: Encoding.Static,
+          operator: Operator.EqualTo,
+          compValue: AbiCoder.defaultAbiCoder().encode(["uint256"], [1]) as any,
+        },
+        {
+          paramType: Encoding.Static,
+          operator: Operator.EqualTo,
+          compValue: AbiCoder.defaultAbiCoder().encode(
+            ["address"],
+            ["0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC"]
+          ) as any,
         },
       ],
     }
@@ -152,38 +143,32 @@ describe("scopeSignTypedMessage()", () => {
       compValue: "0x0000", // leadingBytes = 0
       children: [
         {
-          paramType: Encoding.Tuple,
-          operator: Operator.Matches,
+          paramType: Encoding.Dynamic,
+          operator: Operator.EqualTo,
+          compValue: AbiCoder.defaultAbiCoder().encode(
+            ["string"],
+            ["Vitalik"]
+          ) as any,
+        },
+        {
+          paramType: Encoding.Static,
+          operator: Operator.EqualTo,
+          compValue: AbiCoder.defaultAbiCoder().encode(
+            ["address"],
+            [SomeAddress]
+          ) as any,
+        },
+        {
+          paramType: Encoding.Array,
+          operator: Operator.Pass,
           children: [
             {
-              paramType: Encoding.Dynamic,
-              operator: Operator.EqualTo,
-              compValue: AbiCoder.defaultAbiCoder().encode(
-                ["string"],
-                ["Vitalik"]
-              ) as any,
-            },
-            {
-              paramType: Encoding.Static,
-              operator: Operator.EqualTo,
-              compValue: AbiCoder.defaultAbiCoder().encode(
-                ["address"],
-                [SomeAddress]
-              ) as any,
-            },
-            {
-              paramType: Encoding.Array,
+              paramType: Encoding.Tuple,
               operator: Operator.Pass,
               children: [
                 {
-                  paramType: Encoding.Tuple,
+                  paramType: Encoding.Dynamic,
                   operator: Operator.Pass,
-                  children: [
-                    {
-                      paramType: Encoding.Dynamic,
-                      operator: Operator.Pass,
-                    },
-                  ],
                 },
               ],
             },

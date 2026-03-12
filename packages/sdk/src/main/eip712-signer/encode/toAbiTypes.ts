@@ -30,15 +30,25 @@ export function toAbiTypes({
   // BFS queue: { type, parentIndex }
   const queue: { type: string; parentIndex: number }[] = []
 
-  // Add root wrappers (AbiEncoded nodes)
+  // Add root struct nodes directly. The encoded bytes are the tuple block for
+  // the root struct itself, not `abi.encode(rootStruct)` with an outer wrapper.
   for (const rootType of rootTypes) {
+    const { isStruct } = parseType(rootType)
+    if (!isStruct) {
+      throw new Error(`EIP-712 root type must be a struct, got: ${rootType}`)
+    }
+
+    const { typeHash } = hashType({ types, type: rootType })
     const rootIndex = result.length
     result.push({
-      parent: rootIndex, // root points to self
-      encoding: Encoding.AbiEncoded,
-      typeHash: ZeroHash as `0x${string}`,
+      parent: rootIndex,
+      encoding: Encoding.Tuple,
+      typeHash,
     })
-    queue.push({ type: rootType, parentIndex: rootIndex })
+
+    for (const field of types[rootType]) {
+      queue.push({ type: field.type, parentIndex: rootIndex })
+    }
   }
 
   // BFS expansion
