@@ -14,14 +14,14 @@ contract MockEIP712Encoder {
     function hashTypedMessage(
         bytes calldata domain,
         bytes calldata message,
-        EIP712Encoder.Types calldata types
+        TypeNodeFlat[] calldata types
     ) external pure returns (bytes32) {
         return EIP712Encoder.hashTypedMessage(domain, message, types);
     }
 
     function hashTypedDomain(
         bytes calldata data,
-        EIP712Encoder.Types calldata types
+        TypeNodeFlat[] calldata types
     ) external pure returns (bytes32) {
         return EIP712Encoder.hashTypedDomain(data, types);
     }

@@ -20,8 +20,8 @@ const buyTokenDestinationMap: Record<string, BuyTokenDestination> = {
   internal: BuyTokenDestination.INTERNAL,
 }
 
-type SupportedChainIdNumber = `${SupportedChainId}` extends `${infer N extends number}` ? N : never
-
+type SupportedChainIdNumber =
+  `${SupportedChainId}` extends `${infer N extends number}` ? N : never
 
 /**
  * Posts a CowSwap order to the Cow order book API.
@@ -31,7 +31,6 @@ type SupportedChainIdNumber = `${SupportedChainId}` extends `${infer N extends n
  * @deprecated The `zodiac-roles-sdk/swaps` entrypoint is deprecated and will be removed in the next major release.
  */
 export const postCowOrder = async (quote: Quote) => {
-  
   // Validate the appData before posting
   await validateAppData(
     { chainId: quote.chainId as SupportedChainIdNumber, owner: quote.from },

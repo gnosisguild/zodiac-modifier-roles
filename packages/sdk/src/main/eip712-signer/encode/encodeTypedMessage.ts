@@ -11,39 +11,41 @@ export function encodeTypedMessage({
   message: Record<string, any>
 }): `0x${string}` {
   const primaryType = findPrimaryType({ types })
+
+  const fields = types[primaryType]
   return AbiCoder.defaultAbiCoder().encode(
-    [abiTypes(types, primaryType)],
-    [abiValues(types, message, primaryType)]
+    fields.map((field) => abiType(types, field.type)),
+    fields.map((field) => abiValue(types, message[field.name], field.type))
   ) as `0x${string}`
 }
 
-function abiTypes(types: TypedData, type: string): string {
+function abiType(types: TypedData, type: string): string {
   const { type: baseType, isStruct, isArray, fixedLength } = parseType(type)
 
   if (isStruct) {
     return `tuple(${types[type]
-      .map((field) => abiTypes(types, field.type))
+      .map((field) => abiType(types, field.type))
       .join(",")})`
   } else if (isArray && fixedLength) {
     return `tuple(${new Array(fixedLength)
-      .fill(abiTypes(types, baseType))
+      .fill(abiType(types, baseType))
       .join(",")})`
   } else if (isArray && !fixedLength) {
-    return `${abiTypes(types, baseType)}[]`
+    return `${abiType(types, baseType)}[]`
   } else {
     return type
   }
 }
 
-function abiValues(types: TypedData, value: any, type: string): any[] {
+function abiValue(types: TypedData, value: any, type: string): any {
   const { type: baseType, isStruct, isArray } = parseType(type)
 
   if (isStruct) {
     return types[type].map((field) =>
-      abiValues(types, value[field.name], field.type)
+      abiValue(types, value[field.name], field.type)
     )
   } else if (isArray) {
-    return value.map((child: string) => abiValues(types, child, baseType))
+    return value.map((child: unknown) => abiValue(types, child, baseType))
   } else {
     return value
   }
