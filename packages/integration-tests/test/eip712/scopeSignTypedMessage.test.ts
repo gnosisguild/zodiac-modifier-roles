@@ -380,9 +380,9 @@ describe("scopeSignTypedMessage()", () => {
       })
     ).to.not.be.reverted
 
-    const aTypeHash = toAbiTypes({ domain, types }).typeHashes.find(
-      (t) => t != ZeroHash
-    )!
+    const aTypeHash = toAbiTypes({ domain, types })
+      .map((n) => n.typeHash)
+      .find((t) => t != ZeroHash)!
 
     // change one hash
     expect(data.includes(aTypeHash.slice(2))).to.be.true

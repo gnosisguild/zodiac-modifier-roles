@@ -96,8 +96,5 @@ export function toAbiTypes({
     }
   }
 
-  return {
-    layout: result.map(({ parent, encoding }) => ({ parent, encoding })),
-    typeHashes: result.map(({ typeHash }) => typeHash),
-  }
+  return result
 }
