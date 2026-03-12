@@ -4,7 +4,6 @@
  *
  * TODO: Deploy CowOrderSigner contracts to these additional cow-sdk chains:
  * - LENS (232)
- * - 
  */
 export enum SupportedChainId {
   MAINNET = 1,
