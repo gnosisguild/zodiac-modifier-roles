@@ -166,7 +166,6 @@ describe("normalizeCondition", () => {
           ],
         })
       })
-
     })
 
     describe("dedupeBranches", () => {
@@ -373,11 +372,7 @@ describe("normalizeCondition", () => {
     })
 
     it("handles conditions with allowance operators", () => {
-      const input = MATCHES(
-        Encoding.AbiEncoded,
-        CALL_ALLOWANCE(),
-        PASS()
-      )
+      const input = MATCHES(Encoding.AbiEncoded, CALL_ALLOWANCE(), PASS())
 
       const result = normalizeCondition(input)
 

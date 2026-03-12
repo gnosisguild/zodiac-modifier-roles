@@ -44,4 +44,3 @@ export const and =
       return mapScoping(branch, abiType) as Condition // cast is safe because of earlier branch check
     }),
   })
-
