@@ -18,9 +18,9 @@ export function diffAllowances({
     .filter((allowance) => {
       const existing = prev.find((a) => a.key == allowance.key)!
       return (
-        BigInt(allowance.refill) !== BigInt(existing.refill) ||
-        BigInt(allowance.maxRefill) !== BigInt(existing.maxRefill) ||
-        BigInt(allowance.period) !== BigInt(existing.period)
+        allowance.refill !== existing.refill ||
+        allowance.maxRefill !== existing.maxRefill ||
+        allowance.period !== existing.period
       )
     })
 
