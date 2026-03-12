@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.4.7](https://github.com/gnosisguild/zodiac-modifier-roles/compare/zodiac-roles-sdk-v3.4.6...zodiac-roles-sdk-v3.4.7) (2026-03-12)
+
+
+### Bug Fixes
+
+* don't diff against dynamically updated allowance fields ([#470](https://github.com/gnosisguild/zodiac-modifier-roles/issues/470)) ([ec71323](https://github.com/gnosisguild/zodiac-modifier-roles/commit/ec71323d7e66c13075149f98a23b16c9f68576b3))
+
 ## [3.4.6](https://github.com/gnosisguild/zodiac-modifier-roles/compare/zodiac-roles-sdk-v3.4.5...zodiac-roles-sdk-v3.4.6) (2026-03-10)
 
 
