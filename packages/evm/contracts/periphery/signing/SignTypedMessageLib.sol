@@ -74,12 +74,12 @@ contract SignTypedMessageLib is SafeStorage {
      *      bytes as signature represent an on-chain signature
      * @param domain  The encoded EIP712 domain
      * @param message The encoded EIP712 message
-     * @param types   The flattened EIP712 typedData definitions
+     * @param types   The flattened EIP712 type nodes
      */
     function signTypedMessage(
         bytes calldata domain,
         bytes calldata message,
-        EIP712Encoder.Types calldata types
+        TypeNodeFlat[] calldata types
     ) public {
         require(address(this) != deployedAt);
         bytes32 safeMessageHash = keccak256(
@@ -114,13 +114,13 @@ contract SignTypedMessageLib is SafeStorage {
      *
      * @param domain   The encoded EIP712 domain
      * @param message  The encoded EIP712 message
-     * @param types    The flattened EIP712 type definitions
+     * @param types    The flattened EIP712 type nodes
      * @return bytes   The EIP-712 preimage (hash it to get the SafeMessage hash)
      */
     function safeTypedMessagePreimage(
         bytes calldata domain,
         bytes calldata message,
-        EIP712Encoder.Types calldata types
+        TypeNodeFlat[] calldata types
     ) public view returns (bytes memory) {
         return
             safeMessagePreimage(
@@ -138,7 +138,7 @@ contract SignTypedMessageLib is SafeStorage {
     fallback() external {
         bytes calldata domain;
         bytes calldata message;
-        EIP712Encoder.Types calldata types;
+        TypeNodeFlat[] calldata types;
         assembly {
             // offset to domain block
             domain.offset := add(calldataload(0x04), 0x24)
@@ -148,8 +148,10 @@ contract SignTypedMessageLib is SafeStorage {
             message.offset := add(calldataload(0x24), 0x24)
             message.length := calldataload(sub(message.offset, 0x20))
 
-            // offset to types block
-            types := add(calldataload(0x44), 0x04)
+            // offset to types array
+            let typesPtr := add(calldataload(0x44), 0x04)
+            types.length := calldataload(typesPtr)
+            types.offset := add(typesPtr, 0x20)
         }
         signTypedMessage(domain, message, types);
     }

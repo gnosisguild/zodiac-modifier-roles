@@ -11,7 +11,7 @@ import {
 const iface = Interface.from([
   "function signMessage(bytes message)",
   "function personalSign(bytes message)",
-  "function signTypedMessage(bytes domain, bytes message, ((uint256 parent, uint8 encoding)[] layout, bytes32[] typeHashes) types)",
+  "function signTypedMessage(bytes domain, bytes message, (uint256 parent, uint8 encoding, bytes32 typeHash)[] types)",
 ])
 
 export function encodeSignTypedMessage({
@@ -32,7 +32,11 @@ export function encodeSignTypedMessage({
   const data = iface.encodeFunctionData("signTypedMessage", [
     encodeTypedDomain({ domain }),
     encodeTypedMessage({ types, message }),
-    toAbiTypes({ domain, types }),
+    toAbiTypes({ domain, types }).map((n) => [
+      n.parent,
+      n.encoding,
+      n.typeHash,
+    ]),
   ])
 
   return `${selector}${data.slice(10)}`

@@ -37,15 +37,16 @@ export const scopeSignTypedMessage = ({
 }
 
 function typesCondition(types: TypedData): Condition {
-  const { layout, typeHashes } = toAbiTypes({ types })
+  const nodes = toAbiTypes({ types })
   const compValue = AbiCoder.defaultAbiCoder().encode(
-    ["tuple(tuple(uint256,uint8)[], bytes32[])"],
-    [[layout.map((p) => [p.parent, p.encoding]), typeHashes]]
+    ["tuple(uint256,uint8,bytes32)[]"],
+    [nodes.map((n) => [n.parent, n.encoding, n.typeHash])]
   )
 
-  const left: Condition = {
+  return {
     paramType: Encoding.Array,
-    operator: Operator.Pass,
+    operator: Operator.EqualTo,
+    compValue: compValue as any,
     children: [
       {
         paramType: Encoding.Tuple,
@@ -59,26 +60,13 @@ function typesCondition(types: TypedData): Condition {
             paramType: Encoding.Static,
             operator: Operator.Pass,
           },
+          {
+            paramType: Encoding.Static,
+            operator: Operator.Pass,
+          },
         ],
       },
     ],
-  }
-
-  const right: Condition = {
-    paramType: Encoding.Array,
-    operator: Operator.Pass,
-    children: [
-      {
-        paramType: Encoding.Static,
-        operator: Operator.Pass,
-      },
-    ],
-  }
-  return {
-    paramType: Encoding.Tuple,
-    operator: Operator.EqualTo,
-    compValue: compValue as any,
-    children: [left, right],
   }
 }
 
