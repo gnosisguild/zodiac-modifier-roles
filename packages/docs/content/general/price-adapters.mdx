@@ -1,3 +1,5 @@
+import { Callout } from "nextra/components";
+
 # Price Adapters
 
 Price adapters provide on-chain price conversion, enabling the Roles Modifier to reason about values across different token denominations.
@@ -21,8 +23,66 @@ This enables slippage protection: a condition can enforce that the value receive
 
 ## How It Works
 
-A price adapter is a contract that exposes a price conversion interface.
-When the Roles Modifier encounters a condition that requires price conversion, it calls the configured price adapter to translate the value in scope to the target denomination.
+A price adapter is a contract that implements the `IPricing` interface:
 
-The adapter is responsible for sourcing the exchange rate — typically from an on-chain oracle — and returning the converted amount.
+```solidity
+interface IPricing {
+  function getPrice(bytes calldata params) external view returns (uint256 price);
+}
+```
+
+When the Roles Modifier encounters a condition that requires price conversion, it calls the configured price adapter to translate the value in scope to the target denomination.
+The returned price must use 18-decimal fixed-point precision.
+The adapter is invoked via `staticcall`, which means it cannot modify state and any revert is caught — a failing adapter causes the transaction to be rejected rather than passing through with an unconverted value.
+
 Different adapter implementations can integrate with different oracle systems (e.g., Chainlink, Uniswap TWAP) depending on the requirements of the deployment.
+
+## Chainlink Price Adapter
+
+The `ChainlinkPricing` contract is a price adapter that sources exchange rates from [Chainlink Data Feeds](https://docs.chain.link/data-feeds).
+
+### Overview
+
+Chainlink Data Feeds are decentralized oracle networks where a set of independent node operators fetch off-chain price data and submit it on-chain.
+A feed aggregates these reports and exposes the latest price via the `AggregatorV3Interface`.
+Each feed is published as a specific pair in one direction (e.g., ETH/USD, BTC/ETH) and returns a fixed-point integer with a feed-specific number of decimals (typically 8 for USD pairs and 18 for ETH pairs).
+
+### Configuration
+
+`ChainlinkPricing` is a stateless contract with no constructor parameters. All configuration is passed per query as ABI-encoded calldata:
+
+```solidity
+(address source, bool invert, uint256 maxAge) = abi.decode(params, (address, bool, uint256));
+```
+
+| Parameter | Type | Description |
+|---|---|---|
+| `source` | `address` | Address of the Chainlink price feed contract. |
+| `invert` | `bool` | If `true`, return `1 / price` instead of the raw price. Useful when only the inverse pair is available (see [Price Inversion](#price-inversion)). |
+| `maxAge` | `uint256` | Maximum acceptable age (in seconds) for a price update. Set this to match or slightly exceed the feed's heartbeat interval. |
+
+### Price Inversion
+
+Chainlink does not support native price inversion.
+Feeds are published in a single direction only — for example, ETH/USD exists but USD/ETH does not.
+
+To obtain the inverse rate, set `invert = true` in the params.
+The adapter computes `1e36 / scaledPrice`, which yields the reciprocal in 18-decimal precision.
+
+<Callout type="info">
+  Inversion introduces precision loss inherent to fixed-point division. For typical DeFi price ranges, this yields approximately 14-16 significant digits of precision, sufficient for most use cases.
+</Callout>
+
+### Finding Feed Addresses
+
+To configure `ChainlinkPricing`, you need the address of the Chainlink price feed contract for the desired pair on the target network. There are several ways to find it:
+
+- **Chainlink documentation** — The canonical list of all feed addresses per chain is at [docs.chain.link/data-feeds/price-feeds/addresses](https://docs.chain.link/data-feeds/price-feeds/addresses). This page also lists each feed's heartbeat and deviation threshold, which are useful for choosing the `maxAge` parameter.
+
+- **Data explorer** — The [data.chain.link](https://data.chain.link/) interface lets you browse feeds visually, see current prices, heartbeat intervals, and the number of oracle nodes serving each feed.
+
+- **Feed Registry (on-chain)** — On Ethereum mainnet, the [Feed Registry](https://docs.chain.link/data-feeds/feed-registry) at `0x47Fb2585D2C56Fe188D0E6ec628a38b74fCeeeDf` maps `(asset, denomination)` token address pairs to feed addresses on-chain. Availability on other networks is limited.
+
+<Callout type="warning">
+  Feed addresses differ across networks. Never assume the same address works on multiple chains. Always verify the address for the specific network you are deploying to.
+</Callout>
