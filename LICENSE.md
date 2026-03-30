@@ -1,118 +1,98 @@
-# Business Source License 1.1
+Business Source License 1.1
 
-License: Business Source License 1.1  
-Licensor: GG DAO LLC  
-Licensed Work: Zodiac Roles Modifier v3  
-Additional Use Grant: None  
-Change Date: 2030-03-01  
-Change License: GNU Lesser General Public License v3.0 or later (LGPL-3.0-or-later)
+License text copyright (c) 2017 MariaDB Corporation Ab, All Rights Reserved.
+"Business Source License" is a trademark of MariaDB Corporation Ab.
 
----
+-----------------------------------------------------------------------------
 
-## Terms
+Parameters
 
-The Licensor hereby grants you the right to copy, modify, create derivative works, redistribute, and make non-production use of the Licensed Work, subject to the restrictions set forth below.
+Licensor:             GG DAO LLC
 
-This license is based on the Business Source License 1.1.
+Licensed Work:        Zodiac Roles Modifier v3
+                      The Licensed Work is (c) 2026 GG DAO LLC
 
----
+Additional Use Grant: None
 
-## Definitions
+Change Date:          2030-03-01
 
-**"Licensed Work"** means the software, smart contracts, and associated documentation made available under this License, excluding components expressly licensed under separate terms.
+Change License:       GNU Lesser General Public License v3.0 or later (LGPL-3.0-or-later)
 
-**"Production Use"** means any use of the Licensed Work in a live, public, organizational, or commercial blockchain environment, including but not limited to:
+-----------------------------------------------------------------------------
 
-- Mainnet deployments for operational use  
-- DAO, multisig, or organizational permissioning systems  
-- Governance or access-control frameworks used in live environments  
-- Revenue-generating or fee-based deployments  
-- Managed or hosted services built on the Licensed Work  
+Terms
 
-**"Change Date"** means March 1, 2030, on which the Licensed Work becomes available under the Change License.
+The Licensor hereby grants you the right to copy, modify, create derivative
+works, redistribute, and make non-production use of the Licensed Work. The
+Licensor may make an Additional Use Grant, above, permitting limited
+production use.
 
----
+Effective on the Change Date, or the fourth anniversary of the first publicly
+available distribution of a specific version of the Licensed Work under this
+License, whichever comes first, the Licensor hereby grants you rights under
+the terms of the Change License, and the rights granted in the paragraph
+above terminate.
 
-## Grant of Rights
+If your use of the Licensed Work does not comply with the requirements
+currently in effect as described in this License, you must purchase a
+commercial license from the Licensor, its affiliated entities, or authorized
+resellers, or you must refrain from using the Licensed Work.
 
-Subject to the terms of this License, the Licensor grants you a non-exclusive, non-transferable, royalty-free license to:
+All copies of the original and modified Licensed Work, and derivative works
+of the Licensed Work, are subject to this License. This License applies
+separately for each version of the Licensed Work and the Change Date may vary
+for each version of the Licensed Work released by Licensor.
 
-- View and study the source code  
-- Modify the Licensed Work  
-- Create derivative works  
-- Deploy the Licensed Work for testing, auditing, and development  
-- Use the Licensed Work for research and evaluation  
+You must conspicuously display this License on each original or modified copy
+of the Licensed Work. If you receive the Licensed Work in original or
+modified form from a third party, the terms and conditions set forth in this
+License apply to your use of that work.
 
-All granted rights are limited to non-production use prior to the Change Date.
+Any use of the Licensed Work in violation of this License will automatically
+terminate your rights under this License for the current and all other
+versions of the Licensed Work.
 
----
+This License does not grant you any right in any trademark or logo of
+Licensor or its affiliates (provided that you may use a trademark or logo of
+Licensor as expressly required by this License).
 
-## Restrictions
+TO THE EXTENT PERMITTED BY APPLICABLE LAW, THE LICENSED WORK IS PROVIDED ON
+AN "AS IS" BASIS. LICENSOR HEREBY DISCLAIMS ALL WARRANTIES AND CONDITIONS,
+EXPRESS OR IMPLIED, INCLUDING (WITHOUT LIMITATION) WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT, AND
+TITLE.
 
-Until the Change Date, you may not:
+MariaDB hereby grants you permission to use this License’s text to license
+your works, and to refer to it using the trademark "Business Source License",
+as long as you comply with the Covenants of Licensor below.
 
-1. Deploy the Licensed Work or derivative works for operational or organizational use  
-2. Use the Licensed Work in commercial, hosted, or managed environments  
-3. Offer the Licensed Work as part of a third-party service or product  
-4. Operate competing account, permissioning, or governance frameworks based on the Licensed Work  
-5. Circumvent technical, contractual, or license restrictions  
+-----------------------------------------------------------------------------
 
-Any use not expressly permitted is prohibited.
+Covenants of Licensor
 
----
+In consideration of the right to use this License’s text and the "Business
+Source License" name and trademark, Licensor covenants to MariaDB, and to all
+other recipients of the licensed work to be provided by Licensor:
 
-## Additional Use Grant
+1. To specify as the Change License the GPL Version 2.0 or any later version,
+   or a license that is compatible with GPL Version 2.0 or a later version,
+   where "compatible" means that software provided under the Change License can
+   be included in a program with software provided under GPL Version 2.0 or a
+   later version. Licensor may specify additional Change Licenses without
+   limitation.
 
-No additional use rights are granted unless explicitly authorized in writing by the Licensor.
+2. To either: (a) specify an additional grant of rights to use that does not
+   impose any additional restriction on the right granted in this License, as
+   the Additional Use Grant; or (b) insert the text "None".
 
----
+3. To specify a Change Date.
 
-## Change License
+4. Not to modify this License in any other way.
 
-On the Change Date, the Licensed Work will automatically be licensed under:
+-----------------------------------------------------------------------------
 
-> GNU Lesser General Public License v3.0 or later (LGPL-3.0-or-later)
+Notice
 
-From that date onward, this License no longer applies, and the Change License governs all use, modification, and distribution.
-
----
-
-## Attribution
-
-All copies or substantial portions of the Licensed Work must include:
-
-- This License  
-- Copyright notice  
-- License metadata  
-
----
-
-## Disclaimer of Warranty
-
-THE LICENSED WORK IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
-
----
-
-## Limitation of Liability
-
-IN NO EVENT SHALL THE LICENSOR BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE LICENSED WORK.
-
----
-
-## Termination
-
-This License terminates automatically if you violate its terms. Upon termination, you must immediately cease all use of the Licensed Work.
-
----
-
-## Governing Law
-
-This License shall be governed by and construed in accordance with the laws of the Republic of the Marshall Islands.
-
----
-
-## Contact
-
-For commercial licensing inquiries:
-
-ops@gnosisguild.org
+The Business Source License (this document, or the "License") is not an Open
+Source license. However, the Licensed Work will eventually be made available
+under an Open Source License, as stated in this License.
