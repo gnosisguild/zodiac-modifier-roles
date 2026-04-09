@@ -36,6 +36,7 @@ export const postCowOrder = async (quote: Quote) => {
   return await postCowOrderApi(quote.chainId, {
     sellToken: quote.sellToken,
     buyToken: quote.buyToken,
+    receiver: quote.receiver,
     sellAmount: quote.sellAmount,
     buyAmount: quote.buyAmount,
     validTo: quote.validTo,
