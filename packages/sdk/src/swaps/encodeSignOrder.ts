@@ -3,6 +3,13 @@ import { Quote } from "./types"
 import { encodeKey } from "zodiac-roles-sdk"
 
 const CowswapOrderSignerAddress = "0x23dA9AdE38E4477b23770DeD512fD37b12381FAB"
+// Dishonest valid duration checks if block.timestamp + validDuration > order.validTo
+// but because we compute validDuration as validTo - Date.now() this simplifies to block.timestamp > Date.now()
+// block.timestamp might be behind Date.now() (when sending transaction it's verified against "latest" block).
+// This means that signOrder would reject unless we wait some time for block.timestamp to advance.
+// Adding buffer here (15 seconds) to ensure signature is immediately valid when generated.
+// https://github.com/gnosisguild/cow-order-signer/blob/1fc456e113ded34bfc745456966f72aec9444be1/contracts/CowswapOrderSigner.sol#L46-L49
+const signatureValidityBuffer = 15;
 
 /** Encodes a signOrder call to the CowswapOrderSigner contract */
 export const encodeSignOrder = (quote: Quote) => {
@@ -15,7 +22,7 @@ export const encodeSignOrder = (quote: Quote) => {
       feeAmount: 0,
       appData: id(quote.appData),
     },
-    quote.validTo - Math.floor(Date.now() / 1000),
+    quote.validTo - Math.floor(Date.now() / 1000) + signatureValidityBuffer,
     0,
   ]) as `0x${string}`
 }
