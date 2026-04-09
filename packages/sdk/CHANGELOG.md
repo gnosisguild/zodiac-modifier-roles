@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.4.8](https://github.com/gnosisguild/zodiac-modifier-roles/compare/zodiac-roles-sdk-v3.4.7...zodiac-roles-sdk-v3.4.8) (2026-04-09)
+
+
+### Bug Fixes
+
+* add buffer to order validDuration to make it instantly valid ([#475](https://github.com/gnosisguild/zodiac-modifier-roles/issues/475)) ([21d4e4d](https://github.com/gnosisguild/zodiac-modifier-roles/commit/21d4e4dc46d5b3cc3bda2c040ec3d0aeb2a3d791))
+* pass receiver to postCowOrderApi ([#476](https://github.com/gnosisguild/zodiac-modifier-roles/issues/476)) ([2da8d22](https://github.com/gnosisguild/zodiac-modifier-roles/commit/2da8d223103eb5d41df84de3affd0bf6312c6c98))
+
 ## [3.4.7](https://github.com/gnosisguild/zodiac-modifier-roles/compare/zodiac-roles-sdk-v3.4.6...zodiac-roles-sdk-v3.4.7) (2026-03-12)
 
 
