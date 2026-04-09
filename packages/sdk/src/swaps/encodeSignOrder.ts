@@ -7,9 +7,9 @@ const CowswapOrderSignerAddress = "0x23dA9AdE38E4477b23770DeD512fD37b12381FAB"
 // but because we compute validDuration as validTo - Date.now() this simplifies to block.timestamp > Date.now()
 // block.timestamp might be behind Date.now() (when sending transaction it's verified against "latest" block).
 // This means that signOrder would reject unless we wait some time for block.timestamp to advance.
-// Adding buffer here (5 minutes) to ensure signature is immediately valid when generated.
+// Adding buffer here (15 seconds) to ensure signature is immediately valid when generated.
 // https://github.com/gnosisguild/cow-order-signer/blob/1fc456e113ded34bfc745456966f72aec9444be1/contracts/CowswapOrderSigner.sol#L46-L49
-const signatureValidityBuffer = 5 * 60;
+const signatureValidityBuffer = 15;
 
 /** Encodes a signOrder call to the CowswapOrderSigner contract */
 export const encodeSignOrder = (quote: Quote) => {
