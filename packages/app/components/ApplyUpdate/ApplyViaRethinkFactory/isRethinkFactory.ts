@@ -16,7 +16,7 @@ export const isRethinkFactory = async (
   // Create a public client for the chain
   const client = createPublicClient({
     chain,
-    transport: http(),
+    transport: http(`https://rpc.gnosisguild.org/${chainId}`),
   })
 
   // First check if there's actually a contract at this address
