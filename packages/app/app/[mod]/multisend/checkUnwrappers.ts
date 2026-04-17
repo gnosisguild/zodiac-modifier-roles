@@ -64,7 +64,7 @@ export async function checkUnwrappers(
 
   const client = createPublicClient({
     chain: CHAINS[chainId as keyof typeof CHAINS],
-    transport: http(),
+    transport: http(`https://rpc.gnosisguild.org/${chainId}`),
   })
 
   const results = await client.multicall({

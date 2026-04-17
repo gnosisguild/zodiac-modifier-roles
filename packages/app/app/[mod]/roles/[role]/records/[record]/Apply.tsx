@@ -69,7 +69,7 @@ async function fetchOwnerSafe(
 ): Promise<`0x${string}` | undefined> {
   const publicClient = createPublicClient({
     chain: CHAINS[chainId],
-    transport: http(),
+    transport: http(`https://rpc.gnosisguild.org/${chainId}`),
   })
   const owner = await publicClient.readContract({
     address: roleMod,
