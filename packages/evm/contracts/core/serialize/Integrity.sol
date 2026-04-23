@@ -381,12 +381,12 @@ library Integrity {
             conditions,
             index
         );
-        // Children: At most 1 child
+        // Children: Exactly 1 child
         if (childCount != 1) {
             revert IRolesError.UnsuitableChildCount(index);
         }
 
-        // If it has a structural child, it must resolve to Static
+        // The child must resolve to Static
         if (conditions[childStart].paramType != Encoding.Static) {
             revert IRolesError.SliceChildNotStatic(index);
         }
@@ -398,11 +398,14 @@ library Integrity {
     ) private pure {
         ConditionFlat memory condition = conditions[index];
         Encoding encoding = condition.paramType;
-        // ParamType: Static / EtherValue / Array
+        // ParamType: any encoding except None (None is reserved for operators
+        // that do not target a calldata value, e.g. And/Or/Empty/ZipSome/...)
         if (encoding == Encoding.None) {
             revert IRolesError.UnsuitableParameterType(index);
         }
-        // CompValue: 1 byte
+        // CompValue: 1 byte holding the pluck slot index. The packed buffer
+        // header stores `maxPluckCount = max(pluckIndex) + 1` in 8 bits, so
+        // index 255 would overflow that field on pack. Capped at 254 here.
         if (
             condition.compValue.length != 1 ||
             uint8(condition.compValue[0]) == 255
