@@ -8,12 +8,33 @@ import {Status} from "../../types/Types.sol";
 
 /**
  * @title BitmaskChecker
- * @notice Validates that a value matches an expected pattern after applying a bitmask.
+ * @notice Validates that selected bits of an operand match an expected pattern.
  *
- * @dev compValue packs shift, mask and expected.
+ * @dev compValue layout (total length = 2 + 2 * N bytes, N >= 1):
+ *
+ *      ┌────────────────────┬────────────────────┬────────────────────┐
+ *      │ shift (16 bits)    │ mask (8N bits)     │ expected (8N bits) │
+ *      └────────────────────┴────────────────────┴────────────────────┘
+ *
+ *      Fields:
+ *        - shift     uint16, byte offset into the operand at which the mask
+ *                    window starts.
+ *        - mask      N bytes; selects which bits of the operand are checked.
+ *        - expected  N bytes; the required value of the selected bits.
+ *
+ *      Operand framing (passed via `inlined`):
+ *        - inlined == true   Operand is a Static value (32 bytes at location)
+ *        - inlined == false  Operand is a Dynamic value; `location` points at
+ *                            the length-prefix word, content begins at
+ *                            `location + 32` and `shift` indexes into content
+ *                            (the prefix is not part of the addressable range)
+ *
+ *      Bounds: `shift + N` must not exceed the operand's actual byte length
+ *      (32 for Static, the value of the length prefix for Dynamic). The
+ *      window is processed in 32-byte chunks; the trailing chunk is rinsed
+ *      so unused tail bits cannot contribute to the comparison.
  *
  * @author gnosisguild
- *
  */
 library BitmaskChecker {
     function check(
@@ -23,12 +44,34 @@ library BitmaskChecker {
         bool inlined
     ) internal pure returns (Status) {
         uint256 shift = uint16(bytes2(compValue));
-        uint256 length = (compValue.length - 2) / 2;
+        uint256 n = (compValue.length - 2) / 2;
 
-        uint256 start = location + (inlined ? 0 : 32);
-        uint256 end = data.length;
+        if (location + shift + n > data.length) {
+            return Status.BitmaskOverflow;
+        }
 
-        if (shift + length > end - start) {
+        /*
+         * Resolve the operand's encoded byte length so the compare cannot
+         * bleed into trailing zero padding (or, for Dynamic operands sitting
+         * mid-buffer, into the next ABI field).
+         *   - Static (inlined): 32 bytes inline at `location`.
+         *   - Dynamic: length prefix at `location`, content at `location + 32`.
+         */
+        uint256 start = location;
+        uint256 encodedLength = 32;
+        if (inlined == false) {
+            if (start + 32 > data.length) {
+                return Status.BitmaskOverflow;
+            }
+
+            assembly {
+                encodedLength := calldataload(add(data.offset, start))
+            }
+
+            start += 32;
+        }
+
+        if (shift + n > encodedLength) {
             return Status.BitmaskOverflow;
         }
 
@@ -38,7 +81,7 @@ library BitmaskChecker {
          * Load actual, expected, and mask in 32-byte chunks. Final chunk
          * gets rinsed if less than 32 bytes remain.
          */
-        for (uint256 i; i < length; i += 32) {
+        for (uint256 i; i < n; i += 32) {
             /*
              * compValue memory layout:
              * | 32: length | 2: shift | N: mask | N: expected |
@@ -51,7 +94,7 @@ library BitmaskChecker {
 
             bytes32 expected;
             assembly {
-                expected := mload(add(add(compValue, 0x22), add(length, i)))
+                expected := mload(add(add(compValue, 0x22), add(n, i)))
             }
 
             bytes32 actual;
@@ -59,7 +102,7 @@ library BitmaskChecker {
                 actual := calldataload(add(value.offset, add(shift, i)))
             }
 
-            bytes32 rinseMask = _rinseMask(length - i);
+            bytes32 rinseMask = _rinseMask(n - i);
 
             if (expected & rinseMask != actual & mask & rinseMask) {
                 return Status.BitmaskNotAllowed;
