@@ -68,7 +68,10 @@ library Topology {
     }
 
     /**
-     * @notice Computes inlined size for a node (0 if not inlined)
+     * @notice Computes the inlined size (in bytes) for a node.
+     *
+     * @dev Only invoked on nodes already known to be inlined; the assertion
+     *      documents this invariant rather than acting as a runtime guard.
      */
     function inlinedSize(
         ConditionFlat[] memory conditions,
