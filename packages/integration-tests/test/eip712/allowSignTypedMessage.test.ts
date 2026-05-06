@@ -14,8 +14,8 @@ import {
   ExecutionOptions,
   Operator,
   Encoding,
+  allowSignTypedMessage,
   encodeSignTypedMessage,
-  scopeSignTypedMessage,
   __integration,
 } from "zodiac-roles-sdk"
 
@@ -37,7 +37,7 @@ const AddressOne = "0x0000000000000000000000000000000000000001"
 
 const EIP712_MAGIC_VALUE = "0x20c13b0b"
 
-describe("scopeSignTypedMessage()", () => {
+describe("allowSignTypedMessage()", () => {
   async function setup() {
     await deployMastercopies()
 
@@ -177,7 +177,7 @@ describe("scopeSignTypedMessage()", () => {
       ],
     }
 
-    const { selector, condition } = scopeSignTypedMessage({
+    const { selector, condition } = allowSignTypedMessage({
       domain: conditionDomain,
       message: conditionMessage,
       types,

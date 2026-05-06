@@ -1,10 +1,23 @@
 import { TypedData } from "abitype"
-import { AbiCoder, Interface, keccak256 } from "ethers"
-import { Condition, Operator, Encoding, rolesAbi } from "zodiac-roles-sdk"
+import { AbiCoder, keccak256 } from "ethers"
+import {
+  Condition,
+  Encoding,
+  Operator,
+  SIGN_TYPED_MESSAGE_LIB_ADDRESS,
+} from "zodiac-roles-deployments"
 
 import { encodeAbiTypes, toAbiTypes } from "./encode"
 
-export const scopeSignTypedMessage = ({
+/**
+ * Returns a permission allowing the role to sign EIP-712 typed messages
+ * matching the given domain and message conditions.
+ *
+ * The returned permission targets `SignTypedMessageLib` under a selector
+ * that's deterministically derived from the provided `types`, so different
+ * EIP-712 layouts can be scoped under the same target without colliding.
+ */
+export const allowSignTypedMessage = ({
   domain,
   message,
   types,
@@ -12,22 +25,33 @@ export const scopeSignTypedMessage = ({
   domain: Condition
   message: Condition
   types: TypedData
-}): { selector: `0x${string}`; condition: Condition } => {
+}): {
+  targetAddress: `0x${string}`
+  selector: `0x${string}`
+  delegatecall: true
+  condition: Condition
+} => {
   if (domain.paramType !== Encoding.AbiEncoded) {
-    throw new Error("Domain is not and AbiEncoded condition")
+    throw new Error("Domain is not an AbiEncoded condition")
   }
 
   if (message.paramType !== Encoding.AbiEncoded) {
-    throw new Error("Message is not and AbiEncoded condition")
+    throw new Error("Message is not an AbiEncoded condition")
   }
 
   if (!types["EIP712Domain"]) {
     throw new Error("TypedData does not include EIP712Domain")
   }
 
-  const selector = keccak256(encodeAbiTypes({ types })).slice(0, 10)
+  const selector = keccak256(encodeAbiTypes({ types })).slice(
+    0,
+    10
+  ) as `0x${string}`
+
   return {
-    selector: selector as `0x${string}`,
+    targetAddress: SIGN_TYPED_MESSAGE_LIB_ADDRESS,
+    selector,
+    delegatecall: true,
     condition: {
       paramType: Encoding.AbiEncoded,
       operator: Operator.Matches,
@@ -69,5 +93,3 @@ function typesCondition(types: TypedData): Condition {
     ],
   }
 }
-
-export const iface = Interface.from(rolesAbi)

@@ -47,8 +47,8 @@ export {
   encodePersonalSign,
   encodeSignMessage,
   encodeSignTypedMessage,
-  scopePersonalSign,
-  scopeSignTypedMessage,
+  allowPersonalSign,
+  allowSignTypedMessage,
 } from "./eip712-signer"
 export { encodeKey, decodeKey } from "./keys"
 export { postRole } from "./postRole"

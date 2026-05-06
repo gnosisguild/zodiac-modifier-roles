@@ -1,19 +1,29 @@
 import { hexlify, toUtf8Bytes } from "ethers"
-import { Condition, Operator, Encoding } from "zodiac-roles-sdk"
+import {
+  Condition,
+  Encoding,
+  Operator,
+  SIGN_TYPED_MESSAGE_LIB_ADDRESS,
+} from "zodiac-roles-deployments"
 
 /**
- * Scopes a role to only allow signing personal_sign messages whose text
- * starts with the given string.
+ * Returns a permission allowing the role to sign personal_sign messages
+ * whose text starts with the given string.
  *
- * Uses the `personalSign(bytes)` entrypoint which handles EIP-191
- * wrapping internally. The condition is a single bitmask on the raw
- * message bytes.
+ * Uses the `personalSign(bytes)` entrypoint of `SignTypedMessageLib` which
+ * handles EIP-191 wrapping internally. The condition is a single bitmask
+ * on the raw message bytes.
  */
-export const scopePersonalSign = ({
+export const allowPersonalSign = ({
   startsWith,
 }: {
   startsWith: string
-}): { selector: `0x${string}`; condition: Condition } => {
+}): {
+  targetAddress: `0x${string}`
+  selector: `0x${string}`
+  delegatecall: true
+  condition: Condition
+} => {
   if (!startsWith) {
     throw new Error("startsWith must not be empty")
   }
@@ -24,7 +34,9 @@ export const scopePersonalSign = ({
   const compValue = `0x${shift}${mask}${startsWithHex}` as `0x${string}`
 
   return {
+    targetAddress: SIGN_TYPED_MESSAGE_LIB_ADDRESS,
     selector: "0x641e3d2b", // personalSign(bytes)
+    delegatecall: true,
     condition: {
       paramType: Encoding.AbiEncoded,
       operator: Operator.Matches,

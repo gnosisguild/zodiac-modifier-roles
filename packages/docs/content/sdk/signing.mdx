@@ -5,23 +5,22 @@ import { Callout } from "nextra/components";
 The SDK provides helpers for scoping signing calls and for producing the calldata that triggers them.
 Each flow has two pieces:
 
-- A `scope*` function that builds a `(selector, condition)` pair you attach to a permission targeting `SignTypedMessageLib`.
-- An `encode*` function that produces the calldata a member sends through the Roles Modifier (with `operation: 1` for delegatecall) to actually mark the message as signed.
+- An `allow*` function that returns a [Permission](/sdk/api#permission) targeting `SignTypedMessageLib` with the appropriate selector, condition, and `delegatecall: true`.
+- An `encode*` function that produces the calldata a member sends through the Roles Modifier to actually mark the message as signed.
 
 For background on how on-chain signing works through the Roles Modifier, see the [Signature Scoping](/general/signing) section.
 
 ## EIP-712 typed messages
 
-### `scopeSignTypedMessage`
+### `allowSignTypedMessage`
 
-Builds a permission condition for an EIP-712 typed message layout.
-The returned `selector` is derived deterministically from the type definition, so different EIP-712 layouts can be scoped under the same target without colliding.
+Returns a permission allowing the role to sign EIP-712 typed messages matching the given `domain` and `message` conditions.
 
 The `domain` and `message` arguments are conditions over the ABI-encoded domain and message blocks.
 The most ergonomic way to author them is `c.abiEncodedMatches`, which takes a tuple-style scoping array and the corresponding ABI types of the root struct fields.
 
 ```typescript
-import { c, scopeSignTypedMessage } from "zodiac-roles-sdk";
+import { c, allowSignTypedMessage } from "zodiac-roles-sdk";
 
 const types = {
   EIP712Domain: [
@@ -51,18 +50,13 @@ const message = c.abiEncodedMatches(
   ["address", "address", "address", "uint256"]
 )();
 
-const { selector, condition } = scopeSignTypedMessage({
-  domain,
-  message,
-  types,
-});
+const permission = allowSignTypedMessage({ domain, message, types });
 ```
 
 A few things to note:
 
 - The scoping array positions correspond one-to-one to the fields of the `EIP712Domain` and root struct.
 - Primitive values (string, number, address, bigint) are shorthand for [`c.eq`](/sdk/conditions#ceq); use any [condition function](/sdk/conditions#condition-functions) (`c.avatar`, `c.or`, `c.gt`, …) for non-equality constraints.
-- `c.abiEncodedMatches(...)` returns a builder; the trailing `()` invokes it with no parent ABI type so you get the `Condition` object that `scopeSignTypedMessage` expects.
 
 <Callout type="info">
   `types` must include the `EIP712Domain` entry that matches the domain you
@@ -95,8 +89,8 @@ const data = encodeSignTypedMessage({
   },
 });
 
-// The selector portion of `data` matches the one returned by
-// `scopeSignTypedMessage` above for the same `types`.
+// The selector portion of `data` matches the one in the permission returned
+// by `allowSignTypedMessage` for the same `types`.
 ```
 
 After the call lands, `isValidSignature(safeMessageHash, "0x")` on the Safe returns the EIP-1271 magic value.
@@ -114,14 +108,14 @@ const data = encodeSignMessage({ message: "0xdeadbeef" });
 
 ## `personal_sign` messages
 
-### `scopePersonalSign`
+### `allowPersonalSign`
 
-Builds a condition that allows signing any `personal_sign` message whose text starts with a given prefix.
+Returns a permission allowing the role to sign any `personal_sign` message whose text starts with a given prefix.
 
 ```typescript
-import { scopePersonalSign } from "zodiac-roles-sdk";
+import { allowPersonalSign } from "zodiac-roles-sdk";
 
-const { selector, condition } = scopePersonalSign({
+const permission = allowPersonalSign({
   startsWith: "example.com wants you to sign in",
 });
 ```
@@ -144,30 +138,3 @@ const data = encodePersonalSign({
 ```
 
 After the call lands, `isValidSignature(hashMessage(text), "0x")` on the Safe returns the EIP-1271 magic value, where `hashMessage` is the standard EIP-191 hash (e.g. `ethers.hashMessage`).
-
-## Wiring it into a role
-
-Both flows attach to a permission targeting the deployed `SignTypedMessageLib`:
-
-```typescript
-import {
-  scopeFunction,
-  scopeTarget,
-  ExecutionOptions,
-} from "zodiac-roles-sdk";
-
-await scopeTarget({ owner, roles, roleKey, target: SIGN_TYPED_MESSAGE_LIB });
-
-await scopeFunction({
-  owner,
-  roles,
-  roleKey,
-  target: SIGN_TYPED_MESSAGE_LIB,
-  selector,
-  condition,
-  // delegatecall is required, so allow it via execution options
-  executionOptions: ExecutionOptions.DelegateCall,
-});
-```
-
-The member then executes the encoded calldata through `execTransactionWithRole` with `operation: 1` (delegatecall) so that `SignTypedMessageLib` writes into the Safe's `signedMessages` storage.
