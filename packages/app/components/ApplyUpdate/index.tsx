@@ -60,8 +60,8 @@ const ApplyUpdates: React.FC<Props> = async ({
     if (error instanceof LicenseError) {
       return (
         <Flex direction="column" gap={3}>
-          <Alert title="Zodiac OS account required">
-            This role is using allowances, a feature requiring a Zodiac OS
+          <Alert title="Zodiac account required">
+            This role is using allowances, a feature requiring a Zodiac
             account. Please add the owner of the Roles Modifier to your Zodiac
             OS organization using the button below. Afterwards, reload this page
             to continue.
@@ -71,7 +71,7 @@ const ApplyUpdates: React.FC<Props> = async ({
             target="_blank"
             href={`https://app.zodiac.eco/create/${error.owner}`}
           >
-            Add account to Zodiac OS
+            Add account to Zodiac
           </LinkButton>
         </Flex>
       )

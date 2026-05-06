@@ -71,7 +71,7 @@ export const enforceLicenseTerms = ({
 }
 
 /**
- * Asserts that the role is only using features that are available without a zodiac os account.
+ * Asserts that the role is only using features that are available without a zodiac account.
  */
 const assertPublicFeatureScope = (role: Role, owner: PrefixedAddress) => {
   if (!role.targets) return
@@ -84,7 +84,7 @@ const assertPublicFeatureScope = (role: Role, owner: PrefixedAddress) => {
     )
   ) {
     throw new LicenseError(
-      `Role ${decodeKey(role.key)} is using allowances. Add the owner of the Roles Modifier to your Zodiac OS organization to proceed: https://app.zodiac.eco/create/${owner}`,
+      `Role ${decodeKey(role.key)} is using allowances. Add the owner of the Roles Modifier to your Zodiac organization to proceed: https://app.zodiac.eco/create/${owner}`,
       owner
     )
   }
