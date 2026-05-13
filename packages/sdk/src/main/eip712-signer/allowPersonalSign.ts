@@ -7,23 +7,26 @@ import {
 } from "zodiac-roles-deployments"
 
 /**
- * Returns a permission allowing the role to sign personal_sign messages
+ * Returns a permission allowing the role to sign `personal_sign` messages
  * whose text starts with the given string.
  *
- * Uses the `personalSign(bytes)` entrypoint of `SignTypedMessageLib` which
- * handles EIP-191 wrapping internally. The condition is a single bitmask
+ * Targets the `personalSign(bytes)` entrypoint of `SignTypedMessageLib`, which
+ * handles the EIP-191 wrapping internally. The condition is a single bitmask
  * on the raw message bytes.
+ *
+ * @param params
+ * @param params.startsWith - Prefix string the message text must begin with.
+ *   Must be non-empty — an empty prefix would allow signing arbitrary
+ *   messages, which should generally not be delegated.
+ * @returns A permission targeting `SignTypedMessageLib` with the
+ *   `personalSign(bytes)` selector, delegatecall flag, and the prefix
+ *   bitmask condition.
  */
 export const allowPersonalSign = ({
   startsWith,
 }: {
   startsWith: string
-}): {
-  targetAddress: `0x${string}`
-  selector: `0x${string}`
-  delegatecall: true
-  condition: Condition
-} => {
+}) => {
   if (!startsWith) {
     throw new Error("startsWith must not be empty")
   }

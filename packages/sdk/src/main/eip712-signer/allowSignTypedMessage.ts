@@ -1,5 +1,5 @@
 import { TypedData } from "abitype"
-import { AbiCoder, keccak256 } from "ethers"
+import { AbiCoder, keccak256, ParamType } from "ethers"
 import {
   Condition,
   Encoding,
@@ -7,41 +7,56 @@ import {
   SIGN_TYPED_MESSAGE_LIB_ADDRESS,
 } from "zodiac-roles-deployments"
 
+import { c } from "../target/authoring"
+import { StructScoping } from "../target/authoring/types"
 import { encodeAbiTypes, toAbiTypes } from "./encode"
+import { findPrimaryType, parseType } from "./types"
+import { DomainStructOf, MessageStructOf } from "./typedDataTypes"
 
 /**
  * Returns a permission allowing the role to sign EIP-712 typed messages
  * matching the given domain and message conditions.
  *
  * The returned permission targets `SignTypedMessageLib` under a selector
- * that's deterministically derived from the provided `types`, so different
- * EIP-712 layouts can be scoped under the same target without colliding.
+ * deterministically derived from `types`, so different EIP-712 layouts can be
+ * scoped under the same target without colliding.
+ *
+ * @param params
+ * @param params.types - EIP-712 type definitions, including `EIP712Domain` and
+ *   the primary message struct. Should be declared `as const` so TypeScript
+ *   can narrow field types and infer the primary type.
+ * @param params.domain - Struct scoping over the `EIP712Domain` fields. Field
+ *   names, primitive types, and nested struct shapes are inferred from
+ *   `params.types`. Omitted fields are unconstrained; the whole struct may
+ *   also be a {@link ConditionFunction} (e.g. `c.pass`).
+ * @param params.message - Struct scoping over the primary message struct. Same
+ *   inference rules as `domain`.
+ * @returns A permission targeting `SignTypedMessageLib` with the right
+ *   selector, delegatecall flag, and condition tree wired up.
  */
-export const allowSignTypedMessage = ({
+export function allowSignTypedMessage<const T extends TypedData>({
+  types,
   domain,
   message,
-  types,
 }: {
-  domain: Condition
-  message: Condition
-  types: TypedData
+  types: T
+  domain: DomainStructOf<T> extends Record<string, any>
+    ? StructScoping<DomainStructOf<T>>
+    : never
+  message: MessageStructOf<T> extends Record<string, any>
+    ? StructScoping<MessageStructOf<T>>
+    : never
 }): {
   targetAddress: `0x${string}`
   selector: `0x${string}`
   delegatecall: true
   condition: Condition
-} => {
-  if (domain.paramType !== Encoding.AbiEncoded) {
-    throw new Error("Domain is not an AbiEncoded condition")
-  }
-
-  if (message.paramType !== Encoding.AbiEncoded) {
-    throw new Error("Message is not an AbiEncoded condition")
-  }
-
+} {
   if (!types["EIP712Domain"]) {
     throw new Error("TypedData does not include EIP712Domain")
   }
+
+  const primaryType = findPrimaryType({ types })
 
   const selector = keccak256(encodeAbiTypes({ types })).slice(
     0,
@@ -55,9 +70,56 @@ export const allowSignTypedMessage = ({
     condition: {
       paramType: Encoding.AbiEncoded,
       operator: Operator.Matches,
-      children: [domain, message, typesCondition(types)],
+      children: [
+        toAbiEncodedCondition(types, "EIP712Domain", domain),
+        toAbiEncodedCondition(types, primaryType, message),
+        typesCondition(types),
+      ],
     },
   }
+}
+
+/**
+ * Converts a struct scoping over an EIP-712 named struct into a Condition
+ * with `paramType: AbiEncoded`, by delegating to `c.matches` against a
+ * named-tuple ABI type derived from the EIP-712 type tree.
+ */
+function toAbiEncodedCondition(
+  types: TypedData,
+  typeName: string,
+  scoping: unknown
+): Condition {
+  const tupleAbiType = ParamType.from(buildTupleAbiType(types, typeName))
+  const tupleCondition = c.matches(scoping as any)(tupleAbiType)
+
+  return {
+    paramType: Encoding.AbiEncoded,
+    operator: Operator.Matches,
+    children: tupleCondition.children,
+  }
+}
+
+/** Builds a named-tuple ABI type string for an EIP-712 struct. */
+function buildTupleAbiType(types: TypedData, typeName: string): string {
+  const fields = types[typeName]
+  return `tuple(${fields
+    .map((f: { name: string; type: string }) => `${buildAbiType(types, f.type)} ${f.name}`)
+    .join(",")})`
+}
+
+/** Recursively builds an ABI type string for an EIP-712 field type. */
+function buildAbiType(types: TypedData, typeStr: string): string {
+  const { type, isStruct, isArray, fixedLength } = parseType(typeStr)
+  if (isStruct) {
+    return buildTupleAbiType(types, type)
+  }
+  if (isArray && fixedLength) {
+    return `${buildAbiType(types, type)}[${fixedLength}]`
+  }
+  if (isArray) {
+    return `${buildAbiType(types, type)}[]`
+  }
+  return typeStr
 }
 
 function typesCondition(types: TypedData): Condition {
