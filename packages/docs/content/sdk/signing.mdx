@@ -16,11 +16,11 @@ For background on how on-chain signing works through the Roles Modifier, see the
 
 Returns a permission allowing the role to sign EIP-712 typed messages matching the given `domain` and `message` conditions.
 
-The `domain` and `message` arguments are conditions over the ABI-encoded domain and message blocks.
-The most ergonomic way to author them is `c.abiEncodedMatches`, which takes a tuple-style scoping array and the corresponding ABI types of the root struct fields.
+`domain` and `message` are struct scopings keyed by the field names of `EIP712Domain` and the primary message struct.
+The helper is generic in `types`, so field names, primitive types, and nested struct shapes are inferred — you get full autocomplete and compile-time validation:
 
 ```typescript
-import { c, allowSignTypedMessage } from "zodiac-roles-sdk";
+import { allowSignTypedMessage, c } from "zodiac-roles-sdk";
 
 const types = {
   EIP712Domain: [
@@ -35,36 +35,36 @@ const types = {
     { name: "receiver", type: "address" },
     { name: "sellAmount", type: "uint256" },
   ],
-};
+} as const;
 
-// Pin the domain to a specific app + chain + verifying contract.
-// `undefined` leaves a field unconstrained.
-const domain = c.abiEncodedMatches(
-  ["My App", undefined, 1, "0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC"],
-  ["string", "string", "uint256", "address"]
-)();
-
-// Constrain the message: the receiver must be the avatar; other fields free.
-const message = c.abiEncodedMatches(
-  [undefined, undefined, c.avatar, undefined],
-  ["address", "address", "address", "uint256"]
-)();
-
-const permission = allowSignTypedMessage({ domain, message, types });
+const permission = allowSignTypedMessage({
+  types,
+  // Pin the domain to a specific app + chain + verifying contract;
+  // omitted fields (version) are left unconstrained.
+  domain: {
+    name: "My App",
+    chainId: 1n,
+    verifyingContract: "0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC",
+  },
+  // Constrain the message: the receiver must be the avatar.
+  message: {
+    receiver: c.avatar,
+  },
+});
 ```
 
 A few things to note:
 
-- The scoping array positions correspond one-to-one to the fields of the `EIP712Domain` and root struct.
-- Primitive values (string, number, address, bigint) are shorthand for [`c.eq`](/sdk/conditions#ceq); use any [condition function](/sdk/conditions#condition-functions) (`c.avatar`, `c.or`, `c.gt`, …) for non-equality constraints.
+- The `types` object should use `as const` (or be inlined) so TypeScript can narrow the field types and infer the primary message struct.
+- Field values can be primitives — `string`, `number`, `bigint`, address literals, etc. — which are shorthand for [`c.eq`](/sdk/conditions#ceq); use any [condition function](/sdk/conditions#condition-functions) (`c.avatar`, `c.or`, `c.gt`, …) for non-equality constraints.
+- Omitted fields are unconstrained; an entire struct can also be replaced by a condition function like `c.pass`.
+- Nested structs and arrays of structs follow the same struct-shape rules; see [Conditions](/sdk/conditions) for the underlying authoring API.
 
 <Callout type="info">
   `types` must include the `EIP712Domain` entry that matches the domain you
   intend to scope. Use `typesForDomain` from `zodiac-roles-sdk` to derive it
   from a `TypedDataDomain` object if you don't want to write it by hand.
 </Callout>
-
-For nested struct or array fields in the message, use `c.matches` (or a nested array) at the corresponding position to drill into sub-fields — the same authoring API documented under [Conditions](/sdk/conditions).
 
 ### `encodeSignTypedMessage`
 
