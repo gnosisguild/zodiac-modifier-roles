@@ -1,7 +1,6 @@
 import { expect } from "chai"
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers"
 import {
-  AbiCoder,
   TypedDataEncoder,
   ZeroAddress,
   ZeroHash,
@@ -10,10 +9,7 @@ import {
 } from "ethers"
 import hre, { ethers } from "hardhat"
 import {
-  Condition,
   ExecutionOptions,
-  Operator,
-  Encoding,
   allowSignTypedMessage,
   encodeSignTypedMessage,
   __integration,
@@ -30,10 +26,12 @@ import {
 import { deploySafe } from "./setup/safe"
 import deployMastercopies from "./setup/deploy-mastercopies"
 
-const { toAbiTypes, typesForDomain } = __integration
+const { toAbiTypes } = __integration
 
-const SomeAddress = "0x7e2a2fa2a064f693f0a55c5639476d913ff12d05"
-const AddressOne = "0x0000000000000000000000000000000000000001"
+const SomeAddress =
+  "0x7e2a2fa2a064f693f0a55c5639476d913ff12d05" as `0x${string}`
+const AddressOne =
+  "0x0000000000000000000000000000000000000001" as `0x${string}`
 
 const EIP712_MAGIC_VALUE = "0x20c13b0b"
 
@@ -85,14 +83,19 @@ describe("allowSignTypedMessage()", () => {
 
     // Define the types for the EIP-712 structured data
     const types = {
+      EIP712Domain: [
+        { name: "name", type: "string" },
+        { name: "version", type: "string" },
+        { name: "chainId", type: "uint256" },
+        { name: "verifyingContract", type: "address" },
+      ],
       Person: [
         { name: "name", type: "string" },
         { name: "wallet", type: "address" },
         { name: "attachments", type: "Attachment[]" },
       ],
       Attachment: [{ name: "filename", type: "string" }],
-      EIP712Domain: typesForDomain(domain),
-    }
+    } as const
 
     // The actual data to be signed
     const message = {
@@ -108,79 +111,16 @@ describe("allowSignTypedMessage()", () => {
       ],
     }
 
-    const conditionDomain: Condition = {
-      paramType: Encoding.AbiEncoded,
-      operator: Operator.Matches,
-      compValue: "0x0000", // leadingBytes = 0
-      children: [
-        {
-          paramType: Encoding.Dynamic,
-          operator: Operator.Pass,
-        },
-        {
-          paramType: Encoding.Dynamic,
-          operator: Operator.Pass,
-        },
-        {
-          paramType: Encoding.Static,
-          operator: Operator.EqualTo,
-          compValue: AbiCoder.defaultAbiCoder().encode(["uint256"], [1]) as any,
-        },
-        {
-          paramType: Encoding.Static,
-          operator: Operator.EqualTo,
-          compValue: AbiCoder.defaultAbiCoder().encode(
-            ["address"],
-            ["0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC"]
-          ) as any,
-        },
-      ],
-    }
-
-    const conditionMessage: Condition = {
-      paramType: Encoding.AbiEncoded,
-      operator: Operator.Matches,
-      compValue: "0x0000", // leadingBytes = 0
-      children: [
-        {
-          paramType: Encoding.Dynamic,
-          operator: Operator.EqualTo,
-          compValue: AbiCoder.defaultAbiCoder().encode(
-            ["string"],
-            ["Vitalik"]
-          ) as any,
-        },
-        {
-          paramType: Encoding.Static,
-          operator: Operator.EqualTo,
-          compValue: AbiCoder.defaultAbiCoder().encode(
-            ["address"],
-            [SomeAddress]
-          ) as any,
-        },
-        {
-          paramType: Encoding.Array,
-          operator: Operator.Pass,
-          children: [
-            {
-              paramType: Encoding.Tuple,
-              operator: Operator.Pass,
-              children: [
-                {
-                  paramType: Encoding.Dynamic,
-                  operator: Operator.Pass,
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    }
-
     const { selector, condition } = allowSignTypedMessage({
-      domain: conditionDomain,
-      message: conditionMessage,
       types,
+      domain: {
+        chainId: 1n,
+        verifyingContract: "0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC",
+      },
+      message: {
+        name: "Vitalik",
+        wallet: SomeAddress,
+      },
     })
 
     await scopeFunction({
@@ -232,7 +172,9 @@ describe("allowSignTypedMessage()", () => {
         data: encodeSignTypedMessage({
           domain,
           types,
-          message: { ...message, name: "Alice" },
+          // Cast to bypass the compile-time check so we can verify the
+          // on-chain condition also rejects the malformed value.
+          message: { ...message, name: 1 } as any,
         }),
         operation: 1,
       })
@@ -393,13 +335,14 @@ describe("allowSignTypedMessage()", () => {
     } = await loadFixture(setup)
 
     const { EIP712Domain, ...rest } = types
+    const messageHashTypes = rest as any
 
     await expect(
       relayer.call({
         to: safe,
         data: ifaceFallback.encodeFunctionData(
           "isValidSignature(bytes,bytes)",
-          [TypedDataEncoder.hash(domain, rest, message), "0x"]
+          [TypedDataEncoder.hash(domain, messageHashTypes, message), "0x"]
         ),
       })
     ).to.be.revertedWith("Hash not approved")
@@ -413,7 +356,7 @@ describe("allowSignTypedMessage()", () => {
     const resultData = await relayer.call({
       to: safe,
       data: ifaceFallback.encodeFunctionData("isValidSignature(bytes,bytes)", [
-        TypedDataEncoder.hash(domain, rest, message),
+        TypedDataEncoder.hash(domain, messageHashTypes, message),
         "0x",
       ]),
     })
