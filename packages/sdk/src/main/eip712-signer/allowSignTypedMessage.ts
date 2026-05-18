@@ -95,6 +95,10 @@ function toAbiEncodedCondition(
   return {
     paramType: Encoding.AbiEncoded,
     operator: Operator.Matches,
+    // Inner AbiEncoded matches a `bytes` parameter directly (no function
+    // selector prefix), so set leadingBytes = 0. Without this, the on-chain
+    // packer defaults leadingBytes to 4 and the condition fails to match.
+    compValue: "0x0000",
     children: tupleCondition.children,
   }
 }

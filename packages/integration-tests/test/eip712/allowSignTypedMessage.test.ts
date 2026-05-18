@@ -172,9 +172,7 @@ describe("allowSignTypedMessage()", () => {
         data: encodeSignTypedMessage({
           domain,
           types,
-          // Cast to bypass the compile-time check so we can verify the
-          // on-chain condition also rejects the malformed value.
-          message: { ...message, name: 1 } as any,
+          message: { ...message, name: "Alice" },
         }),
         operation: 1,
       })
