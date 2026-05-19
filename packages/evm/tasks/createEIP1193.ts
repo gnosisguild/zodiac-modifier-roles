@@ -1,4 +1,4 @@
-import { EIP1193Provider } from "@gnosis-guild/zodiac-core";
+import type { EIP1193Provider } from "@gnosis-guild/zodiac-core";
 import { Signer } from "ethers";
 import { EthereumProvider } from "hardhat/types";
 import ethProvider from "eth-provider";

@@ -47,9 +47,9 @@ contract Roles is RolesStorage, Setup, Membership, Authorization, Settlement {
         uint256 value,
         bytes calldata data,
         Operation operation
-    ) public override returns (bool success) {
+    ) public override nonReentrant moduleOnly returns (bool success) {
         return
-            execTransactionWithRole(
+            _execWithRole(
                 to,
                 value,
                 data,
@@ -70,9 +70,15 @@ contract Roles is RolesStorage, Setup, Membership, Authorization, Settlement {
         uint256 value,
         bytes calldata data,
         Operation operation
-    ) public override returns (bool success, bytes memory returnData) {
+    )
+        public
+        override
+        nonReentrant
+        moduleOnly
+        returns (bool success, bytes memory returnData)
+    {
         return
-            execTransactionWithRoleReturnData(
+            _execWithRoleReturnData(
                 to,
                 value,
                 data,
@@ -97,7 +103,56 @@ contract Roles is RolesStorage, Setup, Membership, Authorization, Settlement {
         Operation operation,
         bytes32 roleKey,
         bool shouldRevert
-    ) public nonReentrant returns (bool success) {
+    ) public nonReentrant moduleOnly returns (bool success) {
+        return _execWithRole(to, value, data, operation, roleKey, shouldRevert);
+    }
+
+    /// @dev Relayed variant of execTransactionWithRole. The caller does not
+    ///      need to be an enabled module; instead, an enabled module must sign
+    ///      the call (EIP-712 over a ModuleTx struct).
+    /// @param to Destination address of module transaction
+    /// @param value Ether value of module transaction
+    /// @param data Data payload of module transaction
+    /// @param operation Operation type of module transaction
+    /// @param roleKey Identifier of the role to assume for this transaction
+    /// @param shouldRevert Should the function revert on inner execution returning success false?
+    /// @param salt Replay-protection nonce mixed into the signed digest;
+    ///        each digest can be consumed only once.
+    /// @param signature EIP-712 signature by the module (EOA or ERC-1271)
+    function execTransactionWithSignature(
+        address to,
+        uint256 value,
+        bytes calldata data,
+        Operation operation,
+        bytes32 roleKey,
+        bool shouldRevert,
+        bytes32 salt,
+        bytes calldata signature
+    )
+        public
+        nonReentrant
+        moduleOnlySigned(
+            ModuleTx({to: to, value: value, data: data, operation: operation}),
+            salt,
+            signature
+        )
+        returns (bool success)
+    {
+        return _execWithRole(to, value, data, operation, roleKey, shouldRevert);
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                               INTERNALS
+    //////////////////////////////////////////////////////////////*/
+
+    function _execWithRole(
+        address to,
+        uint256 value,
+        bytes calldata data,
+        Operation operation,
+        bytes32 roleKey,
+        bool shouldRevert
+    ) private returns (bool success) {
         (address module, uint256 nextMembership) = _authenticate(roleKey);
         Consumption[] memory consumptions = _authorize(
             roleKey,
@@ -120,22 +175,14 @@ contract Roles is RolesStorage, Setup, Membership, Authorization, Settlement {
         }
     }
 
-    /// @dev Passes a transaction to the modifier assuming the specified role. Expects return data.
-    /// @param to Destination address of module transaction
-    /// @param value Ether value of module transaction
-    /// @param data Data payload of module transaction
-    /// @param operation Operation type of module transaction
-    /// @param roleKey Identifier of the role to assume for this transaction
-    /// @param shouldRevert Should the function revert on inner execution returning success false?
-    /// @notice Can only be called by enabled modules
-    function execTransactionWithRoleReturnData(
+    function _execWithRoleReturnData(
         address to,
         uint256 value,
         bytes calldata data,
         Operation operation,
         bytes32 roleKey,
         bool shouldRevert
-    ) public nonReentrant returns (bool success, bytes memory returnData) {
+    ) private returns (bool success, bytes memory returnData) {
         (address module, uint256 nextMembership) = _authenticate(roleKey);
         Consumption[] memory consumptions = _authorize(
             roleKey,
