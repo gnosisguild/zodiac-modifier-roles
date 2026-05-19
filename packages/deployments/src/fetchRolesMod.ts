@@ -9,7 +9,7 @@ type Props = {
 
   /**
    * Specify a block height to fetch a historic state of the Roles mod. Defaults to latest block.
-   * @requires A Zodiac OS Enterprise subscription
+   * @requires A Zodiac Enterprise subscription
    **/
   blockNumber?: number
 }

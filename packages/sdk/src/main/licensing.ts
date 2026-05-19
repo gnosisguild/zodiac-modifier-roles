@@ -88,7 +88,7 @@ export const enforceLicenseTerms = ({
 }
 
 /**
- * Asserts that the role is only using features that are available without a zodiac os account.
+ * Asserts that the role is only using features that are available without a zodiac account.
  */
 const assertPublicFeatureScope = (role: Role, owner: PrefixedAddress) => {
   if (!role.targets) return

@@ -24,8 +24,11 @@ const config: HardhatUserConfig = {
   },
   paths: {
     root: "../evm",
-    artifacts: "build/artifacts",
-    cache: "build/cache",
+    // Isolate artifacts/cache from the EVM package's own `build/` so the two
+    // packages don't race on the same Hardhat artifact files when `turbo test`
+    // runs them in parallel.
+    artifacts: "../integration-tests/build/artifacts",
+    cache: "../integration-tests/build/cache",
     sources: "contracts",
     tests: "../integration-tests/test",
   },

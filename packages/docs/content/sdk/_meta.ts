@@ -13,6 +13,9 @@ const meta: MetaRecord = {
   swaps: {
     title: "Swaps",
   },
+  signing: {
+    title: "Signing",
+  },
   api: {
     title: "API Reference",
   },
