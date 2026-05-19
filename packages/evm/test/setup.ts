@@ -5,11 +5,8 @@ import { ConditionFlatStruct } from "../typechain-types/contracts/Roles";
 import hre from "hardhat";
 import { EthereumProvider, HardhatRuntimeEnvironment } from "hardhat/types";
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
-import {
-  deployFactories,
-  deployMastercopy,
-  EIP1193Provider,
-} from "@gnosis-guild/zodiac-core";
+import type { EIP1193Provider } from "@gnosis-guild/zodiac-core";
+import { loadZodiacCore } from "./loadZodiacCore";
 
 export async function setupTestContract() {
   const [owner, member] = await hre.ethers.getSigners();
@@ -70,6 +67,8 @@ export async function deployRolesMod(
 ) {
   const [signer] = await hre.ethers.getSigners();
   const provider = createEip1193(hre.network.provider, signer);
+
+  const { deployFactories, deployMastercopy } = await loadZodiacCore();
 
   await deployFactories({ provider });
   const conditionStorer = await hre.artifacts.readArtifact("ConditionStorer");

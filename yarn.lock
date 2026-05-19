@@ -1329,7 +1329,7 @@ __metadata:
   resolution: "@gnosis-guild/zodiac-core-modifier-roles@workspace:packages/evm"
   dependencies:
     "@gnosis-guild/typechain-ethers-v6": ^0.5.5
-    "@gnosis-guild/zodiac-core": ^3.0.1
+    "@gnosis-guild/zodiac-core": 4.0.0-alpha.1
     "@nomicfoundation/hardhat-chai-matchers": ^2.1.0
     "@nomicfoundation/hardhat-ethers": ^3.0.10
     "@nomicfoundation/hardhat-ignition": ^3.0.3
@@ -1358,6 +1358,16 @@ __metadata:
     typescript: 5.9.3
   languageName: unknown
   linkType: soft
+
+"@gnosis-guild/zodiac-core@npm:4.0.0-alpha.1":
+  version: 4.0.0-alpha.1
+  resolution: "@gnosis-guild/zodiac-core@npm:4.0.0-alpha.1"
+  dependencies:
+    ethers: 6.16.0
+    semver: 7.7.4
+  checksum: 89051129da4148f99268067543a61e9cdac076c4c0e35cdb8aa060f3cebf20322f17d682f56bca6fa2d8ee5c23409e6971f835cda7d641d3edcfa9fa52f35a27
+  languageName: node
+  linkType: hard
 
 "@gnosis-guild/zodiac-core@npm:^3.0.1":
   version: 3.0.1
@@ -8613,6 +8623,21 @@ __metadata:
   languageName: node
   linkType: hard
 
+"ethers@npm:6.16.0, ethers@npm:^6.16.0":
+  version: 6.16.0
+  resolution: "ethers@npm:6.16.0"
+  dependencies:
+    "@adraffy/ens-normalize": 1.10.1
+    "@noble/curves": 1.2.0
+    "@noble/hashes": 1.3.2
+    "@types/node": 22.7.5
+    aes-js: 4.0.0-beta.5
+    tslib: 2.7.0
+    ws: 8.17.1
+  checksum: f96c54d35aa09d6700dbbe732db160d66f2a1acd59f2820e307869be478bb5c4c3fd0f34a5d51014cbea04200e6e9776290f521795492688c8d67052bf8a1e2a
+  languageName: node
+  linkType: hard
+
 "ethers@npm:^6.13.2":
   version: 6.13.6
   resolution: "ethers@npm:6.13.6"
@@ -8640,21 +8665,6 @@ __metadata:
     tslib: 2.7.0
     ws: 8.17.1
   checksum: 3e8fb73b5cf2bef564433442adb68fe89a6da0d664c1ebe6e226fe5e7160da7010800334c3ecc53eef51ff8c10a3255fa99160e8d424f1241440043f6faa2ea1
-  languageName: node
-  linkType: hard
-
-"ethers@npm:^6.16.0":
-  version: 6.16.0
-  resolution: "ethers@npm:6.16.0"
-  dependencies:
-    "@adraffy/ens-normalize": 1.10.1
-    "@noble/curves": 1.2.0
-    "@noble/hashes": 1.3.2
-    "@types/node": 22.7.5
-    aes-js: 4.0.0-beta.5
-    tslib: 2.7.0
-    ws: 8.17.1
-  checksum: f96c54d35aa09d6700dbbe732db160d66f2a1acd59f2820e307869be478bb5c4c3fd0f34a5d51014cbea04200e6e9776290f521795492688c8d67052bf8a1e2a
   languageName: node
   linkType: hard
 
@@ -14820,6 +14830,15 @@ __metadata:
     node-gyp: latest
     node-gyp-build: ^4.2.0
   checksum: 9314ddcd27506c5f8d9b21a2c131c62464762f597b82fe48ba89b50149ec95cd566d6ad2d4a922553dd0a8b4b14c1ccd83283f487229a941b6c7c02361ef5177
+  languageName: node
+  linkType: hard
+
+"semver@npm:7.7.4":
+  version: 7.7.4
+  resolution: "semver@npm:7.7.4"
+  bin:
+    semver: bin/semver.js
+  checksum: 9b4a6a58e98b9723fafcafa393c9d4e8edefaa60b8dfbe39e30892a3604cf1f45f52df9cfb1ae1a22b44c8b3d57fec8a9bb7b3e1645431587cb272399ede152e
   languageName: node
   linkType: hard
 

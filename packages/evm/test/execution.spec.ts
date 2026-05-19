@@ -352,102 +352,161 @@ describe("Execution Mechanics", () => {
     });
   });
 
-  describe("execTransactionWithRoleReturnData", () => {
-    it("returns data and persists consumption on success", async () => {
-      const { roles, invoker, testContractAddress, ROLE_KEY, ALLOWANCE_KEY } =
-        await loadFixture(setup);
+  describe("execTransactionWithSignature", () => {
+    async function signedSetup() {
+      const fixture = await setup();
+      const [, , relayer] = await hre.ethers.getSigners();
+      return { ...fixture, relayer };
+    }
+
+    const buildDomain = async (roles: any) => ({
+      chainId: (await hre.ethers.provider.getNetwork()).chainId,
+      verifyingContract: await roles.getAddress(),
+    });
+
+    const moduleTxTypes = {
+      ModuleTx: [
+        { name: "to", type: "address" },
+        { name: "value", type: "uint256" },
+        { name: "data", type: "bytes" },
+        { name: "operation", type: "uint8" },
+        { name: "salt", type: "bytes32" },
+      ],
+    };
+
+    it("executes when the call is signed by an enabled module", async () => {
+      const {
+        roles,
+        invoker,
+        relayer,
+        testContractAddress,
+        ROLE_KEY,
+        ALLOWANCE_KEY,
+      } = await loadFixture(signedSetup);
+
       const calldata = iface.encodeFunctionData("fnThatMaybeReverts", [
         100,
         false,
       ]);
+      const salt = hre.ethers.id("salt-1");
 
-      const [success] = await roles
-        .connect(invoker)
-        .execTransactionWithRoleReturnData.staticCall(
-          testContractAddress,
-          0,
-          calldata,
-          0,
-          ROLE_KEY,
-          false,
-        );
-
-      expect(success).to.be.true;
+      const signature = await invoker.signTypedData(
+        await buildDomain(roles),
+        moduleTxTypes,
+        {
+          to: testContractAddress,
+          value: 0,
+          data: calldata,
+          operation: 0,
+          salt,
+        },
+      );
 
       await roles
-        .connect(invoker)
-        .execTransactionWithRoleReturnData(
+        .connect(relayer)
+        .execTransactionWithSignature(
           testContractAddress,
           0,
           calldata,
           0,
           ROLE_KEY,
           false,
+          salt,
+          signature,
         );
 
       const { balance } = await roles.accruedAllowance(ALLOWANCE_KEY);
       expect(balance).to.equal(900);
     });
 
-    it("returns success=false and does not persist consumption when inner fail and shouldRevert=false", async () => {
-      const { roles, invoker, testContractAddress, ROLE_KEY, ALLOWANCE_KEY } =
-        await loadFixture(setup);
+    it("reverts NotAuthorized when signer is not an enabled module", async () => {
+      const { roles, relayer, testContractAddress, ROLE_KEY } =
+        await loadFixture(signedSetup);
+
       const calldata = iface.encodeFunctionData("fnThatMaybeReverts", [
         100,
-        true,
+        false,
       ]);
+      const salt = hre.ethers.id("salt-stranger");
 
-      const [success] = await roles
-        .connect(invoker)
-        .execTransactionWithRoleReturnData.staticCall(
-          testContractAddress,
-          0,
-          calldata,
-          0,
-          ROLE_KEY,
-          false,
-        );
-
-      expect(success).to.be.false;
-
-      await roles
-        .connect(invoker)
-        .execTransactionWithRoleReturnData(
-          testContractAddress,
-          0,
-          calldata,
-          0,
-          ROLE_KEY,
-          false,
-        );
-
-      const { balance } = await roles.accruedAllowance(ALLOWANCE_KEY);
-      expect(balance).to.equal(1000);
-    });
-
-    it("reverts and does not persist consumption when inner fail and shouldRevert=true", async () => {
-      const { roles, invoker, testContractAddress, ROLE_KEY, ALLOWANCE_KEY } =
-        await loadFixture(setup);
-      const calldata = iface.encodeFunctionData("fnThatMaybeReverts", [
-        100,
-        true,
-      ]);
+      // relayer is not enabled as a module — sign with relayer ⇒ signer is not a module
+      const signature = await relayer.signTypedData(
+        await buildDomain(roles),
+        moduleTxTypes,
+        {
+          to: testContractAddress,
+          value: 0,
+          data: calldata,
+          operation: 0,
+          salt,
+        },
+      );
 
       await expect(
         roles
-          .connect(invoker)
-          .execTransactionWithRoleReturnData(
+          .connect(relayer)
+          .execTransactionWithSignature(
             testContractAddress,
             0,
             calldata,
             0,
             ROLE_KEY,
-            true,
+            false,
+            salt,
+            signature,
           ),
-      ).to.be.reverted;
+      ).to.be.revertedWithCustomError(roles, "NotAuthorized");
+    });
 
-      const { balance } = await roles.accruedAllowance(ALLOWANCE_KEY);
-      expect(balance).to.equal(1000);
+    it("reverts HashAlreadyConsumed when the same signature is replayed", async () => {
+      const { roles, invoker, relayer, testContractAddress, ROLE_KEY } =
+        await loadFixture(signedSetup);
+
+      const calldata = iface.encodeFunctionData("fnThatMaybeReverts", [
+        100,
+        false,
+      ]);
+      const salt = hre.ethers.id("salt-replay");
+
+      const signature = await invoker.signTypedData(
+        await buildDomain(roles),
+        moduleTxTypes,
+        {
+          to: testContractAddress,
+          value: 0,
+          data: calldata,
+          operation: 0,
+          salt,
+        },
+      );
+
+      await roles
+        .connect(relayer)
+        .execTransactionWithSignature(
+          testContractAddress,
+          0,
+          calldata,
+          0,
+          ROLE_KEY,
+          false,
+          salt,
+          signature,
+        );
+
+      await expect(
+        roles
+          .connect(relayer)
+          .execTransactionWithSignature(
+            testContractAddress,
+            0,
+            calldata,
+            0,
+            ROLE_KEY,
+            false,
+            salt,
+            signature,
+          ),
+      ).to.be.revertedWithCustomError(roles, "HashAlreadyConsumed");
     });
   });
 });

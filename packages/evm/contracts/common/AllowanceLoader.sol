@@ -4,6 +4,8 @@
 // Converts to LGPL-3.0-or-later on 2030-03-01
 pragma solidity >=0.8.17 <0.9.0;
 
+import {ALLOWANCES_SLOT} from "../core/StorageSlots.sol";
+
 import {Allowance} from "../types/Allowance.sol";
 
 /**
@@ -51,7 +53,6 @@ library AllowanceLoader {
      * └────────────────┴───────────────────────────────┴────────────────┘
      *
      */
-    uint256 constant ALLOWANCES_SLOT = 106;
     function _load(
         bytes32 allowanceKey
     ) private view returns (Allowance memory) {

@@ -12,8 +12,11 @@ import "./Storage.sol";
  *          authorizing transactions. Memberships can be time-bound and
  *          usage-limited.
  *
- * @dev     moduleOnly reverts if the call is not sent or signed by an enabled
- *          module. Membership packs timestamps and uses into a single uint256.
+ * @dev     Module authentication is enforced at the public entry points via
+ *          `moduleOnly` / `moduleOnlySigned` (defined in `Modifier`). This
+ *          function reads `sentOrSignedByModule()` to identify the active
+ *          module and verifies its membership for the requested role.
+ *          Membership packs timestamps and uses into a single uint256.
  *          See layout below.
  *
  * @author  gnosisguild
@@ -25,7 +28,7 @@ abstract contract Membership is RolesStorage {
 
     function _authenticate(
         bytes32 roleKey
-    ) internal moduleOnly returns (address module, uint256 nextMembership) {
+    ) internal view returns (address module, uint256 nextMembership) {
         // Never authorize the zero role
         if (roleKey == 0) {
             revert NoMembership();

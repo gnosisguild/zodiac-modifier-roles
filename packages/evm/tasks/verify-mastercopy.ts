@@ -1,5 +1,5 @@
 import { task, types } from "hardhat/config";
-import { readMastercopies, verifyMastercopy } from "@gnosis-guild/zodiac-core";
+import { loadZodiacCore } from "./loadZodiacCore";
 
 task(
   "verify:mastercopy",
@@ -12,6 +12,7 @@ task(
     types.string,
   )
   .setAction(async ({ contractVersion }, hre) => {
+    const { readMastercopies, verifyMastercopy } = await loadZodiacCore();
     const apiKey = hre.config.etherscan.apiKey as string;
     if (!apiKey) {
       throw new Error(
