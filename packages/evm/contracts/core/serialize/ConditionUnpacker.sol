@@ -4,6 +4,8 @@
 // Converts to LGPL-3.0-or-later on 2030-03-01
 pragma solidity >=0.8.17 <0.9.0;
 
+import {AVATAR_SLOT} from "../StorageSlots.sol";
+
 import "../../types/Types.sol";
 
 /**
@@ -167,7 +169,7 @@ library ConditionUnpacker {
                 condition.operator = Operator.EqualTo;
                 address avatar;
                 assembly {
-                    avatar := sload(101)
+                    avatar := sload(AVATAR_SLOT)
                 }
                 condition.compValue = abi.encode(avatar);
             }

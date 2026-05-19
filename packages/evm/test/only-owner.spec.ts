@@ -49,14 +49,14 @@ describe("onlyOwner", () => {
         ).to.not.be.reverted;
       });
 
-      it("reverts 'Ownable: caller is not the owner' when called by non-owner", async () => {
+      it("reverts 'OwnableUnauthorizedAccount' when called by non-owner", async () => {
         const { roles, nonOwner, ROLE_KEY } = await loadFixture(setup);
 
         await expect(
           roles
             .connect(nonOwner)
             .grantRole(nonOwner.address, ROLE_KEY, 0, 0, 0),
-        ).to.be.revertedWith("Ownable: caller is not the owner");
+        ).to.be.revertedWithCustomError(roles, "OwnableUnauthorizedAccount");
       });
     });
 
@@ -69,12 +69,12 @@ describe("onlyOwner", () => {
         ).to.not.be.reverted;
       });
 
-      it("reverts 'Ownable: caller is not the owner' when called by non-owner", async () => {
+      it("reverts 'OwnableUnauthorizedAccount' when called by non-owner", async () => {
         const { roles, nonOwner, ROLE_KEY } = await loadFixture(setup);
 
         await expect(
           roles.connect(nonOwner).revokeRole(nonOwner.address, ROLE_KEY),
-        ).to.be.revertedWith("Ownable: caller is not the owner");
+        ).to.be.revertedWithCustomError(roles, "OwnableUnauthorizedAccount");
       });
     });
 
@@ -89,14 +89,14 @@ describe("onlyOwner", () => {
         ).to.not.be.reverted;
       });
 
-      it("reverts 'Ownable: caller is not the owner' when called by non-owner", async () => {
+      it("reverts 'OwnableUnauthorizedAccount' when called by non-owner", async () => {
         const { roles, nonOwner, ROLE_KEY } = await loadFixture(setup);
 
         await expect(
           roles
             .connect(nonOwner)
             .assignRoles(nonOwner.address, [ROLE_KEY], [true]),
-        ).to.be.revertedWith("Ownable: caller is not the owner");
+        ).to.be.revertedWithCustomError(roles, "OwnableUnauthorizedAccount");
       });
     });
 
@@ -109,12 +109,12 @@ describe("onlyOwner", () => {
         ).to.not.be.reverted;
       });
 
-      it("reverts 'Ownable: caller is not the owner' when called by non-owner", async () => {
+      it("reverts 'OwnableUnauthorizedAccount' when called by non-owner", async () => {
         const { roles, nonOwner, ROLE_KEY } = await loadFixture(setup);
 
         await expect(
           roles.connect(nonOwner).setDefaultRole(nonOwner.address, ROLE_KEY),
-        ).to.be.revertedWith("Ownable: caller is not the owner");
+        ).to.be.revertedWithCustomError(roles, "OwnableUnauthorizedAccount");
       });
     });
   });
@@ -131,14 +131,14 @@ describe("onlyOwner", () => {
         ).to.not.be.reverted;
       });
 
-      it("reverts 'Ownable: caller is not the owner' when called by non-owner", async () => {
+      it("reverts 'OwnableUnauthorizedAccount' when called by non-owner", async () => {
         const { roles, nonOwner, ROLE_KEY, TARGET } = await loadFixture(setup);
 
         await expect(
           roles
             .connect(nonOwner)
             .allowTarget(ROLE_KEY, TARGET, "0x", ExecutionOptions.None),
-        ).to.be.revertedWith("Ownable: caller is not the owner");
+        ).to.be.revertedWithCustomError(roles, "OwnableUnauthorizedAccount");
       });
     });
 
@@ -150,12 +150,12 @@ describe("onlyOwner", () => {
           .be.reverted;
       });
 
-      it("reverts 'Ownable: caller is not the owner' when called by non-owner", async () => {
+      it("reverts 'OwnableUnauthorizedAccount' when called by non-owner", async () => {
         const { roles, nonOwner, ROLE_KEY, TARGET } = await loadFixture(setup);
 
         await expect(
           roles.connect(nonOwner).scopeTarget(ROLE_KEY, TARGET),
-        ).to.be.revertedWith("Ownable: caller is not the owner");
+        ).to.be.revertedWithCustomError(roles, "OwnableUnauthorizedAccount");
       });
     });
 
@@ -167,12 +167,12 @@ describe("onlyOwner", () => {
           .be.reverted;
       });
 
-      it("reverts 'Ownable: caller is not the owner' when called by non-owner", async () => {
+      it("reverts 'OwnableUnauthorizedAccount' when called by non-owner", async () => {
         const { roles, nonOwner, ROLE_KEY, TARGET } = await loadFixture(setup);
 
         await expect(
           roles.connect(nonOwner).revokeTarget(ROLE_KEY, TARGET),
-        ).to.be.revertedWith("Ownable: caller is not the owner");
+        ).to.be.revertedWithCustomError(roles, "OwnableUnauthorizedAccount");
       });
     });
   });
@@ -196,7 +196,7 @@ describe("onlyOwner", () => {
         ).to.not.be.reverted;
       });
 
-      it("reverts 'Ownable: caller is not the owner' when called by non-owner", async () => {
+      it("reverts 'OwnableUnauthorizedAccount' when called by non-owner", async () => {
         const { roles, nonOwner, ROLE_KEY, TARGET, SELECTOR } =
           await loadFixture(setup);
 
@@ -210,7 +210,7 @@ describe("onlyOwner", () => {
               "0x",
               ExecutionOptions.None,
             ),
-        ).to.be.revertedWith("Ownable: caller is not the owner");
+        ).to.be.revertedWithCustomError(roles, "OwnableUnauthorizedAccount");
       });
     });
 
@@ -224,13 +224,13 @@ describe("onlyOwner", () => {
         ).to.not.be.reverted;
       });
 
-      it("reverts 'Ownable: caller is not the owner' when called by non-owner", async () => {
+      it("reverts 'OwnableUnauthorizedAccount' when called by non-owner", async () => {
         const { roles, nonOwner, ROLE_KEY, TARGET, SELECTOR } =
           await loadFixture(setup);
 
         await expect(
           roles.connect(nonOwner).revokeFunction(ROLE_KEY, TARGET, SELECTOR),
-        ).to.be.revertedWith("Ownable: caller is not the owner");
+        ).to.be.revertedWithCustomError(roles, "OwnableUnauthorizedAccount");
       });
     });
   });
@@ -248,7 +248,7 @@ describe("onlyOwner", () => {
         ).to.not.be.reverted;
       });
 
-      it("reverts 'Ownable: caller is not the owner' when called by non-owner", async () => {
+      it("reverts 'OwnableUnauthorizedAccount' when called by non-owner", async () => {
         const { roles, nonOwner } = await loadFixture(setup);
         const allowanceKey = hre.ethers.id("ALLOWANCE_KEY");
 
@@ -256,7 +256,7 @@ describe("onlyOwner", () => {
           roles
             .connect(nonOwner)
             .setAllowance(allowanceKey, 1000, 0, 100, 3600, 0),
-        ).to.be.revertedWith("Ownable: caller is not the owner");
+        ).to.be.revertedWithCustomError(roles, "OwnableUnauthorizedAccount");
       });
     });
 
@@ -275,7 +275,7 @@ describe("onlyOwner", () => {
         ).to.not.be.reverted;
       });
 
-      it("reverts 'Ownable: caller is not the owner' when called by non-owner", async () => {
+      it("reverts 'OwnableUnauthorizedAccount' when called by non-owner", async () => {
         const { roles, owner, nonOwner } = await loadFixture(setup);
         const allowanceKey = hre.ethers.id("ALLOWANCE_KEY");
 
@@ -286,7 +286,7 @@ describe("onlyOwner", () => {
 
         await expect(
           roles.connect(nonOwner).updateAllowance(allowanceKey, 0, 200, 7200),
-        ).to.be.revertedWith("Ownable: caller is not the owner");
+        ).to.be.revertedWithCustomError(roles, "OwnableUnauthorizedAccount");
       });
     });
   });
@@ -304,7 +304,7 @@ describe("onlyOwner", () => {
         ).to.not.be.reverted;
       });
 
-      it("reverts 'Ownable: caller is not the owner' when called by non-owner", async () => {
+      it("reverts 'OwnableUnauthorizedAccount' when called by non-owner", async () => {
         const { roles, nonOwner, TARGET, SELECTOR } = await loadFixture(setup);
         const adapter = "0x0000000000000000000000000000000000000001";
 
@@ -312,7 +312,7 @@ describe("onlyOwner", () => {
           roles
             .connect(nonOwner)
             .setTransactionUnwrapper(TARGET, SELECTOR, adapter),
-        ).to.be.revertedWith("Ownable: caller is not the owner");
+        ).to.be.revertedWithCustomError(roles, "OwnableUnauthorizedAccount");
       });
     });
   });
@@ -333,7 +333,7 @@ describe("onlyOwner", () => {
 
         await expect(
           roles.connect(nonOwner).enableModule(moduleToEnable),
-        ).to.be.revertedWith("Ownable: caller is not the owner");
+        ).to.be.revertedWithCustomError(roles, "OwnableUnauthorizedAccount");
       });
     });
 
@@ -364,7 +364,7 @@ describe("onlyOwner", () => {
 
         await expect(
           roles.connect(nonOwner).disableModule(sentinelModule, moduleToEnable),
-        ).to.be.revertedWith("Ownable: caller is not the owner");
+        ).to.be.revertedWithCustomError(roles, "OwnableUnauthorizedAccount");
       });
     });
   });
@@ -383,7 +383,7 @@ describe("onlyOwner", () => {
 
         await expect(
           roles.connect(nonOwner).transferOwnership(owner.address),
-        ).to.be.revertedWith("Ownable: caller is not the owner");
+        ).to.be.revertedWithCustomError(roles, "OwnableUnauthorizedAccount");
       });
 
       it("updates owner after transfer", async () => {
@@ -395,26 +395,29 @@ describe("onlyOwner", () => {
       });
     });
 
-    describe("renounceOwnership", () => {
+    // zodiac-core 4 removed renounceOwnership() from Ownable. To relinquish
+    // ownership now, owner calls transferOwnership(ZeroAddress).
+    describe("transferOwnership(0) — relinquish", () => {
       it("succeeds when called by owner", async () => {
         const { roles, owner } = await loadFixture(setup);
 
-        await expect(roles.connect(owner).renounceOwnership()).to.not.be
-          .reverted;
+        await expect(
+          roles.connect(owner).transferOwnership(hre.ethers.ZeroAddress),
+        ).to.not.be.reverted;
       });
 
       it("reverts when called by non-owner", async () => {
         const { roles, nonOwner } = await loadFixture(setup);
 
         await expect(
-          roles.connect(nonOwner).renounceOwnership(),
-        ).to.be.revertedWith("Ownable: caller is not the owner");
+          roles.connect(nonOwner).transferOwnership(hre.ethers.ZeroAddress),
+        ).to.be.revertedWithCustomError(roles, "OwnableUnauthorizedAccount");
       });
 
       it("sets owner to zero address", async () => {
         const { roles, owner } = await loadFixture(setup);
 
-        await roles.connect(owner).renounceOwnership();
+        await roles.connect(owner).transferOwnership(hre.ethers.ZeroAddress);
 
         expect(await roles.owner()).to.equal(hre.ethers.ZeroAddress);
       });

@@ -2,8 +2,8 @@ import { expect } from "chai";
 import hre, { ethers } from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { AbiCoder, ZeroHash } from "ethers";
-import { deployFactories, deployProxy } from "@gnosis-guild/zodiac-core";
 import { createEip1193 } from "./setup";
+import { loadZodiacCore } from "./loadZodiacCore";
 
 const AddressOne = "0x0000000000000000000000000000000000000001";
 
@@ -68,14 +68,16 @@ describe("Module works with factory", () => {
       AddressOne,
     ]);
 
-    await expect(masterCopy.setUp(encodedParams)).to.be.revertedWith(
-      "Initializable: contract is already initialized",
+    await expect(masterCopy.setUp(encodedParams)).to.be.revertedWithCustomError(
+      masterCopy,
+      "AlreadyInitialized",
     );
   });
 
   it("should deploy new roles module proxy", async () => {
     const { masterCopy, eip1193Provider } = await loadFixture(setup);
     const [avatar, owner, target] = await ethers.getSigners();
+    const { deployFactories, deployProxy } = await loadZodiacCore();
     await deployFactories({ provider: eip1193Provider });
     const { address: deployProxyAddress } = await deployProxy({
       mastercopy: await masterCopy.getAddress(),

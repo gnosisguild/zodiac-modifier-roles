@@ -1,11 +1,7 @@
 import { task, types } from "hardhat/config";
 
-import {
-  deployFactories,
-  deployMastercopy,
-  readMastercopies,
-} from "@gnosis-guild/zodiac-core";
 import { createEIP1193 } from "./createEIP1193";
+import { loadZodiacCore } from "./loadZodiacCore";
 
 task(
   "deploy:mastercopy",
@@ -18,6 +14,8 @@ task(
     types.string
   )
   .setAction(async ({ contractVersion }, hre) => {
+    const { deployFactories, deployMastercopy, readMastercopies } =
+      await loadZodiacCore();
     const [signer] = await hre.ethers.getSigners();
     const provider = createEIP1193(
       hre.network.config.chainId,

@@ -1,9 +1,8 @@
 import { task } from "hardhat/config";
 
-import { writeMastercopyFromBuild } from "@gnosis-guild/zodiac-core";
-
 import packageJson from "../package.json";
 import { ZeroHash } from "ethers";
+import { loadZodiacCore } from "./loadZodiacCore";
 
 const AddressOne = "0x0000000000000000000000000000000000000001";
 
@@ -11,6 +10,7 @@ task(
   "extract:mastercopy",
   "Extracts and persists current mastercopy build artifacts",
 ).setAction(async (_, hre) => {
+  const { writeMastercopyFromBuild } = await loadZodiacCore();
   writeMastercopyFromBuild({
     contractVersion: packageJson.version,
     contractName: "AvatarIsOwnerOfERC721",
