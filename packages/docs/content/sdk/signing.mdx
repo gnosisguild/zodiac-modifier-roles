@@ -1,0 +1,140 @@
+import { Callout } from "nextra/components";
+
+# Signing
+
+The SDK provides helpers for scoping signing calls and for producing the calldata that triggers them.
+Each flow has two pieces:
+
+- An `allow*` function that returns a [Permission](/sdk/api#permission) targeting `SignTypedMessageLib` with the appropriate selector, condition, and `delegatecall: true`.
+- An `encode*` function that produces the calldata a member sends through the Roles Modifier to actually mark the message as signed.
+
+For background on how on-chain signing works through the Roles Modifier, see the [Signature Scoping](/general/signing) section.
+
+## EIP-712 typed messages
+
+### `allowSignTypedMessage`
+
+Returns a permission allowing the role to sign EIP-712 typed messages matching the given `domain` and `message` conditions.
+
+`domain` and `message` are struct scopings keyed by the field names of `EIP712Domain` and the primary message struct.
+The helper is generic in `types`, so field names, primitive types, and nested struct shapes are inferred — you get full autocomplete and compile-time validation:
+
+```typescript
+import { allowSignTypedMessage, c } from "zodiac-roles-sdk";
+
+const types = {
+  EIP712Domain: [
+    { name: "name", type: "string" },
+    { name: "version", type: "string" },
+    { name: "chainId", type: "uint256" },
+    { name: "verifyingContract", type: "address" },
+  ],
+  Order: [
+    { name: "sellToken", type: "address" },
+    { name: "buyToken", type: "address" },
+    { name: "receiver", type: "address" },
+    { name: "sellAmount", type: "uint256" },
+  ],
+} as const;
+
+const permission = allowSignTypedMessage({
+  types,
+  // Pin the domain to a specific app + chain + verifying contract;
+  // omitted fields (version) are left unconstrained.
+  domain: {
+    name: "My App",
+    chainId: 1n,
+    verifyingContract: "0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC",
+  },
+  // Constrain the message: the receiver must be the avatar.
+  message: {
+    receiver: c.avatar,
+  },
+});
+```
+
+A few things to note:
+
+- The `types` object should use `as const` (or be inlined) so TypeScript can narrow the field types and infer the primary message struct.
+- Field values can be primitives — `string`, `number`, `bigint`, address literals, etc. — which are shorthand for [`c.eq`](/sdk/conditions#ceq); use any [condition function](/sdk/conditions#condition-functions) (`c.avatar`, `c.or`, `c.gt`, …) for non-equality constraints.
+- Omitted fields are unconstrained; an entire struct can also be replaced by a condition function like `c.pass`.
+- Nested structs and arrays of structs follow the same struct-shape rules; see [Conditions](/sdk/conditions) for the underlying authoring API.
+
+<Callout type="info">
+  `types` must include the `EIP712Domain` entry that matches the domain you
+  intend to scope. Use `typesForDomain` from `zodiac-roles-sdk` to derive it
+  from a `TypedDataDomain` object if you don't want to write it by hand.
+</Callout>
+
+### `encodeSignTypedMessage`
+
+Produces the calldata that a role member submits (via `execTransactionWithRole`, `operation: 1`) to sign a concrete message.
+
+```typescript
+import { encodeSignTypedMessage } from "zodiac-roles-sdk";
+
+const data = encodeSignTypedMessage({
+  domain: {
+    name: "My App",
+    version: "1",
+    chainId: 1,
+    verifyingContract: "0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC",
+  },
+  types,
+  message: {
+    sellToken: "0x...",
+    buyToken: "0x...",
+    receiver: AVATAR_ADDRESS,
+    sellAmount: 1_000_000n,
+  },
+});
+
+// The selector portion of `data` matches the one in the permission returned
+// by `allowSignTypedMessage` for the same `types`.
+```
+
+After the call lands, `isValidSignature(safeMessageHash, "0x")` on the Safe returns the EIP-1271 magic value.
+
+### `encodeSignMessage`
+
+A thin wrapper for the legacy `signMessage(bytes)` entry point on `SignTypedMessageLib`, which signs a raw byte string without EIP-191 wrapping.
+Most integrations should prefer `encodePersonalSign` or `encodeSignTypedMessage` instead.
+
+```typescript
+import { encodeSignMessage } from "zodiac-roles-sdk";
+
+const data = encodeSignMessage({ message: "0xdeadbeef" });
+```
+
+## `personal_sign` messages
+
+### `allowPersonalSign`
+
+Returns a permission allowing the role to sign any `personal_sign` message whose text starts with a given prefix.
+
+```typescript
+import { allowPersonalSign } from "zodiac-roles-sdk";
+
+const permission = allowPersonalSign({
+  startsWith: "example.com wants you to sign in",
+});
+```
+
+The condition is a single bitmask check on the raw message bytes — the EIP-191 wrapping is added on-chain by `SignTypedMessageLib.personalSign`, so the prefix you pass is matched against the user-visible text of the message.
+
+`startsWith` must not be empty.
+A scoped permission with no prefix would allow signing arbitrary messages, which the Safe should generally not delegate to a member.
+
+### `encodePersonalSign`
+
+Produces the calldata to mark a concrete `personal_sign` message as signed.
+
+```typescript
+import { encodePersonalSign } from "zodiac-roles-sdk";
+
+const data = encodePersonalSign({
+  message: "example.com wants you to sign in with nonce 12345",
+});
+```
+
+After the call lands, `isValidSignature(hashMessage(text), "0x")` on the Safe returns the EIP-1271 magic value, where `hashMessage` is the standard EIP-191 hash (e.g. `ethers.hashMessage`).

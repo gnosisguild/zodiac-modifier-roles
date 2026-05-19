@@ -11,8 +11,8 @@ import {
 import { ethers } from "hardhat"
 import {
   ExecutionOptions,
+  allowPersonalSign,
   encodePersonalSign,
-  scopePersonalSign,
 } from "zodiac-roles-sdk"
 
 import { iface as ifaceFallback } from "./setup/deploy-mastercopies/fallbackHandler"
@@ -28,7 +28,7 @@ import deployMastercopies from "./setup/deploy-mastercopies"
 
 const EIP712_MAGIC_VALUE = "0x20c13b0b"
 
-describe("scopePersonalSign()", () => {
+describe("allowPersonalSign()", () => {
   async function setup() {
     await deployMastercopies()
 
@@ -68,7 +68,7 @@ describe("scopePersonalSign()", () => {
 
     const startsWith = "example.com wants you to sign in"
 
-    const { selector, condition } = scopePersonalSign({ startsWith })
+    const { selector, condition } = allowPersonalSign({ startsWith })
 
     await scopeFunction({
       owner,

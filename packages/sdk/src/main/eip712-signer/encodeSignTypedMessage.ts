@@ -7,6 +7,7 @@ import {
   encodeTypedMessage,
   toAbiTypes,
 } from "./encode"
+import { MessageStructOf } from "./typedDataTypes"
 
 const iface = Interface.from([
   "function signMessage(bytes message)",
@@ -14,14 +15,16 @@ const iface = Interface.from([
   "function signTypedMessage(bytes domain, bytes message, (uint256 parent, uint8 encoding, bytes32 typeHash)[] types)",
 ])
 
-export function encodeSignTypedMessage({
+export function encodeSignTypedMessage<const T extends TypedData>({
   domain,
   types,
   message,
 }: {
   domain: TypedDataDomain
-  types: TypedData
-  message: Record<string, any>
+  types: T
+  message: MessageStructOf<T> extends Record<string, any>
+    ? MessageStructOf<T>
+    : never
 }) {
   /*
    * We want to hit the correct roles rule, and so we hash the types, and use

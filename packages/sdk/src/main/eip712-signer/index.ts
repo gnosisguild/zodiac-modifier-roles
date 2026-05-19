@@ -3,5 +3,5 @@ export {
   encodeSignMessage,
   encodeSignTypedMessage,
 } from "./encodeSignTypedMessage"
-export { scopePersonalSign } from "./scopePersonalSign"
-export { scopeSignTypedMessage } from "./scopeSignTypedMessage"
+export { allowPersonalSign } from "./allowPersonalSign"
+export { allowSignTypedMessage } from "./allowSignTypedMessage"

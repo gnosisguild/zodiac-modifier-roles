@@ -10,6 +10,9 @@ const meta: MetaRecord = {
   conditions: {
     title: "Conditions",
   },
+  signing: {
+    title: "Signing",
+  },
   api: {
     title: "API Reference",
   },

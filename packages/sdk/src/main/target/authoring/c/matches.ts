@@ -18,7 +18,7 @@ import {
   TupleScopings,
 } from "../types"
 
-type Encoding = string | ParamType
+type AbiTypeInput = string | ParamType
 
 /**
  * Matches a tuple or array against a structure of conditions.
@@ -102,7 +102,7 @@ export const matches =
 const calldataMatchesScopings =
   <S extends TupleScopings<any>>(
     scopings: S,
-    abiTypes: readonly Encoding[],
+    abiTypes: readonly AbiTypeInput[],
     options: {
       selector?: `0x${string}`
       callWithinAllowance?: string
@@ -207,7 +207,7 @@ type CalldataMatches = {
    **/
   <S extends TupleScopings<any>>(
     scopings: S,
-    abiTypes: readonly Encoding[],
+    abiTypes: readonly AbiTypeInput[],
     options?: {
       selector?: `0x${string}`
       callWithinAllowance?: string
@@ -227,7 +227,7 @@ type CalldataMatches = {
 
 export const calldataMatches: CalldataMatches = <S extends TupleScopings<any>>(
   scopingsOrFunctionPermission: S | FunctionPermission,
-  abiTypes?: readonly Encoding[],
+  abiTypes?: readonly AbiTypeInput[],
   options?: {
     selector?: `0x${string}`
     callWithinAllowance?: string
@@ -251,7 +251,7 @@ export const calldataMatches: CalldataMatches = <S extends TupleScopings<any>>(
  * @param abiTypes The parameter types defining how to decode bytes
  **/
 export const abiEncodedMatches =
-  <S extends TupleScopings<any>>(scopings: S, abiTypes: Encoding[]) =>
+  <S extends TupleScopings<any>>(scopings: S, abiTypes: AbiTypeInput[]) =>
   (abiType?: ParamType) => {
     const paramTypes = abiTypes.map((abiType) => ParamType.from(abiType))
 

@@ -16,6 +16,9 @@ const meta: MetaRecord = {
   unwrapping: {
     title: "Transaction Unwrapping",
   },
+  signing: {
+    title: "Signature Scoping",
+  },
   "price-adapters": {
     title: "Price Adapters",
   },
