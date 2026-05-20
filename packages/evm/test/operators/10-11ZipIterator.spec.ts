@@ -1,14 +1,10 @@
 import { expect } from "chai";
-import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { anyValue } from "@nomicfoundation/hardhat-ethers-chai-matchers/withArgs";
 import { AbiCoder } from "ethers";
 
-import {
-  setupTwoArrayParams,
-  setupThreeArrayParams,
-  setupTwoTupleArrayParams,
-  setupTestContract,
-} from "../setup";
+import { network } from "hardhat";
+
+import { createSetup } from "../setup.js";
 import {
   Encoding,
   Operator,
@@ -16,9 +12,19 @@ import {
   ConditionViolationStatus,
   flattenCondition,
   packConditions,
-} from "../utils";
+} from "../utils.js";
 
 const abiCoder = AbiCoder.defaultAbiCoder();
+
+const connection = await network.create();
+const { ethers, networkHelpers } = connection;
+const { loadFixture } = networkHelpers;
+const {
+  setupTwoArrayParams,
+  setupThreeArrayParams,
+  setupTwoTupleArrayParams,
+  setupTestContract,
+} = createSetup(connection);
 
 function pluckArray(index: number) {
   return {
@@ -55,7 +61,15 @@ function setupThreeBytesArrayParams() {
   return setupThreeArrayParams("bytes");
 }
 
+function setupThreeDefaultArrayParams() {
+  return setupThreeArrayParams();
+}
+
 describe("Operator - Zip (ZipSome & ZipEvery)", () => {
+  after(async () => {
+    await connection.close();
+  });
+
   it("fails when arrays have different lengths", async () => {
     const { roles, allowFunction, invoke } =
       await loadFixture(setupTwoArrayParams);
@@ -148,7 +162,7 @@ describe("Operator - Zip (ZipSome & ZipEvery)", () => {
     );
 
     // First field of left tuple must be 100
-    await expect(invoke([[100, 1]], [[200, 2]])).to.not.be.reverted;
+    await expect(invoke([[100, 1]], [[200, 2]])).to.not.be.revert(ethers);
 
     await expect(invoke([[99, 1]], [[200, 2]]))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
@@ -194,7 +208,7 @@ describe("Operator - Zip (ZipSome & ZipEvery)", () => {
       ExecutionOptions.Both,
     );
 
-    await expect(invoke([42], [100])).to.not.be.reverted;
+    await expect(invoke([42], [100])).to.not.be.revert(ethers);
 
     await expect(invoke([100], [42]))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
@@ -251,7 +265,7 @@ describe("Operator - Zip (ZipSome & ZipEvery)", () => {
 
   it("zips three arrays", async () => {
     const { roles, allowFunction, invoke } = await loadFixture(
-      setupThreeArrayParams,
+      setupThreeDefaultArrayParams,
     );
 
     await allowFunction(
@@ -295,7 +309,9 @@ describe("Operator - Zip (ZipSome & ZipEvery)", () => {
       ExecutionOptions.Both,
     );
 
-    await expect(invoke([3, 1, 9], [4, 2, 9], [5, 3, 9])).to.not.be.reverted;
+    await expect(invoke([3, 1, 9], [4, 2, 9], [5, 3, 9])).to.not.be.revert(
+      ethers,
+    );
     await expect(invoke([3, 1, 9], [4, 2, 9], [5, 0, 9]))
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(
@@ -380,7 +396,7 @@ describe("Operator - Zip (ZipSome & ZipEvery)", () => {
 
     await expect(
       invoke(["0xaa", "0xbb"], ["0xdeadbeef", "0xdeadbeef"], ["0x", "0x"]),
-    ).to.not.be.reverted;
+    ).to.not.be.revert(ethers);
     await expect(
       invoke(["0xaa", "0xbb"], ["0xdeadbeef", "0xcafebabe"], ["0x", "0x"]),
     )
@@ -482,7 +498,9 @@ describe("Operator - Zip (ZipSome & ZipEvery)", () => {
     );
 
     // Passes via second Or branch: right element equals targetBytes
-    await expect(invoke(["0xaa"], [targetBytes], ["0x"])).to.not.be.reverted;
+    await expect(invoke(["0xaa"], [targetBytes], ["0x"])).to.not.be.revert(
+      ethers,
+    );
 
     // Fails: right element doesn't match either branch
     await expect(invoke(["0xaa"], ["0xcafebabe"], ["0x"]))
@@ -531,7 +549,7 @@ describe("Operator - Zip (ZipSome & ZipEvery)", () => {
       );
 
       // Second position matches (left == 42)
-      await expect(invoke([1, 42, 3], [10, 20, 30])).to.not.be.reverted;
+      await expect(invoke([1, 42, 3], [10, 20, 30])).to.not.be.revert(ethers);
 
       // reversed arrays fail (no position has left == 42)
       await expect(invoke([10, 20, 30], [1, 42, 3]))
@@ -663,7 +681,7 @@ describe("Operator - Zip (ZipSome & ZipEvery)", () => {
         ExecutionOptions.Both,
       );
 
-      await expect(invoke([1, 2, 3], [10, 20, 30])).to.not.be.reverted;
+      await expect(invoke([1, 2, 3], [10, 20, 30])).to.not.be.revert(ethers);
     });
 
     it("fails when all positions mismatch", async () => {
@@ -745,7 +763,7 @@ describe("Operator - Zip (ZipSome & ZipEvery)", () => {
         ExecutionOptions.Both,
       );
 
-      await expect(invoke([], [])).to.not.be.reverted;
+      await expect(invoke([], [])).to.not.be.revert(ethers);
     });
   });
 

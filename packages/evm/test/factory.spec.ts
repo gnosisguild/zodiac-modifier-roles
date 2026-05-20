@@ -1,9 +1,13 @@
 import { expect } from "chai";
-import hre, { ethers } from "hardhat";
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import hre, { network } from "hardhat";
 import { AbiCoder, ZeroHash } from "ethers";
-import { createEip1193 } from "./setup";
-import { loadZodiacCore } from "./loadZodiacCore";
+import { deployFactories, deployProxy } from "@gnosis-guild/zodiac-core";
+
+import { createEip1193 } from "./setup.js";
+
+const connection = await network.create();
+const { ethers, networkHelpers, provider } = connection;
+const { loadFixture } = networkHelpers;
 
 const AddressOne = "0x0000000000000000000000000000000000000001";
 
@@ -18,11 +22,15 @@ const AddressOne = "0x0000000000000000000000000000000000000001";
  */
 
 describe("Module works with factory", () => {
+  after(async () => {
+    await connection.close();
+  });
+
   const paramsTypes = ["address", "address", "address"];
 
   async function setup() {
-    const [deployer] = await hre.ethers.getSigners();
-    const Factory = await hre.ethers.getContractFactory("ModuleProxyFactory");
+    const [deployer] = await ethers.getSigners();
+    const Factory = await ethers.getContractFactory("ModuleProxyFactory");
     const factory = await Factory.deploy();
 
     const conditionStorerArtifact =
@@ -45,7 +53,7 @@ describe("Module works with factory", () => {
     const withinRatioChecker = await WithinRatioChecker.deploy();
     const withinRatioCheckerAddress = await withinRatioChecker.getAddress();
 
-    const Modifier = await hre.ethers.getContractFactory("Roles", {
+    const Modifier = await ethers.getContractFactory("Roles", {
       libraries: {
         ConditionStorer: conditionStorerAddress,
         WithinRatioChecker: withinRatioCheckerAddress,
@@ -56,7 +64,7 @@ describe("Module works with factory", () => {
       AddressOne,
       AddressOne,
     );
-    const eip1193Provider = createEip1193(hre.network.provider, deployer);
+    const eip1193Provider = createEip1193(provider, deployer);
     return { factory, masterCopy, Modifier, eip1193Provider };
   }
 
@@ -77,7 +85,6 @@ describe("Module works with factory", () => {
   it("should deploy new roles module proxy", async () => {
     const { masterCopy, eip1193Provider } = await loadFixture(setup);
     const [avatar, owner, target] = await ethers.getSigners();
-    const { deployFactories, deployProxy } = await loadZodiacCore();
     await deployFactories({ provider: eip1193Provider });
     const { address: deployProxyAddress } = await deployProxy({
       mastercopy: await masterCopy.getAddress(),
@@ -89,7 +96,7 @@ describe("Module works with factory", () => {
       provider: eip1193Provider,
     });
 
-    const proxy = await hre.ethers.getContractAt("Roles", deployProxyAddress);
+    const proxy = await ethers.getContractAt("Roles", deployProxyAddress);
 
     expect(await proxy.avatar()).to.be.eq(avatar.address);
   });

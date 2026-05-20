@@ -1,9 +1,10 @@
 import { expect } from "chai";
-import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { anyValue } from "@nomicfoundation/hardhat-ethers-chai-matchers/withArgs";
 import { AbiCoder } from "ethers";
 
-import { setupTestContract, setupOneParam, setupDynamicParam } from "../setup";
+import { network } from "hardhat";
+
+import { createSetup } from "../setup.js";
 import {
   Encoding,
   Operator,
@@ -11,11 +12,21 @@ import {
   ConditionViolationStatus,
   flattenCondition,
   packConditions,
-} from "../utils";
+} from "../utils.js";
 
 const abiCoder = AbiCoder.defaultAbiCoder();
 
+const connection = await network.create();
+const { ethers, networkHelpers } = connection;
+const { loadFixture } = networkHelpers;
+const { setupTestContract, setupOneParam, setupDynamicParam } =
+  createSetup(connection);
+
 describe("Operator - Or", () => {
+  after(async () => {
+    await connection.close();
+  });
+
   describe("boolean logic", () => {
     it("passes when first child passes", async () => {
       const { allowFunction, invoke } = await loadFixture(setupOneParam);
@@ -48,7 +59,7 @@ describe("Operator - Or", () => {
       );
 
       // 10 matches first child - passes immediately
-      await expect(invoke(10)).to.not.be.reverted;
+      await expect(invoke(10)).to.not.be.revert(ethers);
     });
 
     it("passes when second child passes after first fails", async () => {
@@ -82,7 +93,7 @@ describe("Operator - Or", () => {
       );
 
       // 20 fails first child, passes second child
-      await expect(invoke(20)).to.not.be.reverted;
+      await expect(invoke(20)).to.not.be.revert(ethers);
     });
 
     it("fails with OrViolation when all children fail", async () => {
@@ -159,10 +170,10 @@ describe("Operator - Or", () => {
       );
 
       // 5 passes first child (<10)
-      await expect(invoke(5)).to.not.be.reverted;
+      await expect(invoke(5)).to.not.be.revert(ethers);
 
       // 150 passes second child (>100)
-      await expect(invoke(150)).to.not.be.reverted;
+      await expect(invoke(150)).to.not.be.revert(ethers);
 
       // 50 fails both (not <10 and not >100)
       await expect(invoke(50))
@@ -229,14 +240,14 @@ describe("Operator - Or", () => {
 
       // Matches child 1: single bytes = 0xaabbccdd
       const matchChild1 = abiCoder.encode(["bytes"], ["0xaabbccdd"]);
-      await expect(invoke(matchChild1)).to.not.be.reverted;
+      await expect(invoke(matchChild1)).to.not.be.revert(ethers);
 
       // Matches child 2: two bytes where first = 0x11111111
       const matchChild2 = abiCoder.encode(
         ["bytes", "bytes"],
         ["0x11111111", "0xffffffff"],
       );
-      await expect(invoke(matchChild2)).to.not.be.reverted;
+      await expect(invoke(matchChild2)).to.not.be.revert(ethers);
 
       // Matches neither
       const matchNeither = abiCoder.encode(["bytes"], ["0xdeadbeef"]);
@@ -282,10 +293,10 @@ describe("Operator - Or", () => {
       );
 
       // Correct param, any ether - passes via first child
-      await expect(invoke(42)).to.not.be.reverted;
+      await expect(invoke(42)).to.not.be.revert(ethers);
 
       // Wrong param, correct ether - passes via second child
-      await expect(invoke(99, { value: 123 })).to.not.be.reverted;
+      await expect(invoke(99, { value: 123 })).to.not.be.revert(ethers);
 
       // Wrong param, wrong ether - fails both
       await expect(invoke(99, { value: 999 }))
@@ -363,7 +374,7 @@ describe("Operator - Or", () => {
       );
 
       // Call with value 30 - takes first branch, consumes from allowanceA
-      await expect(invoke(30)).to.not.be.reverted;
+      await expect(invoke(30)).to.not.be.revert(ethers);
 
       // Verify only allowanceA was consumed
       const { balance: balanceA } = await roles.accruedAllowance(allowanceKeyA);
@@ -372,7 +383,7 @@ describe("Operator - Or", () => {
       expect(balanceB).to.equal(100); // unchanged
 
       // Call with value 60 - takes second branch, consumes from allowanceB
-      await expect(invoke(60)).to.not.be.reverted;
+      await expect(invoke(60)).to.not.be.revert(ethers);
 
       // Verify only allowanceB was consumed this time
       const { balance: balanceA2 } =
@@ -446,7 +457,7 @@ describe("Operator - Or", () => {
       );
 
       // Call with value 10
-      await expect(invoke(10)).to.not.be.reverted;
+      await expect(invoke(10)).to.not.be.revert(ethers);
 
       // Allowance A should be untouched (rolled back)
       const { balance: balanceA } = await roles.accruedAllowance(allowanceKeyA);

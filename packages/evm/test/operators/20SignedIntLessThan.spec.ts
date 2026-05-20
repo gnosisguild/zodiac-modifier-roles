@@ -1,13 +1,10 @@
 import { expect } from "chai";
-import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { AbiCoder, Interface, solidityPacked, ZeroHash } from "ethers";
+import { anyValue } from "@nomicfoundation/hardhat-ethers-chai-matchers/withArgs";
+import { AbiCoder, Interface, solidityPacked } from "ethers";
 
-import {
-  setupTestContract,
-  setupDynamicParam,
-  setupOneParamSigned,
-} from "../setup";
+import { network } from "hardhat";
+
+import { createSetup } from "../setup.js";
 import {
   Encoding,
   Operator,
@@ -15,11 +12,21 @@ import {
   ConditionViolationStatus,
   flattenCondition,
   packConditions,
-} from "../utils";
+} from "../utils.js";
 
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
 
+const connection = await network.create();
+const { ethers, networkHelpers } = connection;
+const { loadFixture } = networkHelpers;
+const { setupTestContract, setupDynamicParam, setupOneParamSigned } =
+  createSetup(connection);
+
 describe("Operator - SignedIntLessThan", () => {
+  after(async () => {
+    await connection.close();
+  });
+
   it("passes when signed value < compValue", async () => {
     const { roles, allowFunction, invoke } =
       await loadFixture(setupOneParamSigned);
@@ -39,7 +46,7 @@ describe("Operator - SignedIntLessThan", () => {
     );
 
     // 99 < 100 passes
-    await expect(invoke(99)).to.not.be.reverted;
+    await expect(invoke(99)).to.not.be.revert(ethers);
   });
 
   it("fails when signed value >= compValue", async () => {
@@ -99,10 +106,10 @@ describe("Operator - SignedIntLessThan", () => {
     );
 
     // -51 < -50 passes
-    await expect(invoke(-51)).to.not.be.reverted;
+    await expect(invoke(-51)).to.not.be.revert(ethers);
 
     // -100 < -50 passes
-    await expect(invoke(-100)).to.not.be.reverted;
+    await expect(invoke(-100)).to.not.be.revert(ethers);
 
     // -50 == -50 fails
     await expect(invoke(-50))
@@ -159,7 +166,7 @@ describe("Operator - SignedIntLessThan", () => {
     );
 
     // 0x00000063 = 99 < 100 passes
-    await expect(invoke("0x00000063")).to.not.be.reverted;
+    await expect(invoke("0x00000063")).to.not.be.revert(ethers);
 
     // 0x00000064 = 100 >= 100 fails
     await expect(invoke("0x00000064"))
@@ -194,7 +201,7 @@ describe("Operator - SignedIntLessThan", () => {
 
     // -150 (32 bytes) < -100 -> Pass
     const neg150 = solidityPacked(["int256"], [-150]);
-    await expect(invoke(neg150)).to.not.be.reverted;
+    await expect(invoke(neg150)).to.not.be.revert(ethers);
 
     // -100 (32 bytes) < -100 -> Fail (Equal)
     const neg100 = solidityPacked(["int256"], [-100]);
@@ -250,7 +257,7 @@ describe("Operator - SignedIntLessThan", () => {
           iface.encodeFunctionData(fn),
           0,
         ),
-    ).to.not.be.reverted;
+    ).to.not.be.revert(ethers);
 
     // 1000 >= 1000 fails
     await expect(

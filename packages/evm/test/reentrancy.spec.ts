@@ -1,8 +1,13 @@
 import { expect } from "chai";
-import hre from "hardhat";
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { ExecutionOptions } from "./utils";
-import { deployRolesMod } from "./setup";
+import { network } from "hardhat";
+
+import { ExecutionOptions } from "./utils.js";
+import { createSetup } from "./setup.js";
+
+const connection = await network.create();
+const { ethers, networkHelpers } = connection;
+const { loadFixture } = networkHelpers;
+const { deployRolesMod } = createSetup(connection);
 
 /**
  * Reentrancy tests
@@ -14,15 +19,18 @@ import { deployRolesMod } from "./setup";
  */
 
 describe("Reentrancy", () => {
-  async function setup() {
-    const [owner, invoker] = await hre.ethers.getSigners();
+  after(async () => {
+    await connection.close();
+  });
 
-    const Avatar = await hre.ethers.getContractFactory("TestAvatar");
+  async function setup() {
+    const [owner, invoker] = await ethers.getSigners();
+
+    const Avatar = await ethers.getContractFactory("TestAvatar");
     const avatar = await Avatar.deploy();
     const avatarAddress = await avatar.getAddress();
 
     const roles = await deployRolesMod(
-      hre,
       owner.address,
       avatarAddress,
       avatarAddress,
@@ -41,10 +49,10 @@ describe("Reentrancy", () => {
   it("blocks reentrant call - doNothing is never executed", async () => {
     const { roles, invoker } = await loadFixture(setup);
 
-    const roleKey = hre.ethers.hexlify(hre.ethers.randomBytes(32));
+    const roleKey = ethers.hexlify(ethers.randomBytes(32));
 
     const ReentrancyChecker =
-      await hre.ethers.getContractFactory("ReentrancyChecker");
+      await ethers.getContractFactory("ReentrancyChecker");
     const checker = await ReentrancyChecker.deploy(
       await roles.getAddress(),
       roleKey,

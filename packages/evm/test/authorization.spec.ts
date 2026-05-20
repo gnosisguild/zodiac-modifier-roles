@@ -1,8 +1,7 @@
 import { expect } from "chai";
-import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
-import hre from "hardhat";
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { anyValue } from "@nomicfoundation/hardhat-ethers-chai-matchers/withArgs";
 import { hexlify, Interface, randomBytes, ZeroAddress } from "ethers";
+import { network } from "hardhat";
 
 import {
   encodeMultisendPayload,
@@ -11,8 +10,13 @@ import {
   Operator,
   ConditionViolationStatus,
   packConditions,
-} from "./utils";
-import { deployRolesMod } from "./setup";
+} from "./utils.js";
+import { createSetup } from "./setup.js";
+
+const connection = await network.create();
+const { ethers, networkHelpers } = connection;
+const { loadFixture } = networkHelpers;
+const { deployRolesMod } = createSetup(connection);
 
 const iface = new Interface([
   "function doNothing()",
@@ -33,21 +37,24 @@ const iface = new Interface([
  */
 
 describe("Authorization", () => {
-  async function setup() {
-    const [owner, member] = await hre.ethers.getSigners();
+  after(async () => {
+    await connection.close();
+  });
 
-    const Avatar = await hre.ethers.getContractFactory("TestAvatar");
+  async function setup() {
+    const [owner, member] = await ethers.getSigners();
+
+    const Avatar = await ethers.getContractFactory("TestAvatar");
     const avatar = await Avatar.deploy();
     const avatarAddress = await avatar.getAddress();
 
     const roles = await deployRolesMod(
-      hre,
       owner.address,
       avatarAddress,
       avatarAddress,
     );
 
-    const TestContract = await hre.ethers.getContractFactory("TestContract");
+    const TestContract = await ethers.getContractFactory("TestContract");
     const testContract = await TestContract.deploy();
     const testContractAddress = await testContract.getAddress();
 
@@ -125,7 +132,7 @@ describe("Authorization", () => {
               iface.encodeFunctionData("oneParamStatic", [42]),
               0,
             ),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("evaluates target condition regardless of which function is called", async () => {
@@ -147,7 +154,7 @@ describe("Authorization", () => {
             parent: 0,
             paramType: Encoding.Static,
             operator: Operator.EqualTo,
-            compValue: hre.ethers.AbiCoder.defaultAbiCoder().encode(
+            compValue: ethers.AbiCoder.defaultAbiCoder().encode(
               ["uint256"],
               [100],
             ),
@@ -170,7 +177,7 @@ describe("Authorization", () => {
               iface.encodeFunctionData("oneParamStatic", [100]),
               0,
             ),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
 
         // oneParamStatic with 50 - should fail
         await expect(
@@ -200,7 +207,7 @@ describe("Authorization", () => {
               iface.encodeFunctionData("twoParamsStatic", [100, 999]),
               0,
             ),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
 
         await expect(
           roles
@@ -327,7 +334,7 @@ describe("Authorization", () => {
             parent: 0,
             paramType: Encoding.Static,
             operator: Operator.EqualTo,
-            compValue: hre.ethers.AbiCoder.defaultAbiCoder().encode(
+            compValue: ethers.AbiCoder.defaultAbiCoder().encode(
               ["uint256"],
               [42],
             ),
@@ -351,7 +358,7 @@ describe("Authorization", () => {
               iface.encodeFunctionData("oneParamStatic", [42]),
               0,
             ),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
 
         // Call with 99 - should fail
         await expect(
@@ -412,7 +419,7 @@ describe("Authorization", () => {
               iface.encodeFunctionData("oneParamStatic", [42]),
               0,
             ),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
 
         // Now scope target (tightens to function-level)
         await roles.scopeTarget(roleKey, testContractAddress);
@@ -502,7 +509,7 @@ describe("Authorization", () => {
               iface.encodeFunctionData("oneParamStatic", [42]),
               0,
             ),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("revokeTarget makes allowFunction permissions ineffective", async () => {
@@ -578,7 +585,7 @@ describe("Authorization", () => {
         roles
           .connect(member)
           .execTransactionFromModule(testContractAddress, 0, "0x", 0),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
     });
 
     it("reverts with FunctionSignatureTooShort for 1-3 bytes", async () => {
@@ -638,10 +645,10 @@ describe("Authorization", () => {
           );
 
           // Fund the avatar
-          const [owner] = await hre.ethers.getSigners();
+          const [owner] = await ethers.getSigners();
           await owner.sendTransaction({
             to: await avatar.getAddress(),
-            value: hre.ethers.parseEther("1"),
+            value: ethers.parseEther("1"),
           });
 
           await expect(
@@ -649,7 +656,7 @@ describe("Authorization", () => {
               .connect(member)
               .execTransactionFromModule(
                 testContractAddress,
-                hre.ethers.parseEther("0.1"),
+                ethers.parseEther("0.1"),
                 "0x",
                 0,
               ),
@@ -678,10 +685,10 @@ describe("Authorization", () => {
           );
 
           // Fund the avatar
-          const [owner] = await hre.ethers.getSigners();
+          const [owner] = await ethers.getSigners();
           await owner.sendTransaction({
             to: await avatar.getAddress(),
-            value: hre.ethers.parseEther("1"),
+            value: ethers.parseEther("1"),
           });
 
           await expect(
@@ -689,11 +696,11 @@ describe("Authorization", () => {
               .connect(member)
               .execTransactionFromModule(
                 testContractAddress,
-                hre.ethers.parseEther("0.1"),
+                ethers.parseEther("0.1"),
                 "0x",
                 0,
               ),
-          ).to.not.be.reverted;
+          ).to.not.be.revert(ethers);
         });
       });
 
@@ -738,7 +745,7 @@ describe("Authorization", () => {
             roles
               .connect(member)
               .execTransactionFromModule(testContractAddress, 0, "0x", 1),
-          ).to.not.be.reverted;
+          ).to.not.be.revert(ethers);
         });
 
         it("allows Call regardless of DelegateCall option", async () => {
@@ -759,7 +766,7 @@ describe("Authorization", () => {
             roles
               .connect(member)
               .execTransactionFromModule(testContractAddress, 0, "0x", 0),
-          ).to.not.be.reverted;
+          ).to.not.be.revert(ethers);
         });
       });
 
@@ -784,10 +791,10 @@ describe("Authorization", () => {
           );
 
           // Fund the avatar
-          const [owner] = await hre.ethers.getSigners();
+          const [owner] = await ethers.getSigners();
           await owner.sendTransaction({
             to: await avatar.getAddress(),
-            value: hre.ethers.parseEther("1"),
+            value: ethers.parseEther("1"),
           });
 
           // Send with value works
@@ -796,18 +803,18 @@ describe("Authorization", () => {
               .connect(member)
               .execTransactionFromModule(
                 testContractAddress,
-                hre.ethers.parseEther("0.1"),
+                ethers.parseEther("0.1"),
                 "0x",
                 0,
               ),
-          ).to.not.be.reverted;
+          ).to.not.be.revert(ethers);
 
           // DelegateCall works (executes in avatar's context, so we can't verify testContract events)
           await expect(
             roles
               .connect(member)
               .execTransactionFromModule(testContractAddress, 0, "0x", 1),
-          ).to.not.be.reverted;
+          ).to.not.be.revert(ethers);
         });
       });
     });
@@ -832,10 +839,10 @@ describe("Authorization", () => {
           );
 
           // Fund the avatar
-          const [owner] = await hre.ethers.getSigners();
+          const [owner] = await ethers.getSigners();
           await owner.sendTransaction({
             to: await avatar.getAddress(),
-            value: hre.ethers.parseEther("1"),
+            value: ethers.parseEther("1"),
           });
 
           await expect(
@@ -843,7 +850,7 @@ describe("Authorization", () => {
               .connect(member)
               .execTransactionFromModule(
                 testContractAddress,
-                hre.ethers.parseEther("0.1"),
+                ethers.parseEther("0.1"),
                 iface.encodeFunctionData("doNothing"),
                 0,
               ),
@@ -876,10 +883,10 @@ describe("Authorization", () => {
           );
 
           // Fund the avatar
-          const [owner] = await hre.ethers.getSigners();
+          const [owner] = await ethers.getSigners();
           await owner.sendTransaction({
             to: await avatar.getAddress(),
-            value: hre.ethers.parseEther("1"),
+            value: ethers.parseEther("1"),
           });
 
           await expect(
@@ -887,11 +894,11 @@ describe("Authorization", () => {
               .connect(member)
               .execTransactionFromModule(
                 testContractAddress,
-                hre.ethers.parseEther("0.1"),
+                ethers.parseEther("0.1"),
                 iface.encodeFunctionData("doNothing"),
                 0,
               ),
-          ).to.not.be.reverted;
+          ).to.not.be.revert(ethers);
         });
       });
 
@@ -954,7 +961,7 @@ describe("Authorization", () => {
                 iface.encodeFunctionData("doNothing"),
                 1,
               ),
-          ).to.not.be.reverted;
+          ).to.not.be.revert(ethers);
         });
 
         it("allows Call regardless of DelegateCall option", async () => {
@@ -984,7 +991,7 @@ describe("Authorization", () => {
                 iface.encodeFunctionData("doNothing"),
                 0,
               ),
-          ).to.not.be.reverted;
+          ).to.not.be.revert(ethers);
         });
       });
 
@@ -1013,10 +1020,10 @@ describe("Authorization", () => {
           );
 
           // Fund the avatar
-          const [owner] = await hre.ethers.getSigners();
+          const [owner] = await ethers.getSigners();
           await owner.sendTransaction({
             to: await avatar.getAddress(),
-            value: hre.ethers.parseEther("1"),
+            value: ethers.parseEther("1"),
           });
 
           // Send with value works
@@ -1025,7 +1032,7 @@ describe("Authorization", () => {
               .connect(member)
               .execTransactionFromModule(
                 testContractAddress,
-                hre.ethers.parseEther("0.1"),
+                ethers.parseEther("0.1"),
                 iface.encodeFunctionData("doNothing"),
                 0,
               ),
@@ -1043,7 +1050,7 @@ describe("Authorization", () => {
                 iface.encodeFunctionData("doNothing"),
                 1,
               ),
-          ).to.not.be.reverted;
+          ).to.not.be.revert(ethers);
         });
       });
     });
@@ -1059,12 +1066,12 @@ describe("Authorization", () => {
         await loadFixture(setup);
 
       // Deploy multisend and unwrapper
-      const MultiSend = await hre.ethers.getContractFactory("MultiSend");
+      const MultiSend = await ethers.getContractFactory("MultiSend");
       const multisend = await MultiSend.deploy();
       const multisendAddress = await multisend.getAddress();
 
       const MultiSendUnwrapper =
-        await hre.ethers.getContractFactory("MultiSendUnwrapper");
+        await ethers.getContractFactory("MultiSendUnwrapper");
       const unwrapper = await MultiSendUnwrapper.deploy();
       const unwrapperAddress = await unwrapper.getAddress();
 
@@ -1114,19 +1121,19 @@ describe("Authorization", () => {
         roles
           .connect(member)
           .execTransactionFromModule(multisendAddress, 0, multisendData, 1), // DelegateCall
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
     });
 
     it("reverts with MalformedMultiEntrypoint when unwrapper fails", async () => {
       const { roles, member, roleKey } = await loadFixture(setup);
 
       // Deploy multisend and unwrapper
-      const MultiSend = await hre.ethers.getContractFactory("MultiSend");
+      const MultiSend = await ethers.getContractFactory("MultiSend");
       const multisend = await MultiSend.deploy();
       const multisendAddress = await multisend.getAddress();
 
       const MultiSendUnwrapper =
-        await hre.ethers.getContractFactory("MultiSendUnwrapper");
+        await ethers.getContractFactory("MultiSendUnwrapper");
       const unwrapper = await MultiSendUnwrapper.deploy();
       const unwrapperAddress = await unwrapper.getAddress();
 
@@ -1160,17 +1167,17 @@ describe("Authorization", () => {
         await loadFixture(setup);
 
       // Deploy multisend and unwrapper
-      const MultiSend = await hre.ethers.getContractFactory("MultiSend");
+      const MultiSend = await ethers.getContractFactory("MultiSend");
       const multisend = await MultiSend.deploy();
       const multisendAddress = await multisend.getAddress();
 
       const MultiSendUnwrapper =
-        await hre.ethers.getContractFactory("MultiSendUnwrapper");
+        await ethers.getContractFactory("MultiSendUnwrapper");
       const unwrapper = await MultiSendUnwrapper.deploy();
       const unwrapperAddress = await unwrapper.getAddress();
 
       // Deploy a second target that won't be allowed
-      const TestContract2 = await hre.ethers.getContractFactory("TestContract");
+      const TestContract2 = await ethers.getContractFactory("TestContract");
       const testContract2 = await TestContract2.deploy();
       const target2Address = await testContract2.getAddress();
 
@@ -1258,7 +1265,7 @@ describe("Authorization", () => {
       const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setup);
 
-      const ALLOWANCE_KEY = hre.ethers.id("TEST_ALLOWANCE");
+      const ALLOWANCE_KEY = ethers.id("TEST_ALLOWANCE");
 
       await roles.grantRole(member.address, roleKey, 0, 0, 0);
       await roles.setDefaultRole(member.address, roleKey);
@@ -1313,15 +1320,15 @@ describe("Authorization", () => {
       const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setup);
 
-      const ALLOWANCE_KEY = hre.ethers.id("TEST_ALLOWANCE");
+      const ALLOWANCE_KEY = ethers.id("TEST_ALLOWANCE");
 
       // Deploy multisend and unwrapper
-      const MultiSend = await hre.ethers.getContractFactory("MultiSend");
+      const MultiSend = await ethers.getContractFactory("MultiSend");
       const multisend = await MultiSend.deploy();
       const multisendAddress = await multisend.getAddress();
 
       const MultiSendUnwrapper =
-        await hre.ethers.getContractFactory("MultiSendUnwrapper");
+        await ethers.getContractFactory("MultiSendUnwrapper");
       const unwrapper = await MultiSendUnwrapper.deploy();
       const unwrapperAddress = await unwrapper.getAddress();
 
@@ -1406,20 +1413,19 @@ describe("Authorization", () => {
 
   describe("functionEverywhere", () => {
     async function setupEverywhere() {
-      const [owner, member] = await hre.ethers.getSigners();
+      const [owner, member] = await ethers.getSigners();
 
-      const Avatar = await hre.ethers.getContractFactory("TestAvatar");
+      const Avatar = await ethers.getContractFactory("TestAvatar");
       const avatar = await Avatar.deploy();
       const avatarAddress = await avatar.getAddress();
 
       const roles = await deployRolesMod(
-        hre,
         owner.address,
         avatarAddress,
         avatarAddress,
       );
 
-      const TestContract = await hre.ethers.getContractFactory("TestContract");
+      const TestContract = await ethers.getContractFactory("TestContract");
       const testContractA = await TestContract.deploy();
       const testContractB = await TestContract.deploy();
       const testContractAddressA = await testContractA.getAddress();
@@ -1581,7 +1587,7 @@ describe("Authorization", () => {
             parent: 0,
             paramType: Encoding.Static,
             operator: Operator.EqualTo,
-            compValue: hre.ethers.AbiCoder.defaultAbiCoder().encode(
+            compValue: ethers.AbiCoder.defaultAbiCoder().encode(
               ["uint256"],
               [42],
             ),
@@ -1603,7 +1609,7 @@ describe("Authorization", () => {
             iface.encodeFunctionData("oneParamStatic", [42]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
 
       // param = 99 fails — target-specific rule is used, not the global
       await expect(
@@ -1672,7 +1678,7 @@ describe("Authorization", () => {
             parent: 0,
             paramType: Encoding.Static,
             operator: Operator.EqualTo,
-            compValue: hre.ethers.AbiCoder.defaultAbiCoder().encode(
+            compValue: ethers.AbiCoder.defaultAbiCoder().encode(
               ["uint256"],
               [100],
             ),
@@ -1689,7 +1695,7 @@ describe("Authorization", () => {
             iface.encodeFunctionData("oneParamStatic", [100]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
 
       await expect(
         roles
@@ -1753,7 +1759,7 @@ describe("Authorization", () => {
             iface.encodeFunctionData("doNothing"),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
     });
 
     it("revokeFunctionGlobally clears only the global entry", async () => {

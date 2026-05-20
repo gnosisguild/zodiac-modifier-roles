@@ -1,8 +1,7 @@
 import { expect } from "chai";
-import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
-import hre from "hardhat";
-import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
+import { anyValue } from "@nomicfoundation/hardhat-ethers-chai-matchers/withArgs";
 import { Interface } from "ethers";
+import { network } from "hardhat";
 
 import {
   Encoding,
@@ -11,8 +10,13 @@ import {
   ConditionViolationStatus,
   encodeMultisendPayload,
   packConditions,
-} from "./utils";
-import { deployRolesMod } from "./setup";
+} from "./utils.js";
+import { createSetup } from "./setup.js";
+
+const connection = await network.create();
+const { ethers, networkHelpers } = connection;
+const { loadFixture, time } = networkHelpers;
+const { deployRolesMod } = createSetup(connection);
 
 const iface = new Interface([
   "function oneParamStatic(uint256)",
@@ -34,27 +38,30 @@ const iface = new Interface([
  * Note: Operator-specific logic (e.g., `WithinAllowance` pricing) is tested in `operators/`.
  */
 describe("AllowanceTracking", () => {
-  async function setup() {
-    const [owner, member] = await hre.ethers.getSigners();
+  after(async () => {
+    await connection.close();
+  });
 
-    const Avatar = await hre.ethers.getContractFactory("TestAvatar");
+  async function setup() {
+    const [owner, member] = await ethers.getSigners();
+
+    const Avatar = await ethers.getContractFactory("TestAvatar");
     const avatar = await Avatar.deploy();
     const avatarAddress = await avatar.getAddress();
 
     const roles = await deployRolesMod(
-      hre,
       owner.address,
       avatarAddress,
       avatarAddress,
     );
     await roles.enableModule(member.address);
 
-    const TestContract = await hre.ethers.getContractFactory("TestContract");
+    const TestContract = await ethers.getContractFactory("TestContract");
     const testContract = await TestContract.deploy();
     const testContractAddress = await testContract.getAddress();
 
-    const ROLE_KEY = hre.ethers.id("TEST_ROLE");
-    const ALLOWANCE_KEY = hre.ethers.id("TEST_ALLOWANCE");
+    const ROLE_KEY = ethers.id("TEST_ROLE");
+    const ALLOWANCE_KEY = ethers.id("TEST_ALLOWANCE");
 
     await roles.connect(owner).grantRole(member.address, ROLE_KEY, 0, 0, 0);
     await roles.connect(owner).setDefaultRole(member.address, ROLE_KEY);
@@ -134,7 +141,7 @@ describe("AllowanceTracking", () => {
         );
 
         const receipt = await tx.wait();
-        const block = await hre.ethers.provider.getBlock(receipt!.blockNumber);
+        const block = await ethers.provider.getBlock(receipt!.blockNumber);
 
         const allowance = await roles.allowances(ALLOWANCE_KEY);
         expect(allowance.timestamp).to.equal(block!.timestamp);
@@ -175,7 +182,7 @@ describe("AllowanceTracking", () => {
         );
 
         const receipt = await tx.wait();
-        const block = await hre.ethers.provider.getBlock(receipt!.blockNumber);
+        const block = await ethers.provider.getBlock(receipt!.blockNumber);
 
         const newAllowance = await roles.allowances(ALLOWANCE_KEY);
         expect(newAllowance.timestamp).to.not.equal(initialAllowance.timestamp);
@@ -259,20 +266,19 @@ describe("AllowanceTracking", () => {
 
   describe("Accrual (refill)", () => {
     async function setupAccrual() {
-      const [owner] = await hre.ethers.getSigners();
+      const [owner] = await ethers.getSigners();
 
-      const Avatar = await hre.ethers.getContractFactory("TestAvatar");
+      const Avatar = await ethers.getContractFactory("TestAvatar");
       const avatar = await Avatar.deploy();
       const avatarAddress = await avatar.getAddress();
 
       const roles = await deployRolesMod(
-        hre,
         owner.address,
         avatarAddress,
         avatarAddress,
       );
 
-      const ALLOWANCE_KEY = hre.ethers.id("ACCRUAL_TEST");
+      const ALLOWANCE_KEY = ethers.id("ACCRUAL_TEST");
 
       return { roles, ALLOWANCE_KEY };
     }
@@ -509,12 +515,12 @@ describe("AllowanceTracking", () => {
     async function setupMultisend() {
       const base = await setup();
 
-      const MultiSend = await hre.ethers.getContractFactory("MultiSend");
+      const MultiSend = await ethers.getContractFactory("MultiSend");
       const multisend = await MultiSend.deploy();
       const multisendAddress = await multisend.getAddress();
 
       const MultiSendUnwrapper =
-        await hre.ethers.getContractFactory("MultiSendUnwrapper");
+        await ethers.getContractFactory("MultiSendUnwrapper");
       const adapter = await MultiSendUnwrapper.deploy();
       const adapterAddress = await adapter.getAddress();
 

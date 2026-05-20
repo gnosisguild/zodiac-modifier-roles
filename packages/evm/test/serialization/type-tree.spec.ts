@@ -1,11 +1,19 @@
 import { expect } from "chai";
-import hre from "hardhat";
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { Encoding, Operator, flattenCondition } from "../utils";
+import { network } from "hardhat";
+
+import { Encoding, Operator, flattenCondition } from "../utils.js";
+
+const connection = await network.create();
+const { ethers, networkHelpers } = connection;
+const { loadFixture } = networkHelpers;
 
 describe("TypeTree", () => {
+  after(async () => {
+    await connection.close();
+  });
+
   async function setup() {
-    const MockTypeTree = await hre.ethers.getContractFactory("MockTypeTree");
+    const MockTypeTree = await ethers.getContractFactory("MockTypeTree");
     const mockTypeTree = await MockTypeTree.deploy();
 
     // Helper to inspect and format result for easier assertions

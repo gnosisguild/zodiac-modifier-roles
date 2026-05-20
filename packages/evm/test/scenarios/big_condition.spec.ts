@@ -1,16 +1,26 @@
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { Interface } from "ethers";
-import { setupTestContract } from "../setup";
+import { network } from "hardhat";
+
+import { createSetup } from "../setup.js";
 import {
   Encoding,
   ExecutionOptions,
   Operator,
   flattenCondition,
   packConditions,
-} from "../utils";
-import { bigConditionCandidates } from "./big_condition_candidates";
+} from "../utils.js";
+import { bigConditionCandidates } from "./big_condition_candidates.js";
+
+const connection = await network.create();
+const { networkHelpers } = connection;
+const { loadFixture } = networkHelpers;
+const { setupTestContract } = createSetup(connection);
 
 describe("Big Condition Scenario", () => {
+  after(async () => {
+    await connection.close();
+  });
+
   // skip because this breaks the coverage report
   it.skip("should store a ~750-node condition with a big OR on fn(bytes, uint256, address)", async () => {
     const iface = new Interface(["function fn(bytes,uint256,address)"]);
@@ -44,7 +54,7 @@ describe("Big Condition Scenario", () => {
             {
               paramType: Encoding.None,
               operator: Operator.Or,
-              children: bigConditionCandidates as any[],
+              children: bigConditionCandidates as unknown as any[],
             },
           ],
         },

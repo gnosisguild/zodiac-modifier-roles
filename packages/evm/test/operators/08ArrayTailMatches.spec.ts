@@ -1,9 +1,10 @@
 import { expect } from "chai";
-import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { anyValue } from "@nomicfoundation/hardhat-ethers-chai-matchers/withArgs";
 import { AbiCoder, hexlify, randomBytes } from "ethers";
 
-import { setupTestContract, setupArrayParam } from "../setup";
+import { network } from "hardhat";
+
+import { createSetup } from "../setup.js";
 import {
   Encoding,
   Operator,
@@ -11,11 +12,20 @@ import {
   ConditionViolationStatus,
   flattenCondition,
   packConditions,
-} from "../utils";
+} from "../utils.js";
 
 const abiCoder = AbiCoder.defaultAbiCoder();
 
+const connection = await network.create();
+const { ethers, networkHelpers } = connection;
+const { loadFixture } = networkHelpers;
+const { setupTestContract, setupArrayParam } = createSetup(connection);
+
 describe("Operator - ArrayTailMatches", () => {
+  after(async () => {
+    await connection.close();
+  });
+
   describe("matching logic", () => {
     it("matches when tail elements align with conditions", async () => {
       const { allowFunction, invoke } = await loadFixture(setupArrayParam);
@@ -48,10 +58,10 @@ describe("Operator - ArrayTailMatches", () => {
       );
 
       // Exact tail match passes
-      await expect(invoke([100, 200])).to.not.be.reverted;
+      await expect(invoke([100, 200])).to.not.be.revert(ethers);
 
       // Longer array with matching tail passes
-      await expect(invoke([1, 2, 3, 100, 200])).to.not.be.reverted;
+      await expect(invoke([1, 2, 3, 100, 200])).to.not.be.revert(ethers);
     });
 
     it("fails when tail elements do not match", async () => {
@@ -180,10 +190,10 @@ describe("Operator - ArrayTailMatches", () => {
       );
 
       // Any prefix values are ignored - only tail (42) matters
-      await expect(invoke([999, 888, 777, 42])).to.not.be.reverted;
+      await expect(invoke([999, 888, 777, 42])).to.not.be.revert(ethers);
 
       // Different prefix, same tail - still passes
-      await expect(invoke([1, 2, 3, 4, 5, 42])).to.not.be.reverted;
+      await expect(invoke([1, 2, 3, 4, 5, 42])).to.not.be.revert(ethers);
     });
   });
 
@@ -230,7 +240,7 @@ describe("Operator - ArrayTailMatches", () => {
 
       // Array [1, 2, 20, 50, 80] - tail is [20, 50, 80]
       // 20 > 10 ✓, 50 == 50 ✓, 80 < 100 ✓
-      await expect(invoke([1, 2, 20, 50, 80])).to.not.be.reverted;
+      await expect(invoke([1, 2, 20, 50, 80])).to.not.be.revert(ethers);
 
       // Array [5, 50, 80] - swapped first condition value
       // 5 > 10 ✗ - fails on first tail element
@@ -300,7 +310,7 @@ describe("Operator - ArrayTailMatches", () => {
       );
 
       // Array [999, 20, 30] - prefix ignored, tail [20, 30] consumed (50 total)
-      await expect(invoke([999, 20, 30])).to.not.be.reverted;
+      await expect(invoke([999, 20, 30])).to.not.be.revert(ethers);
 
       // Both tail elements consumed - remaining is 50
       const { balance } = await roles.accruedAllowance(allowanceKey);

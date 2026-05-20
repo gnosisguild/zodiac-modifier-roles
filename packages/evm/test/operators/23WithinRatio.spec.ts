@@ -1,11 +1,11 @@
 import { expect } from "chai";
-import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import hre from "hardhat";
+import { anyValue } from "@nomicfoundation/hardhat-ethers-chai-matchers/withArgs";
 
 import { AbiCoder, Interface, solidityPacked, ZeroAddress } from "ethers";
 
-import { setupTestContract, setupTwoParams } from "../setup";
+import { network } from "hardhat";
+
+import { createSetup } from "../setup.js";
 import {
   Encoding,
   flattenCondition,
@@ -13,7 +13,8 @@ import {
   ExecutionOptions,
   ConditionViolationStatus,
   packConditions,
-} from "../utils";
+} from "../utils.js";
+
 function pluck(index: number) {
   return {
     paramType: Encoding.Static,
@@ -46,6 +47,11 @@ function matchesWithRatio(
   };
 }
 
+const connection = await network.create();
+const { ethers, networkHelpers } = connection;
+const { loadFixture } = networkHelpers;
+const { setupTestContract, setupTwoParams } = createSetup(connection);
+
 describe("Operator - WithinRatio", () => {
   describe("Core Functionality", () => {
     describe("ratio bounds", () => {
@@ -68,7 +74,7 @@ describe("Operator - WithinRatio", () => {
           );
 
           // invoke(relative, reference): Ratio = 950/1000 = 95% == maxRatio → pass
-          await expect(invoke(950, 1000)).to.not.be.reverted;
+          await expect(invoke(950, 1000)).to.not.be.revert(ethers);
         });
 
         it("passes when ratio is below maxRatio", async () => {
@@ -88,7 +94,7 @@ describe("Operator - WithinRatio", () => {
           );
 
           // Ratio = 800/1000 = 80% < 95% → pass
-          await expect(invoke(1000, 800)).to.not.be.reverted;
+          await expect(invoke(1000, 800)).to.not.be.revert(ethers);
         });
 
         it("reverts with RatioAboveMax when ratio exceeds maxRatio", async () => {
@@ -141,7 +147,7 @@ describe("Operator - WithinRatio", () => {
           );
 
           // Ratio = 5000/1000 = 500% → pass (no upper bound, above 10% min)
-          await expect(invoke(1000, 5000)).to.not.be.reverted;
+          await expect(invoke(1000, 5000)).to.not.be.revert(ethers);
         });
       });
 
@@ -166,7 +172,7 @@ describe("Operator - WithinRatio", () => {
           );
 
           // invoke(relative, reference): Ratio = 900/1000 = 90% == minRatio → pass
-          await expect(invoke(900, 1000)).to.not.be.reverted;
+          await expect(invoke(900, 1000)).to.not.be.revert(ethers);
         });
 
         it("passes when ratio is above minRatio", async () => {
@@ -187,7 +193,7 @@ describe("Operator - WithinRatio", () => {
           );
 
           // Ratio = 950/1000 = 95% > 90% → pass
-          await expect(invoke(950, 1000)).to.not.be.reverted;
+          await expect(invoke(950, 1000)).to.not.be.revert(ethers);
         });
 
         it("reverts with RatioBelowMin when ratio is below minRatio", async () => {
@@ -239,7 +245,7 @@ describe("Operator - WithinRatio", () => {
           );
 
           // invoke(relative, reference) → ratio = 10/1000 = 1% → pass (no lower bound)
-          await expect(invoke(10, 1000)).to.not.be.reverted;
+          await expect(invoke(10, 1000)).to.not.be.revert(ethers);
         });
       });
     });
@@ -252,7 +258,7 @@ describe("Operator - WithinRatio", () => {
         // param0→relative (USDC), param1→reference (ETH)
         // Reference: 18 decimals (ETH), Relative: 6 decimals (USDC)
         // Relative adapter: 1 USDC = 0.0005 ETH (price in 18 decimals)
-        const MockPricing = await hre.ethers.getContractFactory("MockPricing");
+        const MockPricing = await ethers.getContractFactory("MockPricing");
         const usdcEthAdapter = await MockPricing.deploy(5n * 10n ** 14n); // 0.0005 ETH
 
         const compValue = encodeWithinRatioCompValue({
@@ -273,12 +279,14 @@ describe("Operator - WithinRatio", () => {
         // Reference: 1 ETH (18 decimals)
         // Relative: 2000 USDC (6 decimals) × 0.0005 = 1 ETH equivalent
         // Ratio = 100%
-        await expect(invoke(2000n * 10n ** 6n, 1n * 10n ** 18n)).to.not.be
-          .reverted;
+        await expect(
+          invoke(2000n * 10n ** 6n, 1n * 10n ** 18n),
+        ).to.not.be.revert(ethers);
 
         // Relative: 1980 USDC × 0.0005 = 0.99 ETH → 99% (boundary)
-        await expect(invoke(1980n * 10n ** 6n, 1n * 10n ** 18n)).to.not.be
-          .reverted;
+        await expect(
+          invoke(1980n * 10n ** 6n, 1n * 10n ** 18n),
+        ).to.not.be.revert(ethers);
 
         // Relative: 1970 USDC × 0.0005 = 0.985 ETH → 98.5% < 99%
         await expect(invoke(1970n * 10n ** 6n, 1n * 10n ** 18n))
@@ -297,7 +305,7 @@ describe("Operator - WithinRatio", () => {
         // Swapped: param0→pluckedValues[11]=relative, param1→pluckedValues[22]=reference
         // Reference: 8 decimals (WBTC), Relative: 18 decimals (ETH)
         // Reference adapter: 1 WBTC = 75 ETH (price in 18 decimals)
-        const MockPricing = await hre.ethers.getContractFactory("MockPricing");
+        const MockPricing = await ethers.getContractFactory("MockPricing");
         const wbtcEthAdapter = await MockPricing.deploy(75n * 10n ** 18n);
 
         const compValue = encodeWithinRatioCompValue({
@@ -318,12 +326,14 @@ describe("Operator - WithinRatio", () => {
         // Reference: 1 WBTC (8 decimals) × 75 = 75 ETH equivalent
         // Relative: 75 ETH (18 decimals)
         // Ratio = 100%
-        await expect(invoke(75n * 10n ** 18n, 1n * 10n ** 8n)).to.not.be
-          .reverted;
+        await expect(invoke(75n * 10n ** 18n, 1n * 10n ** 8n)).to.not.be.revert(
+          ethers,
+        );
 
         // Relative: 74.25 ETH → 99%
-        await expect(invoke(7425n * 10n ** 16n, 1n * 10n ** 8n)).to.not.be
-          .reverted;
+        await expect(
+          invoke(7425n * 10n ** 16n, 1n * 10n ** 8n),
+        ).to.not.be.revert(ethers);
 
         // Relative: 76.01 ETH → 101.3% > 101%
         await expect(invoke(7601n * 10n ** 16n, 1n * 10n ** 8n))
@@ -342,7 +352,7 @@ describe("Operator - WithinRatio", () => {
         // Reference: USDC (6 decimals), Relative: ExoticToken (37 decimals)
         // Reference adapter: 1 USDC = 1 USD (stable)
         // Relative adapter: 1 ExoticToken = 0.5 USD
-        const MockPricing = await hre.ethers.getContractFactory("MockPricing");
+        const MockPricing = await ethers.getContractFactory("MockPricing");
         const usdcUsdAdapter = await MockPricing.deploy(1n * 10n ** 18n);
         const exoticUsdAdapter = await MockPricing.deploy(5n * 10n ** 17n); // 0.5 USD
 
@@ -364,12 +374,14 @@ describe("Operator - WithinRatio", () => {
         // Reference: 1000 USDC × 1 = 1000 USD
         // Relative: 2000 ExoticToken × 0.5 = 1000 USD
         // Ratio = 100%
-        await expect(invoke(1000n * 10n ** 6n, 2000n * 10n ** 37n)).to.not.be
-          .reverted;
+        await expect(
+          invoke(1000n * 10n ** 6n, 2000n * 10n ** 37n),
+        ).to.not.be.revert(ethers);
 
         // Relative: 2020 ExoticToken × 0.5 = 1010 USD → 101%
-        await expect(invoke(1000n * 10n ** 6n, 2020n * 10n ** 37n)).to.not.be
-          .reverted;
+        await expect(
+          invoke(1000n * 10n ** 6n, 2020n * 10n ** 37n),
+        ).to.not.be.revert(ethers);
 
         // Relative: 2030 ExoticToken × 0.5 = 1015 USD → 101.5% > 101%
         await expect(invoke(1000n * 10n ** 6n, 2030n * 10n ** 37n))
@@ -389,7 +401,7 @@ describe("Operator - WithinRatio", () => {
 
         // Swapped: param0→relative (USD), param1→reference (token)
         // Reference adapter: 1 token = 2000 USD
-        const MockPricing = await hre.ethers.getContractFactory("MockPricing");
+        const MockPricing = await ethers.getContractFactory("MockPricing");
         const refAdapter = await MockPricing.deploy(2000n * 10n ** 18n);
 
         const compValue = encodeWithinRatioCompValue({
@@ -410,8 +422,9 @@ describe("Operator - WithinRatio", () => {
         // Reference: 10 tokens × 2000 = 20,000 USD
         // Relative: 20,000 USD × 1 = 20,000 USD
         // Ratio = 100%
-        await expect(invoke(20000n * 10n ** 18n, 10n * 10n ** 18n)).to.not.be
-          .reverted;
+        await expect(
+          invoke(20000n * 10n ** 18n, 10n * 10n ** 18n),
+        ).to.not.be.revert(ethers);
 
         // Relative: 19,700 USD → Ratio = 98.5% < 99%
         await expect(invoke(19700n * 10n ** 18n, 10n * 10n ** 18n))
@@ -428,7 +441,7 @@ describe("Operator - WithinRatio", () => {
           await loadFixture(setupTwoParams);
 
         // Relative adapter: 1 token = 150,000 USD
-        const MockPricing = await hre.ethers.getContractFactory("MockPricing");
+        const MockPricing = await ethers.getContractFactory("MockPricing");
         const relAdapter = await MockPricing.deploy(150000n * 10n ** 18n);
 
         // Swapped order: relative plucked before reference
@@ -450,12 +463,14 @@ describe("Operator - WithinRatio", () => {
         // Relative: 0.3 WBTC × 150,000 = 45,000 USD
         // Reference: 45,000 USD × 1 = 45,000 USD
         // Ratio = 100%
-        await expect(invoke(3n * 10n ** 7n, 45000n * 10n ** 18n)).to.not.be
-          .reverted;
+        await expect(
+          invoke(3n * 10n ** 7n, 45000n * 10n ** 18n),
+        ).to.not.be.revert(ethers);
 
         // Relative: 0.297 WBTC × 150,000 = 44,550 USD → Ratio = 99%
-        await expect(invoke(297n * 10n ** 5n, 45000n * 10n ** 18n)).to.not.be
-          .reverted;
+        await expect(
+          invoke(297n * 10n ** 5n, 45000n * 10n ** 18n),
+        ).to.not.be.revert(ethers);
 
         // Relative: 0.2967 WBTC → Ratio ≈ 98.9% < 99%
         await expect(invoke(2967n * 10n ** 4n, 45000n * 10n ** 18n))
@@ -473,7 +488,7 @@ describe("Operator - WithinRatio", () => {
 
         // ETH/USD: 1 ETH = 2000 USD
         // BTC/USD: 1 BTC = 150,000 USD
-        const MockPricing = await hre.ethers.getContractFactory("MockPricing");
+        const MockPricing = await ethers.getContractFactory("MockPricing");
         const ethUsdAdapter = await MockPricing.deploy(2000n * 10n ** 18n);
         const btcUsdAdapter = await MockPricing.deploy(150000n * 10n ** 18n);
 
@@ -497,12 +512,14 @@ describe("Operator - WithinRatio", () => {
         // Reference: 22.5 ETH × 2000 = 45,000 USD
         // Relative: 0.3 BTC × 150,000 = 45,000 USD
         // Ratio = 100%
-        await expect(invoke(225n * 10n ** 17n, 3n * 10n ** 7n)).to.not.be
-          .reverted;
+        await expect(
+          invoke(225n * 10n ** 17n, 3n * 10n ** 7n),
+        ).to.not.be.revert(ethers);
 
         // Relative: 0.2985 BTC → Ratio = 99.5%
-        await expect(invoke(225n * 10n ** 17n, 2985n * 10n ** 4n)).to.not.be
-          .reverted;
+        await expect(
+          invoke(225n * 10n ** 17n, 2985n * 10n ** 4n),
+        ).to.not.be.revert(ethers);
 
         // Relative: 0.30225 BTC → Ratio = 100.75% > 100.5%
         await expect(invoke(225n * 10n ** 17n, 30225n * 10n ** 4n))
@@ -518,7 +535,7 @@ describe("Operator - WithinRatio", () => {
         const { allowFunction, invoke } = await loadFixture(setupTwoParams);
 
         // Reference adapter: 1 token = 2000 USD, no relative adapter
-        const MockPricing = await hre.ethers.getContractFactory("MockPricing");
+        const MockPricing = await ethers.getContractFactory("MockPricing");
         const refAdapter = await MockPricing.deploy(2000n * 10n ** 18n);
 
         // 33-byte encoding: base(12) + refLen(1) + refAdapter(20)
@@ -552,8 +569,9 @@ describe("Operator - WithinRatio", () => {
         // Reference: 10 tokens × 2000 = 20,000 USD
         // Relative: 20,000 USD × 1 (no adapter) = 20,000 USD
         // Ratio = 100%
-        await expect(invoke(20000n * 10n ** 18n, 10n * 10n ** 18n)).to.not.be
-          .reverted;
+        await expect(
+          invoke(20000n * 10n ** 18n, 10n * 10n ** 18n),
+        ).to.not.be.revert(ethers);
       });
 
       it("applies relative adapter only (54-byte compValue)", async () => {
@@ -561,7 +579,7 @@ describe("Operator - WithinRatio", () => {
           await loadFixture(setupTwoParams);
 
         // Relative adapter only: 1 WBTC = 150,000 USD
-        const MockPricing = await hre.ethers.getContractFactory("MockPricing");
+        const MockPricing = await ethers.getContractFactory("MockPricing");
         const relAdapter = await MockPricing.deploy(150000n * 10n ** 18n);
 
         // 54-byte encoding: base(12) + refLen(1) + refAdapter(20) + relLen(1) + relAdapter(20)
@@ -599,8 +617,9 @@ describe("Operator - WithinRatio", () => {
         // Reference: 45,000 USD × 1 (no adapter) = 45,000 USD
         // Relative: 0.3 WBTC × 150,000 = 45,000 USD
         // Ratio = 100%
-        await expect(invoke(3n * 10n ** 7n, 45000n * 10n ** 18n)).to.not.be
-          .reverted;
+        await expect(
+          invoke(3n * 10n ** 7n, 45000n * 10n ** 18n),
+        ).to.not.be.revert(ethers);
       });
     });
 
@@ -609,7 +628,7 @@ describe("Operator - WithinRatio", () => {
         const { roles, allowFunction, invoke } =
           await loadFixture(setupTwoParams);
 
-        const [, , randomEOA] = await hre.ethers.getSigners();
+        const [, , randomEOA] = await ethers.getSigners();
 
         const compValue = encodeWithinRatioCompValue({
           referenceAdapter: randomEOA.address,
@@ -638,7 +657,7 @@ describe("Operator - WithinRatio", () => {
         const { roles, allowFunction, invoke } =
           await loadFixture(setupTwoParams);
 
-        const [, , randomEOA] = await hre.ethers.getSigners();
+        const [, , randomEOA] = await ethers.getSigners();
 
         // Swapped order: relative plucked before reference
         const compValue = encodeWithinRatioCompValue({
@@ -668,7 +687,7 @@ describe("Operator - WithinRatio", () => {
         const { roles, allowFunction, invoke } =
           await loadFixture(setupTwoParams);
 
-        const MockPricingNoInterface = await hre.ethers.getContractFactory(
+        const MockPricingNoInterface = await ethers.getContractFactory(
           "MockPricingNoInterface",
         );
         const noInterfaceAdapter = await MockPricingNoInterface.deploy();
@@ -700,7 +719,7 @@ describe("Operator - WithinRatio", () => {
         const { roles, allowFunction, invoke } =
           await loadFixture(setupTwoParams);
 
-        const MockPricingReverting = await hre.ethers.getContractFactory(
+        const MockPricingReverting = await ethers.getContractFactory(
           "MockPricingReverting",
         );
         const revertingAdapter = await MockPricingReverting.deploy();
@@ -735,7 +754,7 @@ describe("Operator - WithinRatio", () => {
         const { roles, allowFunction, invoke } =
           await loadFixture(setupTwoParams);
 
-        const MockPricingWrongReturn = await hre.ethers.getContractFactory(
+        const MockPricingWrongReturn = await ethers.getContractFactory(
           "MockPricingWrongReturn",
         );
         const wrongReturnAdapter = await MockPricingWrongReturn.deploy();
@@ -769,7 +788,7 @@ describe("Operator - WithinRatio", () => {
         const { roles, allowFunction, invoke } =
           await loadFixture(setupTwoParams);
 
-        const MockPricing = await hre.ethers.getContractFactory("MockPricing");
+        const MockPricing = await ethers.getContractFactory("MockPricing");
         const zeroAdapter = await MockPricing.deploy(0);
 
         // Swapped order: relative plucked before reference
@@ -803,7 +822,7 @@ describe("Operator - WithinRatio", () => {
       const { roles, allowFunction, invoke } =
         await loadFixture(setupTwoParams);
 
-      const MockPricingParameterized = await hre.ethers.getContractFactory(
+      const MockPricingParameterized = await ethers.getContractFactory(
         "MockPricingParameterized",
       );
       const refAdapter = await MockPricingParameterized.deploy();
@@ -855,7 +874,7 @@ describe("Operator - WithinRatio", () => {
       );
 
       // ref=1 * 2000 = 2000, rel=2000 * 1 = 2000, ratio=10000 (100%) → pass
-      await expect(invoke(1, 2000)).to.not.be.reverted;
+      await expect(invoke(1, 2000)).to.not.be.revert(ethers);
 
       // ref=1 * 2000 = 2000, rel=1600 * 1 = 1600, ratio=8000 (80%) < 90% → fail
       await expect(invoke(1, 1600))
@@ -867,7 +886,7 @@ describe("Operator - WithinRatio", () => {
       const { roles, allowFunction, invoke } =
         await loadFixture(setupTwoParams);
 
-      const MockPricingParameterized = await hre.ethers.getContractFactory(
+      const MockPricingParameterized = await ethers.getContractFactory(
         "MockPricingParameterized",
       );
       const relAdapter = await MockPricingParameterized.deploy();
@@ -876,7 +895,7 @@ describe("Operator - WithinRatio", () => {
 
       // ref adapter requires empty params
       const refAdapter = await (
-        await hre.ethers.getContractFactory("MockPricingEmptyParams")
+        await ethers.getContractFactory("MockPricingEmptyParams")
       ).deploy(2n * 10n ** 18n); // 2x
 
       // counterfactual: wrong rel params → adapter reverts
@@ -917,14 +936,14 @@ describe("Operator - WithinRatio", () => {
       );
 
       // ref=100 * 2 = 200, rel=60 * 3 = 180, ratio=9000 (90%) → pass
-      await expect(invoke(100, 60)).to.not.be.reverted;
+      await expect(invoke(100, 60)).to.not.be.revert(ethers);
     });
 
     it("ref without adapter, rel with params", async () => {
       const { roles, allowFunction, invoke } =
         await loadFixture(setupTwoParams);
 
-      const MockPricingParameterized = await hre.ethers.getContractFactory(
+      const MockPricingParameterized = await ethers.getContractFactory(
         "MockPricingParameterized",
       );
       const relAdapter = await MockPricingParameterized.deploy();
@@ -967,7 +986,7 @@ describe("Operator - WithinRatio", () => {
       );
 
       // ref=1000 * 1 = 1000, rel=500 * 2 = 1000, ratio=10000 → pass
-      await expect(invoke(1000, 500)).to.not.be.reverted;
+      await expect(invoke(1000, 500)).to.not.be.revert(ethers);
     });
   });
 
@@ -977,7 +996,7 @@ describe("Operator - WithinRatio", () => {
         await loadFixture(setupTwoParams);
 
       // ETH/USD: 1 ETH = 2000 USD
-      const MockPricing = await hre.ethers.getContractFactory("MockPricing");
+      const MockPricing = await ethers.getContractFactory("MockPricing");
       const ethUsdAdapter = await MockPricing.deploy(2000n * 10n ** 18n);
 
       // Swapped order: relative (USD output) plucked before reference (ETH input)
@@ -998,8 +1017,9 @@ describe("Operator - WithinRatio", () => {
 
       // invoke(relative, reference) since param0→relative (USD), param1→reference (ETH)
       // Selling 10 ETH for 20,000 USD → exactly 100%
-      await expect(invoke(20000n * 10n ** 18n, 10n * 10n ** 18n)).to.not.be
-        .reverted;
+      await expect(
+        invoke(20000n * 10n ** 18n, 10n * 10n ** 18n),
+      ).to.not.be.revert(ethers);
 
       // Selling 10 ETH for 19,880 USD → 99.4% < 99.5%
       await expect(invoke(19880n * 10n ** 18n, 10n * 10n ** 18n))
@@ -1027,7 +1047,7 @@ describe("Operator - WithinRatio", () => {
       // Swapped: param0→relative (WBTC), param1→reference (ETH)
       // ETH/USD: 1 ETH = 2000 USD
       // BTC/USD: 1 BTC = 150,000 USD
-      const MockPricing = await hre.ethers.getContractFactory("MockPricing");
+      const MockPricing = await ethers.getContractFactory("MockPricing");
       const ethUsdAdapter = await MockPricing.deploy(2000n * 10n ** 18n);
       const btcUsdAdapter = await MockPricing.deploy(150000n * 10n ** 18n);
 
@@ -1048,7 +1068,9 @@ describe("Operator - WithinRatio", () => {
 
       // invoke(relative, reference)
       // Selling 75 ETH ($150,000) for 1 BTC ($150,000) → 100%
-      await expect(invoke(1n * 10n ** 8n, 75n * 10n ** 18n)).to.not.be.reverted;
+      await expect(invoke(1n * 10n ** 8n, 75n * 10n ** 18n)).to.not.be.revert(
+        ethers,
+      );
 
       // Selling 75 ETH for 0.94 BTC → 94% < 95%
       await expect(invoke(94n * 10n ** 6n, 75n * 10n ** 18n))
@@ -1074,7 +1096,7 @@ describe("Operator - WithinRatio", () => {
         await loadFixture(setupTwoParams);
 
       // ExoticToken/USDC: 1 ExoticToken = 2 USDC
-      const MockPricing = await hre.ethers.getContractFactory("MockPricing");
+      const MockPricing = await ethers.getContractFactory("MockPricing");
       const exoticUsdcAdapter = await MockPricing.deploy(2n * 10n ** 18n);
 
       // Swapped: param0→pluckedValues[61]=relative (ExoticToken), param1→pluckedValues[83]=reference (USDC)
@@ -1095,8 +1117,9 @@ describe("Operator - WithinRatio", () => {
 
       // invoke(relative, reference) since param0→relative (ExoticToken), param1→reference (USDC)
       // Selling 1000 USDC for 500 ExoticToken → (500 × 2) / 1000 = 100%
-      await expect(invoke(500n * 10n ** 37n, 1000n * 10n ** 6n)).to.not.be
-        .reverted;
+      await expect(
+        invoke(500n * 10n ** 37n, 1000n * 10n ** 6n),
+      ).to.not.be.revert(ethers);
 
       // Selling 1000 USDC for 498.7 ExoticToken → 99.74% < 99.75%
       await expect(invoke(4987n * 10n ** 34n, 1000n * 10n ** 6n))
@@ -1136,12 +1159,14 @@ describe("Operator - WithinRatio", () => {
         );
 
       // 250 / 1000 = 25% → pass
-      await expect(invoke(1000n * 10n ** 18n, 250n * 10n ** 18n)).to.not.be
-        .reverted;
+      await expect(
+        invoke(1000n * 10n ** 18n, 250n * 10n ** 18n),
+      ).to.not.be.revert(ethers);
 
       // 300 / 1000 = 30% → pass
-      await expect(invoke(1000n * 10n ** 18n, 300n * 10n ** 18n)).to.not.be
-        .reverted;
+      await expect(
+        invoke(1000n * 10n ** 18n, 300n * 10n ** 18n),
+      ).to.not.be.revert(ethers);
     });
 
     it("no adapters - enforces max 500% ratio", async () => {
@@ -1164,12 +1189,14 @@ describe("Operator - WithinRatio", () => {
 
       // invoke(relative, reference)
       // 4900 / 1000 = 490% → pass
-      await expect(invoke(4900n * 10n ** 18n, 1000n * 10n ** 18n)).to.not.be
-        .reverted;
+      await expect(
+        invoke(4900n * 10n ** 18n, 1000n * 10n ** 18n),
+      ).to.not.be.revert(ethers);
 
       // 5000 / 1000 = 500% → pass (boundary)
-      await expect(invoke(5000n * 10n ** 18n, 1000n * 10n ** 18n)).to.not.be
-        .reverted;
+      await expect(
+        invoke(5000n * 10n ** 18n, 1000n * 10n ** 18n),
+      ).to.not.be.revert(ethers);
 
       // 5001 / 1000 = 500.1% → fail
       await expect(invoke(5001n * 10n ** 18n, 1000n * 10n ** 18n))
@@ -1186,7 +1213,7 @@ describe("Operator - WithinRatio", () => {
         await loadFixture(setupTwoParams);
 
       // WBTC/USD adapter: 1 WBTC = 150,000 USD
-      const MockPricing = await hre.ethers.getContractFactory("MockPricing");
+      const MockPricing = await ethers.getContractFactory("MockPricing");
       const wbtcUsdAdapter = await MockPricing.deploy(150000n * 10n ** 18n);
 
       const compValue = encodeWithinRatioCompValue({
@@ -1205,12 +1232,14 @@ describe("Operator - WithinRatio", () => {
       );
 
       // Reference: 45,000 USD, Relative: 0.3 WBTC × 150,000 = 45,000 USD → 100%
-      await expect(invoke(45000n * 10n ** 18n, 3n * 10n ** 7n)).to.not.be
-        .reverted;
+      await expect(
+        invoke(45000n * 10n ** 18n, 3n * 10n ** 7n),
+      ).to.not.be.revert(ethers);
 
       // Relative: 0.297 WBTC → 44,550 / 45,000 = 99% → pass
-      await expect(invoke(45000n * 10n ** 18n, 297n * 10n ** 5n)).to.not.be
-        .reverted;
+      await expect(
+        invoke(45000n * 10n ** 18n, 297n * 10n ** 5n),
+      ).to.not.be.revert(ethers);
 
       // Relative: 0.2967 WBTC → 44,505 / 45,000 = 98.9% → fail
       await expect(invoke(45000n * 10n ** 18n, 2967n * 10n ** 4n))
@@ -1228,7 +1257,7 @@ describe("Operator - WithinRatio", () => {
 
       // Swapped: param0→relative (WBTC), param1→reference (ETH)
       // WBTC/ETH adapter: 1 WBTC = 75 ETH
-      const MockPricing = await hre.ethers.getContractFactory("MockPricing");
+      const MockPricing = await ethers.getContractFactory("MockPricing");
       const wbtcEthAdapter = await MockPricing.deploy(75n * 10n ** 18n);
 
       const compValue = encodeWithinRatioCompValue({
@@ -1248,11 +1277,14 @@ describe("Operator - WithinRatio", () => {
 
       // invoke(relative, reference)
       // Reference: 75 ETH, Relative: 1 WBTC × 75 = 75 ETH → 100%
-      await expect(invoke(1n * 10n ** 8n, 75n * 10n ** 18n)).to.not.be.reverted;
+      await expect(invoke(1n * 10n ** 8n, 75n * 10n ** 18n)).to.not.be.revert(
+        ethers,
+      );
 
       // Relative: 0.95 WBTC → 71.25 / 75 = 95% → pass
-      await expect(invoke(95n * 10n ** 6n, 75n * 10n ** 18n)).to.not.be
-        .reverted;
+      await expect(invoke(95n * 10n ** 6n, 75n * 10n ** 18n)).to.not.be.revert(
+        ethers,
+      );
 
       // Relative: 0.949 WBTC → 71.175 / 75 = 94.9% → fail
       await expect(invoke(949n * 10n ** 5n, 75n * 10n ** 18n))
@@ -1278,7 +1310,7 @@ describe("Operator - WithinRatio", () => {
 
       // Reference: WBTC (8 decimals), price = $100,000
       // Relative: FunkyToken (27 decimals), price = $2
-      const MockPricing = await hre.ethers.getContractFactory("MockPricing");
+      const MockPricing = await ethers.getContractFactory("MockPricing");
       const wbtcAdapter = await MockPricing.deploy(100000n * 10n ** 18n);
       const funkyAdapter = await MockPricing.deploy(2n * 10n ** 18n);
 
@@ -1300,12 +1332,14 @@ describe("Operator - WithinRatio", () => {
       // Reference: 1 WBTC × $100,000 = $100,000
       // Relative: 50,000 FunkyToken × $2 = $100,000
       // Ratio = 100%
-      await expect(invoke(1n * 10n ** 8n, 50000n * 10n ** 27n)).to.not.be
-        .reverted;
+      await expect(
+        invoke(1n * 10n ** 8n, 50000n * 10n ** 27n),
+      ).to.not.be.revert(ethers);
 
       // Relative: 49,500 FunkyToken × $2 = $99,000 → 99%
-      await expect(invoke(1n * 10n ** 8n, 49500n * 10n ** 27n)).to.not.be
-        .reverted;
+      await expect(
+        invoke(1n * 10n ** 8n, 49500n * 10n ** 27n),
+      ).to.not.be.revert(ethers);
 
       // Relative: 49,400 FunkyToken × $2 = $98,800 → 98.8% < 99%
       await expect(invoke(1n * 10n ** 8n, 49400n * 10n ** 27n))
@@ -1387,7 +1421,7 @@ describe("Operator - WithinRatio", () => {
           );
 
       // 1200 / 1000 = 120% → pass
-      await expect(invoke(1000, 1200)).to.not.be.reverted;
+      await expect(invoke(1000, 1200)).to.not.be.revert(ethers);
 
       // 1201 / 1000 = 120.1% > 120% → fail
       await expect(invoke(1000, 1201))
@@ -1469,7 +1503,7 @@ describe("Operator - WithinRatio", () => {
         ["uint256", "uint256", "uint256"],
         [1000, 500, 800],
       );
-      await expect(invoke(encoded)).to.not.be.reverted;
+      await expect(invoke(encoded)).to.not.be.revert(ethers);
 
       // 801 / 1000 = 80.1% > 80% → fail
       const encodedFail = abiCoder.encode(
@@ -1556,7 +1590,7 @@ describe("Operator - WithinRatio", () => {
           );
 
       // 1500 / 1000 = 150% → pass
-      await expect(invoke(500, 1000, 800, 1500)).to.not.be.reverted;
+      await expect(invoke(500, 1000, 800, 1500)).to.not.be.revert(ethers);
 
       // 1501 / 1000 = 150.1% > 150% → fail
       await expect(invoke(500, 1000, 800, 1501))
@@ -1636,7 +1670,7 @@ describe("Operator - WithinRatio", () => {
           );
 
       // 1500 / 1000 = 150% → pass
-      await expect(invoke(1000, 1500)).to.not.be.reverted;
+      await expect(invoke(1000, 1500)).to.not.be.revert(ethers);
 
       // 1501 / 1000 = 150.1% > 150% → fail
       await expect(invoke(1000, 1501))
@@ -1711,7 +1745,7 @@ describe("Operator - WithinRatio", () => {
           );
 
       // 1200 / 1000 = 120% → pass
-      await expect(invoke([1000, 500, 1200])).to.not.be.reverted;
+      await expect(invoke([1000, 500, 1200])).to.not.be.revert(ethers);
 
       // 1201 / 1000 = 120.1% > 120% → fail
       await expect(invoke([1000, 500, 1201]))
@@ -1817,10 +1851,10 @@ describe("Operator - WithinRatio", () => {
 
       // bytes: [reference: 4 bytes][relative: 4 bytes]
       // reference = 0x000003e8 (1000), relative = 0x000003e8 (1000) → 100%
-      await expect(invoke("0x000003e8000003e8")).to.not.be.reverted;
+      await expect(invoke("0x000003e8000003e8")).to.not.be.revert(ethers);
 
       // reference = 0x000003e8 (1000), relative = 0x00000384 (900) → 90%
-      await expect(invoke("0x000003e800000384")).to.not.be.reverted;
+      await expect(invoke("0x000003e800000384")).to.not.be.revert(ethers);
 
       // reference = 0x000003e8 (1000), relative = 0x00000379 (889) → 88.9% < 90%
       await expect(invoke("0x000003e800000379"))
@@ -1893,7 +1927,7 @@ describe("Operator - WithinRatio", () => {
             iface.encodeFunctionData(fn, [2n * 10n ** 18n]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
 
       // 1 ETH / 1 ETH = 100% → pass
       await expect(
@@ -1905,7 +1939,7 @@ describe("Operator - WithinRatio", () => {
             iface.encodeFunctionData(fn, [1n * 10n ** 18n]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
 
       // 2.1 ETH / 1 ETH = 210% > 200% → fail
       await expect(
@@ -2054,6 +2088,10 @@ function encodeWithinRatioCompValue({
 }
 
 describe("integrity", () => {
+  after(async () => {
+    await connection.close();
+  });
+
   it("reverts UnsuitableParameterType for invalid encodings", async () => {
     const { roles } = await loadFixture(setupTestContract);
 

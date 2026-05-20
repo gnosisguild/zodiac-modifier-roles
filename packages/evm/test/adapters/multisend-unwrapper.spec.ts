@@ -1,10 +1,14 @@
 import assert from "assert";
 import { expect } from "chai";
-import hre from "hardhat";
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 import { BigNumberish, getAddress, Interface, solidityPacked } from "ethers";
-import { encodeMultisendPayload } from "../utils";
+import { network } from "hardhat";
+
+import { encodeMultisendPayload } from "../utils.js";
+
+const connection = await network.create();
+const { ethers, networkHelpers } = connection;
+const { loadFixture } = networkHelpers;
 
 const AddressOne = "0x0000000000000000000000000000000000000001";
 
@@ -19,12 +23,16 @@ const iface = new Interface([
 ]);
 
 describe("MultiSendUnwrapper", () => {
+  after(async () => {
+    await connection.close();
+  });
+
   async function setup() {
-    const MultiSend = await hre.ethers.getContractFactory("MultiSend");
+    const MultiSend = await ethers.getContractFactory("MultiSend");
     const multisend = await MultiSend.deploy();
 
     const MultiSendUnwrapper =
-      await hre.ethers.getContractFactory("MultiSendUnwrapper");
+      await ethers.getContractFactory("MultiSendUnwrapper");
     const unwrapper = await MultiSendUnwrapper.deploy();
 
     return {
@@ -60,7 +68,7 @@ describe("MultiSendUnwrapper", () => {
         `${data.slice(0, 2)}${selectorWrong}${data.slice(10)}`,
         Operation.DelegateCall,
       ),
-    ).to.be.reverted;
+    ).to.be.revert(ethers);
 
     await expect(
       unwrapper.unwrap(
@@ -69,7 +77,7 @@ describe("MultiSendUnwrapper", () => {
         `${data.slice(0, 2)}${selectorOk}${data.slice(10)}`,
         Operation.DelegateCall,
       ),
-    ).to.not.be.reverted;
+    ).to.not.be.revert(ethers);
   });
 
   it("reverts if header offset incorrect", async () => {
@@ -101,7 +109,7 @@ describe("MultiSendUnwrapper", () => {
         `${data.slice(0, 10)}${offsetWrong}${data.slice(74)}`,
         Operation.DelegateCall,
       ),
-    ).to.be.reverted;
+    ).to.be.revert(ethers);
 
     await expect(
       unwrapper.unwrap(
@@ -110,7 +118,7 @@ describe("MultiSendUnwrapper", () => {
         `${data.slice(0, 10)}${offsetOk}${data.slice(74)}`,
         Operation.DelegateCall,
       ),
-    ).to.not.be.reverted;
+    ).to.not.be.revert(ethers);
   });
 
   it("reverts if calldata length incorrect", async () => {
@@ -140,10 +148,11 @@ describe("MultiSendUnwrapper", () => {
         `${data.slice(0, 74)}${lengthWrong}${data.slice(140)}`,
         Operation.DelegateCall,
       ),
-    ).to.be.reverted;
+    ).to.be.revert(ethers);
 
-    await expect(unwrapper.unwrap(AddressOne, 0, data, Operation.DelegateCall))
-      .to.not.be.reverted;
+    await expect(
+      unwrapper.unwrap(AddressOne, 0, data, Operation.DelegateCall),
+    ).to.not.be.revert(ethers);
   });
 
   it("reverts if value not zero", async () => {
@@ -163,10 +172,12 @@ describe("MultiSendUnwrapper", () => {
     );
     assert(data);
 
-    await expect(unwrapper.unwrap(AddressOne, 1, data, Operation.DelegateCall))
-      .to.be.reverted;
-    await expect(unwrapper.unwrap(AddressOne, 0, data, Operation.DelegateCall))
-      .to.not.be.reverted;
+    await expect(
+      unwrapper.unwrap(AddressOne, 1, data, Operation.DelegateCall),
+    ).to.be.revert(ethers);
+    await expect(
+      unwrapper.unwrap(AddressOne, 0, data, Operation.DelegateCall),
+    ).to.not.be.revert(ethers);
   });
 
   it("reverts if operation not delegate call", async () => {
@@ -186,10 +197,12 @@ describe("MultiSendUnwrapper", () => {
     );
     assert(data);
 
-    await expect(unwrapper.unwrap(AddressOne, 0, data, Operation.Call)).to.be
-      .reverted;
-    await expect(unwrapper.unwrap(AddressOne, 0, data, Operation.DelegateCall))
-      .to.not.be.reverted;
+    await expect(
+      unwrapper.unwrap(AddressOne, 0, data, Operation.Call),
+    ).to.be.revert(ethers);
+    await expect(
+      unwrapper.unwrap(AddressOne, 0, data, Operation.DelegateCall),
+    ).to.not.be.revert(ethers);
   });
 
   it("reverts if no transaction encoded", async () => {
@@ -198,8 +211,9 @@ describe("MultiSendUnwrapper", () => {
     const { data } = await multisend.multiSend.populateTransaction("0x");
     assert(data);
 
-    await expect(unwrapper.unwrap(AddressOne, 0, data, Operation.DelegateCall))
-      .to.be.reverted;
+    await expect(
+      unwrapper.unwrap(AddressOne, 0, data, Operation.DelegateCall),
+    ).to.be.revert(ethers);
   });
 
   it("reverts if single transaction length wrong", async () => {
@@ -220,7 +234,7 @@ describe("MultiSendUnwrapper", () => {
 
     await expect(
       unwrapper.unwrap(AddressOne, 0, data as string, Operation.DelegateCall),
-    ).to.be.reverted;
+    ).to.be.revert(ethers);
   });
 
   it("unwraps a single transaction", async () => {
@@ -325,7 +339,7 @@ describe("MultiSendUnwrapper", () => {
     );
     await expect(
       unwrapper.unwrap(AddressOne, 0, data as string, Operation.DelegateCall),
-    ).to.be.reverted;
+    ).to.be.revert(ethers);
 
     // operation = 1 (DelegateCall) is valid
     ({ data } = await multisend.multiSend.populateTransaction(
@@ -340,7 +354,7 @@ describe("MultiSendUnwrapper", () => {
     ));
     await expect(
       unwrapper.unwrap(AddressOne, 0, data as string, Operation.DelegateCall),
-    ).to.not.be.reverted;
+    ).to.not.be.revert(ethers);
   });
 });
 

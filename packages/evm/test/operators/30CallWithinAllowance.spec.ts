@@ -1,16 +1,11 @@
 import { expect } from "chai";
-import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
-import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
-import {
-  AbiCoder,
-  BigNumberish,
-  hexlify,
-  Interface,
-  randomBytes,
-  ZeroHash,
-} from "ethers";
+import { anyValue } from "@nomicfoundation/hardhat-ethers-chai-matchers/withArgs";
+import { AbiCoder, hexlify, Interface, randomBytes, ZeroHash } from "ethers";
+import type { BigNumberish } from "ethers";
 
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
+
+import { network } from "hardhat";
 
 import {
   Encoding,
@@ -19,11 +14,20 @@ import {
   ConditionViolationStatus,
   flattenCondition,
   packConditions,
-} from "../utils";
-import { setupTestContract, setupOneParam } from "../setup";
-import { Roles } from "../../typechain-types";
+} from "../utils.js";
+import { createSetup } from "../setup.js";
+import type { Roles } from "../../typechain-types/index.js";
+
+const connection = await network.create();
+const { ethers, networkHelpers } = connection;
+const { loadFixture, time } = networkHelpers;
+const { setupTestContract, setupOneParam } = createSetup(connection);
 
 describe("Operator - CallWithinAllowance", async () => {
+  after(async () => {
+    await connection.close();
+  });
+
   async function setAllowance(
     roles: Roles,
     key: string,
@@ -116,11 +120,11 @@ describe("Operator - CallWithinAllowance", async () => {
 
       expect((await roles.allowances(allowanceKey)).balance).to.equal(2);
 
-      await expect(invoke()).to.not.be.reverted;
+      await expect(invoke()).to.not.be.revert(ethers);
 
       expect((await roles.allowances(allowanceKey)).balance).to.equal(1);
 
-      await expect(invoke()).to.not.be.reverted;
+      await expect(invoke()).to.not.be.revert(ethers);
 
       expect((await roles.allowances(allowanceKey)).balance).to.equal(0);
 
@@ -139,7 +143,7 @@ describe("Operator - CallWithinAllowance", async () => {
       const timestamp = await time.latest();
       await setAllowance(roles, allowanceKey, 0, 0, 1, 1000, timestamp - 1010);
 
-      await expect(invoke()).to.not.be.reverted;
+      await expect(invoke()).to.not.be.revert(ethers);
       await expect(invoke())
         .to.be.revertedWithCustomError(roles, `ConditionViolation`)
         .withArgs(
@@ -255,7 +259,7 @@ describe("Operator - CallWithinAllowance", async () => {
           anyValue,
         );
 
-      await expect(invoke(value2)).not.to.be.reverted;
+      await expect(invoke(value2)).not.to.be.revert(ethers);
       await expect(invoke(value2))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
@@ -314,13 +318,13 @@ describe("Operator - CallWithinAllowance", async () => {
         );
 
       // Correct param - should succeed (3 times)
-      await expect(invoke(allowedValue)).to.not.be.reverted;
+      await expect(invoke(allowedValue)).to.not.be.revert(ethers);
       expect((await roles.allowances(allowanceKey)).balance).to.equal(2);
 
-      await expect(invoke(allowedValue)).to.not.be.reverted;
+      await expect(invoke(allowedValue)).to.not.be.revert(ethers);
       expect((await roles.allowances(allowanceKey)).balance).to.equal(1);
 
-      await expect(invoke(allowedValue)).to.not.be.reverted;
+      await expect(invoke(allowedValue)).to.not.be.revert(ethers);
       expect((await roles.allowances(allowanceKey)).balance).to.equal(0);
 
       // Now should fail due to exhausted allowance
@@ -395,19 +399,19 @@ describe("Operator - CallWithinAllowance", async () => {
         );
 
       // Allowed value A - should succeed
-      await expect(invoke(allowedValueA)).to.not.be.reverted;
+      await expect(invoke(allowedValueA)).to.not.be.revert(ethers);
       expect((await roles.allowances(allowanceKey)).balance).to.equal(3);
 
       // Allowed value B - should succeed
-      await expect(invoke(allowedValueB)).to.not.be.reverted;
+      await expect(invoke(allowedValueB)).to.not.be.revert(ethers);
       expect((await roles.allowances(allowanceKey)).balance).to.equal(2);
 
       // Allowed value A again - should succeed
-      await expect(invoke(allowedValueA)).to.not.be.reverted;
+      await expect(invoke(allowedValueA)).to.not.be.revert(ethers);
       expect((await roles.allowances(allowanceKey)).balance).to.equal(1);
 
       // Allowed value B again - should succeed
-      await expect(invoke(allowedValueB)).to.not.be.reverted;
+      await expect(invoke(allowedValueB)).to.not.be.revert(ethers);
       expect((await roles.allowances(allowanceKey)).balance).to.equal(0);
 
       // Both values should now fail due to exhausted allowance
@@ -504,10 +508,10 @@ describe("Operator - CallWithinAllowance", async () => {
         );
 
       // Correct second param (42) - should succeed and consume allowance
-      await expect(invoke(100, 42)).to.not.be.reverted;
+      await expect(invoke(100, 42)).to.not.be.revert(ethers);
       expect((await roles.allowances(allowanceKey)).balance).to.equal(1);
 
-      await expect(invoke(200, 42)).to.not.be.reverted;
+      await expect(invoke(200, 42)).to.not.be.revert(ethers);
       expect((await roles.allowances(allowanceKey)).balance).to.equal(0);
 
       // Allowance exhausted - should fail
@@ -567,7 +571,7 @@ describe("Operator - CallWithinAllowance", async () => {
             roleKey,
             true,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
 
       // Second call passes (allowance: 1 -> 0)
       await expect(
@@ -581,7 +585,7 @@ describe("Operator - CallWithinAllowance", async () => {
             roleKey,
             true,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
 
       // Third call fails (allowance exhausted)
       await expect(
@@ -648,15 +652,15 @@ describe("Operator - CallWithinAllowance", async () => {
       expect((await roles.allowances(allowanceKey)).balance).to.equal(3);
 
       // First call passes (allowance: 3 -> 2)
-      await expect(invoke()).to.not.be.reverted;
+      await expect(invoke()).to.not.be.revert(ethers);
       expect((await roles.allowances(allowanceKey)).balance).to.equal(2);
 
       // Second call passes (allowance: 2 -> 1)
-      await expect(invoke()).to.not.be.reverted;
+      await expect(invoke()).to.not.be.revert(ethers);
       expect((await roles.allowances(allowanceKey)).balance).to.equal(1);
 
       // Third call passes (allowance: 1 -> 0)
-      await expect(invoke()).to.not.be.reverted;
+      await expect(invoke()).to.not.be.revert(ethers);
       expect((await roles.allowances(allowanceKey)).balance).to.equal(0);
 
       // Fourth call fails (allowance exhausted)

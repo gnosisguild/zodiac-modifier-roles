@@ -1,26 +1,30 @@
-import { task, types } from "hardhat/config";
+import { task } from "hardhat/config";
+import { ArgumentType } from "hardhat/types/arguments";
+import {
+  deployFactories,
+  deployMastercopy,
+  readMastercopies,
+} from "@gnosis-guild/zodiac-core";
 
-import { createEIP1193 } from "./createEIP1193";
-import { loadZodiacCore } from "./loadZodiacCore";
+import { createEIP1193 } from "./createEIP1193.js";
 
-task(
+export default task(
   "deploy:mastercopy",
-  "For every version entry on the artifacts file, deploys a mastercopy into the current network"
+  "For every version entry on the artifacts file, deploys a mastercopy into the current network",
 )
-  .addOptionalParam(
-    "contractVersion",
-    "The specific version of the contract to deploy",
-    "latest", // Default value
-    types.string
-  )
-  .setAction(async ({ contractVersion }, hre) => {
-    const { deployFactories, deployMastercopy, readMastercopies } =
-      await loadZodiacCore();
-    const [signer] = await hre.ethers.getSigners();
+  .addOption({
+    name: "contractVersion",
+    description: "The specific version of the contract to deploy",
+    type: ArgumentType.STRING,
+    defaultValue: "latest",
+  })
+  .setInlineAction(async ({ contractVersion }, hre) => {
+    const connection = await hre.network.create();
+    const [signer] = await connection.ethers.getSigners();
     const provider = createEIP1193(
-      hre.network.config.chainId,
-      hre.network.provider,
-      signer
+      connection.networkConfig.chainId,
+      connection.provider,
+      signer,
     );
 
     await deployFactories({ provider });
@@ -28,7 +32,7 @@ task(
     for (const mastercopy of readMastercopies({ contractVersion })) {
       const {
         contractName,
-        contractVersion,
+        contractVersion: version,
         factory,
         bytecode,
         constructorArgs,
@@ -41,19 +45,18 @@ task(
         salt,
         provider,
         onStart: () => {
-          console.log(
-            `⏳ ${contractName}@${contractVersion}: Deployment starting...`
-          );
+          console.log(`⏳ ${contractName}@${version}: Deployment starting...`);
         },
       });
       if (noop) {
         console.log(
-          `🔄 ${contractName}@${contractVersion}: Already deployed at ${address}`
+          `🔄 ${contractName}@${version}: Already deployed at ${address}`,
         );
       } else {
         console.log(
-          `🚀 ${contractName}@${contractVersion}: Successfully deployed at ${address}`
+          `🚀 ${contractName}@${version}: Successfully deployed at ${address}`,
         );
       }
     }
-  });
+  })
+  .build();
