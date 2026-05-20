@@ -1,21 +1,33 @@
 import { expect } from "chai";
-import hre from "hardhat";
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { hexlify, randomBytes } from "ethers";
+import { network } from "hardhat";
 
-import { Encoding, Operator, flattenCondition, packConditions } from "../utils";
-import { deployRolesMod } from "../setup";
+import {
+  Encoding,
+  Operator,
+  flattenCondition,
+  packConditions,
+} from "../utils.js";
+import { createSetup } from "../setup.js";
+
+const connection = await network.create();
+const { ethers, networkHelpers } = connection;
+const { loadFixture } = networkHelpers;
+const { deployRolesMod } = createSetup(connection);
 
 describe("Integrity", () => {
-  async function setup() {
-    const [owner] = await hre.ethers.getSigners();
+  after(async () => {
+    await connection.close();
+  });
 
-    const Avatar = await hre.ethers.getContractFactory("TestAvatar");
+  async function setup() {
+    const [owner] = await ethers.getSigners();
+
+    const Avatar = await ethers.getContractFactory("TestAvatar");
     const avatar = await Avatar.deploy();
     const avatarAddress = await avatar.getAddress();
 
     const roles = await deployRolesMod(
-      hre,
       owner.address,
       avatarAddress,
       avatarAddress,
@@ -247,7 +259,7 @@ describe("Integrity", () => {
               parent: 0,
               paramType: Encoding.Dynamic,
               operator: Operator.EqualTo,
-              compValue: hre.ethers.keccak256("0xaabbccdd"),
+              compValue: ethers.keccak256("0xaabbccdd"),
             },
             {
               parent: 0,
@@ -388,7 +400,7 @@ describe("Integrity", () => {
               ],
             }),
           ),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
     });
   });
@@ -526,7 +538,7 @@ describe("Integrity", () => {
               compValue: "0x",
             },
           ]),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
     });
 
@@ -771,7 +783,7 @@ describe("Integrity", () => {
             ],
           }),
         ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
     });
 
     it("accepts WithinRatio when Pluck in earlier sibling subtree (DFS)", async () => {
@@ -839,7 +851,7 @@ describe("Integrity", () => {
             ],
           }),
         ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
     });
   });
 });

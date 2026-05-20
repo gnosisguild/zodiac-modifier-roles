@@ -1,9 +1,13 @@
 import { expect } from "chai";
-import hre from "hardhat";
-import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
 import { Interface } from "ethers";
+import { network } from "hardhat";
 
-import { deployRolesMod } from "./setup";
+import { createSetup } from "./setup.js";
+
+const connection = await network.create();
+const { ethers, networkHelpers, provider } = connection;
+const { loadFixture, time } = networkHelpers;
+const { deployRolesMod } = createSetup(connection);
 
 /**
  * Membership tests
@@ -26,25 +30,28 @@ const iface = new Interface([
 ]);
 
 describe("Membership", () => {
-  async function setup() {
-    const [owner, member, , , other] = await hre.ethers.getSigners();
+  after(async () => {
+    await connection.close();
+  });
 
-    const Avatar = await hre.ethers.getContractFactory("TestAvatar");
+  async function setup() {
+    const [owner, member, , , other] = await ethers.getSigners();
+
+    const Avatar = await ethers.getContractFactory("TestAvatar");
     const avatar = await Avatar.deploy();
     const avatarAddress = await avatar.getAddress();
 
     const roles = await deployRolesMod(
-      hre,
       owner.address,
       avatarAddress,
       avatarAddress,
     );
 
-    const TestContract = await hre.ethers.getContractFactory("TestContract");
+    const TestContract = await ethers.getContractFactory("TestContract");
     const testContract = await TestContract.deploy();
     const testContractAddress = await testContract.getAddress();
 
-    const ROLE_KEY = hre.ethers.hexlify(hre.ethers.randomBytes(32));
+    const ROLE_KEY = ethers.hexlify(ethers.randomBytes(32));
 
     return {
       roles: roles.connect(owner),
@@ -95,7 +102,7 @@ describe("Membership", () => {
         roles
           .connect(member)
           .execTransactionFromModule(testContractAddress, 0, "0x", 0),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
 
       await roles.revokeRole(member.address, ROLE_KEY);
 
@@ -109,7 +116,7 @@ describe("Membership", () => {
     it("rejects zero role even if membership storage is non-zero", async () => {
       const { roles, member, testContractAddress } = await loadFixture(setup);
 
-      const ZERO_ROLE = hre.ethers.ZeroHash;
+      const ZERO_ROLE = ethers.ZeroHash;
 
       await roles.grantRole(member.address, ZERO_ROLE, 0, 0, 0);
       await roles.setDefaultRole(member.address, ZERO_ROLE);
@@ -155,7 +162,7 @@ describe("Membership", () => {
           roles
             .connect(member)
             .execTransactionFromModule(testContractAddress, 0, "0x", 0),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("succeeds when within valid window", async () => {
@@ -174,7 +181,7 @@ describe("Membership", () => {
           roles
             .connect(member)
             .execTransactionFromModule(testContractAddress, 0, "0x", 0),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("succeeds at exactly end timestamp (boundary)", async () => {
@@ -193,7 +200,7 @@ describe("Membership", () => {
           roles
             .connect(member)
             .execTransactionFromModule(testContractAddress, 0, "0x", 0),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("reverts MembershipExpired after end timestamp", async () => {
@@ -232,7 +239,7 @@ describe("Membership", () => {
               roles
                 .connect(member)
                 .execTransactionFromModule(testContractAddress, 0, "0x", 0),
-            ).to.not.be.reverted;
+            ).to.not.be.revert(ethers);
           }
         });
 
@@ -380,7 +387,7 @@ describe("Membership", () => {
             roles
               .connect(member)
               .execTransactionFromModule(testContractAddress, 0, "0x", 0),
-          ).to.not.be.reverted;
+          ).to.not.be.revert(ethers);
 
           // Next should fail - membership revoked
           await expect(
@@ -420,12 +427,12 @@ describe("Membership", () => {
             roles
               .connect(member)
               .execTransactionFromModule(testContractAddress, 0, "0x", 0),
-          ).to.not.be.reverted;
+          ).to.not.be.revert(ethers);
           await expect(
             roles
               .connect(member)
               .execTransactionFromModule(testContractAddress, 0, "0x", 0),
-          ).to.not.be.reverted;
+          ).to.not.be.revert(ethers);
 
           // Subsequent call should fail
           await expect(
@@ -442,8 +449,7 @@ describe("Membership", () => {
     it("returns false for zero role key", async () => {
       const { roles, member } = await loadFixture(setup);
 
-      expect(await roles.isMember(hre.ethers.ZeroHash, member.address)).to.be
-        .false;
+      expect(await roles.isMember(ethers.ZeroHash, member.address)).to.be.false;
     });
 
     it("returns false when module has no membership", async () => {
@@ -517,7 +523,7 @@ describe("Membership", () => {
 
       await time.setNextBlockTimestamp(end);
       // Mine a block so time.latest() reflects the new timestamp
-      await hre.network.provider.send("evm_mine");
+      await provider.request({ method: "evm_mine" });
 
       expect(await roles.isMember(ROLE_KEY, member.address)).to.be.true;
     });

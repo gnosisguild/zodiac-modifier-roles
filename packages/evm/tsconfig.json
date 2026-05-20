@@ -2,18 +2,14 @@
   "compilerOptions": {
     "declaration": true,
     "esModuleInterop": true,
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "noEmit": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": true,
-    "target": "es2020",
-    "typeRoots": [
-      "node_modules/@types",
-      "typings",
-      "typechain-types/hardhat.d.ts"
-    ]
+    "target": "es2023",
+    "typeRoots": ["node_modules/@types", "typings", "typechain-types/hardhat.d.ts"]
   },
   "include": ["tasks", "./test", "./typechain-types"],
   "files": ["./hardhat.config.ts"]
