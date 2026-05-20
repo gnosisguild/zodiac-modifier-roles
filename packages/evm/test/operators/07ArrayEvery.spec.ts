@@ -1,9 +1,10 @@
 import { expect } from "chai";
-import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { AbiCoder, hexlify, randomBytes, ZeroHash } from "ethers";
+import { anyValue } from "@nomicfoundation/hardhat-ethers-chai-matchers/withArgs";
+import { AbiCoder, hexlify, randomBytes } from "ethers";
 
-import { setupTestContract, setupArrayParam } from "../setup";
+import { network } from "hardhat";
+
+import { createSetup } from "../setup.js";
 import {
   Encoding,
   Operator,
@@ -11,11 +12,20 @@ import {
   ConditionViolationStatus,
   flattenCondition,
   packConditions,
-} from "../utils";
+} from "../utils.js";
 
 const abiCoder = AbiCoder.defaultAbiCoder();
 
+const connection = await network.create();
+const { ethers, networkHelpers } = connection;
+const { loadFixture } = networkHelpers;
+const { setupTestContract, setupArrayParam } = createSetup(connection);
+
 describe("Operator - ArrayEvery", () => {
+  after(async () => {
+    await connection.close();
+  });
+
   describe("element matching", () => {
     it("passes when all elements match", async () => {
       const { allowFunction, invoke } = await loadFixture(setupArrayParam);
@@ -43,7 +53,7 @@ describe("Operator - ArrayEvery", () => {
       );
 
       // All elements < 100 passes
-      await expect(invoke([10, 20, 30, 40])).to.not.be.reverted;
+      await expect(invoke([10, 20, 30, 40])).to.not.be.revert(ethers);
     });
 
     it("fails when at least one element does not match", async () => {
@@ -167,7 +177,7 @@ describe("Operator - ArrayEvery", () => {
       );
 
       // Empty array passes - no element violates the condition (vacuous truth)
-      await expect(invoke([])).to.not.be.reverted;
+      await expect(invoke([])).to.not.be.revert(ethers);
     });
   });
 
@@ -205,7 +215,7 @@ describe("Operator - ArrayEvery", () => {
       );
 
       // Array [10, 20, 30] - all elements pass, all consumed (60 total)
-      await expect(invoke([10, 20, 30])).to.not.be.reverted;
+      await expect(invoke([10, 20, 30])).to.not.be.revert(ethers);
 
       // All elements consumed - remaining is 40
       const { balance } = await roles.accruedAllowance(allowanceKey);

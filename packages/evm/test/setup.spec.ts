@@ -1,10 +1,19 @@
 import { expect } from "chai";
-import hre from "hardhat";
-import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
 import { ZeroHash, ZeroAddress, Interface } from "ethers";
+import { network } from "hardhat";
 
-import { Encoding, ExecutionOptions, Operator, packConditions } from "./utils";
-import { deployRolesMod } from "./setup";
+import {
+  Encoding,
+  ExecutionOptions,
+  Operator,
+  packConditions,
+} from "./utils.js";
+import { createSetup } from "./setup.js";
+
+const connection = await network.create();
+const { ethers, networkHelpers } = connection;
+const { loadFixture, time } = networkHelpers;
+const { deployRolesMod } = createSetup(connection);
 
 const maxUint64 = 2n ** 64n - 1n;
 const maxUint128 = 2n ** 128n - 1n;
@@ -31,25 +40,28 @@ const iface = new Interface([
  */
 
 describe("Setup", () => {
-  async function setup() {
-    const [owner, member] = await hre.ethers.getSigners();
+  after(async () => {
+    await connection.close();
+  });
 
-    const Avatar = await hre.ethers.getContractFactory("TestAvatar");
+  async function setup() {
+    const [owner, member] = await ethers.getSigners();
+
+    const Avatar = await ethers.getContractFactory("TestAvatar");
     const avatar = await Avatar.deploy();
     const avatarAddress = await avatar.getAddress();
 
     const roles = await deployRolesMod(
-      hre,
       owner.address,
       avatarAddress,
       avatarAddress,
     );
 
-    const TestContract = await hre.ethers.getContractFactory("TestContract");
+    const TestContract = await ethers.getContractFactory("TestContract");
     const testContract = await TestContract.deploy();
     const testContractAddress = await testContract.getAddress();
 
-    const ROLE_KEY = hre.ethers.id("TEST_ROLE");
+    const ROLE_KEY = ethers.id("TEST_ROLE");
 
     return {
       roles: roles.connect(owner),
@@ -84,7 +96,7 @@ describe("Setup", () => {
         roles
           .connect(member)
           .execTransactionFromModule(testContractAddress, 0, "0x", 0),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
     });
 
     it("automatically enables module if not already enabled", async () => {
@@ -186,7 +198,7 @@ describe("Setup", () => {
         roles
           .connect(member)
           .execTransactionFromModule(testContractAddress, 0, "0x", 0),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
 
       await roles.revokeRole(member.address, ROLE_KEY);
 
@@ -210,7 +222,7 @@ describe("Setup", () => {
     it("does not disable module (may have other roles)", async () => {
       const { roles, member, ROLE_KEY } = await loadFixture(setup);
 
-      const ROLE_KEY_2 = hre.ethers.id("TEST_ROLE_2");
+      const ROLE_KEY_2 = ethers.id("TEST_ROLE_2");
 
       expect(await roles.isModuleEnabled(member.address)).to.be.false;
       await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
@@ -222,8 +234,9 @@ describe("Setup", () => {
     it("succeeds even if membership doesn't exist", async () => {
       const { roles, member, ROLE_KEY } = await loadFixture(setup);
 
-      await expect(roles.revokeRole(member.address, ROLE_KEY)).to.not.be
-        .reverted;
+      await expect(roles.revokeRole(member.address, ROLE_KEY)).to.not.be.revert(
+        ethers,
+      );
     });
   });
 
@@ -245,7 +258,7 @@ describe("Setup", () => {
         roles
           .connect(member)
           .execTransactionFromModule(testContractAddress, 0, "0x", 0),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
 
       await roles.connect(member).renounceRole(ROLE_KEY);
 
@@ -271,7 +284,7 @@ describe("Setup", () => {
     it("batch grants roles when memberOf is true", async () => {
       const { roles, member, ROLE_KEY } = await loadFixture(setup);
 
-      const ROLE_KEY_2 = hre.ethers.id("TEST_ROLE_2");
+      const ROLE_KEY_2 = ethers.id("TEST_ROLE_2");
 
       await roles.assignRoles(
         member.address,
@@ -285,7 +298,7 @@ describe("Setup", () => {
     it("batch revokes roles when memberOf is false", async () => {
       const { roles, member, ROLE_KEY } = await loadFixture(setup);
 
-      const ROLE_KEY_2 = hre.ethers.id("TEST_ROLE_2");
+      const ROLE_KEY_2 = ethers.id("TEST_ROLE_2");
 
       await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
       await roles.grantRole(member.address, ROLE_KEY_2, 0, 0, 0);
@@ -304,7 +317,7 @@ describe("Setup", () => {
     it("handles mixed grant and revoke in single call", async () => {
       const { roles, member, ROLE_KEY } = await loadFixture(setup);
 
-      const ROLE_KEY_2 = hre.ethers.id("TEST_ROLE_2");
+      const ROLE_KEY_2 = ethers.id("TEST_ROLE_2");
 
       await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
 
@@ -356,7 +369,7 @@ describe("Setup", () => {
     it("overwrites existing default role", async () => {
       const { roles, member, ROLE_KEY } = await loadFixture(setup);
 
-      const ROLE_KEY_2 = hre.ethers.id("TEST_ROLE_2");
+      const ROLE_KEY_2 = ethers.id("TEST_ROLE_2");
 
       await roles.setDefaultRole(member.address, ROLE_KEY);
       expect(await roles.defaultRoles(member.address)).to.equal(ROLE_KEY);
@@ -396,7 +409,7 @@ describe("Setup", () => {
         roles
           .connect(member)
           .execTransactionFromModule(testContractAddress, 0, "0x", 0),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
     });
 
     it("validates condition tree integrity on pack", async () => {
@@ -455,7 +468,7 @@ describe("Setup", () => {
             iface.encodeFunctionData("oneParamStatic", [99]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
 
       // Overwrite with condition: param must equal 42
       const conditionsEq42 = await packConditions(roles, [
@@ -469,7 +482,7 @@ describe("Setup", () => {
           parent: 0,
           paramType: Encoding.Static,
           operator: Operator.EqualTo,
-          compValue: hre.ethers.AbiCoder.defaultAbiCoder().encode(
+          compValue: ethers.AbiCoder.defaultAbiCoder().encode(
             ["uint256"],
             [42],
           ),
@@ -504,7 +517,7 @@ describe("Setup", () => {
             iface.encodeFunctionData("oneParamStatic", [42]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
     });
   });
 
@@ -558,7 +571,7 @@ describe("Setup", () => {
         roles
           .connect(member)
           .execTransactionFromModule(testContractAddress, 0, "0x", 0),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
 
       await roles.revokeTarget(ROLE_KEY, testContractAddress);
 
@@ -635,8 +648,9 @@ describe("Setup", () => {
     it("succeeds even if target was not allowed", async () => {
       const { roles, ROLE_KEY, testContractAddress } = await loadFixture(setup);
 
-      await expect(roles.revokeTarget(ROLE_KEY, testContractAddress)).to.not.be
-        .reverted;
+      await expect(
+        roles.revokeTarget(ROLE_KEY, testContractAddress),
+      ).to.not.be.revert(ethers);
     });
   });
 
@@ -699,7 +713,7 @@ describe("Setup", () => {
           parent: 0,
           paramType: Encoding.Static,
           operator: Operator.EqualTo,
-          compValue: hre.ethers.AbiCoder.defaultAbiCoder().encode(
+          compValue: ethers.AbiCoder.defaultAbiCoder().encode(
             ["uint256"],
             [42],
           ),
@@ -723,7 +737,7 @@ describe("Setup", () => {
             iface.encodeFunctionData("oneParamStatic", [42]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
 
       // Call with 99 - should fail
       await expect(
@@ -800,10 +814,7 @@ describe("Setup", () => {
           parent: 0,
           paramType: Encoding.Static,
           operator: Operator.EqualTo,
-          compValue: hre.ethers.AbiCoder.defaultAbiCoder().encode(
-            ["uint256"],
-            [1],
-          ),
+          compValue: ethers.AbiCoder.defaultAbiCoder().encode(["uint256"], [1]),
         },
       ]);
       await roles.allowFunction(
@@ -838,10 +849,7 @@ describe("Setup", () => {
           parent: 0,
           paramType: Encoding.Static,
           operator: Operator.EqualTo,
-          compValue: hre.ethers.AbiCoder.defaultAbiCoder().encode(
-            ["uint256"],
-            [2],
-          ),
+          compValue: ethers.AbiCoder.defaultAbiCoder().encode(["uint256"], [2]),
         },
       ]);
       await roles.allowFunction(
@@ -862,7 +870,7 @@ describe("Setup", () => {
             iface.encodeFunctionData("oneParamStatic", [2]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
     });
   });
 
@@ -981,7 +989,7 @@ describe("Setup", () => {
             iface.encodeFunctionData("doEvenLess"),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
     });
   });
 
@@ -993,7 +1001,7 @@ describe("Setup", () => {
     it("sets balance to specified value", async () => {
       const { roles } = await loadFixture(setup);
 
-      const ALLOWANCE_KEY = hre.ethers.id("TEST_ALLOWANCE");
+      const ALLOWANCE_KEY = ethers.id("TEST_ALLOWANCE");
 
       await roles.setAllowance(ALLOWANCE_KEY, 500, 1000, 100, 3600, 0);
 
@@ -1004,7 +1012,7 @@ describe("Setup", () => {
     it("sets refill to specified value", async () => {
       const { roles } = await loadFixture(setup);
 
-      const ALLOWANCE_KEY = hre.ethers.id("TEST_ALLOWANCE");
+      const ALLOWANCE_KEY = ethers.id("TEST_ALLOWANCE");
 
       await roles.setAllowance(ALLOWANCE_KEY, 500, 1000, 100, 3600, 0);
 
@@ -1015,7 +1023,7 @@ describe("Setup", () => {
     it("sets period to specified value", async () => {
       const { roles } = await loadFixture(setup);
 
-      const ALLOWANCE_KEY = hre.ethers.id("TEST_ALLOWANCE");
+      const ALLOWANCE_KEY = ethers.id("TEST_ALLOWANCE");
 
       await roles.setAllowance(ALLOWANCE_KEY, 500, 1000, 100, 3600, 0);
 
@@ -1026,7 +1034,7 @@ describe("Setup", () => {
     it("emits SetAllowance event", async () => {
       const { roles } = await loadFixture(setup);
 
-      const ALLOWANCE_KEY = hre.ethers.id("TEST_ALLOWANCE");
+      const ALLOWANCE_KEY = ethers.id("TEST_ALLOWANCE");
 
       await expect(
         roles.setAllowance(ALLOWANCE_KEY, 500, 1000, 100, 3600, 0),
@@ -1037,7 +1045,7 @@ describe("Setup", () => {
       it("sets maxRefill to max uint128 when passed 0", async () => {
         const { roles } = await loadFixture(setup);
 
-        const ALLOWANCE_KEY = hre.ethers.id("TEST_ALLOWANCE");
+        const ALLOWANCE_KEY = ethers.id("TEST_ALLOWANCE");
 
         await roles.setAllowance(ALLOWANCE_KEY, 500, 0, 100, 3600, 0);
 
@@ -1048,7 +1056,7 @@ describe("Setup", () => {
       it("sets timestamp to current block.timestamp when passed 0", async () => {
         const { roles } = await loadFixture(setup);
 
-        const ALLOWANCE_KEY = hre.ethers.id("TEST_ALLOWANCE");
+        const ALLOWANCE_KEY = ethers.id("TEST_ALLOWANCE");
 
         const tx = await roles.setAllowance(
           ALLOWANCE_KEY,
@@ -1060,7 +1068,7 @@ describe("Setup", () => {
         );
 
         const receipt = await tx.wait();
-        const block = await hre.ethers.provider.getBlock(receipt!.blockNumber);
+        const block = await ethers.provider.getBlock(receipt!.blockNumber);
 
         const allowance = await roles.allowances(ALLOWANCE_KEY);
         expect(allowance.timestamp).to.equal(block!.timestamp);
@@ -1070,7 +1078,7 @@ describe("Setup", () => {
     it("overwrites all fields of existing allowance", async () => {
       const { roles } = await loadFixture(setup);
 
-      const ALLOWANCE_KEY = hre.ethers.id("TEST_ALLOWANCE");
+      const ALLOWANCE_KEY = ethers.id("TEST_ALLOWANCE");
 
       await roles.setAllowance(ALLOWANCE_KEY, 500, 1000, 100, 3600, 0);
       await roles.setAllowance(ALLOWANCE_KEY, 999, 2000, 200, 7200, 0);
@@ -1087,7 +1095,7 @@ describe("Setup", () => {
     it("updates refill parameters only", async () => {
       const { roles } = await loadFixture(setup);
 
-      const ALLOWANCE_KEY = hre.ethers.id("TEST_ALLOWANCE");
+      const ALLOWANCE_KEY = ethers.id("TEST_ALLOWANCE");
 
       await roles.setAllowance(ALLOWANCE_KEY, 500, 1000, 100, 3600, 0);
       await roles.updateAllowance(ALLOWANCE_KEY, 2000, 200, 7200);
@@ -1101,7 +1109,7 @@ describe("Setup", () => {
     it("preserves existing balance", async () => {
       const { roles } = await loadFixture(setup);
 
-      const ALLOWANCE_KEY = hre.ethers.id("TEST_ALLOWANCE");
+      const ALLOWANCE_KEY = ethers.id("TEST_ALLOWANCE");
 
       await roles.setAllowance(ALLOWANCE_KEY, 500, 1000, 100, 3600, 0);
       await roles.updateAllowance(ALLOWANCE_KEY, 2000, 200, 7200);
@@ -1113,7 +1121,7 @@ describe("Setup", () => {
     it("preserves existing timestamp", async () => {
       const { roles } = await loadFixture(setup);
 
-      const ALLOWANCE_KEY = hre.ethers.id("TEST_ALLOWANCE");
+      const ALLOWANCE_KEY = ethers.id("TEST_ALLOWANCE");
 
       await roles.setAllowance(ALLOWANCE_KEY, 500, 1000, 100, 3600, 0);
 
@@ -1130,7 +1138,7 @@ describe("Setup", () => {
     it("emits SetAllowance event", async () => {
       const { roles } = await loadFixture(setup);
 
-      const ALLOWANCE_KEY = hre.ethers.id("TEST_ALLOWANCE");
+      const ALLOWANCE_KEY = ethers.id("TEST_ALLOWANCE");
 
       await roles.setAllowance(ALLOWANCE_KEY, 500, 1000, 100, 3600, 0);
 
@@ -1149,7 +1157,7 @@ describe("Setup", () => {
       const { roles, testContractAddress } = await loadFixture(setup);
 
       const MultiSendUnwrapper =
-        await hre.ethers.getContractFactory("MultiSendUnwrapper");
+        await ethers.getContractFactory("MultiSendUnwrapper");
       const unwrapper = await MultiSendUnwrapper.deploy();
       const unwrapperAddress = await unwrapper.getAddress();
 
@@ -1170,7 +1178,7 @@ describe("Setup", () => {
       const { roles, testContractAddress } = await loadFixture(setup);
 
       const MultiSendUnwrapper =
-        await hre.ethers.getContractFactory("MultiSendUnwrapper");
+        await ethers.getContractFactory("MultiSendUnwrapper");
       const unwrapper = await MultiSendUnwrapper.deploy();
       const unwrapperAddress = await unwrapper.getAddress();
 
@@ -1191,7 +1199,7 @@ describe("Setup", () => {
       const { roles, testContractAddress } = await loadFixture(setup);
 
       const MultiSendUnwrapper =
-        await hre.ethers.getContractFactory("MultiSendUnwrapper");
+        await ethers.getContractFactory("MultiSendUnwrapper");
       const unwrapper1 = await MultiSendUnwrapper.deploy();
       const unwrapper2 = await MultiSendUnwrapper.deploy();
       const unwrapper2Address = await unwrapper2.getAddress();
@@ -1220,7 +1228,7 @@ describe("Setup", () => {
       const { roles, testContractAddress } = await loadFixture(setup);
 
       const MultiSendUnwrapper =
-        await hre.ethers.getContractFactory("MultiSendUnwrapper");
+        await ethers.getContractFactory("MultiSendUnwrapper");
       const unwrapper = await MultiSendUnwrapper.deploy();
       const unwrapperAddress = await unwrapper.getAddress();
 
@@ -1253,7 +1261,7 @@ describe("Setup", () => {
       const { roles, member, ROLE_KEY, testContractAddress } =
         await loadFixture(setup);
 
-      const TestContract2 = await hre.ethers.getContractFactory("TestContract");
+      const TestContract2 = await ethers.getContractFactory("TestContract");
       const testContract2 = await TestContract2.deploy();
       const testContract2Address = await testContract2.getAddress();
 
@@ -1271,7 +1279,7 @@ describe("Setup", () => {
         roles
           .connect(member)
           .execTransactionFromModule(testContractAddress, 0, "0x", 0),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
 
       // testContract2Address is NOT allowed
       await expect(
@@ -1330,7 +1338,7 @@ describe("Setup", () => {
       const { roles, member, ROLE_KEY, testContractAddress, testContract } =
         await loadFixture(setup);
 
-      const TestContract2 = await hre.ethers.getContractFactory("TestContract");
+      const TestContract2 = await ethers.getContractFactory("TestContract");
       const testContract2 = await TestContract2.deploy();
       const testContract2Address = await testContract2.getAddress();
 
@@ -1379,7 +1387,7 @@ describe("Setup", () => {
       const { roles, member, ROLE_KEY, testContractAddress, testContract } =
         await loadFixture(setup);
 
-      const ROLE_KEY_2 = hre.ethers.id("TEST_ROLE_2");
+      const ROLE_KEY_2 = ethers.id("TEST_ROLE_2");
 
       const selector1 = iface.getFunction("doNothing")!.selector;
       const selector2 = iface.getFunction("doEvenLess")!.selector;
@@ -1459,7 +1467,7 @@ describe("Setup", () => {
             iface.encodeFunctionData("doEvenLess"),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
     });
   });
 });

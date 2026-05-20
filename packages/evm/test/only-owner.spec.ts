@@ -1,9 +1,13 @@
 import { expect } from "chai";
-import hre from "hardhat";
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { network } from "hardhat";
 
-import { ExecutionOptions } from "./utils";
-import { deployRolesMod } from "./setup";
+import { ExecutionOptions } from "./utils.js";
+import { createSetup } from "./setup.js";
+
+const connection = await network.create();
+const { ethers, networkHelpers } = connection;
+const { loadFixture } = networkHelpers;
+const { deployRolesMod } = createSetup(connection);
 
 /**
  * onlyOwner tests
@@ -18,21 +22,24 @@ import { deployRolesMod } from "./setup";
  */
 
 describe("onlyOwner", () => {
-  async function setup() {
-    const [owner, nonOwner] = await hre.ethers.getSigners();
+  after(async () => {
+    await connection.close();
+  });
 
-    const Avatar = await hre.ethers.getContractFactory("TestAvatar");
+  async function setup() {
+    const [owner, nonOwner] = await ethers.getSigners();
+
+    const Avatar = await ethers.getContractFactory("TestAvatar");
     const avatar = await Avatar.deploy();
     const avatarAddress = await avatar.getAddress();
 
     const roles = await deployRolesMod(
-      hre,
       owner.address,
       avatarAddress,
       avatarAddress,
     );
 
-    const ROLE_KEY = hre.ethers.id("TEST_ROLE");
+    const ROLE_KEY = ethers.id("TEST_ROLE");
     const TARGET = "0x000000000000000000000000000000000000000f";
     const SELECTOR = "0x12345678";
 
@@ -46,7 +53,7 @@ describe("onlyOwner", () => {
 
         await expect(
           roles.connect(owner).grantRole(nonOwner.address, ROLE_KEY, 0, 0, 0),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("reverts 'OwnableUnauthorizedAccount' when called by non-owner", async () => {
@@ -66,7 +73,7 @@ describe("onlyOwner", () => {
 
         await expect(
           roles.connect(owner).revokeRole(nonOwner.address, ROLE_KEY),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("reverts 'OwnableUnauthorizedAccount' when called by non-owner", async () => {
@@ -86,7 +93,7 @@ describe("onlyOwner", () => {
           roles
             .connect(owner)
             .assignRoles(nonOwner.address, [ROLE_KEY], [true]),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("reverts 'OwnableUnauthorizedAccount' when called by non-owner", async () => {
@@ -106,7 +113,7 @@ describe("onlyOwner", () => {
 
         await expect(
           roles.connect(owner).setDefaultRole(nonOwner.address, ROLE_KEY),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("reverts 'OwnableUnauthorizedAccount' when called by non-owner", async () => {
@@ -128,7 +135,7 @@ describe("onlyOwner", () => {
           roles
             .connect(owner)
             .allowTarget(ROLE_KEY, TARGET, "0x", ExecutionOptions.None),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("reverts 'OwnableUnauthorizedAccount' when called by non-owner", async () => {
@@ -146,8 +153,9 @@ describe("onlyOwner", () => {
       it("succeeds when called by owner", async () => {
         const { roles, owner, ROLE_KEY, TARGET } = await loadFixture(setup);
 
-        await expect(roles.connect(owner).scopeTarget(ROLE_KEY, TARGET)).to.not
-          .be.reverted;
+        await expect(
+          roles.connect(owner).scopeTarget(ROLE_KEY, TARGET),
+        ).to.not.be.revert(ethers);
       });
 
       it("reverts 'OwnableUnauthorizedAccount' when called by non-owner", async () => {
@@ -163,8 +171,9 @@ describe("onlyOwner", () => {
       it("succeeds when called by owner", async () => {
         const { roles, owner, ROLE_KEY, TARGET } = await loadFixture(setup);
 
-        await expect(roles.connect(owner).revokeTarget(ROLE_KEY, TARGET)).to.not
-          .be.reverted;
+        await expect(
+          roles.connect(owner).revokeTarget(ROLE_KEY, TARGET),
+        ).to.not.be.revert(ethers);
       });
 
       it("reverts 'OwnableUnauthorizedAccount' when called by non-owner", async () => {
@@ -193,7 +202,7 @@ describe("onlyOwner", () => {
               "0x",
               ExecutionOptions.None,
             ),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("reverts 'OwnableUnauthorizedAccount' when called by non-owner", async () => {
@@ -221,7 +230,7 @@ describe("onlyOwner", () => {
 
         await expect(
           roles.connect(owner).revokeFunction(ROLE_KEY, TARGET, SELECTOR),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("reverts 'OwnableUnauthorizedAccount' when called by non-owner", async () => {
@@ -239,18 +248,18 @@ describe("onlyOwner", () => {
     describe("setAllowance", () => {
       it("succeeds when called by owner", async () => {
         const { roles, owner } = await loadFixture(setup);
-        const allowanceKey = hre.ethers.id("ALLOWANCE_KEY");
+        const allowanceKey = ethers.id("ALLOWANCE_KEY");
 
         await expect(
           roles
             .connect(owner)
             .setAllowance(allowanceKey, 1000, 0, 100, 3600, 0),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("reverts 'OwnableUnauthorizedAccount' when called by non-owner", async () => {
         const { roles, nonOwner } = await loadFixture(setup);
-        const allowanceKey = hre.ethers.id("ALLOWANCE_KEY");
+        const allowanceKey = ethers.id("ALLOWANCE_KEY");
 
         await expect(
           roles
@@ -263,7 +272,7 @@ describe("onlyOwner", () => {
     describe("updateAllowance", () => {
       it("succeeds when called by owner", async () => {
         const { roles, owner } = await loadFixture(setup);
-        const allowanceKey = hre.ethers.id("ALLOWANCE_KEY");
+        const allowanceKey = ethers.id("ALLOWANCE_KEY");
 
         // First set an allowance
         await roles
@@ -272,12 +281,12 @@ describe("onlyOwner", () => {
 
         await expect(
           roles.connect(owner).updateAllowance(allowanceKey, 0, 200, 7200),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("reverts 'OwnableUnauthorizedAccount' when called by non-owner", async () => {
         const { roles, owner, nonOwner } = await loadFixture(setup);
-        const allowanceKey = hre.ethers.id("ALLOWANCE_KEY");
+        const allowanceKey = ethers.id("ALLOWANCE_KEY");
 
         // First set an allowance
         await roles
@@ -301,7 +310,7 @@ describe("onlyOwner", () => {
           roles
             .connect(owner)
             .setTransactionUnwrapper(TARGET, SELECTOR, adapter),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("reverts 'OwnableUnauthorizedAccount' when called by non-owner", async () => {
@@ -323,8 +332,9 @@ describe("onlyOwner", () => {
         const { roles, owner } = await loadFixture(setup);
         const moduleToEnable = "0x0000000000000000000000000000000000000002";
 
-        await expect(roles.connect(owner).enableModule(moduleToEnable)).to.not
-          .be.reverted;
+        await expect(
+          roles.connect(owner).enableModule(moduleToEnable),
+        ).to.not.be.revert(ethers);
       });
 
       it("reverts when called by non-owner", async () => {
@@ -350,7 +360,7 @@ describe("onlyOwner", () => {
 
         await expect(
           roles.connect(owner).disableModule(sentinelModule, moduleToEnable),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("reverts when called by non-owner", async () => {
@@ -374,8 +384,9 @@ describe("onlyOwner", () => {
       it("succeeds when called by owner", async () => {
         const { roles, owner, nonOwner } = await loadFixture(setup);
 
-        await expect(roles.connect(owner).transferOwnership(nonOwner.address))
-          .to.not.be.reverted;
+        await expect(
+          roles.connect(owner).transferOwnership(nonOwner.address),
+        ).to.not.be.revert(ethers);
       });
 
       it("reverts when called by non-owner", async () => {
@@ -402,24 +413,24 @@ describe("onlyOwner", () => {
         const { roles, owner } = await loadFixture(setup);
 
         await expect(
-          roles.connect(owner).transferOwnership(hre.ethers.ZeroAddress),
-        ).to.not.be.reverted;
+          roles.connect(owner).transferOwnership(ethers.ZeroAddress),
+        ).to.not.be.revert(ethers);
       });
 
       it("reverts when called by non-owner", async () => {
         const { roles, nonOwner } = await loadFixture(setup);
 
         await expect(
-          roles.connect(nonOwner).transferOwnership(hre.ethers.ZeroAddress),
+          roles.connect(nonOwner).transferOwnership(ethers.ZeroAddress),
         ).to.be.revertedWithCustomError(roles, "OwnableUnauthorizedAccount");
       });
 
       it("sets owner to zero address", async () => {
         const { roles, owner } = await loadFixture(setup);
 
-        await roles.connect(owner).transferOwnership(hre.ethers.ZeroAddress);
+        await roles.connect(owner).transferOwnership(ethers.ZeroAddress);
 
-        expect(await roles.owner()).to.equal(hre.ethers.ZeroAddress);
+        expect(await roles.owner()).to.equal(ethers.ZeroAddress);
       });
     });
   });
@@ -435,8 +446,9 @@ describe("onlyOwner", () => {
           .grantRole(nonOwner.address, ROLE_KEY, 0, 0, 0);
 
         // nonOwner can renounce their own role
-        await expect(roles.connect(nonOwner).renounceRole(ROLE_KEY)).to.not.be
-          .reverted;
+        await expect(
+          roles.connect(nonOwner).renounceRole(ROLE_KEY),
+        ).to.not.be.revert(ethers);
       });
 
       it("does not require owner permission", async () => {

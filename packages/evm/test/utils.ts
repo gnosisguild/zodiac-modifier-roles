@@ -1,6 +1,10 @@
 import assert from "assert";
-import { BigNumberish, solidityPacked } from "ethers";
-import { ConditionFlatStruct, Roles } from "../typechain-types/contracts/Roles";
+import { solidityPacked } from "ethers";
+import type { BigNumberish } from "ethers";
+import type {
+  ConditionFlatStruct,
+  Roles,
+} from "../typechain-types/contracts/Roles.js";
 
 export const logGas = async (
   message: string,

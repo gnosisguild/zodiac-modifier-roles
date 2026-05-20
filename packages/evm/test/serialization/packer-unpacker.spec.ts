@@ -1,12 +1,20 @@
 import { expect } from "chai";
-import hre from "hardhat";
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { Encoding, Operator, flattenCondition } from "../utils";
+import { network } from "hardhat";
+
+import { Encoding, Operator, flattenCondition } from "../utils.js";
+
+const connection = await network.create();
+const { ethers, networkHelpers } = connection;
+const { loadFixture } = networkHelpers;
 
 describe("PackerUnpacker", () => {
+  after(async () => {
+    await connection.close();
+  });
+
   async function setup() {
     const MockPackerUnpacker =
-      await hre.ethers.getContractFactory("MockPackerUnpacker");
+      await ethers.getContractFactory("MockPackerUnpacker");
     const mock = await MockPackerUnpacker.deploy();
 
     return { mock };

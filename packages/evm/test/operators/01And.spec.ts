@@ -1,14 +1,10 @@
 import { expect } from "chai";
-import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { anyValue } from "@nomicfoundation/hardhat-ethers-chai-matchers/withArgs";
 import { AbiCoder, hexlify, randomBytes } from "ethers";
 
-import {
-  setupTestContract,
-  setupOneParam,
-  setupTwoParams,
-  setupDynamicParam,
-} from "../setup";
+import { network } from "hardhat";
+
+import { createSetup } from "../setup.js";
 import {
   Encoding,
   Operator,
@@ -16,11 +12,21 @@ import {
   ConditionViolationStatus,
   flattenCondition,
   packConditions,
-} from "../utils";
+} from "../utils.js";
 
 const abiCoder = AbiCoder.defaultAbiCoder();
 
+const connection = await network.create();
+const { ethers, networkHelpers } = connection;
+const { loadFixture } = networkHelpers;
+const { setupTestContract, setupOneParam, setupTwoParams, setupDynamicParam } =
+  createSetup(connection);
+
 describe("Operator - And", () => {
+  after(async () => {
+    await connection.close();
+  });
+
   describe("boolean logic", () => {
     it("passes when all children pass", async () => {
       const { allowFunction, invoke } = await loadFixture(setupOneParam);
@@ -53,7 +59,7 @@ describe("Operator - And", () => {
       );
 
       // 15 satisfies both: >10 AND <20
-      await expect(invoke(15)).to.not.be.reverted;
+      await expect(invoke(15)).to.not.be.revert(ethers);
     });
 
     it("fails on first child and short-circuits", async () => {
@@ -169,7 +175,7 @@ describe("Operator - And", () => {
       );
 
       // 50 satisfies both conditions on same payload
-      await expect(invoke(50)).to.not.be.reverted;
+      await expect(invoke(50)).to.not.be.revert(ethers);
     });
 
     it("passes individual child payloads when variant", async () => {
@@ -233,7 +239,7 @@ describe("Operator - And", () => {
       );
 
       // Passes both children
-      await expect(invoke(embedded)).to.not.be.reverted;
+      await expect(invoke(embedded)).to.not.be.revert(ethers);
 
       // Wrong first bytes - fails both children
       const wrongFirst = abiCoder.encode(
@@ -295,7 +301,7 @@ describe("Operator - And", () => {
       );
 
       // Correct param + correct ether value
-      await expect(invoke(42, { value: 123 })).to.not.be.reverted;
+      await expect(invoke(42, { value: 123 })).to.not.be.revert(ethers);
 
       // Wrong param value
       await expect(invoke(99, { value: 123 }))
@@ -373,7 +379,7 @@ describe("Operator - And", () => {
       // Child 1 (Matches) consumes 30.
       // Child 2 (Matches) consumes 20.
       // Total consumption: 50.
-      await expect(invoke(30, 20)).to.not.be.reverted;
+      await expect(invoke(30, 20)).to.not.be.revert(ethers);
 
       // Verify balance: 100 - 50 = 50
       const { balance } = await roles.accruedAllowance(allowanceKey);

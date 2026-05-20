@@ -1,10 +1,10 @@
 import { expect } from "chai";
-import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
-import hre from "hardhat";
+import { anyValue } from "@nomicfoundation/hardhat-ethers-chai-matchers/withArgs";
 import { hexlify, Interface, randomBytes } from "ethers";
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import { setupTestContract, setupOneParam } from "../setup";
+import { network } from "hardhat";
+
+import { createSetup } from "../setup.js";
 import {
   Encoding,
   Operator,
@@ -12,13 +12,21 @@ import {
   ConditionViolationStatus,
   flattenCondition,
   packConditions,
-} from "../utils";
+} from "../utils.js";
+
+const connection = await network.create();
+const { ethers, networkHelpers } = connection;
+const { loadFixture } = networkHelpers;
+const { setupTestContract, setupOneParam } = createSetup(connection);
 
 describe("Operator - Custom", () => {
+  after(async () => {
+    await connection.close();
+  });
+
   async function setupWithChecker() {
     const base = await setupOneParam();
-    const CustomChecker =
-      await hre.ethers.getContractFactory("TestCustomChecker");
+    const CustomChecker = await ethers.getContractFactory("TestCustomChecker");
     const customChecker = await CustomChecker.deploy();
     return {
       ...base,
@@ -49,7 +57,7 @@ describe("Operator - Custom", () => {
       );
 
       // 101 > 100 passes
-      await expect(invoke(101)).to.not.be.reverted;
+      await expect(invoke(101)).to.not.be.revert(ethers);
     });
 
     it("passes correct context (operation type) to adapter", async () => {
@@ -87,7 +95,7 @@ describe("Operator - Custom", () => {
           iface.encodeFunctionData(fn, [101]),
           0, // Operation.Call
         ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
 
       // DelegateCall operation (1) fails (adapter returns false)
       await expect(
@@ -164,7 +172,7 @@ describe("Operator - Custom", () => {
       );
 
       // Adapter returns true for > 100
-      await expect(invoke(101)).to.not.be.reverted;
+      await expect(invoke(101)).to.not.be.revert(ethers);
     });
 
     it("fails when adapter returns false (propagates error info)", async () => {
@@ -237,7 +245,7 @@ describe("Operator - Custom", () => {
         await loadFixture(setupWithChecker);
 
       // Deploy contract with code but no check() function and no fallback
-      const NoInterfaceChecker = await hre.ethers.getContractFactory(
+      const NoInterfaceChecker = await ethers.getContractFactory(
         "TestCustomCheckerNoInterface",
       );
       const noInterfaceChecker = await NoInterfaceChecker.deploy();
@@ -272,7 +280,7 @@ describe("Operator - Custom", () => {
       const { roles, allowFunction, invoke } =
         await loadFixture(setupWithChecker);
 
-      const RevertingChecker = await hre.ethers.getContractFactory(
+      const RevertingChecker = await ethers.getContractFactory(
         "TestCustomCheckerReverting",
       );
       const revertingChecker = await RevertingChecker.deploy();
@@ -308,7 +316,7 @@ describe("Operator - Custom", () => {
         await loadFixture(setupWithChecker);
 
       // Deploy contract that returns (uint256, uint256) instead of bool
-      const WrongReturnChecker = await hre.ethers.getContractFactory(
+      const WrongReturnChecker = await ethers.getContractFactory(
         "TestCustomCheckerWrongReturn",
       );
       const wrongReturnChecker = await WrongReturnChecker.deploy();
@@ -359,7 +367,7 @@ describe("Operator - Custom", () => {
       );
 
       // Valid adapter returns true -> passes
-      await expect(invoke(101)).to.not.be.reverted;
+      await expect(invoke(101)).to.not.be.revert(ethers);
     });
   });
 

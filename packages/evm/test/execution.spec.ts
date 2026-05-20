@@ -1,10 +1,19 @@
 import { expect } from "chai";
-import hre from "hardhat";
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { Interface } from "ethers";
+import { network } from "hardhat";
 
-import { Encoding, ExecutionOptions, Operator, packConditions } from "./utils";
-import { deployRolesMod } from "./setup";
+import {
+  Encoding,
+  ExecutionOptions,
+  Operator,
+  packConditions,
+} from "./utils.js";
+import { createSetup } from "./setup.js";
+
+const connection = await network.create();
+const { ethers, networkHelpers } = connection;
+const { loadFixture } = networkHelpers;
+const { deployRolesMod } = createSetup(connection);
 
 const iface = new Interface([
   "function fnThatMaybeReverts(uint256, bool) returns (uint256)",
@@ -24,15 +33,18 @@ const iface = new Interface([
  */
 
 describe("Execution Mechanics", () => {
-  async function setup() {
-    const [owner, invoker] = await hre.ethers.getSigners();
+  after(async () => {
+    await connection.close();
+  });
 
-    const Avatar = await hre.ethers.getContractFactory("TestAvatar");
+  async function setup() {
+    const [owner, invoker] = await ethers.getSigners();
+
+    const Avatar = await ethers.getContractFactory("TestAvatar");
     const avatar = await Avatar.deploy();
     const avatarAddress = await avatar.getAddress();
 
     const roles = await deployRolesMod(
-      hre,
       owner.address,
       avatarAddress,
       avatarAddress,
@@ -41,12 +53,12 @@ describe("Execution Mechanics", () => {
     // Invoker must be a module to call execTransactionFromModule*
     await roles.enableModule(invoker.address);
 
-    const TestContract = await hre.ethers.getContractFactory("TestContract");
+    const TestContract = await ethers.getContractFactory("TestContract");
     const testContract = await TestContract.deploy();
     const testContractAddress = await testContract.getAddress();
 
-    const ROLE_KEY = hre.ethers.id("TEST_ROLE");
-    const ALLOWANCE_KEY = hre.ethers.id("TEST_ALLOWANCE");
+    const ROLE_KEY = ethers.id("TEST_ROLE");
+    const ALLOWANCE_KEY = ethers.id("TEST_ALLOWANCE");
 
     // Grant role
     await roles.grantRole(invoker.address, ROLE_KEY, 0, 0, 0);
@@ -273,7 +285,7 @@ describe("Execution Mechanics", () => {
         100,
         false,
       ]);
-      const BAD_ROLE = hre.ethers.id("BAD_ROLE");
+      const BAD_ROLE = ethers.id("BAD_ROLE");
 
       await expect(
         roles
@@ -344,7 +356,7 @@ describe("Execution Mechanics", () => {
             ROLE_KEY,
             true,
           ),
-      ).to.be.reverted;
+      ).to.be.revert(ethers);
 
       // Reverts bubble up, so state should be rolled back naturally (implicit in EVM, but good to check if we catch it)
       const { balance } = await roles.accruedAllowance(ALLOWANCE_KEY);
@@ -355,12 +367,12 @@ describe("Execution Mechanics", () => {
   describe("execTransactionWithSignature", () => {
     async function signedSetup() {
       const fixture = await setup();
-      const [, , relayer] = await hre.ethers.getSigners();
+      const [, , relayer] = await ethers.getSigners();
       return { ...fixture, relayer };
     }
 
     const buildDomain = async (roles: any) => ({
-      chainId: (await hre.ethers.provider.getNetwork()).chainId,
+      chainId: (await ethers.provider.getNetwork()).chainId,
       verifyingContract: await roles.getAddress(),
     });
 
@@ -388,7 +400,7 @@ describe("Execution Mechanics", () => {
         100,
         false,
       ]);
-      const salt = hre.ethers.id("salt-1");
+      const salt = ethers.id("salt-1");
 
       const signature = await invoker.signTypedData(
         await buildDomain(roles),
@@ -427,7 +439,7 @@ describe("Execution Mechanics", () => {
         100,
         false,
       ]);
-      const salt = hre.ethers.id("salt-stranger");
+      const salt = ethers.id("salt-stranger");
 
       // relayer is not enabled as a module — sign with relayer ⇒ signer is not a module
       const signature = await relayer.signTypedData(
@@ -466,7 +478,7 @@ describe("Execution Mechanics", () => {
         100,
         false,
       ]);
-      const salt = hre.ethers.id("salt-replay");
+      const salt = ethers.id("salt-replay");
 
       const signature = await invoker.signTypedData(
         await buildDomain(roles),

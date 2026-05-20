@@ -1,10 +1,10 @@
-import hre from "hardhat";
 import { expect } from "chai";
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { AbiCoder, hexlify, randomBytes } from "ethers";
-import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
+import { anyValue } from "@nomicfoundation/hardhat-ethers-chai-matchers/withArgs";
 
-import { deployRolesMod } from "../setup";
+import { network } from "hardhat";
+
+import { createSetup } from "../setup.js";
 import {
   Encoding,
   flattenCondition,
@@ -12,21 +12,25 @@ import {
   ExecutionOptions,
   ConditionViolationStatus,
   packConditions,
-} from "../utils";
+} from "../utils.js";
+
+const connection = await network.create();
+const { ethers, networkHelpers } = connection;
+const { loadFixture } = networkHelpers;
+const { deployRolesMod } = createSetup(connection);
 
 // ============================================================================
 // Setup
 // ============================================================================
 
 async function setupRoles() {
-  const [owner, invoker] = await hre.ethers.getSigners();
+  const [owner, invoker] = await ethers.getSigners();
 
-  const Avatar = await hre.ethers.getContractFactory("TestAvatar");
+  const Avatar = await ethers.getContractFactory("TestAvatar");
   const avatar = await Avatar.deploy();
   const avatarAddress = await avatar.getAddress();
 
   const roles = await deployRolesMod(
-    hre,
     owner.address,
     avatarAddress,
     avatarAddress,
@@ -34,7 +38,7 @@ async function setupRoles() {
 
   await roles.enableModule(invoker.address);
 
-  const TestContract = await hre.ethers.getContractFactory("TestContract");
+  const TestContract = await ethers.getContractFactory("TestContract");
   const testContract = await TestContract.deploy();
   const testContractAddress = await testContract.getAddress();
 
@@ -75,6 +79,10 @@ async function invoke(
 // ============================================================================
 
 describe("AbiLocation - Bounds & Overflow", () => {
+  after(async () => {
+    await connection.close();
+  });
+
   describe("Head Bounds", () => {
     it("should detect calldata shorter than 32 bytes", async () => {
       const fixture = await loadFixture(setupRoles);
@@ -154,7 +162,7 @@ describe("AbiLocation - Bounds & Overflow", () => {
         "0xaabbccdd" +
         "0000000000000000000000000000000000000000000000000000000000000000"; // slot 0: value = 0
 
-      await expect(invoke(fixture, calldata)).to.not.be.reverted;
+      await expect(invoke(fixture, calldata)).to.not.be.revert(ethers);
     });
 
     it("should detect truncated second dynamic pointer", async () => {
@@ -314,7 +322,7 @@ describe("AbiLocation - Bounds & Overflow", () => {
         "0000000000000000000000000000000000000000000000000000000000000005" + // slot 1: length = 5
         "aabbccddee000000000000000000000000000000000000000000000000000000"; // slot 2: 5 bytes data + 27 bytes padding (exact fit)
 
-      await expect(invoke(fixture, calldata)).to.not.be.reverted;
+      await expect(invoke(fixture, calldata)).to.not.be.revert(ethers);
     });
 
     it("should detect partial tail slot", async () => {

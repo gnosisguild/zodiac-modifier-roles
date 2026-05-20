@@ -1,10 +1,19 @@
 import { expect } from "chai";
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { network } from "hardhat";
 
-import { setupTestContract } from "../setup";
-import { Encoding, Operator, packConditions } from "../utils";
+import { createSetup } from "../setup.js";
+import { Encoding, Operator, packConditions } from "../utils.js";
+
+const connection = await network.create();
+const { networkHelpers } = connection;
+const { loadFixture } = networkHelpers;
+const { setupTestContract } = createSetup(connection);
 
 describe("Operator - Pluck", () => {
+  after(async () => {
+    await connection.close();
+  });
+
   describe("integrity", () => {
     it("reverts UnsuitableParameterType for invalid encodings", async () => {
       const { roles } = await loadFixture(setupTestContract);

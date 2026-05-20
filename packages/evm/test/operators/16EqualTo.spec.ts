@@ -1,14 +1,10 @@
 import { expect } from "chai";
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
+import { anyValue } from "@nomicfoundation/hardhat-ethers-chai-matchers/withArgs";
 import { AbiCoder, Interface, solidityPacked, ZeroHash } from "ethers";
 
-import {
-  setupTestContract,
-  setupOneParam,
-  setupDynamicParam,
-  setupArrayParam,
-} from "../setup";
+import { network } from "hardhat";
+
+import { createSetup } from "../setup.js";
 import {
   Encoding,
   Operator,
@@ -16,11 +12,21 @@ import {
   ConditionViolationStatus,
   flattenCondition,
   packConditions,
-} from "../utils";
+} from "../utils.js";
 
 const abiCoder = AbiCoder.defaultAbiCoder();
 
+const connection = await network.create();
+const { ethers, networkHelpers } = connection;
+const { loadFixture } = networkHelpers;
+const { setupTestContract, setupOneParam, setupDynamicParam, setupArrayParam } =
+  createSetup(connection);
+
 describe("Operator - EqualTo", () => {
+  after(async () => {
+    await connection.close();
+  });
+
   describe("word-like comparison (size <= 32)", () => {
     it("matches a full 32-byte word (e.g. uint256, bytes32)", async () => {
       const { allowFunction, invoke } = await loadFixture(setupOneParam);
@@ -42,7 +48,7 @@ describe("Operator - EqualTo", () => {
       );
 
       // Exact match passes
-      await expect(invoke(12345)).to.not.be.reverted;
+      await expect(invoke(12345)).to.not.be.revert(ethers);
     });
 
     it("fails when values differ", async () => {
@@ -102,7 +108,7 @@ describe("Operator - EqualTo", () => {
       );
 
       // bytes[4:8] = 0xdeadbeef matches (first 4 bytes ignored)
-      await expect(invoke("0x00000000deadbeef")).to.not.be.reverted;
+      await expect(invoke("0x00000000deadbeef")).to.not.be.revert(ethers);
 
       // bytes[4:8] = 0xcafebabe does not match
       await expect(invoke("0x00000000cafebabe"))
@@ -144,7 +150,7 @@ describe("Operator - EqualTo", () => {
       );
 
       // Exact ether value passes
-      await expect(invoke(42, { value: 1000 })).to.not.be.reverted;
+      await expect(invoke(42, { value: 1000 })).to.not.be.revert(ethers);
 
       // Different ether value fails
       await expect(invoke(42, { value: 1001 }))
@@ -201,7 +207,7 @@ describe("Operator - EqualTo", () => {
             iface.encodeFunctionData(fn, [largeString]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
     });
 
     it("matches complex types (e.g. Tuple, Array) by comparing hash", async () => {
@@ -232,7 +238,7 @@ describe("Operator - EqualTo", () => {
       );
 
       // Exact array match passes
-      await expect(invoke(targetArray)).to.not.be.reverted;
+      await expect(invoke(targetArray)).to.not.be.revert(ethers);
     });
 
     it("fails when large dynamic data differs", async () => {
@@ -309,7 +315,7 @@ describe("Operator - EqualTo", () => {
         ExecutionOptions.Both,
       );
 
-      await expect(invoke("0x")).to.not.be.reverted;
+      await expect(invoke("0x")).to.not.be.revert(ethers);
 
       await expect(invoke("0xaa"))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
@@ -337,7 +343,7 @@ describe("Operator - EqualTo", () => {
         ExecutionOptions.Both,
       );
 
-      await expect(invoke(bytes10)).to.not.be.reverted;
+      await expect(invoke(bytes10)).to.not.be.revert(ethers);
 
       await expect(invoke("0x00112233445566778800"))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
@@ -365,7 +371,7 @@ describe("Operator - EqualTo", () => {
         ExecutionOptions.Both,
       );
 
-      await expect(invoke(bytes32)).to.not.be.reverted;
+      await expect(invoke(bytes32)).to.not.be.revert(ethers);
 
       await expect(invoke("0x" + "ff".repeat(32)))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
@@ -394,7 +400,7 @@ describe("Operator - EqualTo", () => {
         ExecutionOptions.Both,
       );
 
-      await expect(invoke(bytes33)).to.not.be.reverted;
+      await expect(invoke(bytes33)).to.not.be.revert(ethers);
 
       await expect(invoke(bytes32))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
@@ -424,7 +430,7 @@ describe("Operator - EqualTo", () => {
         ExecutionOptions.Both,
       );
 
-      await expect(invoke(bytes100)).to.not.be.reverted;
+      await expect(invoke(bytes100)).to.not.be.revert(ethers);
 
       await expect(invoke("0x" + "ff".repeat(100)))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
@@ -479,7 +485,7 @@ describe("Operator - EqualTo", () => {
               iface.encodeFunctionData(fn, [targetArray]),
               0,
             ),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("matches address[] array", async () => {
@@ -530,7 +536,7 @@ describe("Operator - EqualTo", () => {
               iface.encodeFunctionData(fn, [targetArray]),
               0,
             ),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("matches bytes32[] array", async () => {
@@ -581,7 +587,7 @@ describe("Operator - EqualTo", () => {
               iface.encodeFunctionData(fn, [targetArray]),
               0,
             ),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("matches empty uint256[] array", async () => {
@@ -629,7 +635,7 @@ describe("Operator - EqualTo", () => {
               iface.encodeFunctionData(fn, [targetArray]),
               0,
             ),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("matches empty address[] array", async () => {
@@ -677,7 +683,7 @@ describe("Operator - EqualTo", () => {
               iface.encodeFunctionData(fn, [targetArray]),
               0,
             ),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("fails when array elements differ", async () => {
@@ -833,7 +839,7 @@ describe("Operator - EqualTo", () => {
               iface.encodeFunctionData(fn, [targetArray]),
               0,
             ),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("matches address[][] (array of arrays)", async () => {
@@ -893,7 +899,7 @@ describe("Operator - EqualTo", () => {
               iface.encodeFunctionData(fn, [targetArray]),
               0,
             ),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("matches empty outer array uint256[][]", async () => {
@@ -947,7 +953,7 @@ describe("Operator - EqualTo", () => {
               iface.encodeFunctionData(fn, [targetArray]),
               0,
             ),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("matches array with empty inner arrays [[],[]]", async () => {
@@ -1001,7 +1007,7 @@ describe("Operator - EqualTo", () => {
               iface.encodeFunctionData(fn, [targetArray]),
               0,
             ),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("fails when nested array differs", async () => {
@@ -1119,7 +1125,7 @@ describe("Operator - EqualTo", () => {
               iface.encodeFunctionData(fn, [targetArray]),
               0,
             ),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("matches empty 3-level array", async () => {
@@ -1179,7 +1185,7 @@ describe("Operator - EqualTo", () => {
               iface.encodeFunctionData(fn, [targetArray]),
               0,
             ),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("matches 3-level array with mixed empty/populated", async () => {
@@ -1239,7 +1245,7 @@ describe("Operator - EqualTo", () => {
               iface.encodeFunctionData(fn, [targetArray]),
               0,
             ),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("fails when deeply nested array differs", async () => {
@@ -1360,7 +1366,7 @@ describe("Operator - EqualTo", () => {
               iface.encodeFunctionData(fn, [targetTuple]),
               0,
             ),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("matches (uint256, address, bytes32) tuple", async () => {
@@ -1425,7 +1431,7 @@ describe("Operator - EqualTo", () => {
               iface.encodeFunctionData(fn, [targetTuple]),
               0,
             ),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("matches (bool, uint8, int256) tuple", async () => {
@@ -1484,7 +1490,7 @@ describe("Operator - EqualTo", () => {
               iface.encodeFunctionData(fn, [targetTuple]),
               0,
             ),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("fails when tuple field differs", async () => {
@@ -1688,7 +1694,7 @@ describe("Operator - EqualTo", () => {
               iface.encodeFunctionData(fn, [targetTuple]),
               0,
             ),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("matches (uint256, (address, uint256)) - tuple with nested tuple", async () => {
@@ -1758,7 +1764,7 @@ describe("Operator - EqualTo", () => {
               iface.encodeFunctionData(fn, [targetTuple]),
               0,
             ),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("matches ((uint256, uint256), (address, address))", async () => {
@@ -1841,7 +1847,7 @@ describe("Operator - EqualTo", () => {
               iface.encodeFunctionData(fn, [targetTuple]),
               0,
             ),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("fails when nested tuple field differs", async () => {
@@ -1997,7 +2003,7 @@ describe("Operator - EqualTo", () => {
               iface.encodeFunctionData(fn, [targetTuple]),
               0,
             ),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("matches (uint256, ((address, uint256), (bool, bytes32)))", async () => {
@@ -2090,7 +2096,7 @@ describe("Operator - EqualTo", () => {
               iface.encodeFunctionData(fn, [targetTuple]),
               0,
             ),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("fails when deeply nested tuple differs", async () => {
@@ -2248,7 +2254,7 @@ describe("Operator - EqualTo", () => {
               iface.encodeFunctionData(fn, [targetArray]),
               0,
             ),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("matches empty (uint256, address)[] array", async () => {
@@ -2309,7 +2315,7 @@ describe("Operator - EqualTo", () => {
               iface.encodeFunctionData(fn, [targetArray]),
               0,
             ),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("matches ((uint256, address), bytes32)[] - array of nested tuples", async () => {
@@ -2385,7 +2391,7 @@ describe("Operator - EqualTo", () => {
               iface.encodeFunctionData(fn, [targetArray]),
               0,
             ),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("fails when array of tuples differs", async () => {
@@ -2518,7 +2524,7 @@ describe("Operator - EqualTo", () => {
               iface.encodeFunctionData(fn, [targetTuple]),
               0,
             ),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("matches (address, uint256[], bytes32)", async () => {
@@ -2589,7 +2595,7 @@ describe("Operator - EqualTo", () => {
               iface.encodeFunctionData(fn, [targetTuple]),
               0,
             ),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("matches tuple with empty array field", async () => {
@@ -2653,7 +2659,7 @@ describe("Operator - EqualTo", () => {
               iface.encodeFunctionData(fn, [targetTuple]),
               0,
             ),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("fails when tuple array field differs", async () => {
@@ -2861,7 +2867,7 @@ describe("Operator - EqualTo", () => {
               iface.encodeFunctionData(fn, [targetTuple]),
               0,
             ),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("matches ((uint256, address)[]) - array of tuples in tuple", async () => {
@@ -2933,7 +2939,7 @@ describe("Operator - EqualTo", () => {
               iface.encodeFunctionData(fn, [targetTuple]),
               0,
             ),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("matches (uint256, address)[][] - nested array of tuples", async () => {
@@ -3006,7 +3012,7 @@ describe("Operator - EqualTo", () => {
               iface.encodeFunctionData(fn, [targetArray]),
               0,
             ),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("fails when 2-level combination differs", async () => {
@@ -3171,7 +3177,7 @@ describe("Operator - EqualTo", () => {
               iface.encodeFunctionData(fn, [targetTuple]),
               0,
             ),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("matches ((uint256[], address[]), (bytes32, uint256)[])", async () => {
@@ -3281,7 +3287,7 @@ describe("Operator - EqualTo", () => {
               iface.encodeFunctionData(fn, [targetTuple]),
               0,
             ),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("matches (uint256, address)[][][] - 3-level array of tuples", async () => {
@@ -3360,7 +3366,7 @@ describe("Operator - EqualTo", () => {
               iface.encodeFunctionData(fn, [targetArray]),
               0,
             ),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("matches tuple with 3-level nested array field", async () => {
@@ -3436,7 +3442,7 @@ describe("Operator - EqualTo", () => {
               iface.encodeFunctionData(fn, [targetTuple]),
               0,
             ),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("matches 3-level combo with empty arrays at each level", async () => {
@@ -3512,7 +3518,7 @@ describe("Operator - EqualTo", () => {
               iface.encodeFunctionData(fn, [targetTuple]),
               0,
             ),
-        ).to.not.be.reverted;
+        ).to.not.be.revert(ethers);
       });
 
       it("fails when 3-level combination differs", async () => {
@@ -3674,7 +3680,7 @@ describe("Operator - EqualTo", () => {
             iface.encodeFunctionData(fn, [targetTuple]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
 
       await expect(
         roles
@@ -3749,7 +3755,7 @@ describe("Operator - EqualTo", () => {
             iface.encodeFunctionData(fn, [targetTuple]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
 
       await expect(
         roles
@@ -3793,7 +3799,7 @@ describe("Operator - EqualTo", () => {
         ExecutionOptions.None,
       );
 
-      await expect(invoke(12345)).to.not.be.reverted;
+      await expect(invoke(12345)).to.not.be.revert(ethers);
 
       await expect(invoke(99999))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
@@ -3855,7 +3861,7 @@ describe("Operator - EqualTo", () => {
             iface.encodeFunctionData(fn, [targetArray]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
 
       await expect(
         roles
@@ -3942,7 +3948,7 @@ describe("Operator - EqualTo", () => {
           ]),
           0,
         ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
 
       await expect(
         roles.connect(member).execTransactionFromModule(
@@ -4034,7 +4040,7 @@ describe("Operator - EqualTo", () => {
             iface.encodeFunctionData(fn, [targetArray]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
 
       const badInner = abiCoder.encode(
         ["uint256", "address"],
@@ -4119,7 +4125,7 @@ describe("Operator - EqualTo", () => {
             iface.encodeFunctionData(fn, [targetTuple]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
 
       await expect(
         roles
@@ -4213,7 +4219,7 @@ describe("Operator - EqualTo", () => {
             iface.encodeFunctionData(fn, [targetArray, targetDynamic]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
 
       const badInner = abiCoder.encode(
         ["uint256", "bytes"],
@@ -4363,7 +4369,7 @@ describe("Operator - EqualTo", () => {
             iface.encodeFunctionData(fn, [targetTuple]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
     });
 
     it.skip("handles large condition trees (600 nodes)", async () => {
@@ -4430,7 +4436,7 @@ describe("Operator - EqualTo", () => {
             iface.encodeFunctionData(fn, [targetValue]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
     });
 
     it("handles tuples with many fields (10+ fields)", async () => {
@@ -4504,7 +4510,7 @@ describe("Operator - EqualTo", () => {
             iface.encodeFunctionData(fn, [targetTuple]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
     });
   });
 

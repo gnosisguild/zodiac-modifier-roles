@@ -1,8 +1,8 @@
 import { expect } from "chai";
-import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
-import hre from "hardhat";
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { anyValue } from "@nomicfoundation/hardhat-ethers-chai-matchers/withArgs";
 import { ZeroHash } from "ethers";
+
+import { network } from "hardhat";
 
 import {
   Encoding,
@@ -10,24 +10,32 @@ import {
   Operator,
   ConditionViolationStatus,
   packConditions,
-} from "../utils";
-import { deployRolesMod } from "../setup";
+} from "../utils.js";
+import { createSetup } from "../setup.js";
 
 const AddressOne = "0x0000000000000000000000000000000000000001";
 
+const connection = await network.create();
+const { ethers, networkHelpers } = connection;
+const { loadFixture } = networkHelpers;
+const { deployRolesMod } = createSetup(connection);
+
 describe("AvatarIsOwnerOfERC721", () => {
+  after(async () => {
+    await connection.close();
+  });
+
   async function setup() {
     const ROLE_KEY =
       "0x0000000000000000000000000000000000000000000000000000000000000001";
 
-    const [owner, invoker] = await hre.ethers.getSigners();
+    const [owner, invoker] = await ethers.getSigners();
 
-    const Avatar = await hre.ethers.getContractFactory("TestAvatar");
+    const Avatar = await ethers.getContractFactory("TestAvatar");
     const avatar = await Avatar.deploy();
     const avatarAddress = await avatar.getAddress();
 
     const roles = await deployRolesMod(
-      hre,
       owner.address,
       avatarAddress,
       avatarAddress,
@@ -37,14 +45,14 @@ describe("AvatarIsOwnerOfERC721", () => {
     await roles.connect(owner).grantRole(invoker.address, ROLE_KEY, 0, 0, 0);
     await roles.connect(owner).setDefaultRole(invoker.address, ROLE_KEY);
 
-    const MockERC721 = await hre.ethers.getContractFactory("MockERC721");
+    const MockERC721 = await ethers.getContractFactory("MockERC721");
     const mockERC721 = await MockERC721.deploy();
     const mockERC721Address = await mockERC721.getAddress();
     const SELECTOR = mockERC721.interface.getFunction("doSomething").selector;
 
     await roles.connect(owner).scopeTarget(ROLE_KEY, mockERC721Address);
 
-    const CustomChecker = await hre.ethers.getContractFactory(
+    const CustomChecker = await ethers.getContractFactory(
       "AvatarIsOwnerOfERC721",
     );
     const customChecker = await CustomChecker.deploy();
@@ -112,7 +120,7 @@ describe("AvatarIsOwnerOfERC721", () => {
 
     await mockERC721.mint(avatarAddress, tokenId);
 
-    await expect(invoke(tokenId, someParam)).to.not.be.reverted;
+    await expect(invoke(tokenId, someParam)).to.not.be.revert(ethers);
   });
 
   it("fails when avatar does not own the token", async () => {

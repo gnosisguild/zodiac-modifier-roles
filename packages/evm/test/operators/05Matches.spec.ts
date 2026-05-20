@@ -1,14 +1,10 @@
 import { expect } from "chai";
-import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { anyValue } from "@nomicfoundation/hardhat-ethers-chai-matchers/withArgs";
 import { AbiCoder, Interface, hexlify, randomBytes, concat } from "ethers";
 
-import {
-  setupTestContract,
-  setupOneParam,
-  setupTwoParams,
-  setupDynamicParam,
-} from "../setup";
+import { network } from "hardhat";
+
+import { createSetup } from "../setup.js";
 import {
   Encoding,
   Operator,
@@ -16,11 +12,21 @@ import {
   ConditionViolationStatus,
   flattenCondition,
   packConditions,
-} from "../utils";
+} from "../utils.js";
 
 const abiCoder = AbiCoder.defaultAbiCoder();
 
+const connection = await network.create();
+const { ethers, networkHelpers } = connection;
+const { loadFixture } = networkHelpers;
+const { setupTestContract, setupOneParam, setupTwoParams, setupDynamicParam } =
+  createSetup(connection);
+
 describe("Operator - Matches", () => {
+  after(async () => {
+    await connection.close();
+  });
+
   describe("prefix skipping", () => {
     it("skips 10 bytes offset before decoding child", async () => {
       const { roles, allowFunction, invoke } =
@@ -56,7 +62,7 @@ describe("Operator - Matches", () => {
       const paramData = abiCoder.encode(["uint256"], [42]).slice(2); // remove 0x
       const correctPayload = junkHeader + paramData;
 
-      await expect(invoke(correctPayload)).to.not.be.reverted;
+      await expect(invoke(correctPayload)).to.not.be.revert(ethers);
 
       // Ensure that actual logic checks the param (42)
       const wrongParamPayload =
@@ -101,7 +107,7 @@ describe("Operator - Matches", () => {
       // Correct 4-byte prefix + valid param passes
       const correctPayload =
         "0xdeadbeef" + abiCoder.encode(["uint256"], [42]).slice(2);
-      await expect(invoke(correctPayload)).to.not.be.reverted;
+      await expect(invoke(correctPayload)).to.not.be.revert(ethers);
 
       // Wrong 4-byte prefix fails
       const wrongPayload =
@@ -185,7 +191,7 @@ describe("Operator - Matches", () => {
       // Correct 10-byte prefix + valid param passes
       const correctPayload =
         prefix10 + abiCoder.encode(["uint256"], [123]).slice(2);
-      await expect(invoke(correctPayload)).to.not.be.reverted;
+      await expect(invoke(correctPayload)).to.not.be.revert(ethers);
 
       // Wrong 10-byte prefix fails with LeadingBytesNotAMatch
       const wrongPrefix10 = hexlify(randomBytes(10));
@@ -243,7 +249,7 @@ describe("Operator - Matches", () => {
       // Correct 31-byte prefix + valid param passes
       const correctPayload =
         prefix31 + abiCoder.encode(["uint256"], [456]).slice(2);
-      await expect(invoke(correctPayload)).to.not.be.reverted;
+      await expect(invoke(correctPayload)).to.not.be.revert(ethers);
 
       // Wrong 31-byte prefix fails
       const wrongPrefix31 = hexlify(randomBytes(31));
@@ -309,7 +315,7 @@ describe("Operator - Matches", () => {
             iface.encodeFunctionData(fn, [100, 200, 300]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
 
       // First param wrong - fails
       await expect(
@@ -398,7 +404,7 @@ describe("Operator - Matches", () => {
       );
 
       // Correct param + correct ether
-      await expect(invoke(42, { value: 100 })).to.not.be.reverted;
+      await expect(invoke(42, { value: 100 })).to.not.be.revert(ethers);
 
       // Correct param + wrong ether
       await expect(invoke(42, { value: 999 }))
@@ -442,7 +448,7 @@ describe("Operator - Matches", () => {
       );
 
       // First call: 30 + 20 = 50 consumed
-      await expect(invoke(30, 20)).to.not.be.reverted;
+      await expect(invoke(30, 20)).to.not.be.revert(ethers);
 
       // Verify consumption was accumulated
       const { balance } = await roles.accruedAllowance(allowanceKey);
@@ -573,7 +579,7 @@ describe("Operator - Matches", () => {
             iface.encodeFunctionData(fn, [[100, 200]]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
     });
 
     it("reverts CalldataOverflow when tuple head is truncated", async () => {
@@ -1064,7 +1070,7 @@ describe("Operator - Matches", () => {
 
       const payload =
         "0xdeadbeef" + abiCoder.encode(["uint256"], [42]).slice(2);
-      await expect(invoke(payload)).to.not.be.reverted;
+      await expect(invoke(payload)).to.not.be.revert(ethers);
     });
 
     it("reverts CalldataOverflow when nested payload is truncated", async () => {
@@ -1226,7 +1232,7 @@ describe("Operator - Matches", () => {
             iface.encodeFunctionData(fn, [100]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
 
       // Second branch matches
       await expect(
@@ -1238,7 +1244,7 @@ describe("Operator - Matches", () => {
             iface.encodeFunctionData(fn, [200]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
     });
 
     it("passes when one branch overflows and other succeeds", async () => {
@@ -1282,7 +1288,7 @@ describe("Operator - Matches", () => {
 
       // Single uint256 - first branch overflows, second succeeds
       const payload = abiCoder.encode(["uint256"], [42]);
-      await expect(invoke(payload)).to.not.be.reverted;
+      await expect(invoke(payload)).to.not.be.revert(ethers);
     });
 
     it("reverts OrViolation when all branches fail validation", async () => {

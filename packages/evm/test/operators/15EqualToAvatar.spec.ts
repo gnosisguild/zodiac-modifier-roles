@@ -1,9 +1,10 @@
 import { expect } from "chai";
-import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { hexlify, Interface, randomBytes, ZeroHash } from "ethers";
+import { anyValue } from "@nomicfoundation/hardhat-ethers-chai-matchers/withArgs";
+import { hexlify, Interface, randomBytes } from "ethers";
 
-import { setupTestContract } from "../setup";
+import { network } from "hardhat";
+
+import { createSetup } from "../setup.js";
 import {
   Encoding,
   Operator,
@@ -11,9 +12,18 @@ import {
   ConditionViolationStatus,
   flattenCondition,
   packConditions,
-} from "../utils";
+} from "../utils.js";
+
+const connection = await network.create();
+const { ethers, networkHelpers } = connection;
+const { loadFixture } = networkHelpers;
+const { setupTestContract } = createSetup(connection);
 
 describe("Operator - EqualToAvatar", () => {
+  after(async () => {
+    await connection.close();
+  });
+
   describe("comparison logic", () => {
     it("matches when parameter equals the avatar address", async () => {
       const iface = new Interface(["function fn(address)"]);
@@ -55,7 +65,7 @@ describe("Operator - EqualToAvatar", () => {
             iface.encodeFunctionData(fn, [avatar]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
     });
 
     it("fails when parameter does not equal the avatar address", async () => {
@@ -159,7 +169,7 @@ describe("Operator - EqualToAvatar", () => {
             iface.encodeFunctionData(fn, [originalAvatar]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
 
       // Change the avatar (roles is already connected to owner)
       const newAvatar = "0xDeaDbeefdEAdbeefdEadbEEFdeadbeEFdEaDbeeF";
@@ -189,7 +199,7 @@ describe("Operator - EqualToAvatar", () => {
             iface.encodeFunctionData(fn, [newAvatar]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
     });
   });
 

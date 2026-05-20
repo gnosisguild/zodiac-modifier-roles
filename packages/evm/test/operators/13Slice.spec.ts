@@ -1,9 +1,10 @@
 import { expect } from "chai";
-import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { anyValue } from "@nomicfoundation/hardhat-ethers-chai-matchers/withArgs";
 import { AbiCoder, hexlify, randomBytes, solidityPacked } from "ethers";
 
-import { setupTestContract, setupDynamicParam } from "../setup";
+import { network } from "hardhat";
+
+import { createSetup } from "../setup.js";
 import {
   Encoding,
   Operator,
@@ -11,7 +12,7 @@ import {
   ConditionViolationStatus,
   flattenCondition,
   packConditions,
-} from "../utils";
+} from "../utils.js";
 
 const abiCoder = AbiCoder.defaultAbiCoder();
 
@@ -19,7 +20,16 @@ const abiCoder = AbiCoder.defaultAbiCoder();
 const encodeCompValue = (shift: number, size: number) =>
   solidityPacked(["uint16", "uint8"], [shift, size]);
 
+const connection = await network.create();
+const { ethers, networkHelpers } = connection;
+const { loadFixture } = networkHelpers;
+const { setupTestContract, setupDynamicParam } = createSetup(connection);
+
 describe("Operator - Slice", () => {
+  after(async () => {
+    await connection.close();
+  });
+
   describe("extraction", () => {
     it("extracts 2-byte shift from compValue", async () => {
       const { roles, allowFunction, invoke } =
@@ -50,7 +60,9 @@ describe("Operator - Slice", () => {
 
       // bytes: [4 bytes prefix][0xdeadbeef][suffix]
       // Slice extracts bytes 4-7 which should equal 0xdeadbeef
-      await expect(invoke("0x00000000deadbeef00000000")).to.not.be.reverted;
+      await expect(invoke("0x00000000deadbeef00000000")).to.not.be.revert(
+        ethers,
+      );
 
       // Wrong value at the slice position
       await expect(invoke("0x00000000cafebabe00000000"))
@@ -92,7 +104,7 @@ describe("Operator - Slice", () => {
       );
 
       // bytes starting with 0xab - passes
-      await expect(invoke("0xab00000000000000")).to.not.be.reverted;
+      await expect(invoke("0xab00000000000000")).to.not.be.revert(ethers);
 
       // bytes starting with 0xcd - fails
       await expect(invoke("0xcd00000000000000"))
@@ -128,8 +140,9 @@ describe("Operator - Slice", () => {
       );
 
       // 32 bytes encoding 12345 - passes
-      await expect(invoke(abiCoder.encode(["uint256"], [12345]))).to.not.be
-        .reverted;
+      await expect(
+        invoke(abiCoder.encode(["uint256"], [12345])),
+      ).to.not.be.revert(ethers);
 
       // 32 bytes encoding different value - fails
       await expect(invoke(abiCoder.encode(["uint256"], [12346])))
@@ -167,7 +180,7 @@ describe("Operator - Slice", () => {
       );
 
       // Value 101 > 100 - child passes, Slice propagates success
-      await expect(invoke("0x00000065")).to.not.be.reverted; // 101 in 4 bytes
+      await expect(invoke("0x00000065")).to.not.be.revert(ethers); // 101 in 4 bytes
 
       // Value 100 not > 100 - child fails with ParameterLessThanAllowed, Slice propagates
       await expect(invoke("0x00000064")) // 100 in 4 bytes
@@ -212,8 +225,9 @@ describe("Operator - Slice", () => {
       );
 
       // Consume 30 from sliced value
-      await expect(invoke(abiCoder.encode(["uint256"], [30]))).to.not.be
-        .reverted;
+      await expect(invoke(abiCoder.encode(["uint256"], [30]))).to.not.be.revert(
+        ethers,
+      );
 
       // Consumption propagated through Slice - remaining is 70
       const { balance } = await roles.accruedAllowance(allowanceKey);

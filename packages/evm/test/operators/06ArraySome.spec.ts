@@ -1,9 +1,10 @@
 import { expect } from "chai";
-import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { anyValue } from "@nomicfoundation/hardhat-ethers-chai-matchers/withArgs";
 import { AbiCoder, hexlify, randomBytes } from "ethers";
 
-import { setupTestContract, setupArrayParam } from "../setup";
+import { network } from "hardhat";
+
+import { createSetup } from "../setup.js";
 import {
   Encoding,
   Operator,
@@ -11,11 +12,20 @@ import {
   ConditionViolationStatus,
   flattenCondition,
   packConditions,
-} from "../utils";
+} from "../utils.js";
 
 const abiCoder = AbiCoder.defaultAbiCoder();
 
+const connection = await network.create();
+const { ethers, networkHelpers } = connection;
+const { loadFixture } = networkHelpers;
+const { setupTestContract, setupArrayParam } = createSetup(connection);
+
 describe("Operator - ArraySome", () => {
+  after(async () => {
+    await connection.close();
+  });
+
   describe("element matching", () => {
     it("passes when at least one element matches", async () => {
       const { allowFunction, invoke } = await loadFixture(setupArrayParam);
@@ -43,10 +53,10 @@ describe("Operator - ArraySome", () => {
       );
 
       // Array with matching element passes
-      await expect(invoke([1, 2, 42, 4])).to.not.be.reverted;
+      await expect(invoke([1, 2, 42, 4])).to.not.be.revert(ethers);
 
       // Array with only matching element passes
-      await expect(invoke([42])).to.not.be.reverted;
+      await expect(invoke([42])).to.not.be.revert(ethers);
     });
 
     it("fails when no element matches", async () => {
@@ -155,7 +165,7 @@ describe("Operator - ArraySome", () => {
 
       // Array [10, 20, 30] - first element (10) matches and is consumed
       // If not short-circuiting, all would be consumed (60 total)
-      await expect(invoke([10, 20, 30])).to.not.be.reverted;
+      await expect(invoke([10, 20, 30])).to.not.be.revert(ethers);
 
       // Only 10 was consumed (first match), not 60 - remaining is 90
       const { balance } = await roles.accruedAllowance(allowanceKey);
@@ -210,7 +220,7 @@ describe("Operator - ArraySome", () => {
 
       // Array [5, 10, 20, 30] - elements 5, 10 fail (<=15), element 20 matches
       // Only 20 is consumed (first matching element)
-      await expect(invoke([5, 10, 20, 30])).to.not.be.reverted;
+      await expect(invoke([5, 10, 20, 30])).to.not.be.revert(ethers);
 
       // Only 20 consumed from matching element - remaining is 30
       const { balance } = await roles.accruedAllowance(allowanceKey);

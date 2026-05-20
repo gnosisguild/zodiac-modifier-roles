@@ -1,8 +1,9 @@
 import { expect } from "chai";
-import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { anyValue } from "@nomicfoundation/hardhat-ethers-chai-matchers/withArgs";
 
-import { setupTestContract, setupDynamicParam } from "../setup";
+import { network } from "hardhat";
+
+import { createSetup } from "../setup.js";
 import {
   Encoding,
   Operator,
@@ -10,7 +11,7 @@ import {
   ConditionViolationStatus,
   flattenCondition,
   packConditions,
-} from "../utils";
+} from "../utils.js";
 
 // Helper: compValue = [shift (2 bytes)][mask (N bytes)][expected (N bytes)]
 function encodeCompValue(
@@ -25,7 +26,16 @@ function encodeCompValue(
   return `0x${shiftHex}${mask}${expected}`;
 }
 
+const connection = await network.create();
+const { ethers, networkHelpers } = connection;
+const { loadFixture } = networkHelpers;
+const { setupTestContract, setupDynamicParam } = createSetup(connection);
+
 describe("Operator - Bitmask", () => {
+  after(async () => {
+    await connection.close();
+  });
+
   describe("parsing and bounds", () => {
     it("extracts shift and derives mask length correctly", async () => {
       const { allowFunction, invoke } = await loadFixture(setupDynamicParam);
@@ -47,10 +57,10 @@ describe("Operator - Bitmask", () => {
       );
 
       // bytes[3:5] = 0xaabb -> passes
-      await expect(invoke("0x000000aabb")).to.not.be.reverted;
+      await expect(invoke("0x000000aabb")).to.not.be.revert(ethers);
 
       // bytes[3:5] = 0xccdd -> fails
-      await expect(invoke("0x000000ccdd")).to.be.reverted;
+      await expect(invoke("0x000000ccdd")).to.be.revert(ethers);
     });
 
     it("fails with BitmaskOverflow when shift + length exceeds data size", async () => {
@@ -74,7 +84,7 @@ describe("Operator - Bitmask", () => {
       );
 
       // 33 bytes -> passes
-      await expect(invoke("0x" + "ab".repeat(33))).to.not.be.reverted;
+      await expect(invoke("0x" + "ab".repeat(33))).to.not.be.revert(ethers);
 
       // 32 bytes -> fails (crosses into second word but data only has one word)
       await expect(invoke("0x" + "ab".repeat(32)))
@@ -102,7 +112,7 @@ describe("Operator - Bitmask", () => {
         ExecutionOptions.None,
       );
 
-      await expect(invoke("0xaabb")).to.not.be.reverted;
+      await expect(invoke("0xaabb")).to.not.be.revert(ethers);
     });
 
     it("fails when (data & mask) != expected", async () => {
@@ -150,10 +160,10 @@ describe("Operator - Bitmask", () => {
       );
 
       // 0xab & 0xf0 = 0xa0 -> passes (low nibble 0xb ignored)
-      await expect(invoke("0xab7777")).to.not.be.reverted;
+      await expect(invoke("0xab7777")).to.not.be.revert(ethers);
 
       // 0xaf & 0xf0 = 0xa0 -> passes (low nibble 0xf ignored)
-      await expect(invoke("0xaf8888888888")).to.not.be.reverted;
+      await expect(invoke("0xaf8888888888")).to.not.be.revert(ethers);
 
       // 0xbb & 0xf0 = 0xb0 != 0xa0 -> fails
       await expect(invoke("0xbb"))
@@ -182,7 +192,7 @@ describe("Operator - Bitmask", () => {
         ExecutionOptions.None,
       );
 
-      await expect(invoke("0x" + "ab".repeat(64))).to.not.be.reverted;
+      await expect(invoke("0x" + "ab".repeat(64))).to.not.be.revert(ethers);
     });
 
     it("fails on mismatch in any chunk (first or subsequent)", async () => {
@@ -239,7 +249,7 @@ describe("Operator - Bitmask", () => {
       );
 
       // byte[5] = 0xcd -> passes
-      await expect(invoke("0x0000000000cd4444444444")).to.not.be.reverted;
+      await expect(invoke("0x0000000000cd4444444444")).to.not.be.revert(ethers);
 
       // byte[5] = 0xab -> fails
       await expect(invoke("0x0000000000ab"))

@@ -1,9 +1,10 @@
 import { expect } from "chai";
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
+import { anyValue } from "@nomicfoundation/hardhat-ethers-chai-matchers/withArgs";
 import { AbiCoder, Interface } from "ethers";
 
-import { setupTestContract, setupOneParam, setupDynamicParam } from "../setup";
+import { network } from "hardhat";
+
+import { createSetup } from "../setup.js";
 import {
   Encoding,
   Operator,
@@ -11,11 +12,21 @@ import {
   ConditionViolationStatus,
   flattenCondition,
   packConditions,
-} from "../utils";
+} from "../utils.js";
 
 const abiCoder = AbiCoder.defaultAbiCoder();
 
+const connection = await network.create();
+const { ethers, networkHelpers } = connection;
+const { loadFixture } = networkHelpers;
+const { setupTestContract, setupOneParam, setupDynamicParam } =
+  createSetup(connection);
+
 describe("AbiLocation", () => {
+  after(async () => {
+    await connection.close();
+  });
+
   // ───────────────────────────────────────────────
   // Parent: Tuple
   // ───────────────────────────────────────────────
@@ -62,7 +73,7 @@ describe("AbiLocation", () => {
             iface.encodeFunctionData(fn, [target]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
 
       await expect(
         roles
@@ -121,7 +132,7 @@ describe("AbiLocation", () => {
             iface.encodeFunctionData(fn, [target]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
 
       await expect(
         roles
@@ -192,7 +203,7 @@ describe("AbiLocation", () => {
             iface.encodeFunctionData(fn, [target]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
 
       await expect(
         roles
@@ -261,7 +272,7 @@ describe("AbiLocation", () => {
             iface.encodeFunctionData(fn, [target]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
 
       await expect(
         roles
@@ -325,7 +336,7 @@ describe("AbiLocation", () => {
             iface.encodeFunctionData(fn, [target]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
 
       await expect(
         roles
@@ -391,7 +402,7 @@ describe("AbiLocation", () => {
             iface.encodeFunctionData(fn, [target]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
 
       const badPayload = abiCoder.encode(["uint256"], [999]);
       await expect(
@@ -457,7 +468,7 @@ describe("AbiLocation", () => {
             iface.encodeFunctionData(fn, [target]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
 
       await expect(
         roles
@@ -522,7 +533,7 @@ describe("AbiLocation", () => {
             iface.encodeFunctionData(fn, [target]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
 
       await expect(
         roles
@@ -585,7 +596,7 @@ describe("AbiLocation", () => {
             iface.encodeFunctionData(fn, [target]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
 
       await expect(
         roles
@@ -643,7 +654,7 @@ describe("AbiLocation", () => {
             iface.encodeFunctionData(fn, [target]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
 
       await expect(
         roles
@@ -711,7 +722,7 @@ describe("AbiLocation", () => {
             iface.encodeFunctionData(fn, [target]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
 
       await expect(
         roles.connect(member).execTransactionFromModule(
@@ -782,7 +793,7 @@ describe("AbiLocation", () => {
             iface.encodeFunctionData(fn, [target]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
 
       await expect(
         roles.connect(member).execTransactionFromModule(
@@ -852,7 +863,7 @@ describe("AbiLocation", () => {
             iface.encodeFunctionData(fn, [target]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
 
       await expect(
         roles.connect(member).execTransactionFromModule(
@@ -921,7 +932,7 @@ describe("AbiLocation", () => {
             iface.encodeFunctionData(fn, [target]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
 
       const badElem = abiCoder.encode(["uint256"], [999]);
       await expect(
@@ -986,7 +997,7 @@ describe("AbiLocation", () => {
             iface.encodeFunctionData(fn, [target]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
 
       await expect(
         roles
@@ -1050,7 +1061,7 @@ describe("AbiLocation", () => {
             iface.encodeFunctionData(fn, [target]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
 
       await expect(
         roles
@@ -1089,7 +1100,7 @@ describe("AbiLocation", () => {
         ExecutionOptions.None,
       );
 
-      await expect(invoke(12345)).to.not.be.reverted;
+      await expect(invoke(12345)).to.not.be.revert(ethers);
 
       await expect(invoke(99999))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
@@ -1115,7 +1126,7 @@ describe("AbiLocation", () => {
         ExecutionOptions.Both,
       );
 
-      await expect(invoke("0xdeadbeef")).to.not.be.reverted;
+      await expect(invoke("0xdeadbeef")).to.not.be.revert(ethers);
 
       await expect(invoke("0xaa"))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
@@ -1165,7 +1176,7 @@ describe("AbiLocation", () => {
             iface.encodeFunctionData(fn, [target]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
 
       await expect(
         roles
@@ -1224,7 +1235,7 @@ describe("AbiLocation", () => {
             iface.encodeFunctionData(fn, [target]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
 
       await expect(
         roles
@@ -1282,7 +1293,7 @@ describe("AbiLocation", () => {
             iface.encodeFunctionData(fn, [target]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
 
       await expect(
         roles
@@ -1345,7 +1356,7 @@ describe("AbiLocation", () => {
             iface.encodeFunctionData(fn, [innerPayload]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
 
       const badPayload = abiCoder.encode(["uint256", "uint256"], [999, 200]);
       await expect(
@@ -1386,7 +1397,7 @@ describe("AbiLocation", () => {
         ExecutionOptions.None,
       );
 
-      await expect(invoke(42)).to.not.be.reverted;
+      await expect(invoke(42)).to.not.be.revert(ethers);
 
       await expect(invoke(99))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
@@ -1418,7 +1429,7 @@ describe("AbiLocation", () => {
         ExecutionOptions.Both,
       );
 
-      await expect(invoke("0xaabb")).to.not.be.reverted;
+      await expect(invoke("0xaabb")).to.not.be.revert(ethers);
 
       await expect(invoke("0xff"))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
@@ -1454,7 +1465,7 @@ describe("AbiLocation", () => {
         ExecutionOptions.None,
       );
 
-      await expect(invoke(42)).to.not.be.reverted;
+      await expect(invoke(42)).to.not.be.revert(ethers);
 
       await expect(invoke(99))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
@@ -1486,7 +1497,7 @@ describe("AbiLocation", () => {
         ExecutionOptions.Both,
       );
 
-      await expect(invoke("0xaabb")).to.not.be.reverted;
+      await expect(invoke("0xaabb")).to.not.be.revert(ethers);
 
       await expect(invoke("0xff"))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
@@ -1542,7 +1553,7 @@ describe("AbiLocation", () => {
             iface.encodeFunctionData(fn, [target]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
 
       await expect(
         roles
@@ -1606,7 +1617,7 @@ describe("AbiLocation", () => {
             iface.encodeFunctionData(fn, [target]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
 
       await expect(
         roles
@@ -1674,7 +1685,7 @@ describe("AbiLocation", () => {
             iface.encodeFunctionData(fn, [innerPayload]),
             0,
           ),
-      ).to.not.be.reverted;
+      ).to.not.be.revert(ethers);
 
       const badPayload = abiCoder.encode(["uint256"], [999]);
       await expect(
@@ -1721,7 +1732,7 @@ describe("AbiLocation", () => {
         ExecutionOptions.None,
       );
 
-      await expect(invoke(42)).to.not.be.reverted;
+      await expect(invoke(42)).to.not.be.revert(ethers);
 
       await expect(invoke(99))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")

@@ -1,9 +1,9 @@
 import { expect } from "chai";
-import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { ZeroHash } from "ethers";
+import { anyValue } from "@nomicfoundation/hardhat-ethers-chai-matchers/withArgs";
 
-import { setupTestContract } from "../setup";
+import { network } from "hardhat";
+
+import { createSetup } from "../setup.js";
 import {
   Encoding,
   Operator,
@@ -11,10 +11,19 @@ import {
   ConditionViolationStatus,
   flattenCondition,
   packConditions,
-} from "../utils";
-import { ConditionFlatStruct } from "../../typechain-types/contracts/Roles";
+} from "../utils.js";
+import type { ConditionFlatStruct } from "../../typechain-types/contracts/Roles.js";
+
+const connection = await network.create();
+const { ethers, networkHelpers } = connection;
+const { loadFixture } = networkHelpers;
+const { setupTestContract } = createSetup(connection);
 
 describe("Operator - Empty", () => {
+  after(async () => {
+    await connection.close();
+  });
+
   async function setup() {
     const { roles, member, testContractAddress, roleKey } =
       await setupTestContract();
@@ -55,7 +64,7 @@ describe("Operator - Empty", () => {
         ExecutionOptions.Both,
       );
 
-      await expect(invoke("0x")).to.not.be.reverted;
+      await expect(invoke("0x")).to.not.be.revert(ethers);
     });
 
     it("fails when calldata is not empty", async () => {

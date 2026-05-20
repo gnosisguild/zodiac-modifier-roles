@@ -1,16 +1,25 @@
 import { expect } from "chai";
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { network } from "hardhat";
 
-import { setupTestContract, setupOneParam } from "../setup";
+import { createSetup } from "../setup.js";
 import {
   Operator,
   Encoding,
   ExecutionOptions,
   flattenCondition,
   packConditions,
-} from "../utils";
+} from "../utils.js";
+
+const connection = await network.create();
+const { ethers, networkHelpers } = connection;
+const { loadFixture } = networkHelpers;
+const { setupTestContract, setupOneParam } = createSetup(connection);
 
 describe("Operator - Pass", () => {
+  after(async () => {
+    await connection.close();
+  });
+
   describe("core behavior", () => {
     it("allows any parameter value", async () => {
       const { allowFunction, invoke } = await loadFixture(setupOneParam);
@@ -30,8 +39,8 @@ describe("Operator - Pass", () => {
       );
 
       // Any value passes - the operator performs no validation
-      await expect(invoke(0)).to.not.be.reverted;
-      await expect(invoke(999)).to.not.be.reverted;
+      await expect(invoke(0)).to.not.be.revert(ethers);
+      await expect(invoke(999)).to.not.be.revert(ethers);
     });
   });
 
