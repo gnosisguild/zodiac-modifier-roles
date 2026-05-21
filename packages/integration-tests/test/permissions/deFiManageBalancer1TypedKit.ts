@@ -1,7 +1,14 @@
-import { c, Permission } from "zodiac-roles-sdk"
-import { allow as allowKit } from "zodiac-roles-sdk/kit"
+import { createRequire } from "node:module"
+import { c } from "zodiac-roles-sdk"
+import type { Permission } from "zodiac-roles-sdk"
+import type { allow as allowKitType } from "zodiac-roles-sdk/kit"
 
-const allow = allowKit.mainnet
+const require = createRequire(import.meta.url)
+const { allow: allowKit } = require("zodiac-roles-sdk/kit") as {
+  allow: typeof allowKitType
+}
+
+const allow = allowKit.mainnet as any
 
 const USDT = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
 const USDC = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"

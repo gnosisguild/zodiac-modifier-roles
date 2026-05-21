@@ -1,19 +1,18 @@
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers"
-import hre from "hardhat"
-import {
-  encodeKey,
-  Permission,
-  planApplyRole,
-  processPermissions,
-} from "zodiac-roles-sdk"
+import { network } from "hardhat"
+import { encodeKey, planApplyRole, processPermissions } from "zodiac-roles-sdk"
+import type { Permission } from "zodiac-roles-sdk"
 
-import { TestAvatar } from "../../evm/typechain-types"
+import type { TestAvatar } from "../../evm/typechain-types/index.js"
 
-import { deployContracts } from "./deployContracts"
-import manageBalancer1Permissions from "./permissions/deFiManageBalancer1TypedKit"
-import manageENS1Permissions from "./permissions/deFiManageENS1Untyped"
-import manageBalancer1Transactions from "./testTransactions/deFiManageBalancer1"
-import manageENS1Transactions from "./testTransactions/deFiManageENS1"
+import { deployContracts } from "./deployContracts.js"
+import manageBalancer1Permissions from "./permissions/deFiManageBalancer1TypedKit.js"
+import manageENS1Permissions from "./permissions/deFiManageENS1Untyped.js"
+import manageBalancer1Transactions from "./testTransactions/deFiManageBalancer1.js"
+import manageENS1Transactions from "./testTransactions/deFiManageENS1.js"
+
+const connection = await network.create()
+const { ethers, networkHelpers, provider } = connection
+const { loadFixture } = networkHelpers
 
 const ADDRESSES = {
   BALANCER_1_ETH: {
@@ -39,22 +38,27 @@ type Configs = typeof ADDRESSES
 type Config = Configs["BALANCER_1_ETH"]
 
 describe.skip("Simulate Transactions Test", async () => {
+  after(async () => {
+    await connection.close()
+  })
+
   const ROLE_KEY = encodeKey("TEST_ROLE")
 
   const setup = async () => {
-    const [owner] = await hre.ethers.getSigners()
+    const [owner] = await ethers.getSigners()
 
-    const MultiSend = await hre.ethers.getContractFactory("MultiSend")
+    const MultiSend = await ethers.getContractFactory("MultiSend")
     const multiSend = await MultiSend.deploy()
 
     const MultiSendUnwrapper =
-      await hre.ethers.getContractFactory("MultiSendUnwrapper")
+      await ethers.getContractFactory("MultiSendUnwrapper")
     const multiSendUnwrapper = await MultiSendUnwrapper.deploy()
 
-    const Avatar = await hre.ethers.getContractFactory("TestAvatar")
+    const Avatar = await ethers.getContractFactory("TestAvatar")
     const avatar = (await Avatar.deploy()) as unknown as TestAvatar
 
     const modifier = await deployContracts(
+      { ethers, provider },
       owner.address,
       await avatar.getAddress(),
       await avatar.getAddress()
@@ -67,7 +71,7 @@ describe.skip("Simulate Transactions Test", async () => {
     )
 
     // add ethers default signer to role 1
-    const defaultSigner = (await hre.ethers.getSigners())[0]
+    const defaultSigner = (await ethers.getSigners())[0]
     await modifier.assignRoles(defaultSigner.address, [ROLE_KEY], [true])
 
     return {

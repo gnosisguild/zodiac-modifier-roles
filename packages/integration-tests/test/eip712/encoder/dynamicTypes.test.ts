@@ -1,6 +1,15 @@
-import { compareToEthersHashing } from "./compareToEthersHashing"
+import { network } from "hardhat"
+
+import { createCompareToEthersHashing } from "./compareToEthersHashing.js"
+
+const connection = await network.create()
+const compareToEthersHashing = createCompareToEthersHashing(connection)
 
 describe("EIP712Encoder", () => {
+  after(async () => {
+    await connection.close()
+  })
+
   describe("Dynamic Types", () => {
     it("should handle a struct with dynamic types (string, bytes)", async () => {
       const domain = {

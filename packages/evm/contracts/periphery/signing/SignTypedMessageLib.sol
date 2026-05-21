@@ -8,8 +8,6 @@ import "./EIP712Encoder.sol";
 
 import "../interfaces/SafeStorage.sol";
 
-import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
-
 /**
  * @title SignTypedMessageLib - Marks (typed) messages as signed in SafeStorage
  * @author gnosisguild
@@ -55,7 +53,7 @@ contract SignTypedMessageLib is SafeStorage {
         require(address(this) != deployedAt);
         bytes memory wrapped = abi.encodePacked(
             "\x19Ethereum Signed Message:\n",
-            Strings.toString(message.length),
+            uintToString(message.length),
             message
         );
         bytes32 safeMessageHash = keccak256(
@@ -159,4 +157,28 @@ contract SignTypedMessageLib is SafeStorage {
 
 interface ISafe {
     function domainSeparator() external view returns (bytes32);
+}
+
+function uintToString(uint256 value) pure returns (string memory) {
+    if (value == 0) {
+        return "0";
+    }
+
+    uint256 temp = value;
+    uint256 digits;
+    while (temp != 0) {
+        digits++;
+        temp /= 10;
+    }
+
+    bytes memory buffer = new bytes(digits);
+    uint8 asciiZero = 48;
+    while (value != 0) {
+        digits--;
+        uint8 digit = uint8(value % 10);
+        buffer[digits] = bytes1(asciiZero + digit);
+        value /= 10;
+    }
+
+    return string(buffer);
 }

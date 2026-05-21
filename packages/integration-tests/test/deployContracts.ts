@@ -1,36 +1,35 @@
-import { deployFactories, EIP1193Provider } from "@gnosis-guild/zodiac-core"
-import { Signer } from "ethers"
-import hre from "hardhat"
-import { EthereumProvider } from "hardhat/types"
+import { deployFactories } from "@gnosis-guild/zodiac-core"
+import type { EIP1193Provider } from "@gnosis-guild/zodiac-core"
+import type { Signer } from "ethers"
+import type { NetworkConnection } from "hardhat/types/network"
+import type { EthereumProvider } from "hardhat/types/providers"
 
-import { Roles } from "../../evm/typechain-types"
+import type { Roles } from "../../evm/typechain-types/index.js"
 
 export const deployContracts = async (
+  { ethers, provider }: Pick<NetworkConnection, "ethers" | "provider">,
   owner: string,
   avatar: string,
   target: string
 ) => {
-  const [deployer] = await hre.ethers.getSigners()
+  const [deployer] = await ethers.getSigners()
 
   await deployFactories({
-    provider: createAdapter({
-      provider: hre.network.provider,
-      signer: deployer,
-    }),
+    provider: createAdapter({ provider, signer: deployer }),
   })
 
-  // deploy libs
-  const Packer = await hre.ethers.getContractFactory("Packer")
-  const packer = await Packer.connect(deployer).deploy()
+  const ConditionStorer = await ethers.getContractFactory("ConditionStorer")
+  const conditionStorer = await ConditionStorer.connect(deployer).deploy()
 
-  const Integrity = await hre.ethers.getContractFactory("Integrity")
-  const integrity = await Integrity.connect(deployer).deploy()
+  const WithinRatioChecker =
+    await ethers.getContractFactory("WithinRatioChecker")
+  const withinRatioChecker = await WithinRatioChecker.connect(deployer).deploy()
 
   // deploy Roles
-  const Roles = await hre.ethers.getContractFactory("Roles", {
+  const Roles = await ethers.getContractFactory("Roles", {
     libraries: {
-      Integrity: await integrity.getAddress(),
-      Packer: await packer.getAddress(),
+      ConditionStorer: await conditionStorer.getAddress(),
+      WithinRatioChecker: await withinRatioChecker.getAddress(),
     },
   })
 

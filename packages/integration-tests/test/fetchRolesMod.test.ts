@@ -1,9 +1,5 @@
-import chai from "chai"
-import chaiAsPromised from "chai-as-promised"
+import { expect } from "chai"
 import { fetchRolesMod } from "zodiac-roles-deployments"
-
-chai.use(chaiAsPromised)
-const expect = chai.expect
 
 describe.skip("fetchRolesMod", () => {
   it("fetches the mod's base config, allowance, and unwrap adapter", async () => {

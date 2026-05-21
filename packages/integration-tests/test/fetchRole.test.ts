@@ -1,9 +1,5 @@
-import chai from "chai"
-import chaiAsPromised from "chai-as-promised"
+import { expect } from "chai"
 import { fetchRole } from "zodiac-roles-deployments"
-
-chai.use(chaiAsPromised)
-const expect = chai.expect
 
 describe.skip("fetchRole", () => {
   it("allows fetching historic role states", async () => {
