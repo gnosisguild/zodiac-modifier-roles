@@ -4,13 +4,11 @@
 // Converts to LGPL-3.0-or-later on 2030-03-01
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-
-contract MockERC721 is ERC721 {
-    constructor() ERC721("MockErc721", "NFTPOS") {}
+contract MockERC721 {
+    mapping(uint256 tokenId => address owner) public ownerOf;
 
     function mint(address to, uint256 tokenId) external {
-        _mint(to, tokenId);
+        ownerOf[tokenId] = to;
     }
 
     function doSomething(uint256 tokenId, uint256 someParam) external {}

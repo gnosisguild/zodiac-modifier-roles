@@ -1,20 +1,20 @@
-import hre from "hardhat"
+import type { HardhatEthers } from "@nomicfoundation/hardhat-ethers/types"
 
-import { deployFactory as deploy2470Factory } from "./eip2470"
-import { deployFallbackHandler } from "./fallbackHandler"
-import { deployModuleProxyFactory } from "./moduleProxyFactory"
-import { deployRolesMastercopy } from "./rolesMastercopy"
-import { deploySafeMastercopy } from "./safeMastercopy"
+import { deployFactory as deploy2470Factory } from "./eip2470.js"
+import { deployFallbackHandler } from "./fallbackHandler.js"
+import { deployModuleProxyFactory } from "./moduleProxyFactory.js"
+import { deployRolesMastercopy } from "./rolesMastercopy.js"
+import { deploySafeMastercopy } from "./safeMastercopy.js"
 import {
   deploySafeProxyFactory,
   address as safeProxyFactory,
-} from "./safeProxyFactory"
-import { deployFactory } from "./singletonFactory"
+} from "./safeProxyFactory.js"
+import { deployFactory } from "./singletonFactory.js"
 
-export default async function deployMastercopies() {
-  const [, , , , , , deployer] = await hre.ethers.getSigners()
+export default async function deployMastercopies(ethers: HardhatEthers) {
+  const [, , , , , , deployer] = await ethers.getSigners()
 
-  if ((await deployer.provider.getCode(safeProxyFactory)) != "0x") {
+  if ((await deployer.provider!.getCode(safeProxyFactory)) != "0x") {
     return
   }
 

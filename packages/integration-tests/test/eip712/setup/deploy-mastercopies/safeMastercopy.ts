@@ -1,8 +1,8 @@
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers"
-import Artifact from "@safe-global/safe-contracts/build/artifacts/contracts/Safe.sol/Safe.json"
+import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types"
+import Artifact from "@safe-global/safe-contracts/build/artifacts/contracts/Safe.sol/Safe.json" with { type: "json" }
 import { Interface } from "ethers"
 
-import { deployViaFactory } from "./singletonFactory"
+import { deployViaFactory } from "./singletonFactory.js"
 
 export const address = "0x639245e8476E03e789a244f279b5843b9633b2E7"
 

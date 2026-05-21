@@ -1,4 +1,4 @@
-import { bytecode as creationBytecode } from "@safe-global/safe-contracts/build/artifacts/contracts/proxies/SafeProxy.sol/SafeProxy.json"
+import SafeProxyArtifact from "@safe-global/safe-contracts/build/artifacts/contracts/proxies/SafeProxy.sol/SafeProxy.json" with { type: "json" }
 import {
   AbiCoder,
   ZeroAddress,
@@ -7,15 +7,17 @@ import {
   keccak256,
 } from "ethers"
 
-import { address as fallbackHandler } from "./deploy-mastercopies/fallbackHandler"
+import { address as fallbackHandler } from "./deploy-mastercopies/fallbackHandler.js"
 import {
   iface as ifaceSafe,
   address as mastercopy,
-} from "./deploy-mastercopies/safeMastercopy"
+} from "./deploy-mastercopies/safeMastercopy.js"
 import {
   address as factory,
   iface as ifaceFactory,
-} from "./deploy-mastercopies/safeProxyFactory"
+} from "./deploy-mastercopies/safeProxyFactory.js"
+
+const { bytecode: creationBytecode } = SafeProxyArtifact
 
 export function calculateSafeAddress({
   owners,

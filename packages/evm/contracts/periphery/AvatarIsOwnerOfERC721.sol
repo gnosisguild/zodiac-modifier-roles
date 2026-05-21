@@ -4,7 +4,6 @@
 // Converts to LGPL-3.0-or-later on 2030-03-01
 pragma solidity >=0.8.17 <0.9.0;
 
-import "@openzeppelin/contracts/interfaces/IERC721.sol";
 import "./interfaces/ICustomCondition.sol";
 
 /**
@@ -18,6 +17,10 @@ interface IModifier {
     function avatar() external view returns (address);
 
     function target() external view returns (address);
+}
+
+interface IERC721 {
+    function ownerOf(uint256 tokenId) external view returns (address);
 }
 
 contract AvatarIsOwnerOfERC721 is ICustomCondition {

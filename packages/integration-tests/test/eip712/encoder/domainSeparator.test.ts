@@ -1,21 +1,27 @@
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers"
 import { expect } from "chai"
-import hre from "hardhat"
+import { network } from "hardhat"
 import { TypedDataEncoder, keccak256, toUtf8Bytes } from "ethers"
 
 import { __integration } from "zodiac-roles-sdk"
 
 const { encodeTypedDomain, toAbiTypes } = __integration
 
+const connection = await network.create()
+const { ethers, networkHelpers } = connection
+const { loadFixture } = networkHelpers
+
 async function deployEIP712Encoder() {
-  const EIP7127Encoder =
-    await hre.ethers.getContractFactory("MockEIP712Encoder")
+  const EIP7127Encoder = await ethers.getContractFactory("MockEIP712Encoder")
   const encoder = await EIP7127Encoder.deploy()
 
   return { encoder }
 }
 
 describe("EIP712Encoder", () => {
+  after(async () => {
+    await connection.close()
+  })
+
   describe("hashDomainSeparator()", () => {
     it("should hash the domain separator with all required fields", async () => {
       const { encoder } = await loadFixture(deployEIP712Encoder)

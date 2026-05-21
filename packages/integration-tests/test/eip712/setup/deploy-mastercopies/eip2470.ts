@@ -1,13 +1,13 @@
 import assert from "assert"
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers"
+import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types"
 import {
   Contract,
-  Signer,
   ZeroHash,
   getCreate2Address,
   keccak256,
   parseEther,
 } from "ethers"
+import type { Signer } from "ethers"
 
 export async function deployViaFactory(
   { bytecode, salt = ZeroHash }: { bytecode: string; salt?: string },
@@ -58,7 +58,7 @@ const factoryInfo = {
  *
  * https://eips.ethereum.org/EIPS/eip-2470
  */
-export async function deployFactory(signer: SignerWithAddress) {
+export async function deployFactory(signer: HardhatEthersSigner) {
   const { address, deployer } = factoryInfo
 
   // fund the singleton factory deployer account
@@ -69,7 +69,7 @@ export async function deployFactory(signer: SignerWithAddress) {
 
   // deploy the singleton factory
   await (
-    await signer.provider.broadcastTransaction(factoryInfo.transaction)
+    await signer.provider!.broadcastTransaction(factoryInfo.transaction)
   ).wait()
 
   return address

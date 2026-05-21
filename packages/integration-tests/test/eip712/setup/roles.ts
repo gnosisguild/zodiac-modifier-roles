@@ -1,11 +1,12 @@
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers"
+import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types"
 import { AbiCoder, randomBytes } from "ethers"
-import { Condition, ExecutionOptions } from "zodiac-roles-sdk"
+import type { ExecutionOptions } from "zodiac-roles-deployments"
+import type { Condition } from "zodiac-roles-sdk"
 
-import { moduleProxyFactory } from "./deploy-mastercopies/moduleProxyFactory"
-import { rolesModMastercopy } from "./deploy-mastercopies/rolesMastercopy"
-import { enableModuleInSafe } from "./safe"
-import { ConditionFlatStruct } from "../../../../evm/typechain-types/contracts/Roles"
+import { moduleProxyFactory } from "./deploy-mastercopies/moduleProxyFactory.js"
+import { rolesModMastercopy } from "./deploy-mastercopies/rolesMastercopy.js"
+import { enableModuleInSafe } from "./safe.js"
+import type { ConditionFlatStruct } from "../../../../evm/typechain-types/contracts/Roles.js"
 
 export async function deployRoles(
   {
