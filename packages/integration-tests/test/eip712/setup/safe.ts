@@ -1,15 +1,12 @@
-import {
-  HardhatEthersSigner,
-  SignerWithAddress,
-} from "@nomicfoundation/hardhat-ethers/signers"
+import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types"
 
 import { AbiCoder, ZeroAddress, ZeroHash, concat } from "ethers"
 
-import { iface } from "./deploy-mastercopies/safeMastercopy"
+import { iface } from "./deploy-mastercopies/safeMastercopy.js"
 import {
   calculateSafeAddress,
   populateSafeCreation,
-} from "./encodeSafeCreation"
+} from "./encodeSafeCreation.js"
 
 export async function deploySafe(
   {
@@ -46,7 +43,7 @@ export async function enableModuleInSafe(
     safe: string
     module: string
   },
-  signer: SignerWithAddress
+  signer: HardhatEthersSigner
 ) {
   return signer.sendTransaction({
     to: safe,

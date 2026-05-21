@@ -1,5 +1,4 @@
 import { expect } from "chai"
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers"
 import {
   AbiCoder,
   concat,
@@ -8,35 +7,40 @@ import {
   randomBytes,
   toUtf8Bytes,
 } from "ethers"
-import { ethers } from "hardhat"
-import {
-  ExecutionOptions,
-  allowPersonalSign,
-  encodePersonalSign,
-} from "zodiac-roles-sdk"
+import { network } from "hardhat"
+import { allowPersonalSign, encodePersonalSign } from "zodiac-roles-sdk"
+import { ExecutionOptions } from "zodiac-roles-deployments"
 
-import { iface as ifaceFallback } from "./setup/deploy-mastercopies/fallbackHandler"
+import { iface as ifaceFallback } from "./setup/deploy-mastercopies/fallbackHandler.js"
 import {
   connectRolesSafeAndMember,
   deployRoles,
   execTransactionWithRole,
   scopeFunction,
   scopeTarget,
-} from "./setup/roles"
-import { deploySafe } from "./setup/safe"
-import deployMastercopies from "./setup/deploy-mastercopies"
+} from "./setup/roles.js"
+import { deploySafe } from "./setup/safe.js"
+import deployMastercopies from "./setup/deploy-mastercopies/index.js"
+
+const connection = await network.create()
+const { ethers, networkHelpers } = connection
+const { loadFixture } = networkHelpers
 
 const EIP712_MAGIC_VALUE = "0x20c13b0b"
 
 describe("allowPersonalSign()", () => {
+  after(async () => {
+    await connection.close()
+  })
+
   async function setup() {
-    await deployMastercopies()
+    await deployMastercopies(ethers)
 
     const lib = await (
       await ethers.getContractFactory("SignTypedMessageLib")
     ).deploy()
 
-    const [owner, member, relayer] = await hre.ethers.getSigners()
+    const [owner, member, relayer] = await ethers.getSigners()
 
     const safe = await deploySafe(
       {
@@ -80,7 +84,6 @@ describe("allowPersonalSign()", () => {
       executionOptions: ExecutionOptions.Both,
     })
 
-
     return {
       relayer,
       safe,
@@ -119,7 +122,7 @@ describe("allowPersonalSign()", () => {
         data: encodePersonalSign({ message }),
         operation: 1,
       })
-    ).to.not.be.reverted
+    ).to.not.be.revert(ethers)
   })
 
   it("allows signing a message that exactly matches the prefix", async () => {
@@ -132,7 +135,7 @@ describe("allowPersonalSign()", () => {
         data: encodePersonalSign({ message: startsWith }),
         operation: 1,
       })
-    ).to.not.be.reverted
+    ).to.not.be.revert(ethers)
   })
 
   it("rejects signing a message that does not start with the allowed prefix", async () => {
@@ -146,7 +149,7 @@ describe("allowPersonalSign()", () => {
         data: encodePersonalSign({ message }),
         operation: 1,
       })
-    ).to.be.reverted
+    ).to.be.revert(ethers)
   })
 
   it("signs a message through roles and verifies via isValidSignature", async () => {
@@ -215,10 +218,10 @@ describe("allowPersonalSign()", () => {
     await expect(
       relayer.call({
         to: safe,
-        data: ifaceFallback.encodeFunctionData("isValidSignature(bytes32,bytes)", [
-          messageHash,
-          "0x",
-        ]),
+        data: ifaceFallback.encodeFunctionData(
+          "isValidSignature(bytes32,bytes)",
+          [messageHash, "0x"]
+        ),
       })
     ).to.be.revertedWith("Hash not approved")
 
@@ -232,10 +235,10 @@ describe("allowPersonalSign()", () => {
     // After signing, isValidSignature(bytes32,bytes) should return magic value
     const resultData = await relayer.call({
       to: safe,
-      data: ifaceFallback.encodeFunctionData("isValidSignature(bytes32,bytes)", [
-        messageHash,
-        "0x",
-      ]),
+      data: ifaceFallback.encodeFunctionData(
+        "isValidSignature(bytes32,bytes)",
+        [messageHash, "0x"]
+      ),
     })
 
     const result = ifaceFallback.decodeFunctionResult(

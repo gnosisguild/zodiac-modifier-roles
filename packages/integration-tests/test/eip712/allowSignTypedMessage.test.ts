@@ -1,5 +1,4 @@
 import { expect } from "chai"
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers"
 import {
   TypedDataEncoder,
   ZeroAddress,
@@ -7,43 +6,50 @@ import {
   keccak256,
   randomBytes,
 } from "ethers"
-import hre, { ethers } from "hardhat"
+import { network } from "hardhat"
 import {
-  ExecutionOptions,
   allowSignTypedMessage,
   encodeSignTypedMessage,
   __integration,
 } from "zodiac-roles-sdk"
+import { ExecutionOptions } from "zodiac-roles-deployments"
 
-import { iface as ifaceFallback } from "./setup/deploy-mastercopies/fallbackHandler"
+import { iface as ifaceFallback } from "./setup/deploy-mastercopies/fallbackHandler.js"
 import {
   connectRolesSafeAndMember,
   deployRoles,
   execTransactionWithRole,
   scopeFunction,
   scopeTarget,
-} from "./setup/roles"
-import { deploySafe } from "./setup/safe"
-import deployMastercopies from "./setup/deploy-mastercopies"
+} from "./setup/roles.js"
+import { deploySafe } from "./setup/safe.js"
+import deployMastercopies from "./setup/deploy-mastercopies/index.js"
+
+const connection = await network.create()
+const { ethers, networkHelpers, provider } = connection
+const { loadFixture } = networkHelpers
 
 const { toAbiTypes } = __integration
 
 const SomeAddress =
   "0x7e2a2fa2a064f693f0a55c5639476d913ff12d05" as `0x${string}`
-const AddressOne =
-  "0x0000000000000000000000000000000000000001" as `0x${string}`
+const AddressOne = "0x0000000000000000000000000000000000000001" as `0x${string}`
 
 const EIP712_MAGIC_VALUE = "0x20c13b0b"
 
 describe("allowSignTypedMessage()", () => {
+  after(async () => {
+    await connection.close()
+  })
+
   async function setup() {
-    await deployMastercopies()
+    await deployMastercopies(ethers)
 
     const lib = await (
       await ethers.getContractFactory("SignTypedMessageLib")
     ).deploy()
 
-    const [owner, member, relayer] = await hre.ethers.getSigners()
+    const [owner, member, relayer] = await ethers.getSigners()
 
     const safe = await deploySafe(
       {
@@ -176,7 +182,7 @@ describe("allowSignTypedMessage()", () => {
         }),
         operation: 1,
       })
-    ).to.be.reverted
+    ).to.be.revert(ethers)
 
     await expect(
       execTransactionFromRoles({
@@ -191,7 +197,7 @@ describe("allowSignTypedMessage()", () => {
         }),
         operation: 1,
       })
-    ).to.be.reverted
+    ).to.be.revert(ethers)
 
     await expect(
       execTransactionFromRoles({
@@ -199,7 +205,7 @@ describe("allowSignTypedMessage()", () => {
         data: encodeSignTypedMessage({ domain, types, message }),
         operation: 1,
       })
-    ).to.not.be.reverted
+    ).to.not.be.revert(ethers)
 
     // any name for the app
     await expect(
@@ -208,7 +214,7 @@ describe("allowSignTypedMessage()", () => {
         data: encodeSignTypedMessage({ domain, types, message }),
         operation: 1,
       })
-    ).to.not.be.reverted
+    ).to.not.be.revert(ethers)
 
     // any version for the app
     await expect(
@@ -224,7 +230,7 @@ describe("allowSignTypedMessage()", () => {
         }),
         operation: 1,
       })
-    ).to.not.be.reverted
+    ).to.not.be.revert(ethers)
 
     await expect(
       execTransactionFromRoles({
@@ -239,7 +245,7 @@ describe("allowSignTypedMessage()", () => {
         }),
         operation: 1,
       })
-    ).to.not.be.reverted
+    ).to.not.be.revert(ethers)
   })
 
   it("correctly restricts some elements in message", async () => {
@@ -256,7 +262,7 @@ describe("allowSignTypedMessage()", () => {
         }),
         operation: 1,
       })
-    )
+    ).to.be.revert(ethers)
 
     await expect(
       execTransactionFromRoles({
@@ -268,7 +274,7 @@ describe("allowSignTypedMessage()", () => {
         }),
         operation: 1,
       })
-    ).to.be.reverted
+    ).to.be.revert(ethers)
 
     await expect(
       execTransactionFromRoles({
@@ -280,7 +286,7 @@ describe("allowSignTypedMessage()", () => {
         }),
         operation: 1,
       })
-    ).to.not.be.reverted
+    ).to.not.be.revert(ethers)
 
     // any name for the app
     await expect(
@@ -289,7 +295,7 @@ describe("allowSignTypedMessage()", () => {
         data: encodeSignTypedMessage({ domain, types, message }),
         operation: 1,
       })
-    ).to.not.be.reverted
+    ).to.not.be.revert(ethers)
   })
 
   it("correctly enforces exact type layout", async () => {
@@ -303,7 +309,7 @@ describe("allowSignTypedMessage()", () => {
         data: data,
         operation: 1,
       })
-    ).to.not.be.reverted
+    ).to.not.be.revert(ethers)
 
     const aTypeHash = toAbiTypes({ domain, types })
       .map((n) => n.typeHash)
@@ -318,7 +324,7 @@ describe("allowSignTypedMessage()", () => {
         data: data.replace(aTypeHash.slice(2), keccak256(aTypeHash).slice(2)),
         operation: 1,
       })
-    ).to.be.reverted
+    ).to.be.revert(ethers)
   })
 
   it("signs a message from a safe, through a roles mod", async () => {

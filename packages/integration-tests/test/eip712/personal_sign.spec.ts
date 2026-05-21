@@ -1,9 +1,7 @@
 import { expect } from "chai"
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers"
 import {
   AbiCoder,
   Interface,
-  Signer,
   ZeroAddress,
   ZeroHash,
   concat,
@@ -12,20 +10,23 @@ import {
   solidityPacked,
   toUtf8Bytes,
 } from "ethers"
-import hre, { ethers } from "hardhat"
+import type { Signer } from "ethers"
+import { network } from "hardhat"
 import { createPublicClient, custom } from "viem"
 import { hardhat } from "viem/chains"
 
-import { iface as ifaceFallback } from "./setup/deploy-mastercopies/fallbackHandler"
-import { iface as ifaceSafe } from "./setup/deploy-mastercopies/safeMastercopy"
-import { deploySafe } from "./setup/safe"
-import deployMastercopies from "./setup/deploy-mastercopies"
+import { iface as ifaceFallback } from "./setup/deploy-mastercopies/fallbackHandler.js"
+import { iface as ifaceSafe } from "./setup/deploy-mastercopies/safeMastercopy.js"
+import { deploySafe } from "./setup/safe.js"
+import deployMastercopies from "./setup/deploy-mastercopies/index.js"
+
+const connection = await network.create()
+const { ethers, networkHelpers, provider } = connection
+const { loadFixture } = networkHelpers
 
 const EIP712_MAGIC_VALUE = "0x1626ba7e"
 
-const SAFE_MSG_TYPEHASH = keccak256(
-  toUtf8Bytes("SafeMessage(bytes message)")
-)
+const SAFE_MSG_TYPEHASH = keccak256(toUtf8Bytes("SafeMessage(bytes message)"))
 
 // It's not possible to verify a contract signature (on-chain, "0x") directly
 // with viem's standard tooling because it throws on "0x" signatures.
@@ -33,14 +34,18 @@ const SAFE_MSG_TYPEHASH = keccak256(
 // and then compare that the same dataHash is produced by the lib and call
 // isValidSignature directly.
 describe("personal_sign", () => {
+  after(async () => {
+    await connection.close()
+  })
+
   async function setup() {
-    await deployMastercopies()
+    await deployMastercopies(ethers)
 
     const lib = await (
       await ethers.getContractFactory("SignTypedMessageLib")
     ).deploy()
 
-    const [owner, relayer] = await hre.ethers.getSigners()
+    const [owner, relayer] = await ethers.getSigners()
 
     const safe = await deploySafe(
       {
@@ -58,14 +63,10 @@ describe("personal_sign", () => {
     const { owner, relayer, safe, lib } = await loadFixture(setup)
 
     const plainMessage = "hello sir"
-    const { dataHash } = await computeSafeMessageHash(
-      plainMessage,
-      safe,
-      owner
-    )
+    const { dataHash } = await computeSafeMessageHash(plainMessage, safe, owner)
 
     // EOA signs the SafeMessage typed data (normal ecrecover, v=27/28)
-    const chainId = (await owner.provider.getNetwork()).chainId
+    const chainId = (await owner.provider!.getNetwork()).chainId
     const signature = await owner.signTypedData(
       { chainId, verifyingContract: safe as `0x${string}` },
       { SafeMessage: [{ name: "message", type: "bytes" }] },
@@ -75,7 +76,7 @@ describe("personal_sign", () => {
     // viem verifyMessage targeting the Safe (EIP-1271)
     const client = createPublicClient({
       chain: hardhat,
-      transport: custom(hre.network.provider),
+      transport: custom(provider),
     })
     const isValid = await client.verifyMessage({
       address: safe as `0x${string}`,
@@ -102,11 +103,7 @@ describe("personal_sign", () => {
     const { owner, relayer, safe, lib } = await loadFixture(setup)
 
     const plainMessage = "hello sir"
-    const { dataHash } = await computeSafeMessageHash(
-      plainMessage,
-      safe,
-      owner
-    )
+    const { dataHash } = await computeSafeMessageHash(plainMessage, safe, owner)
 
     // Before signing on-chain, isValidSignature with 0x should revert
     await expect(
@@ -117,7 +114,7 @@ describe("personal_sign", () => {
           [dataHash, "0x"]
         ),
       })
-    ).to.be.reverted
+    ).to.be.revert(ethers)
 
     // Safe calls signMessage("hello sir") via SignTypedMessageLib
     await owner.sendTransaction(
@@ -140,7 +137,7 @@ describe("personal_sign", () => {
     // viem's verifyMessage throws on "0x" signature, so this returns false
     const client = createPublicClient({
       chain: hardhat,
-      transport: custom(hre.network.provider),
+      transport: custom(provider),
     })
     const isValid = await client.verifyMessage({
       address: safe as `0x${string}`,

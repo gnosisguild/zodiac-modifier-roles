@@ -1,36 +1,43 @@
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers"
 import { expect } from "chai"
-import { TypedData, TypedDataDomain } from "abitype"
+import type { TypedData, TypedDataDomain } from "abitype"
 import {
   AbiCoder,
   Interface,
-  Signer,
   TypedDataEncoder,
   ZeroAddress,
   ZeroHash,
   concat,
   randomBytes,
 } from "ethers"
-import hre, { ethers } from "hardhat"
+import type { Signer } from "ethers"
+import { network } from "hardhat"
 import { encodeSignTypedMessage, __integration } from "zodiac-roles-sdk"
 
-import deployMastercopies from "./setup/deploy-mastercopies"
-import { iface as ifaceFallback } from "./setup/deploy-mastercopies/fallbackHandler"
-import { iface as ifaceSafe } from "./setup/deploy-mastercopies/safeMastercopy"
+import deployMastercopies from "./setup/deploy-mastercopies/index.js"
+import { iface as ifaceFallback } from "./setup/deploy-mastercopies/fallbackHandler.js"
+import { iface as ifaceSafe } from "./setup/deploy-mastercopies/safeMastercopy.js"
 
-import { deploySafe } from "./setup/safe"
+import { deploySafe } from "./setup/safe.js"
+
+const connection = await network.create()
+const { ethers, networkHelpers, provider } = connection
+const { loadFixture } = networkHelpers
 
 const EIP712_MAGIC_VALUE = "0x1626ba7e"
 const EIP712_MAGIC_VALUE_OLD = "0x20c13b0b"
 
 describe("SignTypedMessageLib", () => {
+  after(async () => {
+    await connection.close()
+  })
+
   async function setup() {
-    await deployMastercopies()
+    await deployMastercopies(ethers)
     const lib = await (
       await ethers.getContractFactory("SignTypedMessageLib")
     ).deploy()
 
-    const [owner, relayer] = await hre.ethers.getSigners()
+    const [owner, relayer] = await ethers.getSigners()
 
     const safe = await deploySafe(
       {

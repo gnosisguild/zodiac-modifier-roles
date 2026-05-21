@@ -1,6 +1,15 @@
-import { compareToEthersHashing } from "./compareToEthersHashing"
+import { network } from "hardhat"
+
+import { createCompareToEthersHashing } from "./compareToEthersHashing.js"
+
+const connection = await network.create()
+const compareToEthersHashing = createCompareToEthersHashing(connection)
 
 describe("EIP712Encoder", () => {
+  after(async () => {
+    await connection.close()
+  })
+
   describe("Array Types", () => {
     it("should hash a struct with arrays of atomic types (fixed length)", async () => {
       const domain = {

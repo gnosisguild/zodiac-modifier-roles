@@ -1,11 +1,11 @@
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers"
+import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types"
 import { Interface } from "ethers"
 
-import { deployViaFactory } from "./eip2470"
+import { deployViaFactory } from "./eip2470.js"
 
 export const address = "0x000000000000addb49795b0f9ba5bc298cdda236"
 
-export async function deployModuleProxyFactory(signer: SignerWithAddress) {
+export async function deployModuleProxyFactory(signer: HardhatEthersSigner) {
   await deployViaFactory({ bytecode: creationBytecode, salt }, signer)
 }
 
