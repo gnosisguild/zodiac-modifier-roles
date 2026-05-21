@@ -9,7 +9,7 @@ const CowswapOrderSignerAddress = "0x23dA9AdE38E4477b23770DeD512fD37b12381FAB"
 // This means that signOrder would reject unless we wait some time for block.timestamp to advance.
 // Adding buffer here (15 seconds) to ensure signature is immediately valid when generated.
 // https://github.com/gnosisguild/cow-order-signer/blob/1fc456e113ded34bfc745456966f72aec9444be1/contracts/CowswapOrderSigner.sol#L46-L49
-const signatureValidityBuffer = 15;
+const signatureValidityBuffer = 15
 
 /** Encodes a signOrder call to the CowswapOrderSigner contract */
 export const encodeSignOrder = (quote: Quote) => {

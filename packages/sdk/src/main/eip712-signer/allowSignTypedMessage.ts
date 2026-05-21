@@ -107,7 +107,10 @@ function toAbiEncodedCondition(
 function buildTupleAbiType(types: TypedData, typeName: string): string {
   const fields = types[typeName]
   return `tuple(${fields
-    .map((f: { name: string; type: string }) => `${buildAbiType(types, f.type)} ${f.name}`)
+    .map(
+      (f: { name: string; type: string }) =>
+        `${buildAbiType(types, f.type)} ${f.name}`
+    )
     .join(",")})`
 }
 

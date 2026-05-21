@@ -1,8 +1,7 @@
 import { expect, test } from "vitest"
 import { c } from "zodiac-roles-sdk"
-import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
+import { Condition, Encoding, Operator } from "zodiac-roles-deployments"
 
-import { Scoping } from "../main/target/authoring/types"
 import { allow } from "./typings"
 import { checkRootConditionIntegrity } from "../main/condition/conditionIntegrity"
 
@@ -19,19 +18,17 @@ test("callWithinAllowance sets correct compValue", () => {
   // with compValue equal to the provided allowance key
   expect(permission.condition).toBeDefined()
 
-  const condition = permission.condition!
+  const condition = permission.condition as Condition
   const callWithinAllowanceNode = condition.children?.find(
     (child) => child.operator === Operator.CallWithinAllowance
   )
 
   expect(callWithinAllowanceNode).toBeDefined()
-  expect(callWithinAllowanceNode!.paramType).toBe(ParameterType.None)
+  expect(callWithinAllowanceNode!.paramType).toBe(Encoding.None)
   expect(callWithinAllowanceNode!.compValue).toBe(allowanceKey)
 
   // The condition should pass the SDK's own integrity check
-  expect(() =>
-    checkRootConditionIntegrity(condition as Condition)
-  ).not.toThrow()
+  expect(() => checkRootConditionIntegrity(condition)).not.toThrow()
 })
 
 test("callWithinAllowance without etherWithinAllowance does not throw", () => {

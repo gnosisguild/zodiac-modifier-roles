@@ -1,6 +1,5 @@
 import { hexlify, toUtf8Bytes } from "ethers"
 import {
-  Condition,
   Encoding,
   Operator,
   SIGN_TYPED_MESSAGE_LIB_ADDRESS,
@@ -22,11 +21,7 @@ import {
  *   `personalSign(bytes)` selector, delegatecall flag, and the prefix
  *   bitmask condition.
  */
-export const allowPersonalSign = ({
-  startsWith,
-}: {
-  startsWith: string
-}) => {
+export const allowPersonalSign = ({ startsWith }: { startsWith: string }) => {
   if (!startsWith) {
     throw new Error("startsWith must not be empty")
   }
