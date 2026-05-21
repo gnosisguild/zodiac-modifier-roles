@@ -1,11 +1,8 @@
-import { expect, test } from "vitest"
+import { test } from "vitest"
 import { BigNumberish } from "ethers"
 import { c } from "zodiac-roles-sdk"
-import { Condition, Operator, ParameterType } from "../main/types"
 
 import { Scoping } from "../main/target/authoring/types"
-import { allow } from "./typings"
-import { checkRootConditionIntegrity } from "../main/condition/conditionIntegrity"
 
 test("typings", async () => {
   // These are tests of the typing system, not the runtime behavior.
@@ -27,7 +24,7 @@ test("typings", async () => {
   const _t05: Scoping<string[]> = c.gt(0)
 
   // @ts-expect-error - It should only allow scoping actual fields
-  const _t06 = c.matches<{name: string; version: string}>({ wrong: "foo" })
+  const _t06 = c.matches<{ name: string; version: string }>({ wrong: "foo" })
 
   // It should be allowed to only define scoping for some struct fields
   const _t07: Scoping<{ a: string; b: number }> = { a: c.or("foo", "bar") }
@@ -37,7 +34,7 @@ test("typings", async () => {
 
   // calldataMatches should have an overload scopings and ABI types
   c.calldataMatches([], [])
-  
+
   // calldataMatches should have an overload allowing to pass a PresetFunction
   c.calldataMatches({
     targetAddress: "0x1234567890123456789012345678901234567890",
