@@ -46,10 +46,6 @@ library BitmaskChecker {
         uint256 shift = uint16(bytes2(compValue));
         uint256 n = (compValue.length - 2) / 2;
 
-        if (location + shift + n > data.length) {
-            return Status.BitmaskOverflow;
-        }
-
         /*
          * Resolve the operand's encoded byte length so the compare cannot
          * bleed into trailing zero padding (or, for Dynamic operands sitting
@@ -71,8 +67,14 @@ library BitmaskChecker {
             start += 32;
         }
 
+        // mask window must fit within the declared value length
         if (shift + n > encodedLength) {
             return Status.BitmaskOverflow;
+        }
+
+        // declared value length must be physically present in calldata
+        if (start + encodedLength > data.length) {
+            return Status.CalldataOverflow;
         }
 
         bytes calldata value = data[start:];
