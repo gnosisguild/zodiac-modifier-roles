@@ -3,7 +3,7 @@ import {
   Clearance,
   ExecutionOptions,
   Target,
-} from "zodiac-roles-deployments"
+} from "../types"
 
 import { groupBy } from "../groupBy"
 import { normalizeCondition } from "../condition"

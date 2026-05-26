@@ -1,5 +1,5 @@
 import { ParamType } from "ethers"
-import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
+import { Condition, Operator, ParameterType } from "../../../types"
 
 import { mapScoping } from "./matches"
 

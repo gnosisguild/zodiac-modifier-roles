@@ -27,6 +27,10 @@ const COW_ADDRESS =
 // RolesMod address from the user request
 const ROLES_MOD_ADDRESS =
   "0x27d8bb2e33Bc38A9CE93fdD90C80677b8436aFfb" as `0x${string}`
+const AVATAR_ADDRESS =
+  "0x849D52316331967b6fF1198e5E32A0eB168D039d" as `0x${string}`
+const OWNER_ADDRESS =
+  "0x849D52316331967b6fF1198e5E32A0eB168D039d" as `0x${string}`
 
 // 1 ETH in wei
 const ONE_ETH_WEI = 1000000000000000000n
@@ -57,6 +61,8 @@ describe("getCowQuote", () => {
         chainId: SupportedChainId.MAINNET,
         rolesModifier: ROLES_MOD_ADDRESS,
         roleKey: encodeKey("test-role"),
+        avatar: AVATAR_ADDRESS,
+        owner: OWNER_ADDRESS,
       })
 
       // Verify the quote was successful
@@ -90,6 +96,8 @@ describe("getCowQuote", () => {
         chainId: SupportedChainId.MAINNET,
         rolesModifier: ROLES_MOD_ADDRESS,
         roleKey: encodeKey("test-role"),
+        avatar: AVATAR_ADDRESS,
+        owner: OWNER_ADDRESS,
       })
 
       // Verify the quote was successful

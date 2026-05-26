@@ -1,12 +1,6 @@
-import {
-  ChainId,
-  chains,
-  Condition,
-  Operator,
-  Role,
-} from "zodiac-roles-deployments"
-
+import { chains } from "./chains"
 import { decodeKey } from "./keys"
+import { ChainId, Condition, Operator, Role } from "./types"
 
 /**
  * Error class for license-related errors

@@ -1,6 +1,6 @@
 import OpenAPIBackend from "openapi-backend"
 import { OpenAPIV3 } from "openapi-types"
-import { Annotation, Target } from "zodiac-roles-deployments"
+import { Annotation, Target } from "../main/types"
 // We import via alias to avoid double bundling of sdk functions
 import {
   Permission,

@@ -1,5 +1,5 @@
 import { BigNumberish, BytesLike, getAddress, hexlify, ParamType } from "ethers"
-import { Operator, ParameterType } from "zodiac-roles-deployments"
+import { Operator, ParameterType } from "../../../types"
 
 import { ConditionFunction } from "../types"
 

@@ -1,5 +1,5 @@
 import { ParamType } from "ethers"
-import { ParameterType } from "zodiac-roles-deployments"
+import { ParameterType } from "../../../../types"
 
 export const parameterType = (type: ParamType): ParameterType => {
   switch (type.baseType) {

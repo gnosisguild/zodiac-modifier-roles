@@ -1,10 +1,8 @@
-import {
-  fetchRolesMod,
-  planApplyRole,
-  LicenseError,
-} from "zodiac-roles-sdk"
+import { planApplyRole, LicenseError } from "zodiac-roles-sdk"
 import { notFound } from "next/navigation"
 import { kv } from "@vercel/kv"
+
+import { fetchRolesMod } from "@/utils/subgraph"
 
 import Layout from "@/components/Layout"
 import { parseModParam, parseRoleParam } from "@/app/params"

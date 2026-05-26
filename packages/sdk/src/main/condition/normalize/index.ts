@@ -1,4 +1,4 @@
-import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
+import { Condition, Operator, ParameterType } from "../../types"
 
 import { conditionId, rawConditionId } from "../conditionId"
 import { padToMatchTypeTree } from "./padToMatchTypeTree"

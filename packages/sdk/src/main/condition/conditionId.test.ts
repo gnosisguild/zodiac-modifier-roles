@@ -1,5 +1,5 @@
 import { expect, it, suite } from "vitest"
-import { Operator, ParameterType } from "zodiac-roles-deployments"
+import { Operator, ParameterType } from "../types"
 
 import { conditionAddress } from "./conditionId"
 import { normalizeCondition } from "./normalize"

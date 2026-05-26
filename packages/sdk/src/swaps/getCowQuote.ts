@@ -7,7 +7,6 @@ import {
   PriceQuality,
   OrderQuoteRequest,
 } from "@cowprotocol/sdk-order-book"
-import { fetchRolesModConfig } from "zodiac-roles-deployments"
 import { makeAppData } from "./appData"
 import { getCowOrderbookQuote } from "./cowOrderbookApi"
 import type { AdvancedOptions, Quote, QuoteRequest } from "./types"
@@ -36,17 +35,6 @@ export const getCowQuote = async (
   quoteRequest: QuoteRequest,
   advancedOptions: AdvancedOptions = {}
 ): Promise<Quote> => {
-  const rolesModConfig = await fetchRolesModConfig({
-    chainId: quoteRequest.chainId,
-    address: quoteRequest.rolesModifier,
-  })
-
-  if (!rolesModConfig) {
-    throw new Error(
-      `RolesModifier ${quoteRequest.rolesModifier} not found on subgraph`
-    )
-  }
-
   // Calculate validTo if not provided (30 minutes from now)
   const validTo =
     quoteRequest.validTo || Math.floor(Date.now() / 1000) + 30 * 60
@@ -54,7 +42,7 @@ export const getCowQuote = async (
   const appData = await makeAppData(
     {
       chainId: quoteRequest.chainId,
-      owner: rolesModConfig.owner,
+      owner: quoteRequest.owner,
     },
     advancedOptions
   )
@@ -62,9 +50,9 @@ export const getCowQuote = async (
   const quoteRequestParams = {
     sellToken: quoteRequest.sellToken,
     buyToken: quoteRequest.buyToken,
-    from: rolesModConfig.avatar,
+    from: quoteRequest.avatar,
     validTo,
-    receiver: quoteRequest.receiver || rolesModConfig.avatar,
+    receiver: quoteRequest.receiver || quoteRequest.avatar,
     appData,
     sellTokenBalance: quoteRequest.sellTokenBalance
       ? sellTokenSourceMap[quoteRequest.sellTokenBalance]
@@ -98,7 +86,7 @@ export const getCowQuote = async (
   return {
     sellToken: quote.sellToken as `0x${string}`,
     buyToken: quote.buyToken as `0x${string}`,
-    receiver: (quote.receiver ?? rolesModConfig.avatar) as `0x${string}`,
+    receiver: (quote.receiver ?? quoteRequest.avatar) as `0x${string}`,
     sellAmount: quote.sellAmount,
     buyAmount: quote.buyAmount,
     validTo: quote.validTo,
@@ -112,7 +100,7 @@ export const getCowQuote = async (
       "erc20") as "erc20" | "internal",
     networkCostsAmount,
     chainId: quoteRequest.chainId,
-    from: rolesModConfig.avatar as `0x${string}`,
+    from: quoteRequest.avatar,
     rolesModifier: quoteRequest.rolesModifier,
     roleKey: quoteRequest.roleKey,
   }

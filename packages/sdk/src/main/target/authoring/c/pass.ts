@@ -1,5 +1,5 @@
 import { ParamType } from "ethers"
-import { Operator } from "zodiac-roles-deployments"
+import { Operator } from "../../../types"
 
 import { describeStructure } from "./helpers/describeStructure"
 import { parameterType } from "./helpers/parameterType"

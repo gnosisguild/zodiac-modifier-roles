@@ -1,5 +1,4 @@
-import { chains } from "./chains"
-import { ChainId } from "./types"
+import { ChainId, chains } from "zodiac-roles-sdk"
 
 export const getRolesModId = (chainId: ChainId, address: `0x${string}`) =>
   `${chains[chainId].prefix}:${address.toLowerCase()}`

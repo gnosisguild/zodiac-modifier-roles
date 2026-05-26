@@ -5,7 +5,7 @@ import {
   ExecutionOptions,
   Operator,
   ParameterType,
-} from "zodiac-roles-deployments"
+} from "../types"
 
 import { abiEncode } from "../abiEncode"
 import { normalizeCondition } from "../condition"

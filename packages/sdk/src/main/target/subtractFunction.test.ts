@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { Function, Operator, ParameterType } from "zodiac-roles-deployments"
+import { Function, Operator, ParameterType } from "../types"
 import { subtractFunction } from "./subtractFunction"
 import { abiEncode } from "../abiEncode"
 

@@ -1,4 +1,4 @@
-import { ExecutionOptions } from "zodiac-roles-deployments"
+import { ExecutionOptions } from "../types"
 
 import { ExecutionFlags } from "./types"
 
