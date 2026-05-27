@@ -1,5 +1,6 @@
 import { expect } from "chai";
 import { anyValue } from "@nomicfoundation/hardhat-ethers-chai-matchers/withArgs";
+import { AbiCoder, concat } from "ethers";
 
 import { network } from "hardhat";
 
@@ -12,6 +13,8 @@ import {
   flattenCondition,
   packConditions,
 } from "../utils.js";
+
+const abiCoder = AbiCoder.defaultAbiCoder();
 
 // Helper: compValue = [shift (2 bytes)][mask (N bytes)][expected (N bytes)]
 function encodeCompValue(
@@ -90,6 +93,40 @@ describe("Operator - Bitmask", () => {
       await expect(invoke("0x" + "ab".repeat(32)))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(ConditionViolationStatus.BitmaskOverflow, 1, anyValue);
+    });
+
+    it("fails with CalldataOverflow when declared dynamic content is truncated", async () => {
+      const { roles, member, testContractAddress, fn, allowFunction } =
+        await loadFixture(setupDynamicParam);
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Dynamic,
+              operator: Operator.Bitmask,
+              compValue: encodeCompValue(31, "ff", "00"),
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
+      );
+
+      const malformedCall = concat([
+        fn.selector,
+        abiCoder.encode(["uint256", "uint256"], [32, 32]),
+        `0x${"11".repeat(31)}`,
+      ]);
+
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(testContractAddress, 0, malformedCall, 0),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.CalldataOverflow, 1, anyValue);
     });
   });
 
