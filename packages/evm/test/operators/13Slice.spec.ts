@@ -20,6 +20,14 @@ const abiCoder = AbiCoder.defaultAbiCoder();
 const encodeCompValue = (shift: number, size: number) =>
   solidityPacked(["uint16", "uint8"], [shift, size]);
 
+function replaceBytes(data: string, byteOffset: number, replacement: string) {
+  const hex = data.slice(2);
+  const replacementHex = replacement.slice(2);
+  const start = byteOffset * 2;
+  const end = start + replacementHex.length;
+  return `0x${hex.slice(0, start)}${replacementHex}${hex.slice(end)}`;
+}
+
 const connection = await network.create();
 const { ethers, networkHelpers } = connection;
 const { loadFixture } = networkHelpers;
@@ -148,6 +156,49 @@ describe("Operator - Slice", () => {
       await expect(invoke(abiCoder.encode(["uint256"], [12346])))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(ConditionViolationStatus.ParameterNotAllowed, 2, anyValue);
+    });
+
+    it("rejects dynamic slices beyond the declared byte length", async () => {
+      const { roles, member, testContractAddress, fn, allowFunction } =
+        await loadFixture(setupDynamicParam);
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Dynamic,
+              operator: Operator.Slice,
+              compValue: encodeCompValue(1, 4),
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [0xdeadbeef]),
+                },
+              ],
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
+      );
+
+      const call = replaceBytes(
+        ethers.Interface.from(["function fn(bytes)"]).encodeFunctionData(fn, [
+          "0x01",
+        ]),
+        69,
+        "0xdeadbeef",
+      );
+
+      await expect(
+        roles
+          .connect(member)
+          .execTransactionFromModule(testContractAddress, 0, call, 0),
+      )
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.CalldataOverflow, 1, anyValue);
     });
   });
 

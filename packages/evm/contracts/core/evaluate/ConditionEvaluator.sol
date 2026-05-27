@@ -461,9 +461,40 @@ library ConditionEvaluator {
         Consumption[] memory consumptions,
         Context memory context
     ) private view returns (Result memory result) {
-        // compValue layout: | 2 bytes: shift | 1 byte: size (1-32)
-        uint16 shift = uint16(bytes2(condition.compValue));
-        uint8 size = uint8(condition.compValue[2]);
+        /*
+         * compValue layout (3 bytes):
+         *
+         *   ┌──────────────────────┬──────────────────────┐
+         *   │ shift (16 bits)      │ size (8 bits)        │
+         *   └──────────────────────┴──────────────────────┘
+         *
+         *   shift  byte offset into the operand content at which the window starts
+         *   size   number of bytes to extract (right-aligned into a bytes32 word)
+         */
+        uint256 shift = uint256(uint16(bytes2(condition.compValue)));
+        uint256 size = uint256(uint8(condition.compValue[2]));
+
+        /*
+         * Integrity guarantees Slice targets either Static or Dynamic values
+         * and has one Static child. Normalize both cases to one byte range:
+         * - Static starts at `location` and is bounded by `condition.size`.
+         * - Dynamic starts after the length word and is bounded by its
+         *   declared byte length, not by ABI padding.
+         */
+        uint256 length = condition.size;
+        if (!condition.inlined) {
+            if (location + 32 > data.length) {
+                return _violation(Status.CalldataOverflow, location, condition);
+            }
+
+            assembly {
+                length := calldataload(add(data.offset, location))
+            }
+        }
+
+        if (shift + size > length) {
+            return _violation(Status.CalldataOverflow, location, condition);
+        }
 
         Condition memory sliced = condition.children[0];
         sliced.size = size;
@@ -471,7 +502,6 @@ library ConditionEvaluator {
         return
             evaluate(
                 data,
-                // compute the slices location
                 location + (condition.inlined ? 0 : 32) + shift,
                 sliced,
                 consumptions,
