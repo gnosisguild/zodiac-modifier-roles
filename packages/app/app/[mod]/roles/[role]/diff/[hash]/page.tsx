@@ -1,3 +1,4 @@
+import { LicenseError } from "zodiac-roles-sdk"
 import { notFound } from "next/navigation"
 import { kv } from "@vercel/kv"
 
@@ -9,6 +10,8 @@ import { parseModParam, parseRoleParam } from "@/app/params"
 import PageBreadcrumbs from "./breadcrumbs"
 import Flex from "@/ui/Flex"
 import Box from "@/ui/Box"
+import Alert from "@/ui/Alert"
+import { LinkButton } from "@/ui/Button"
 import { isGovernor } from "@/components/ApplyUpdate/ApplyViaGovernor/isGovernor"
 import { isRethinkFactory } from "@/components/ApplyUpdate/ApplyViaRethinkFactory/isRethinkFactory"
 import ApplyUpdateInteractive from "@/components/ApplyUpdate/ApplyUpdateInteractive"
@@ -63,18 +66,69 @@ export default async function DiffPage(props: {
     () => "📦 Update MultiSend unwrapper to latest version"
   )
 
+  const unwrapperWarning = hasLegacy && (
+    <Box p={2} className={styles.unwrapperWarning}>
+      <Flex gap={2} alignItems="center">
+        <span className={styles.warningIcon}>&#x26A0;</span>
+        <span>
+          This Roles instance uses an outdated MultiSend unwrapper. You can{" "}
+          <a href={`/${params.mod}/multisend`}>update the unwrapper here</a>.
+        </span>
+      </Flex>
+    </Box>
+  )
+
   const comments: string[] = []
   const logCall = (log: string) => comments.push(log)
 
-  const calls = await planApplyRole(
-    {
-      key: roleData.key,
-      members: post.members,
-      targets: post.targets,
-      annotations: post.annotations,
-    },
-    { chainId: mod.chainId, address: mod.address, log: logCall }
-  )
+  let calls: { to: `0x${string}`; data: `0x${string}` }[] = []
+  try {
+    calls = await planApplyRole(
+      {
+        key: roleData.key,
+        members: post.members,
+        targets: post.targets,
+        annotations: post.annotations,
+      },
+      { chainId: mod.chainId, address: mod.address, log: logCall }
+    )
+  } catch (error) {
+    if (error instanceof LicenseError) {
+      return (
+        <Layout head={<PageBreadcrumbs {...params} mod={mod} />}>
+          <main>
+            <Flex direction="column" gap={3}>
+              {error.status === "BLOCKED" ? (
+                <Alert title="Subscription expired">
+                  Updates to this role are currently blocked due to an expired
+                  Zodiac subscription. To resume applying changes, renew your
+                  subscription or contact us at ops@gnosisguild.org
+                </Alert>
+              ) : (
+                <>
+                  <Alert title="Zodiac OS account required">
+                    This role is using allowances, a feature requiring a Zodiac
+                    OS account. Please add the owner of the Roles Modifier to
+                    your Zodiac OS organization using the button below.
+                    Afterwards, reload this page to continue.
+                  </Alert>
+                  <LinkButton
+                    primary
+                    target="_blank"
+                    href={`https://app.zodiac.eco/create/${error.owner}`}
+                  >
+                    Add account to Zodiac OS
+                  </LinkButton>
+                </>
+              )}
+              {unwrapperWarning}
+            </Flex>
+          </main>
+        </Layout>
+      )
+    }
+    throw error
+  }
 
   let applyType: "safe" | "governor" | "rethink" = "safe"
   if (await isGovernor(mod.chainId, modInfo.owner)) applyType = "governor"

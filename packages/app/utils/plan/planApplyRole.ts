@@ -1,9 +1,10 @@
-import { ChainId, Role } from "zodiac-roles-sdk"
+import { ChainId, Role, fetchLicense } from "zodiac-roles-sdk"
 
-import { fetchRole } from "@/utils/subgraph"
+import { fetchRole, fetchRolesModConfig } from "@/utils/subgraph"
 
 import { Call } from "./Call"
 import { encodeCalls } from "./encodeCalls"
+import { enforceLicenseTerms } from "./enforceLicenseTerms"
 import { logCall } from "./logCall"
 import { diffRole } from "./diff/role"
 
@@ -40,6 +41,20 @@ export async function planApplyRole(
   const next = {
     ...(prev || { members: [], targets: [], annotations: [], lastUpdate: 0 }),
     ...clean(desired),
+  }
+
+  const rolesModConfig = await fetchRolesModConfig({ chainId, address })
+  if (rolesModConfig) {
+    const license = await fetchLicense({
+      chainId,
+      owner: rolesModConfig.owner,
+    })
+    enforceLicenseTerms({
+      role: next,
+      license,
+      chainId,
+      owner: rolesModConfig.owner,
+    })
   }
 
   const { minus, plus } = diffRole({ prev, next })
