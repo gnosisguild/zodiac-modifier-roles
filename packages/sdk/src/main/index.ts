@@ -35,6 +35,22 @@ export {
 
 /*
  *
+ * Condition primitives
+ *
+ */
+export {
+  conditionId,
+  conditionAddress,
+  conditionHash,
+} from "./condition/conditionId"
+export {
+  flattenCondition,
+  type ConditionFlat,
+} from "./condition/flattenCondition"
+export { normalizeCondition } from "./condition/normalize"
+
+/*
+ *
  * Misc
  *
  */

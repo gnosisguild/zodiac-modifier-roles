@@ -1,10 +1,6 @@
 import { chains } from "./chains"
-import { decodeKey } from "./keys"
-import { ChainId, Condition, Operator, Role } from "./types"
+import { ChainId } from "./types"
 
-/**
- * Error class for license-related errors
- */
 type LicenseErrorStatus = "BLOCKED" | "UNLICENSED_FEATURE"
 
 export class LicenseError extends Error {
@@ -55,60 +51,4 @@ export const fetchLicense = async ({
   }
 
   return data.currentPlan as License
-}
-
-export const enforceLicenseTerms = ({
-  chainId,
-  owner,
-  role,
-  license,
-}: {
-  chainId: ChainId
-  owner: `0x${string}`
-  role: Role
-  license: License
-}) => {
-  if (license === License.Blocked) {
-    throw new LicenseError(
-      "Permissions updates are blocked. To proceed, renew your Zodiac subscription.",
-      prefixAddress(chainId, owner),
-      "BLOCKED"
-    )
-  }
-
-  if (license === License.None) {
-    assertPublicFeatureScope(role, prefixAddress(chainId, owner))
-  }
-}
-
-/**
- * Asserts that the role is only using features that are available without a zodiac os account.
- */
-const assertPublicFeatureScope = (role: Role, owner: PrefixedAddress) => {
-  if (!role.targets) return
-
-  if (
-    role.targets.some((target) =>
-      target.functions.some(
-        (func) => func.condition && usesAllowances(func.condition)
-      )
-    )
-  ) {
-    throw new LicenseError(
-      `Role ${decodeKey(role.key)} is using allowances. Add the owner of the Roles Modifier to your Zodiac OS organization to proceed: https://app.zodiac.eco/create/${owner}`,
-      owner,
-      "UNLICENSED_FEATURE"
-    )
-  }
-}
-
-const usesAllowances = (condition: Condition): boolean => {
-  if (
-    condition.operator === Operator.WithinAllowance ||
-    condition.operator === Operator.CallWithinAllowance ||
-    condition.operator === Operator.EtherWithinAllowance
-  ) {
-    return true
-  }
-  return condition.children?.some((child) => usesAllowances(child)) ?? false
 }
