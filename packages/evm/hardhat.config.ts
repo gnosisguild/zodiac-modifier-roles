@@ -19,25 +19,7 @@ import "./tasks/extract-mastercopy";
 import "./tasks/verify-mastercopies";
 import "./tasks/verify-mastercopy";
 
-const {
-  INFURA_KEY,
-  PK,
-  MNEMONIC,
-  ETHERSCAN_API_KEY,
-  OPTIMISTIC_ETHERSCAN_API_KEY,
-  GNOSISSCAN_API_KEY,
-  POLYGONSCAN_API_KEY,
-  ARBISCAN_API_KEY,
-  SNOWTRACE_API_KEY,
-  ZKEVM_POLYGONSCAN_API_KEY,
-  BASESCAN_API_KEY,
-  BSCSCAN_API_KEY,
-  CELOSCAN_API_KEY,
-  SONICSCAN_API_KEY,
-  BERASCAN_API_KEY,
-  MANTLESCAN_API_KEY,
-  UNISCAN_API_KEY,
-} = process.env;
+const { INFURA_KEY, PK, MNEMONIC, ETHERSCAN_API_KEY } = process.env;
 
 const sharedNetworkConfig: HttpNetworkUserConfig = {};
 if (PK) {
@@ -218,6 +200,11 @@ const config: HardhatUserConfig = {
       chainId: 59144,
       url: "https://linea-rpc.publicnode.com",
     },
+    ink: {
+      ...sharedNetworkConfig,
+      chainId: 57073,
+      url: "https://rpc-qnd.inkonchain.com",
+    },
   },
   etherscan: {
     apiKey: ETHERSCAN_API_KEY,
@@ -380,6 +367,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://api.plasmascan.to/api",
           browserURL: "https://plasmascan.to",
+        },
+      },
+      {
+        network: "ink",
+        chainId: 57073,
+        urls: {
+          apiURL: "https://explorer.inkonchain.com/api",
+          browserURL: "https://explorer.inkonchain.com",
         },
       },
     ],
