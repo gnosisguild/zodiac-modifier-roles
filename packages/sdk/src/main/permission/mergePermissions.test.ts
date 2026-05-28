@@ -1,5 +1,5 @@
 import { describe, expect, it, suite } from "vitest"
-import { Operator, ParameterType } from "zodiac-roles-deployments"
+import { Operator, ParameterType } from "../types"
 
 import { abiEncode } from "../abiEncode"
 import { mergePermissions } from "./mergePermissions"

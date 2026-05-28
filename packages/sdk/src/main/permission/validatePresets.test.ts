@@ -1,6 +1,6 @@
 import { describe, it, suite, expect } from "vitest"
 
-import { Target } from "zodiac-roles-deployments"
+import { Target } from "../types"
 
 import { validatePresets } from "./validatePresets"
 import { PermissionCoerced } from "./types"

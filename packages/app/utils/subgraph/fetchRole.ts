@@ -1,14 +1,15 @@
-import { getRoleId } from "./ids"
-import { fetchFromSubgraph, FetchOptions } from "./subgraph"
 import {
   ChainId,
-  Condition,
-  Role,
   Clearance,
+  Condition,
   ExecutionOptions,
   Function,
+  Role,
   Target,
-} from "./types"
+} from "zodiac-roles-sdk"
+
+import { getRoleId } from "./ids"
+import { fetchFromSubgraph, FetchOptions } from "./subgraph"
 
 type Props = {
   chainId: ChainId

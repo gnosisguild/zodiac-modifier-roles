@@ -1,5 +1,5 @@
 import { ZeroHash } from "ethers"
-import { Role } from "zodiac-roles-deployments"
+import { Role } from "zodiac-roles-sdk"
 
 import { diffAnnotations } from "./annotations"
 import { diffMembers } from "./members"

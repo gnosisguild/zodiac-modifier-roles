@@ -10,7 +10,6 @@
     "test": "turbo test",
     "build": "turbo build",
     "build:evm": "turbo build --filter=@gnosis-guild/zodiac-core-modifier-roles",
-    "build:deployments": "turbo build --filter=zodiac-roles-deployments",
     "build:sdk": "turbo build --filter=zodiac-roles-sdk",
     "build:app": "turbo build --filter=zodiac-roles-app",
     "build:docs": "turbo build --filter=zodiac-roles-docs",

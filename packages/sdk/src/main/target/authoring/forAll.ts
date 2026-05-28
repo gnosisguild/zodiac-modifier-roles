@@ -1,5 +1,5 @@
 import { BytesLike } from "ethers"
-import { Condition } from "zodiac-roles-deployments"
+import { Condition } from "../../types"
 
 import { ExecutionFlags, Permission } from "../../permission"
 

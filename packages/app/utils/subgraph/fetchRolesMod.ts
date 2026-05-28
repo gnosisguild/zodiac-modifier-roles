@@ -1,7 +1,8 @@
-import { fetchFromSubgraph, FetchOptions } from "./subgraph"
-import { ChainId, RolesModifier } from "./types"
+import { ChainId, RolesModifier } from "zodiac-roles-sdk"
+
 import { mapGraphQl as mapGraphQlRole, ROLE_FIELDS } from "./fetchRole"
 import { getRolesModId } from "./ids"
+import { fetchFromSubgraph, FetchOptions } from "./subgraph"
 
 type Props = {
   address: `0x${string}`
@@ -20,7 +21,7 @@ query RolesMod($id: ID!, $blockNumber: Int) {
     address
     owner
     avatar
-    target 
+    target
     roles {
       ${ROLE_FIELDS}
     }

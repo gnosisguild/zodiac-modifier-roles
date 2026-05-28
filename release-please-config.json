@@ -4,9 +4,6 @@
   "plugins": ["node-workspace"],
   "target-branch": "main",
   "packages": {
-    "packages/deployments": {
-      "release-type": "node"
-    },
     "packages/sdk": {
       "release-type": "node"
     }

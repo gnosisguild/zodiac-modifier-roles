@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
+import { Condition, Operator, ParameterType } from "../types"
 
 import { normalizeCondition } from "./normalize"
 import { subtractCondition } from "./subtractCondition"

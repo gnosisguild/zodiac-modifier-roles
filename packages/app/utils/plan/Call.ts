@@ -1,4 +1,4 @@
-import { Condition, ExecutionOptions } from "zodiac-roles-deployments"
+import { Condition, ExecutionOptions } from "zodiac-roles-sdk"
 
 export type Call =
   | AllowTargetCall

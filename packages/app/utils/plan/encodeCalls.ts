@@ -1,8 +1,8 @@
 import { Interface } from "ethers"
-import { flattenCondition } from "../../condition/flattenCondition"
+import { flattenCondition } from "zodiac-roles-sdk"
 
 import { Call } from "./Call"
-import { Roles__factory } from "../../../typechain"
+import { Roles__factory } from "zodiac-roles-sdk/typechain"
 
 const rolesInterface = Roles__factory.createInterface()
 const posterInterface = Interface.from([

@@ -1,4 +1,4 @@
-import { ChainId } from "zodiac-roles-deployments"
+import { ChainId } from "../main/types"
 import { fetchLicense, License } from "zodiac-roles-sdk"
 import { AdvancedOptions } from "./types"
 

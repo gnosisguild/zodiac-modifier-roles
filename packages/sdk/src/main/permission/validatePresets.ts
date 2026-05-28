@@ -1,4 +1,4 @@
-import { Target } from "zodiac-roles-deployments"
+import { Target } from "../types"
 
 import { subtractTarget } from "../target/subtractTarget"
 import { targetIncludes } from "../target/targetIncludes"

@@ -1,6 +1,7 @@
+import { ChainId } from "zodiac-roles-sdk"
+
 import { getRolesModId } from "./ids"
 import { fetchFromSubgraph, FetchOptions } from "./subgraph"
-import { ChainId } from "./types"
 
 interface Props {
   chainId: ChainId

@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation"
-import { ChainId, Role, fetchRole, fetchRolesMod } from "zodiac-roles-sdk"
+import { ChainId, Role } from "zodiac-roles-sdk"
+
+import { fetchRole, fetchRolesMod } from "@/utils/subgraph"
 
 interface Props {
   address: `0x${string}`

@@ -1,6 +1,6 @@
-import { Function } from "zodiac-roles-deployments"
+import { Function } from "zodiac-roles-sdk"
 
-import { normalizeCondition, conditionId } from "../../condition"
+import { normalizeCondition, conditionId } from "zodiac-roles-sdk"
 import {
   Diff,
   isExecutionOptionsMinus,
@@ -8,7 +8,7 @@ import {
   merge,
 } from "./helpers"
 
-import { Call } from "../calls"
+import { Call } from "../Call"
 
 export function diffFunctions({
   roleKey,

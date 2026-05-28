@@ -1,4 +1,5 @@
-export * from "zodiac-roles-deployments"
+export * from "./types"
+export { chains } from "./chains"
 
 /*
  *
@@ -6,12 +7,7 @@ export * from "zodiac-roles-deployments"
  *
  */
 export { c, forAll } from "./target/authoring"
-export { planApply, planApplyRole, planExtendRole } from "./target/plan"
 export { targetIntegrity } from "./target/integrity"
-
-// helpers
-export { callsPlannedForApply, callsPlannedForApplyRole } from "./target/plan"
-export { encodeCalls, type Call } from "./target/calls"
 
 /*
  *
@@ -36,6 +32,22 @@ export {
   targetId,
   validatePresets,
 } from "./permission"
+
+/*
+ *
+ * Condition primitives
+ *
+ */
+export {
+  conditionId,
+  conditionAddress,
+  conditionHash,
+} from "./condition/conditionId"
+export {
+  flattenCondition,
+  type ConditionFlat,
+} from "./condition/flattenCondition"
+export { normalizeCondition } from "./condition/normalize"
 
 /*
  *

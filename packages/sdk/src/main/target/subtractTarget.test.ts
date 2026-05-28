@@ -6,7 +6,7 @@ import {
   ExecutionOptions,
   Operator,
   ParameterType,
-} from "zodiac-roles-deployments"
+} from "../types"
 import { subtractTarget } from "./subtractTarget"
 import { abiEncode } from "../abiEncode"
 

@@ -1,7 +1,7 @@
 import { expect, test } from "vitest"
 import { BigNumberish } from "ethers"
 import { c } from "zodiac-roles-sdk"
-import { Condition, Operator, ParameterType } from "zodiac-roles-deployments"
+import { Condition, Operator, ParameterType } from "../main/types"
 
 import { Scoping } from "../main/target/authoring/types"
 import { allow } from "./typings"
