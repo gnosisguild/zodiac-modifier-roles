@@ -1,5 +1,16 @@
 # Changelog
 
+## [4.0.0](https://github.com/gnosisguild/zodiac-modifier-roles/compare/zodiac-roles-sdk-v3.4.8...zodiac-roles-sdk-v4.0.0) (2026-05-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* removes from the sdk public API: planApply, planApplyRole, planExtendRole, callsPlannedForApply, callsPlannedForApplyRole, encodeCalls, and the Call type. The internal target/diff and target/calls modules become dead code and are deleted with them.
+
+### Features
+
+* SDK v4 — sunset deployments package and prune apply API ([#480](https://github.com/gnosisguild/zodiac-modifier-roles/issues/480)) ([3a05b49](https://github.com/gnosisguild/zodiac-modifier-roles/commit/3a05b490a866de8d59995efb55de72dd774c4720))
+
 ## [3.4.8](https://github.com/gnosisguild/zodiac-modifier-roles/compare/zodiac-roles-sdk-v3.4.7...zodiac-roles-sdk-v3.4.8) (2026-04-09)
 
 
