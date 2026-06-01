@@ -1,0 +1,31 @@
+diff --git a/node_modules/@gnosis.pm/zodiac/contracts/signature/SignatureChecker.sol b/node_modules/@gnosis.pm/zodiac/contracts/signature/SignatureChecker.sol
+index 4a8fc5b..1de5d1a 100644
+--- a/node_modules/@gnosis.pm/zodiac/contracts/signature/SignatureChecker.sol
++++ b/node_modules/@gnosis.pm/zodiac/contracts/signature/SignatureChecker.sol
+@@ -114,7 +114,7 @@ abstract contract SignatureChecker {
+     address signer,
+     bytes32 hash,
+     bytes calldata signature
+-  ) internal view returns (bool result) {
++  ) private view returns (bool result) {
+     uint256 size;
+     // eslint-disable-line no-inline-assembly
+     assembly {
+@@ -124,7 +124,7 @@ abstract contract SignatureChecker {
+       return false;
+     }
+ 
+-    (, bytes memory returnData) = signer.staticcall(
++    (bool success, bytes memory returnData) = signer.staticcall(
+       abi.encodeWithSelector(
+         IERC1271.isValidSignature.selector,
+         hash,
+@@ -132,7 +132,7 @@ abstract contract SignatureChecker {
+       )
+     );
+ 
+-    return bytes4(returnData) == EIP1271_MAGIC_VALUE;
++    return success && bytes4(returnData) == EIP1271_MAGIC_VALUE;
+   }
+ 
+   // keccak256(
