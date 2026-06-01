@@ -1,0 +1,180 @@
+diff --git a/node_modules/@nomiclabs/hardhat-etherscan/dist/src/etherscan/EtherscanService.js b/node_modules/@nomiclabs/hardhat-etherscan/dist/src/etherscan/EtherscanService.js
+index 6050750..02678fe 100644
+--- a/node_modules/@nomiclabs/hardhat-etherscan/dist/src/etherscan/EtherscanService.js
++++ b/node_modules/@nomiclabs/hardhat-etherscan/dist/src/etherscan/EtherscanService.js
+@@ -46,7 +46,11 @@ exports.verifyContract = verifyContract;
+ async function getVerificationStatus(url, req) {
+     const parameters = new URLSearchParams({ ...req });
+     const urlWithQuery = new URL(url);
+-    urlWithQuery.search = parameters.toString();
++    // Preserve query params already present on the base URL (e.g. the V2 chainid)
++    // instead of overwriting the whole search string.
++    for (const [key, value] of parameters) {
++        urlWithQuery.searchParams.append(key, value);
++    }
+     let response;
+     try {
+         response = await (0, undici_1.sendGetRequest)(urlWithQuery);
+@@ -109,7 +113,10 @@ async function isAlreadyVerified(apiURL, apiKey, address) {
+         apikey: apiKey,
+     });
+     const url = new URL(apiURL);
+-    url.search = parameters.toString();
++    // Preserve query params already present on the base URL (e.g. the V2 chainid).
++    for (const [key, value] of parameters) {
++        url.searchParams.append(key, value);
++    }
+     const response = await (0, undici_1.sendGetRequest)(url);
+     const json = await response.body.json();
+     if (json.message !== "OK") {
+diff --git a/node_modules/@nomiclabs/hardhat-etherscan/dist/src/network/prober.js b/node_modules/@nomiclabs/hardhat-etherscan/dist/src/network/prober.js
+index 699625f..d84b914 100644
+--- a/node_modules/@nomiclabs/hardhat-etherscan/dist/src/network/prober.js
++++ b/node_modules/@nomiclabs/hardhat-etherscan/dist/src/network/prober.js
+@@ -10,20 +10,37 @@ async function getEtherscanEndpoints(provider, networkName, chainConfig, customC
+         chainName,
+     ]));
+     const chainID = parseInt(await provider.send("eth_chainId"), 16);
++    // Route all API calls through the Etherscan V2 multichain endpoint. The V1
++    // per-chain hosts (api.gnosisscan.io, api.polygonscan.com, ...) have been
++    // deprecated; V2 uses a single host disambiguated by the chainid query param
++    // and a single API key. We keep the chain's browserURL for the result link.
++    const v2ApiURL = `https://api.etherscan.io/v2/api?chainid=${chainID}`;
+     const networkInCustomChains = [...customChains]
+         .reverse() // the last entry wins
+         .find((customChain) => customChain.chainId === chainID);
+     // if there is a custom chain with the given chain id, that one is preferred
+     // over the built-in ones
+     if (networkInCustomChains !== undefined) {
+-        return networkInCustomChains;
++        return {
++            network: networkInCustomChains.network,
++            urls: {
++                apiURL: v2ApiURL,
++                browserURL: networkInCustomChains.urls.browserURL,
++            },
++        };
+     }
+-    const network = networkInCustomChains ?? chainIdsToNames.get(chainID);
++    const network = chainIdsToNames.get(chainID);
+     if (network === undefined) {
+         (0, errors_1.throwUnsupportedNetwork)(networkName, chainID);
+     }
+     const chainConfigEntry = chainConfig[network];
+-    return { network, urls: chainConfigEntry.urls };
++    return {
++        network,
++        urls: {
++            apiURL: v2ApiURL,
++            browserURL: chainConfigEntry.urls.browserURL,
++        },
++    };
+ }
+ exports.getEtherscanEndpoints = getEtherscanEndpoints;
+ async function retrieveContractBytecode(address, provider, networkName) {
+diff --git a/node_modules/@nomiclabs/hardhat-etherscan/dist/src/solc/version.js b/node_modules/@nomiclabs/hardhat-etherscan/dist/src/solc/version.js
+index 3c16eda..f3fc134 100644
+--- a/node_modules/@nomiclabs/hardhat-etherscan/dist/src/solc/version.js
++++ b/node_modules/@nomiclabs/hardhat-etherscan/dist/src/solc/version.js
+@@ -4,7 +4,7 @@ exports.getVersions = exports.getLongVersion = void 0;
+ const plugins_1 = require("hardhat/plugins");
+ const constants_1 = require("../constants");
+ const undici_1 = require("../undici");
+-const COMPILERS_LIST_URL = "https://solc-bin.ethereum.org/bin/list.json";
++const COMPILERS_LIST_URL = "https://binaries.soliditylang.org/bin/list.json";
+ // TODO: this could be retrieved from the hardhat config instead.
+ async function getLongVersion(shortVersion) {
+     const versions = await getVersions();
+diff --git a/node_modules/@nomiclabs/hardhat-etherscan/src/etherscan/EtherscanService.ts b/node_modules/@nomiclabs/hardhat-etherscan/src/etherscan/EtherscanService.ts
+index 698cc20..3a0d37f 100644
+--- a/node_modules/@nomiclabs/hardhat-etherscan/src/etherscan/EtherscanService.ts
++++ b/node_modules/@nomiclabs/hardhat-etherscan/src/etherscan/EtherscanService.ts
+@@ -76,7 +76,11 @@ export async function getVerificationStatus(
+ ): Promise<EtherscanResponse> {
+   const parameters = new URLSearchParams({ ...req });
+   const urlWithQuery = new URL(url);
+-  urlWithQuery.search = parameters.toString();
++  // Preserve query params already present on the base URL (e.g. the V2 chainid)
++  // instead of overwriting the whole search string.
++  for (const [key, value] of parameters) {
++    urlWithQuery.searchParams.append(key, value);
++  }
+ 
+   let response;
+   try {
+@@ -168,7 +172,10 @@ export async function isAlreadyVerified(
+   });
+ 
+   const url = new URL(apiURL);
+-  url.search = parameters.toString();
++  // Preserve query params already present on the base URL (e.g. the V2 chainid).
++  for (const [key, value] of parameters) {
++    url.searchParams.append(key, value);
++  }
+ 
+   const response = await sendGetRequest(url);
+   const json = await response.body.json();
+diff --git a/node_modules/@nomiclabs/hardhat-etherscan/src/network/prober.ts b/node_modules/@nomiclabs/hardhat-etherscan/src/network/prober.ts
+index 17742ff..3d68c25 100644
+--- a/node_modules/@nomiclabs/hardhat-etherscan/src/network/prober.ts
++++ b/node_modules/@nomiclabs/hardhat-etherscan/src/network/prober.ts
+@@ -20,6 +20,12 @@ export async function getEtherscanEndpoints(
+ 
+   const chainID = parseInt(await provider.send("eth_chainId"), 16);
+ 
++  // Route all API calls through the Etherscan V2 multichain endpoint. The V1
++  // per-chain hosts (api.gnosisscan.io, api.polygonscan.com, ...) have been
++  // deprecated; V2 uses a single host disambiguated by the chainid query param
++  // and a single API key. We keep the chain's browserURL for the result link.
++  const v2ApiURL = `https://api.etherscan.io/v2/api?chainid=${chainID}`;
++
+   const networkInCustomChains = [...customChains]
+     .reverse() // the last entry wins
+     .find((customChain) => customChain.chainId === chainID);
+@@ -27,10 +33,16 @@ export async function getEtherscanEndpoints(
+   // if there is a custom chain with the given chain id, that one is preferred
+   // over the built-in ones
+   if (networkInCustomChains !== undefined) {
+-    return networkInCustomChains;
++    return {
++      network: networkInCustomChains.network,
++      urls: {
++        apiURL: v2ApiURL,
++        browserURL: networkInCustomChains.urls.browserURL,
++      },
++    };
+   }
+ 
+-  const network = networkInCustomChains ?? chainIdsToNames.get(chainID);
++  const network = chainIdsToNames.get(chainID);
+ 
+   if (network === undefined) {
+     throwUnsupportedNetwork(networkName, chainID);
+@@ -38,7 +50,13 @@ export async function getEtherscanEndpoints(
+ 
+   const chainConfigEntry = chainConfig[network];
+ 
+-  return { network, urls: chainConfigEntry.urls };
++  return {
++    network,
++    urls: {
++      apiURL: v2ApiURL,
++      browserURL: chainConfigEntry.urls.browserURL,
++    },
++  };
+ }
+ 
+ export async function retrieveContractBytecode(
+diff --git a/node_modules/@nomiclabs/hardhat-etherscan/src/solc/version.ts b/node_modules/@nomiclabs/hardhat-etherscan/src/solc/version.ts
+index 4171704..accfdc8 100644
+--- a/node_modules/@nomiclabs/hardhat-etherscan/src/solc/version.ts
++++ b/node_modules/@nomiclabs/hardhat-etherscan/src/solc/version.ts
+@@ -3,7 +3,7 @@ import { NomicLabsHardhatPluginError } from "hardhat/plugins";
+ import { pluginName } from "../constants";
+ import { sendGetRequest } from "../undici";
+ 
+-const COMPILERS_LIST_URL = "https://solc-bin.ethereum.org/bin/list.json";
++const COMPILERS_LIST_URL = "https://binaries.soliditylang.org/bin/list.json";
+ 
+ // Non-exhaustive interface for the official compiler list.
+ export interface CompilersList {
