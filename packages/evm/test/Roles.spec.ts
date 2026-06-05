@@ -1,7 +1,14 @@
 import { expect } from "chai";
 import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { AbiCoder, BytesLike } from "ethers";
+import {
+  AbiCoder,
+  BytesLike,
+  concat,
+  dataLength,
+  toBeHex,
+  zeroPadValue,
+} from "ethers";
 
 import {
   AbiType,
@@ -22,6 +29,16 @@ const ROLE_KEY2 =
   "0x0000000000000000000000000000000000000000000000000000000000000002";
 
 const defaultAbiCoder = AbiCoder.defaultAbiCoder();
+
+function appendContractSignature(calldata: string, signer: string) {
+  return concat([
+    calldata,
+    toBeHex(1, 32),
+    zeroPadValue(signer, 32),
+    toBeHex(dataLength(calldata), 32),
+    "0x00",
+  ]);
+}
 
 describe("Roles", async () => {
   async function setup() {
@@ -527,6 +544,40 @@ describe("Roles", async () => {
 
       result = await roles.allowances(allowanceKey);
       expect(result.balance).to.equal(1000);
+    });
+    it("rejects relayed execution when an ERC-1271 signer reverts with the magic value", async () => {
+      const { roles, testContract, owner, alice } = await loadFixture(setup);
+      const FaultyErc1271Signer =
+        await hre.ethers.getContractFactory("FaultyErc1271Signer");
+      const contractSigner = await FaultyErc1271Signer.deploy();
+      const contractSignerAddress = await contractSigner.getAddress();
+      const testContractAddress = await testContract.getAddress();
+
+      await roles
+        .connect(owner)
+        .assignRoles(contractSignerAddress, [ROLE_KEY], [true]);
+      await roles
+        .connect(owner)
+        .allowTarget(ROLE_KEY, testContractAddress, ExecutionOptions.None);
+
+      const calldata = roles.interface.encodeFunctionData(
+        "execTransactionWithRole",
+        [
+          testContractAddress,
+          0,
+          testContract.interface.encodeFunctionData("doNothing"),
+          0,
+          ROLE_KEY,
+          true,
+        ],
+      );
+
+      await expect(
+        alice.sendTransaction({
+          to: await roles.getAddress(),
+          data: appendContractSignature(calldata, contractSignerAddress),
+        }),
+      ).to.be.revertedWithCustomError(roles, "NotAuthorized");
     });
   });
 
