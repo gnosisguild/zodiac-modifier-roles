@@ -251,15 +251,12 @@ abstract contract PermissionChecker is Core, Periphery {
                 return _and(data, condition, payload, context);
             } else if (operator == Operator.Or) {
                 return _or(data, condition, payload, context);
-            } else if (operator == Operator.Nor) {
-                return _nor(data, condition, payload, context);
             } else if (operator == Operator.ArraySome) {
                 return _arraySome(data, condition, payload, context);
             } else if (operator == Operator.ArrayEvery) {
                 return _arrayEvery(data, condition, payload, context);
             } else {
-                assert(operator == Operator.ArraySubset);
-                return _arraySubset(data, condition, payload, context);
+                revert OperatorDeprecated();
             }
         } else {
             if (operator <= Operator.LessThan) {
@@ -401,30 +398,6 @@ abstract contract PermissionChecker is Core, Periphery {
         );
     }
 
-    function _nor(
-        bytes calldata data,
-        Condition memory condition,
-        Payload memory payload,
-        Context memory context
-    ) private view returns (Status status, Result memory) {
-        for (uint256 i; i < condition.children.length; ) {
-            (status, ) = _walk(data, condition.children[i], payload, context);
-            if (status == Status.Ok) {
-                return (
-                    Status.NorViolation,
-                    Result({consumptions: context.consumptions, info: 0})
-                );
-            }
-            unchecked {
-                ++i;
-            }
-        }
-        return (
-            Status.Ok,
-            Result({consumptions: context.consumptions, info: 0})
-        );
-    }
-
     function _arraySome(
         bytes calldata data,
         Condition memory condition,
@@ -489,56 +462,6 @@ abstract contract PermissionChecker is Core, Periphery {
                 ++i;
             }
         }
-        return (Status.Ok, result);
-    }
-
-    function _arraySubset(
-        bytes calldata data,
-        Condition memory condition,
-        Payload memory payload,
-        Context memory context
-    ) private view returns (Status, Result memory result) {
-        result.consumptions = context.consumptions;
-
-        if (
-            payload.children.length == 0 ||
-            payload.children.length > condition.children.length
-        ) {
-            return (Status.ParameterNotSubsetOfAllowed, result);
-        }
-
-        uint256 taken;
-        for (uint256 i; i < payload.children.length; ++i) {
-            bool found = false;
-            for (uint256 j; j < condition.children.length; ++j) {
-                if (taken & (1 << j) != 0) continue;
-
-                (Status status, Result memory _result) = _walk(
-                    data,
-                    condition.children[j],
-                    payload.children[i],
-                    Context({
-                        to: context.to,
-                        value: context.value,
-                        operation: context.operation,
-                        consumptions: result.consumptions
-                    })
-                );
-                if (status == Status.Ok) {
-                    found = true;
-                    taken |= 1 << j;
-                    result = _result;
-                    break;
-                }
-            }
-            if (!found) {
-                return (
-                    Status.ParameterNotSubsetOfAllowed,
-                    Result({consumptions: context.consumptions, info: 0})
-                );
-            }
-        }
-
         return (Status.Ok, result);
     }
 
@@ -772,7 +695,9 @@ abstract contract PermissionChecker is Core, Periphery {
     error FunctionSignatureTooShort();
 
     /// Calldata unwrapping failed
-    error MalformedMultiEntrypoint();
+    error MalformedMultiEntrypoint();    
 
     error ConditionViolation(Status status, bytes32 info);
+
+    error OperatorDeprecated();
 }
