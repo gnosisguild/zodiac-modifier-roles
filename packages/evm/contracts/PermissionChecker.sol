@@ -601,7 +601,9 @@ abstract contract PermissionChecker is Core, Periphery {
         bytes calldata value = AbiDecoder.pluck(
             data,
             payload.location + (isInline ? 0 : 32),
-            payload.size - (isInline ? 0 : 32)
+            isInline
+                ? payload.size
+                : uint256(AbiDecoder.word(data, payload.location))
         );
 
         uint256 shift = uint16(bytes2(compValue));
