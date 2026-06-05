@@ -253,6 +253,33 @@ describe("Operator - Bitmask", async () => {
     await expect(invoke("0x0000000000000000000000000003ffff")).to.not.be
       .reverted;
   });
+  it("evaluates operator Bitmask - Dynamic, does not inspect padding", async () => {
+    const { roles, scopeFunction, invoke } =
+      await loadFixture(setupOneParamBytes);
+
+    const shift = "0001";
+    const mask = "ff".padEnd(30, "0");
+    const expected = "00".padEnd(30, "0");
+    const compValue = `0x${shift}${mask}${expected}`;
+    await scopeFunction([
+      {
+        parent: 0,
+        paramType: AbiType.Calldata,
+        operator: Operator.Matches,
+        compValue: "0x",
+      },
+      {
+        parent: 0,
+        paramType: AbiType.Dynamic,
+        operator: Operator.Bitmask,
+        compValue,
+      },
+    ]);
+
+    await expect(invoke("0xff"))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.BitmaskOverflow, BYTES32_ZERO);
+  });
   it("evaluates operator Bitmask - Dynamic, overflow", async () => {
     const { roles, scopeFunction, invoke } =
       await loadFixture(setupOneParamBytes);
