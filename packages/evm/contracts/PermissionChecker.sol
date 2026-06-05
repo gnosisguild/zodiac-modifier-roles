@@ -433,7 +433,7 @@ abstract contract PermissionChecker is Core, Periphery {
     ) private view returns (Status status, Result memory result) {
         result.consumptions = context.consumptions;
 
-        uint256 length = condition.children.length;
+        uint256 length = payload.children.length;
         for (uint256 i; i < length; ) {
             (status, result) = _walk(
                 data,
