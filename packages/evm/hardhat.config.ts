@@ -8,7 +8,11 @@ import { HardhatUserConfig } from "hardhat/config";
 import type { HttpNetworkUserConfig } from "hardhat/types";
 
 import "./tasks/deploy-mastercopy";
+import "./tasks/deploy-mastercopies";
 import "./tasks/deploy";
+import "./tasks/extract-mastercopy";
+import "./tasks/verify-mastercopy";
+import "./tasks/verify-mastercopies";
 
 // Load environment variables.
 dotenv.config();

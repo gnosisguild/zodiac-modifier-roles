@@ -1,73 +1,45 @@
 import { defaultAbiCoder } from "ethers/lib/utils";
-import { task } from "hardhat/config";
+import { task, types } from "hardhat/config";
+import type { HardhatRuntimeEnvironment } from "hardhat/types";
+
 import { deployViaFactory } from "./EIP2470";
+import { getArtifacts, MastercopyArtifact } from "./mastercopy-artifacts";
 
-const ZeroHash =
-  "0x0000000000000000000000000000000000000000000000000000000000000000";
-const AddressZero = "0x0000000000000000000000000000000000000001";
+task(
+  "deploy:mastercopy",
+  "Deploys mastercopies from the artifacts file into the current network"
+)
+  .addOptionalParam(
+    "contractVersion",
+    "The specific version of the contracts to deploy",
+    "latest",
+    types.string
+  )
+  .setAction(async ({ contractVersion }, hre) => {
+    await deployMastercopyArtifacts(getArtifacts({ contractVersion }), hre);
+  });
 
-task("deploy:mastercopy", "Deploys and verifies Delay mastercopy").setAction(
-  async (_, hre) => {
-    const [deployer] = await hre.ethers.getSigners();
+export async function deployMastercopyArtifacts(
+  artifacts: MastercopyArtifact[],
+  hre: HardhatRuntimeEnvironment
+) {
+  const [deployer] = await hre.ethers.getSigners();
 
-    const salt = ZeroHash;
-
-    const Packer = await hre.ethers.getContractFactory("Packer");
-    const packerLibraryAddress = await deployViaFactory(
-      Packer.bytecode,
-      salt,
+  for (const artifact of artifacts) {
+    const initCode = `${artifact.bytecode}${defaultAbiCoder
+      .encode(artifact.constructorArgs.types, artifact.constructorArgs.values)
+      .slice(2)}`;
+    const address = await deployViaFactory(
+      initCode,
+      artifact.salt,
       deployer,
-      "Packer          "
+      `${artifact.contractName}@${artifact.contractVersion}`
     );
 
-    const Integrity = await hre.ethers.getContractFactory("Integrity");
-    const integrityLibraryAddress = await deployViaFactory(
-      Integrity.bytecode,
-      salt,
-      deployer,
-      "Integrity       "
-    );
-
-    const Roles = await hre.ethers.getContractFactory("Roles", {
-      libraries: {
-        Integrity: integrityLibraryAddress,
-        Packer: packerLibraryAddress,
-      },
-    });
-
-    const args = defaultAbiCoder.encode(
-      ["address", "address", "address"],
-      [AddressZero, AddressZero, AddressZero]
-    );
-
-    const rolesAddress = await deployViaFactory(
-      `${Roles.bytecode}${args.substring(2)}`,
-      salt,
-      deployer,
-      "Roles Mastercopy"
-    );
-
-    if (hre.network.name == "hardhat") {
-      return;
+    if (address !== artifact.address) {
+      throw new Error(
+        `${artifact.contractName}@${artifact.contractVersion} deployed to ${address}, expected ${artifact.address}`
+      );
     }
-
-    console.log("Waiting 1 minute before etherscan verification start...");
-    // Etherscan needs some time to process before trying to verify.
-    await new Promise((resolve) => setTimeout(resolve, 60000));
-
-    await hre.run("verify:verify", {
-      address: packerLibraryAddress,
-      constructorArguments: [],
-    });
-
-    await hre.run("verify:verify", {
-      address: integrityLibraryAddress,
-      constructorArguments: [],
-    });
-
-    await hre.run("verify:verify", {
-      address: rolesAddress,
-      constructorArguments: [AddressZero, AddressZero, AddressZero],
-    });
   }
-);
+}
