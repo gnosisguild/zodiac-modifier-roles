@@ -1,9 +1,11 @@
-import { defaultAbiCoder } from "ethers/lib/utils";
 import { task, types } from "hardhat/config";
-import type { HardhatRuntimeEnvironment } from "hardhat/types";
 
-import { deployViaFactory } from "./EIP2470";
-import { getArtifacts, MastercopyArtifact } from "./mastercopy-artifacts";
+import {
+  deployFactories,
+  deployMastercopy,
+  readMastercopies,
+} from "@gnosis-guild/zodiac-core";
+import { createEIP1193 } from "./createEIP1193";
 
 task(
   "deploy:mastercopy",
@@ -16,30 +18,42 @@ task(
     types.string
   )
   .setAction(async ({ contractVersion }, hre) => {
-    await deployMastercopyArtifacts(getArtifacts({ contractVersion }), hre);
-  });
+    const [signer] = await hre.ethers.getSigners();
+    const provider = createEIP1193(hre.network.provider, signer);
 
-export async function deployMastercopyArtifacts(
-  artifacts: MastercopyArtifact[],
-  hre: HardhatRuntimeEnvironment
-) {
-  const [deployer] = await hre.ethers.getSigners();
+    await deployFactories({ provider });
 
-  for (const artifact of artifacts) {
-    const initCode = `${artifact.bytecode}${defaultAbiCoder
-      .encode(artifact.constructorArgs.types, artifact.constructorArgs.values)
-      .slice(2)}`;
-    const address = await deployViaFactory(
-      initCode,
-      artifact.salt,
-      deployer,
-      `${artifact.contractName}@${artifact.contractVersion}`
-    );
+    for (const mastercopy of readMastercopies({ contractVersion })) {
+      const {
+        contractName,
+        contractVersion,
+        factory,
+        bytecode,
+        constructorArgs,
+        salt,
+      } = mastercopy;
 
-    if (address !== artifact.address) {
-      throw new Error(
-        `${artifact.contractName}@${artifact.contractVersion} deployed to ${address}, expected ${artifact.address}`
-      );
+      const { address, noop } = await deployMastercopy({
+        factory,
+        bytecode,
+        constructorArgs,
+        salt,
+        provider,
+        onStart: () => {
+          console.log(
+            `${contractName}@${contractVersion}: Deployment starting...`
+          );
+        },
+      });
+
+      if (noop) {
+        console.log(
+          `${contractName}@${contractVersion}: Already deployed at ${address}`
+        );
+      } else {
+        console.log(
+          `${contractName}@${contractVersion}: Successfully deployed at ${address}`
+        );
+      }
     }
-  }
-}
+  });

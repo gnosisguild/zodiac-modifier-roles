@@ -63,4 +63,50 @@ describe("Operator - ArraySome", async () => {
       .to.be.revertedWithCustomError(roles, "ConditionViolation")
       .withArgs(PermissionCheckerStatus.NoArrayElementPasses, BYTES32_ZERO);
   });
+
+  it("passes when a later array element matches", async () => {
+    const { invoke, scopeFunction } = await loadFixture(
+      setupOneParamArrayOfStaticTuple
+    );
+
+    scopeFunction([
+      {
+        parent: 0,
+        paramType: ParameterType.Calldata,
+        operator: Operator.Matches,
+        compValue: "0x",
+      },
+      {
+        parent: 0,
+        paramType: ParameterType.Array,
+        operator: Operator.ArraySome,
+        compValue: "0x",
+      },
+      {
+        parent: 1,
+        paramType: ParameterType.Tuple,
+        operator: Operator.Matches,
+        compValue: "0x",
+      },
+      {
+        parent: 2,
+        paramType: ParameterType.Static,
+        operator: Operator.EqualTo,
+        compValue: defaultAbiCoder.encode(["uint256"], [1234]),
+      },
+      {
+        parent: 2,
+        paramType: ParameterType.Static,
+        operator: Operator.EqualTo,
+        compValue: defaultAbiCoder.encode(["bool"], [true]),
+      },
+    ]);
+
+    await expect(
+      invoke([
+        { a: 1234, b: false },
+        { a: 1234, b: true },
+      ])
+    ).to.not.be.reverted;
+  });
 });

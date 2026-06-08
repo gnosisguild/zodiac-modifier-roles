@@ -432,7 +432,7 @@ abstract contract PermissionChecker is Core, Periphery {
     ) private view returns (Status status, Result memory result) {
         result.consumptions = context.consumptions;
 
-        uint256 length = condition.children.length;
+        uint256 length = payload.children.length;
         for (uint256 i; i < length; ) {
             (status, result) = _walk(
                 data,
@@ -442,7 +442,7 @@ abstract contract PermissionChecker is Core, Periphery {
                     to: context.to,
                     value: context.value,
                     operation: context.operation,
-                    consumptions: result.consumptions
+                    consumptions: context.consumptions
                 })
             );
             if (status == Status.Ok) {
@@ -600,7 +600,9 @@ abstract contract PermissionChecker is Core, Periphery {
         bytes calldata value = Decoder.pluck(
             data,
             payload.location + (isInline ? 0 : 32),
-            payload.size - (isInline ? 0 : 32)
+            isInline
+                ? payload.size
+                : uint256(Decoder.word(data, payload.location))
         );
 
         uint256 shift = uint16(bytes2(compValue));

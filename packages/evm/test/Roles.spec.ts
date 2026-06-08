@@ -13,7 +13,8 @@ import {
 } from "./utils";
 import { defaultAbiCoder } from "@ethersproject/abi";
 import { AddressOne } from "@gnosis.pm/safe-contracts";
-import { BytesLike } from "ethers";
+import { BigNumber, BytesLike } from "ethers";
+import { hexConcat, hexZeroPad } from "ethers/lib/utils";
 
 const ROLE_KEY =
   "0x000000000000000000000000000000000000000000000000000000000000000f";
@@ -21,6 +22,19 @@ const ROLE_KEY1 =
   "0x0000000000000000000000000000000000000000000000000000000000000001";
 const ROLE_KEY2 =
   "0x0000000000000000000000000000000000000000000000000000000000000002";
+
+const ZeroHash =
+  "0x0000000000000000000000000000000000000000000000000000000000000000";
+
+function appendContractSignature(data: string, signer: string) {
+  return hexConcat([
+    data,
+    ZeroHash,
+    hexZeroPad(signer, 32),
+    hexZeroPad(BigNumber.from((data.length - 2) / 2).toHexString(), 32),
+    "0x00",
+  ]);
+}
 
 describe("Roles", async () => {
   async function setup() {
@@ -513,6 +527,40 @@ describe("Roles", async () => {
 
       result = await roles.allowances(allowanceKey);
       expect(result.balance).to.equal(1000);
+    });
+
+    it("rejects relayed execution when an ERC-1271 signer reverts with the magic value", async () => {
+      const { roles, testContract, owner, alice } = await loadFixture(setup);
+      const FaultyErc1271Signer = await hre.ethers.getContractFactory(
+        "FaultyErc1271Signer"
+      );
+      const contractSigner = await FaultyErc1271Signer.deploy();
+
+      await roles
+        .connect(owner)
+        .assignRoles(contractSigner.address, [ROLE_KEY], [true]);
+      await roles
+        .connect(owner)
+        .allowTarget(ROLE_KEY, testContract.address, ExecutionOptions.None);
+
+      const calldata = roles.interface.encodeFunctionData(
+        "execTransactionWithRole",
+        [
+          testContract.address,
+          0,
+          testContract.interface.encodeFunctionData("doNothing"),
+          0,
+          ROLE_KEY,
+          true,
+        ]
+      );
+
+      await expect(
+        alice.sendTransaction({
+          to: roles.address,
+          data: appendContractSignature(calldata, contractSigner.address),
+        })
+      ).to.be.revertedWithCustomError(roles, "NotAuthorized");
     });
   });
 

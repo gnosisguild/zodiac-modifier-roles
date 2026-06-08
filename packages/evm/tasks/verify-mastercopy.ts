@@ -1,7 +1,6 @@
 import { task, types } from "hardhat/config";
-import type { HardhatRuntimeEnvironment } from "hardhat/types";
 
-import { getArtifacts, MastercopyArtifact } from "./mastercopy-artifacts";
+import { readMastercopies, verifyMastercopy } from "@gnosis-guild/zodiac-core";
 
 task(
   "verify:mastercopy",
@@ -14,36 +13,32 @@ task(
     types.string
   )
   .setAction(async ({ contractVersion }, hre) => {
-    await verifyMastercopyArtifacts(getArtifacts({ contractVersion }), hre);
+    const apiKey = hre.config.etherscan.apiKey as string;
+    if (!apiKey) {
+      throw new Error(
+        `Missing etherscan api key for network ${hre.network.name}`
+      );
+    }
+
+    const chainId = Number((await hre.ethers.provider.getNetwork()).chainId);
+
+    for (const artifact of readMastercopies({ contractVersion })) {
+      const { noop } = await verifyMastercopy({
+        chainId,
+        artifact,
+        apiKey,
+      });
+
+      const { contractName, contractVersion, address } = artifact;
+
+      if (noop) {
+        console.log(
+          `${contractName}@${contractVersion}: Already verified at ${address}`
+        );
+      } else {
+        console.log(
+          `${contractName}@${contractVersion}: Successfully verified at ${address}`
+        );
+      }
+    }
   });
-
-export async function verifyMastercopyArtifacts(
-  artifacts: MastercopyArtifact[],
-  hre: HardhatRuntimeEnvironment
-) {
-  for (const artifact of artifacts) {
-    await hre.run("verify:verify", {
-      address: artifact.address,
-      constructorArguments: artifact.constructorArgs.values,
-      contract: `${artifact.sourceName}:${artifact.contractName}`,
-      libraries: getLibraries(artifact),
-    });
-  }
-}
-
-function getLibraries(artifact: MastercopyArtifact) {
-  if (artifact.contractName !== "Roles") {
-    return {};
-  }
-
-  return {
-    Integrity: getArtifacts({
-      contractName: "Integrity",
-      contractVersion: artifact.contractVersion,
-    })[0].address,
-    Packer: getArtifacts({
-      contractName: "Packer",
-      contractVersion: artifact.contractVersion,
-    })[0].address,
-  };
-}

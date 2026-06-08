@@ -290,6 +290,35 @@ describe("Operator - Bitmask", async () => {
       .withArgs(PermissionCheckerStatus.BitmaskOverflow, BYTES32_ZERO);
   });
 
+  it("evaluates operator Bitmask - Dynamic, does not inspect padding", async () => {
+    const { roles, scopeFunction, invoke } = await loadFixture(
+      setupOneParamBytes
+    );
+
+    const shift = "0001";
+    const mask = "ff".padEnd(30, "0");
+    const expected = "00".padEnd(30, "0");
+    const compValue = `0x${shift}${mask}${expected}`;
+    await scopeFunction([
+      {
+        parent: 0,
+        paramType: ParameterType.Calldata,
+        operator: Operator.Matches,
+        compValue: "0x",
+      },
+      {
+        parent: 0,
+        paramType: ParameterType.Dynamic,
+        operator: Operator.Bitmask,
+        compValue,
+      },
+    ]);
+
+    await expect(invoke("0xff"))
+      .to.be.revertedWithCustomError(roles, "ConditionViolation")
+      .withArgs(PermissionCheckerStatus.BitmaskOverflow, BYTES32_ZERO);
+  });
+
   it("cannot set up a Bitmap operator for other than Static/Dynamic", async () => {
     const { scopeFunction } = await loadFixture(setupOneParamBytes);
 

@@ -1,12 +1,14 @@
 {
   "name": "@gnosis.pm/zodiac-modifier-roles",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "A Zodiac modifier that allows avatars to enforce granular, role-based, permissions for attached modules.",
   "directories": {
     "test": "test"
   },
   "scripts": {
+    "prebuild": "node scripts/patch-zodiac-signature-checker.js",
     "build": "hardhat compile",
+    "pretest": "node scripts/patch-zodiac-signature-checker.js",
     "test": "hardhat test",
     "extract:mastercopy": "yarn run build && yarn hardhat extract:mastercopy",
     "deploy": "yarn hardhat deploy",
@@ -24,6 +26,7 @@
     "@ethersproject/abi": "^5.7.0",
     "@ethersproject/bytes": "^5.7.0",
     "@ethersproject/providers": "^5.7.2",
+    "@gnosis-guild/zodiac-core": "^3.0.1",
     "@nomicfoundation/hardhat-chai-matchers": "^1.0.5",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.7",
     "@nomicfoundation/hardhat-toolbox": "^2.0.0",
