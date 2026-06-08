@@ -6,7 +6,9 @@
     "test": "test"
   },
   "scripts": {
+    "prebuild": "node scripts/patch-zodiac-signature-checker.js",
     "build": "hardhat compile",
+    "pretest": "node scripts/patch-zodiac-signature-checker.js",
     "test": "hardhat test",
     "extract:mastercopy": "yarn run build && yarn hardhat extract:mastercopy",
     "deploy": "yarn hardhat deploy",
