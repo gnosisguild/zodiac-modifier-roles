@@ -4,6 +4,7 @@ import packageJson from "../package.json";
 import {
   buildMastercopyArtifact,
   Mastercopies,
+  readMastercopies,
   upsertMastercopy,
   writeMastercopies,
   ZeroHash,
@@ -16,7 +17,7 @@ task(
   "Extracts and persists current mastercopy build artifacts"
 ).setAction(async (_, hre) => {
   const contractVersion = packageJson.version;
-  let mastercopies: Mastercopies = {};
+  let mastercopies: Mastercopies = readMastercopies();
 
   const artifactInputs = [
     {
