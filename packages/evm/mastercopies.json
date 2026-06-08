@@ -3862,7 +3862,14 @@
               ]
             }
           },
-          "libraries": {}
+          "libraries": {
+            "contracts/Integrity.sol": {
+              "Integrity": "0x6a6Af4b16458Bc39817e4019fB02BD3b26d41049"
+            },
+            "contracts/packers/Packer.sol": {
+              "Packer": "0x869718C939652084BC491fBC5ce0D3C1d5B309F0"
+            }
+          }
         }
       }
     }

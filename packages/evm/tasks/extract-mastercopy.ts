@@ -1,23 +1,31 @@
 import { task } from "hardhat/config";
+import type { HardhatRuntimeEnvironment } from "hardhat/types";
 
+import { writeMastercopyFromBuild } from "@gnosis-guild/zodiac-core";
 import packageJson from "../package.json";
-import {
-  buildMastercopyArtifact,
-  Mastercopies,
-  readMastercopies,
-  upsertMastercopy,
-  writeMastercopies,
-  ZeroHash,
-} from "./mastercopy-artifacts";
 
 const AddressOne = "0x0000000000000000000000000000000000000001";
+const ZeroHash =
+  "0x0000000000000000000000000000000000000000000000000000000000000000";
+
+const VerificationOutputSelection = {
+  "*": {
+    "*": [
+      "evm.bytecode",
+      "evm.deployedBytecode",
+      "devdoc",
+      "userdoc",
+      "metadata",
+      "abi",
+    ],
+  },
+};
 
 task(
   "extract:mastercopy",
   "Extracts and persists current mastercopy build artifacts"
 ).setAction(async (_, hre) => {
   const contractVersion = packageJson.version;
-  let mastercopies: Mastercopies = readMastercopies();
 
   const artifactInputs = [
     {
@@ -51,17 +59,64 @@ task(
   ];
 
   for (const input of artifactInputs) {
-    const artifact = await buildMastercopyArtifact({
-      hre,
+    const artifact = writeMastercopyFromBuild({
       contractVersion,
+      contractName: input.contractName,
+      compilerInput: await minimalCompilerInput(
+        hre,
+        input.sourceName,
+        input.contractName
+      ),
+      constructorArgs: input.constructorArgs,
       salt: ZeroHash,
-      mastercopies,
-      ...input,
     });
-    mastercopies = upsertMastercopy(mastercopies, artifact);
 
     console.log(`${artifact.contractName}: ${artifact.address}`);
   }
-
-  writeMastercopies(mastercopies);
 });
+
+async function minimalCompilerInput(
+  hre: HardhatRuntimeEnvironment,
+  sourceName: string,
+  contractName: string
+) {
+  const buildInfo = await hre.artifacts.getBuildInfo(
+    `${sourceName}:${contractName}`
+  );
+
+  if (!buildInfo) {
+    throw new Error(`Build info not found for ${sourceName}:${contractName}`);
+  }
+  const info = buildInfo;
+
+  const sourceNames = new Set<string>();
+
+  function visit(sourceName: string) {
+    if (sourceNames.has(sourceName)) {
+      return;
+    }
+
+    sourceNames.add(sourceName);
+
+    for (const node of info.output.sources[sourceName]?.ast?.nodes ?? []) {
+      if (node.nodeType === "ImportDirective") {
+        visit(node.absolutePath);
+      }
+    }
+  }
+
+  visit(sourceName);
+
+  return {
+    language: info.input.language,
+    sources: Object.fromEntries(
+      [...sourceNames].sort().map((name) => [name, info.input.sources[name]])
+    ),
+    settings: {
+      evmVersion: info.input.settings.evmVersion,
+      optimizer: info.input.settings.optimizer,
+      outputSelection: VerificationOutputSelection,
+      libraries: {},
+    },
+  };
+}
