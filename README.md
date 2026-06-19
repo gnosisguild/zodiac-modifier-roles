@@ -40,32 +40,32 @@ The contracts have been developed with [Solidity 0.8.21](https://github.com/ethe
 
 #### Chains
 
-- [Mainnet](https://etherscan.io/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
-- [Optimism](https://optimistic.etherscan.io/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
-- [Gnosis](https://gnosisscan.io/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
-- [Polygon](https://www.polygonscan.com/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
-- [Polygon zkEVM](https://zkevm.polygonscan.com/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
-- [Arbitrum One](https://arbiscan.io/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
-- [Avalanche C-Chain](https://snowtrace.io/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337/contract/43114/code)
-- [BSC](https://bscscan.com/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
-- [Base](https://basescan.org/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
-- [Celo](https://celoscan.io/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
-- [Sonic](https://sonicscan.org/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
-- [Katana](https://katanascan.com/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
-- [Berachain](https://berascan.com/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
-- [HyperEVM](https://www.hyperscan.com/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
-- [World Chain](https://worldscan.org/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
-- [MegaETH](https://mega.etherscan.io/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
-- [Base Sepolia](https://sepolia.basescan.org/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
-- [Sepolia](https://sepolia.etherscan.io/address/0x9646fDAD06d3e24444381f44362a3B0eB343D337#code)
+- [Mainnet](https://etherscan.io/address/0xF2964CE6161ce0e75964Fe7927cE114cb0B283D5#code)
+- [Optimism](https://optimistic.etherscan.io/address/0xF2964CE6161ce0e75964Fe7927cE114cb0B283D5#code)
+- [Gnosis](https://gnosisscan.io/address/0xF2964CE6161ce0e75964Fe7927cE114cb0B283D5#code)
+- [Polygon](https://www.polygonscan.com/address/0xF2964CE6161ce0e75964Fe7927cE114cb0B283D5#code)
+- [Polygon zkEVM](https://zkevm.polygonscan.com/address/0xF2964CE6161ce0e75964Fe7927cE114cb0B283D5#code)
+- [Arbitrum One](https://arbiscan.io/address/0xF2964CE6161ce0e75964Fe7927cE114cb0B283D5#code)
+- [Avalanche C-Chain](https://snowtrace.io/address/0xF2964CE6161ce0e75964Fe7927cE114cb0B283D5/contract/43114/code)
+- [BSC](https://bscscan.com/address/0xF2964CE6161ce0e75964Fe7927cE114cb0B283D5#code)
+- [Base](https://basescan.org/address/0xF2964CE6161ce0e75964Fe7927cE114cb0B283D5#code)
+- [Celo](https://celoscan.io/address/0xF2964CE6161ce0e75964Fe7927cE114cb0B283D5#code)
+- [Sonic](https://sonicscan.org/address/0xF2964CE6161ce0e75964Fe7927cE114cb0B283D5#code)
+- [Katana](https://katanascan.com/address/0xF2964CE6161ce0e75964Fe7927cE114cb0B283D5#code)
+- [Berachain](https://berascan.com/address/0xF2964CE6161ce0e75964Fe7927cE114cb0B283D5#code)
+- [HyperEVM](https://www.hyperscan.com/address/0xF2964CE6161ce0e75964Fe7927cE114cb0B283D5#code)
+- [World Chain](https://worldscan.org/address/0xF2964CE6161ce0e75964Fe7927cE114cb0B283D5#code)
+- [MegaETH](https://mega.etherscan.io/address/0xF2964CE6161ce0e75964Fe7927cE114cb0B283D5#code)
+- [Base Sepolia](https://sepolia.basescan.org/address/0xF2964CE6161ce0e75964Fe7927cE114cb0B283D5#code)
+- [Sepolia](https://sepolia.etherscan.io/address/0xF2964CE6161ce0e75964Fe7927cE114cb0B283D5#code)
 
 #### Contracts
 
 | Contract                | Description                                                                     | Address                                      |
 | ----------------------- | ------------------------------------------------------------------------------- | -------------------------------------------- |
-| Roles                   | Main roles modifier contract                                                    | `0x9646fDAD06d3e24444381f44362a3B0eB343D337` |
+| Roles                   | Main roles modifier contract                                                    | `0xF2964CE6161ce0e75964Fe7927cE114cb0B283D5` |
 | Integrity               | Library contract for condition integrity checks                                 | `0x6a6Af4b16458Bc39817e4019fB02BD3b26d41049` |
-| Packer                  | Library contract for optimized condition storage                                | `0x61C5B1bE435391fDd7BC6703F3740C0d11728a8C` |
+| Packer                  | Library contract for optimized condition storage                                | `0x869718c939652084bc491fbc5ce0d3c1d5b309f0` |
 | MultiSendUnwrapper      | Transaction unwrapper for Safe's MultiSend                                      | `0xB4Cd4bb764C089f20DA18700CE8bc5e49F369efD` |
 | AvatarIsOwnerOfERC721   | Custom condition useful for permissioned interaction with Uniswap NFT positions | `0x91B1bd7BCC5E623d5CE76b0152253499a9C819d1` |
 | MorphoBundler3Unwrapper | Transaction unwrapper for Morpho's Bundler3                                     | `0x7533922A155DC6b4Cc0ae4E74D70a73bc86dD3E8` |
