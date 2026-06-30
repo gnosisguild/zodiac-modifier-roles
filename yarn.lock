@@ -16270,17 +16270,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"zodiac-roles-deployments@workspace:*, zodiac-roles-deployments@workspace:packages/deployments":
-  version: 0.0.0-use.local
-  resolution: "zodiac-roles-deployments@workspace:packages/deployments"
-  dependencies:
-    prettier: ^3.4.2
-    rimraf: ^6.0.1
-    tsdown: ^0.14.1
-    typescript: ^5.7.3
-  languageName: unknown
-  linkType: soft
-
 "zodiac-roles-docs@workspace:packages/docs":
   version: 0.0.0-use.local
   resolution: "zodiac-roles-docs@workspace:packages/docs"
@@ -16332,7 +16321,6 @@ __metadata:
     typechain: 8.3.2
     typescript: 5.9.3
     viem: ^2.46.3
-    zodiac-roles-deployments: "workspace:*"
     zodiac-roles-sdk: "workspace:*"
   languageName: unknown
   linkType: soft
@@ -16373,7 +16361,6 @@ __metadata:
     typechain: ^8.3.2
     typescript: ^5.7.3
     vitest: 3.0.4
-    zodiac-roles-deployments: "workspace:*"
   peerDependencies:
     "@gnosis-guild/eth-sdk-client": ^0.1.6
     openapi-backend: ^5.15.0

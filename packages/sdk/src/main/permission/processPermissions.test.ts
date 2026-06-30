@@ -5,7 +5,7 @@ import {
   Clearance,
   ExecutionOptions,
   Operator,
-} from "zodiac-roles-deployments"
+} from "../types"
 
 import { abiEncode } from "../abiEncode"
 import { normalizeCondition } from "../condition"

@@ -215,6 +215,11 @@ export default defineConfig({
       accounts,
       url: "https://linea-rpc.publicnode.com",
     },
+    ink: {
+      ...sharedNetworkConfig,
+      chainId: 57073,
+      url: "https://rpc-qnd.inkonchain.com",
+    },
   },
   chainDescriptors: {
     10: {
@@ -394,6 +399,15 @@ export default defineConfig({
         etherscan: {
           apiUrl: "https://api.plasmascan.to/api",
           url: "https://plasmascan.to",
+        },
+      },
+    },
+    57073: {
+      name: "ink",
+      blockExplorers: {
+        etherscan: {
+          apiUrl: "https://explorer.inkonchain.com/api",
+          url: "https://explorer.inkonchain.com",
         },
       },
     },

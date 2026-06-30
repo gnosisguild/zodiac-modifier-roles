@@ -1,4 +1,3 @@
 {
-  "packages/deployments": "3.3.0",
-  "packages/sdk": "3.4.8"
+  "packages/sdk": "4.0.0"
 }

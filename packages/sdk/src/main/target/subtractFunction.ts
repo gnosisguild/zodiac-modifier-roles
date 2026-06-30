@@ -1,4 +1,4 @@
-import { Function } from "zodiac-roles-deployments"
+import { Function } from "../types"
 
 import { normalizeCondition, subtractCondition } from "../condition"
 

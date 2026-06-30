@@ -7,7 +7,7 @@ import {
   keccak256,
   toBeHex,
 } from "ethers"
-import { Encoding, Condition, Operator } from "zodiac-roles-deployments"
+import { Encoding, Condition, Operator } from "../types"
 
 import { abiEncode } from "../abiEncode"
 

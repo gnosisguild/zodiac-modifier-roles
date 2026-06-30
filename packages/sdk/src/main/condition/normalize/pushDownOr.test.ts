@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { Encoding, Condition, Operator } from "zodiac-roles-deployments"
+import { Encoding, Condition, Operator } from "../../types"
 
 import { pushDownOr } from "./pushDownOr"
 import { abiEncode } from "../../abiEncode"

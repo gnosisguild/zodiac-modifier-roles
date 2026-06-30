@@ -37,7 +37,6 @@
     "typechain": "8.3.2",
     "typescript": "5.9.3",
     "viem": "^2.46.3",
-    "zodiac-roles-deployments": "workspace:*",
     "zodiac-roles-sdk": "workspace:*"
   },
   "installConfig": {

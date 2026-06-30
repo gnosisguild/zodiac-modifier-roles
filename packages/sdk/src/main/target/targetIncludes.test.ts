@@ -6,7 +6,7 @@ import {
   ExecutionOptions,
   Operator,
   Target,
-} from "zodiac-roles-deployments"
+} from "../types"
 
 import { abiEncode } from "../abiEncode"
 import { targetIncludes } from "./targetIncludes"

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { Operator, Encoding } from "zodiac-roles-deployments"
+import { Operator, Encoding } from "../../../types"
 
 import { calldataMatches } from "./matches"
 import { encodeKey } from "../../../keys"

@@ -1,4 +1,4 @@
-import { Annotation, Target } from "zodiac-roles-deployments"
+import { Annotation, Target } from "./types"
 
 const ZODIAC_ROLES_APP = "https://roles.gnosisguild.org"
 

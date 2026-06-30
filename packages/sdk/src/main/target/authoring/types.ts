@@ -1,5 +1,5 @@
 import { Addressable, BigNumberish, BytesLike, ParamType, Typed } from "ethers"
-import { Condition } from "zodiac-roles-deployments"
+import { Condition } from "../../types"
 
 export type ConditionFunction<T> = (
   abiType: ParamType,

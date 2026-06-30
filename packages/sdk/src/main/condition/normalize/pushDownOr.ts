@@ -1,4 +1,4 @@
-import { Encoding, Condition, Operator } from "zodiac-roles-deployments"
+import { Encoding, Condition, Operator } from "../../types"
 
 import { conditionId } from "../conditionId"
 

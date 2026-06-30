@@ -4,7 +4,7 @@ The SDK is designed in three layers of abstraction:
 
 ## Layer 1: Targets
 
-This layer has diffing & patching functions on role configurations, operating on JSON objects matching the `Role` type of the subgraph schema.
+This layer provides the core types and structural operations on role configurations, operating on JSON objects matching the `Role` type of the subgraph schema.
 
 **Example:**
 
@@ -33,9 +33,10 @@ This layer has diffing & patching functions on role configurations, operating on
 
 **Functions implemented on this layer:**
 
-- fetch current role configurations
-- compute contract calls required for patching an existing role configuration (targets and members) to a desired configuration
 - integrity checks, minimizations, and normalizations for conditions
+- subtracting and comparing target configurations
+
+Reading current role configurations and applying configuration changes are handled by the [Zodiac SDK](https://github.com/gnosisguild/zodiac-os-sdk).
 
 ## Layer 2: Permissions
 

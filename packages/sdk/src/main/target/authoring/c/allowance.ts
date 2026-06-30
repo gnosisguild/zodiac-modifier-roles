@@ -1,5 +1,5 @@
 import { BigNumberish, ParamType } from "ethers"
-import { Operator, Encoding } from "zodiac-roles-deployments"
+import { Operator, Encoding } from "../../../types"
 
 import { abiEncode } from "../../../abiEncode"
 

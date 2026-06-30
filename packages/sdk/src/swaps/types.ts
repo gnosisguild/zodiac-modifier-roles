@@ -44,6 +44,10 @@ export type QuoteRequest = (SellOrderRequest | BuyOrderRequest) & {
   chainId: SupportedChainId
   rolesModifier: `0x${string}`
   roleKey: `0x${string}`
+  /** Address of the avatar (Safe) the rolesModifier is attached to. Used as the order's `from`. */
+  avatar: `0x${string}`
+  /** Address of the rolesModifier owner. Used to resolve the partner fee license. */
+  owner: `0x${string}`
 }
 
 /**

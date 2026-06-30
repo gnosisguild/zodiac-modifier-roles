@@ -4,45 +4,17 @@ import { Callout } from "nextra/components";
 
 Complete reference for the Zodiac Roles SDK functions and types.
 
+<Callout type="info">
+  Applying role configuration to a Roles Modifier is handled by
+  [`@zodiac-os/sdk`](https://github.com/gnosisguild/zodiac-os-sdk)'s `push()`.
+  The functions documented here cover **authoring** permissions; see the
+  [Getting Started guide](/sdk/getting-started#apply-permissions) for the full
+  apply flow.
+</Callout>
+
 ## `zodiac-roles-sdk`
 
-The main entrypoint for core role management functionality.
-
-### Role Planning & Management
-
-#### `planExtendRole(fragment, options)`
-
-Extends an existing role with new permissions without removing existing ones.
-
-**Parameters:**
-
-- `fragment` - [RoleFragment](#rolefragment) with permissions to add
-- `options.chainId` - Network chain ID
-- `options.address` - Roles Modifier contract address
-- `options.current` - Optional current [Role](#role) state
-- `options.log` - Optional logging function or `true` to log with `console.log`
-
-**Returns:** `Promise<TransactionRequest[]>`
-
-#### `planApplyRole(fragment, options)`
-
-Updates a role to match the exact configuration provided.
-
-**Parameters:** Same as `planExtendRole`
-
-**Returns:** `Promise<TransactionRequest[]>`
-
-#### `planApply(next, options)`
-
-Plans transactions to update complete rolesMod state (roles + allowances).
-
-**Parameters:**
-
-- `next.roles` - Array of [Role](#role) configurations
-- `next.allowances` - Array of [Allowance](#allowance) configurations
-- `options` - Same as `planExtendRole`
-
-**Returns:** `Promise<TransactionRequest[]>`
+The main entrypoint for permission authoring and role-related types.
 
 ### Permission Processing
 
@@ -143,6 +115,15 @@ Validates permissions against preset configurations.
 
 Type-safe permission builders generated from contract ABIs.
 
+<Callout type="warning">
+  Deprecated in favor of
+  [`@zodiac-os/sdk`](https://github.com/gnosisguild/zodiac-os-sdk). The Zodiac
+  SDK generates the same kit from `zodiac.config.ts` via `zodiac pull` and
+  integrates with `push()` directly. This entrypoint remains available for
+  projects still using the [eth-sdk](https://github.com/gnosisguild/eth-sdk)
+  workflow.
+</Callout>
+
 ### Permission Builders
 
 #### `allow`
@@ -205,7 +186,7 @@ Gets a quote for a COW Protocol swap.
 
 **Parameters:**
 
-- `request` - [QuoteRequest](#quoterequest) configuration
+- `request` - [QuoteRequest](#quoterequest) configuration. Must include the `avatar` and `owner` of the Roles Modifier.
 - `options` - Optional [AdvancedOptions](#advancedoptions)
 
 **Returns:** `Promise<Quote>`
@@ -268,19 +249,6 @@ interface Role {
 }
 ```
 
-### RoleFragment
-
-Partial role configuration for updates (all fields optional except key).
-
-```typescript
-interface RoleFragment {
-  key: `0x${string}`;
-  members?: `0x${string}`[];
-  targets?: Target[];
-  annotations?: Annotation[];
-}
-```
-
 ### Target
 
 Permission configuration for a target contract.
@@ -313,10 +281,11 @@ Spending limit configuration for roles.
 
 ```typescript
 interface Allowance {
+  key: `0x${string}`; // Unique allowance identifier
   refill: bigint; // Amount refilled per period
   maxRefill: bigint; // Maximum accruable amount
-  period: number; // Refill period in seconds
+  period: bigint; // Refill period in seconds
   balance: bigint; // Current available balance
-  timestamp: number; // Last refill timestamp
+  timestamp: bigint; // Last refill timestamp
 }
 ```

@@ -1,5 +1,5 @@
 import { BigNumberish, isHexString, ParamType } from "ethers"
-import { Condition, Operator, Encoding } from "zodiac-roles-deployments"
+import { Condition, Operator, Encoding } from "../../../types"
 
 import { coercePermission } from "../../../permission/coercePermission"
 import { checkParameterTypeCompatibility } from "../../../condition/conditionIntegrity"

@@ -19,6 +19,9 @@ const meta: MetaRecord = {
   api: {
     title: "API Reference",
   },
+  "v3-v4-migration": {
+    title: "v3 to v4 Migration",
+  },
   "v2-v3-migration": {
     title: "v2 to v3 Migration",
   },

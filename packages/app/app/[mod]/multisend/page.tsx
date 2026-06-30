@@ -1,5 +1,6 @@
-import { fetchRolesMod } from "zodiac-roles-sdk"
 import { notFound } from "next/navigation"
+
+import { fetchRolesMod } from "@/utils/subgraph"
 
 import Layout from "@/components/Layout"
 import { parseModParam } from "@/app/params"

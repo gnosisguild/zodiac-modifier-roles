@@ -65,37 +65,30 @@ The `allowCowOrderSigning` function creates permissions for:
 
 #### Apply Permissions to Your Roles Modifier
 
-Once you have the permissions, apply them to a role in your Roles Modifier:
+Apply the permissions to a role using the [Zodiac SDK](https://github.com/gnosisguild/zodiac-os-sdk)'s `push()`:
 
 ```typescript
-import {
-  planExtendRole,
-  processPermissions,
-  encodeKey,
-} from "zodiac-roles-sdk";
+import { constellation, push } from "@zodiac-os/sdk";
 
-// Convert permissions to targets
-const { targets } = processPermissions(permissions);
+const eth = constellation({
+  workspace: "Production",
+  label: "Trader Setup",
+  chain: 1,
+});
 
-// Plan the role extension (this fetches current state and calculates the diff)
-// `planExtendRole` is strictly additive, for replacing permissions that have been applied earlier, use `planApplyRole`.
-const calls = await planExtendRole(
-  {
-    key: encodeKey("trader-role"),
-    targets, // The swap permissions
+const rolesMod = eth.roles["My Roles"]({
+  roles: {
+    trader: {
+      members: ["0xAlice…"],
+      permissions, // The swap permissions from allowCowOrderSigning above
+    },
   },
-  {
-    chainId: 1, // Ethereum mainnet
-    address: "0x27d8bb2e33Bc38A9CE93fdD90C80677b8436aFfb", // Your Roles Modifier address
-    log: true, // Optional: log the planned changes
-  },
-);
+});
 
-// Execute the calls (requires owner permissions on the Roles Modifier)
-for (const call of calls) {
-  await signer.sendTransaction(call);
-}
+await push({ rolesMod });
 ```
+
+`push()` sends the desired state to the Zodiac API, which diffs against the current on-chain configuration and applies the necessary calls. See the [Getting Started guide](/sdk/getting-started#apply-permissions) for the full setup.
 
 Once permissions are applied, you can make swaps using your role.
 
@@ -124,6 +117,8 @@ const quote = await getCowQuote({
   chainId: SupportedChainId.MAINNET,
   rolesModifier: "0x27d8bb2e33Bc38A9CE93fdD90C80677b8436aFfb",
   roleKey: "trader-role",
+  avatar: "0x54f3…",
+  owner: "0x54f3…",
 });
 
 console.log("Quote:", quote);
@@ -146,6 +141,8 @@ console.log("Quote:", quote);
 - `chainId`: Network chain ID (see `SupportedChainId` enum)
 - `rolesModifier`: Address of your Roles Modifier instance
 - `roleKey`: Identifier for the role making the swap
+- `avatar`: Address of the avatar (Safe) the Roles Modifier is attached to. Used as the order's `from`.
+- `owner`: Address of the Roles Modifier's owner. Used to resolve the partner fee license.
 
 ##### Amount Parameters
 

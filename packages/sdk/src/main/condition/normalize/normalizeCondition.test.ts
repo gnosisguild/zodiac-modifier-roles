@@ -1,5 +1,5 @@
 import { expect, it, suite } from "vitest"
-import { Encoding, Condition, Operator } from "zodiac-roles-deployments"
+import { Encoding, Condition, Operator } from "../../types"
 
 import { normalizeCondition } from "."
 

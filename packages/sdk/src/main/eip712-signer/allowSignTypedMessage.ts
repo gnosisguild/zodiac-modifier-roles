@@ -1,11 +1,7 @@
 import { TypedData } from "abitype"
 import { AbiCoder, keccak256, ParamType } from "ethers"
-import {
-  Condition,
-  Encoding,
-  Operator,
-  SIGN_TYPED_MESSAGE_LIB_ADDRESS,
-} from "zodiac-roles-deployments"
+import { Condition, Encoding, Operator } from "../types"
+import { SIGN_TYPED_MESSAGE_LIB_ADDRESS } from "../addresses"
 
 import { c } from "../target/authoring"
 import { StructScoping } from "../target/authoring/types"

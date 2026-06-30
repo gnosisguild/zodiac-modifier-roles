@@ -1,9 +1,6 @@
 import { hexlify, toUtf8Bytes } from "ethers"
-import {
-  Encoding,
-  Operator,
-  SIGN_TYPED_MESSAGE_LIB_ADDRESS,
-} from "zodiac-roles-deployments"
+import { Encoding, Operator } from "../types"
+import { SIGN_TYPED_MESSAGE_LIB_ADDRESS } from "../addresses"
 
 /**
  * Returns a permission allowing the role to sign `personal_sign` messages

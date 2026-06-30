@@ -1,4 +1,4 @@
-import { Encoding, Condition, Operator } from "zodiac-roles-deployments"
+import { Encoding, Condition, Operator } from "../types"
 
 export interface ConditionFlat {
   parent: number

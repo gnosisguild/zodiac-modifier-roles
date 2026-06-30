@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 import { c } from "zodiac-roles-sdk"
-import { Condition, Encoding, Operator } from "zodiac-roles-deployments"
+import { Condition, Encoding, Operator } from "../main/types"
 
 import { allow } from "./typings"
 import { checkRootConditionIntegrity } from "../main/condition/conditionIntegrity"

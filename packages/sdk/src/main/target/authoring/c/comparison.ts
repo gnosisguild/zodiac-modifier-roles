@@ -7,7 +7,7 @@ import {
   ParamType,
   toBeHex,
 } from "ethers"
-import { Encoding, Operator } from "zodiac-roles-deployments"
+import { Encoding, Operator } from "../../../types"
 
 import { abiEncode } from "../../../abiEncode"
 import { describeStructure } from "./helpers/describeStructure"

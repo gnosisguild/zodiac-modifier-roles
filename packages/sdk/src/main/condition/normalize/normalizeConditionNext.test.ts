@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { Encoding, Operator, Condition } from "zodiac-roles-deployments"
+import { Encoding, Operator, Condition } from "../../types"
 import { normalizeCondition } from "."
 import { abiEncode } from "../../abiEncode"
 import { conditionHash, conditionId } from "../conditionId"
