@@ -49,6 +49,7 @@ export enum Operator {
   //          ✅ children
   //          🚫 compValue (exception AbiEncoded.Matches uses compValue to define leading bytes)
   Matches = 5,
+  ArraySome = 6,
   ArrayEvery = 7,
   ArrayTailMatches = 8,
   // ------------------------------------------------------------

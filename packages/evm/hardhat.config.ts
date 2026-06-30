@@ -216,8 +216,9 @@ export default defineConfig({
       url: "https://linea-rpc.publicnode.com",
     },
     ink: {
-      ...sharedNetworkConfig,
+      type: "http",
       chainId: 57073,
+      accounts,
       url: "https://rpc-qnd.inkonchain.com",
     },
   },
