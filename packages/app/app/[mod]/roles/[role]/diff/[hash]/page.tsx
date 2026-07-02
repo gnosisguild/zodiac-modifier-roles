@@ -40,7 +40,7 @@ const LEGACY_FLOW_END = Date.UTC(2026, 7, 15) // 2026-08-15T00:00:00Z
 
 export default async function DiffPage(props: {
   params: Promise<{ mod: string; role: string; hash: string }>
-  searchParams: Promise<{ annotations?: string }>
+  searchParams: Promise<{ annotations?: string; unlock?: string }>
 }) {
   const searchParams = await props.searchParams
   const params = await props.params
@@ -68,8 +68,15 @@ export default async function DiffPage(props: {
   const showLegacyFlowWarning =
     post.createdAt != null && post.createdAt >= LEGACY_FLOW_SUNSET
 
+  // Escape hatch: teams that coordinated with us can keep using the legacy
+  // flow beyond the cutoff by appending ?unlock=<token> to the diff URL. The
+  // token is configured via env (server-only), so an unset env disables the
+  // bypass entirely.
+  const unlockToken = process.env.LEGACY_FLOW_UNLOCK
+  const unlocked = !!unlockToken && searchParams.unlock === unlockToken
+
   const legacyFlowWarning = showLegacyFlowWarning && (
-    <LegacyFlowModal dismissable={Date.now() < LEGACY_FLOW_END} />
+    <LegacyFlowModal dismissable={unlocked || Date.now() < LEGACY_FLOW_END} />
   )
 
   const modInfo = await fetchRolesMod(mod)
