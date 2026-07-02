@@ -8,6 +8,15 @@ export const zPermissionsPost = z.object({
   members: z.array(zAddress).optional(),
 })
 
+/**
+ * The shape actually persisted in KV: the posted permissions plus a
+ * server-assigned `createdAt` (Unix ms). Older entries predate the timestamp,
+ * so `createdAt` is optional.
+ */
+export const zStoredPermissionsPost = zPermissionsPost.extend({
+  createdAt: z.number().optional(),
+})
+
 export interface PermissionsPost {
   targets?: Target[]
   annotations?: Annotation[]

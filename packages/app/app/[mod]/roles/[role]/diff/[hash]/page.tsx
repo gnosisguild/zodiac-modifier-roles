@@ -16,7 +16,8 @@ import { isGovernor } from "@/components/ApplyUpdate/ApplyViaGovernor/isGovernor
 import { isRethinkFactory } from "@/components/ApplyUpdate/ApplyViaRethinkFactory/isRethinkFactory"
 import ApplyUpdateInteractive from "@/components/ApplyUpdate/ApplyUpdateInteractive"
 import { fetchOrInitRole } from "../../fetching"
-import { zPermissionsPost } from "@/app/api/permissions/types"
+import { zStoredPermissionsPost } from "@/app/api/permissions/types"
+import LegacyFlowModal from "./LegacyFlowModal"
 import DiffView from "@/components/DiffView"
 import {
   checkUnwrappers,
@@ -25,9 +26,21 @@ import {
 } from "../../../../multisend/checkUnwrappers"
 import styles from "./page.module.css"
 
+/**
+ * Permissions posted at/after this instant are treated as legacy Roles app
+ * pushes and get the "update your tooling" modal. Unix ms, UTC.
+ */
+const LEGACY_FLOW_SUNSET = Date.UTC(2026, 6, 2) // 2026-07-02T00:00:00Z
+
+/**
+ * From this instant on, the legacy flow is switched off entirely: the modal
+ * can no longer be dismissed. Unix ms, UTC.
+ */
+const LEGACY_FLOW_END = Date.UTC(2026, 7, 15) // 2026-08-15T00:00:00Z
+
 export default async function DiffPage(props: {
   params: Promise<{ mod: string; role: string; hash: string }>
-  searchParams: Promise<{ annotations?: string }>
+  searchParams: Promise<{ annotations?: string; "legacy-unlock"?: string }>
 }) {
   const searchParams = await props.searchParams
   const params = await props.params
@@ -43,9 +56,26 @@ export default async function DiffPage(props: {
   if (!value) {
     notFound()
   }
-  const post = zPermissionsPost.parse(value)
+  const post = zStoredPermissionsPost.parse(value)
 
   const showAnnotations = searchParams.annotations !== "false"
+
+  // Pushing permission updates through the Roles app is the legacy flow; the
+  // permissions starter kit now guides users through the Zodiac app instead.
+  // Show the migration modal for posts created once the legacy flow was
+  // sunset — dismissable until the flow is switched off entirely. Posts made
+  // before the sunset (and older posts with no timestamp) render unchanged.
+  const showLegacyFlowWarning =
+    post.createdAt != null && post.createdAt >= LEGACY_FLOW_SUNSET
+
+  // Escape hatch: appending ?legacy-unlock to the diff URL keeps the legacy
+  // flow usable beyond the cutoff. Deliberately plain (visible in source) —
+  // it's a speed bump for stragglers, not a lock.
+  const unlocked = searchParams["legacy-unlock"] !== undefined
+
+  const legacyFlowWarning = showLegacyFlowWarning && (
+    <LegacyFlowModal dismissable={unlocked || Date.now() < LEGACY_FLOW_END} />
+  )
 
   const modInfo = await fetchRolesMod(mod)
   if (!modInfo) {
@@ -98,6 +128,7 @@ export default async function DiffPage(props: {
         <Layout head={<PageBreadcrumbs {...params} mod={mod} />}>
           <main>
             <Flex direction="column" gap={3}>
+              {legacyFlowWarning}
               {error.status === "BLOCKED" ? (
                 <Alert title="Subscription expired">
                   Updates to this role are currently blocked due to an expired
@@ -139,6 +170,7 @@ export default async function DiffPage(props: {
     <Layout head={<PageBreadcrumbs {...params} mod={mod} />}>
       <main>
         <Flex direction="column" gap={3}>
+          {legacyFlowWarning}
           {hasLegacy && (
             <Box p={2} className={styles.unwrapperWarning}>
               <Flex gap={2} alignItems="center">
