@@ -30,7 +30,7 @@ import styles from "./page.module.css"
  * Permissions posted at/after this instant are treated as legacy Roles app
  * pushes and get the "update your tooling" modal. Unix ms, UTC.
  */
-const LEGACY_FLOW_SUNSET = Date.UTC(2026, 6, 3) // 2026-07-03T00:00:00Z
+const LEGACY_FLOW_SUNSET = Date.UTC(2026, 6, 2) // 2026-07-02T00:00:00Z
 
 /**
  * From this instant on, the legacy flow is switched off entirely: the modal
