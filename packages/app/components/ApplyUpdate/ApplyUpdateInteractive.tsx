@@ -70,9 +70,14 @@ const ApplyUpdateInteractive: React.FC<Props> = ({
       <ApplyViaGovernor
         calls={allCalls}
         owner={owner}
+        // `window` is undefined during SSR; the description is only read in
+        // the propose() click handler, which always runs post-hydration where
+        // the full URL is available.
         description={`Update permissions of the ${decodeKey(
           roleKey
-        )} role. Review the update at ${window.location.href}`}
+        )} role. Review the update at ${
+          typeof window === "undefined" ? "" : window.location.href
+        }`}
         chainId={chainId}
       />
     ) : (
