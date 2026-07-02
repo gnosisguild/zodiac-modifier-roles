@@ -16,7 +16,7 @@ import { isGovernor } from "@/components/ApplyUpdate/ApplyViaGovernor/isGovernor
 import { isRethinkFactory } from "@/components/ApplyUpdate/ApplyViaRethinkFactory/isRethinkFactory"
 import ApplyUpdateInteractive from "@/components/ApplyUpdate/ApplyUpdateInteractive"
 import { fetchOrInitRole } from "../../fetching"
-import { zPermissionsPost } from "@/app/api/permissions/types"
+import { zStoredPermissionsPost } from "@/app/api/permissions/types"
 import DiffView from "@/components/DiffView"
 import {
   checkUnwrappers,
@@ -24,6 +24,12 @@ import {
   buildSetUnwrapperCalls,
 } from "../../../../multisend/checkUnwrappers"
 import styles from "./page.module.css"
+
+/**
+ * Permissions posted at/after this instant are treated as legacy Roles app
+ * pushes and get the "update your starter kit" hint. Unix ms, UTC.
+ */
+const LEGACY_FLOW_SUNSET = Date.UTC(2026, 6, 3) // 2026-07-03T00:00:00Z
 
 export default async function DiffPage(props: {
   params: Promise<{ mod: string; role: string; hash: string }>
@@ -43,9 +49,36 @@ export default async function DiffPage(props: {
   if (!value) {
     notFound()
   }
-  const post = zPermissionsPost.parse(value)
+  const post = zStoredPermissionsPost.parse(value)
 
   const showAnnotations = searchParams.annotations !== "false"
+
+  // Pushing permission updates through the Roles app is the legacy flow; the
+  // permissions starter kit now guides users through the Zodiac app instead.
+  // Warn on posts created once the legacy flow was sunset. Posts made before
+  // then (and older posts with no timestamp) render unchanged.
+  const showLegacyFlowWarning =
+    post.createdAt != null && post.createdAt >= LEGACY_FLOW_SUNSET
+
+  const legacyFlowWarning = showLegacyFlowWarning && (
+    <Box p={2} className={styles.legacyFlowWarning}>
+      <Flex gap={2} alignItems="center">
+        <span className={styles.warningIcon}>&#x26A0;</span>
+        <span>
+          You pushed these permissions through the Roles app, which is being
+          sunset. Please update to the latest{" "}
+          <a
+            href="https://github.com/gnosisguild/permissions-starter-kit"
+            target="_blank"
+            rel="noreferrer"
+          >
+            permissions starter kit
+          </a>
+          , which guides you through the new Zodiac app flow.
+        </span>
+      </Flex>
+    </Box>
+  )
 
   const modInfo = await fetchRolesMod(mod)
   if (!modInfo) {
@@ -98,6 +131,7 @@ export default async function DiffPage(props: {
         <Layout head={<PageBreadcrumbs {...params} mod={mod} />}>
           <main>
             <Flex direction="column" gap={3}>
+              {legacyFlowWarning}
               {error.status === "BLOCKED" ? (
                 <Alert title="Subscription expired">
                   Updates to this role are currently blocked due to an expired
@@ -139,6 +173,7 @@ export default async function DiffPage(props: {
     <Layout head={<PageBreadcrumbs {...params} mod={mod} />}>
       <main>
         <Flex direction="column" gap={3}>
+          {legacyFlowWarning}
           {hasLegacy && (
             <Box p={2} className={styles.unwrapperWarning}>
               <Flex gap={2} alignItems="center">
