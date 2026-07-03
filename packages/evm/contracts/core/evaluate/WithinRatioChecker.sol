@@ -82,17 +82,33 @@ library WithinRatioChecker {
          *                 relativeAmount × priceRel
          *   ratio (bps) = ───────────────────────── × 10,000
          *                 referenceAmount × priceRef
+         *
+         * Rounding always favors rejection: minRatio checks the floored
+         * ratio, maxRatio the ceiled ratio. Truncation can therefore
+         * never mask a bound violation.
          */
-        uint256 ratio = (relativeAmount * BPS) / referenceAmount;
+        uint256 scaledRelative = relativeAmount * BPS;
 
-        if (config.minRatio != 0 && ratio < config.minRatio) {
+        if (
+            config.minRatio != 0 &&
+            scaledRelative / referenceAmount < config.minRatio
+        ) {
             return Status.RatioBelowMin;
         }
-        if (config.maxRatio != 0 && ratio > config.maxRatio) {
+        if (
+            config.maxRatio != 0 &&
+            _ceilDiv(scaledRelative, referenceAmount) > config.maxRatio
+        ) {
             return Status.RatioAboveMax;
         }
 
         return Status.Ok;
+    }
+
+    /// @dev Ceiling division. Returns 0 for 0, otherwise ⌈a / b⌉.
+    function _ceilDiv(uint256 a, uint256 b) private pure returns (uint256) {
+        if (a == 0) return 0;
+        return (a - 1) / b + 1;
     }
 
     /**

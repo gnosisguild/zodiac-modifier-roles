@@ -248,6 +248,90 @@ describe("Operator - WithinRatio", () => {
           await expect(invoke(10, 1000)).to.not.be.revert(ethers);
         });
       });
+
+      // Both bound checks must round the ratio towards rejection. Otherwise
+      // sub-bps truncation masks genuine bound violations: a ratio of up to
+      // (maxRatio + 1) - 1wei would floor to maxRatio and pass.
+      describe("sub-bps rounding", () => {
+        it("reverts when ratio exceeds maxRatio by less than 1 bps", async () => {
+          const { roles, allowFunction, invoke } =
+            await loadFixture(setupTwoParams);
+
+          const compValue = encodeWithinRatioCompValue({
+            referencePluckIndex: 1,
+            referenceDecimals: 0,
+            relativePluckIndex: 0,
+            relativeDecimals: 0,
+            minRatio: 0,
+            maxRatio: 10000, // 100%
+          });
+
+          await allowFunction(
+            flattenCondition(matchesWithRatio([pluck(0), pluck(1)], compValue)),
+          );
+
+          // true ratio = 10002/10001 = 10000.9999 bps > 10000 cap.
+          // A floored ratio truncates to 10000 and lets the overshoot pass;
+          // the ceiled ratio (10001) rejects it.
+          await expect(invoke(10002, 10001))
+            .to.be.revertedWithCustomError(roles, "ConditionViolation")
+            .withArgs(
+              ConditionViolationStatus.RatioAboveMax,
+              2, // WithinRatio node
+              anyValue,
+            );
+        });
+
+        it("still passes when the truncated ratio is genuinely within maxRatio", async () => {
+          const { allowFunction, invoke } = await loadFixture(setupTwoParams);
+
+          const compValue = encodeWithinRatioCompValue({
+            referencePluckIndex: 1,
+            referenceDecimals: 0,
+            relativePluckIndex: 0,
+            relativeDecimals: 0,
+            minRatio: 0,
+            maxRatio: 10000,
+          });
+
+          await allowFunction(
+            flattenCondition(matchesWithRatio([pluck(0), pluck(1)], compValue)),
+          );
+
+          // true ratio = 10000/10001 = 9999.0001 bps → ceil 10000 == cap:
+          // rounding up must not reject ratios genuinely within the bound
+          await expect(invoke(10000, 10001)).to.not.be.revert(ethers);
+        });
+
+        it("reverts when ratio falls below minRatio by less than 1 bps", async () => {
+          const { roles, allowFunction, invoke } =
+            await loadFixture(setupTwoParams);
+
+          const compValue = encodeWithinRatioCompValue({
+            referencePluckIndex: 1,
+            referenceDecimals: 0,
+            relativePluckIndex: 0,
+            relativeDecimals: 0,
+            minRatio: 10000, // 100%
+            maxRatio: 0,
+          });
+
+          await allowFunction(
+            flattenCondition(matchesWithRatio([pluck(0), pluck(1)], compValue)),
+          );
+
+          // true ratio = 99999/100000 = 9999.9 bps < 10000 floor.
+          // The floored ratio (9999) rejects; a ceiled ratio would round to
+          // 10000 and mask the shortfall.
+          await expect(invoke(99999, 100000))
+            .to.be.revertedWithCustomError(roles, "ConditionViolation")
+            .withArgs(
+              ConditionViolationStatus.RatioBelowMin,
+              2, // WithinRatio node
+              anyValue,
+            );
+        });
+      });
     });
 
     describe("decimal normalization", () => {
