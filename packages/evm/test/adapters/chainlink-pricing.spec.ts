@@ -72,6 +72,34 @@ describe("ChainlinkPricing", () => {
     expect(price).to.equal(10n ** 36n / (3000n * 10n ** 18n) + 1n);
   });
 
+  it("does not understate the inverted price for feeds with more than 18 decimals", async () => {
+    const now = await time.latest();
+
+    const ChainlinkPricing =
+      await ethers.getContractFactory("ChainlinkPricing");
+    const pricing = await ChainlinkPricing.deploy();
+
+    const Feed = await ethers.getContractFactory("MockChainlinkAggregatorV3");
+    // 20 decimals with a small answer: pre-fix, ceiling the denominator first
+    // (ceil(150 / 10^2) = 2) collapsed precision and understated the inverted
+    // price by 25% (5e35 instead of ~6.67e35).
+    const decimals = 20n;
+    const answer = 150n;
+    const feed = await Feed.deploy(20, 1, answer, now, 1);
+
+    const params = coder.encode(
+      ["address", "bool", "uint256"],
+      [await feed.getAddress(), true, 3600],
+    );
+
+    const price = await pricing.getPrice(params);
+    // exact ceil of the true inverse: ceil(1e36 * 10^(decimals-18) / answer).
+    // = ~6.67e35; the pre-fix double-rounding returned 5e35 (25% low).
+    const expected =
+      (10n ** 36n * 10n ** (decimals - 18n) + answer - 1n) / answer;
+    expect(price).to.equal(expected);
+  });
+
   it("rounds up when scaling down feeds with more than 18 decimals", async () => {
     const now = await time.latest();
 

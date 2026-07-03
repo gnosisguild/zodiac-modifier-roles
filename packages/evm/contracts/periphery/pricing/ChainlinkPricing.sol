@@ -44,18 +44,30 @@ contract ChainlinkPricing is IPricing {
         }
 
         uint8 decimals = IChainlinkAggregatorV3(source).decimals();
-        uint256 scaled = uint256(answer);
-        if (decimals < 18) {
-            scaled *= 10 ** (18 - decimals);
-        } else if (decimals > 18) {
-            scaled = _ceilDiv(scaled, 10 ** (decimals - 18));
-        }
+        uint256 answerValue = uint256(answer);
 
-        // with answer > 0 enforced above, ceiling division never returns 0
+        // The price is rounded up in the direction it is consumed, so it is
+        // never understated. For invert this means scaling the numerator of
+        // 1e36 / price rather than pre-rounding the denominator, which would
+        // otherwise round twice and could nudge the result down.
         if (invert) {
-            price = _ceilDiv(ONE * ONE, scaled);
+            if (decimals <= 18) {
+                price = _ceilDiv(
+                    ONE * ONE,
+                    answerValue * 10 ** (18 - decimals)
+                );
+            } else {
+                price = _ceilDiv(
+                    ONE * ONE * 10 ** (decimals - 18),
+                    answerValue
+                );
+            }
         } else {
-            price = scaled;
+            if (decimals <= 18) {
+                price = answerValue * 10 ** (18 - decimals);
+            } else {
+                price = _ceilDiv(answerValue, 10 ** (decimals - 18));
+            }
         }
     }
 
