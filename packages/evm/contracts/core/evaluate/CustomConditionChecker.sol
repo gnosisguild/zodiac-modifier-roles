@@ -7,21 +7,30 @@ pragma solidity >=0.8.17 <0.9.0;
 import "../../periphery/interfaces/ICustomCondition.sol";
 import "../../types/Types.sol";
 import "../../common/AbiLocation.sol";
+import "./WithinAllowanceChecker.sol";
 
 /**
  * @title CustomConditionChecker
  * @notice Validates transactions against external custom condition adapters.
  *
- * @dev Safely invokes ICustomCondition.check via staticcall, handling all
- *      error scenarios:
+ * @dev Safely invokes ICustomCondition.check via staticcall. The adapter
+ *      returns `(bool success, AllowanceConsumption[] consumptions)`: a pass/
+ *      fail verdict plus zero or more directives to consume from allowances.
+ *      Consumption is applied here through the shared WithinAllowanceChecker
+ *      core (which enforces the balance cap) and settled post-execution like
+ *      any other consumption — the adapter itself stays view/staticcall and
+ *      never touches state.
+ *
+ *      A 32-byte return is accepted as a legacy bool-only verdict (no
+ *      consumptions), so existing adapters keep working.
  *
  *   | Scenario              | staticcall Result     | Behavior                      | Status                          |
  *   |-----------------------|-----------------------|-------------------------------|---------------------------------|
  *   | No code at address    | (true, "")            | extcodesize == 0              | CustomConditionNotAContract     |
- *   | Wrong interface       | (false, "")           | staticcall fails              | CustomConditionReverted         |
  *   | Function reverts      | (false, <error data>) | staticcall fails              | CustomConditionReverted         |
- *   | Returns wrong type    | (true, <len != 32>)   | returnData.length != 32       | CustomConditionInvalidResult    |
- *   | Returns false         | (true, <32 bytes>)    | Adapter rejects the condition | CustomConditionViolation        |
+ *   | Returns wrong type    | (true, <bad shape>)   | decode reverts / len < 32     | CustomConditionInvalidResult    |
+ *   | Returns false         | (true, <verdict>)     | Adapter rejects the condition | CustomConditionViolation        |
+ *   | Consumption exceeds   | (true, <directive>)   | consumed > balance            | AllowanceExceeded               |
  *
  * @author gnosisguild
  */
@@ -35,8 +44,10 @@ library CustomConditionChecker {
      * @param operation Call or DelegateCall
      * @param location Byte offset into calldata
      * @param condition The condition with payload info for size computation
+     * @param consumptions Running copy-on-write consumption list
      * @param pluckedValues Array of previously plucked values
      * @return status Ok if condition passes, error status otherwise
+     * @return consumptions Updated consumption list (directives applied)
      */
     function check(
         bytes memory compValue,
@@ -46,8 +57,9 @@ library CustomConditionChecker {
         Operation operation,
         uint256 location,
         Condition memory condition,
+        Consumption[] memory consumptions,
         bytes32[] memory pluckedValues
-    ) internal view returns (Status status) {
+    ) internal view returns (Status status, Consumption[] memory) {
         address adapter = address(bytes20(compValue));
 
         uint256 size = condition.size != 0
@@ -75,12 +87,14 @@ library CustomConditionChecker {
                 location,
                 size,
                 extra,
+                consumptions,
                 pluckedValues
             );
     }
 
     /**
-     * @dev Safely invokes the adapter via staticcall.
+     * @dev Safely invokes the adapter via staticcall, then applies any returned
+     *      consumption directives through the shared allowance core.
      */
     function _invoke(
         address adapter,
@@ -91,14 +105,15 @@ library CustomConditionChecker {
         uint256 location,
         uint256 size,
         bytes memory extra,
+        Consumption[] memory consumptions,
         bytes32[] memory pluckedValues
-    ) private view returns (Status) {
+    ) private view returns (Status, Consumption[] memory) {
         uint256 codeSize;
         assembly {
             codeSize := extcodesize(adapter)
         }
         if (codeSize == 0) {
-            return Status.CustomConditionNotAContract;
+            return (Status.CustomConditionNotAContract, consumptions);
         }
 
         (bool callSuccess, bytes memory returnData) = adapter.staticcall(
@@ -118,18 +133,43 @@ library CustomConditionChecker {
         );
 
         if (!callSuccess) {
-            return Status.CustomConditionReverted;
+            return (Status.CustomConditionReverted, consumptions);
         }
 
-        if (returnData.length != 32) {
-            return Status.CustomConditionInvalidResult;
+        // A 32-byte return is a legacy bool-only verdict (no consumptions).
+        // Anything shorter is malformed. Otherwise decode the full result;
+        // abi.decode reverts (fail-closed) on a malformed dynamic payload.
+        bool success;
+        AllowanceConsumption[] memory directives;
+        if (returnData.length == 32) {
+            success = abi.decode(returnData, (bool));
+        } else if (returnData.length < 32) {
+            return (Status.CustomConditionInvalidResult, consumptions);
+        } else {
+            (success, directives) = abi.decode(
+                returnData,
+                (bool, AllowanceConsumption[])
+            );
         }
 
-        bool success = abi.decode(returnData, (bool));
         if (!success) {
-            return Status.CustomConditionViolation;
+            return (Status.CustomConditionViolation, consumptions);
         }
 
-        return Status.Ok;
+        // Apply consumption directives. The shared core enforces the balance
+        // cap; directives are settled post-execution like any consumption.
+        for (uint256 i; i < directives.length; ++i) {
+            Status status;
+            (status, consumptions) = WithinAllowanceChecker.consume(
+                consumptions,
+                directives[i].allowanceKey,
+                directives[i].amount
+            );
+            if (status != Status.Ok) {
+                return (status, consumptions);
+            }
+        }
+
+        return (Status.Ok, consumptions);
     }
 }

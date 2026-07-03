@@ -15,19 +15,45 @@ contract TestCustomChecker is ICustomCondition {
         uint256 location,
         uint256 size,
         bytes calldata,
-        bytes32[] memory
-    ) public pure returns (bool success) {
+        bytes32[] calldata
+    )
+        public
+        pure
+        returns (bool success, AllowanceConsumption[] memory consumptions)
+    {
         uint256 param = uint256(bytes32(data[location:location + size]));
 
         if (operation != Operation.Call) {
-            return false;
+            return (false, consumptions);
         }
 
-        if (param > 100) {
-            return true;
-        } else {
-            return false;
-        }
+        return (param > 100, consumptions);
+    }
+}
+
+/// @dev Returns a verdict plus a consumption directive: consume `param` from
+///      the allowance passed via `extra` (first 32 bytes).
+contract TestCustomCheckerConsuming is ICustomCondition {
+    function check(
+        address,
+        uint256,
+        bytes calldata data,
+        Operation,
+        uint256 location,
+        uint256 size,
+        bytes calldata extra,
+        bytes32[] calldata
+    )
+        public
+        pure
+        returns (bool success, AllowanceConsumption[] memory consumptions)
+    {
+        uint256 param = uint256(bytes32(data[location:location + size]));
+        bytes32 allowanceKey = bytes32(extra);
+
+        consumptions = new AllowanceConsumption[](1);
+        consumptions[0] = AllowanceConsumption(allowanceKey, param);
+        return (true, consumptions);
     }
 }
 
@@ -46,8 +72,8 @@ contract TestCustomCheckerReverting is ICustomCondition {
         uint256,
         uint256,
         bytes calldata,
-        bytes32[] memory
-    ) public pure returns (bool) {
+        bytes32[] calldata
+    ) public pure returns (bool, AllowanceConsumption[] memory) {
         revert("CustomChecker: intentional revert");
     }
 }

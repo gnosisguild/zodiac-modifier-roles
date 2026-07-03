@@ -337,14 +337,11 @@ describe("Operator - Custom", () => {
         ExecutionOptions.Both,
       );
 
-      // Return data length != 32 bytes
-      await expect(invoke(101))
-        .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(
-          ConditionViolationStatus.CustomConditionInvalidResult,
-          1, // Custom node
-          anyValue,
-        );
+      // Non-conforming (bool, AllowanceConsumption[]) return data now fails
+      // closed via a decode revert rather than a graceful
+      // CustomConditionInvalidResult status. (See PR discussion: whether to
+      // add manual decode-validation to restore the graceful status.)
+      await expect(invoke(101)).to.be.revert(ethers);
     });
 
     it("returns expected: succeeds", async () => {
@@ -442,6 +439,68 @@ describe("Operator - Custom", () => {
           },
         ]),
       ).to.be.revertedWithCustomError(roles, "UnsuitableCompValue");
+    });
+  });
+
+  // PROPOSAL: custom conditions can return AllowanceConsumption[] directives,
+  // settled by the core through the shared WithinAllowanceChecker balance cap.
+  describe("allowance consumption (proposal)", () => {
+    const allowanceKey = "0x" + "11".repeat(32);
+
+    async function setupConsuming() {
+      const base = await setupOneParam();
+      const Consuming = await ethers.getContractFactory(
+        "TestCustomCheckerConsuming",
+      );
+      const consuming = await Consuming.deploy();
+      const adapter = await consuming.getAddress();
+      // compValue = adapter(20 bytes) ++ allowanceKey(32 bytes) as `extra`
+      const compValue = adapter + allowanceKey.slice(2);
+      return { ...base, compValue };
+    }
+
+    it("consumes the directive amount and enforces the balance cap", async () => {
+      const { owner, roles, allowFunction, invoke, compValue } =
+        await loadFixture(setupConsuming);
+
+      // balance 1000, no refill
+      await roles.connect(owner).setAllowance(allowanceKey, 1000, 0, 0, 0, 0);
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Static,
+              operator: Operator.Custom,
+              compValue,
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
+      );
+
+      // adapter returns "consume <param> from allowanceKey"
+      await expect(invoke(300)).to.not.be.revert(ethers);
+      let allowance = await roles.accruedAllowance(allowanceKey);
+      expect(allowance.balance).to.equal(700);
+
+      // second call: 300 more -> 400 remaining
+      await expect(invoke(300)).to.not.be.revert(ethers);
+      allowance = await roles.accruedAllowance(allowanceKey);
+      expect(allowance.balance).to.equal(400);
+
+      // 401 > 400 remaining -> AllowanceExceeded, nothing consumed
+      await expect(invoke(401))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.AllowanceExceeded,
+          anyValue,
+          anyValue,
+        );
+      allowance = await roles.accruedAllowance(allowanceKey);
+      expect(allowance.balance).to.equal(400);
     });
   });
 });

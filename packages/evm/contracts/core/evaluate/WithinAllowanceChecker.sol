@@ -30,21 +30,36 @@ library WithinAllowanceChecker {
         uint256 value,
         bytes memory compValue
     ) internal view returns (Status status, Consumption[] memory) {
-        bytes32 allowanceKey = bytes32(compValue);
-
         // 1. Convert value to base denomination
         (status, value) = _convert(value, compValue);
         if (status != Status.Ok) {
             return (status, consumptions);
         }
 
-        // 2. Find in list
+        // 2. Consume `value` (base units) from the allowance
+        return consume(consumptions, bytes32(compValue), value);
+    }
+
+    /**
+     * @notice Consumes `value` (already in the allowance's base units) from the
+     *         allowance identified by `allowanceKey`, accumulating into the
+     *         copy-on-write consumption list.
+     * @dev Shared consumption core used by both the WithinAllowance operator
+     *      (after decimal/price conversion) and custom-condition adapters that
+     *      return consumption directives.
+     */
+    function consume(
+        Consumption[] memory consumptions,
+        bytes32 allowanceKey,
+        uint256 value
+    ) internal view returns (Status, Consumption[] memory) {
+        // Find in list
         uint256 index;
         for (; index < consumptions.length; ++index) {
             if (consumptions[index].allowanceKey == allowanceKey) break;
         }
 
-        // 3. Copy existing or load from storage
+        // Copy existing or load from storage
         Consumption memory consumption;
         if (index < consumptions.length) {
             consumption = Consumption(
@@ -61,20 +76,20 @@ library WithinAllowanceChecker {
             consumption = Consumption(allowanceKey, balance, 0, timestamp);
         }
 
-        // 4. Check overflow before consuming
+        // Check overflow before consuming
         if (consumption.consumed + value > type(uint128).max) {
             return (Status.AllowanceValueOverflow, consumptions);
         }
 
-        // 5. Consume
+        // Consume
         consumption.consumed += uint128(value);
 
-        // 6. Check balance
+        // Check balance
         if (consumption.consumed > consumption.balance) {
             return (Status.AllowanceExceeded, consumptions);
         }
 
-        // 7. Return updated list
+        // Return updated list
         return (
             Status.Ok,
             ConsumptionList.copyOnWrite(consumptions, consumption, index)

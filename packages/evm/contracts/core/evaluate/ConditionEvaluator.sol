@@ -156,22 +156,21 @@ library ConditionEvaluator {
                     );
             } else {
                 // Custom
-                return
-                    _result(
-                        CustomConditionChecker.check(
-                            condition.compValue,
-                            context.to,
-                            context.value,
-                            data,
-                            context.operation,
-                            location,
-                            condition,
-                            context.pluckedValues
-                        ),
+                (
+                    Status status,
+                    Consumption[] memory nextConsumptions
+                ) = CustomConditionChecker.check(
+                        condition.compValue,
+                        context.to,
+                        context.value,
+                        data,
+                        context.operation,
                         location,
                         condition,
-                        consumptions
+                        consumptions,
+                        context.pluckedValues
                     );
+                return _result(status, location, condition, nextConsumptions);
             }
         }
     }
