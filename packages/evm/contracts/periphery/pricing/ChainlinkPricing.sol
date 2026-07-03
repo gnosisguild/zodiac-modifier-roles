@@ -12,6 +12,10 @@ import "./interfaces/IChainlinkAggregatorV3.sol";
  * @notice Generic pricing adapter over Chainlink AggregatorV3 feeds.
  * @dev Returns 18-decimal fixed-point prices. Params are encoded as
  *      `(address feed, bool invert, uint256 maxAge)`.
+ *
+ *      Divisions round up, so the returned price is never understated.
+ *      This errs on the conservative side for allowance consumption,
+ *      where an understated price would understate consumption.
  */
 contract ChainlinkPricing is IPricing {
     uint256 private constant ONE = 1e18;
@@ -19,7 +23,6 @@ contract ChainlinkPricing is IPricing {
     error InvalidSource();
     error InvalidAnswer();
     error StalePrice(uint256 updatedAt, uint256 maxAge);
-    error ZeroPrice();
 
     function getPrice(
         bytes calldata params
@@ -45,16 +48,20 @@ contract ChainlinkPricing is IPricing {
         if (decimals < 18) {
             scaled *= 10 ** (18 - decimals);
         } else if (decimals > 18) {
-            scaled /= 10 ** (decimals - 18);
+            scaled = _ceilDiv(scaled, 10 ** (decimals - 18));
         }
 
-        if (scaled == 0) revert ZeroPrice();
-
+        // with answer > 0 enforced above, ceiling division never returns 0
         if (invert) {
-            price = (ONE * ONE) / scaled;
-            if (price == 0) revert ZeroPrice();
+            price = _ceilDiv(ONE * ONE, scaled);
         } else {
             price = scaled;
         }
+    }
+
+    /// @dev Ceiling division. Returns 0 for 0, otherwise ⌈a / b⌉.
+    function _ceilDiv(uint256 a, uint256 b) private pure returns (uint256) {
+        if (a == 0) return 0;
+        return (a - 1) / b + 1;
     }
 }
