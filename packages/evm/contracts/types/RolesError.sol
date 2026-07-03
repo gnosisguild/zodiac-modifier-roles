@@ -89,6 +89,12 @@ interface IRolesError {
     /// Child count is unsuitable for the node at given index
     error UnsuitableChildCount(uint256 index);
 
+    /// Child count exceeds the maximum encodable in the packed node (1023)
+    error TooManyChildren(uint256 index);
+
+    /// Inlined size exceeds the maximum encodable in the packed node (8191)
+    error InlinedSizeTooLarge(uint256 index);
+
     /// Leaf node cannot have children at given index
     error LeafNodeCannotHaveChildren(uint256 index);
 

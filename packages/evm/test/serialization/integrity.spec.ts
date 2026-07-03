@@ -854,4 +854,162 @@ describe("Integrity", () => {
       ).to.not.be.revert(ethers);
     });
   });
+
+  // 3. PACKED FIELD BOUNDS
+  //
+  // Per-node counts/sizes are packed into fixed-width bit fields
+  // (childCount -> 10 bits, max 1023; inlinedSize -> 13 bits, max 8191).
+  // An oversized value truncates on pack and silently mis-evaluates on
+  // unpack (dropped constraints / misaligned node stream). Integrity must
+  // reject these at configuration time.
+  describe("packed field bounds", () => {
+    // childCount 1024 truncates to `1024 & 0x3FF = 0`; pre-fix this Matches
+    // would unpack with 0 children and vacuously pass ANY calldata, dropping
+    // all 1024 constraints.
+    it("reverts TooManyChildren when a node has 1024 children", async () => {
+      const { roles, pack } = await loadFixture(setup);
+
+      const conditions = [
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        ...Array.from({ length: 1024 }, () => ({
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.Pass,
+          compValue: "0x",
+        })),
+      ];
+
+      await expect(pack(conditions))
+        .to.be.revertedWithCustomError(roles, "TooManyChildren")
+        .withArgs(0);
+    });
+
+    // A Tuple of 256 static fields has inlinedSize 256*32 = 8192, which
+    // overflows the 13-bit field into childCount's LSB (phantom child +
+    // size wrapping to 0).
+    it("reverts InlinedSizeTooLarge for an inlined Tuple of 256 static fields", async () => {
+      const { roles, pack } = await loadFixture(setup);
+
+      const conditions = [
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Tuple,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        ...Array.from({ length: 256 }, () => ({
+          parent: 1,
+          paramType: Encoding.Static,
+          operator: Operator.Pass,
+          compValue: "0x",
+        })),
+      ];
+
+      await expect(pack(conditions))
+        .to.be.revertedWithCustomError(roles, "InlinedSizeTooLarge")
+        .withArgs(1);
+    });
+
+    it("accepts a Tuple of 255 static fields (inlinedSize boundary)", async () => {
+      const { roles, pack } = await loadFixture(setup);
+
+      const conditions = [
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Tuple,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        ...Array.from({ length: 255 }, () => ({
+          parent: 1,
+          paramType: Encoding.Static,
+          operator: Operator.Pass,
+          compValue: "0x",
+        })),
+      ];
+
+      // 255 * 32 = 8160 <= 8191: the bounds pass; only assert TooManyChildren
+      // / InlinedSizeTooLarge are not raised (full pack may exceed the test
+      // eth_call gas cap, which is irrelevant to the bound itself).
+      await expect(pack(conditions)).to.not.be.revertedWithCustomError(
+        roles,
+        "InlinedSizeTooLarge",
+      );
+    });
+  });
+
+  // 4. DYNAMIC EqualTo compValue length
+  //
+  // A Dynamic EqualTo is never inlined, so ConditionPacker strips a
+  // 32-byte leading offset from compValue; a shorter buffer underflowed
+  // that subtraction pre-fix. Integrity must reject it up front.
+  describe("dynamic EqualTo compValue length", () => {
+    it("reverts UnsuitableCompValue for Dynamic EqualTo with compValue shorter than 32 bytes", async () => {
+      const { roles, pack } = await loadFixture(setup);
+
+      const conditions = [
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Dynamic,
+          operator: Operator.EqualTo,
+          compValue: "0xdeadbeef", // 4 bytes < 32
+        },
+      ];
+
+      await expect(pack(conditions))
+        .to.be.revertedWithCustomError(roles, "UnsuitableCompValue")
+        .withArgs(1);
+    });
+
+    it("accepts Dynamic EqualTo with a well-formed (>= 32 byte) compValue", async () => {
+      const { roles, allowTarget } = await loadFixture(setup);
+
+      // abi.encode(bytes) => 32-byte offset + 32-byte length + padded data
+      const compValue =
+        "0x" +
+        "20".padStart(64, "0") + // offset
+        "04".padStart(64, "0") + // length = 4
+        "deadbeef".padEnd(64, "0"); // data
+
+      const conditions = [
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Dynamic,
+          operator: Operator.EqualTo,
+          compValue,
+        },
+      ];
+
+      await expect(allowTarget(conditions)).to.not.be.revert(ethers);
+    });
+  });
 });

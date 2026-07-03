@@ -16,8 +16,20 @@ import "../../types/Types.sol";
  * @author gnosisguild
  */
 library Integrity {
+    /*
+     * Packed-node field capacities (see ConditionPacker layout):
+     *   childCount   -> 10 bits  [23-14]  => max 1023
+     *   inlinedSize  -> 13 bits  [13-1]   => max 8191
+     * A value exceeding its slot truncates on pack and silently
+     * mis-evaluates on unpack (dropped constraints / misaligned node
+     * stream), so both must be rejected at configuration time.
+     */
+    uint256 private constant MAX_CHILD_COUNT = 1023;
+    uint256 private constant MAX_INLINED_SIZE = 8191;
+
     function enforce(ConditionFlat[] memory conditions) internal pure {
         _validateBFS(conditions);
+        _validatePackedFieldBounds(conditions);
 
         for (uint256 i = 0; i < conditions.length; ++i) {
             _validateOperator(conditions, i);
@@ -27,6 +39,71 @@ library Integrity {
         _validateVariantTypes(conditions);
         _validatePluckZipTypes(conditions);
         _validatePluckOrder(conditions, 0, 0);
+    }
+
+    /**
+     * @dev Rejects trees whose per-node childCount or inlinedSize would not
+     *      fit the fixed-width fields of the packed node encoding.
+     *
+     *      Runs in O(n): childCount is tallied via parent pointers and
+     *      inlinedSize is computed bottom-up in a single reverse pass
+     *      (BFS order guarantees parent < index). This mirrors
+     *      Topology.childBounds / Topology.inlinedSize without their
+     *      per-node rescans, so it stays cheap even for wide trees.
+     */
+    function _validatePackedFieldBounds(
+        ConditionFlat[] memory conditions
+    ) private pure {
+        uint256 n = conditions.length;
+
+        // childCount: one node increments its parent's tally per pass.
+        uint256[] memory childCount = new uint256[](n);
+        for (uint256 i = 1; i < n; ++i) {
+            ++childCount[conditions[i].parent];
+        }
+        for (uint256 i = 0; i < n; ++i) {
+            if (childCount[i] > MAX_CHILD_COUNT) {
+                revert IRolesError.TooManyChildren(i);
+            }
+        }
+
+        // inlinedSize: Static = 32, Tuple = sum(children), None = first
+        // non-zero child; Dynamic/Array/AbiEncoded are never inlined and a
+        // non-inlined child makes its parent non-inlined too.
+        bool[] memory inlined = new bool[](n);
+        uint256[] memory size = new uint256[](n);
+        for (uint256 i = 0; i < n; ++i) {
+            Encoding enc = conditions[i].paramType;
+            if (enc == Encoding.Static) {
+                inlined[i] = true;
+                size[i] = 32;
+            } else if (
+                enc == Encoding.None ||
+                enc == Encoding.Tuple ||
+                enc == Encoding.EtherValue
+            ) {
+                // accumulates from children below (leaf None/EtherValue stay 0)
+                inlined[i] = true;
+            }
+            // Dynamic / Array / AbiEncoded: inlined stays false
+        }
+        for (uint256 i = n - 1; i > 0; --i) {
+            uint256 p = conditions[i].parent;
+            if (!inlined[i]) {
+                inlined[p] = false;
+            } else if (conditions[p].paramType == Encoding.Tuple) {
+                size[p] += size[i];
+            } else if (size[i] != 0) {
+                // None/EtherValue parent: first non-zero child (reverse pass
+                // means the lowest-index child assigns last and wins)
+                size[p] = size[i];
+            }
+        }
+        for (uint256 i = 0; i < n; ++i) {
+            if (inlined[i] && size[i] > MAX_INLINED_SIZE) {
+                revert IRolesError.InlinedSizeTooLarge(i);
+            }
+        }
     }
 
     function _validateBFS(ConditionFlat[] memory conditions) private pure {
@@ -446,7 +523,14 @@ library Integrity {
             unsuitable = condition.compValue.length != 32;
         }
 
-        if (enc == Encoding.Tuple || enc == Encoding.Array) {
+        // Dynamic/Tuple/Array EqualTo are never inlined, so ConditionPacker
+        // strips a 32-byte leading offset from compValue; a shorter buffer
+        // would underflow that subtraction. Require at least the 32 bytes.
+        if (
+            enc == Encoding.Dynamic ||
+            enc == Encoding.Tuple ||
+            enc == Encoding.Array
+        ) {
             unsuitable = condition.compValue.length < 32;
         }
 
