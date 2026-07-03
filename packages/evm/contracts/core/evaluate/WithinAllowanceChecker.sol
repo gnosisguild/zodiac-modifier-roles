@@ -150,7 +150,10 @@ library WithinAllowanceChecker {
             }
         }
 
-        return PriceConversion.convert(value, adapter, params);
+        // Round up: dust amounts always consume at least 1, and truncation
+        // errors accumulate against the allowance rather than in favor of
+        // the spender.
+        return PriceConversion.convert(value, adapter, params, true);
     }
 
     /// @dev Ceiling division. Returns 0 for 0, otherwise ⌈a / b⌉.

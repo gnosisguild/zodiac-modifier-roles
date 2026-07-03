@@ -1549,6 +1549,196 @@ describe("Operator - WithinAllowance", async () => {
       allowance = await roles.accruedAllowance(allowanceKey);
       expect(allowance.balance).to.equal(0);
     });
+
+    // Rounding must always favor the allowance: truncation in the price
+    // conversion (value * price / 1e18) rounds up, so consumption is never
+    // understated. Otherwise dust transfers convert to 0 consumed (bypassing
+    // exhausted allowances) and sub-unit truncation accumulates in favor of
+    // the spender across transactions.
+    describe("conversion rounding is conservative", () => {
+      it("dust amounts consume at least 1 unit when price < 1e18", async () => {
+        const { owner, roles, allowFunction, invoke } =
+          await loadFixture(setupOneParam);
+
+        const MockPricing = await ethers.getContractFactory("MockPricing");
+        // token worth 0.5 base units
+        const adapter = await MockPricing.deploy(5n * 10n ** 17n);
+
+        await setAllowance(await roles.connect(owner), allowanceKey, {
+          balance: 1_000_000n, // 1 unit in 6 decimals
+          period: 0,
+          refill: 0,
+          timestamp: 0,
+        });
+
+        await allowFunction([
+          {
+            parent: 0,
+            paramType: Encoding.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: Encoding.Static,
+            operator: Operator.WithinAllowance,
+            compValue: encodeAllowanceCompValue({
+              allowanceKey,
+              adapter: await adapter.getAddress(),
+              targetDecimals: 6,
+              sourceDecimals: 18,
+            }),
+          },
+        ]);
+
+        // 1 wei of token: ceil(1 / 1e12) = 1, then ceil(1 * 0.5e18 / 1e18) = 1
+        await expect(invoke(1n)).to.not.be.revert(ethers);
+
+        const allowance = await roles.accruedAllowance(allowanceKey);
+        expect(allowance.balance).to.equal(999_999n);
+      });
+
+      it("dust amounts cannot pass an exhausted allowance", async () => {
+        const { owner, roles, allowFunction, invoke } =
+          await loadFixture(setupOneParam);
+
+        const MockPricing = await ethers.getContractFactory("MockPricing");
+        const adapter = await MockPricing.deploy(5n * 10n ** 17n);
+
+        await setAllowance(await roles.connect(owner), allowanceKey, {
+          balance: 0,
+          period: 0,
+          refill: 0,
+          timestamp: 0,
+        });
+
+        await allowFunction([
+          {
+            parent: 0,
+            paramType: Encoding.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: Encoding.Static,
+            operator: Operator.WithinAllowance,
+            compValue: encodeAllowanceCompValue({
+              allowanceKey,
+              adapter: await adapter.getAddress(),
+              targetDecimals: 6,
+              sourceDecimals: 18,
+            }),
+          },
+        ]);
+
+        await expect(invoke(1n))
+          .to.be.revertedWithCustomError(roles, "ConditionViolation")
+          .withArgs(
+            ConditionViolationStatus.AllowanceExceeded,
+            1, // WithinAllowance node
+            anyValue,
+          );
+      });
+
+      it("truncation errors accumulate against the allowance, not the spender", async () => {
+        const { owner, roles, allowFunction, invoke } =
+          await loadFixture(setupOneParam);
+
+        const MockPricing = await ethers.getContractFactory("MockPricing");
+        // token worth 1.5 base units
+        const adapter = await MockPricing.deploy(15n * 10n ** 17n);
+
+        await setAllowance(await roles.connect(owner), allowanceKey, {
+          balance: 3n, // 3 whole base units
+          period: 0,
+          refill: 0,
+          timestamp: 0,
+        });
+
+        await allowFunction([
+          {
+            parent: 0,
+            paramType: Encoding.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: Encoding.Static,
+            operator: Operator.WithinAllowance,
+            compValue: encodeAllowanceCompValue({
+              allowanceKey,
+              adapter: await adapter.getAddress(),
+              targetDecimals: 0, // whole base units
+              sourceDecimals: 18,
+            }),
+          },
+        ]);
+
+        // 1 token = 1.5 base units true value → consumes ceil(1.5) = 2
+        await expect(invoke(10n ** 18n)).to.not.be.revert(ethers);
+
+        let allowance = await roles.accruedAllowance(allowanceKey);
+        expect(allowance.balance).to.equal(1n);
+
+        // second token needs 2 > 1 remaining → rejected
+        // (with floor rounding this would consume 1 per tx, spending 4.5
+        // units of true value against a 3 unit allowance)
+        await expect(invoke(10n ** 18n))
+          .to.be.revertedWithCustomError(roles, "ConditionViolation")
+          .withArgs(
+            ConditionViolationStatus.AllowanceExceeded,
+            1, // WithinAllowance node
+            anyValue,
+          );
+      });
+
+      it("only rounds up on truncation, exact conversions stay exact", async () => {
+        const { owner, roles, allowFunction, invoke } =
+          await loadFixture(setupOneParam);
+
+        const MockPricing = await ethers.getContractFactory("MockPricing");
+        const adapter = await MockPricing.deploy(5n * 10n ** 17n); // 0.5
+
+        await setAllowance(await roles.connect(owner), allowanceKey, {
+          balance: 1_000_000n,
+          period: 0,
+          refill: 0,
+          timestamp: 0,
+        });
+
+        await allowFunction([
+          {
+            parent: 0,
+            paramType: Encoding.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: Encoding.Static,
+            operator: Operator.WithinAllowance,
+            compValue: encodeAllowanceCompValue({
+              allowanceKey,
+              adapter: await adapter.getAddress(),
+              targetDecimals: 6,
+              sourceDecimals: 18,
+            }),
+          },
+        ]);
+
+        // 4 units (6 dec) * 0.5 = 2 exactly → no rounding
+        await expect(invoke(4n * 10n ** 12n)).to.not.be.revert(ethers);
+        let allowance = await roles.accruedAllowance(allowanceKey);
+        expect(allowance.balance).to.equal(999_998n);
+
+        // 5 units (6 dec) * 0.5 = 2.5 → rounds up to 3
+        await expect(invoke(5n * 10n ** 12n)).to.not.be.revert(ethers);
+        allowance = await roles.accruedAllowance(allowanceKey);
+        expect(allowance.balance).to.equal(999_995n);
+      });
+    });
   });
 
   describe("parameterized adapter", () => {

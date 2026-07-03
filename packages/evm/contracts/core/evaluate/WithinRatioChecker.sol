@@ -144,7 +144,8 @@ library WithinRatioChecker {
             PriceConversion.convert(
                 value * (10 ** (precision - decimals)),
                 adapter,
-                params
+                params,
+                false
             );
     }
 

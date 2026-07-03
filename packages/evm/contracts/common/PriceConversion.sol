@@ -25,20 +25,28 @@ library PriceConversion {
      * @notice Applies exchange rate conversion to an amount.
      * @param amount The amount to convert
      * @param adapter Price adapter address
+     * @param roundUp Whether to round the result up (conservative for
+     *        allowance consumption) or down
      * @return status Ok or error status from adapter
      * @return result Amount multiplied by price and divided by 10^18
      */
     function convert(
         uint256 amount,
         address adapter,
-        bytes memory params
+        bytes memory params,
+        bool roundUp
     ) internal view returns (Status, uint256) {
         (Status status, uint256 price) = _getPrice(adapter, params);
         if (status != Status.Ok) {
             return (status, 0);
         }
 
-        return (Status.Ok, (amount * price) / ONE);
+        uint256 product = amount * price;
+        uint256 result = product / ONE;
+        if (roundUp && product % ONE != 0) {
+            result += 1;
+        }
+        return (Status.Ok, result);
     }
 
     /**
