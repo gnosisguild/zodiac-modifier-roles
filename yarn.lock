@@ -1467,7 +1467,7 @@ __metadata:
   resolution: "@gnosis-guild/zodiac-core-modifier-roles@workspace:packages/evm"
   dependencies:
     "@gnosis-guild/typechain-ethers-v6": ^0.5.5
-    "@gnosis-guild/zodiac-core": 4.0.0-alpha.2
+    "@gnosis-guild/zodiac-core": 4.2.0
     "@nomicfoundation/hardhat-ethers": ^4.0.0
     "@nomicfoundation/hardhat-ethers-chai-matchers": ^3.0.0
     "@nomicfoundation/hardhat-ignition": ^3.0.0
@@ -1480,7 +1480,6 @@ __metadata:
     "@nomicfoundation/hardhat-verify": ^3.0.0
     "@nomicfoundation/ignition-core": ^3.0.0
     "@types/mocha": 10.0.10
-    "@types/yargs": 17.0.33
     chai: ^5.2.1
     dotenv: 16.4.7
     eth-provider: ^0.13.7
@@ -1494,13 +1493,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@gnosis-guild/zodiac-core@npm:4.0.0-alpha.2":
-  version: 4.0.0-alpha.2
-  resolution: "@gnosis-guild/zodiac-core@npm:4.0.0-alpha.2"
+"@gnosis-guild/zodiac-core@npm:4.2.0":
+  version: 4.2.0
+  resolution: "@gnosis-guild/zodiac-core@npm:4.2.0"
   dependencies:
     ethers: 6.16.0
-    semver: 7.7.4
-  checksum: 186bbd264ba7f0f1784b82eeca4b7f869dd7f3774f7a2c5355482e4233f47e29542b5d353be4592e726326642bb7ffe2b221d8dc4ce2612ba9b9f4bdf9225a12
+  checksum: c5c961ddad7c39f3d762930e34b124b0a8d991de6f9e4c57206bbed9d0e348c7f8e442194555dc3848e8bb433eac2f165a324883eeeaa258c3b020bb53607203
   languageName: node
   linkType: hard
 
@@ -4313,22 +4311,6 @@ __metadata:
   version: 2.0.11
   resolution: "@types/unist@npm:2.0.11"
   checksum: 6d436e832bc35c6dde9f056ac515ebf2b3384a1d7f63679d12358766f9b313368077402e9c1126a14d827f10370a5485e628bf61aa91117cf4fc882423191a4e
-  languageName: node
-  linkType: hard
-
-"@types/yargs-parser@npm:*":
-  version: 21.0.3
-  resolution: "@types/yargs-parser@npm:21.0.3"
-  checksum: ef236c27f9432983e91432d974243e6c4cdae227cb673740320eff32d04d853eed59c92ca6f1142a335cfdc0e17cccafa62e95886a8154ca8891cc2dec4ee6fc
-  languageName: node
-  linkType: hard
-
-"@types/yargs@npm:17.0.33":
-  version: 17.0.33
-  resolution: "@types/yargs@npm:17.0.33"
-  dependencies:
-    "@types/yargs-parser": "*"
-  checksum: ee013f257472ab643cb0584cf3e1ff9b0c44bca1c9ba662395300a7f1a6c55fa9d41bd40ddff42d99f5d95febb3907c9ff600fbcb92dadbec22c6a76de7e1236
   languageName: node
   linkType: hard
 
@@ -13592,15 +13574,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"semver@npm:7.7.4":
-  version: 7.7.4
-  resolution: "semver@npm:7.7.4"
-  bin:
-    semver: bin/semver.js
-  checksum: 9b4a6a58e98b9723fafcafa393c9d4e8edefaa60b8dfbe39e30892a3604cf1f45f52df9cfb1ae1a22b44c8b3d57fec8a9bb7b3e1645431587cb272399ede152e
-  languageName: node
-  linkType: hard
-
 "semver@npm:^6.3.1":
   version: 6.3.1
   resolution: "semver@npm:6.3.1"
@@ -16296,7 +16269,7 @@ __metadata:
   resolution: "zodiac-roles-integration-tests@workspace:packages/integration-tests"
   dependencies:
     "@gnosis-guild/typechain-ethers-v6": ^0.5.5
-    "@gnosis-guild/zodiac-core": 4.0.0-alpha.2
+    "@gnosis-guild/zodiac-core": 4.2.0
     "@gnosis-guild/zodiac-core-modifier-roles": "workspace:*"
     "@nomicfoundation/hardhat-ethers": ^4.0.0
     "@nomicfoundation/hardhat-ethers-chai-matchers": ^3.0.0
