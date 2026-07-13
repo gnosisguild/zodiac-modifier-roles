@@ -2,10 +2,7 @@ import dotenv from "dotenv";
 import { defineConfig } from "hardhat/config";
 import hardhatToolboxMochaEthers from "@nomicfoundation/hardhat-toolbox-mocha-ethers";
 
-import deployMastercopies from "./tasks/deploy-mastercopies.js";
 import deployMastercopy from "./tasks/deploy-mastercopy.js";
-import extractMastercopy from "./tasks/extract-mastercopy.js";
-import verifyMastercopies from "./tasks/verify-mastercopies.js";
 import verifyMastercopy from "./tasks/verify-mastercopy.js";
 
 dotenv.config();
@@ -422,11 +419,5 @@ export default defineConfig({
       enabled: false,
     },
   },
-  tasks: [
-    deployMastercopies,
-    deployMastercopy,
-    extractMastercopy,
-    verifyMastercopies,
-    verifyMastercopy,
-  ],
+  tasks: [deployMastercopy, verifyMastercopy],
 });
