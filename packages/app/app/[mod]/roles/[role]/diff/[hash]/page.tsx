@@ -1,9 +1,6 @@
-import { LicenseError } from "zodiac-roles-sdk"
+import { fetchRolesMod, planApplyRole, LicenseError } from "zodiac-roles-sdk"
 import { notFound } from "next/navigation"
 import { kv } from "@vercel/kv"
-
-import { fetchRolesMod } from "@/utils/subgraph"
-import { planApplyRole } from "@/utils/plan"
 
 import Layout from "@/components/Layout"
 import { parseModParam, parseRoleParam } from "@/app/params"
@@ -78,6 +75,7 @@ export default async function DiffPage(props: {
     </Box>
   )
 
+  // Plan the role apply and handle license errors
   const comments: string[] = []
   const logCall = (log: string) => comments.push(log)
 

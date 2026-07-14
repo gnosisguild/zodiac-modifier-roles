@@ -17,7 +17,9 @@ import { ChainId } from "@/app/chains"
 import { Call, Operation, Record } from "@/app/api/records/types"
 import { tupleValues } from "@/utils/abi"
 
-type ConditionFunction = (abiType: ParamType, _?: any) => Condition
+// The published SDK has its own Ethers instance due to workspace hoisting.
+// Treat its ParamType callback argument as opaque at this package boundary.
+type ConditionFunction = (abiType: any, _?: any) => Condition
 
 export async function derivePermissionsFromRecord(
   record: Record,
@@ -81,14 +83,14 @@ export const derivePermissionFromCall = ({
   call,
   abi,
   wildcards,
-  send,
-  delegatecall,
+  send = false,
+  delegatecall = false,
 }: {
   call: Call
   abi: AbiFunction
   wildcards: string[]
-  send: boolean
-  delegatecall: boolean
+  send?: boolean
+  delegatecall?: boolean
 }): FunctionPermissionCoerced => {
   const selector = call.data.slice(0, 10) as `0x${string}`
   // viem returns args as undefined for functions without args even though the types indicate something else 😤

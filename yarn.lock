@@ -12,17 +12,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@adraffy/ens-normalize@npm:1.11.1, @adraffy/ens-normalize@npm:^1.11.0":
+  version: 1.11.1
+  resolution: "@adraffy/ens-normalize@npm:1.11.1"
+  checksum: e8b17fcc730ccc45a956e1fbb09edfe42be41c291079512082e9964f8ef4287e67913183cdd02fff71d2e215340d5b98a9bbbd9be32c5d36fad4ba2c1ec33ff2
+  languageName: node
+  linkType: hard
+
 "@adraffy/ens-normalize@npm:^1.10.1":
   version: 1.11.0
   resolution: "@adraffy/ens-normalize@npm:1.11.0"
   checksum: b2911269e3e0ec6396a2e5433a99e0e1f9726befc6c167994448cd0e53dbdd0be22b4835b4f619558b568ed9aa7312426b8fa6557a13999463489daa88169ee5
-  languageName: node
-  linkType: hard
-
-"@adraffy/ens-normalize@npm:^1.11.0":
-  version: 1.11.1
-  resolution: "@adraffy/ens-normalize@npm:1.11.1"
-  checksum: e8b17fcc730ccc45a956e1fbb09edfe42be41c291079512082e9964f8ef4287e67913183cdd02fff71d2e215340d5b98a9bbbd9be32c5d36fad4ba2c1ec33ff2
   languageName: node
   linkType: hard
 
@@ -468,12 +468,31 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@cowprotocol/sdk-common@npm:0.5.0":
+  version: 0.5.0
+  resolution: "@cowprotocol/sdk-common@npm:0.5.0"
+  dependencies:
+    "@cowprotocol/sdk-config": 0.6.3
+  checksum: 77b3f39f9e6b8997f8da1081964ea2212e40ada18ea654f52f4f77b6826d3bd017c31b7d38316ec5118b41f5a40ff8e798d3af8940cc09e707eabaa86336112e
+  languageName: node
+  linkType: hard
+
 "@cowprotocol/sdk-common@npm:0.6.2":
   version: 0.6.2
   resolution: "@cowprotocol/sdk-common@npm:0.6.2"
   dependencies:
     "@cowprotocol/sdk-config": 0.8.1
   checksum: b341f968e12be0c10bba2f2a850a49e21022dab4f1f827f2ea9e6ea1cd1804886fccae23f585a10c56794b5773e8142cdb25cc26302fc04bc5ca4a9170babbbc
+  languageName: node
+  linkType: hard
+
+"@cowprotocol/sdk-config@npm:0.6.3, @cowprotocol/sdk-config@npm:^0.6.3":
+  version: 0.6.3
+  resolution: "@cowprotocol/sdk-config@npm:0.6.3"
+  dependencies:
+    exponential-backoff: ^3.1.1
+    limiter: ^2.1.0
+  checksum: 18426292c35a19eb11cdfaacc2b2821f5174dc2beaf30724834a3f48efd571f77d77c4582473ec0bb76c29f1c953c7cc267b76244b20c2b01250c8dff6a60fac
   languageName: node
   linkType: hard
 
@@ -484,6 +503,19 @@ __metadata:
     exponential-backoff: ^3.1.1
     limiter: ^2.1.0
   checksum: 04dc579e64ab7fc6fbd4f501185d9fd45c85a50237e1df884ab8defd4380fafdc722d864b786a855b33dd2830d663869515fbee47a0980ae3827c431caf71f65
+  languageName: node
+  linkType: hard
+
+"@cowprotocol/sdk-order-book@npm:^0.5.1":
+  version: 0.5.1
+  resolution: "@cowprotocol/sdk-order-book@npm:0.5.1"
+  dependencies:
+    "@cowprotocol/sdk-common": 0.5.0
+    "@cowprotocol/sdk-config": 0.6.3
+    cross-fetch: ^3.2.0
+    exponential-backoff: ^3.1.2
+    limiter: ^3.0.0
+  checksum: 7636e620ff157dd917773df7cf102047cadefc359a0f8fdfda243d76376bd0954f89c1a982da5fd6e4b4df2e106150c0820c6d7c795e106e4fb27ae9a4f06fbb
   languageName: node
   linkType: hard
 
@@ -7799,6 +7831,21 @@ __metadata:
     tslib: 2.7.0
     ws: 8.17.1
   checksum: f96c54d35aa09d6700dbbe732db160d66f2a1acd59f2820e307869be478bb5c4c3fd0f34a5d51014cbea04200e6e9776290f521795492688c8d67052bf8a1e2a
+  languageName: node
+  linkType: hard
+
+"ethers@npm:^6.13.5":
+  version: 6.17.0
+  resolution: "ethers@npm:6.17.0"
+  dependencies:
+    "@adraffy/ens-normalize": 1.11.1
+    "@noble/curves": 1.2.0
+    "@noble/hashes": 1.3.2
+    "@types/node": 22.7.5
+    aes-js: 4.0.0-beta.5
+    tslib: 2.7.0
+    ws: 8.21.0
+  checksum: 0ba314af2ae25622c60886caf83d825ce543262685961667d166b825c9dbfc66f905e0d7a2e3d8d4ccfa58b6ac20326e7f9a897b5580879efa758a50067ad082
   languageName: node
   linkType: hard
 
@@ -15609,6 +15656,21 @@ __metadata:
   languageName: node
   linkType: hard
 
+"ws@npm:8.21.0":
+  version: 8.21.0
+  resolution: "ws@npm:8.21.0"
+  peerDependencies:
+    bufferutil: ^4.0.1
+    utf-8-validate: ">=5.0.2"
+  peerDependenciesMeta:
+    bufferutil:
+      optional: true
+    utf-8-validate:
+      optional: true
+  checksum: 83ff89ae011bc5c3c5605a45a0d50e12589143c7500ca4de83a8d43b3cd26e71f422cb3206fd1a9e6d541d666eeb66255c30d095d62d413b3c7afe5d2c5cb928
+  languageName: node
+  linkType: hard
+
 "ws@npm:8.9.0":
   version: 8.9.0
   resolution: "ws@npm:8.9.0"
@@ -15836,9 +15898,16 @@ __metadata:
     vitest: ^3.0.9
     wagmi: ^3.5.0
     zod: ^3.23.8
-    zodiac-roles-sdk: "workspace:*"
+    zodiac-roles-sdk: "npm:3.4.8"
   languageName: unknown
   linkType: soft
+
+"zodiac-roles-deployments@npm:3.3.0":
+  version: 3.3.0
+  resolution: "zodiac-roles-deployments@npm:3.3.0"
+  checksum: c7ebb42444f73210e077476845d0c4876dc956d83c79ca3f161b4557c7b169000d8cffc4d5db5efffe53368623ee11b948993fe1266b734b6d1925780aa5f26d
+  languageName: node
+  linkType: hard
 
 "zodiac-roles-docs@workspace:packages/docs":
   version: 0.0.0-use.local
@@ -15902,6 +15971,29 @@ __metadata:
     turbo: ^2.5.6
   languageName: unknown
   linkType: soft
+
+"zodiac-roles-sdk@npm:3.4.8":
+  version: 3.4.8
+  resolution: "zodiac-roles-sdk@npm:3.4.8"
+  dependencies:
+    "@cowprotocol/sdk-config": ^0.6.3
+    "@cowprotocol/sdk-order-book": ^0.5.1
+    ethers: ^6.13.5
+    zodiac-roles-deployments: 3.3.0
+  peerDependencies:
+    "@gnosis-guild/eth-sdk-client": ^0.1.6
+    openapi-backend: ^5.15.0
+    openapi-types: ^12.1.3
+  peerDependenciesMeta:
+    "@gnosis-guild/eth-sdk-client":
+      optional: true
+    openapi-backend:
+      optional: true
+    openapi-types:
+      optional: true
+  checksum: 3efadfde641304a037f97b13cea861e9d0a930cb99b46eaa8f03b3587af2f313f8e080980b6fa839cafa909dcc7ef23faf340cc3cbf1440ce55047b90deac7cd
+  languageName: node
+  linkType: hard
 
 "zodiac-roles-sdk@workspace:*, zodiac-roles-sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
