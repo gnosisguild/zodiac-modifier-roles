@@ -12,4 +12,8 @@
 packages/evm/typechain-types
 packages/sdk/eth-sdk/tmp
 
+# Mastercopy deployment metadata is managed outside this repository.
+**/mastercopy.json
+**/mastercopies.json
+
 .turbo

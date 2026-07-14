@@ -21,15 +21,15 @@ jobs:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
         # ensure that a publication only occurs when a new release is created:
         if: ${{ steps.release.outputs.releases_created }}
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v5
         with:
           node-version: 24
         # ensure that a publication only occurs when a new release is created:
         if: ${{ steps.release.outputs.releases_created }}
-      - uses: actions/cache@v3
+      - uses: actions/cache@v5
         with:
           path: |
             **/node_modules
