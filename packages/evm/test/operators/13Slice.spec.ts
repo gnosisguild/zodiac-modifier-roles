@@ -31,7 +31,8 @@ function replaceBytes(data: string, byteOffset: number, replacement: string) {
 const connection = await network.create();
 const { ethers, networkHelpers } = connection;
 const { loadFixture } = networkHelpers;
-const { setupTestContract, setupDynamicParam } = createSetup(connection);
+const { setupTestContract, setupOneParam, setupDynamicParam } =
+  createSetup(connection);
 
 describe("Operator - Slice", () => {
   after(async () => {
@@ -357,6 +358,84 @@ describe("Operator - Slice", () => {
       await expect(invoke("0xdeadbeefcafe"))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(ConditionViolationStatus.BitmaskOverflow, anyValue, anyValue);
+    });
+
+    it("frames Bitmask under a Slice of a static operand", async () => {
+      const { roles, allowFunction, invoke } = await loadFixture(setupOneParam);
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Static,
+              operator: Operator.Slice,
+              compValue: encodeCompValue(28, 4),
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.Bitmask,
+                  compValue: "0x0000ffffffffdeadbeef",
+                },
+              ],
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
+      );
+
+      await expect(invoke(0xdeadbeef)).to.not.be.revert(ethers);
+      await expect(invoke(0xcafebabe))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.BitmaskNotAllowed,
+          anyValue,
+          anyValue,
+        );
+    });
+
+    it("propagates the narrowed frame through nested slices", async () => {
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupDynamicParam);
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Dynamic,
+              operator: Operator.Slice,
+              compValue: encodeCompValue(1, 6),
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.Slice,
+                  compValue: encodeCompValue(0, 4),
+                  children: [
+                    {
+                      paramType: Encoding.Static,
+                      operator: Operator.Bitmask,
+                      compValue: "0x0000ffffffffdeadbeef",
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
+      );
+
+      await expect(invoke("0xaadeadbeefbbcc")).to.not.be.revert(ethers);
+      await expect(invoke("0xaacafebabebbcc"))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.BitmaskNotAllowed,
+          anyValue,
+          anyValue,
+        );
     });
   });
 

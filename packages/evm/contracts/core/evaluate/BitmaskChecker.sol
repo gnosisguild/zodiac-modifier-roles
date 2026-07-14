@@ -22,15 +22,16 @@ import {Status} from "../../types/Types.sol";
  *        - mask      N bytes; selects which bits of the operand are checked.
  *        - expected  N bytes; the required value of the selected bits.
  *
- *      Operand framing (passed via `inlined`):
- *        - inlined == true   Operand is a Static value (32 bytes at location)
+ *      Operand framing (passed via `inlined` and `size`):
+ *        - inlined == true   Operand is a Static value (`size` bytes at
+ *                            location; normally 32, or 1-32 after Slice)
  *        - inlined == false  Operand is a Dynamic value; `location` points at
  *                            the length-prefix word, content begins at
  *                            `location + 32` and `shift` indexes into content
  *                            (the prefix is not part of the addressable range)
  *
  *      Bounds: `shift + N` must not exceed the operand's actual byte length
- *      (32 for Static, the value of the length prefix for Dynamic). The
+ *      (`size` for Static, the value of the length prefix for Dynamic). The
  *      window is processed in 32-byte chunks; the trailing chunk is rinsed
  *      so unused tail bits cannot contribute to the comparison.
  *
