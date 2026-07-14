@@ -15898,16 +15898,9 @@ __metadata:
     vitest: ^3.0.9
     wagmi: ^3.5.0
     zod: ^3.23.8
-    zodiac-roles-sdk: "npm:3.4.8"
+    zodiac-roles-sdk: "npm:4.0.0"
   languageName: unknown
   linkType: soft
-
-"zodiac-roles-deployments@npm:3.3.0":
-  version: 3.3.0
-  resolution: "zodiac-roles-deployments@npm:3.3.0"
-  checksum: c7ebb42444f73210e077476845d0c4876dc956d83c79ca3f161b4557c7b169000d8cffc4d5db5efffe53368623ee11b948993fe1266b734b6d1925780aa5f26d
-  languageName: node
-  linkType: hard
 
 "zodiac-roles-docs@workspace:packages/docs":
   version: 0.0.0-use.local
@@ -15972,14 +15965,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"zodiac-roles-sdk@npm:3.4.8":
-  version: 3.4.8
-  resolution: "zodiac-roles-sdk@npm:3.4.8"
+"zodiac-roles-sdk@npm:4.0.0":
+  version: 4.0.0
+  resolution: "zodiac-roles-sdk@npm:4.0.0"
   dependencies:
     "@cowprotocol/sdk-config": ^0.6.3
     "@cowprotocol/sdk-order-book": ^0.5.1
     ethers: ^6.13.5
-    zodiac-roles-deployments: 3.3.0
   peerDependencies:
     "@gnosis-guild/eth-sdk-client": ^0.1.6
     openapi-backend: ^5.15.0
@@ -15991,7 +15983,7 @@ __metadata:
       optional: true
     openapi-types:
       optional: true
-  checksum: 3efadfde641304a037f97b13cea861e9d0a930cb99b46eaa8f03b3587af2f313f8e080980b6fa839cafa909dcc7ef23faf340cc3cbf1440ce55047b90deac7cd
+  checksum: 28b0ef7fd0eb13e41f615c1a1aead8f16d01cbaaaf4854b5a2b5c41179155051e999d5725c7bf9477d7b7852b0b31e08dc012b7a2392e3afc186dbdd29833c55
   languageName: node
   linkType: hard
 
