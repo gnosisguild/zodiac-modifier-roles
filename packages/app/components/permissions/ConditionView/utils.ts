@@ -20,7 +20,7 @@ export const matchesAbi = (
       const elementType = arrayElementType(abi)
       return !!elementType
     case ParameterType.Calldata:
-      abi.type === "bytes" || abi.type === "function"
+      return abi.type === "bytes" || abi.type === "function"
     case ParameterType.AbiEncoded:
       return abi.type === "bytes"
   }
