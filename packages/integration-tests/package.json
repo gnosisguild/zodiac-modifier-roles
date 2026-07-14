@@ -12,7 +12,7 @@
   },
   "devDependencies": {
     "@gnosis-guild/typechain-ethers-v6": "^0.5.5",
-    "@gnosis-guild/zodiac-core": "4.2.0",
+    "@gnosis-guild/zodiac-core": "4.3.0",
     "@gnosis-guild/zodiac-core-modifier-roles": "workspace:*",
     "@nomicfoundation/hardhat-ethers": "^4.0.0",
     "@nomicfoundation/hardhat-ethers-chai-matchers": "^3.0.0",

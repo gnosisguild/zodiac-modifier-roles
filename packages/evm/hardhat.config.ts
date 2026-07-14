@@ -46,6 +46,7 @@ export default defineConfig({
     default: {
       type: "edr-simulated",
       allowUnlimitedContractSize: true,
+      hardfork: "cancun",
     },
     mainnet: {
       type: "http",
