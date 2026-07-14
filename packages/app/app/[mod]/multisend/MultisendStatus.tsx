@@ -45,7 +45,11 @@ const MultisendStatus: React.FC<Props> = ({
   const txBuilderJson = useMemo(
     () =>
       JSON.stringify(
-        exportToSafeTransactionBuilder(calls, chainId, "Update MultiSend unwrapper"),
+        exportToSafeTransactionBuilder(
+          calls,
+          chainId,
+          "Update MultiSend unwrapper"
+        ),
         null,
         2
       ),
@@ -77,11 +81,7 @@ const MultisendStatus: React.FC<Props> = ({
 
       <Flex direction="column" gap={2}>
         {unwrappers.map((u) => (
-          <UnwrapperRow
-            key={u.address}
-            address={u.address}
-            status={u.status}
-          />
+          <UnwrapperRow key={u.address} address={u.address} status={u.status} />
         ))}
       </Flex>
 

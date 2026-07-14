@@ -28,7 +28,8 @@ const ConditionHeader: React.FC<Props> = ({
   const paramName =
     paramIndex !== undefined ? abi?.name || `[${paramIndex}]` : "" // e.g.: array elements don't have a param name
 
-  const paramTypeLabel = !abi || "inputs" in abi ? Encoding[paramType] : abi.type
+  const paramTypeLabel =
+    !abi || "inputs" in abi ? Encoding[paramType] : abi.type
 
   const abiMismatch = abi && condition && !matchesAbi(condition, abi)
 
@@ -105,8 +106,7 @@ export default ConditionHeader
 const OperatorLabels: Record<number, ReactNode> = {
   [Operator.Matches]: "matches",
   [Operator.ArrayEvery]: "only has elements that",
-  [Operator.ArrayTailMatches]:
-    "rmatches the end of the collection",
+  [Operator.ArrayTailMatches]: "rmatches the end of the collection",
 
   [Operator.EqualToAvatar]: (
     <>

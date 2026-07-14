@@ -50,14 +50,30 @@ export async function derivePermissionsFromRecord(
 
     // If some call to this target function is a send or delegatecall, we must allow it for all derived permissions.
     // (Otherwise it would yield errors when merging the variants.)
-    const send = calls.some(c => c.to === call.to && c.data.slice(0, 10) === selector && BigInt(c.value || 0) > 0n)
-    const delegatecall = calls.some(c => c.to === call.to && c.data.slice(0, 10) === selector && c.operation === Operation.DelegateCall)
+    const send = calls.some(
+      (c) =>
+        c.to === call.to &&
+        c.data.slice(0, 10) === selector &&
+        BigInt(c.value || 0) > 0n
+    )
+    const delegatecall = calls.some(
+      (c) =>
+        c.to === call.to &&
+        c.data.slice(0, 10) === selector &&
+        c.operation === Operation.DelegateCall
+    )
 
     const wildcardsObj = record.wildcards[call.to + ":" + selector] || {}
     const wildcards = Object.entries(wildcardsObj)
       .filter(([, active]) => !!active)
       .map(([paramPath]) => paramPath)
-    return derivePermissionFromCall({ call, abi: functionAbi, wildcards, send, delegatecall })
+    return derivePermissionFromCall({
+      call,
+      abi: functionAbi,
+      wildcards,
+      send,
+      delegatecall,
+    })
   })
 }
 
@@ -66,7 +82,7 @@ export const derivePermissionFromCall = ({
   abi,
   wildcards,
   send,
-  delegatecall
+  delegatecall,
 }: {
   call: Call
   abi: AbiFunction
