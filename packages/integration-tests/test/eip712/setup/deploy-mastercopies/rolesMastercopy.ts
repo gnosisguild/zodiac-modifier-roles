@@ -2,7 +2,7 @@ import assert from "assert"
 import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types"
 import { Interface } from "ethers"
 
-import { deployMastercopy } from "@gnosis-guild/zodiac-core"
+import { deployMastercopy } from "@gnosis-guild/zodiac-core/tooling"
 import type { EIP1193Provider } from "@gnosis-guild/zodiac-core"
 
 export const address = "0x3F363f5b430F4C4fd47787224C0EFa7Da04De7A6"

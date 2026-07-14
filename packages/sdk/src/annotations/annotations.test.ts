@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, expect, it, suite, vi } from "vitest"
+import type { OpenAPIV3 } from "openapi-types"
 
 import { processAnnotations } from "./annotations"
 import { PermissionCoerced, processPermissions } from "../main"
@@ -37,7 +38,8 @@ suite("processAnnotations()", () => {
   it("returns presets (resolved annotated permissions)", async () => {
     const result = await processAnnotations(
       processPermissions(permissionsForPreset1).targets,
-      [annotation1]
+      [annotation1],
+      annotationFetchOptions
     )
 
     expect(result.presets).to.have.lengthOf(1)
@@ -64,7 +66,8 @@ suite("processAnnotations()", () => {
     ] as const
     const result = await processAnnotations(
       processPermissions(permissions).targets,
-      [annotation1]
+      [annotation1],
+      annotationFetchOptions
     )
     expect(result.permissions).to.deep.equal([
       {
@@ -86,7 +89,10 @@ suite("processAnnotations()", () => {
           schema: "https://kit.karpatkey.com/api/v1/openapi.json",
         },
       ],
-      { fetchPermissions: async () => permissionsForPreset1 }
+      {
+        fetchPermissions: async () => permissionsForPreset1,
+        fetchSchema: async () => indiscriminateParameterSchema,
+      }
     )
 
     expect(result.presets).to.have.lengthOf(1)
@@ -96,6 +102,55 @@ suite("processAnnotations()", () => {
 const annotation1 = {
   uri: "https://kit.karpatkey.com/api/v1/permissions/eth/cowswap/swap?buy=0x6B175474E89094C44Da98b954EedeAC495271d0F%2C0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48&sell=0x6B175474E89094C44Da98b954EedeAC495271d0F%2C0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
   schema: "https://kit.karpatkey.com/api/v1/openapi.json",
+}
+
+const annotationFetchOptions = {
+  fetchPermissions: async () => permissionsForPreset1,
+  fetchSchema: async () => annotationSchema,
+}
+
+const annotationSchema = buildAnnotationSchema({
+  type: "array",
+  items: { type: "string" },
+})
+
+const indiscriminateParameterSchema = buildAnnotationSchema({})
+
+function buildAnnotationSchema(
+  queryParameterSchema: OpenAPIV3.SchemaObject
+): OpenAPIV3.Document {
+  return {
+    openapi: "3.0.0",
+    info: { title: "Karpatkey Kit", version: "1.0.0" },
+    servers: [{ url: "https://kit.karpatkey.com/api/v1" }],
+    paths: {
+      "/permissions/{chain}/{protocol}/{action}": {
+        get: {
+          parameters: [
+            ...["chain", "protocol", "action"].map(
+              (name): OpenAPIV3.ParameterObject => ({
+                name,
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+              })
+            ),
+            ...["buy", "sell"].map(
+              (name): OpenAPIV3.ParameterObject => ({
+                name,
+                in: "query",
+                required: true,
+                style: "form",
+                explode: false,
+                schema: queryParameterSchema,
+              })
+            ),
+          ],
+          responses: { "200": { description: "Permission preset" } },
+        },
+      },
+    },
+  }
 }
 
 const permissionsForPreset1: PermissionCoerced[] = [

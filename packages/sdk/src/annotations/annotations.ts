@@ -7,8 +7,6 @@ import {
   PermissionCoerced,
   permissionId,
   validatePresets,
-  // eslint does not know about our Typescript path alias
-  // eslint-disable-next-line import/no-unresolved
 } from "zodiac-roles-sdk"
 
 type DeferencedOpenAPIParameter = Omit<OpenAPIV3.ParameterObject, "schema"> & {

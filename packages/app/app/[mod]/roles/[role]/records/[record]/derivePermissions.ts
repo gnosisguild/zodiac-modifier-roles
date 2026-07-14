@@ -17,7 +17,9 @@ import { ChainId } from "@/app/chains"
 import { Call, Operation, Record } from "@/app/api/records/types"
 import { tupleValues } from "@/utils/abi"
 
-type ConditionFunction = (abiType: ParamType, _?: any) => Condition
+// The published SDK has its own Ethers instance due to workspace hoisting.
+// Treat its ParamType callback argument as opaque at this package boundary.
+type ConditionFunction = (abiType: any, _?: any) => Condition
 
 export async function derivePermissionsFromRecord(
   record: Record,
@@ -50,14 +52,30 @@ export async function derivePermissionsFromRecord(
 
     // If some call to this target function is a send or delegatecall, we must allow it for all derived permissions.
     // (Otherwise it would yield errors when merging the variants.)
-    const send = calls.some(c => c.to === call.to && c.data.slice(0, 10) === selector && BigInt(c.value || 0) > 0n)
-    const delegatecall = calls.some(c => c.to === call.to && c.data.slice(0, 10) === selector && c.operation === Operation.DelegateCall)
+    const send = calls.some(
+      (c) =>
+        c.to === call.to &&
+        c.data.slice(0, 10) === selector &&
+        BigInt(c.value || 0) > 0n
+    )
+    const delegatecall = calls.some(
+      (c) =>
+        c.to === call.to &&
+        c.data.slice(0, 10) === selector &&
+        c.operation === Operation.DelegateCall
+    )
 
     const wildcardsObj = record.wildcards[call.to + ":" + selector] || {}
     const wildcards = Object.entries(wildcardsObj)
       .filter(([, active]) => !!active)
       .map(([paramPath]) => paramPath)
-    return derivePermissionFromCall({ call, abi: functionAbi, wildcards, send, delegatecall })
+    return derivePermissionFromCall({
+      call,
+      abi: functionAbi,
+      wildcards,
+      send,
+      delegatecall,
+    })
   })
 }
 
@@ -65,14 +83,14 @@ export const derivePermissionFromCall = ({
   call,
   abi,
   wildcards,
-  send,
-  delegatecall
+  send = false,
+  delegatecall = false,
 }: {
   call: Call
   abi: AbiFunction
   wildcards: string[]
-  send: boolean
-  delegatecall: boolean
+  send?: boolean
+  delegatecall?: boolean
 }): FunctionPermissionCoerced => {
   const selector = call.data.slice(0, 10) as `0x${string}`
   // viem returns args as undefined for functions without args even though the types indicate something else 😤

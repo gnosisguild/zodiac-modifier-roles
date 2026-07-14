@@ -10,7 +10,7 @@ import type { EIP1193Provider } from "@gnosis-guild/zodiac-core";
 import {
   deployFactories,
   deployMastercopy as zodiacDeployMastercopy,
-} from "@gnosis-guild/zodiac-core";
+} from "@gnosis-guild/zodiac-core/tooling";
 
 // Side-effect imports to pull in the NetworkConnection augmentations
 // (adds `ethers` and `networkHelpers` to NetworkConnection).

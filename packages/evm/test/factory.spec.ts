@@ -1,7 +1,10 @@
 import { expect } from "chai";
 import hre, { network } from "hardhat";
 import { AbiCoder, ZeroHash } from "ethers";
-import { deployFactories, deployProxy } from "@gnosis-guild/zodiac-core";
+import {
+  deployFactories,
+  deployProxy,
+} from "@gnosis-guild/zodiac-core/tooling";
 
 import { createEip1193 } from "./setup.js";
 
