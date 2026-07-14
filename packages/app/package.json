@@ -9,7 +9,8 @@
     "dist": "next build",
     "start": "next start",
     "test": "vitest",
-    "prettier": "prettier --write ."
+    "prettier": "prettier --write .",
+    "prettier:check": "prettier --check ."
   },
   "dependencies": {
     "@epic-web/invariant": "^1.0.0",
