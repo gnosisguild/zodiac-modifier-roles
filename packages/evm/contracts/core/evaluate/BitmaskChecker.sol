@@ -41,7 +41,8 @@ library BitmaskChecker {
         bytes calldata data,
         uint256 location,
         bytes memory compValue,
-        bool inlined
+        bool inlined,
+        uint256 size
     ) internal pure returns (Status) {
         uint256 shift = uint16(bytes2(compValue));
         uint256 n = (compValue.length - 2) / 2;
@@ -50,11 +51,12 @@ library BitmaskChecker {
          * Resolve the operand's encoded byte length so the compare cannot
          * bleed into trailing zero padding (or, for Dynamic operands sitting
          * mid-buffer, into the next ABI field).
-         *   - Static (inlined): 32 bytes inline at `location`.
+         *   - Static (inlined): `size` bytes inline at `location`. We rely on
+         *     the passed `size` because a static node may itself be sliced.
          *   - Dynamic: length prefix at `location`, content at `location + 32`.
          */
         uint256 start = location;
-        uint256 encodedLength = 32;
+        uint256 encodedLength = size;
         if (inlined == false) {
             if (start + 32 > data.length) {
                 return Status.BitmaskOverflow;
