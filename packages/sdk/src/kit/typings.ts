@@ -10,8 +10,6 @@ import {
 } from "ethers"
 import { Condition, Operator, Encoding } from "../main/types"
 // We import via alias to avoid double bundling of sdk functions
-// eslint does not know about our Typescript path alias
-// eslint-disable-next-line import/no-unresolved
 import {
   c,
   ExecutionFlags,

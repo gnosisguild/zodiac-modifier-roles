@@ -28,7 +28,8 @@ describe("allowCowOrderSigning", () => {
     const depositPermission = permissions.find(
       (p) =>
         p.targetAddress === WETH &&
-        "signature" in p && p.signature === "deposit()" &&
+        "signature" in p &&
+        p.signature === "deposit()" &&
         p.send === true
     )
     expect(depositPermission).toBeDefined()
@@ -45,7 +46,10 @@ describe("allowCowOrderSigning", () => {
     })
 
     const withdrawPermission = permissions.find(
-      (p) => p.targetAddress === WETH && "signature" in p && p.signature === "withdraw(uint256)"
+      (p) =>
+        p.targetAddress === WETH &&
+        "signature" in p &&
+        p.signature === "withdraw(uint256)"
     )
     expect(withdrawPermission).toBeDefined()
 
@@ -63,11 +67,15 @@ describe("allowCowOrderSigning", () => {
     const depositPermission = permissions.find(
       (p) =>
         p.targetAddress === WETH &&
-        "signature" in p && p.signature === "deposit()" &&
+        "signature" in p &&
+        p.signature === "deposit()" &&
         p.send === true
     )
     const withdrawPermission = permissions.find(
-      (p) => p.targetAddress === WETH && "signature" in p && p.signature === "withdraw(uint256)"
+      (p) =>
+        p.targetAddress === WETH &&
+        "signature" in p &&
+        p.signature === "withdraw(uint256)"
     )
     expect(depositPermission).toBeDefined()
     expect(withdrawPermission).toBeDefined()
@@ -169,7 +177,8 @@ describe("allowCowOrderSigning", () => {
     const depositPermission = permissions.find(
       (p) =>
         p.targetAddress.toLowerCase() === WXDAI.toLowerCase() &&
-        "signature" in p && p.signature === "deposit()" &&
+        "signature" in p &&
+        p.signature === "deposit()" &&
         p.send === true
     )
     expect(depositPermission).toBeDefined()

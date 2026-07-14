@@ -20,7 +20,7 @@ export enum Encoding {
   Static = 1,
   Dynamic = 2,
   Tuple = 3,
-  Array = 4,  
+  Array = 4,
   AbiEncoded = 5,
 }
 
