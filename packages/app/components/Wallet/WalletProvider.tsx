@@ -3,7 +3,7 @@ import { CHAINS } from "@/app/chains"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { getDefaultConfig } from "connectkit"
 import { Ref, useMemo } from "react"
-import { createConfig, injected, WagmiProvider } from "wagmi"
+import { createConfig, http, injected, WagmiProvider } from "wagmi"
 import { metaMask, walletConnect } from "wagmi/connectors"
 
 const WALLETCONNECT_PROJECT_ID = "4a48c8853b777ed87e37fc43d506de27"
@@ -25,12 +25,20 @@ const getWalletConnectConnector = () => {
   return walletConnectConnectorRef.current
 }
 
+const transports = Object.fromEntries(
+  Object.keys(CHAINS).map((chainId) => [
+    Number(chainId),
+    http(`https://rpc.gnosisguild.org/${chainId}`),
+  ])
+)
+
 export const wagmiConfig = createConfig(
   getDefaultConfig({
     appName: "Zodiac Roles",
     ssr: true,
     walletConnectProjectId: WALLETCONNECT_PROJECT_ID,
     chains: Object.values(CHAINS) as any,
+    transports,
     connectors: [injected(), metaMask(), getWalletConnectConnector()],
     batch: {
       multicall: false,
