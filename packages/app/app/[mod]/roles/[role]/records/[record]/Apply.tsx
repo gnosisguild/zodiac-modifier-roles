@@ -31,7 +31,8 @@ const Apply: React.FC<{}> = ({}) => {
       recordId: record,
       chainId,
     })
-    const path = `/${mod}/roles/${role}/diff/${permissionsHash}`
+
+    const path = `/${mod}/roles/${role}/diff/${permissionsHash}?legacy-unlock`
 
     const isInIframe = window.self !== window.top
     if (!isInIframe) {
@@ -45,7 +46,7 @@ const Apply: React.FC<{}> = ({}) => {
       }
     }
 
-    router.push(`/${mod}/roles/${role}/diff/${permissionsHash}`)
+    router.push(path)
   }
 
   return (
