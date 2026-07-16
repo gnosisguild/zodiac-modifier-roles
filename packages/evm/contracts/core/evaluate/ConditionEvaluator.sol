@@ -113,7 +113,8 @@ library ConditionEvaluator {
                             data,
                             location,
                             condition.compValue,
-                            condition.inlined
+                            condition.inlined,
+                            condition.size
                         ),
                         location,
                         condition,
