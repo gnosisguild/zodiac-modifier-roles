@@ -15,9 +15,9 @@ import {Consumption} from "../../types/Allowance.sol";
  * @title WithinAllowanceChecker
  * @notice Validates allowance consumption with optional amount conversion.
  *
- * @dev Checks if a value is within an allowance and consumes it. The value is
- *      normalized to the allowance's base denomination via decimal scaling
- *      and/or exchange rate conversion.
+ * @dev Checks if a value is within an allowance and consumes it. Values are
+ *      compared at the highest required precision and only scaled back down
+ *      when the consumption is recorded.
  *
  *      The `consumptions` array is treated as immutable. If consumption occurs,
  *      a new array is allocated and returned (Copy-on-Write).
@@ -25,6 +25,20 @@ import {Consumption} from "../../types/Allowance.sol";
  * @author gnosisguild
  */
 library WithinAllowanceChecker {
+    /**
+     * CompValue Layout (32, 34, 54, or 54+ bytes):
+     * ┌─────────────────────────┬──────────┬──────────┬─────────────────────┬─────────────────────┐
+     * │      allowanceKey       │ balance  │  input   │       adapter       │    adapterParams    │
+     * │        (bytes32)        │ decimals │ decimals │      (address)      │       (bytes)       │
+     * ├─────────────────────────┼──────────┼──────────┼─────────────────────┼─────────────────────┤
+     * │         0 - 31          │    32    │    33    │       34 - 53       │        54+          │
+     * └─────────────────────────┴──────────┴──────────┴─────────────────────┴─────────────────────┘
+     *                           └── optional ─────────┴───── optional ──────┴──── optional ───────┘
+     *
+     * balanceDecimals: decimals used to track the allowance balance
+     * inputDecimals: decimals of the value being checked
+     * adapterParams: optional trailing bytes passed to IPricing.getPrice(params)
+     */
     function check(
         Consumption[] memory consumptions,
         uint256 value,
@@ -32,106 +46,92 @@ library WithinAllowanceChecker {
     ) internal view returns (Status status, Consumption[] memory) {
         bytes32 allowanceKey = bytes32(compValue);
 
-        // 1. Convert value to base denomination
-        (status, value) = _convert(value, compValue);
+        // 1. Find the current consumption or load its accrued allowance
+        (Consumption memory consumption, uint256 index) = _findConsumption(
+            consumptions,
+            allowanceKey
+        );
+
+        // 2. Convert and scale up the input value
+        uint256 scaledInput;
+        (status, scaledInput) = _convertAndScaleUpInputValue(value, compValue);
         if (status != Status.Ok) {
             return (status, consumptions);
         }
 
-        // 2. Find in list
-        uint256 index;
-        for (; index < consumptions.length; ++index) {
-            if (consumptions[index].allowanceKey == allowanceKey) break;
-        }
+        // 3. Scale the stored values to the same precision as the input
+        uint256 scaledConsumed = _scaleUpBalanceValue(
+            consumption.consumed,
+            compValue
+        );
+        uint256 scaledBalance = _scaleUpBalanceValue(
+            consumption.balance,
+            compValue
+        );
+        uint256 nextScaledConsumed = scaledConsumed + scaledInput;
 
-        // 3. Copy existing or load from storage
-        Consumption memory consumption;
-        if (index < consumptions.length) {
-            consumption = Consumption(
-                allowanceKey,
-                consumptions[index].balance,
-                consumptions[index].consumed,
-                consumptions[index].timestamp
-            );
-        } else {
-            (uint128 balance, uint64 timestamp) = AllowanceLoader.accrue(
-                allowanceKey,
-                uint64(block.timestamp)
-            );
-            consumption = Consumption(allowanceKey, balance, 0, timestamp);
-        }
-
-        // 4. Check overflow before consuming
-        if (consumption.consumed + value > type(uint128).max) {
-            return (Status.AllowanceValueOverflow, consumptions);
-        }
-
-        // 5. Consume
-        consumption.consumed += uint128(value);
-
-        // 6. Check balance
-        if (consumption.consumed > consumption.balance) {
+        // 4. Check the allowance at highest level precision
+        if (nextScaledConsumed > scaledBalance) {
             return (Status.AllowanceExceeded, consumptions);
         }
 
-        // 7. Return updated list
+        // 5. Scale consumption down to the allowance's balance precision,
+        //    and round up the division. Fits uint128: the check above caps
+        //    it at balance.
+        consumption.consumed = uint128(
+            _scaleDownBalanceValue(nextScaledConsumed, compValue)
+        );
+
+        // 6. Return updated list
         return (
             Status.Ok,
             ConsumptionList.copyOnWrite(consumptions, consumption, index)
         );
     }
 
+    function _findConsumption(
+        Consumption[] memory consumptions,
+        bytes32 allowanceKey
+    ) private view returns (Consumption memory consumption, uint256 index) {
+        for (; index < consumptions.length; ++index) {
+            if (consumptions[index].allowanceKey == allowanceKey) break;
+        }
+
+        if (index < consumptions.length) {
+            consumption = consumptions[index];
+            return (
+                Consumption(
+                    allowanceKey,
+                    consumption.balance,
+                    consumption.consumed,
+                    consumption.timestamp
+                ),
+                index
+            );
+        }
+
+        (uint128 balance, uint64 timestamp) = AllowanceLoader.accrue(
+            allowanceKey,
+            uint64(block.timestamp)
+        );
+        return (Consumption(allowanceKey, balance, 0, timestamp), index);
+    }
+
     /**
-     * @dev Normalizes a value to the allowance's base denomination.
-     *
-     *      Calculates the final amount via decimal scaling and optionally
-     *      an exchange rate (via price adapter). Scaling is possible without
-     *      an adapter by providing both base and param decimals.
-     *
-     * @param value The raw amount to be converted.
-     * @param compValue Configuration bytes containing decimals and adapter.
-     * @return status Result of the conversion (Ok or price adapter error).
-     * @return converted Normalized amount in the allowance's base decimals.
+     * @dev Converts and scales an input value to the highest decimal precision,
+     *      retaining the price's 18-decimal factor.
      */
-    function _convert(
+    function _convertAndScaleUpInputValue(
         uint256 value,
         bytes memory compValue
-    ) private view returns (Status, uint256) {
-        /**
-         * CompValue Layout (32, 34, 54, or 54+ bytes):
-         * ┌─────────────────────────┬──────────┬──────────┬─────────────────────┬─────────────────────┐
-         * │      allowanceKey       │   base   │  param   │       adapter       │    adapterParams    │
-         * │        (bytes32)        │ decimals │ decimals │      (address)      │       (bytes)       │
-         * ├─────────────────────────┼──────────┼──────────┼─────────────────────┼─────────────────────┤
-         * │         0 - 31          │    32    │    33    │       34 - 53       │        54+          │
-         * └─────────────────────────┴──────────┴──────────┴─────────────────────┴─────────────────────┘
-         *                           └── optional ─────────┴───── optional ──────┴──── optional ───────┘
-         *
-         * baseDecimals: decimals of the allowance unit  (how it's accounted)
-         * paramDecimals: decimals of the parameter value (from calldata)
-         * adapterParams: optional trailing bytes passed to IPricing.getPrice(params)
-         */
-
+    ) private view returns (Status status, uint256) {
+        // A 32-byte compValue contains only the allowance key, so the input is
+        // already denominated in balance units and needs no conversion.
         if (compValue.length == 32) {
             return (Status.Ok, value);
         }
 
-        uint256 baseDecimals = uint8(compValue[32]);
-        uint256 paramDecimals = uint8(compValue[33]);
-
-        // Scale decimals
-        if (baseDecimals >= paramDecimals) {
-            /*
-             * Scale Up
-             */
-            value = value * (10 ** (baseDecimals - paramDecimals));
-        } else {
-            /*
-             * Scale Down
-             * round up - dust amounts always consume at least 1 in target precision
-             */
-            value = _ceilDiv(value, 10 ** (paramDecimals - baseDecimals));
-        }
+        (, uint256 inputDecimals, uint256 precision) = _unpack(compValue);
 
         address adapter;
         if (compValue.length > 34) {
@@ -150,7 +150,56 @@ library WithinAllowanceChecker {
             }
         }
 
-        return PriceConversion.convert(value, adapter, params);
+        uint256 price;
+        (status, price) = PriceConversion.getPrice(adapter, params);
+        if (status != Status.Ok) {
+            return (status, 0);
+        }
+
+        return (Status.Ok, value * (10 ** (precision - inputDecimals)) * price);
+    }
+
+    /// @dev Scales a balance-decimal value to the comparison precision.
+    function _scaleUpBalanceValue(
+        uint256 value,
+        bytes memory compValue
+    ) private pure returns (uint256) {
+        if (compValue.length == 32) return value;
+
+        (uint256 balanceDecimals, , uint256 precision) = _unpack(compValue);
+
+        return value * (10 ** (precision - balanceDecimals)) * 1e18;
+    }
+
+    /**
+     * @dev Scales a comparison value down to balance decimals, rounding up.
+     *      Scaling the balance value 1 up produces the exact inverse factor:
+     *      the retained 1e18 price precision and, when input decimals are
+     *      higher, the additional decimal scale.
+     */
+    function _scaleDownBalanceValue(
+        uint256 value,
+        bytes memory compValue
+    ) private pure returns (uint256) {
+        return _ceilDiv(value, _scaleUpBalanceValue(1, compValue));
+    }
+
+    function _unpack(
+        bytes memory compValue
+    )
+        private
+        pure
+        returns (
+            uint256 balanceDecimals,
+            uint256 inputDecimals,
+            uint256 precision
+        )
+    {
+        balanceDecimals = uint8(compValue[32]);
+        inputDecimals = uint8(compValue[33]);
+        precision = balanceDecimals > inputDecimals
+            ? balanceDecimals
+            : inputDecimals;
     }
 
     /// @dev Ceiling division. Returns 0 for 0, otherwise ⌈a / b⌉.

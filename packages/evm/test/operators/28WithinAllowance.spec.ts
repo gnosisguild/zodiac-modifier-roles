@@ -328,45 +328,6 @@ describe("Operator - WithinAllowance", async () => {
 
       await expect(invoke(9000)).to.not.be.revert(ethers);
     });
-    it("reverts when value exceeds uint128 max", async () => {
-      const { owner, roles, allowFunction, invoke } =
-        await loadFixture(setupOneParam);
-
-      const allowanceKey = hexlify(randomBytes(32));
-
-      await setAllowance(await roles.connect(owner), allowanceKey, {
-        balance: 1000,
-        period: 0,
-        refill: 0,
-        timestamp: 0,
-      });
-
-      await allowFunction([
-        {
-          parent: 0,
-          paramType: Encoding.AbiEncoded,
-          operator: Operator.Matches,
-          compValue: "0x",
-        },
-        {
-          parent: 0,
-          paramType: Encoding.Static,
-          operator: Operator.WithinAllowance,
-          compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
-        },
-      ]);
-
-      // uint128 max + 1
-      const exceedsUint128 = 2n ** 128n;
-
-      await expect(invoke(exceedsUint128))
-        .to.be.revertedWithCustomError(roles, "ConditionViolation")
-        .withArgs(
-          ConditionViolationStatus.AllowanceValueOverflow,
-          1, // WithinAllowance node
-          anyValue,
-        );
-    });
   });
 
   describe("WithinAllowance - Consumption", async () => {
