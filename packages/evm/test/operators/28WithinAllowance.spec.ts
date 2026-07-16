@@ -953,6 +953,59 @@ describe("Operator - WithinAllowance", async () => {
     const allowanceKey =
       "0x0000000000000000000000000000000000000000000000000000000000000001";
 
+    it("price-converted dust rounds up and consumes 1 in target precision", async () => {
+      const { owner, roles, allowFunction, invoke } =
+        await loadFixture(setupOneParam);
+
+      const MockPricing = await ethers.getContractFactory("MockPricing");
+
+      /*
+       * Spend: 1 source unit (0 decimals). Price: 0.5, encoded as 5e17 with
+       * 18 decimals. Allowance: 2 target units (0 decimals).
+       *
+       * Each spend converts to 1 * 5e17 / 1e18 = 0.5 target units and must
+       * consume ceil(0.5) = 1: balance goes 2 → 1 → 0, then reverts.
+       * Floored, it would consume 0 and let unlimited dust spends through.
+       */
+      const adapter = await MockPricing.deploy(5n * 10n ** 17n); // 0.5x
+
+      await setAllowance(await roles.connect(owner), allowanceKey, {
+        balance: 2,
+        period: 0,
+        refill: 0,
+        timestamp: 0,
+      });
+
+      await allowFunction([
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: encodeAllowanceCompValue({
+            allowanceKey,
+            adapter: await adapter.getAddress(),
+          }),
+        },
+      ]);
+
+      expect((await roles.accruedAllowance(allowanceKey)).balance).to.equal(2);
+      // each spend converts to 0.5, and consumes ceil(0.5) = 1, never 0
+      await expect(invoke(1)).to.not.be.revert(ethers);
+      expect((await roles.accruedAllowance(allowanceKey)).balance).to.equal(1);
+      await expect(invoke(1)).to.not.be.revert(ethers);
+      expect((await roles.accruedAllowance(allowanceKey)).balance).to.equal(0);
+
+      await expect(invoke(1))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.AllowanceExceeded, 1, anyValue);
+    });
+
     // base=12, param=6: scale up by 10^6
     // 1000 units (6 dec) → converted = 1000e6 * 1e18 * 1e12 / 1e24 = 1000e12 (12 dec)
     it("param(6) → base(12): consumes correctly", async () => {
