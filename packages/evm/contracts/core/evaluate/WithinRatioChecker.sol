@@ -12,9 +12,10 @@ import "../../types/Types.sol";
  * @notice Validates that a relative amount falls within a ratio range of a
  *         reference amount, with optional price adapter conversion.
  *
- * @dev Ratio is computed in basis points (10000 = 100%). Both amounts are read
- *      from pluckedValues by index, scaled to shared precision, optionally
- *      converted via price adapters, then compared against [minRatio, maxRatio].
+ * @dev Bounds are in basis points (10000 = 100%). Both amounts are read from
+ *      pluckedValues by index, scaled to shared precision, optionally priced
+ *      via adapters, then checked against [minRatio, maxRatio] using exact
+ *      cross-multiplied comparisons (no rounding; overflow reverts).
  *
  * @author gnosisguild
  */
@@ -71,24 +72,39 @@ library WithinRatioChecker {
         CompValue memory config = _unpack(compValue);
         (
             Status status,
-            uint256 referenceAmount,
-            uint256 relativeAmount
+            uint256 referenceAmountUp,
+            uint256 relativeAmountUp
         ) = _convert(config, pluckedValues);
         if (status != Status.Ok) {
             return status;
         }
 
         /*
-         *                 relativeAmount × priceRel
-         *   ratio (bps) = ───────────────────────── × 10,000
-         *                 referenceAmount × priceRef
+         * The naive formula looks like:
+         *
+         *                 relativeAmountUp
+         *   ratio (bps) = ───────────────── × 10,000   within [minRatio, maxRatio]
+         *                 referenceAmountUp
+         *
+         * It is equivalent to the following, which does no truncation:
+         *
+         *   below min ⇔ relativeAmountUp × 10,000 < referenceAmountUp × minRatio
+         *   above max ⇔ relativeAmountUp × 10,000 > referenceAmountUp × maxRatio
+         *
+         * A zero reference needs no special case: nothing is below min, and
+         * any nonzero relative amount exceeds a configured max. Checked
+         * arithmetic reverts if a multiplication overflows.
          */
-        uint256 ratio = (relativeAmount * BPS) / referenceAmount;
-
-        if (config.minRatio != 0 && ratio < config.minRatio) {
+        if (
+            config.minRatio != 0 &&
+            relativeAmountUp * BPS < referenceAmountUp * config.minRatio
+        ) {
             return Status.RatioBelowMin;
         }
-        if (config.maxRatio != 0 && ratio > config.maxRatio) {
+        if (
+            config.maxRatio != 0 &&
+            relativeAmountUp * BPS > referenceAmountUp * config.maxRatio
+        ) {
             return Status.RatioAboveMax;
         }
 
@@ -101,6 +117,10 @@ library WithinRatioChecker {
      *      1. Reads raw values from pluckedValues by index
      *      2. Scales both to the higher decimal precision
      *      3. Applies price adapters (if configured)
+     *
+     * @return status Ok, or the adapter failure status
+     * @return referenceAmount Reference amount, scaled up to common precision
+     * @return relativeAmount Relative amount, scaled up to common precision
      */
     function _convert(
         CompValue memory config,
@@ -133,19 +153,22 @@ library WithinRatioChecker {
         if (status != Status.Ok) return (status, 0, 0);
     }
 
+    /// @dev Returns the scaled value multiplied by the adapter price. The
+    ///      price's 10^18 factor is never divided out — it carries on both
+    ///      sides and cancels in the ratio comparison.
     function _scaleAndPrice(
         uint256 value,
         uint256 decimals,
         uint256 precision,
         address adapter,
         bytes memory params
-    ) private view returns (Status, uint256) {
-        return
-            PriceConversion.convert(
-                value * (10 ** (precision - decimals)),
-                adapter,
-                params
-            );
+    ) private view returns (Status status, uint256 price) {
+        (status, price) = PriceConversion.getPrice(adapter, params);
+        if (status != Status.Ok) {
+            return (status, 0);
+        }
+
+        return (Status.Ok, value * (10 ** (precision - decimals)) * price);
     }
 
     function _unpack(
