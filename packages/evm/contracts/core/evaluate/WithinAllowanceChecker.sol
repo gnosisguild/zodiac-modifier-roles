@@ -6,7 +6,7 @@ pragma solidity >=0.8.17 <0.9.0;
 
 import "../../common/AllowanceLoader.sol";
 import "../../common/ConsumptionList.sol";
-import "../../common/PriceConversion.sol";
+import "../../common/PriceLoader.sol";
 import "../../types/Types.sol";
 
 import {Consumption} from "../../types/Allowance.sol";
@@ -151,7 +151,7 @@ library WithinAllowanceChecker {
         }
 
         uint256 price;
-        (status, price) = PriceConversion.getPrice(adapter, params);
+        (status, price) = PriceLoader.load(adapter, params);
         if (status != Status.Ok) {
             return (status, 0);
         }

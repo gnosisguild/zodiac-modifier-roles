@@ -4,7 +4,7 @@
 // Converts to LGPL-3.0-or-later on 2030-03-01
 pragma solidity >=0.8.17 <0.9.0;
 
-import "../../common/PriceConversion.sol";
+import "../../common/PriceLoader.sol";
 import "../../types/Types.sol";
 
 /**
@@ -163,7 +163,7 @@ library WithinRatioChecker {
         address adapter,
         bytes memory params
     ) private view returns (Status status, uint256 price) {
-        (status, price) = PriceConversion.getPrice(adapter, params);
+        (status, price) = PriceLoader.load(adapter, params);
         if (status != Status.Ok) {
             return (status, 0);
         }

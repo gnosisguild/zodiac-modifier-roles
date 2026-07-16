@@ -8,7 +8,7 @@ import "../periphery/interfaces/IPricing.sol";
 import "../types/Types.sol";
 
 /**
- * @title PriceConversion
+ * @title PriceLoader
  * @notice Library for retrieving exchange rates from IPricing adapters.
  *
  * @dev The adapter returns a price with 18 decimals precision. Applying that
@@ -16,7 +16,7 @@ import "../types/Types.sol";
  *
  * @author gnosisguild
  */
-library PriceConversion {
+library PriceLoader {
     uint256 private constant PRICE_DECIMALS = 18;
     uint256 private constant ONE = 10 ** PRICE_DECIMALS;
 
@@ -34,7 +34,7 @@ library PriceConversion {
      *
      */
 
-    function getPrice(
+    function load(
         address adapter,
         bytes memory params
     ) internal view returns (Status, uint256) {
