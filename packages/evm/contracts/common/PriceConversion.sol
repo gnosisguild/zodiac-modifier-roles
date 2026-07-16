@@ -33,7 +33,7 @@ library PriceConversion {
         address adapter,
         bytes memory params
     ) internal view returns (Status, uint256) {
-        (Status status, uint256 price) = _getPrice(adapter, params);
+        (Status status, uint256 price) = getPrice(adapter, params);
         if (status != Status.Ok) {
             return (status, 0);
         }
@@ -55,10 +55,10 @@ library PriceConversion {
      *
      */
 
-    function _getPrice(
+    function getPrice(
         address adapter,
         bytes memory params
-    ) private view returns (Status, uint256) {
+    ) internal view returns (Status, uint256) {
         if (adapter == address(0)) {
             return (Status.Ok, ONE);
         }
