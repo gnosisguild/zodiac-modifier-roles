@@ -1,8 +1,5 @@
 import { hexlify, toUtf8Bytes } from "ethers"
-import {
-  Encoding,
-  Operator,
-} from "../types"
+import { Encoding, Operator } from "../types"
 import { SIGN_TYPED_MESSAGE_LIB_ADDRESS } from "../addresses"
 
 /**

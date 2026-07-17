@@ -12,7 +12,7 @@ import {
   encodeSignTypedMessage,
   __integration,
 } from "zodiac-roles-sdk"
-import { ExecutionOptions } from "zodiac-roles-deployments"
+import { ExecutionOptions } from "zodiac-roles-sdk"
 
 import { iface as ifaceFallback } from "./setup/deploy-mastercopies/fallbackHandler.js"
 import {

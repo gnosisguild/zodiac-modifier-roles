@@ -2,7 +2,7 @@ import { TypedData, TypedDataDomain } from "abitype"
 import { ZeroHash } from "ethers"
 
 import { findRootTypes, hashType, parseType, typesForDomain } from "../types"
-import { Encoding } from "zodiac-roles-deployments"
+import { Encoding } from "../../types"
 
 interface LayoutNode {
   parent: number

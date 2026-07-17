@@ -9,7 +9,7 @@ import {
 } from "ethers"
 import { network } from "hardhat"
 import { allowPersonalSign, encodePersonalSign } from "zodiac-roles-sdk"
-import { ExecutionOptions } from "zodiac-roles-deployments"
+import { ExecutionOptions } from "zodiac-roles-sdk"
 
 import { iface as ifaceFallback } from "./setup/deploy-mastercopies/fallbackHandler.js"
 import {
