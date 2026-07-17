@@ -75,8 +75,9 @@ library ConditionEvaluator {
                         consumptions,
                         context
                     );
-            } else {
-                // ZipSome or ZipEvery
+            } else if (
+                operator == Operator.ZipSome || operator == Operator.ZipEvery
+            ) {
                 return
                     _zipIterator(
                         data,
@@ -155,8 +156,7 @@ library ConditionEvaluator {
                         condition,
                         consumptions
                     );
-            } else {
-                // Custom
+            } else if (operator == Operator.Custom) {
                 return
                     _result(
                         CustomConditionChecker.check(
@@ -175,6 +175,8 @@ library ConditionEvaluator {
                     );
             }
         }
+
+        revert IRolesError.UnsupportedOperator(condition.index);
     }
 
     function _matches(

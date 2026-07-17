@@ -42,7 +42,7 @@ enum Operator {
     //          ❓ children (at most one child, must resolve to Static)
     //          ✅ compValue
     /* 13: */ Slice, // paramType: Static / Dynamic, compValue: 3 bytes (2 bytes shift + 1 byte size, 1-32)
-    /* 14: */ Pluck, // paramType: Static / EtherValue / Array, compValue: 1 byte (index into pluckedValues, 0-255)
+    /* 14: */ Pluck, // paramType: Static / EtherValue / Array, compValue: 1 byte (index into pluckedValues, 0-254)
     // ------------------------------------------------------------
     // 15:    SPECIAL COMPARISON (without compValue)
     //          paramType: Static

@@ -345,11 +345,11 @@ describe("Operator - WithinRatio", () => {
           );
       });
 
-      it("handles extreme decimal difference with adapters (6 vs 37 decimals)", async () => {
+      it("handles maximum decimal difference with adapters (6 vs 27 decimals)", async () => {
         const { roles, allowFunction, invoke } =
           await loadFixture(setupTwoParams);
 
-        // Reference: USDC (6 decimals), Relative: ExoticToken (37 decimals)
+        // Reference: USDC (6 decimals), Relative: ExoticToken (27 decimals)
         // Reference adapter: 1 USDC = 1 USD (stable)
         // Relative adapter: 1 ExoticToken = 0.5 USD
         const MockPricing = await ethers.getContractFactory("MockPricing");
@@ -362,7 +362,7 @@ describe("Operator - WithinRatio", () => {
           referencePluckIndex: 77,
           referenceDecimals: 6,
           relativePluckIndex: 88,
-          relativeDecimals: 37,
+          relativeDecimals: 27,
           minRatio: 9900,
           maxRatio: 10100,
         });
@@ -375,16 +375,16 @@ describe("Operator - WithinRatio", () => {
         // Relative: 2000 ExoticToken × 0.5 = 1000 USD
         // Ratio = 100%
         await expect(
-          invoke(1000n * 10n ** 6n, 2000n * 10n ** 37n),
+          invoke(1000n * 10n ** 6n, 2000n * 10n ** 27n),
         ).to.not.be.revert(ethers);
 
         // Relative: 2020 ExoticToken × 0.5 = 1010 USD → 101%
         await expect(
-          invoke(1000n * 10n ** 6n, 2020n * 10n ** 37n),
+          invoke(1000n * 10n ** 6n, 2020n * 10n ** 27n),
         ).to.not.be.revert(ethers);
 
         // Relative: 2030 ExoticToken × 0.5 = 1015 USD → 101.5% > 101%
-        await expect(invoke(1000n * 10n ** 6n, 2030n * 10n ** 37n))
+        await expect(invoke(1000n * 10n ** 6n, 2030n * 10n ** 27n))
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
           .withArgs(
             ConditionViolationStatus.RatioAboveMax,
@@ -1310,7 +1310,7 @@ describe("Operator - WithinRatio", () => {
         );
     });
 
-    it("USDC/exotic token swap - extreme decimal difference", async () => {
+    it("USDC/exotic token swap - maximum decimal difference", async () => {
       const { roles, allowFunction, invoke } =
         await loadFixture(setupTwoParams);
 
@@ -1325,7 +1325,7 @@ describe("Operator - WithinRatio", () => {
         referencePluckIndex: 83,
         referenceDecimals: 6, // USDC
         relativePluckIndex: 61,
-        relativeDecimals: 37, // ExoticToken
+        relativeDecimals: 27, // ExoticToken
         minRatio: 9975, // 99.75%
         maxRatio: 10025, // 100.25%
       });
@@ -1337,11 +1337,11 @@ describe("Operator - WithinRatio", () => {
       // invoke(relative, reference) since param0→relative (ExoticToken), param1→reference (USDC)
       // Selling 1000 USDC for 500 ExoticToken → (500 × 2) / 1000 = 100%
       await expect(
-        invoke(500n * 10n ** 37n, 1000n * 10n ** 6n),
+        invoke(500n * 10n ** 27n, 1000n * 10n ** 6n),
       ).to.not.be.revert(ethers);
 
       // Selling 1000 USDC for 498.7 ExoticToken → 99.74% < 99.75%
-      await expect(invoke(4987n * 10n ** 34n, 1000n * 10n ** 6n))
+      await expect(invoke(4987n * 10n ** 24n, 1000n * 10n ** 6n))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.RatioBelowMin,
@@ -2525,6 +2525,56 @@ describe("integrity", () => {
           },
         ]),
       ).to.be.revertedWithCustomError(roles, "UnsuitableCompValue");
+    });
+
+    it("reverts AllowanceDecimalsExceedMax when referenceDecimals exceeds 27", async () => {
+      const { roles } = await loadFixture(setupTestContract);
+      const compValue = encodeWithinRatioCompValue({
+        referencePluckIndex: 0,
+        referenceDecimals: 28,
+        relativePluckIndex: 1,
+        relativeDecimals: 18,
+        minRatio: 9000,
+        maxRatio: 11000,
+      });
+
+      await expect(
+        packConditions(roles, [
+          {
+            parent: 0,
+            paramType: Encoding.None,
+            operator: Operator.WithinRatio,
+            compValue,
+          },
+        ]),
+      )
+        .to.be.revertedWithCustomError(roles, "AllowanceDecimalsExceedMax")
+        .withArgs(0);
+    });
+
+    it("reverts AllowanceDecimalsExceedMax when relativeDecimals exceeds 27", async () => {
+      const { roles } = await loadFixture(setupTestContract);
+      const compValue = encodeWithinRatioCompValue({
+        referencePluckIndex: 0,
+        referenceDecimals: 18,
+        relativePluckIndex: 1,
+        relativeDecimals: 28,
+        minRatio: 9000,
+        maxRatio: 11000,
+      });
+
+      await expect(
+        packConditions(roles, [
+          {
+            parent: 0,
+            paramType: Encoding.None,
+            operator: Operator.WithinRatio,
+            compValue,
+          },
+        ]),
+      )
+        .to.be.revertedWithCustomError(roles, "AllowanceDecimalsExceedMax")
+        .withArgs(0);
     });
 
     it("accepts compValue with adapter params", async () => {

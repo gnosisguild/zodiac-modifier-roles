@@ -20,16 +20,25 @@ describe("Operator - Pluck", () => {
 
       // Note: Array is now allowed for Pluck (used by Zip operators)
 
-      await expect(
-        packConditions(roles, [
-          {
-            parent: 0,
-            paramType: Encoding.None,
-            operator: Operator.Pluck,
-            compValue: "0x00",
-          },
-        ]),
-      ).to.be.revertedWithCustomError(roles, "UnsuitableParameterType");
+      for (const encoding of [
+        Encoding.None,
+        Encoding.Dynamic,
+        Encoding.Tuple,
+        Encoding.AbiEncoded,
+      ]) {
+        await expect(
+          packConditions(roles, [
+            {
+              parent: 0,
+              paramType: encoding,
+              operator: Operator.Pluck,
+              compValue: "0x00",
+            },
+          ]),
+        )
+          .to.be.revertedWithCustomError(roles, "UnsuitableParameterType")
+          .withArgs(0);
+      }
     });
 
     describe("compValue", () => {

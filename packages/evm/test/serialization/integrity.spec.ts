@@ -14,6 +14,7 @@ const connection = await network.create();
 const { ethers, networkHelpers } = connection;
 const { loadFixture } = networkHelpers;
 const { deployRolesMod } = createSetup(connection);
+const oversizedCompValue = "0x" + "00".repeat(65536);
 
 describe("Integrity", () => {
   after(async () => {
@@ -259,7 +260,7 @@ describe("Integrity", () => {
               parent: 0,
               paramType: Encoding.Dynamic,
               operator: Operator.EqualTo,
-              compValue: ethers.keccak256("0xaabbccdd"),
+              compValue: "0x" + "00".repeat(64),
             },
             {
               parent: 0,
@@ -582,6 +583,131 @@ describe("Integrity", () => {
           ),
         ).to.be.revertedWithCustomError(roles, "UnsuitableCompValue");
       });
+
+      for (const encoding of [Encoding.Tuple, Encoding.Array]) {
+        it(`reverts UnsuitableCompValue for ${Encoding[encoding]} EqualTo when compValue exceeds 65535 bytes`, async () => {
+          const { roles, pack } = await loadFixture(setup);
+
+          await expect(
+            pack(
+              flattenCondition({
+                paramType: encoding,
+                operator: Operator.EqualTo,
+                compValue: oversizedCompValue,
+                children: [
+                  {
+                    paramType: Encoding.Static,
+                    operator: Operator.Pass,
+                  },
+                ],
+              }),
+            ),
+          )
+            .to.be.revertedWithCustomError(roles, "UnsuitableCompValue")
+            .withArgs(0);
+        });
+      }
+    });
+
+    describe("maximum compValue length", () => {
+      for (const [name, paramType, operator] of [
+        ["Bitmask", Encoding.Static, Operator.Bitmask],
+        ["Custom", Encoding.Static, Operator.Custom],
+        ["WithinAllowance", Encoding.Static, Operator.WithinAllowance],
+        ["WithinRatio", Encoding.None, Operator.WithinRatio],
+        ["Dynamic EqualTo", Encoding.Dynamic, Operator.EqualTo],
+      ] as const) {
+        it(`reverts UnsuitableCompValue for ${name} when compValue exceeds 65535 bytes`, async () => {
+          const { roles, pack } = await loadFixture(setup);
+
+          await expect(
+            pack([
+              {
+                parent: 0,
+                paramType,
+                operator,
+                compValue: oversizedCompValue,
+              },
+            ]),
+          )
+            .to.be.revertedWithCustomError(roles, "UnsuitableCompValue")
+            .withArgs(0);
+        });
+      }
+    });
+
+    describe("packed field widths", () => {
+      it("reverts when a node has more than 1023 children", async () => {
+        const { roles, pack } = await loadFixture(setup);
+
+        await expect(
+          pack(
+            flattenCondition({
+              paramType: Encoding.None,
+              operator: Operator.And,
+              children: Array.from({ length: 1024 }, () => ({
+                paramType: Encoding.Static,
+                operator: Operator.Pass,
+              })),
+            }),
+          ),
+        )
+          .to.be.revertedWithCustomError(roles, "ConditionChildCountExceedsMax")
+          .withArgs(0);
+      });
+
+    });
+
+    describe("additional operator constraints", () => {
+      it("reverts Dynamic EqualTo with less than one ABI head and tail word", async () => {
+        const { roles, pack } = await loadFixture(setup);
+
+        await expect(
+          pack([
+            {
+              parent: 0,
+              paramType: Encoding.Dynamic,
+              operator: Operator.EqualTo,
+              compValue: "0x" + "00".repeat(32),
+            },
+          ]),
+        )
+          .to.be.revertedWithCustomError(roles, "UnsuitableCompValue")
+          .withArgs(0);
+      });
+
+      it("reverts WithinRatio references to an Array Pluck", async () => {
+        const { roles, pack } = await loadFixture(setup);
+
+        await expect(
+          pack(
+            flattenCondition({
+              paramType: Encoding.None,
+              operator: Operator.And,
+              children: [
+                {
+                  paramType: Encoding.Array,
+                  operator: Operator.Pluck,
+                  compValue: "0x00",
+                  children: [
+                    {
+                      paramType: Encoding.Static,
+                      operator: Operator.Pass,
+                    },
+                  ],
+                },
+                {
+                  paramType: Encoding.None,
+                  operator: Operator.WithinRatio,
+                  compValue: "0x000000000000232800002af8",
+                },
+              ],
+            }),
+          ),
+        )
+          .to.be.revertedWithCustomError(roles, "WithinRatioTargetNotStatic")
+          .withArgs(2);
+      });
     });
 
     describe("Slice child constraint", () => {
@@ -609,7 +735,7 @@ describe("Integrity", () => {
   });
 
   // 4. CROSS-NODE DEPENDENCIES
-  describe("pluck order", () => {
+  describe("pluck definite assignment", () => {
     it("reverts PluckNotVisitedBeforeRef when WithinRatio references unvisited pluck index", async () => {
       const { roles, pack } = await loadFixture(setup);
 
@@ -852,6 +978,191 @@ describe("Integrity", () => {
           }),
         ),
       ).to.not.be.revert(ethers);
+    });
+
+    it("rejects Plucks hidden below Pass", async () => {
+      const { roles, pack } = await loadFixture(setup);
+
+      await expect(
+        pack(
+          flattenCondition({
+            paramType: Encoding.None,
+            operator: Operator.And,
+            children: [
+              {
+                paramType: Encoding.Tuple,
+                operator: Operator.Pass,
+                children: [
+                  {
+                    paramType: Encoding.Static,
+                    operator: Operator.Pluck,
+                    compValue: "0x00",
+                  },
+                  {
+                    paramType: Encoding.Static,
+                    operator: Operator.Pluck,
+                    compValue: "0x01",
+                  },
+                ],
+              },
+              {
+                paramType: Encoding.None,
+                operator: Operator.WithinRatio,
+                compValue: "0x000001000000232800002af8",
+              },
+            ],
+          }),
+        ),
+      )
+        .to.be.revertedWithCustomError(roles, "PluckNotVisitedBeforeRef")
+        .withArgs(2, 0);
+    });
+
+    it("intersects Pluck assignments across Or branches", async () => {
+      const { roles, pack } = await loadFixture(setup);
+
+      await expect(
+        pack(
+          flattenCondition({
+            paramType: Encoding.None,
+            operator: Operator.And,
+            children: [
+              {
+                paramType: Encoding.Static,
+                operator: Operator.Pluck,
+                compValue: "0x01",
+              },
+              {
+                paramType: Encoding.None,
+                operator: Operator.Or,
+                children: [
+                  {
+                    paramType: Encoding.Static,
+                    operator: Operator.Pluck,
+                    compValue: "0x00",
+                  },
+                  {
+                    paramType: Encoding.Static,
+                    operator: Operator.Pass,
+                  },
+                ],
+              },
+              {
+                paramType: Encoding.None,
+                operator: Operator.WithinRatio,
+                compValue: "0x000001000000232800002af8",
+              },
+            ],
+          }),
+        ),
+      )
+        .to.be.revertedWithCustomError(roles, "PluckNotVisitedBeforeRef")
+        .withArgs(3, 0);
+    });
+
+    it("does not export Pluck assignments from ArrayEvery", async () => {
+      const { roles, pack } = await loadFixture(setup);
+
+      await expect(
+        pack(
+          flattenCondition({
+            paramType: Encoding.None,
+            operator: Operator.And,
+            children: [
+              {
+                paramType: Encoding.Array,
+                operator: Operator.ArrayEvery,
+                children: [
+                  {
+                    paramType: Encoding.None,
+                    operator: Operator.And,
+                    children: [
+                      {
+                        paramType: Encoding.Static,
+                        operator: Operator.Pluck,
+                        compValue: "0x00",
+                      },
+                      {
+                        paramType: Encoding.Static,
+                        operator: Operator.Pluck,
+                        compValue: "0x01",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                paramType: Encoding.None,
+                operator: Operator.WithinRatio,
+                compValue: "0x000001000000232800002af8",
+              },
+            ],
+          }),
+        ),
+      )
+        .to.be.revertedWithCustomError(roles, "PluckNotVisitedBeforeRef")
+        .withArgs(2, 0);
+    });
+
+    it("rejects duplicate Pluck definitions", async () => {
+      const { roles, pack } = await loadFixture(setup);
+
+      await expect(
+        pack(
+          flattenCondition({
+            paramType: Encoding.None,
+            operator: Operator.And,
+            children: [
+              {
+                paramType: Encoding.Static,
+                operator: Operator.Pluck,
+                compValue: "0x00",
+              },
+              {
+                paramType: Encoding.Static,
+                operator: Operator.Pluck,
+                compValue: "0x00",
+              },
+            ],
+          }),
+        ),
+      )
+        .to.be.revertedWithCustomError(roles, "DuplicatePluckIndex")
+        .withArgs(2, 0);
+    });
+
+    it("does not visit Plucks below an Array Pluck", async () => {
+      const { roles, pack } = await loadFixture(setup);
+
+      await expect(
+        pack(
+          flattenCondition({
+            paramType: Encoding.None,
+            operator: Operator.And,
+            children: [
+              {
+                paramType: Encoding.Array,
+                operator: Operator.Pluck,
+                compValue: "0x00",
+                children: [
+                  {
+                    paramType: Encoding.Static,
+                    operator: Operator.Pluck,
+                    compValue: "0x01",
+                  },
+                ],
+              },
+              {
+                paramType: Encoding.None,
+                operator: Operator.WithinRatio,
+                compValue: "0x010001000000232800002af8",
+              },
+            ],
+          }),
+        ),
+      )
+        .to.be.revertedWithCustomError(roles, "PluckNotVisitedBeforeRef")
+        .withArgs(2, 1);
     });
   });
 });
