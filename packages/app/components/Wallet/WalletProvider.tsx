@@ -25,9 +25,6 @@ const getWalletConnectConnector = () => {
   return walletConnectConnectorRef.current
 }
 
-// No explicit `transports`: connectkit's getDefaultConfig falls back to
-// `http()` per chain, which uses each chain's default RPC — pinned to our own
-// endpoint in `@/app/chains` (see CHAINS rpcUrls override).
 export const wagmiConfig = createConfig(
   getDefaultConfig({
     appName: "Zodiac Roles",
