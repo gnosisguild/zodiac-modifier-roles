@@ -60,11 +60,6 @@ export default async function DiffPage(props: {
 
   const showAnnotations = searchParams.annotations !== "false"
 
-  // Escape hatch: appending ?legacy-unlock to the diff URL suppresses the
-  // legacy-flow modal entirely. The record-apply flow adds it automatically —
-  // that path is the supported flow, not a legacy Roles-app push — and it also
-  // doubles as a manual escape hatch for stragglers. Deliberately plain
-  // (visible in source): it's a speed bump, not a lock.
   const unlocked = searchParams["legacy-unlock"] !== undefined
 
   // Pushing permission updates through the Roles app is the legacy flow; the
