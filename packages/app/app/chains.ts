@@ -38,7 +38,7 @@ const hyperEvm = defineChain({
   },
 })
 
-export const CHAINS = {
+const BASE_CHAINS = {
   [mainnet.id]: {
     ...mainnet,
     prefix: "eth",
@@ -140,6 +140,27 @@ export const CHAINS = {
     prefix: "megaeth",
   },
 }
+
+/**
+ * Override every chain's default RPC with our own reliable endpoint. viem's
+ * built-in defaults (e.g. https://eth.merkle.io for mainnet) rate-limit and
+ * block CORS from the browser. This covers any code path that falls back to
+ * `chain.rpcUrls` instead of an explicit transport — notably the wagmi `mock`
+ * connector used for dev wallet spoofing, which reads
+ * `chain.rpcUrls.default.http[0]` directly and ignores configured transports.
+ */
+export const CHAINS = Object.fromEntries(
+  Object.entries(BASE_CHAINS).map(([id, chain]) => [
+    Number(id),
+    {
+      ...chain,
+      rpcUrls: {
+        ...chain.rpcUrls,
+        default: { http: [`https://rpc.gnosisguild.org/${id}`] },
+      },
+    },
+  ])
+) as unknown as typeof BASE_CHAINS
 
 export type ChainId = keyof typeof CHAINS
 
