@@ -429,6 +429,25 @@ describe("Operator - Custom", () => {
   });
 
   describe("integrity", () => {
+    it("reverts UnsuitableParameterType for None and AbiEncoded", async () => {
+      const { roles } = await loadFixture(setupTestContract);
+
+      for (const encoding of [Encoding.None, Encoding.AbiEncoded]) {
+        await expect(
+          packConditions(roles, [
+            {
+              parent: 0,
+              paramType: encoding,
+              operator: Operator.Custom,
+              compValue: "0x" + "00".repeat(20),
+            },
+          ]),
+        )
+          .to.be.revertedWithCustomError(roles, "UnsuitableParameterType")
+          .withArgs(0);
+      }
+    });
+
     it("reverts UnsuitableCompValue when compValue is less than 20 bytes", async () => {
       const { roles } = await loadFixture(setupTestContract);
 

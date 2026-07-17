@@ -80,6 +80,15 @@ interface IRolesError {
     /// Comparison value is unsuitable for the operator at given index
     error UnsuitableCompValue(uint256 index);
 
+    /// Condition count exceeds the packed header's 16-bit field
+    error ConditionNodeCountExceedsMax();
+
+    /// Child count exceeds the packed node's 10-bit field
+    error ConditionChildCountExceedsMax(uint256 index);
+
+    /// Inlined size exceeds the packed node's 13-bit field
+    error ConditionInlinedSizeExceedsMax(uint256 index);
+
     /// Operator is not supported at given index
     error UnsupportedOperator(uint256 index);
 
@@ -101,14 +110,17 @@ interface IRolesError {
     /// WithinRatio requires at least one ratio (min or max) to be provided
     error WithinRatioNoRatioProvided(uint256 index);
 
-    /// Allowance decimals exceed maximum of 18
+    /// Allowance decimals exceed maximum of 27
     error AllowanceDecimalsExceedMax(uint256 index);
 
     /// Slice child must resolve to Static type
     error SliceChildNotStatic(uint256 index);
 
-    /// WithinRatio references a Pluck index that hasn't been visited yet in DFS order
+    /// An operator references a Pluck slot that is not definitely assigned
     error PluckNotVisitedBeforeRef(uint256 index, uint8 pluckIndex);
+
+    /// A Pluck slot is defined more than once in the condition tree
+    error DuplicatePluckIndex(uint256 index, uint8 pluckIndex);
 
     /// address(0) is not allowed
     error ZeroAddressNotAllowed();
