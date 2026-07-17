@@ -60,21 +60,19 @@ export default async function DiffPage(props: {
 
   const showAnnotations = searchParams.annotations !== "false"
 
+  const unlocked = searchParams["legacy-unlock"] !== undefined
+
   // Pushing permission updates through the Roles app is the legacy flow; the
   // permissions starter kit now guides users through the Zodiac app instead.
   // Show the migration modal for posts created once the legacy flow was
   // sunset — dismissable until the flow is switched off entirely. Posts made
-  // before the sunset (and older posts with no timestamp) render unchanged.
+  // before the sunset (and older posts with no timestamp), and posts reached
+  // via the unlock escape hatch, render unchanged.
   const showLegacyFlowWarning =
-    post.createdAt != null && post.createdAt >= LEGACY_FLOW_SUNSET
-
-  // Escape hatch: appending ?legacy-unlock to the diff URL keeps the legacy
-  // flow usable beyond the cutoff. Deliberately plain (visible in source) —
-  // it's a speed bump for stragglers, not a lock.
-  const unlocked = searchParams["legacy-unlock"] !== undefined
+    !unlocked && post.createdAt != null && post.createdAt >= LEGACY_FLOW_SUNSET
 
   const legacyFlowWarning = showLegacyFlowWarning && (
-    <LegacyFlowModal dismissable={unlocked || Date.now() < LEGACY_FLOW_END} />
+    <LegacyFlowModal dismissable={Date.now() < LEGACY_FLOW_END} />
   )
 
   const modInfo = await fetchRolesMod(mod)
