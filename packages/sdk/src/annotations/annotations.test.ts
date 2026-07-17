@@ -1,9 +1,22 @@
-import { expect, it, suite } from "vitest"
+import { afterEach, beforeEach, expect, it, suite, vi } from "vitest"
 
 import { processAnnotations } from "./annotations"
 import { PermissionCoerced, processPermissions } from "../main"
 
 suite("processAnnotations()", () => {
+  // These tests resolve annotations against the DeFi Kit API. We mock the
+  // network so they stay deterministic and don't break when that API moves
+  // (e.g. the kit.karpatkey.com -> kit.kpk.io redirect) or its data drifts.
+  // The mock returns the OpenAPI schema for *openapi.json requests and the
+  // cowswap-swap permission set for *permissions/* requests — matching what
+  // the live endpoints return for the fixtures below.
+  beforeEach(() => {
+    vi.stubGlobal("fetch", mockDefiKitFetch)
+  })
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
   it("returns the original set of permissions if no annotations are given", async () => {
     const permissions: PermissionCoerced[] = [
       {
@@ -197,3 +210,110 @@ const permissionsForPreset1: PermissionCoerced[] = [
     send: false,
   },
 ]
+
+const json = (body: unknown) =>
+  new Response(JSON.stringify(body), {
+    status: 200,
+    headers: { "content-type": "application/json" },
+  })
+
+/**
+ * Stands in for `fetch` against the DeFi Kit API: returns canned fixtures
+ * keyed on the request URL instead of hitting the network.
+ */
+const mockDefiKitFetch = async (
+  input: string | URL | Request
+): Promise<Response> => {
+  const url =
+    typeof input === "string"
+      ? input
+      : input instanceof URL
+        ? input.href
+        : input.url
+
+  if (url.includes("openapi.json")) return json(openApiSchemaFixture)
+  if (url.includes("/permissions/")) return json(permissionsForPreset1)
+
+  throw new Error(`Unexpected fetch in test: ${url}`)
+}
+
+/**
+ * Minimal DeFi Kit OpenAPI document covering just the cowswap `swap` endpoint
+ * exercised by these tests. Trimmed from the live ~2 MB schema — enough for
+ * openapi-backend to match the operation and parse the sell/buy query params.
+ */
+const openApiSchemaFixture = {
+  openapi: "3.0.0",
+  info: {
+    version: "1.0.0",
+    title: "DeFi Kit",
+    description:
+      "Permissions for Zodiac Roles covering interactions with DeFi protocols",
+    contact: { name: "karpatkey", url: "https://kit.karpatkey.com" },
+  },
+  servers: [{ url: "/api/v1" }],
+  paths: {
+    "/permissions/eth/cowswap/swap": {
+      get: {
+        summary: "Make swaps on cowswap",
+        tags: ["cowswap permissions"],
+        parameters: [
+          {
+            schema: {
+              type: "array",
+              items: {
+                anyOf: [
+                  { type: "string", pattern: "0x[a-fA-F0-9]{40}" },
+                  { type: "string", enum: ["ETH"] },
+                ],
+              },
+            },
+            required: true,
+            name: "sell",
+            in: "query",
+            explode: false,
+          },
+          {
+            schema: {
+              type: "array",
+              items: {
+                anyOf: [
+                  { type: "string", pattern: "0x[a-fA-F0-9]{40}" },
+                  { type: "string", enum: ["ETH"] },
+                ],
+              },
+            },
+            required: false,
+            name: "buy",
+            in: "query",
+            explode: false,
+          },
+          {
+            schema: { type: "integer", minimum: 0, maximum: 10000 },
+            required: false,
+            name: "feeAmountBp",
+            in: "query",
+            explode: false,
+          },
+          {
+            schema: { type: "boolean" },
+            required: false,
+            name: "twap",
+            in: "query",
+            explode: false,
+          },
+          {
+            schema: { type: "string", pattern: "0x[a-fA-F0-9]{40}" },
+            required: false,
+            name: "receiver",
+            in: "query",
+            explode: false,
+          },
+        ],
+        responses: {
+          "200": { description: "Permissions for making swaps on cowswap" },
+        },
+      },
+    },
+  },
+}
