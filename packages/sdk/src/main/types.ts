@@ -103,6 +103,7 @@ export enum Status {
   BitmaskNotAllowed,
   CustomConditionViolation,
   AllowanceExceeded,
+  /** No longer emitted: full-precision comparison reports AllowanceExceeded instead. Kept to preserve status codes. */
   AllowanceValueOverflow,
   /** Payload overflow found by Checker */
   CalldataOverflow,
