@@ -53,34 +53,26 @@ library WithinAllowanceChecker {
         );
 
         // 2. Convert and scale up the input value
-        uint256 scaledInput;
-        (status, scaledInput) = _convertAndScaleUpInputValue(value, compValue);
+        (status, value) = _convertAndScaleInput(value, compValue);
         if (status != Status.Ok) {
             return (status, consumptions);
         }
 
-        // 3. Scale the stored values to the same precision as the input
-        uint256 scaledConsumed = _scaleUpBalanceValue(
-            consumption.consumed,
-            compValue
-        );
-        uint256 scaledBalance = _scaleUpBalanceValue(
-            consumption.balance,
-            compValue
-        );
-        uint256 nextScaledConsumed = scaledConsumed + scaledInput;
+        // 3. Scale the stored values to the input's precision, and add the
+        //    input to the consumed amount
+        uint256 balance = _scaleBalance(consumption.balance, compValue);
+        uint256 consumed = _scaleBalance(consumption.consumed, compValue) +
+            value;
 
         // 4. Check the allowance at highest level precision
-        if (nextScaledConsumed > scaledBalance) {
+        if (consumed > balance) {
             return (Status.AllowanceExceeded, consumptions);
         }
 
         // 5. Scale consumption down to the allowance's balance precision,
         //    and round up the division. Fits uint128: the check above caps
         //    it at balance.
-        consumption.consumed = uint128(
-            _scaleDownBalanceValue(nextScaledConsumed, compValue)
-        );
+        consumption.consumed = uint128(_unscale(consumed, compValue));
 
         // 6. Return updated list
         return (
@@ -89,39 +81,11 @@ library WithinAllowanceChecker {
         );
     }
 
-    function _findConsumption(
-        Consumption[] memory consumptions,
-        bytes32 allowanceKey
-    ) private view returns (Consumption memory consumption, uint256 index) {
-        for (; index < consumptions.length; ++index) {
-            if (consumptions[index].allowanceKey == allowanceKey) break;
-        }
-
-        if (index < consumptions.length) {
-            consumption = consumptions[index];
-            return (
-                Consumption(
-                    allowanceKey,
-                    consumption.balance,
-                    consumption.consumed,
-                    consumption.timestamp
-                ),
-                index
-            );
-        }
-
-        (uint128 balance, uint64 timestamp) = AllowanceLoader.accrue(
-            allowanceKey,
-            uint64(block.timestamp)
-        );
-        return (Consumption(allowanceKey, balance, 0, timestamp), index);
-    }
-
     /**
-     * @dev Converts and scales an input value to the highest decimal precision,
-     *      retaining the price's 18-decimal factor.
+     * @dev Scales an input value to the highest decimal precision, applying
+     *      the price and retaining its 18-decimal factor.
      */
-    function _convertAndScaleUpInputValue(
+    function _convertAndScaleInput(
         uint256 value,
         bytes memory compValue
     ) private view returns (Status status, uint256) {
@@ -159,8 +123,11 @@ library WithinAllowanceChecker {
         return (Status.Ok, value * (10 ** (precision - inputDecimals)) * price);
     }
 
-    /// @dev Scales a balance-decimal value to the comparison precision.
-    function _scaleUpBalanceValue(
+    /**
+     * @dev Scales a balance-denominated value to the comparison precision.
+     *      Includes the price's 1e18 scale so comparison happens without loss.
+     */
+    function _scaleBalance(
         uint256 value,
         bytes memory compValue
     ) private pure returns (uint256) {
@@ -172,16 +139,45 @@ library WithinAllowanceChecker {
     }
 
     /**
-     * @dev Scales a comparison value down to balance decimals, rounding up.
-     *      Scaling the balance value 1 up produces the exact inverse factor:
-     *      the retained 1e18 price precision and, when input decimals are
-     *      higher, the additional decimal scale.
+     * @dev Scales a comparison value down to balance decimals.
+     *      Scaling 1 produces the exact inverse factor required to unscale.
+     *
+     *      Important: since this is the value used in allowance accrual,
+     *      we round up dust.
      */
-    function _scaleDownBalanceValue(
+    function _unscale(
         uint256 value,
         bytes memory compValue
     ) private pure returns (uint256) {
-        return _ceilDiv(value, _scaleUpBalanceValue(1, compValue));
+        return _ceilDiv(value, _scaleBalance(1, compValue));
+    }
+
+    function _findConsumption(
+        Consumption[] memory consumptions,
+        bytes32 allowanceKey
+    ) private view returns (Consumption memory consumption, uint256 index) {
+        for (; index < consumptions.length; ++index) {
+            if (consumptions[index].allowanceKey == allowanceKey) break;
+        }
+
+        if (index < consumptions.length) {
+            consumption = consumptions[index];
+            return (
+                Consumption(
+                    allowanceKey,
+                    consumption.balance,
+                    consumption.consumed,
+                    consumption.timestamp
+                ),
+                index
+            );
+        }
+
+        (uint128 balance, uint64 timestamp) = AllowanceLoader.accrue(
+            allowanceKey,
+            uint64(block.timestamp)
+        );
+        return (Consumption(allowanceKey, balance, 0, timestamp), index);
     }
 
     function _unpack(
