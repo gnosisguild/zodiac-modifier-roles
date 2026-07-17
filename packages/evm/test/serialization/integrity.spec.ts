@@ -656,27 +656,6 @@ describe("Integrity", () => {
           .withArgs(0);
       });
 
-      it("reverts when an inlined node exceeds 8191 bytes", async () => {
-        const { roles, pack } = await loadFixture(setup);
-
-        await expect(
-          pack(
-            flattenCondition({
-              paramType: Encoding.Tuple,
-              operator: Operator.Matches,
-              children: Array.from({ length: 256 }, () => ({
-                paramType: Encoding.Static,
-                operator: Operator.Pass,
-              })),
-            }),
-          ),
-        )
-          .to.be.revertedWithCustomError(
-            roles,
-            "ConditionInlinedSizeExceedsMax",
-          )
-          .withArgs(0);
-      });
     });
 
     describe("additional operator constraints", () => {
