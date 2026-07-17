@@ -689,6 +689,64 @@ describe("Operator - WithinRatio", () => {
           );
       });
 
+      it("accepts a ratio less than one bps below max", async () => {
+        const { roles, allowFunction, invoke } =
+          await loadFixture(setupTwoParams);
+
+        const compValue = encodeWithinRatioCompValue({
+          referencePluckIndex: 2,
+          referenceDecimals: 0,
+          relativePluckIndex: 1,
+          relativeDecimals: 0,
+          minRatio: 0,
+          maxRatio: 10000,
+        });
+
+        await allowFunction(
+          flattenCondition(matchesWithRatio([pluck(1), pluck(2)], compValue)),
+        );
+
+        // Real ratio 10000/10001 is below the max, despite its ceiled bps
+        // representation being exactly 10000.
+        await expect(invoke(10000, 10001)).to.not.be.revert(ethers);
+
+        // reversing the amounts puts the ratio just above max.
+        await expect(invoke(10001, 10000))
+          .to.be.revertedWithCustomError(roles, "ConditionViolation")
+          .withArgs(
+            ConditionViolationStatus.RatioAboveMax,
+            2, // WithinRatio node
+            anyValue,
+          );
+      });
+
+      it("rejects a ratio less than one bps below min", async () => {
+        const { roles, allowFunction, invoke } =
+          await loadFixture(setupTwoParams);
+
+        const compValue = encodeWithinRatioCompValue({
+          referencePluckIndex: 2,
+          referenceDecimals: 0,
+          relativePluckIndex: 1,
+          relativeDecimals: 0,
+          minRatio: 10000,
+          maxRatio: 0,
+        });
+
+        await allowFunction(
+          flattenCondition(matchesWithRatio([pluck(1), pluck(2)], compValue)),
+        );
+
+        // Real ratio 99999/100000 is below the min by one tenth of a bps.
+        await expect(invoke(99999, 100000))
+          .to.be.revertedWithCustomError(roles, "ConditionViolation")
+          .withArgs(
+            ConditionViolationStatus.RatioBelowMin,
+            2, // WithinRatio node
+            anyValue,
+          );
+      });
+
       it("handles extreme values, failing closed beyond uint256 headroom", async () => {
         const { allowFunction, invoke } = await loadFixture(setupTwoParams);
 

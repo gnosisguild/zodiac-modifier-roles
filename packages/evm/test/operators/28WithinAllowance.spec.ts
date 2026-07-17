@@ -1007,6 +1007,48 @@ describe("Operator - WithinAllowance", async () => {
         .withArgs(ConditionViolationStatus.AllowanceExceeded, 1, anyValue);
     });
 
+    it("accumulates conversion truncation against the allowance", async () => {
+      const { owner, roles, allowFunction, invoke } =
+        await loadFixture(setupOneParam);
+
+      const MockPricing = await ethers.getContractFactory("MockPricing");
+      const adapter = await MockPricing.deploy(15n * 10n ** 17n); // 1.5x
+
+      await setAllowance(await roles.connect(owner), allowanceKey, {
+        balance: 3,
+        period: 0,
+        refill: 0,
+        timestamp: 0,
+      });
+
+      await allowFunction([
+        {
+          parent: 0,
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          compValue: "0x",
+        },
+        {
+          parent: 0,
+          paramType: Encoding.Static,
+          operator: Operator.WithinAllowance,
+          compValue: encodeAllowanceCompValue({
+            allowanceKey,
+            adapter: await adapter.getAddress(),
+          }),
+        },
+      ]);
+
+      // One input unit is worth 1.5 allowance units, so it consumes 2.
+      await expect(invoke(1)).to.not.be.revert(ethers);
+      expect((await roles.accruedAllowance(allowanceKey)).balance).to.equal(1);
+
+      // A second input needs another 2 units and cannot spend the remaining 1.
+      await expect(invoke(1))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.AllowanceExceeded, 1, anyValue);
+    });
+
     // base=12, param=6: scale up by 10^6
     // 1000 units (6 dec) → converted = 1000e6 * 1e18 * 1e12 / 1e24 = 1000e12 (12 dec)
     it("param(6) → base(12): consumes correctly", async () => {
@@ -2337,7 +2379,6 @@ describe("Operator - WithinAllowance", async () => {
           },
         ]);
       });
-
     });
 
     it("reverts LeafNodeCannotHaveChildren when WithinAllowance has children", async () => {
