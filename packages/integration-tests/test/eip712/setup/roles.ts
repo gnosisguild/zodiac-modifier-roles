@@ -1,6 +1,6 @@
 import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types"
 import { AbiCoder, randomBytes } from "ethers"
-import type { ExecutionOptions } from "zodiac-roles-deployments"
+import type { ExecutionOptions } from "zodiac-roles-sdk"
 import type { Condition } from "zodiac-roles-sdk"
 
 import { moduleProxyFactory } from "./deploy-mastercopies/moduleProxyFactory.js"
