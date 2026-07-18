@@ -121,6 +121,54 @@ describe("Operator - Matches", () => {
         );
     });
 
+    it("validates 4-byte prefix at the former 2^60 false-rejection boundary", async () => {
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupDynamicParam);
+
+      // Regression: the prefix comparison must only cover the N prefix
+      // bytes. With the old 28-bit shift, 2^60 leaked into the comparison
+      // window and caused a false LeadingBytesNotAMatch rejection.
+      const bigValue = 2n ** 60n;
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.AbiEncoded,
+              operator: Operator.Matches,
+              compValue: "0x0004deadbeef", // 2 bytes length + 4 bytes prefix
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [bigValue]),
+                },
+              ],
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
+      );
+
+      // Correct prefix + large param value passes
+      const payload =
+        "0xdeadbeef" + abiCoder.encode(["uint256"], [bigValue]).slice(2);
+      await expect(invoke(payload)).to.not.be.revert(ethers);
+
+      // Wrong prefix still fails with LeadingBytesNotAMatch
+      const wrongPayload =
+        "0xcafebabe" + abiCoder.encode(["uint256"], [bigValue]).slice(2);
+      await expect(invoke(wrongPayload))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.LeadingBytesNotAMatch,
+          1, // Matches node with prefix
+          anyValue,
+        );
+    });
+
     it("skips prefix check when compValue is empty (shift 0)", async () => {
       const { roles, allowFunction, invoke } =
         await loadFixture(setupDynamicParam);

@@ -37,6 +37,12 @@ export async function buildMastercopyDeployments(
     contract:
       "contracts/core/evaluate/WithinRatioChecker.sol:WithinRatioChecker",
   });
+  const customConditionChecker = await readArtifact({
+    hre,
+    contractName: "CustomConditionChecker",
+    contract:
+      "contracts/core/evaluate/CustomConditionChecker.sol:CustomConditionChecker",
+  });
   const avatarIsOwnerOfERC721 = await readArtifact({
     hre,
     contractName: "AvatarIsOwnerOfERC721",
@@ -53,6 +59,7 @@ export async function buildMastercopyDeployments(
   const libraries = {
     ConditionStorer: conditionStorer.address,
     WithinRatioChecker: withinRatioChecker.address,
+    CustomConditionChecker: customConditionChecker.address,
   };
   const rolesFactory = await connection.ethers.getContractFactory("Roles", {
     libraries,
@@ -71,6 +78,7 @@ export async function buildMastercopyDeployments(
   return [
     conditionStorer,
     withinRatioChecker,
+    customConditionChecker,
     avatarIsOwnerOfERC721,
     multiSendUnwrapper,
     roles,

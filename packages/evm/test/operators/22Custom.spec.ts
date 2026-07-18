@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { anyValue } from "@nomicfoundation/hardhat-ethers-chai-matchers/withArgs";
-import { hexlify, Interface, randomBytes } from "ethers";
+import { hexlify, Interface, MaxUint256, randomBytes } from "ethers";
 
 import { network } from "hardhat";
 
@@ -337,7 +337,7 @@ describe("Operator - Custom", () => {
         ExecutionOptions.Both,
       );
 
-      // Return data length != 32 bytes
+      // Return data does not decode as (bool, AllowanceConsumption[])
       await expect(invoke(101))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
@@ -463,4 +463,240 @@ describe("Operator - Custom", () => {
       ).to.be.revertedWithCustomError(roles, "UnsuitableCompValue");
     });
   });
+
+  describe("allowance consumption", () => {
+    const allowanceKeyA = "0x" + "11".repeat(32);
+    const allowanceKeyB = "0x" + "22".repeat(32);
+
+    async function setupConsuming() {
+      const base = await setupOneParam();
+      const Consuming = await ethers.getContractFactory(
+        "TestCustomCheckerConsuming",
+      );
+      const consuming = await Consuming.deploy();
+      return {
+        ...base,
+        consumingAddress: await consuming.getAddress(),
+      };
+    }
+
+    const customCompValue = (adapter: string, ...keys: string[]) =>
+      adapter + keys.map((key) => key.slice(2)).join("");
+
+    const customCondition = (compValue: string) =>
+      flattenCondition({
+        paramType: Encoding.AbiEncoded,
+        operator: Operator.Matches,
+        children: [
+          {
+            paramType: Encoding.Static,
+            operator: Operator.Custom,
+            compValue,
+          },
+        ],
+      });
+
+    it("consumes across calls and enforces the accrued balance", async () => {
+      const { owner, roles, allowFunction, invoke, consumingAddress } =
+        await loadFixture(setupConsuming);
+      const compValue = customCompValue(consumingAddress, allowanceKeyA);
+
+      await roles.connect(owner).setAllowance(allowanceKeyA, 100, 0, 0, 0, 0);
+      await allowFunction(customCondition(compValue), ExecutionOptions.Both);
+
+      await expect(invoke(40)).to.not.be.revert(ethers);
+      expect((await roles.accruedAllowance(allowanceKeyA)).balance).to.equal(
+        60,
+      );
+
+      // Exact remaining balance is allowed.
+      await expect(invoke(60)).to.not.be.revert(ethers);
+      expect((await roles.accruedAllowance(allowanceKeyA)).balance).to.equal(0);
+
+      await expect(invoke(1))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.AllowanceExceeded, 1, anyValue);
+      expect((await roles.accruedAllowance(allowanceKeyA)).balance).to.equal(0);
+    });
+
+    it("checks pending consumption before loading from storage", async () => {
+      const { owner, roles, allowFunction, invoke, consumingAddress } =
+        await loadFixture(setupConsuming);
+      const compValue = customCompValue(consumingAddress, allowanceKeyA);
+
+      await roles.connect(owner).setAllowance(allowanceKeyA, 100, 0, 0, 0, 0);
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.None,
+              operator: Operator.And,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.WithinAllowance,
+                  compValue: allowanceKeyA,
+                },
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.Custom,
+                  compValue,
+                },
+              ],
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
+      );
+
+      // Both checks charge 40 from the same running list.
+      await expect(invoke(40)).to.not.be.revert(ethers);
+      expect((await roles.accruedAllowance(allowanceKeyA)).balance).to.equal(
+        20,
+      );
+
+      // 11 + 11 exceeds the 20 remaining. Loading storage independently in
+      // each checker would incorrectly allow this call.
+      await expect(invoke(11))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.AllowanceExceeded, 3, anyValue);
+      expect((await roles.accruedAllowance(allowanceKeyA)).balance).to.equal(
+        20,
+      );
+    });
+
+    it("applies multiple consumptions and aggregates duplicate keys", async () => {
+      const { owner, roles, allowFunction, invoke, consumingAddress } =
+        await loadFixture(setupConsuming);
+
+      await roles.connect(owner).setAllowance(allowanceKeyA, 100, 0, 0, 0, 0);
+      await roles.connect(owner).setAllowance(allowanceKeyB, 100, 0, 0, 0, 0);
+      await allowFunction(
+        customCondition(
+          customCompValue(consumingAddress, allowanceKeyA, allowanceKeyB),
+        ),
+        ExecutionOptions.Both,
+      );
+
+      await expect(invoke(30)).to.not.be.revert(ethers);
+      expect((await roles.accruedAllowance(allowanceKeyA)).balance).to.equal(
+        70,
+      );
+      expect((await roles.accruedAllowance(allowanceKeyB)).balance).to.equal(
+        70,
+      );
+
+      // The same key twice must aggregate to 120 and fail atomically.
+      await allowFunction(
+        customCondition(
+          customCompValue(consumingAddress, allowanceKeyA, allowanceKeyA),
+        ),
+        ExecutionOptions.Both,
+      );
+      await expect(invoke(60))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.AllowanceExceeded, 1, anyValue);
+      expect((await roles.accruedAllowance(allowanceKeyA)).balance).to.equal(
+        70,
+      );
+    });
+
+    it("does not leak partial consumptions from a discarded OR branch", async () => {
+      const { owner, roles, allowFunction, invoke, consumingAddress } =
+        await loadFixture(setupConsuming);
+      const duplicate = customCompValue(
+        consumingAddress,
+        allowanceKeyA,
+        allowanceKeyA,
+      );
+
+      await roles.connect(owner).setAllowance(allowanceKeyA, 100, 0, 0, 0, 0);
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.None,
+              operator: Operator.Or,
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.Custom,
+                  compValue: duplicate,
+                },
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.Pass,
+                },
+              ],
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
+      );
+
+      // The first branch consumes 60 then fails on its second consumption. The
+      // Pass branch succeeds, but no partial consumption may be settled.
+      await expect(invoke(60)).to.not.be.revert(ethers);
+      expect((await roles.accruedAllowance(allowanceKeyA)).balance).to.equal(
+        100,
+      );
+    });
+
+    it("handles arbitrary uint256 amounts without an arithmetic panic", async () => {
+      const { owner, roles, allowFunction, invoke, consumingAddress } =
+        await loadFixture(setupConsuming);
+      const compValue = customCompValue(consumingAddress, allowanceKeyA);
+
+      await roles.connect(owner).setAllowance(allowanceKeyA, 100, 0, 0, 0, 0);
+      await allowFunction(customCondition(compValue), ExecutionOptions.Both);
+
+      await expect(invoke(MaxUint256))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.AllowanceExceeded, 1, anyValue);
+    });
+  });
+
+  describe("rich result validation", () => {
+    it("rejects malformed results with a structured status", async () => {
+      const { roles, allowFunction, invoke } = await loadFixture(setupOneParam);
+      const Malformed = await ethers.getContractFactory(
+        "TestCustomCheckerMalformed",
+      );
+      const malformed = await Malformed.deploy();
+      const adapter = await malformed.getAddress();
+
+      for (const mode of ["00", "01", "02"]) {
+        await allowFunction(
+          customConditionForAdapter(adapter + mode),
+          ExecutionOptions.Both,
+        );
+
+        await expect(invoke(101))
+          .to.be.revertedWithCustomError(roles, "ConditionViolation")
+          .withArgs(
+            ConditionViolationStatus.CustomConditionInvalidResult,
+            1,
+            anyValue,
+          );
+      }
+    });
+  });
+
+  function customConditionForAdapter(compValue: string) {
+    return flattenCondition({
+      paramType: Encoding.AbiEncoded,
+      operator: Operator.Matches,
+      children: [
+        {
+          paramType: Encoding.Static,
+          operator: Operator.Custom,
+          compValue,
+        },
+      ],
+    });
+  }
 });

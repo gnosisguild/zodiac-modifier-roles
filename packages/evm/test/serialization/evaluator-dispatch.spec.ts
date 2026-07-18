@@ -17,6 +17,7 @@ describe("ConditionEvaluator dispatch", () => {
       {
         libraries: {
           WithinRatioChecker: "0x0000000000000000000000000000000000000001",
+          CustomConditionChecker: "0x0000000000000000000000000000000000000001",
         },
       },
     );

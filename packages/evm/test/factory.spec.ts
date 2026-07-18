@@ -56,10 +56,23 @@ describe("Module works with factory", () => {
     const withinRatioChecker = await WithinRatioChecker.deploy();
     const withinRatioCheckerAddress = await withinRatioChecker.getAddress();
 
+    const customConditionCheckerArtifact = await hre.artifacts.readArtifact(
+      "CustomConditionChecker",
+    );
+    const CustomConditionChecker = new ethers.ContractFactory(
+      [],
+      customConditionCheckerArtifact.bytecode,
+      deployer,
+    );
+    const customConditionChecker = await CustomConditionChecker.deploy();
+    const customConditionCheckerAddress =
+      await customConditionChecker.getAddress();
+
     const Modifier = await ethers.getContractFactory("Roles", {
       libraries: {
         ConditionStorer: conditionStorerAddress,
         WithinRatioChecker: withinRatioCheckerAddress,
+        CustomConditionChecker: customConditionCheckerAddress,
       },
     });
     const masterCopy = await Modifier.deploy(

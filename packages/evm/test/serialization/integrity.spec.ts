@@ -655,7 +655,6 @@ describe("Integrity", () => {
           .to.be.revertedWithCustomError(roles, "ConditionChildCountExceedsMax")
           .withArgs(0);
       });
-
     });
 
     describe("additional operator constraints", () => {
