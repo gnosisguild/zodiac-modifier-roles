@@ -4,7 +4,7 @@
 // Converts to LGPL-3.0-or-later on 2030-03-01
 pragma solidity >=0.8.17 <0.9.0;
 
-import "../common/AllowanceLoader.sol";
+import "../common/AllowanceConsumer.sol";
 import "./serialize/ConditionStorer.sol";
 import "./Storage.sol";
 
@@ -321,7 +321,7 @@ abstract contract Setup is RolesStorage {
     function accruedAllowance(
         bytes32 allowanceKey
     ) external view returns (uint128 balance, uint64 timestamp) {
-        return AllowanceLoader.accrue(allowanceKey, uint64(block.timestamp));
+        return AllowanceConsumer.accrue(allowanceKey, uint64(block.timestamp));
     }
 
     /*//////////////////////////////////////////////////////////////

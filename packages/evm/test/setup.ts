@@ -58,10 +58,22 @@ export function createSetup({ ethers, provider }: NetworkConnection) {
       },
     );
 
+    const customConditionChecker = await hre.artifacts.readArtifact(
+      "CustomConditionChecker",
+    );
+    const { address: customConditionCheckerAddress } =
+      await zodiacDeployMastercopy({
+        bytecode: customConditionChecker.bytecode,
+        constructorArgs: { types: [], values: [] },
+        salt: ZeroHash,
+        provider: eip1193,
+      });
+
     const Modifier = await ethers.getContractFactory("Roles", {
       libraries: {
         ConditionStorer: conditionStorerAddress,
         WithinRatioChecker: withinRatioCheckerAddress,
+        CustomConditionChecker: customConditionCheckerAddress,
       },
     });
     const modifier = await Modifier.deploy(owner, avatar, target);

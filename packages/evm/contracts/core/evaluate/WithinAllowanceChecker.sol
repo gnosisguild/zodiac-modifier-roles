@@ -4,20 +4,17 @@
 // Converts to LGPL-3.0-or-later on 2030-03-01
 pragma solidity >=0.8.17 <0.9.0;
 
-import "../../common/AllowanceLoader.sol";
-import "../../common/ConsumptionList.sol";
+import "../../common/AllowanceConsumer.sol";
 import "../../common/PriceLoader.sol";
 import "../../types/Types.sol";
-
-import {Consumption} from "../../types/Allowance.sol";
 
 /**
  * @title WithinAllowanceChecker
  * @notice Validates allowance consumption with optional amount conversion.
  *
- * @dev Checks if a value is within an allowance and consumes it. Values are
- *      compared at the highest required precision and only scaled back down
- *      when the consumption is recorded.
+ * @dev Checks if a value is within an allowance and consumes it. The input
+ *      is converted to balance units (dust rounded up), then consumed via
+ *      AllowanceConsumer.
  *
  *      The `consumptions` array is treated as immutable. If consumption occurs,
  *      a new array is allocated and returned (Copy-on-Write).
@@ -44,48 +41,26 @@ library WithinAllowanceChecker {
         uint256 value,
         bytes memory compValue
     ) internal view returns (Status status, Consumption[] memory) {
-        bytes32 allowanceKey = bytes32(compValue);
-
-        // 1. Find the current consumption or load its accrued allowance
-        (Consumption memory consumption, uint256 index) = _findConsumption(
-            consumptions,
-            allowanceKey
-        );
-
-        // 2. Convert and scale up the input value
-        (status, value) = _convertAndScaleInput(value, compValue);
+        // 1. Convert the input value to balance units
+        (status, value) = _scaleInput(value, compValue);
         if (status != Status.Ok) {
             return (status, consumptions);
         }
 
-        // 3. Scale the stored values to the input's precision, and add the
-        //    input to the consumed amount
-        uint256 balance = _scaleBalance(consumption.balance, compValue);
-        uint256 consumed = _scaleBalance(consumption.consumed, compValue) +
-            value;
-
-        // 4. Check the allowance at highest level precision
-        if (consumed > balance) {
-            return (Status.AllowanceExceeded, consumptions);
-        }
-
-        // 5. Scale consumption down to the allowance's balance precision,
-        //    and round up the division. Fits uint128: the check above caps
-        //    it at balance.
-        consumption.consumed = uint128(_unscale(consumed, compValue));
-
-        // 6. Return updated list
-        return (
-            Status.Ok,
-            ConsumptionList.copyOnWrite(consumptions, consumption, index)
-        );
+        // 2. Consume it from the allowance
+        return
+            AllowanceConsumer.consume(consumptions, bytes32(compValue), value);
     }
 
     /**
-     * @dev Scales an input value to the highest decimal precision, applying
-     *      the price and retaining its 18-decimal factor.
+     * @dev Converts an input value to balance-denominated units: scales up
+     *      to the highest decimal precision, applies the price, then scales
+     *      back down in a single division that rounds dust up.
+     *
+     *      Consuming the rounded amount is equivalent to comparing at full
+     *      precision: ⌈v/f⌉ > b − c  ⟺  v > (b − c)·f
      */
-    function _convertAndScaleInput(
+    function _scaleInput(
         uint256 value,
         bytes memory compValue
     ) private view returns (Status status, uint256) {
@@ -95,7 +70,11 @@ library WithinAllowanceChecker {
             return (Status.Ok, value);
         }
 
-        (, uint256 inputDecimals, uint256 precision) = _unpack(compValue);
+        (
+            uint256 balanceDecimals,
+            uint256 inputDecimals,
+            uint256 precision
+        ) = _unpack(compValue);
 
         address adapter;
         if (compValue.length > 34) {
@@ -120,64 +99,13 @@ library WithinAllowanceChecker {
             return (status, 0);
         }
 
-        return (Status.Ok, value * (10 ** (precision - inputDecimals)) * price);
-    }
-
-    /**
-     * @dev Scales a balance-denominated value to the comparison precision.
-     *      Includes the price's 1e18 scale so comparison happens without loss.
-     */
-    function _scaleBalance(
-        uint256 value,
-        bytes memory compValue
-    ) private pure returns (uint256) {
-        if (compValue.length == 32) return value;
-
-        (uint256 balanceDecimals, , uint256 precision) = _unpack(compValue);
-
-        return value * (10 ** (precision - balanceDecimals)) * 1e18;
-    }
-
-    /**
-     * @dev Scales a comparison value down to balance decimals.
-     *      Scaling 1 produces the exact inverse factor required to unscale.
-     *
-     *      Important: since this is the value used in allowance accrual,
-     *      we round up dust.
-     */
-    function _unscale(
-        uint256 value,
-        bytes memory compValue
-    ) private pure returns (uint256) {
-        return _ceilDiv(value, _scaleBalance(1, compValue));
-    }
-
-    function _findConsumption(
-        Consumption[] memory consumptions,
-        bytes32 allowanceKey
-    ) private view returns (Consumption memory consumption, uint256 index) {
-        for (; index < consumptions.length; ++index) {
-            if (consumptions[index].allowanceKey == allowanceKey) break;
-        }
-
-        if (index < consumptions.length) {
-            consumption = consumptions[index];
-            return (
-                Consumption(
-                    allowanceKey,
-                    consumption.balance,
-                    consumption.consumed,
-                    consumption.timestamp
-                ),
-                index
-            );
-        }
-
-        (uint128 balance, uint64 timestamp) = AllowanceLoader.accrue(
-            allowanceKey,
-            uint64(block.timestamp)
+        return (
+            Status.Ok,
+            _ceilDiv(
+                value * (10 ** (precision - inputDecimals)) * price,
+                (10 ** (precision - balanceDecimals)) * 1e18
+            )
         );
-        return (Consumption(allowanceKey, balance, 0, timestamp), index);
     }
 
     function _unpack(

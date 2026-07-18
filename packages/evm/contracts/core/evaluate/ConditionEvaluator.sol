@@ -157,22 +157,24 @@ library ConditionEvaluator {
                         consumptions
                     );
             } else if (operator == Operator.Custom) {
-                return
-                    _result(
-                        CustomConditionChecker.check(
-                            condition.compValue,
-                            context.to,
-                            context.value,
-                            data,
-                            context.operation,
-                            location,
-                            condition,
-                            context.pluckedValues
-                        ),
+                uint256 size = condition.size != 0
+                    ? condition.size
+                    : AbiLocation.size(data, location, condition);
+                (
+                    Status status,
+                    Consumption[] memory nextConsumptions
+                ) = CustomConditionChecker.check(
+                        condition.compValue,
+                        context.to,
+                        context.value,
+                        data,
+                        context.operation,
                         location,
-                        condition,
-                        consumptions
+                        size,
+                        consumptions,
+                        context.pluckedValues
                     );
+                return _result(status, location, condition, nextConsumptions);
             }
         }
 
