@@ -2695,6 +2695,54 @@ describe("integrity", () => {
         ]),
       ).to.be.revertedWithCustomError(roles, "WithinRatioNoRatioProvided");
     });
+
+    it("reverts WithinRatioMinExceedsMax when minRatio is greater than maxRatio", async () => {
+      const { roles } = await loadFixture(setupTestContract);
+
+      const compValue = encodeWithinRatioCompValue({
+        referencePluckIndex: 3,
+        referenceDecimals: 0,
+        relativePluckIndex: 7,
+        relativeDecimals: 0,
+        minRatio: 11000,
+        maxRatio: 9000, // min > max is invalid
+      });
+
+      await expect(
+        packConditions(roles, [
+          {
+            parent: 0,
+            paramType: Encoding.None,
+            operator: Operator.And,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: Encoding.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: Encoding.None,
+            operator: Operator.WithinRatio,
+            compValue,
+          },
+          {
+            parent: 1,
+            paramType: Encoding.Static,
+            operator: Operator.Pluck,
+            compValue: "0x03",
+          },
+          {
+            parent: 1,
+            paramType: Encoding.Static,
+            operator: Operator.Pluck,
+            compValue: "0x07",
+          },
+        ]),
+      ).to.be.revertedWithCustomError(roles, "WithinRatioMinExceedsMax");
+    });
   });
 
   it("reverts LeafNodeCannotHaveChildren when WithinRatio has children", async () => {

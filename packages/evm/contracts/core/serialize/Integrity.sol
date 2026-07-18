@@ -617,6 +617,9 @@ library Integrity {
         if (minRatio == 0 && maxRatio == 0) {
             revert IRolesError.WithinRatioNoRatioProvided(index);
         }
+        if (minRatio != 0 && maxRatio != 0 && minRatio > maxRatio) {
+            revert IRolesError.WithinRatioMinExceedsMax(index);
+        }
         // Children: None
         (, uint256 childCount) = Topology.childBounds(conditions, index);
         if (childCount != 0) {

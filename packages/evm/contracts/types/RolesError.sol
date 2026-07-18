@@ -110,6 +110,9 @@ interface IRolesError {
     /// WithinRatio requires at least one ratio (min or max) to be provided
     error WithinRatioNoRatioProvided(uint256 index);
 
+    /// WithinRatio minRatio exceeds maxRatio (range is unsatisfiable)
+    error WithinRatioMinExceedsMax(uint256 index);
+
     /// Allowance decimals exceed maximum of 27
     error AllowanceDecimalsExceedMax(uint256 index);
 
