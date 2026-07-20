@@ -68,12 +68,14 @@ library AllowanceConsumer {
         // No refill configured.
         if (a.period == 0) return (a.balance, a.timestamp);
 
-        uint64 nextAccrualAt = a.timestamp + a.period;
-        // Not enough time elapsed to complete a period.
-        if (blockTimestamp < nextAccrualAt) return (a.balance, a.timestamp);
+        // Nothing accrues when the configured timestamp is current or in the future.
+        // This also makes the elapsed-time subtraction below safe.
+        if (blockTimestamp <= a.timestamp) return (a.balance, a.timestamp);
 
-        // Calculate full periods elapsed
+        // Calculate full periods elapsed.
         uint64 elapsedIntervals = (blockTimestamp - a.timestamp) / a.period;
+        if (elapsedIntervals == 0) return (a.balance, a.timestamp);
+
         // Timestamp always advances, even when balance is at cap
         timestamp = a.timestamp + elapsedIntervals * a.period;
 

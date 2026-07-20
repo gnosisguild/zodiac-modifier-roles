@@ -383,6 +383,19 @@ describe("AllowanceTracking", () => {
         expect(timestamp).to.equal(initialAllowance.timestamp);
       });
 
+      it("does not overflow when the configured timestamp is near uint64 max", async () => {
+        const { roles, ALLOWANCE_KEY } = await loadFixture(setupAccrual);
+        const maxUint64 = (1n << 64n) - 1n;
+
+        await roles.setAllowance(ALLOWANCE_KEY, 500, 1000, 100, 600, maxUint64);
+
+        const { balance, timestamp } =
+          await roles.accruedAllowance(ALLOWANCE_KEY);
+
+        expect(balance).to.equal(500);
+        expect(timestamp).to.equal(maxUint64);
+      });
+
       it("accrues one refill after exactly one period, updates timestamp", async () => {
         const { roles, ALLOWANCE_KEY } = await loadFixture(setupAccrual);
 
