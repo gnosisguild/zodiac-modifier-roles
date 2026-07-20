@@ -94,10 +94,13 @@ export const getCowQuote = async (
     appDataHash: quote.appData,
     kind: quote.kind.toLowerCase() as "sell" | "buy",
     partiallyFillable: quote.partiallyFillable,
-    sellTokenBalance: (quote.sellTokenBalance?.toLowerCase() ??
-      "erc20") as "erc20" | "external" | "internal",
-    buyTokenBalance: (quote.buyTokenBalance?.toLowerCase() ??
-      "erc20") as "erc20" | "internal",
+    sellTokenBalance: (quote.sellTokenBalance?.toLowerCase() ?? "erc20") as
+      | "erc20"
+      | "external"
+      | "internal",
+    buyTokenBalance: (quote.buyTokenBalance?.toLowerCase() ?? "erc20") as
+      | "erc20"
+      | "internal",
     networkCostsAmount,
     chainId: quoteRequest.chainId,
     from: quoteRequest.avatar,

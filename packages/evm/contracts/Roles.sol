@@ -1,42 +1,23 @@
-// SPDX-License-Identifier: LGPL-3.0-only
+// SPDX-License-Identifier: BUSL-1.1
+// Copyright (c) 2026 GG DAO LLC
+// Zodiac Roles Modifier v3
+// Converts to LGPL-3.0-or-later on 2030-03-01
 pragma solidity >=0.8.17 <0.9.0;
 
-import "./AllowanceTracker.sol";
-import "./PermissionBuilder.sol";
-import "./PermissionChecker.sol";
-import "./PermissionLoader.sol";
+import "./core/Authorization.sol";
+import "./core/Membership.sol";
+import "./core/RoleTx.sol";
+import "./core/Settlement.sol";
+import "./core/Setup.sol";
 
 /**
- * @title Zodiac Roles Mod - granular, role-based, access control for your
- * on-chain avatar accounts (like Safe).
- * @author Cristóvão Honorato - <cristovao.honorato@gnosis.io>
- * @author Jan-Felix Schwarz  - <jan-felix.schwarz@gnosis.io>
- * @author Auryn Macmillan    - <auryn.macmillan@gnosis.io>
- * @author Nathan Ginnever    - <nathan.ginnever@gnosis.io>
+ * @title Zodiac Roles Mod - granular, role-based access control and policy
+ *        engine for onchain accounts
+ *
+ * @author gnosisguild
+ *
  */
-contract Roles is
-    Modifier,
-    AllowanceTracker,
-    PermissionBuilder,
-    PermissionChecker,
-    PermissionLoader
-{
-    mapping(address => bytes32) public defaultRoles;
-
-    event AssignRoles(address module, bytes32[] roleKeys, bool[] memberOf);
-    event RolesModSetup(
-        address indexed initiator,
-        address indexed owner,
-        address indexed avatar,
-        address target
-    );
-    event SetDefaultRole(address module, bytes32 defaultRoleKey);
-
-    error ArraysDifferentLength();
-
-    /// Sender is allowed to make this call, but the internal transaction failed
-    error ModuleTransactionFailed();
-
+contract Roles is RolesStorage, Setup, Membership, Authorization, Settlement {
     /// @param _owner Address of the owner
     /// @param _avatar Address of the avatar (e.g. a Gnosis Safe)
     /// @param _target Address of the contract that will call exec function
@@ -45,56 +26,18 @@ contract Roles is
         setUp(initParams);
     }
 
-    /// @dev There is no zero address check as solidty will check for
-    /// missing arguments and the space of invalid addresses is too large
-    /// to check. Invalid avatar or target address can be reset by owner.
-    function setUp(bytes memory initParams) public override initializer {
-        (address _owner, address _avatar, address _target) = abi.decode(
-            initParams,
-            (address, address, address)
-        );
-        _transferOwnership(_owner);
-        avatar = _avatar;
-        target = _target;
-
-        setupModules();
-
-        emit RolesModSetup(msg.sender, _owner, _avatar, _target);
+    /// @dev Checks whether a module holds an active membership for a role.
+    /// @param roleKey Identifier of the role
+    /// @param module Address of the module to check
+    /// @return True if the module currently has a valid membership for the role
+    function isMember(
+        bytes32 roleKey,
+        address module
+    ) external view returns (bool) {
+        return _hasActiveMembership(roleKey, module);
     }
 
-    /// @dev Assigns and revokes roles to a given module.
-    /// @param module Module on which to assign/revoke roles.
-    /// @param roleKeys Roles to assign/revoke.
-    /// @param memberOf Assign (true) or revoke (false) corresponding roleKeys.
-    function assignRoles(
-        address module,
-        bytes32[] calldata roleKeys,
-        bool[] calldata memberOf
-    ) external onlyOwner {
-        if (roleKeys.length != memberOf.length) {
-            revert ArraysDifferentLength();
-        }
-        for (uint16 i; i < roleKeys.length; ++i) {
-            roles[roleKeys[i]].members[module] = memberOf[i];
-        }
-        if (!isModuleEnabled(module)) {
-            enableModule(module);
-        }
-        emit AssignRoles(module, roleKeys, memberOf);
-    }
-
-    /// @dev Sets the default role used for a module if it calls execTransactionFromModule() or execTransactionFromModuleReturnData().
-    /// @param module Address of the module on which to set default role.
-    /// @param roleKey Role to be set as default.
-    function setDefaultRole(
-        address module,
-        bytes32 roleKey
-    ) external onlyOwner {
-        defaultRoles[module] = roleKey;
-        emit SetDefaultRole(module, roleKey);
-    }
-
-    /// @dev Passes a transaction to the modifier.
+    /// @dev Passes a transaction to the modifier using the caller's default role.
     /// @param to Destination address of module transaction
     /// @param value Ether value of module transaction
     /// @param data Data payload of module transaction
@@ -105,20 +48,19 @@ contract Roles is
         uint256 value,
         bytes calldata data,
         Operation operation
-    ) public override returns (bool success) {
-        Consumption[] memory consumptions = _authorize(
-            defaultRoles[msg.sender],
-            to,
-            value,
-            data,
-            operation
-        );
-        _flushPrepare(consumptions);
-        success = exec(to, value, data, operation);
-        _flushCommit(consumptions, success);
+    ) public override nonReentrant moduleOnly returns (bool success) {
+        return
+            _execWithRole(
+                to,
+                value,
+                data,
+                operation,
+                defaultRoles[sentOrSignedByModule()],
+                false
+            );
     }
 
-    /// @dev Passes a transaction to the modifier, expects return data.
+    /// @dev Passes a transaction to the modifier using the caller's default role. Expects return data.
     /// @param to Destination address of module transaction
     /// @param value Ether value of module transaction
     /// @param data Data payload of module transaction
@@ -129,17 +71,22 @@ contract Roles is
         uint256 value,
         bytes calldata data,
         Operation operation
-    ) public override returns (bool success, bytes memory returnData) {
-        Consumption[] memory consumptions = _authorize(
-            defaultRoles[msg.sender],
-            to,
-            value,
-            data,
-            operation
-        );
-        _flushPrepare(consumptions);
-        (success, returnData) = execAndReturnData(to, value, data, operation);
-        _flushCommit(consumptions, success);
+    )
+        public
+        override
+        nonReentrant
+        moduleOnly
+        returns (bool success, bytes memory returnData)
+    {
+        return
+            _execWithRoleReturnData(
+                to,
+                value,
+                data,
+                operation,
+                defaultRoles[sentOrSignedByModule()],
+                false
+            );
     }
 
     /// @dev Passes a transaction to the modifier assuming the specified role.
@@ -157,38 +104,64 @@ contract Roles is
         Operation operation,
         bytes32 roleKey,
         bool shouldRevert
-    ) public returns (bool success) {
-        Consumption[] memory consumptions = _authorize(
-            roleKey,
-            to,
-            value,
-            data,
-            operation
-        );
-        _flushPrepare(consumptions);
-        success = exec(to, value, data, operation);
-        if (shouldRevert && !success) {
-            revert ModuleTransactionFailed();
-        }
-        _flushCommit(consumptions, success);
+    ) public nonReentrant moduleOnly returns (bool success) {
+        return _execWithRole(to, value, data, operation, roleKey, shouldRevert);
     }
 
-    /// @dev Passes a transaction to the modifier assuming the specified role. Expects return data.
+    /// @dev Relayed variant of execTransactionWithRole. The caller does not
+    ///      need to be an enabled module; instead, an enabled module must sign
+    ///      the call (EIP-712 over a RoleTx struct).
     /// @param to Destination address of module transaction
     /// @param value Ether value of module transaction
     /// @param data Data payload of module transaction
     /// @param operation Operation type of module transaction
     /// @param roleKey Identifier of the role to assume for this transaction
     /// @param shouldRevert Should the function revert on inner execution returning success false?
-    /// @notice Can only be called by enabled modules
-    function execTransactionWithRoleReturnData(
+    /// @param salt Replay-protection nonce mixed into the signed digest;
+    ///        each digest can be consumed only once.
+    /// @param signature EIP-712 signature by the module (EOA or ERC-1271)
+    function execTransactionWithSignature(
+        address to,
+        uint256 value,
+        bytes calldata data,
+        Operation operation,
+        bytes32 roleKey,
+        bool shouldRevert,
+        bytes32 salt,
+        bytes calldata signature
+    )
+        external
+        nonReentrant
+        moduleOnlySigned(
+            RoleTx.hashStruct(
+                to,
+                value,
+                data,
+                operation,
+                roleKey,
+                shouldRevert,
+                salt
+            ),
+            signature
+        )
+        returns (bool success)
+    {
+        return _execWithRole(to, value, data, operation, roleKey, shouldRevert);
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                               INTERNALS
+    //////////////////////////////////////////////////////////////*/
+
+    function _execWithRole(
         address to,
         uint256 value,
         bytes calldata data,
         Operation operation,
         bytes32 roleKey,
         bool shouldRevert
-    ) public returns (bool success, bytes memory returnData) {
+    ) private returns (bool success) {
+        (address module, uint256 nextMembership) = _authenticate(roleKey);
         Consumption[] memory consumptions = _authorize(
             roleKey,
             to,
@@ -196,11 +169,43 @@ contract Roles is
             data,
             operation
         );
-        _flushPrepare(consumptions);
-        (success, returnData) = execAndReturnData(to, value, data, operation);
+        success = IAvatar(target).execTransactionFromModule(
+            to,
+            value,
+            data,
+            operation
+        );
         if (shouldRevert && !success) {
             revert ModuleTransactionFailed();
         }
-        _flushCommit(consumptions, success);
+        if (success) {
+            _persist(module, roleKey, nextMembership, consumptions);
+        }
+    }
+
+    function _execWithRoleReturnData(
+        address to,
+        uint256 value,
+        bytes calldata data,
+        Operation operation,
+        bytes32 roleKey,
+        bool shouldRevert
+    ) private returns (bool success, bytes memory returnData) {
+        (address module, uint256 nextMembership) = _authenticate(roleKey);
+        Consumption[] memory consumptions = _authorize(
+            roleKey,
+            to,
+            value,
+            data,
+            operation
+        );
+        (success, returnData) = IAvatar(target)
+            .execTransactionFromModuleReturnData(to, value, data, operation);
+        if (shouldRevert && !success) {
+            revert ModuleTransactionFailed();
+        }
+        if (success) {
+            _persist(module, roleKey, nextMembership, consumptions);
+        }
     }
 }

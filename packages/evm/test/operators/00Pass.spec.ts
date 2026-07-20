@@ -1,50 +1,63 @@
 import { expect } from "chai";
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { network } from "hardhat";
 
-import { setupAvatarAndRoles } from "../setup";
+import { createSetup } from "../setup.js";
+import {
+  Operator,
+  Encoding,
+  ExecutionOptions,
+  flattenCondition,
+  packConditions,
+} from "../utils.js";
 
-import { ExecutionOptions, Operator, AbiType } from "../utils";
+const connection = await network.create();
+const { ethers, networkHelpers } = connection;
+const { loadFixture } = networkHelpers;
+const { setupTestContract, setupOneParam } = createSetup(connection);
 
-describe("Operator - Pass", async () => {
-  it("evaluates a Pass", async () => {
-    const { owner, member, roles, roleKey, testContract } =
-      await loadFixture(setupAvatarAndRoles);
+describe("Operator - Pass", () => {
+  after(async () => {
+    await connection.close();
+  });
 
-    const conditions = [
-      {
-        parent: 0,
-        paramType: AbiType.Calldata,
-        operator: Operator.Matches,
-        compValue: "0x",
-      },
-      {
-        parent: 0,
-        paramType: AbiType.Static,
-        operator: Operator.Pass,
-        compValue: "0x",
-      },
-    ];
+  describe("core behavior", () => {
+    it("allows any parameter value", async () => {
+      const { allowFunction, invoke } = await loadFixture(setupOneParam);
 
-    await roles
-      .connect(owner)
-      .scopeFunction(
-        roleKey,
-        await testContract.getAddress(),
-        testContract.interface.getFunction("oneParamStatic").selector,
-        conditions,
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Static,
+              operator: Operator.Pass,
+            },
+          ],
+        }),
         ExecutionOptions.Both,
       );
 
-    const invoke = async () =>
-      roles
-        .connect(member)
-        .execTransactionFromModule(
-          await testContract.getAddress(),
-          0,
-          (await testContract.oneParamStatic.populateTransaction(0)).data,
-          0,
-        );
+      // Any value passes - the operator performs no validation
+      await expect(invoke(0)).to.not.be.revert(ethers);
+      await expect(invoke(999)).to.not.be.revert(ethers);
+    });
+  });
 
-    await expect(invoke()).to.not.be.reverted;
+  describe("integrity", () => {
+    it("reverts UnsuitableCompValue when compValue is not empty", async () => {
+      const { roles } = await loadFixture(setupTestContract);
+
+      await expect(
+        packConditions(roles, [
+          {
+            parent: 0,
+            paramType: Encoding.Static,
+            operator: Operator.Pass,
+            compValue: "0x".padEnd(66, "0"),
+          },
+        ]),
+      ).to.be.revertedWithCustomError(roles, "UnsuitableCompValue");
+    });
   });
 });

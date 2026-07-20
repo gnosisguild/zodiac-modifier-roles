@@ -55,6 +55,33 @@ export { normalizeCondition } from "./condition/normalize"
  *
  */
 export { rolesAbi, posterAbi } from "./abi"
+export {
+  encodePersonalSign,
+  encodeSignMessage,
+  encodeSignTypedMessage,
+  allowPersonalSign,
+  allowSignTypedMessage,
+} from "./eip712-signer"
 export { encodeKey, decodeKey } from "./keys"
 export { postRole } from "./postRole"
 export { fetchLicense, License, LicenseError } from "./licensing"
+
+/*
+ *
+ * Integration? TODO fix
+ *
+ */
+import {
+  encodeTypedDomain,
+  encodeTypedMessage,
+  toAbiTypes,
+} from "./eip712-signer/encode"
+
+import { typesForDomain } from "./eip712-signer/types"
+
+export const __integration = {
+  encodeTypedDomain,
+  encodeTypedMessage,
+  toAbiTypes,
+  typesForDomain,
+}

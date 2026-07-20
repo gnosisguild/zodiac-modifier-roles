@@ -1,13 +1,26 @@
-// SPDX-License-Identifier: LGPL-3.0-only
+// SPDX-License-Identifier: BUSL-1.1
+// Copyright (c) 2026 GG DAO LLC
+// Zodiac Roles Modifier v3
+// Converts to LGPL-3.0-or-later on 2030-03-01
 pragma solidity >=0.8.17 <0.9.0;
 
-import "@openzeppelin/contracts/interfaces/IERC721.sol";
-import "./Types.sol";
+import "./interfaces/ICustomCondition.sol";
 
+/**
+ * @title   AvatarIsOwnerOfERC721
+ * @notice  Custom condition that validates if the avatar owns a specific ERC721
+ *          token.
+ *
+ * @author  gnosisguild
+ */
 interface IModifier {
     function avatar() external view returns (address);
 
     function target() external view returns (address);
+}
+
+interface IERC721 {
+    function ownerOf(uint256 tokenId) external view returns (address);
 }
 
 contract AvatarIsOwnerOfERC721 is ICustomCondition {
@@ -18,10 +31,16 @@ contract AvatarIsOwnerOfERC721 is ICustomCondition {
         Operation /* operation */,
         uint256 location,
         uint256 size,
-        bytes12 /* extra */
-    ) public view returns (bool success, bytes32 reason) {
+        bytes calldata /* extra */,
+        bytes32[] calldata /* pluckedValues */
+    )
+        public
+        view
+        returns (bool success, AllowanceConsumption[] memory consumptions)
+    {
         address avatar = IModifier(msg.sender).avatar();
         uint256 tokenId = uint256(bytes32(data[location:location + size]));
-        return (IERC721(to).ownerOf(tokenId) == avatar, 0);
+        success = IERC721(to).ownerOf(tokenId) == avatar;
+        consumptions = new AllowanceConsumption[](0);
     }
 }

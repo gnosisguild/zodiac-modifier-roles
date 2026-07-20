@@ -8,10 +8,8 @@ import {
   isError,
   TransactionRequest,
 } from "ethers"
-import { Condition, Operator, ParameterType } from "../main/types"
+import { Condition, Operator, Encoding } from "../main/types"
 // We import via alias to avoid double bundling of sdk functions
-// eslint does not know about our Typescript path alias
-// eslint-disable-next-line import/no-unresolved
 import {
   c,
   ExecutionFlags,
@@ -40,8 +38,6 @@ type Options = {
   send?: boolean
   /** Allow making delegate calls */
   delegatecall?: boolean
-  /** Restrict the total Ether value sent using the specified allowance */
-  etherWithinAllowance?: `0x${string}`
   /** Restrict the call rate using the specified allowance */
   callWithinAllowance?: `0x${string}`
 }
@@ -126,21 +122,21 @@ const makeAllowFunction = <
 }
 
 const emptyCalldataMatches = {
-  paramType: ParameterType.Calldata,
+  paramType: Encoding.AbiEncoded,
   operator: Operator.Matches,
   children: [],
 }
 
 /**
- * EthersWithinAllowance and CallWithinAllowance are global conditions that restrict the total Ether value sent or the call rate.
- * They must be appended as children of the root calldata matches node.
+ * CallWithinAllowance is a global condition that restricts the call rate.
+ * It must be appended as a child of the root calldata matches node.
  */
 const applyGlobalAllowance = (
   condition: Condition = emptyCalldataMatches,
   allowanceCondition: Condition
 ) => {
   if (
-    condition.paramType !== ParameterType.Calldata ||
+    condition.paramType !== Encoding.AbiEncoded ||
     condition.operator !== Operator.Matches
   ) {
     throw new Error(
@@ -160,23 +156,9 @@ const applyOptions = (
 ): FunctionPermissionCoerced => {
   let condition = entry.condition
 
-  if (options.etherWithinAllowance) {
-    if (!options.send) {
-      throw new Error(
-        "`etherWithinAllowance` can only be used if `send` is allowed"
-      )
-    }
-
-    condition = applyGlobalAllowance(condition, {
-      paramType: ParameterType.None,
-      operator: Operator.EtherWithinAllowance,
-      compValue: options.etherWithinAllowance,
-    })
-  }
-
   if (options.callWithinAllowance) {
     condition = applyGlobalAllowance(condition, {
-      paramType: ParameterType.None,
+      paramType: Encoding.None,
       operator: Operator.CallWithinAllowance,
       compValue: options.callWithinAllowance,
     })

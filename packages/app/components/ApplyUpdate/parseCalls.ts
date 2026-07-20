@@ -50,7 +50,10 @@ export function parseCalls(jsonString: string): Call[] {
           const raw = tx.contractInputsValues![input.name]
           try {
             const parsed = JSON.parse(raw)
-            if (Array.isArray(parsed) || (typeof parsed === "object" && parsed !== null)) {
+            if (
+              Array.isArray(parsed) ||
+              (typeof parsed === "object" && parsed !== null)
+            ) {
               return parsed
             }
           } catch {}
@@ -83,9 +86,7 @@ export function parseCalls(jsonString: string): Call[] {
 
   // Format 3: Single meta transaction
   if (isMetaTx(json)) {
-    return [
-      { to: json.to as `0x${string}`, data: json.data as `0x${string}` },
-    ]
+    return [{ to: json.to as `0x${string}`, data: json.data as `0x${string}` }]
   }
 
   throw new Error(

@@ -1,5 +1,5 @@
 import { BigNumberish, isHexString, ParamType } from "ethers"
-import { Condition, Operator, ParameterType } from "../../../types"
+import { Condition, Operator, Encoding } from "../../../types"
 
 import { coercePermission } from "../../../permission/coercePermission"
 import { checkParameterTypeCompatibility } from "../../../condition/conditionIntegrity"
@@ -17,7 +17,7 @@ import {
   TupleScopings,
 } from "../types"
 
-type AbiType = string | ParamType
+type AbiTypeInput = string | ParamType
 
 /**
  * Matches a tuple or array against a structure of conditions.
@@ -101,10 +101,9 @@ export const matches =
 const calldataMatchesScopings =
   <S extends TupleScopings<any>>(
     scopings: S,
-    abiTypes: readonly AbiType[],
+    abiTypes: readonly AbiTypeInput[],
     options: {
       selector?: `0x${string}`
-      etherWithinAllowance?: `0x${string}`
       callWithinAllowance?: `0x${string}`
     } = {}
   ) =>
@@ -118,7 +117,7 @@ const calldataMatchesScopings =
       )
     }
 
-    const { selector, etherWithinAllowance, callWithinAllowance } = options
+    const { selector, callWithinAllowance } = options
 
     // map scoping items to conditions
     const conditions: (Condition | undefined)[] = paramTypes.map(
@@ -130,24 +129,16 @@ const calldataMatchesScopings =
     assertCompatibleParamTypes(conditions, paramTypes)
 
     const matchesCondition = {
-      paramType: ParameterType.Calldata,
+      paramType: Encoding.AbiEncoded,
       operator: Operator.Matches,
       children: conditions.map(
         (condition, index) => condition || describeStructure(paramTypes[index])
       ),
     }
 
-    if (etherWithinAllowance) {
-      matchesCondition.children.push({
-        paramType: ParameterType.None,
-        operator: Operator.EtherWithinAllowance,
-        compValue: etherWithinAllowance,
-      })
-    }
-
     if (callWithinAllowance) {
       matchesCondition.children.push({
-        paramType: ParameterType.None,
+        paramType: Encoding.None,
         operator: Operator.CallWithinAllowance,
         compValue: callWithinAllowance,
       })
@@ -182,12 +173,12 @@ const calldataMatchesFunctionPermission =
     if (condition) {
       if (
         condition.operator !== Operator.Matches ||
-        condition.paramType !== ParameterType.Calldata
+        condition.paramType !== Encoding.AbiEncoded
       ) {
         throw new Error(
-          `calldataMatches expects a function permission with an \`Operator.matches\`, \`ParamType.Calldata\` condition, got: \`Operator.${
+          `calldataMatches expects a function permission with an \`Operator.matches\`, \`ParamType.AbiEncoded\` condition, got: \`Operator.${
             Operator[condition.operator]
-          }\`, \`ParamType.${ParameterType[condition.paramType]}\``
+          }\`, \`ParamType.${Encoding[condition.paramType]}\``
         )
       }
     }
@@ -215,10 +206,9 @@ type CalldataMatches = {
    **/
   <S extends TupleScopings<any>>(
     scopings: S,
-    abiTypes: readonly AbiType[],
+    abiTypes: readonly AbiTypeInput[],
     options?: {
       selector?: `0x${string}`
-      etherWithinAllowance?: `0x${string}`
       callWithinAllowance?: `0x${string}`
     }
   ): (abiType?: ParamType) => Condition
@@ -236,10 +226,9 @@ type CalldataMatches = {
 
 export const calldataMatches: CalldataMatches = <S extends TupleScopings<any>>(
   scopingsOrFunctionPermission: S | FunctionPermission,
-  abiTypes?: readonly AbiType[],
+  abiTypes?: readonly AbiTypeInput[],
   options?: {
     selector?: `0x${string}`
-    etherWithinAllowance?: `0x${string}`
     callWithinAllowance?: `0x${string}`
   }
 ): ((abiType?: ParamType) => Condition) => {
@@ -261,7 +250,7 @@ export const calldataMatches: CalldataMatches = <S extends TupleScopings<any>>(
  * @param abiTypes The parameter types defining how to decode bytes
  **/
 export const abiEncodedMatches =
-  <S extends TupleScopings<any>>(scopings: S, abiTypes: AbiType[]) =>
+  <S extends TupleScopings<any>>(scopings: S, abiTypes: AbiTypeInput[]) =>
   (abiType?: ParamType) => {
     const paramTypes = abiTypes.map((abiType) => ParamType.from(abiType))
 
@@ -282,7 +271,7 @@ export const abiEncodedMatches =
     assertCompatibleParamTypes(conditions, paramTypes)
 
     return {
-      paramType: ParameterType.AbiEncoded,
+      paramType: Encoding.AbiEncoded,
       operator: Operator.Matches,
       children: conditions.map(
         (condition, index) => condition || describeStructure(paramTypes[index])
@@ -406,33 +395,32 @@ const assertCompatibleParamTypes = (
 
     if (scopedType === expectedType) return
 
-    // allow dynamic type values to be interpreted as calldata or abi encoded
+    // allow dynamic type values to be interpreted as abi encoded
     if (
-      expectedType === ParameterType.Dynamic &&
-      (scopedType === ParameterType.Calldata ||
-        scopedType === ParameterType.AbiEncoded)
+      expectedType === Encoding.Dynamic &&
+      scopedType === Encoding.AbiEncoded
     ) {
       return
     }
 
     const fieldReference = type.name ? `'${type.name}'` : `at index ${index}`
     throw new Error(
-      `Condition for field ${fieldReference} has wrong paramType \`${ParameterType[scopedType]}\` (expected: \`${ParameterType[expectedType]}\`)`
+      `Condition for field ${fieldReference} has wrong paramType \`${Encoding[scopedType]}\` (expected: \`${Encoding[expectedType]}\`)`
     )
   })
 }
 
 /**
- * Returns `condition.paramType` if it is not `ParameterType.None`, otherwise returns the scoped param type of its children, if any.
+ * Returns `condition.paramType` if it is not `Encoding.None`, otherwise returns the scoped param type of its children, if any.
  * Throws if the children have mixed scoped param types.
  * @param condition The condition to get the scoped param type of.
- * @returns the `ParameterType` the condition is applied to.
+ * @returns the `Encoding` the condition is applied to.
  */
-const checkScopedType = (condition: Condition): ParameterType => {
-  if (condition.paramType === ParameterType.None) {
+const checkScopedType = (condition: Condition): Encoding => {
+  if (condition.paramType === Encoding.None) {
     if (!condition.children || condition.children.length === 0) {
-      // e.g.: Operator.EtherWithinAllowance / Operator.CallWithinAllowance
-      return ParameterType.None
+      // e.g.: Operator.CallWithinAllowance
+      return Encoding.None
     }
 
     const [first, ...rest] = condition.children

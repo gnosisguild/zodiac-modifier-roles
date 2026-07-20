@@ -1,14 +1,17 @@
-import { EIP1193Provider } from "@gnosis-guild/zodiac-core";
+import type { EIP1193Provider } from "@gnosis-guild/zodiac-core";
 import { Signer } from "ethers";
-import { EthereumProvider } from "hardhat/types";
-import ethProvider from "eth-provider";
+import { EthereumProvider } from "hardhat/types/providers";
+import * as ethProviderModule from "eth-provider";
+
+const ethProvider =
+  ethProviderModule as unknown as typeof import("eth-provider").default;
 
 const shallUseFrame = process.env.USE_FRAME === "true";
 
 export function createEIP1193(
   chainId: number | undefined,
   provider: EthereumProvider,
-  signer: Signer
+  signer: Signer,
 ): EIP1193Provider {
   return {
     request: async ({ method, params }) => {
@@ -29,7 +32,7 @@ export function createEIP1193(
 const requestUsingFrame = async (
   chainId: number | undefined,
   method: string,
-  params: any
+  params: any,
 ) => {
   if (!chainId) throw new Error("Chain ID is required when using frame");
   const frame = ethProvider("frame");

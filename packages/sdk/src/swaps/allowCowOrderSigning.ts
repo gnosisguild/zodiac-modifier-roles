@@ -48,13 +48,16 @@ export const allowCowOrderSigning = ({
   const gpV2VaultRelayer = COW_PROTOCOL_VAULT_RELAYER_ADDRESS[
     chainId
   ] as `0x${string}`
-  const wrappedNativeToken = WRAPPED_NATIVE_CURRENCIES[chainId].address as `0x${string}`
+  const wrappedNativeToken = WRAPPED_NATIVE_CURRENCIES[chainId]
+    .address as `0x${string}`
 
   const sellIncludesNative = sell.includes("native")
   const buyIncludesNative = buy.includes("native")
 
   // Replace "native" with the wrapped native token address
-  const resolveTokens = (tokens: (`0x${string}` | "native")[]): `0x${string}`[] =>
+  const resolveTokens = (
+    tokens: (`0x${string}` | "native")[]
+  ): `0x${string}`[] =>
     tokens.map((token) => {
       if (token === "native") {
         return wrappedNativeToken
