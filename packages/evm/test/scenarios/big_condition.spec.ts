@@ -30,7 +30,7 @@ describe("Big Condition Scenario", () => {
 
     const allowFunction = async (conditions: any[]) => {
       const packed = await packConditions(roles, conditions);
-      return roles.allowFunction(
+      return roles.allowFunctionPacked(
         roleKey,
         testContractAddress,
         fn.selector,

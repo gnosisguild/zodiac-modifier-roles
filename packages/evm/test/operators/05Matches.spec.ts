@@ -11,7 +11,6 @@ import {
   ExecutionOptions,
   ConditionViolationStatus,
   flattenCondition,
-  packConditions,
 } from "../utils.js";
 
 const abiCoder = AbiCoder.defaultAbiCoder();
@@ -112,6 +111,54 @@ describe("Operator - Matches", () => {
       // Wrong 4-byte prefix fails
       const wrongPayload =
         "0xcafebabe" + abiCoder.encode(["uint256"], [42]).slice(2);
+      await expect(invoke(wrongPayload))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.LeadingBytesNotAMatch,
+          1, // Matches node with prefix
+          anyValue,
+        );
+    });
+
+    it("validates 4-byte prefix at the former 2^60 false-rejection boundary", async () => {
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupDynamicParam);
+
+      // Regression: the prefix comparison must only cover the N prefix
+      // bytes. With the old 28-bit shift, 2^60 leaked into the comparison
+      // window and caused a false LeadingBytesNotAMatch rejection.
+      const bigValue = 2n ** 60n;
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.AbiEncoded,
+              operator: Operator.Matches,
+              compValue: "0x0004deadbeef", // 2 bytes length + 4 bytes prefix
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.EqualTo,
+                  compValue: abiCoder.encode(["uint256"], [bigValue]),
+                },
+              ],
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
+      );
+
+      // Correct prefix + large param value passes
+      const payload =
+        "0xdeadbeef" + abiCoder.encode(["uint256"], [bigValue]).slice(2);
+      await expect(invoke(payload)).to.not.be.revert(ethers);
+
+      // Wrong prefix still fails with LeadingBytesNotAMatch
+      const wrongPayload =
+        "0xcafebabe" + abiCoder.encode(["uint256"], [bigValue]).slice(2);
       await expect(invoke(wrongPayload))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
@@ -273,8 +320,10 @@ describe("Operator - Matches", () => {
         await loadFixture(setupTestContract);
 
       // Matches routes each param to its corresponding child
-      const packed = await packConditions(
-        roles,
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -296,12 +345,6 @@ describe("Operator - Matches", () => {
             },
           ],
         }),
-      );
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
-        packed,
         ExecutionOptions.Both,
       );
 
@@ -537,8 +580,10 @@ describe("Operator - Matches", () => {
       const iface = new Interface(["function fn((uint256,uint256))"]);
       const fn = iface.getFunction("fn")!;
 
-      const packed = await packConditions(
-        roles,
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -561,12 +606,6 @@ describe("Operator - Matches", () => {
             },
           ],
         }),
-      );
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
-        packed,
         ExecutionOptions.Both,
       );
 
@@ -588,8 +627,10 @@ describe("Operator - Matches", () => {
 
       const selector = "0xaabbccdd";
 
-      const packed = await packConditions(
-        roles,
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -612,12 +653,6 @@ describe("Operator - Matches", () => {
             },
           ],
         }),
-      );
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        selector,
-        packed,
         ExecutionOptions.Both,
       );
 
@@ -643,8 +678,10 @@ describe("Operator - Matches", () => {
 
       const selector = "0xaabbccdd";
 
-      const packed = await packConditions(
-        roles,
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -667,12 +704,6 @@ describe("Operator - Matches", () => {
             },
           ],
         }),
-      );
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        selector,
-        packed,
         ExecutionOptions.Both,
       );
 
@@ -699,8 +730,10 @@ describe("Operator - Matches", () => {
       const iface = new Interface(["function fn((uint256,uint256))"]);
       const fn = iface.getFunction("fn")!;
 
-      const packed = await packConditions(
-        roles,
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -723,12 +756,6 @@ describe("Operator - Matches", () => {
             },
           ],
         }),
-      );
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
-        packed,
         ExecutionOptions.Both,
       );
 
@@ -758,8 +785,10 @@ describe("Operator - Matches", () => {
 
       const selector = "0xaabbccdd";
 
-      const packed = await packConditions(
-        roles,
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -773,12 +802,6 @@ describe("Operator - Matches", () => {
             },
           ],
         }),
-      );
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        selector,
-        packed,
         ExecutionOptions.Both,
       );
 
@@ -807,8 +830,10 @@ describe("Operator - Matches", () => {
 
       const selector = "0xaabbccdd";
 
-      const packed = await packConditions(
-        roles,
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -836,12 +861,6 @@ describe("Operator - Matches", () => {
             },
           ],
         }),
-      );
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        selector,
-        packed,
         ExecutionOptions.Both,
       );
 
@@ -873,8 +892,10 @@ describe("Operator - Matches", () => {
       const fn = iface.getFunction("fn")!;
 
       // Condition expects exactly 2 elements
-      const packed = await packConditions(
-        roles,
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -897,12 +918,6 @@ describe("Operator - Matches", () => {
             },
           ],
         }),
-      );
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
-        packed,
         ExecutionOptions.Both,
       );
 
@@ -933,8 +948,10 @@ describe("Operator - Matches", () => {
       const fn = iface.getFunction("fn")!;
 
       // Condition expects exactly 2 elements
-      const packed = await packConditions(
-        roles,
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -957,12 +974,6 @@ describe("Operator - Matches", () => {
             },
           ],
         }),
-      );
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
-        packed,
         ExecutionOptions.Both,
       );
 
@@ -993,8 +1004,10 @@ describe("Operator - Matches", () => {
       const fn = iface.getFunction("fn")!;
 
       // Condition expects exactly 2 elements with specific values
-      const packed = await packConditions(
-        roles,
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -1017,12 +1030,6 @@ describe("Operator - Matches", () => {
             },
           ],
         }),
-      );
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
-        packed,
         ExecutionOptions.Both,
       );
 
@@ -1189,8 +1196,10 @@ describe("Operator - Matches", () => {
       const iface = new Interface(["function fn(uint256)"]);
       const fn = iface.getFunction("fn")!;
 
-      const packed = await packConditions(
-        roles,
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -1213,12 +1222,6 @@ describe("Operator - Matches", () => {
             },
           ],
         }),
-      );
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
-        packed,
         ExecutionOptions.Both,
       );
 
@@ -1298,8 +1301,10 @@ describe("Operator - Matches", () => {
       const iface = new Interface(["function fn(uint256)"]);
       const fn = iface.getFunction("fn")!;
 
-      const packed = await packConditions(
-        roles,
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -1322,12 +1327,6 @@ describe("Operator - Matches", () => {
             },
           ],
         }),
-      );
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
-        packed,
         ExecutionOptions.Both,
       );
 
@@ -1407,7 +1406,7 @@ describe("Operator - Matches", () => {
 
   describe("integrity", () => {
     it("reverts UnsuitableParameterType for invalid encodings", async () => {
-      const { roles } = await loadFixture(setupTestContract);
+      const { roles, allowTarget } = await loadFixture(setupTestContract);
 
       for (const encoding of [
         Encoding.None,
@@ -1416,7 +1415,7 @@ describe("Operator - Matches", () => {
         Encoding.EtherValue,
       ]) {
         await expect(
-          packConditions(roles, [
+          allowTarget([
             {
               parent: 0,
               paramType: encoding,
@@ -1430,12 +1429,12 @@ describe("Operator - Matches", () => {
 
     describe("compValue", () => {
       it("only AbiEncoded accepts non-empty compValue", async () => {
-        const { roles } = await loadFixture(setupTestContract);
+        const { roles, allowTarget } = await loadFixture(setupTestContract);
 
         // All valid Matches encodings except AbiEncoded
         for (const encoding of [Encoding.Tuple, Encoding.Array]) {
           await expect(
-            packConditions(roles, [
+            allowTarget([
               {
                 parent: 0,
                 paramType: encoding,
@@ -1454,10 +1453,10 @@ describe("Operator - Matches", () => {
       });
 
       it("reverts UnsuitableCompValue when AbiEncoded Matches has 1 byte compValue", async () => {
-        const { roles } = await loadFixture(setupTestContract);
+        const { roles, allowTarget } = await loadFixture(setupTestContract);
 
         await expect(
-          packConditions(roles, [
+          allowTarget([
             {
               parent: 0,
               paramType: Encoding.AbiEncoded,
@@ -1475,13 +1474,13 @@ describe("Operator - Matches", () => {
       });
 
       it("reverts UnsuitableCompValue when AbiEncoded Matches compValue exceeds 34 bytes", async () => {
-        const { roles } = await loadFixture(setupTestContract);
+        const { roles, allowTarget } = await loadFixture(setupTestContract);
 
         // 35 bytes = 2 + 33, but N must be <= 32
         const compValue = "0x" + "00".repeat(35);
 
         await expect(
-          packConditions(roles, [
+          allowTarget([
             {
               parent: 0,
               paramType: Encoding.AbiEncoded,
@@ -1500,7 +1499,7 @@ describe("Operator - Matches", () => {
     });
 
     it("requires at least one structural child", async () => {
-      const { roles } = await loadFixture(setupTestContract);
+      const { roles, allowTarget } = await loadFixture(setupTestContract);
 
       const allowanceKey = hexlify(randomBytes(32));
 
@@ -1511,7 +1510,7 @@ describe("Operator - Matches", () => {
         Encoding.AbiEncoded,
       ]) {
         await expect(
-          packConditions(roles, [
+          allowTarget([
             {
               parent: 0,
               paramType: encoding,
@@ -1522,7 +1521,7 @@ describe("Operator - Matches", () => {
         ).to.be.revertedWithCustomError(roles, "UnsuitableChildCount");
 
         await expect(
-          packConditions(roles, [
+          allowTarget([
             {
               parent: 0,
               paramType: encoding,

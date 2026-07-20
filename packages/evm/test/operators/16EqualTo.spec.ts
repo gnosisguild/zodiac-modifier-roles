@@ -11,7 +11,6 @@ import {
   ExecutionOptions,
   ConditionViolationStatus,
   flattenCondition,
-  packConditions,
 } from "../utils.js";
 
 const abiCoder = AbiCoder.defaultAbiCoder();
@@ -175,8 +174,10 @@ describe("Operator - EqualTo", () => {
         "This is a string that is definitely longer than 32 bytes and will be hashed for comparison";
 
       // EqualTo: parameter must equal the large string (compared by hash)
-      const packed = await packConditions(
-        roles,
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -188,12 +189,6 @@ describe("Operator - EqualTo", () => {
             },
           ],
         }),
-      );
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
-        packed,
         ExecutionOptions.Both,
       );
 
@@ -251,8 +246,10 @@ describe("Operator - EqualTo", () => {
         "This is a string that is definitely longer than 32 bytes and will be hashed for comparison";
 
       // EqualTo: parameter must equal the large string
-      const packed = await packConditions(
-        roles,
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -264,12 +261,6 @@ describe("Operator - EqualTo", () => {
             },
           ],
         }),
-      );
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
-        packed,
         ExecutionOptions.Both,
       );
 
@@ -448,8 +439,10 @@ describe("Operator - EqualTo", () => {
 
         const targetArray = [1, 2, 3, 4, 5];
 
-        const packed = await packConditions(
-          roles,
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -467,12 +460,6 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
-        );
-        await roles.allowFunction(
-          roleKey,
-          testContractAddress,
-          fn.selector,
-          packed,
           ExecutionOptions.Both,
         );
 
@@ -499,8 +486,10 @@ describe("Operator - EqualTo", () => {
           "0x2222222222222222222222222222222222222222",
         ];
 
-        const packed = await packConditions(
-          roles,
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -518,12 +507,6 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
-        );
-        await roles.allowFunction(
-          roleKey,
-          testContractAddress,
-          fn.selector,
-          packed,
           ExecutionOptions.Both,
         );
 
@@ -550,8 +533,10 @@ describe("Operator - EqualTo", () => {
           "0x2222222222222222222222222222222222222222222222222222222222222222",
         ];
 
-        const packed = await packConditions(
-          roles,
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -569,12 +554,6 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
-        );
-        await roles.allowFunction(
-          roleKey,
-          testContractAddress,
-          fn.selector,
-          packed,
           ExecutionOptions.Both,
         );
 
@@ -598,8 +577,10 @@ describe("Operator - EqualTo", () => {
 
         const targetArray: number[] = [];
 
-        const packed = await packConditions(
-          roles,
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -617,12 +598,6 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
-        );
-        await roles.allowFunction(
-          roleKey,
-          testContractAddress,
-          fn.selector,
-          packed,
           ExecutionOptions.Both,
         );
 
@@ -646,8 +621,10 @@ describe("Operator - EqualTo", () => {
 
         const targetArray: string[] = [];
 
-        const packed = await packConditions(
-          roles,
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -665,12 +642,6 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
-        );
-        await roles.allowFunction(
-          roleKey,
-          testContractAddress,
-          fn.selector,
-          packed,
           ExecutionOptions.Both,
         );
 
@@ -694,8 +665,10 @@ describe("Operator - EqualTo", () => {
 
         const targetArray = [1, 2, 3];
 
-        const packed = await packConditions(
-          roles,
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -713,12 +686,6 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
-        );
-        await roles.allowFunction(
-          roleKey,
-          testContractAddress,
-          fn.selector,
-          packed,
           ExecutionOptions.Both,
         );
 
@@ -744,8 +711,10 @@ describe("Operator - EqualTo", () => {
 
         const targetArray = [1, 2, 3];
 
-        const packed = await packConditions(
-          roles,
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -763,12 +732,6 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
-        );
-        await roles.allowFunction(
-          roleKey,
-          testContractAddress,
-          fn.selector,
-          packed,
           ExecutionOptions.None,
         );
 
@@ -796,8 +759,10 @@ describe("Operator - EqualTo", () => {
 
         const targetArray = [[1, 2], [3, 4, 5], [6]];
 
-        const packed = await packConditions(
-          roles,
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -821,12 +786,6 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
-        );
-        await roles.allowFunction(
-          roleKey,
-          testContractAddress,
-          fn.selector,
-          packed,
           ExecutionOptions.Both,
         );
 
@@ -856,8 +815,10 @@ describe("Operator - EqualTo", () => {
           ["0x3333333333333333333333333333333333333333"],
         ];
 
-        const packed = await packConditions(
-          roles,
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -881,12 +842,6 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
-        );
-        await roles.allowFunction(
-          roleKey,
-          testContractAddress,
-          fn.selector,
-          packed,
           ExecutionOptions.Both,
         );
 
@@ -910,8 +865,10 @@ describe("Operator - EqualTo", () => {
 
         const targetArray: number[][] = [];
 
-        const packed = await packConditions(
-          roles,
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -935,12 +892,6 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
-        );
-        await roles.allowFunction(
-          roleKey,
-          testContractAddress,
-          fn.selector,
-          packed,
           ExecutionOptions.Both,
         );
 
@@ -964,8 +915,10 @@ describe("Operator - EqualTo", () => {
 
         const targetArray: number[][] = [[], []];
 
-        const packed = await packConditions(
-          roles,
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -989,12 +942,6 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
-        );
-        await roles.allowFunction(
-          roleKey,
-          testContractAddress,
-          fn.selector,
-          packed,
           ExecutionOptions.Both,
         );
 
@@ -1018,8 +965,10 @@ describe("Operator - EqualTo", () => {
 
         const targetArray = [[1, 2], [3]];
 
-        const packed = await packConditions(
-          roles,
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -1043,12 +992,6 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
-        );
-        await roles.allowFunction(
-          roleKey,
-          testContractAddress,
-          fn.selector,
-          packed,
           ExecutionOptions.Both,
         );
 
@@ -1076,8 +1019,10 @@ describe("Operator - EqualTo", () => {
 
         const targetArray = [[[1, 2], [3]], [[4, 5, 6]]];
 
-        const packed = await packConditions(
-          roles,
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -1107,12 +1052,6 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
-        );
-        await roles.allowFunction(
-          roleKey,
-          testContractAddress,
-          fn.selector,
-          packed,
           ExecutionOptions.Both,
         );
 
@@ -1136,8 +1075,10 @@ describe("Operator - EqualTo", () => {
 
         const targetArray: number[][][] = [];
 
-        const packed = await packConditions(
-          roles,
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -1167,12 +1108,6 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
-        );
-        await roles.allowFunction(
-          roleKey,
-          testContractAddress,
-          fn.selector,
-          packed,
           ExecutionOptions.Both,
         );
 
@@ -1196,8 +1131,10 @@ describe("Operator - EqualTo", () => {
 
         const targetArray = [[[]], [[1], []], [[2, 3]]];
 
-        const packed = await packConditions(
-          roles,
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -1227,12 +1164,6 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
-        );
-        await roles.allowFunction(
-          roleKey,
-          testContractAddress,
-          fn.selector,
-          packed,
           ExecutionOptions.Both,
         );
 
@@ -1256,8 +1187,10 @@ describe("Operator - EqualTo", () => {
 
         const targetArray = [[[1, 2]], [[3]]];
 
-        const packed = await packConditions(
-          roles,
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -1287,12 +1220,6 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
-        );
-        await roles.allowFunction(
-          roleKey,
-          testContractAddress,
-          fn.selector,
-          packed,
           ExecutionOptions.Both,
         );
 
@@ -1322,8 +1249,10 @@ describe("Operator - EqualTo", () => {
 
         const targetTuple = [100, "0x1111111111111111111111111111111111111111"];
 
-        const packed = await packConditions(
-          roles,
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -1348,12 +1277,6 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
-        );
-        await roles.allowFunction(
-          roleKey,
-          testContractAddress,
-          fn.selector,
-          packed,
           ExecutionOptions.Both,
         );
 
@@ -1383,8 +1306,10 @@ describe("Operator - EqualTo", () => {
           ZeroHash,
         ];
 
-        const packed = await packConditions(
-          roles,
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -1413,12 +1338,6 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
-        );
-        await roles.allowFunction(
-          roleKey,
-          testContractAddress,
-          fn.selector,
-          packed,
           ExecutionOptions.Both,
         );
 
@@ -1442,8 +1361,10 @@ describe("Operator - EqualTo", () => {
 
         const targetTuple = [true, 255, -100];
 
-        const packed = await packConditions(
-          roles,
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -1472,12 +1393,6 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
-        );
-        await roles.allowFunction(
-          roleKey,
-          testContractAddress,
-          fn.selector,
-          packed,
           ExecutionOptions.Both,
         );
 
@@ -1501,8 +1416,10 @@ describe("Operator - EqualTo", () => {
 
         const targetTuple = [100, "0x1111111111111111111111111111111111111111"];
 
-        const packed = await packConditions(
-          roles,
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -1527,12 +1444,6 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
-        );
-        await roles.allowFunction(
-          roleKey,
-          testContractAddress,
-          fn.selector,
-          packed,
           ExecutionOptions.Both,
         );
 
@@ -1566,8 +1477,10 @@ describe("Operator - EqualTo", () => {
           ZeroHash,
         ];
 
-        const packed = await packConditions(
-          roles,
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -1596,12 +1509,6 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
-        );
-        await roles.allowFunction(
-          roleKey,
-          testContractAddress,
-          fn.selector,
-          packed,
           ExecutionOptions.Both,
         );
 
@@ -1640,8 +1547,10 @@ describe("Operator - EqualTo", () => {
           ZeroHash,
         ];
 
-        const packed = await packConditions(
-          roles,
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -1676,12 +1585,6 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
-        );
-        await roles.allowFunction(
-          roleKey,
-          testContractAddress,
-          fn.selector,
-          packed,
           ExecutionOptions.Both,
         );
 
@@ -1710,8 +1613,10 @@ describe("Operator - EqualTo", () => {
           ["0x1111111111111111111111111111111111111111", 200],
         ];
 
-        const packed = await packConditions(
-          roles,
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -1746,12 +1651,6 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
-        );
-        await roles.allowFunction(
-          roleKey,
-          testContractAddress,
-          fn.selector,
-          packed,
           ExecutionOptions.Both,
         );
 
@@ -1783,8 +1682,10 @@ describe("Operator - EqualTo", () => {
           ],
         ];
 
-        const packed = await packConditions(
-          roles,
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -1829,12 +1730,6 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
-        );
-        await roles.allowFunction(
-          roleKey,
-          testContractAddress,
-          fn.selector,
-          packed,
           ExecutionOptions.Both,
         );
 
@@ -1863,8 +1758,10 @@ describe("Operator - EqualTo", () => {
           ZeroHash,
         ];
 
-        const packed = await packConditions(
-          roles,
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -1899,12 +1796,6 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
-        );
-        await roles.allowFunction(
-          roleKey,
-          testContractAddress,
-          fn.selector,
-          packed,
           ExecutionOptions.Both,
         );
 
@@ -1939,8 +1830,10 @@ describe("Operator - EqualTo", () => {
           200,
         ];
 
-        const packed = await packConditions(
-          roles,
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -1985,12 +1878,6 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
-        );
-        await roles.allowFunction(
-          roleKey,
-          testContractAddress,
-          fn.selector,
-          packed,
           ExecutionOptions.Both,
         );
 
@@ -2022,8 +1909,10 @@ describe("Operator - EqualTo", () => {
           ],
         ];
 
-        const packed = await packConditions(
-          roles,
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -2078,12 +1967,6 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
-        );
-        await roles.allowFunction(
-          roleKey,
-          testContractAddress,
-          fn.selector,
-          packed,
           ExecutionOptions.Both,
         );
 
@@ -2112,8 +1995,10 @@ describe("Operator - EqualTo", () => {
           200,
         ];
 
-        const packed = await packConditions(
-          roles,
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -2158,12 +2043,6 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
-        );
-        await roles.allowFunction(
-          roleKey,
-          testContractAddress,
-          fn.selector,
-          packed,
           ExecutionOptions.Both,
         );
 
@@ -2204,8 +2083,10 @@ describe("Operator - EqualTo", () => {
           [200, "0x2222222222222222222222222222222222222222"],
         ];
 
-        const packed = await packConditions(
-          roles,
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -2236,12 +2117,6 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
-        );
-        await roles.allowFunction(
-          roleKey,
-          testContractAddress,
-          fn.selector,
-          packed,
           ExecutionOptions.Both,
         );
 
@@ -2265,8 +2140,10 @@ describe("Operator - EqualTo", () => {
 
         const targetArray: [number, string][] = [];
 
-        const packed = await packConditions(
-          roles,
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -2297,12 +2174,6 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
-        );
-        await roles.allowFunction(
-          roleKey,
-          testContractAddress,
-          fn.selector,
-          packed,
           ExecutionOptions.Both,
         );
 
@@ -2331,8 +2202,10 @@ describe("Operator - EqualTo", () => {
           [[200, "0x2222222222222222222222222222222222222222"], ZeroHash],
         ];
 
-        const packed = await packConditions(
-          roles,
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -2373,12 +2246,6 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
-        );
-        await roles.allowFunction(
-          roleKey,
-          testContractAddress,
-          fn.selector,
-          packed,
           ExecutionOptions.Both,
         );
 
@@ -2404,8 +2271,10 @@ describe("Operator - EqualTo", () => {
           [100, "0x1111111111111111111111111111111111111111"],
         ];
 
-        const packed = await packConditions(
-          roles,
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -2436,12 +2305,6 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
-        );
-        await roles.allowFunction(
-          roleKey,
-          testContractAddress,
-          fn.selector,
-          packed,
           ExecutionOptions.Both,
         );
 
@@ -2474,8 +2337,10 @@ describe("Operator - EqualTo", () => {
           "0x1111111111111111111111111111111111111111",
         ];
 
-        const packed = await packConditions(
-          roles,
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -2506,12 +2371,6 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
-        );
-        await roles.allowFunction(
-          roleKey,
-          testContractAddress,
-          fn.selector,
-          packed,
           ExecutionOptions.Both,
         );
 
@@ -2541,8 +2400,10 @@ describe("Operator - EqualTo", () => {
           ZeroHash,
         ];
 
-        const packed = await packConditions(
-          roles,
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -2577,12 +2438,6 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
-        );
-        await roles.allowFunction(
-          roleKey,
-          testContractAddress,
-          fn.selector,
-          packed,
           ExecutionOptions.Both,
         );
 
@@ -2609,8 +2464,10 @@ describe("Operator - EqualTo", () => {
           "0x1111111111111111111111111111111111111111",
         ];
 
-        const packed = await packConditions(
-          roles,
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -2641,12 +2498,6 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
-        );
-        await roles.allowFunction(
-          roleKey,
-          testContractAddress,
-          fn.selector,
-          packed,
           ExecutionOptions.Both,
         );
 
@@ -2673,8 +2524,10 @@ describe("Operator - EqualTo", () => {
           "0x1111111111111111111111111111111111111111",
         ];
 
-        const packed = await packConditions(
-          roles,
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -2705,12 +2558,6 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
-        );
-        await roles.allowFunction(
-          roleKey,
-          testContractAddress,
-          fn.selector,
-          packed,
           ExecutionOptions.Both,
         );
 
@@ -2741,8 +2588,10 @@ describe("Operator - EqualTo", () => {
           "0x1111111111111111111111111111111111111111",
         ];
 
-        const packed = await packConditions(
-          roles,
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -2773,12 +2622,6 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
-        );
-        await roles.allowFunction(
-          roleKey,
-          testContractAddress,
-          fn.selector,
-          packed,
           ExecutionOptions.Both,
         );
 
@@ -2811,8 +2654,10 @@ describe("Operator - EqualTo", () => {
           "0x1111111111111111111111111111111111111111",
         ];
 
-        const packed = await packConditions(
-          roles,
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -2849,12 +2694,6 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
-        );
-        await roles.allowFunction(
-          roleKey,
-          testContractAddress,
-          fn.selector,
-          packed,
           ExecutionOptions.Both,
         );
 
@@ -2883,8 +2722,10 @@ describe("Operator - EqualTo", () => {
           ],
         ];
 
-        const packed = await packConditions(
-          roles,
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -2921,12 +2762,6 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
-        );
-        await roles.allowFunction(
-          roleKey,
-          testContractAddress,
-          fn.selector,
-          packed,
           ExecutionOptions.Both,
         );
 
@@ -2956,8 +2791,10 @@ describe("Operator - EqualTo", () => {
           ],
         ];
 
-        const packed = await packConditions(
-          roles,
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -2994,12 +2831,6 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
-        );
-        await roles.allowFunction(
-          roleKey,
-          testContractAddress,
-          fn.selector,
-          packed,
           ExecutionOptions.Both,
         );
 
@@ -3026,8 +2857,10 @@ describe("Operator - EqualTo", () => {
           "0x1111111111111111111111111111111111111111",
         ];
 
-        const packed = await packConditions(
-          roles,
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -3064,12 +2897,6 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
-        );
-        await roles.allowFunction(
-          roleKey,
-          testContractAddress,
-          fn.selector,
-          packed,
           ExecutionOptions.Both,
         );
 
@@ -3107,8 +2934,10 @@ describe("Operator - EqualTo", () => {
           ZeroHash,
         ];
 
-        const packed = await packConditions(
-          roles,
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -3159,12 +2988,6 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
-        );
-        await roles.allowFunction(
-          roleKey,
-          testContractAddress,
-          fn.selector,
-          packed,
           ExecutionOptions.Both,
         );
 
@@ -3205,8 +3028,10 @@ describe("Operator - EqualTo", () => {
           ],
         ];
 
-        const packed = await packConditions(
-          roles,
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -3269,12 +3094,6 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
-        );
-        await roles.allowFunction(
-          roleKey,
-          testContractAddress,
-          fn.selector,
-          packed,
           ExecutionOptions.Both,
         );
 
@@ -3304,8 +3123,10 @@ describe("Operator - EqualTo", () => {
           ],
         ];
 
-        const packed = await packConditions(
-          roles,
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -3348,12 +3169,6 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
-        );
-        await roles.allowFunction(
-          roleKey,
-          testContractAddress,
-          fn.selector,
-          packed,
           ExecutionOptions.Both,
         );
 
@@ -3380,8 +3195,10 @@ describe("Operator - EqualTo", () => {
           "0x1111111111111111111111111111111111111111",
         ];
 
-        const packed = await packConditions(
-          roles,
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -3424,12 +3241,6 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
-        );
-        await roles.allowFunction(
-          roleKey,
-          testContractAddress,
-          fn.selector,
-          packed,
           ExecutionOptions.Both,
         );
 
@@ -3456,8 +3267,10 @@ describe("Operator - EqualTo", () => {
           "0x1111111111111111111111111111111111111111",
         ];
 
-        const packed = await packConditions(
-          roles,
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -3500,12 +3313,6 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
-        );
-        await roles.allowFunction(
-          roleKey,
-          testContractAddress,
-          fn.selector,
-          packed,
           ExecutionOptions.Both,
         );
 
@@ -3537,8 +3344,10 @@ describe("Operator - EqualTo", () => {
           ZeroHash,
         ];
 
-        const packed = await packConditions(
-          roles,
+        await roles.allowFunction(
+          roleKey,
+          testContractAddress,
+          fn.selector,
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -3589,12 +3398,6 @@ describe("Operator - EqualTo", () => {
               },
             ],
           }),
-        );
-        await roles.allowFunction(
-          roleKey,
-          testContractAddress,
-          fn.selector,
-          packed,
           ExecutionOptions.Both,
         );
 
@@ -3629,8 +3432,10 @@ describe("Operator - EqualTo", () => {
 
       const targetTuple = [100, 200];
 
-      const packed = await packConditions(
-        roles,
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -3662,12 +3467,6 @@ describe("Operator - EqualTo", () => {
             },
           ],
         }),
-      );
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
-        packed,
         ExecutionOptions.Both,
       );
 
@@ -3704,8 +3503,10 @@ describe("Operator - EqualTo", () => {
 
       const targetTuple = ["0xdeadbeef", 42];
 
-      const packed = await packConditions(
-        roles,
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -3737,12 +3538,6 @@ describe("Operator - EqualTo", () => {
             },
           ],
         }),
-      );
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
-        packed,
         ExecutionOptions.Both,
       );
 
@@ -3814,8 +3609,10 @@ describe("Operator - EqualTo", () => {
 
       const targetArray = [10, 20, 30];
 
-      const packed = await packConditions(
-        roles,
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -3843,12 +3640,6 @@ describe("Operator - EqualTo", () => {
             },
           ],
         }),
-      );
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
-        packed,
         ExecutionOptions.Both,
       );
 
@@ -3888,8 +3679,10 @@ describe("Operator - EqualTo", () => {
         ["0xccdd", 2],
       ];
 
-      const packed = await packConditions(
-        roles,
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -3927,12 +3720,6 @@ describe("Operator - EqualTo", () => {
             },
           ],
         }),
-      );
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
-        packed,
         ExecutionOptions.Both,
       );
 
@@ -3983,8 +3770,10 @@ describe("Operator - EqualTo", () => {
       );
       const targetArray = [innerEncoded1, innerEncoded2];
 
-      const packed = await packConditions(
-        roles,
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -4022,12 +3811,6 @@ describe("Operator - EqualTo", () => {
             },
           ],
         }),
-      );
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
-        packed,
         ExecutionOptions.Both,
       );
 
@@ -4071,8 +3854,10 @@ describe("Operator - EqualTo", () => {
       const innerTuple = [10, 20];
       const targetTuple = [innerTuple, 300];
 
-      const packed = await packConditions(
-        roles,
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -4107,12 +3892,6 @@ describe("Operator - EqualTo", () => {
             },
           ],
         }),
-      );
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
-        packed,
         ExecutionOptions.Both,
       );
 
@@ -4158,8 +3937,10 @@ describe("Operator - EqualTo", () => {
       const targetArray = [innerEncoded1, innerEncoded2];
       const targetDynamic = 777;
 
-      const packed = await packConditions(
-        roles,
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -4201,12 +3982,6 @@ describe("Operator - EqualTo", () => {
             },
           ],
         }),
-      );
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
-        packed,
         ExecutionOptions.Both,
       );
 
@@ -4263,8 +4038,10 @@ describe("Operator - EqualTo", () => {
         ],
       ];
 
-      const packed = await packConditions(
-        roles,
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -4351,12 +4128,6 @@ describe("Operator - EqualTo", () => {
             },
           ],
         }),
-      );
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
-        packed,
         ExecutionOptions.Both,
       );
 
@@ -4384,7 +4155,7 @@ describe("Operator - EqualTo", () => {
 
       const iface = new Interface([`function fn(${outerTupleType})`]);
       const fn = iface.getFunction("fn")!;
-      const { roles, member, testContractAddress, roleKey } =
+      const { roles, member, testContractAddress, allowTarget } =
         await loadFixture(setupTestContract);
 
       // Each array has 2 tuples
@@ -4396,8 +4167,7 @@ describe("Operator - EqualTo", () => {
       ];
       const targetValue = Array(arrayCount).fill([innerTuple, innerTuple]);
 
-      const packed = await packConditions(
-        roles,
+      await allowTarget(
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -4461,8 +4231,10 @@ describe("Operator - EqualTo", () => {
         "0x1111111111111111111111111111111111111111",
       ];
 
-      const packed = await packConditions(
-        roles,
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -4492,12 +4264,6 @@ describe("Operator - EqualTo", () => {
             },
           ],
         }),
-      );
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
-        packed,
         ExecutionOptions.Both,
       );
 
@@ -4572,11 +4338,11 @@ describe("Operator - EqualTo", () => {
 
   describe.skip("integrity", () => {
     it("reverts UnsuitableParameterType for invalid encodings", async () => {
-      const { roles } = await loadFixture(setupTestContract);
+      const { roles, allowTarget } = await loadFixture(setupTestContract);
 
       for (const encoding of [Encoding.None, Encoding.AbiEncoded]) {
         await expect(
-          packConditions(roles, [
+          allowTarget([
             {
               parent: 0,
               paramType: encoding,
@@ -4589,10 +4355,10 @@ describe("Operator - EqualTo", () => {
     });
 
     it("reverts UnsuitableCompValue when compValue is empty", async () => {
-      const { roles } = await loadFixture(setupTestContract);
+      const { roles, allowTarget } = await loadFixture(setupTestContract);
 
       await expect(
-        packConditions(roles, [
+        allowTarget([
           {
             parent: 0,
             paramType: Encoding.Static,

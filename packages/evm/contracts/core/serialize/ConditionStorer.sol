@@ -13,7 +13,7 @@ import "../../types/Types.sol";
 
 /**
  * @title ConditionStorer
- * @notice Validates and stores condition trees in immutable storage.
+ * @notice Packs condition trees and stores packed buffers in immutable storage.
  *
  * @author gnosisguild
  */
@@ -34,7 +34,7 @@ library ConditionStorer {
     /**
      * @notice Stores a pre-packed condition buffer.
      *
-     * @param buffer The packed condition buffer (from pack()).
+     * @param buffer The packed condition buffer.
      * @param options Execution options (Send, DelegateCall, Both, None).
      * @return scopeConfig Packed scope config (options << 160 | pointer).
      */

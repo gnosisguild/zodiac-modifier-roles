@@ -16,17 +16,49 @@ import "../../types/Types.sol";
  * @author gnosisguild
  */
 library Integrity {
+    uint256 private constant MAX_CONDITION_COUNT = type(uint16).max;
+    uint256 private constant MAX_CHILD_COUNT = (1 << 10) - 1;
+    uint256 private constant MAX_INLINED_SIZE = (1 << 13) - 1;
+    uint256 private constant MAX_COMP_VALUE_LENGTH = type(uint16).max;
+
     function enforce(ConditionFlat[] memory conditions) internal pure {
+        if (conditions.length > MAX_CONDITION_COUNT) {
+            revert IRolesError.ConditionNodeCountExceedsMax();
+        }
+
         _validateBFS(conditions);
 
         for (uint256 i = 0; i < conditions.length; ++i) {
+            _validatePackedWidths(conditions, i);
             _validateOperator(conditions, i);
             _validateEncoding(conditions, i);
         }
 
         _validateVariantTypes(conditions);
         _validatePluckZipTypes(conditions);
-        _validatePluckOrder(conditions, 0, 0);
+        _validateUniquePluckDefinitions(conditions);
+        _validatePluckAssignments(conditions, 0, 0);
+    }
+
+    function _validatePackedWidths(
+        ConditionFlat[] memory conditions,
+        uint256 index
+    ) private pure {
+        if (conditions[index].compValue.length > MAX_COMP_VALUE_LENGTH) {
+            revert IRolesError.UnsuitableCompValue(index);
+        }
+
+        (, uint256 childCount) = Topology.childBounds(conditions, index);
+        if (childCount > MAX_CHILD_COUNT) {
+            revert IRolesError.ConditionChildCountExceedsMax(index);
+        }
+
+        if (
+            Topology.isInlined(conditions, index) &&
+            Topology.inlinedSize(conditions, index) > MAX_INLINED_SIZE
+        ) {
+            revert IRolesError.ConditionInlinedSizeExceedsMax(index);
+        }
     }
 
     function _validateBFS(ConditionFlat[] memory conditions) private pure {
@@ -324,6 +356,21 @@ library Integrity {
             revert IRolesError.UnsuitableChildTypeTree(index);
         }
 
+        /*
+         * All children of the Tuple must be structural. TypeTree counts only
+         * structural children when matching the field count against compValue,
+         * but the evaluator iterates the raw child list - a non-structural
+         * child would desync the two and read compValue out of bounds at
+         * evaluation time.
+         */
+        (, uint256 tupleChildCount, uint256 tupleSChildCount) = _sChildBounds(
+            conditions,
+            childStart
+        );
+        if (tupleChildCount != tupleSChildCount) {
+            revert IRolesError.UnsuitableChildCount(childStart);
+        }
+
         // Child must resolve to a Tuple
         Layout memory layout = TypeTree.resolve(conditions, childStart);
         assert(layout.encoding == Encoding.Tuple);
@@ -343,7 +390,7 @@ library Integrity {
             }
             seen |= mask;
 
-            (bool found, uint256 pluckCondition) = _findPluckedArray(
+            (bool found, uint256 pluckCondition) = _findPluck(
                 conditions,
                 pluckIndex
             );
@@ -398,9 +445,12 @@ library Integrity {
     ) private pure {
         ConditionFlat memory condition = conditions[index];
         Encoding encoding = condition.paramType;
-        // ParamType: any encoding except None (None is reserved for operators
-        // that do not target a calldata value, e.g. And/Or/Empty/ZipSome/...)
-        if (encoding == Encoding.None) {
+        // ParamType: Static / EtherValue / Array
+        if (
+            encoding != Encoding.Static &&
+            encoding != Encoding.EtherValue &&
+            encoding != Encoding.Array
+        ) {
             revert IRolesError.UnsuitableParameterType(index);
         }
         // CompValue: 1 byte holding the pluck slot index. The packed buffer
@@ -411,6 +461,23 @@ library Integrity {
             uint8(condition.compValue[0]) == 255
         ) {
             revert IRolesError.UnsuitableCompValue(index);
+        }
+
+        if (encoding == Encoding.Array) {
+            /*
+             * All children of an Array Pluck must be structural. They only
+             * describe the element type and are never evaluated, but the
+             * evaluator reads the raw children[0] as the element template
+             * for location and size math - a non-structural child is
+             * invisible to TypeTree yet breaks that traversal.
+             */
+            (, uint256 childCount, uint256 sChildCount) = _sChildBounds(
+                conditions,
+                index
+            );
+            if (childCount != sChildCount) {
+                revert IRolesError.UnsuitableChildCount(index);
+            }
         }
     }
 
@@ -446,8 +513,19 @@ library Integrity {
             unsuitable = condition.compValue.length != 32;
         }
 
+        if (enc == Encoding.Dynamic) {
+            unsuitable =
+                condition.compValue.length < 64 ||
+                condition.compValue.length > MAX_COMP_VALUE_LENGTH;
+        }
+
         if (enc == Encoding.Tuple || enc == Encoding.Array) {
-            unsuitable = condition.compValue.length < 32;
+            uint256 minimumLength = Topology.isInlined(conditions, index)
+                ? 32
+                : 64;
+            unsuitable =
+                condition.compValue.length < minimumLength ||
+                condition.compValue.length > MAX_COMP_VALUE_LENGTH;
         }
 
         if (unsuitable) {
@@ -484,6 +562,7 @@ library Integrity {
         // CompValue: 2 shift + 2N
         if (
             condition.compValue.length < 4 ||
+            condition.compValue.length > MAX_COMP_VALUE_LENGTH ||
             (condition.compValue.length - 2) % 2 != 0
         ) {
             revert IRolesError.UnsuitableCompValue(index);
@@ -495,8 +574,20 @@ library Integrity {
         uint256 index
     ) private pure {
         ConditionFlat memory condition = conditions[index];
-        // CompValue: >= 20 bytes
-        if (condition.compValue.length < 20) {
+        if (
+            condition.paramType != Encoding.Static &&
+            condition.paramType != Encoding.Dynamic &&
+            condition.paramType != Encoding.Tuple &&
+            condition.paramType != Encoding.Array &&
+            condition.paramType != Encoding.EtherValue
+        ) {
+            revert IRolesError.UnsuitableParameterType(index);
+        }
+        // CompValue: 20 to 65535 bytes
+        if (
+            condition.compValue.length < 20 ||
+            condition.compValue.length > MAX_COMP_VALUE_LENGTH
+        ) {
             revert IRolesError.UnsuitableCompValue(index);
         }
     }
@@ -513,7 +604,7 @@ library Integrity {
         // CompValue: 12 base, optionally followed by adapter blobs.
         {
             uint256 len = condition.compValue.length;
-            if (len < 12) {
+            if (len < 12 || len > MAX_COMP_VALUE_LENGTH) {
                 revert IRolesError.UnsuitableCompValue(index);
             }
             uint256 offset = 12;
@@ -527,6 +618,26 @@ library Integrity {
                 revert IRolesError.UnsuitableCompValue(index);
             }
         }
+        if (
+            uint8(condition.compValue[1]) > 27 ||
+            uint8(condition.compValue[3]) > 27
+        ) {
+            revert IRolesError.AllowanceDecimalsExceedMax(index);
+        }
+
+        for (uint256 offset; offset <= 2; offset += 2) {
+            (bool found, uint256 pluckCondition) = _findPluck(
+                conditions,
+                uint8(condition.compValue[offset])
+            );
+            if (
+                found &&
+                conditions[pluckCondition].paramType != Encoding.Static &&
+                conditions[pluckCondition].paramType != Encoding.EtherValue
+            ) {
+                revert IRolesError.WithinRatioTargetNotStatic(index);
+            }
+        }
         // Check ratio bounds
         uint32 minRatio;
         uint32 maxRatio;
@@ -537,6 +648,9 @@ library Integrity {
         }
         if (minRatio == 0 && maxRatio == 0) {
             revert IRolesError.WithinRatioNoRatioProvided(index);
+        }
+        if (minRatio != 0 && maxRatio != 0 && minRatio > maxRatio) {
+            revert IRolesError.WithinRatioMinExceedsMax(index);
         }
         // Children: None
         (, uint256 childCount) = Topology.childBounds(conditions, index);
@@ -557,9 +671,10 @@ library Integrity {
         }
         // CompValue: 32, 34, or >= 54
         if (
-            condition.compValue.length != 32 &&
-            condition.compValue.length != 34 &&
-            condition.compValue.length < 54
+            condition.compValue.length > MAX_COMP_VALUE_LENGTH ||
+            (condition.compValue.length != 32 &&
+                condition.compValue.length != 34 &&
+                condition.compValue.length < 54)
         ) {
             revert IRolesError.UnsuitableCompValue(index);
         }
@@ -640,10 +755,13 @@ library Integrity {
             Layout memory tuple = TypeTree.resolve(conditions, childStart);
 
             for (uint256 j = 0; j < tuple.children.length; ++j) {
-                (, uint256 pluckCondition) = _findPluckedArray(
+                (bool found, uint256 pluckCondition) = _findPluck(
                     conditions,
                     uint8(conditions[i].compValue[j])
                 );
+                if (!found) {
+                    revert IRolesError.UnsuitableCompValue(i);
+                }
                 Layout memory array = TypeTree.resolve(
                     conditions,
                     pluckCondition
@@ -659,33 +777,56 @@ library Integrity {
         }
     }
 
+    function _validateUniquePluckDefinitions(
+        ConditionFlat[] memory conditions
+    ) private pure {
+        uint256 defined;
+        for (uint256 i; i < conditions.length; ++i) {
+            if (conditions[i].operator != Operator.Pluck) continue;
+
+            uint8 pluckIndex = uint8(conditions[i].compValue[0]);
+            uint256 mask = 1 << pluckIndex;
+            if ((defined & mask) != 0) {
+                revert IRolesError.DuplicatePluckIndex(i, pluckIndex);
+            }
+            defined |= mask;
+        }
+    }
+
     /**
-     * @notice Validates plucked variable definitions precede their usage.
+     * @notice Walks a subtree and returns the set of Pluck slots guaranteed
+     *         to hold a value once that subtree evaluates successfully.
+     *         Reverts if an operator reads a slot (WithinRatio, ZipSome,
+     *         ZipEvery) that may still be empty at that point.
      *
-     * @dev Evaluation happens in DFS order, so this function must check that
-     *      definitions come before usages in DFS order.
-     *
-     *      While the flat `conditions` array is stored in BFS order (parents
-     *      first), this function traverses the tree in DFS order to track the
-     *      `visited` state of plucked variables. This ensures that a
-     *      `WithinRatio` check can only reference variables that have been
-     *      "plucked" by a preceding condition in the execution flow.
+     * @dev A slot is only "guaranteed" if every evaluation path that leads
+     *      to success fills it:
+     *      - And/Matches run children in order, so each child sees the slots
+     *        filled by its predecessors, and its own additions carry forward.
+     *      - Or: any single branch may be the one that succeeded, so only
+     *        slots filled by every branch are guaranteed.
+     *      - Some succeeds only if at least one element was actually
+     *        evaluated, so its child's assignments count.
+     *      - Every passes trivially on an empty collection — its child may
+     *        never run, so nothing it assigns can be counted on.
+     *      Children of Pass, Pluck, comparisons, and Custom only describe
+     *      types and are never evaluated, so they are skipped.
      */
-    function _validatePluckOrder(
+    function _validatePluckAssignments(
         ConditionFlat[] memory conditions,
         uint256 index,
-        uint256 visited
+        uint256 assigned
     ) private pure returns (uint256) {
         ConditionFlat memory condition = conditions[index];
 
         if (condition.operator == Operator.Pluck) {
             uint8 pluckIndex = uint8(condition.compValue[0]);
-            visited |= (1 << pluckIndex);
+            return assigned | (1 << pluckIndex);
         }
 
         if (condition.operator == Operator.WithinRatio) {
             uint8 referencePluckIndex = uint8(condition.compValue[0]);
-            if ((visited & (1 << referencePluckIndex)) == 0) {
+            if ((assigned & (1 << referencePluckIndex)) == 0) {
                 revert IRolesError.PluckNotVisitedBeforeRef(
                     index,
                     referencePluckIndex
@@ -693,7 +834,7 @@ library Integrity {
             }
 
             uint8 relativePluckIndex = uint8(condition.compValue[2]);
-            if ((visited & (1 << relativePluckIndex)) == 0) {
+            if ((assigned & (1 << relativePluckIndex)) == 0) {
                 revert IRolesError.PluckNotVisitedBeforeRef(
                     index,
                     relativePluckIndex
@@ -707,7 +848,7 @@ library Integrity {
         ) {
             for (uint256 k; k < condition.compValue.length; ++k) {
                 uint8 pluckIndex = uint8(condition.compValue[k]);
-                if ((visited & (1 << pluckIndex)) == 0) {
+                if ((assigned & (1 << pluckIndex)) == 0) {
                     revert IRolesError.PluckNotVisitedBeforeRef(
                         index,
                         pluckIndex
@@ -716,16 +857,72 @@ library Integrity {
             }
         }
 
+        Operator op = condition.operator;
         (uint256 childStart, uint256 childCount) = Topology.childBounds(
             conditions,
             index
         );
 
-        for (uint256 i = 0; i < childCount; ++i) {
-            visited = _validatePluckOrder(conditions, childStart + i, visited);
+        if (op == Operator.Or) {
+            uint256 intersection;
+            for (uint256 i; i < childCount; ++i) {
+                uint256 branchAssigned = _validatePluckAssignments(
+                    conditions,
+                    childStart + i,
+                    assigned
+                );
+                intersection = i == 0
+                    ? branchAssigned
+                    : intersection & branchAssigned;
+            }
+            return intersection;
         }
 
-        return visited;
+        if (op == Operator.ArraySome || op == Operator.ArrayEvery) {
+            uint256 childAssigned = _validatePluckAssignments(
+                conditions,
+                childStart,
+                assigned
+            );
+            return op == Operator.ArraySome ? childAssigned : assigned;
+        }
+
+        if (op == Operator.ZipSome || op == Operator.ZipEvery) {
+            (uint256 fieldStart, uint256 fieldCount) = Topology.childBounds(
+                conditions,
+                childStart
+            );
+            uint256 fieldAssigned = assigned;
+            for (uint256 i; i < fieldCount; ++i) {
+                fieldAssigned = _validatePluckAssignments(
+                    conditions,
+                    fieldStart + i,
+                    fieldAssigned
+                );
+            }
+            return op == Operator.ZipSome ? fieldAssigned : assigned;
+        }
+
+        if (
+            op == Operator.And ||
+            op == Operator.Matches ||
+            op == Operator.ArrayTailMatches
+        ) {
+            for (uint256 i; i < childCount; ++i) {
+                assigned = _validatePluckAssignments(
+                    conditions,
+                    childStart + i,
+                    assigned
+                );
+            }
+            return assigned;
+        }
+
+        if (op == Operator.Slice) {
+            return _validatePluckAssignments(conditions, childStart, assigned);
+        }
+
+        return assigned;
     }
 
     function _validateNoPluckDescendant(
@@ -803,7 +1000,7 @@ library Integrity {
      * @notice Finds the conditions index of the Pluck condition with the given
      *         pluck index.
      */
-    function _findPluckedArray(
+    function _findPluck(
         ConditionFlat[] memory conditions,
         uint8 pluckIndex
     ) private pure returns (bool found, uint256 conditionIndex) {

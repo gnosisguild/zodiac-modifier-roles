@@ -1,6 +1,6 @@
 import { hexlify, Interface, randomBytes, ZeroHash } from "ethers";
 
-import { ExecutionOptions, packConditions } from "./utils.js";
+import { ExecutionOptions } from "./utils.js";
 import type { ConditionFlatStruct } from "../typechain-types/contracts/Roles.js";
 import hre from "hardhat";
 import type { NetworkConnection } from "hardhat/types/network";
@@ -10,7 +10,7 @@ import type { EIP1193Provider } from "@gnosis-guild/zodiac-core";
 import {
   deployFactories,
   deployMastercopy as zodiacDeployMastercopy,
-} from "@gnosis-guild/zodiac-core";
+} from "@gnosis-guild/zodiac-core/tooling";
 
 // Side-effect imports to pull in the NetworkConnection augmentations
 // (adds `ethers` and `networkHelpers` to NetworkConnection).
@@ -58,10 +58,22 @@ export function createSetup({ ethers, provider }: NetworkConnection) {
       },
     );
 
+    const customConditionChecker = await hre.artifacts.readArtifact(
+      "CustomConditionChecker",
+    );
+    const { address: customConditionCheckerAddress } =
+      await zodiacDeployMastercopy({
+        bytecode: customConditionChecker.bytecode,
+        constructorArgs: { types: [], values: [] },
+        salt: ZeroHash,
+        provider: eip1193,
+      });
+
     const Modifier = await ethers.getContractFactory("Roles", {
       libraries: {
         ConditionStorer: conditionStorerAddress,
         WithinRatioChecker: withinRatioCheckerAddress,
+        CustomConditionChecker: customConditionCheckerAddress,
       },
     });
     const modifier = await Modifier.deploy(owner, avatar, target);
@@ -93,6 +105,14 @@ export function createSetup({ ethers, provider }: NetworkConnection) {
     await roles.connect(owner).setDefaultRole(member.address, roleKey);
     await roles.connect(owner).scopeTarget(roleKey, testContractAddress);
 
+    const allowTarget = (
+      conditions: ConditionFlatStruct[],
+      options = ExecutionOptions.None,
+    ) =>
+      roles
+        .connect(owner)
+        .allowTarget(roleKey, testContractAddress, conditions, options);
+
     return {
       roles: roles.connect(owner),
       owner,
@@ -100,6 +120,7 @@ export function createSetup({ ethers, provider }: NetworkConnection) {
       testContract,
       testContractAddress,
       roleKey,
+      allowTarget,
     };
   }
 
@@ -113,12 +134,11 @@ export function createSetup({ ethers, provider }: NetworkConnection) {
       conditions: ConditionFlatStruct[],
       options = ExecutionOptions.None,
     ) => {
-      const packed = await packConditions(roles, conditions);
       return roles.allowFunction(
         roleKey,
         testContractAddress,
         fn.selector,
-        packed,
+        conditions,
         options,
       );
     };
@@ -158,12 +178,11 @@ export function createSetup({ ethers, provider }: NetworkConnection) {
       conditions: ConditionFlatStruct[],
       options = ExecutionOptions.None,
     ) => {
-      const packed = await packConditions(roles, conditions);
       return roles.allowFunction(
         roleKey,
         testContractAddress,
         fn.selector,
-        packed,
+        conditions,
         options,
       );
     };
@@ -203,12 +222,11 @@ export function createSetup({ ethers, provider }: NetworkConnection) {
       conditions: ConditionFlatStruct[],
       options = ExecutionOptions.None,
     ) => {
-      const packed = await packConditions(roles, conditions);
       return roles.allowFunction(
         roleKey,
         testContractAddress,
         fn.selector,
-        packed,
+        conditions,
         options,
       );
     };
@@ -249,12 +267,11 @@ export function createSetup({ ethers, provider }: NetworkConnection) {
       conditions: ConditionFlatStruct[],
       options = ExecutionOptions.None,
     ) => {
-      const packed = await packConditions(roles, conditions);
       return roles.allowFunction(
         roleKey,
         testContractAddress,
         fn.selector,
-        packed,
+        conditions,
         options,
       );
     };
@@ -294,12 +311,11 @@ export function createSetup({ ethers, provider }: NetworkConnection) {
       conditions: ConditionFlatStruct[],
       options = ExecutionOptions.None,
     ) => {
-      const packed = await packConditions(roles, conditions);
       return roles.allowFunction(
         roleKey,
         testContractAddress,
         fn.selector,
-        packed,
+        conditions,
         options,
       );
     };
@@ -339,12 +355,11 @@ export function createSetup({ ethers, provider }: NetworkConnection) {
       conditions: ConditionFlatStruct[],
       options = ExecutionOptions.None,
     ) => {
-      const packed = await packConditions(roles, conditions);
       return roles.allowFunction(
         roleKey,
         testContractAddress,
         fn.selector,
-        packed,
+        conditions,
         options,
       );
     };
@@ -387,12 +402,11 @@ export function createSetup({ ethers, provider }: NetworkConnection) {
       conditions: ConditionFlatStruct[],
       options = ExecutionOptions.None,
     ) => {
-      const packed = await packConditions(roles, conditions);
       return roles.allowFunction(
         roleKey,
         testContractAddress,
         fn.selector,
-        packed,
+        conditions,
         options,
       );
     };
@@ -436,12 +450,11 @@ export function createSetup({ ethers, provider }: NetworkConnection) {
       conditions: ConditionFlatStruct[],
       options = ExecutionOptions.None,
     ) => {
-      const packed = await packConditions(roles, conditions);
       return roles.allowFunction(
         roleKey,
         testContractAddress,
         fn.selector,
-        packed,
+        conditions,
         options,
       );
     };

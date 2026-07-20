@@ -11,7 +11,6 @@ import {
   ExecutionOptions,
   ConditionViolationStatus,
   flattenCondition,
-  packConditions,
 } from "../utils.js";
 
 const abiCoder = AbiCoder.defaultAbiCoder();
@@ -133,19 +132,15 @@ describe("Operator - LessThan", () => {
       await loadFixture(setupTestContract);
 
     // LessThan on EtherValue: msg.value must be < 1000 wei
-    const packed = await packConditions(
-      roles,
+    await roles.allowFunction(
+      roleKey,
+      testContractAddress,
+      fn.selector,
       flattenCondition({
         paramType: Encoding.EtherValue,
         operator: Operator.LessThan,
         compValue: abiCoder.encode(["uint256"], [1000]),
       }),
-    );
-    await roles.allowFunction(
-      roleKey,
-      testContractAddress,
-      fn.selector,
-      packed,
       ExecutionOptions.Send,
     );
 
@@ -238,7 +233,7 @@ describe("Operator - LessThan", () => {
 
   describe("integrity", () => {
     it("reverts UnsuitableParameterType for invalid encodings", async () => {
-      const { roles } = await loadFixture(setupTestContract);
+      const { roles, allowTarget } = await loadFixture(setupTestContract);
 
       for (const encoding of [
         Encoding.None,
@@ -248,7 +243,7 @@ describe("Operator - LessThan", () => {
         Encoding.AbiEncoded,
       ]) {
         await expect(
-          packConditions(roles, [
+          allowTarget([
             {
               parent: 0,
               paramType: encoding,
@@ -261,10 +256,10 @@ describe("Operator - LessThan", () => {
     });
 
     it("reverts UnsuitableCompValue when compValue is not 32 bytes", async () => {
-      const { roles } = await loadFixture(setupTestContract);
+      const { roles, allowTarget } = await loadFixture(setupTestContract);
 
       await expect(
-        packConditions(roles, [
+        allowTarget([
           {
             parent: 0,
             paramType: Encoding.Static,
@@ -276,10 +271,10 @@ describe("Operator - LessThan", () => {
     });
 
     it("reverts LeafNodeCannotHaveChildren when LessThan has children", async () => {
-      const { roles } = await loadFixture(setupTestContract);
+      const { roles, allowTarget } = await loadFixture(setupTestContract);
 
       await expect(
-        packConditions(roles, [
+        allowTarget([
           {
             parent: 0,
             paramType: Encoding.Static,

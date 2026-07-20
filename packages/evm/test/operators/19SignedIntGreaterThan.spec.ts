@@ -203,7 +203,7 @@ describe("Operator - SignedIntGreaterThan", () => {
         compValue: defaultAbiCoder.encode(["int256"], [1000]),
       }),
     );
-    await roles.allowFunction(
+    await roles.allowFunctionPacked(
       roleKey,
       testContractAddress,
       fn.selector,

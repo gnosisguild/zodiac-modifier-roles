@@ -20,7 +20,7 @@ export enum Encoding {
   Static = 1,
   Dynamic = 2,
   Tuple = 3,
-  Array = 4,  
+  Array = 4,
   AbiEncoded = 5,
 }
 
@@ -103,6 +103,7 @@ export enum Status {
   BitmaskNotAllowed,
   CustomConditionViolation,
   AllowanceExceeded,
+  /** No longer emitted: full-precision comparison reports AllowanceExceeded instead. Kept to preserve status codes. */
   AllowanceValueOverflow,
   /** Payload overflow found by Checker */
   CalldataOverflow,

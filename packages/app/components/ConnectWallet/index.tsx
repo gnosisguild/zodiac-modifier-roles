@@ -1,3 +1,3 @@
 export default function Connect() {
-  return <span></span>;
+  return <span></span>
 }

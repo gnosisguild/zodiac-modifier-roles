@@ -4,20 +4,17 @@
 // Converts to LGPL-3.0-or-later on 2030-03-01
 pragma solidity >=0.8.17 <0.9.0;
 
-import "../../common/AllowanceLoader.sol";
-import "../../common/ConsumptionList.sol";
-import "../../common/PriceConversion.sol";
+import "../../common/AllowanceConsumer.sol";
+import "../../common/PriceLoader.sol";
 import "../../types/Types.sol";
-
-import {Consumption} from "../../types/Allowance.sol";
 
 /**
  * @title WithinAllowanceChecker
  * @notice Validates allowance consumption with optional amount conversion.
  *
- * @dev Checks if a value is within an allowance and consumes it. The value is
- *      normalized to the allowance's base denomination via decimal scaling
- *      and/or exchange rate conversion.
+ * @dev Checks if a value is within an allowance and consumes it. The input
+ *      is converted to balance units (dust rounded up), then consumed via
+ *      AllowanceConsumer.
  *
  *      The `consumptions` array is treated as immutable. If consumption occurs,
  *      a new array is allocated and returned (Copy-on-Write).
@@ -25,113 +22,59 @@ import {Consumption} from "../../types/Allowance.sol";
  * @author gnosisguild
  */
 library WithinAllowanceChecker {
+    /**
+     * CompValue Layout (32, 34, 54, or 54+ bytes):
+     * ┌─────────────────────────┬──────────┬──────────┬─────────────────────┬─────────────────────┐
+     * │      allowanceKey       │ balance  │  input   │       adapter       │    adapterParams    │
+     * │        (bytes32)        │ decimals │ decimals │      (address)      │       (bytes)       │
+     * ├─────────────────────────┼──────────┼──────────┼─────────────────────┼─────────────────────┤
+     * │         0 - 31          │    32    │    33    │       34 - 53       │        54+          │
+     * └─────────────────────────┴──────────┴──────────┴─────────────────────┴─────────────────────┘
+     *                           └── optional ─────────┴───── optional ──────┴──── optional ───────┘
+     *
+     * balanceDecimals: decimals used to track the allowance balance
+     * inputDecimals: decimals of the value being checked
+     * adapterParams: optional trailing bytes passed to IPricing.getPrice(params)
+     */
     function check(
         Consumption[] memory consumptions,
         uint256 value,
         bytes memory compValue
     ) internal view returns (Status status, Consumption[] memory) {
-        bytes32 allowanceKey = bytes32(compValue);
-
-        // 1. Convert value to base denomination
-        (status, value) = _convert(value, compValue);
+        // 1. Convert the input value to balance units
+        (status, value) = _scaleInput(value, compValue);
         if (status != Status.Ok) {
             return (status, consumptions);
         }
 
-        // 2. Find in list
-        uint256 index;
-        for (; index < consumptions.length; ++index) {
-            if (consumptions[index].allowanceKey == allowanceKey) break;
-        }
-
-        // 3. Copy existing or load from storage
-        Consumption memory consumption;
-        if (index < consumptions.length) {
-            consumption = Consumption(
-                allowanceKey,
-                consumptions[index].balance,
-                consumptions[index].consumed,
-                consumptions[index].timestamp
-            );
-        } else {
-            (uint128 balance, uint64 timestamp) = AllowanceLoader.accrue(
-                allowanceKey,
-                uint64(block.timestamp)
-            );
-            consumption = Consumption(allowanceKey, balance, 0, timestamp);
-        }
-
-        // 4. Check overflow before consuming
-        if (consumption.consumed + value > type(uint128).max) {
-            return (Status.AllowanceValueOverflow, consumptions);
-        }
-
-        // 5. Consume
-        consumption.consumed += uint128(value);
-
-        // 6. Check balance
-        if (consumption.consumed > consumption.balance) {
-            return (Status.AllowanceExceeded, consumptions);
-        }
-
-        // 7. Return updated list
-        return (
-            Status.Ok,
-            ConsumptionList.copyOnWrite(consumptions, consumption, index)
-        );
+        // 2. Consume it from the allowance
+        return
+            AllowanceConsumer.consume(consumptions, bytes32(compValue), value);
     }
 
     /**
-     * @dev Normalizes a value to the allowance's base denomination.
+     * @dev Converts an input value to balance-denominated units: scales up
+     *      to the highest decimal precision, applies the price, then scales
+     *      back down in a single division that rounds dust up.
      *
-     *      Calculates the final amount via decimal scaling and optionally
-     *      an exchange rate (via price adapter). Scaling is possible without
-     *      an adapter by providing both base and param decimals.
-     *
-     * @param value The raw amount to be converted.
-     * @param compValue Configuration bytes containing decimals and adapter.
-     * @return status Result of the conversion (Ok or price adapter error).
-     * @return converted Normalized amount in the allowance's base decimals.
+     *      Consuming the rounded amount is equivalent to comparing at full
+     *      precision: ⌈v/f⌉ > b − c  ⟺  v > (b − c)·f
      */
-    function _convert(
+    function _scaleInput(
         uint256 value,
         bytes memory compValue
-    ) private view returns (Status, uint256) {
-        /**
-         * CompValue Layout (32, 34, 54, or 54+ bytes):
-         * ┌─────────────────────────┬──────────┬──────────┬─────────────────────┬─────────────────────┐
-         * │      allowanceKey       │   base   │  param   │       adapter       │    adapterParams    │
-         * │        (bytes32)        │ decimals │ decimals │      (address)      │       (bytes)       │
-         * ├─────────────────────────┼──────────┼──────────┼─────────────────────┼─────────────────────┤
-         * │         0 - 31          │    32    │    33    │       34 - 53       │        54+          │
-         * └─────────────────────────┴──────────┴──────────┴─────────────────────┴─────────────────────┘
-         *                           └── optional ─────────┴───── optional ──────┴──── optional ───────┘
-         *
-         * baseDecimals: decimals of the allowance unit  (how it's accounted)
-         * paramDecimals: decimals of the parameter value (from calldata)
-         * adapterParams: optional trailing bytes passed to IPricing.getPrice(params)
-         */
-
+    ) private view returns (Status status, uint256) {
+        // A 32-byte compValue contains only the allowance key, so the input is
+        // already denominated in balance units and needs no conversion.
         if (compValue.length == 32) {
             return (Status.Ok, value);
         }
 
-        uint256 baseDecimals = uint8(compValue[32]);
-        uint256 paramDecimals = uint8(compValue[33]);
-
-        // Scale decimals
-        if (baseDecimals >= paramDecimals) {
-            /*
-             * Scale Up
-             */
-            value = value * (10 ** (baseDecimals - paramDecimals));
-        } else {
-            /*
-             * Scale Down
-             * round up - dust amounts always consume at least 1 in target precision
-             */
-            value = _ceilDiv(value, 10 ** (paramDecimals - baseDecimals));
-        }
+        (
+            uint256 balanceDecimals,
+            uint256 inputDecimals,
+            uint256 precision
+        ) = _unpack(compValue);
 
         address adapter;
         if (compValue.length > 34) {
@@ -150,7 +93,37 @@ library WithinAllowanceChecker {
             }
         }
 
-        return PriceConversion.convert(value, adapter, params);
+        uint256 price;
+        (status, price) = PriceLoader.load(adapter, params);
+        if (status != Status.Ok) {
+            return (status, 0);
+        }
+
+        return (
+            Status.Ok,
+            _ceilDiv(
+                value * (10 ** (precision - inputDecimals)) * price,
+                (10 ** (precision - balanceDecimals)) * 1e18
+            )
+        );
+    }
+
+    function _unpack(
+        bytes memory compValue
+    )
+        private
+        pure
+        returns (
+            uint256 balanceDecimals,
+            uint256 inputDecimals,
+            uint256 precision
+        )
+    {
+        balanceDecimals = uint8(compValue[32]);
+        inputDecimals = uint8(compValue[33]);
+        precision = balanceDecimals > inputDecimals
+            ? balanceDecimals
+            : inputDecimals;
     }
 
     /// @dev Ceiling division. Returns 0 for 0, otherwise ⌈a / b⌉.

@@ -1,11 +1,6 @@
 import { expect, it, suite } from "vitest"
 import { processPermissions } from "./processPermissions"
-import {
-  Encoding,
-  Clearance,
-  ExecutionOptions,
-  Operator,
-} from "../types"
+import { Encoding, Clearance, ExecutionOptions, Operator } from "../types"
 
 import { abiEncode } from "../abiEncode"
 import { normalizeCondition } from "../condition"

@@ -345,11 +345,11 @@ describe("Operator - WithinRatio", () => {
           );
       });
 
-      it("handles extreme decimal difference with adapters (6 vs 37 decimals)", async () => {
+      it("handles maximum decimal difference with adapters (6 vs 27 decimals)", async () => {
         const { roles, allowFunction, invoke } =
           await loadFixture(setupTwoParams);
 
-        // Reference: USDC (6 decimals), Relative: ExoticToken (37 decimals)
+        // Reference: USDC (6 decimals), Relative: ExoticToken (27 decimals)
         // Reference adapter: 1 USDC = 1 USD (stable)
         // Relative adapter: 1 ExoticToken = 0.5 USD
         const MockPricing = await ethers.getContractFactory("MockPricing");
@@ -362,7 +362,7 @@ describe("Operator - WithinRatio", () => {
           referencePluckIndex: 77,
           referenceDecimals: 6,
           relativePluckIndex: 88,
-          relativeDecimals: 37,
+          relativeDecimals: 27,
           minRatio: 9900,
           maxRatio: 10100,
         });
@@ -375,16 +375,16 @@ describe("Operator - WithinRatio", () => {
         // Relative: 2000 ExoticToken × 0.5 = 1000 USD
         // Ratio = 100%
         await expect(
-          invoke(1000n * 10n ** 6n, 2000n * 10n ** 37n),
+          invoke(1000n * 10n ** 6n, 2000n * 10n ** 27n),
         ).to.not.be.revert(ethers);
 
         // Relative: 2020 ExoticToken × 0.5 = 1010 USD → 101%
         await expect(
-          invoke(1000n * 10n ** 6n, 2020n * 10n ** 37n),
+          invoke(1000n * 10n ** 6n, 2020n * 10n ** 27n),
         ).to.not.be.revert(ethers);
 
         // Relative: 2030 ExoticToken × 0.5 = 1015 USD → 101.5% > 101%
-        await expect(invoke(1000n * 10n ** 6n, 2030n * 10n ** 37n))
+        await expect(invoke(1000n * 10n ** 6n, 2030n * 10n ** 27n))
           .to.be.revertedWithCustomError(roles, "ConditionViolation")
           .withArgs(
             ConditionViolationStatus.RatioAboveMax,
@@ -620,6 +620,225 @@ describe("Operator - WithinRatio", () => {
         await expect(
           invoke(3n * 10n ** 7n, 45000n * 10n ** 18n),
         ).to.not.be.revert(ethers);
+      });
+    });
+
+    describe("conversion precision", () => {
+      it("rejects an above-max ratio before adapter conversion truncates a tiny amount", async () => {
+        const { roles, allowFunction, invoke } =
+          await loadFixture(setupTwoParams);
+
+        // We set the price to 1.999999999999999999, making the real ratio
+        // ~200%, and configure maxRatio at 100%. The check should reject, but
+        // converting each side separately truncates 1.999... to 1, so it sees
+        // 100% and wrongly accepts.
+
+        const MockPricing = await ethers.getContractFactory("MockPricing");
+        const relativeAdapter = await MockPricing.deploy(2n * 10n ** 18n - 1n);
+
+        const compValue = encodeWithinRatioCompValue({
+          relativeAdapter: await relativeAdapter.getAddress(),
+          referencePluckIndex: 2,
+          referenceDecimals: 0,
+          relativePluckIndex: 1,
+          relativeDecimals: 0,
+          minRatio: 0,
+          maxRatio: 10000,
+        });
+
+        await allowFunction(
+          flattenCondition(matchesWithRatio([pluck(1), pluck(2)], compValue)),
+        );
+
+        // Real ratio ~200% vs maxRatio 100% → must revert with RatioAboveMax
+        await expect(invoke(1, 1))
+          .to.be.revertedWithCustomError(roles, "ConditionViolation")
+          .withArgs(
+            ConditionViolationStatus.RatioAboveMax,
+            2, // WithinRatio node
+            anyValue,
+          );
+      });
+
+      it("rejects a ratio less than one bps above max", async () => {
+        const { roles, allowFunction, invoke } =
+          await loadFixture(setupTwoParams);
+
+        const compValue = encodeWithinRatioCompValue({
+          referencePluckIndex: 2,
+          referenceDecimals: 0,
+          relativePluckIndex: 1,
+          relativeDecimals: 0,
+          minRatio: 0,
+          maxRatio: 10000,
+        });
+
+        await allowFunction(
+          flattenCondition(matchesWithRatio([pluck(1), pluck(2)], compValue)),
+        );
+
+        // Real ratio 10002/10001 ≈ 100.00999...% — above max by less than one
+        // bps. A rounded-down ratio would floor to exactly 100% and wrongly
+        // accept.
+        await expect(invoke(10002, 10001))
+          .to.be.revertedWithCustomError(roles, "ConditionViolation")
+          .withArgs(
+            ConditionViolationStatus.RatioAboveMax,
+            2, // WithinRatio node
+            anyValue,
+          );
+      });
+
+      it("accepts a ratio less than one bps below max", async () => {
+        const { roles, allowFunction, invoke } =
+          await loadFixture(setupTwoParams);
+
+        const compValue = encodeWithinRatioCompValue({
+          referencePluckIndex: 2,
+          referenceDecimals: 0,
+          relativePluckIndex: 1,
+          relativeDecimals: 0,
+          minRatio: 0,
+          maxRatio: 10000,
+        });
+
+        await allowFunction(
+          flattenCondition(matchesWithRatio([pluck(1), pluck(2)], compValue)),
+        );
+
+        // Real ratio 10000/10001 is below the max, despite its ceiled bps
+        // representation being exactly 10000.
+        await expect(invoke(10000, 10001)).to.not.be.revert(ethers);
+
+        // reversing the amounts puts the ratio just above max.
+        await expect(invoke(10001, 10000))
+          .to.be.revertedWithCustomError(roles, "ConditionViolation")
+          .withArgs(
+            ConditionViolationStatus.RatioAboveMax,
+            2, // WithinRatio node
+            anyValue,
+          );
+      });
+
+      it("rejects a ratio less than one bps below min", async () => {
+        const { roles, allowFunction, invoke } =
+          await loadFixture(setupTwoParams);
+
+        const compValue = encodeWithinRatioCompValue({
+          referencePluckIndex: 2,
+          referenceDecimals: 0,
+          relativePluckIndex: 1,
+          relativeDecimals: 0,
+          minRatio: 10000,
+          maxRatio: 0,
+        });
+
+        await allowFunction(
+          flattenCondition(matchesWithRatio([pluck(1), pluck(2)], compValue)),
+        );
+
+        // Real ratio 99999/100000 is below the min by one tenth of a bps.
+        await expect(invoke(99999, 100000))
+          .to.be.revertedWithCustomError(roles, "ConditionViolation")
+          .withArgs(
+            ConditionViolationStatus.RatioBelowMin,
+            2, // WithinRatio node
+            anyValue,
+          );
+      });
+
+      it("handles extreme values, failing closed beyond uint256 headroom", async () => {
+        const { allowFunction, invoke } = await loadFixture(setupTwoParams);
+
+        const compValue = encodeWithinRatioCompValue({
+          referencePluckIndex: 2,
+          referenceDecimals: 0,
+          relativePluckIndex: 1,
+          relativeDecimals: 0,
+          minRatio: 9000,
+          maxRatio: 11000,
+        });
+
+        await allowFunction(
+          flattenCondition(matchesWithRatio([pluck(1), pluck(2)], compValue)),
+        );
+
+        // Equal extreme values → ratio exactly 100%
+        await expect(invoke(10n ** 50n, 10n ** 50n)).to.not.be.revert(ethers);
+
+        // Beyond the supported magnitude the cross products overflow and the
+        // check reverts rather than wrapping around
+        await expect(invoke(ethers.MaxUint256, ethers.MaxUint256)).to.be.revert(
+          ethers,
+        );
+      });
+    });
+
+    describe("zero reference", () => {
+      it("reverts with RatioAboveMax when reference is zero and relative is not", async () => {
+        const { roles, allowFunction, invoke } =
+          await loadFixture(setupTwoParams);
+
+        const compValue = encodeWithinRatioCompValue({
+          referencePluckIndex: 2,
+          referenceDecimals: 0,
+          relativePluckIndex: 1,
+          relativeDecimals: 0,
+          minRatio: 0,
+          maxRatio: 10000,
+        });
+
+        await allowFunction(
+          flattenCondition(matchesWithRatio([pluck(1), pluck(2)], compValue)),
+        );
+
+        // Any nonzero relative amount exceeds a max bound on a zero reference
+        await expect(invoke(1, 0))
+          .to.be.revertedWithCustomError(roles, "ConditionViolation")
+          .withArgs(
+            ConditionViolationStatus.RatioAboveMax,
+            2, // WithinRatio node
+            anyValue,
+          );
+      });
+
+      it("passes when both amounts are zero", async () => {
+        const { allowFunction, invoke } = await loadFixture(setupTwoParams);
+
+        const compValue = encodeWithinRatioCompValue({
+          referencePluckIndex: 2,
+          referenceDecimals: 0,
+          relativePluckIndex: 1,
+          relativeDecimals: 0,
+          minRatio: 9000,
+          maxRatio: 11000,
+        });
+
+        await allowFunction(
+          flattenCondition(matchesWithRatio([pluck(1), pluck(2)], compValue)),
+        );
+
+        await expect(invoke(0, 0)).to.not.be.revert(ethers);
+      });
+
+      it("passes a zero reference when only a min bound is set", async () => {
+        const { allowFunction, invoke } = await loadFixture(setupTwoParams);
+
+        const compValue = encodeWithinRatioCompValue({
+          referencePluckIndex: 2,
+          referenceDecimals: 0,
+          relativePluckIndex: 1,
+          relativeDecimals: 0,
+          minRatio: 1000,
+          maxRatio: 0,
+        });
+
+        await allowFunction(
+          flattenCondition(matchesWithRatio([pluck(1), pluck(2)], compValue)),
+        );
+
+        // min bound is vacuous against a zero reference
+        await expect(invoke(5, 0)).to.not.be.revert(ethers);
       });
     });
 
@@ -1091,7 +1310,7 @@ describe("Operator - WithinRatio", () => {
         );
     });
 
-    it("USDC/exotic token swap - extreme decimal difference", async () => {
+    it("USDC/exotic token swap - maximum decimal difference", async () => {
       const { roles, allowFunction, invoke } =
         await loadFixture(setupTwoParams);
 
@@ -1106,7 +1325,7 @@ describe("Operator - WithinRatio", () => {
         referencePluckIndex: 83,
         referenceDecimals: 6, // USDC
         relativePluckIndex: 61,
-        relativeDecimals: 37, // ExoticToken
+        relativeDecimals: 27, // ExoticToken
         minRatio: 9975, // 99.75%
         maxRatio: 10025, // 100.25%
       });
@@ -1118,11 +1337,11 @@ describe("Operator - WithinRatio", () => {
       // invoke(relative, reference) since param0→relative (ExoticToken), param1→reference (USDC)
       // Selling 1000 USDC for 500 ExoticToken → (500 × 2) / 1000 = 100%
       await expect(
-        invoke(500n * 10n ** 37n, 1000n * 10n ** 6n),
+        invoke(500n * 10n ** 27n, 1000n * 10n ** 6n),
       ).to.not.be.revert(ethers);
 
       // Selling 1000 USDC for 498.7 ExoticToken → 99.74% < 99.75%
-      await expect(invoke(4987n * 10n ** 34n, 1000n * 10n ** 6n))
+      await expect(invoke(4987n * 10n ** 24n, 1000n * 10n ** 6n))
         .to.be.revertedWithCustomError(roles, "ConditionViolation")
         .withArgs(
           ConditionViolationStatus.RatioBelowMin,
@@ -1402,7 +1621,7 @@ describe("Operator - WithinRatio", () => {
           ],
         }),
       );
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddress,
         fn.selector,
@@ -1478,7 +1697,7 @@ describe("Operator - WithinRatio", () => {
           ],
         }),
       );
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddress,
         fn.selector,
@@ -1566,7 +1785,7 @@ describe("Operator - WithinRatio", () => {
           ],
         }),
       );
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddress,
         fn.selector,
@@ -1651,7 +1870,7 @@ describe("Operator - WithinRatio", () => {
           ],
         }),
       );
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddress,
         fn.selector,
@@ -1726,7 +1945,7 @@ describe("Operator - WithinRatio", () => {
           ],
         }),
       );
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddress,
         fn.selector,
@@ -1831,7 +2050,7 @@ describe("Operator - WithinRatio", () => {
           ],
         }),
       );
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddress,
         fn.selector,
@@ -1909,7 +2128,7 @@ describe("Operator - WithinRatio", () => {
           ],
         }),
       );
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddress,
         fn.selector,
@@ -2308,6 +2527,56 @@ describe("integrity", () => {
       ).to.be.revertedWithCustomError(roles, "UnsuitableCompValue");
     });
 
+    it("reverts AllowanceDecimalsExceedMax when referenceDecimals exceeds 27", async () => {
+      const { roles } = await loadFixture(setupTestContract);
+      const compValue = encodeWithinRatioCompValue({
+        referencePluckIndex: 0,
+        referenceDecimals: 28,
+        relativePluckIndex: 1,
+        relativeDecimals: 18,
+        minRatio: 9000,
+        maxRatio: 11000,
+      });
+
+      await expect(
+        packConditions(roles, [
+          {
+            parent: 0,
+            paramType: Encoding.None,
+            operator: Operator.WithinRatio,
+            compValue,
+          },
+        ]),
+      )
+        .to.be.revertedWithCustomError(roles, "AllowanceDecimalsExceedMax")
+        .withArgs(0);
+    });
+
+    it("reverts AllowanceDecimalsExceedMax when relativeDecimals exceeds 27", async () => {
+      const { roles } = await loadFixture(setupTestContract);
+      const compValue = encodeWithinRatioCompValue({
+        referencePluckIndex: 0,
+        referenceDecimals: 18,
+        relativePluckIndex: 1,
+        relativeDecimals: 28,
+        minRatio: 9000,
+        maxRatio: 11000,
+      });
+
+      await expect(
+        packConditions(roles, [
+          {
+            parent: 0,
+            paramType: Encoding.None,
+            operator: Operator.WithinRatio,
+            compValue,
+          },
+        ]),
+      )
+        .to.be.revertedWithCustomError(roles, "AllowanceDecimalsExceedMax")
+        .withArgs(0);
+    });
+
     it("accepts compValue with adapter params", async () => {
       const { roles } = await loadFixture(setupTestContract);
 
@@ -2425,6 +2694,54 @@ describe("integrity", () => {
           },
         ]),
       ).to.be.revertedWithCustomError(roles, "WithinRatioNoRatioProvided");
+    });
+
+    it("reverts WithinRatioMinExceedsMax when minRatio is greater than maxRatio", async () => {
+      const { roles } = await loadFixture(setupTestContract);
+
+      const compValue = encodeWithinRatioCompValue({
+        referencePluckIndex: 3,
+        referenceDecimals: 0,
+        relativePluckIndex: 7,
+        relativeDecimals: 0,
+        minRatio: 11000,
+        maxRatio: 9000, // min > max is invalid
+      });
+
+      await expect(
+        packConditions(roles, [
+          {
+            parent: 0,
+            paramType: Encoding.None,
+            operator: Operator.And,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: Encoding.AbiEncoded,
+            operator: Operator.Matches,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: Encoding.None,
+            operator: Operator.WithinRatio,
+            compValue,
+          },
+          {
+            parent: 1,
+            paramType: Encoding.Static,
+            operator: Operator.Pluck,
+            compValue: "0x03",
+          },
+          {
+            parent: 1,
+            paramType: Encoding.Static,
+            operator: Operator.Pluck,
+            compValue: "0x07",
+          },
+        ]),
+      ).to.be.revertedWithCustomError(roles, "WithinRatioMinExceedsMax");
     });
   });
 
