@@ -41,11 +41,9 @@ describe("Integrity", () => {
     // since validation now happens during packing
     const pack = (conditions: any[]) => packConditions(roles, conditions);
 
-    // For testing successful cases
-    const allowTarget = async (conditions: any[]) => {
-      const packed = await packConditions(roles, conditions);
-      return roles.connect(owner).allowTarget(roleKey, TARGET, packed, 0);
-    };
+    // Exercise validation and packing through the checked setup entrypoint.
+    const allowTarget = (conditions: any[]) =>
+      roles.connect(owner).allowTarget(roleKey, TARGET, conditions, 0);
 
     return { roles, owner, pack, allowTarget };
   }

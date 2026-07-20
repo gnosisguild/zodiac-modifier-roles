@@ -74,6 +74,9 @@ interface IRolesError {
     /// Condition tree is not in BFS (breadth-first search) order
     error NotBFS();
 
+    /// Packed condition buffer is malformed (not produced by pack())
+    error MalformedConditionBuffer();
+
     /// Parameter type is unsuitable for the operator at given index
     error UnsuitableParameterType(uint256 index);
 

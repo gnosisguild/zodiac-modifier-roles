@@ -356,6 +356,21 @@ library Integrity {
             revert IRolesError.UnsuitableChildTypeTree(index);
         }
 
+        /*
+         * All children of the Tuple must be structural. TypeTree counts only
+         * structural children when matching the field count against compValue,
+         * but the evaluator iterates the raw child list - a non-structural
+         * child would desync the two and read compValue out of bounds at
+         * evaluation time.
+         */
+        (, uint256 tupleChildCount, uint256 tupleSChildCount) = _sChildBounds(
+            conditions,
+            childStart
+        );
+        if (tupleChildCount != tupleSChildCount) {
+            revert IRolesError.UnsuitableChildCount(childStart);
+        }
+
         // Child must resolve to a Tuple
         Layout memory layout = TypeTree.resolve(conditions, childStart);
         assert(layout.encoding == Encoding.Tuple);
@@ -446,6 +461,23 @@ library Integrity {
             uint8(condition.compValue[0]) == 255
         ) {
             revert IRolesError.UnsuitableCompValue(index);
+        }
+
+        if (encoding == Encoding.Array) {
+            /*
+             * All children of an Array Pluck must be structural. They only
+             * describe the element type and are never evaluated, but the
+             * evaluator reads the raw children[0] as the element template
+             * for location and size math - a non-structural child is
+             * invisible to TypeTree yet breaks that traversal.
+             */
+            (, uint256 childCount, uint256 sChildCount) = _sChildBounds(
+                conditions,
+                index
+            );
+            if (childCount != sChildCount) {
+                revert IRolesError.UnsuitableChildCount(index);
+            }
         }
     }
 
