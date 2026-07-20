@@ -464,6 +464,25 @@ describe("AllowanceTracking", () => {
         expect(balance).to.equal(1000);
       });
 
+      it("caps without overflowing when accrued refills exceed uint128", async () => {
+        const { roles, ALLOWANCE_KEY } = await loadFixture(setupAccrual);
+        const maxUint128 = (1n << 128n) - 1n;
+
+        await roles.setAllowance(
+          ALLOWANCE_KEY,
+          0,
+          maxUint128,
+          maxUint128,
+          600,
+          0,
+        );
+
+        await time.increase(1200);
+
+        const { balance } = await roles.accruedAllowance(ALLOWANCE_KEY);
+        expect(balance).to.equal(maxUint128);
+      });
+
       it("timestamp updates even when balance already at cap", async () => {
         const { roles, ALLOWANCE_KEY } = await loadFixture(setupAccrual);
 

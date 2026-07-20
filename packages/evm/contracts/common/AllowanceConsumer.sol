@@ -81,8 +81,12 @@ library AllowanceConsumer {
         if (a.balance >= a.maxRefill) return (a.balance, timestamp);
 
         // Add refill for each elapsed period, capping at maxRefill.
-        uint128 accruedBalance = a.balance + (a.refill * elapsedIntervals);
-        balance = accruedBalance < a.maxRefill ? accruedBalance : a.maxRefill;
+        uint256 accruedBalance = uint256(a.balance) +
+            uint256(a.refill) *
+            elapsedIntervals;
+        balance = accruedBalance < a.maxRefill
+            ? uint128(accruedBalance)
+            : a.maxRefill;
     }
 
     /**
