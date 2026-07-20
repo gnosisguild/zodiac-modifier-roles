@@ -1,15 +1,15 @@
-import { SelectHTMLAttributes } from "react";
-import { CHAINS, ChainId } from "../../app/chains";
+import { SelectHTMLAttributes } from "react"
+import { CHAINS, ChainId } from "../../app/chains"
 
-const chains = Object.values(CHAINS);
+const chains = Object.values(CHAINS)
 
 export default function ChainSelect({
   value,
   onChange,
   ...rest
 }: Omit<SelectHTMLAttributes<HTMLSelectElement>, "value" | "onChange"> & {
-  value: ChainId;
-  onChange: (chainId: ChainId) => void;
+  value: ChainId
+  onChange: (chainId: ChainId) => void
 }) {
   return (
     <select
@@ -23,5 +23,5 @@ export default function ChainSelect({
         </option>
       ))}
     </select>
-  );
+  )
 }

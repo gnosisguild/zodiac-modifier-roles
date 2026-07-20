@@ -6,6 +6,7 @@ pragma solidity >=0.8.17 <0.9.0;
 
 import "./core/Authorization.sol";
 import "./core/Membership.sol";
+import "./core/RoleTx.sol";
 import "./core/Settlement.sol";
 import "./core/Setup.sol";
 
@@ -109,7 +110,7 @@ contract Roles is RolesStorage, Setup, Membership, Authorization, Settlement {
 
     /// @dev Relayed variant of execTransactionWithRole. The caller does not
     ///      need to be an enabled module; instead, an enabled module must sign
-    ///      the call (EIP-712 over a ModuleTx struct).
+    ///      the call (EIP-712 over a RoleTx struct).
     /// @param to Destination address of module transaction
     /// @param value Ether value of module transaction
     /// @param data Data payload of module transaction
@@ -129,11 +130,18 @@ contract Roles is RolesStorage, Setup, Membership, Authorization, Settlement {
         bytes32 salt,
         bytes calldata signature
     )
-        public
+        external
         nonReentrant
         moduleOnlySigned(
-            ModuleTx({to: to, value: value, data: data, operation: operation}),
-            salt,
+            RoleTx.hashStruct(
+                to,
+                value,
+                data,
+                operation,
+                roleKey,
+                shouldRevert,
+                salt
+            ),
             signature
         )
         returns (bool success)

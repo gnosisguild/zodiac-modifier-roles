@@ -47,20 +47,29 @@ export const encodeCalls = (
       }
 
       case "allowFunction": {
-        const conditions = call.condition
-          ? flattenCondition(call.condition).map((c) => ({
-              ...c,
-              compValue: c.compValue || "0x",
-            }))
-          : []
+        return {
+          to: rolesMod,
+          data: rolesInterface.encodeFunctionData("allowFunction", [
+            call.roleKey,
+            call.targetAddress,
+            call.selector,
+            call.executionOptions,
+          ]) as `0x${string}`,
+        }
+      }
+
+      case "scopeFunction": {
         try {
           return {
             to: rolesMod,
-            data: rolesInterface.encodeFunctionData("allowFunction", [
+            data: rolesInterface.encodeFunctionData("scopeFunction", [
               call.roleKey,
               call.targetAddress,
               call.selector,
-              conditions,
+              flattenCondition(call.condition).map((c) => ({
+                ...c,
+                compValue: c.compValue || "0x",
+              })),
               call.executionOptions,
             ]) as `0x${string}`,
           }
@@ -69,7 +78,10 @@ export const encodeCalls = (
             call.roleKey,
             call.targetAddress,
             call.selector,
-            conditions,
+            flattenCondition(call.condition).map((c) => ({
+              ...c,
+              compValue: c.compValue || "0x",
+            })),
             call.executionOptions,
           ])
           throw e

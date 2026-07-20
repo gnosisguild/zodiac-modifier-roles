@@ -83,7 +83,7 @@ describe("AvatarIsOwnerOfERC721", () => {
     ]);
     await roles
       .connect(owner)
-      .allowFunction(
+      .allowFunctionPacked(
         ROLE_KEY,
         mockERC721Address,
         SELECTOR,

@@ -334,7 +334,7 @@ describe("AllowanceTracking", () => {
         ]);
         await roles
           .connect(owner)
-          .allowFunction(
+          .allowFunctionPacked(
             ROLE_KEY,
             testContractAddress,
             selector,
@@ -381,6 +381,19 @@ describe("AllowanceTracking", () => {
 
         expect(balance).to.equal(500);
         expect(timestamp).to.equal(initialAllowance.timestamp);
+      });
+
+      it("does not overflow when the configured timestamp is near uint64 max", async () => {
+        const { roles, ALLOWANCE_KEY } = await loadFixture(setupAccrual);
+        const maxUint64 = (1n << 64n) - 1n;
+
+        await roles.setAllowance(ALLOWANCE_KEY, 500, 1000, 100, 600, maxUint64);
+
+        const { balance, timestamp } =
+          await roles.accruedAllowance(ALLOWANCE_KEY);
+
+        expect(balance).to.equal(500);
+        expect(timestamp).to.equal(maxUint64);
       });
 
       it("accrues one refill after exactly one period, updates timestamp", async () => {
@@ -462,6 +475,25 @@ describe("AllowanceTracking", () => {
 
         const { balance } = await roles.accruedAllowance(ALLOWANCE_KEY);
         expect(balance).to.equal(1000);
+      });
+
+      it("caps without overflowing when accrued refills exceed uint128", async () => {
+        const { roles, ALLOWANCE_KEY } = await loadFixture(setupAccrual);
+        const maxUint128 = (1n << 128n) - 1n;
+
+        await roles.setAllowance(
+          ALLOWANCE_KEY,
+          0,
+          maxUint128,
+          maxUint128,
+          600,
+          0,
+        );
+
+        await time.increase(1200);
+
+        const { balance } = await roles.accruedAllowance(ALLOWANCE_KEY);
+        expect(balance).to.equal(maxUint128);
       });
 
       it("timestamp updates even when balance already at cap", async () => {
@@ -570,7 +602,7 @@ describe("AllowanceTracking", () => {
       ]);
       await roles
         .connect(owner)
-        .allowFunction(
+        .allowFunctionPacked(
           ROLE_KEY,
           testContractAddress,
           selector1,
@@ -601,7 +633,7 @@ describe("AllowanceTracking", () => {
       ]);
       await roles
         .connect(owner)
-        .allowFunction(
+        .allowFunctionPacked(
           ROLE_KEY,
           testContractAddress,
           selector2,
@@ -673,7 +705,7 @@ describe("AllowanceTracking", () => {
       ]);
       await roles
         .connect(owner)
-        .allowFunction(
+        .allowFunctionPacked(
           ROLE_KEY,
           testContractAddress,
           selector,
@@ -749,7 +781,7 @@ describe("AllowanceTracking", () => {
       ]);
       await roles
         .connect(owner)
-        .allowFunction(
+        .allowFunctionPacked(
           ROLE_KEY,
           testContractAddress,
           selector,
@@ -825,7 +857,7 @@ describe("AllowanceTracking", () => {
         ]);
         await roles
           .connect(owner)
-          .allowFunction(
+          .allowFunctionPacked(
             ROLE_KEY,
             testContractAddress,
             selector,
@@ -874,7 +906,7 @@ describe("AllowanceTracking", () => {
         ]);
         await roles
           .connect(owner)
-          .allowFunction(
+          .allowFunctionPacked(
             ROLE_KEY,
             testContractAddress,
             selector,
@@ -930,7 +962,7 @@ describe("AllowanceTracking", () => {
         ]);
         await roles
           .connect(owner)
-          .allowFunction(
+          .allowFunctionPacked(
             ROLE_KEY,
             testContractAddress,
             selector,
@@ -992,7 +1024,7 @@ describe("AllowanceTracking", () => {
         ]);
         await roles
           .connect(owner)
-          .allowFunction(
+          .allowFunctionPacked(
             ROLE_KEY,
             testContractAddress,
             selector,
@@ -1051,7 +1083,7 @@ describe("AllowanceTracking", () => {
       ]);
       await roles
         .connect(owner)
-        .allowFunction(
+        .allowFunctionPacked(
           ROLE_KEY,
           testContractAddress,
           selector,
@@ -1111,7 +1143,7 @@ describe("AllowanceTracking", () => {
           compValue: ALLOWANCE_KEY,
         },
       ]);
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         ROLE_KEY,
         testContractAddress,
         selector,
@@ -1151,7 +1183,7 @@ describe("AllowanceTracking", () => {
           compValue: ALLOWANCE_KEY,
         },
       ]);
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         ROLE_KEY,
         testContractAddress,
         selector,

@@ -44,7 +44,7 @@ jobs:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         # everything below runs only for an actual publication — a new release,
         # or a manual dispatch asking for one
         if: ${{ steps.release.outputs.releases_created || inputs.publish }}
@@ -54,12 +54,12 @@ jobs:
       # configured" and never starts the OIDC exchange, failing with E404.
       # See actions/setup-node#1551 and npm/documentation#1960.
       # npm defaults to registry.npmjs.org anyway.
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           # 24.x ships npm 11.17.x; trusted publishing needs >= 11.5.1
           node-version: 24
         if: ${{ steps.release.outputs.releases_created || inputs.publish }}
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: |
             **/node_modules

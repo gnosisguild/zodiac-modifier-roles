@@ -1,4 +1,4 @@
-import { Encoding, Condition, Operator } from "zodiac-roles-sdk"
+import { Condition, Operator, ParameterType } from "zodiac-roles-sdk"
 import { Fragment, ReactNode } from "react"
 import { AbiFunction, AbiParameter, decodeAbiParameters, toHex } from "viem"
 
@@ -21,7 +21,7 @@ export interface Props {
 }
 
 const ConditionView: React.FC<Props> = ({ condition, paramIndex, abi }) => {
-  if (condition.paramType === Encoding.AbiEncoded && paramIndex === undefined) {
+  if (condition.paramType === ParameterType.Calldata) {
     return (
       <CalldataConditionView
         condition={condition}
@@ -41,10 +41,7 @@ const ConditionView: React.FC<Props> = ({ condition, paramIndex, abi }) => {
     )
   }
 
-  if (
-    condition.operator >= Operator.And &&
-    condition.operator <= Operator.Or
-  ) {
+  if (condition.operator >= Operator.And && condition.operator <= Operator.Or) {
     return (
       <LogicalConditionView
         condition={condition}
@@ -56,7 +53,7 @@ const ConditionView: React.FC<Props> = ({ condition, paramIndex, abi }) => {
 
   if (
     condition.operator >= Operator.Matches &&
-    condition.operator <= Operator.ArrayTailMatches
+    condition.operator <= Operator.ArrayEvery
   ) {
     return (
       <ComplexConditionView
@@ -103,7 +100,10 @@ const ConditionView: React.FC<Props> = ({ condition, paramIndex, abi }) => {
   //     />
   //   )
   // }
-  // if (condition.operator === Operator.CallWithinAllowance) {
+  // if (
+  //   condition.operator === Operator.EtherWithinAllowance ||
+  //   condition.operator === Operator.CallWithinAllowance
+  // ) {
   //   return (
   //     <GlobalWithinAllowanceConditionView
   //       condition={condition}
@@ -180,19 +180,17 @@ export const ChildConditions: React.FC<
 > = ({ condition, paramIndex, abi, separator }) => {
   const { children, operator } = condition
   const childrenLength = children?.length || 0
-  const isRootAbiEncodedCondition =
-    condition.paramType === Encoding.AbiEncoded && paramIndex === undefined
-  const isLogicalCondition =
-    operator >= Operator.And && operator <= Operator.Or
+  const isCalldataCondition = condition.paramType === ParameterType.Calldata
+  const isLogicalCondition = operator >= Operator.And && operator <= Operator.Or
 
   return (
     <div
       className={classNames(
         classes.conditionBody,
-        isRootAbiEncodedCondition && classes.topLevelCondition
+        isCalldataCondition && classes.topLevelCondition
       )}
     >
-      {!isLogicalCondition && !isRootAbiEncodedCondition && (
+      {!isLogicalCondition && !isCalldataCondition && (
         <div className={classes.verticalGuide} />
       )}
       <Flex direction="column" gap={2}>

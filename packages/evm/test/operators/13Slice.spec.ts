@@ -11,7 +11,6 @@ import {
   ExecutionOptions,
   ConditionViolationStatus,
   flattenCondition,
-  packConditions,
 } from "../utils.js";
 
 const abiCoder = AbiCoder.defaultAbiCoder();
@@ -31,7 +30,8 @@ function replaceBytes(data: string, byteOffset: number, replacement: string) {
 const connection = await network.create();
 const { ethers, networkHelpers } = connection;
 const { loadFixture } = networkHelpers;
-const { setupTestContract, setupDynamicParam } = createSetup(connection);
+const { setupTestContract, setupOneParam, setupDynamicParam } =
+  createSetup(connection);
 
 describe("Operator - Slice", () => {
   after(async () => {
@@ -284,6 +284,158 @@ describe("Operator - Slice", () => {
       const { balance } = await roles.accruedAllowance(allowanceKey);
       expect(balance).to.equal(70);
     });
+
+    it("frames a Bitmask child by the slice window", async () => {
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupDynamicParam);
+
+      // Slice the first 4 bytes, then Bitmask them. The Bitmask operand must be
+      // framed by the 4-byte window, not a full 32-byte word.
+      // compValue: shift(0x0000) + mask(0xffffffff) + expected(0xdeadbeef)
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Dynamic,
+              operator: Operator.Slice,
+              compValue: encodeCompValue(0, 4), // shift=0, size=4
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.Bitmask,
+                  compValue: "0x0000ffffffffdeadbeef",
+                },
+              ],
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
+      );
+
+      await expect(invoke("0xdeadbeefcafe")).to.not.be.revert(ethers);
+      await expect(invoke("0xcafebabe1234"))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.BitmaskNotAllowed,
+          anyValue,
+          anyValue,
+        );
+    });
+
+    it("reverts BitmaskOverflow when a Bitmask child's mask exceeds the slice window", async () => {
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupDynamicParam);
+
+      // Slice window is 4 bytes; the Bitmask mask starts at shift 1 and spans 4
+      // bytes (1 + 4 = 5 > 4), so it must overflow rather than read the 5th byte
+      // that lies outside the sliced window.
+      // compValue: shift(0x0001) + mask(0xffffffff) + expected(0x00000000)
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Dynamic,
+              operator: Operator.Slice,
+              compValue: encodeCompValue(0, 4), // shift=0, size=4
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.Bitmask,
+                  compValue: "0x0001ffffffff00000000",
+                },
+              ],
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
+      );
+
+      await expect(invoke("0xdeadbeefcafe"))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(ConditionViolationStatus.BitmaskOverflow, anyValue, anyValue);
+    });
+
+    it("frames Bitmask under a Slice of a static operand", async () => {
+      const { roles, allowFunction, invoke } = await loadFixture(setupOneParam);
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Static,
+              operator: Operator.Slice,
+              compValue: encodeCompValue(28, 4),
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.Bitmask,
+                  compValue: "0x0000ffffffffdeadbeef",
+                },
+              ],
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
+      );
+
+      await expect(invoke(0xdeadbeef)).to.not.be.revert(ethers);
+      await expect(invoke(0xcafebabe))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.BitmaskNotAllowed,
+          anyValue,
+          anyValue,
+        );
+    });
+
+    it("propagates the narrowed frame through nested slices", async () => {
+      const { roles, allowFunction, invoke } =
+        await loadFixture(setupDynamicParam);
+
+      await allowFunction(
+        flattenCondition({
+          paramType: Encoding.AbiEncoded,
+          operator: Operator.Matches,
+          children: [
+            {
+              paramType: Encoding.Dynamic,
+              operator: Operator.Slice,
+              compValue: encodeCompValue(1, 6),
+              children: [
+                {
+                  paramType: Encoding.Static,
+                  operator: Operator.Slice,
+                  compValue: encodeCompValue(0, 4),
+                  children: [
+                    {
+                      paramType: Encoding.Static,
+                      operator: Operator.Bitmask,
+                      compValue: "0x0000ffffffffdeadbeef",
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        }),
+        ExecutionOptions.Both,
+      );
+
+      await expect(invoke("0xaadeadbeefbbcc")).to.not.be.revert(ethers);
+      await expect(invoke("0xaacafebabebbcc"))
+        .to.be.revertedWithCustomError(roles, "ConditionViolation")
+        .withArgs(
+          ConditionViolationStatus.BitmaskNotAllowed,
+          anyValue,
+          anyValue,
+        );
+    });
   });
 
   describe("violation context", () => {
@@ -358,11 +510,11 @@ describe("Operator - Slice", () => {
 
   describe("integrity", () => {
     it("reverts UnsuitableParameterType for invalid encodings", async () => {
-      const { roles } = await loadFixture(setupTestContract);
+      const { roles, allowTarget } = await loadFixture(setupTestContract);
 
       for (const encoding of [Encoding.Tuple, Encoding.Array]) {
         await expect(
-          packConditions(roles, [
+          allowTarget([
             {
               parent: 0,
               paramType: encoding,
@@ -376,10 +528,10 @@ describe("Operator - Slice", () => {
 
     describe("compValue", () => {
       it("reverts UnsuitableCompValue when compValue is not 3 bytes", async () => {
-        const { roles } = await loadFixture(setupTestContract);
+        const { roles, allowTarget } = await loadFixture(setupTestContract);
 
         await expect(
-          packConditions(roles, [
+          allowTarget([
             {
               parent: 0,
               paramType: Encoding.Static,
@@ -391,10 +543,10 @@ describe("Operator - Slice", () => {
       });
 
       it("reverts UnsuitableCompValue when size is 0", async () => {
-        const { roles } = await loadFixture(setupTestContract);
+        const { roles, allowTarget } = await loadFixture(setupTestContract);
 
         await expect(
-          packConditions(roles, [
+          allowTarget([
             {
               parent: 0,
               paramType: Encoding.Static,
@@ -406,10 +558,10 @@ describe("Operator - Slice", () => {
       });
 
       it("reverts UnsuitableCompValue when size is greater than 32", async () => {
-        const { roles } = await loadFixture(setupTestContract);
+        const { roles, allowTarget } = await loadFixture(setupTestContract);
 
         await expect(
-          packConditions(roles, [
+          allowTarget([
             {
               parent: 0,
               paramType: Encoding.Static,
@@ -423,10 +575,10 @@ describe("Operator - Slice", () => {
 
     describe("children", () => {
       it("reverts UnsuitableChildCount when Slice has more than one child", async () => {
-        const { roles } = await loadFixture(setupTestContract);
+        const { roles, allowTarget } = await loadFixture(setupTestContract);
 
         await expect(
-          packConditions(roles, [
+          allowTarget([
             {
               parent: 0,
               paramType: Encoding.Static,
@@ -450,7 +602,7 @@ describe("Operator - Slice", () => {
       });
 
       it("reverts SliceChildNotStatic when Slice child is not Static", async () => {
-        const { roles } = await loadFixture(setupTestContract);
+        const { roles, allowTarget } = await loadFixture(setupTestContract);
 
         // All non-Static encodings should be rejected
         for (const encoding of [
@@ -461,7 +613,7 @@ describe("Operator - Slice", () => {
           Encoding.EtherValue,
         ]) {
           await expect(
-            packConditions(roles, [
+            allowTarget([
               {
                 parent: 0,
                 paramType: Encoding.Static,

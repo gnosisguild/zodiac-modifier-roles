@@ -11,7 +11,6 @@ import {
   ExecutionOptions,
   ConditionViolationStatus,
   flattenCondition,
-  packConditions,
 } from "../utils.js";
 
 const abiCoder = AbiCoder.defaultAbiCoder();
@@ -298,7 +297,7 @@ describe("Operator - ArraySome", () => {
 
   describe("integrity", () => {
     it("reverts UnsuitableParameterType for invalid encodings", async () => {
-      const { roles } = await loadFixture(setupTestContract);
+      const { roles, allowTarget } = await loadFixture(setupTestContract);
 
       for (const encoding of [
         Encoding.AbiEncoded,
@@ -309,7 +308,7 @@ describe("Operator - ArraySome", () => {
         Encoding.Tuple,
       ]) {
         await expect(
-          packConditions(roles, [
+          allowTarget([
             {
               parent: 0,
               paramType: encoding,
@@ -322,10 +321,10 @@ describe("Operator - ArraySome", () => {
     });
 
     it("reverts UnsuitableCompValue when compValue is not empty", async () => {
-      const { roles } = await loadFixture(setupTestContract);
+      const { roles, allowTarget } = await loadFixture(setupTestContract);
 
       await expect(
-        packConditions(roles, [
+        allowTarget([
           {
             parent: 0,
             paramType: Encoding.Array,
@@ -344,10 +343,10 @@ describe("Operator - ArraySome", () => {
 
     describe("children", () => {
       it("reverts UnsuitableChildCount when ArraySome has zero children", async () => {
-        const { roles } = await loadFixture(setupTestContract);
+        const { roles, allowTarget } = await loadFixture(setupTestContract);
 
         await expect(
-          packConditions(roles, [
+          allowTarget([
             {
               parent: 0,
               paramType: Encoding.Array,
@@ -359,11 +358,11 @@ describe("Operator - ArraySome", () => {
       });
 
       it("reverts UnsuitableChildCount when ArraySome has more than one child", async () => {
-        const { roles } = await loadFixture(setupTestContract);
+        const { roles, allowTarget } = await loadFixture(setupTestContract);
 
         // ArraySome requires exactly 1 structural child
         await expect(
-          packConditions(roles, [
+          allowTarget([
             {
               parent: 0,
               paramType: Encoding.Array,
@@ -387,7 +386,7 @@ describe("Operator - ArraySome", () => {
 
         // ArraySome requires exactly 1 structural child
         await expect(
-          packConditions(roles, [
+          allowTarget([
             {
               parent: 0,
               paramType: Encoding.Array,
@@ -411,12 +410,12 @@ describe("Operator - ArraySome", () => {
       });
 
       it("reverts UnsuitableChildCount when ArraySome has non-structural child", async () => {
-        const { roles } = await loadFixture(setupTestContract);
+        const { roles, allowTarget } = await loadFixture(setupTestContract);
 
         const allowanceKey = hexlify(randomBytes(32));
 
         // Valid: ArraySome with one structural child - should succeed
-        await roles.packConditions([
+        await allowTarget([
           {
             parent: 0,
             paramType: Encoding.Array,
@@ -433,7 +432,7 @@ describe("Operator - ArraySome", () => {
 
         // Invalid: Adding a non-structural child should fail
         await expect(
-          roles.packConditions([
+          allowTarget([
             {
               parent: 0,
               paramType: Encoding.Array,

@@ -10,7 +10,6 @@ import {
   ExecutionOptions,
   ConditionViolationStatus,
   flattenCondition,
-  packConditions,
 } from "../utils.js";
 import type { ConditionFlatStruct } from "../../typechain-types/contracts/Roles.js";
 
@@ -31,10 +30,7 @@ describe("Operator - Empty", () => {
     const allowTarget = async (
       conditions: ConditionFlatStruct[],
       options = ExecutionOptions.None,
-    ) => {
-      const packed = await packConditions(roles, conditions);
-      return roles.allowTarget(roleKey, testContractAddress, packed, options);
-    };
+    ) => roles.allowTarget(roleKey, testContractAddress, conditions, options);
 
     const invoke = (
       data: string,
@@ -130,7 +126,7 @@ describe("Operator - Empty", () => {
 
   describe("integrity", () => {
     it("reverts UnsuitableParameterType for invalid encodings", async () => {
-      const { roles } = await loadFixture(setupTestContract);
+      const { roles, allowTarget } = await loadFixture(setupTestContract);
 
       for (const encoding of [
         Encoding.Static,
@@ -141,7 +137,7 @@ describe("Operator - Empty", () => {
         Encoding.EtherValue,
       ]) {
         await expect(
-          packConditions(roles, [
+          allowTarget([
             {
               parent: 0,
               paramType: Encoding.None,
@@ -160,10 +156,10 @@ describe("Operator - Empty", () => {
     });
 
     it("reverts UnsuitableCompValue when compValue is not empty", async () => {
-      const { roles } = await loadFixture(setupTestContract);
+      const { roles, allowTarget } = await loadFixture(setupTestContract);
 
       await expect(
-        packConditions(roles, [
+        allowTarget([
           {
             parent: 0,
             paramType: Encoding.None,
@@ -181,10 +177,10 @@ describe("Operator - Empty", () => {
     });
 
     it("reverts LeafNodeCannotHaveChildren when Empty has children", async () => {
-      const { roles } = await loadFixture(setupTestContract);
+      const { roles, allowTarget } = await loadFixture(setupTestContract);
 
       await expect(
-        packConditions(roles, [
+        allowTarget([
           {
             parent: 0,
             paramType: Encoding.None,

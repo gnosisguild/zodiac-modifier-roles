@@ -8,38 +8,17 @@ import "../periphery/interfaces/IPricing.sol";
 import "../types/Types.sol";
 
 /**
- * @title PriceConversion
- * @notice Library for applying exchange rate conversion via IPricing adapters.
+ * @title PriceLoader
+ * @notice Library for retrieving exchange rates from IPricing adapters.
  *
- * @dev Converts amounts using an external pricing adapter. The adapter returns
- *      a price with 18 decimals precision. Decimal scaling should be handled
- *      by the caller.
+ * @dev The adapter returns a price with 18 decimals precision. Applying that
+ *      price and any decimal scaling is handled by the caller.
  *
  * @author gnosisguild
  */
-library PriceConversion {
+library PriceLoader {
     uint256 private constant PRICE_DECIMALS = 18;
     uint256 private constant ONE = 10 ** PRICE_DECIMALS;
-
-    /**
-     * @notice Applies exchange rate conversion to an amount.
-     * @param amount The amount to convert
-     * @param adapter Price adapter address
-     * @return status Ok or error status from adapter
-     * @return result Amount multiplied by price and divided by 10^18
-     */
-    function convert(
-        uint256 amount,
-        address adapter,
-        bytes memory params
-    ) internal view returns (Status, uint256) {
-        (Status status, uint256 price) = _getPrice(adapter, params);
-        if (status != Status.Ok) {
-            return (status, 0);
-        }
-
-        return (Status.Ok, (amount * price) / ONE);
-    }
 
     /**
      * @dev Safely invokes pricing adapter via staticcall.
@@ -55,10 +34,10 @@ library PriceConversion {
      *
      */
 
-    function _getPrice(
+    function load(
         address adapter,
         bytes memory params
-    ) private view returns (Status, uint256) {
+    ) internal view returns (Status, uint256) {
         if (adapter == address(0)) {
             return (Status.Ok, ONE);
         }

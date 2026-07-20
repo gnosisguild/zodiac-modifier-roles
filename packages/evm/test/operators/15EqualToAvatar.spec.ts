@@ -11,7 +11,6 @@ import {
   ExecutionOptions,
   ConditionViolationStatus,
   flattenCondition,
-  packConditions,
 } from "../utils.js";
 
 const connection = await network.create();
@@ -34,8 +33,10 @@ describe("Operator - EqualToAvatar", () => {
       const avatar = await roles.avatar();
 
       // EqualToAvatar: parameter must equal the avatar address
-      const packed = await packConditions(
-        roles,
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -46,12 +47,6 @@ describe("Operator - EqualToAvatar", () => {
             },
           ],
         }),
-      );
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
-        packed,
         ExecutionOptions.Both,
       );
 
@@ -75,8 +70,10 @@ describe("Operator - EqualToAvatar", () => {
         await loadFixture(setupTestContract);
 
       // EqualToAvatar: parameter must equal the avatar address
-      const packed = await packConditions(
-        roles,
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -87,12 +84,6 @@ describe("Operator - EqualToAvatar", () => {
             },
           ],
         }),
-      );
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
-        packed,
         ExecutionOptions.Both,
       );
 
@@ -138,8 +129,10 @@ describe("Operator - EqualToAvatar", () => {
       const originalAvatar = await roles.avatar();
 
       // Set up EqualToAvatar condition
-      const packed = await packConditions(
-        roles,
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -150,12 +143,6 @@ describe("Operator - EqualToAvatar", () => {
             },
           ],
         }),
-      );
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
-        packed,
         ExecutionOptions.Both,
       );
 
@@ -210,8 +197,10 @@ describe("Operator - EqualToAvatar", () => {
       const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupTestContract);
 
-      const packed = await packConditions(
-        roles,
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -222,12 +211,6 @@ describe("Operator - EqualToAvatar", () => {
             },
           ],
         }),
-      );
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
-        packed,
         ExecutionOptions.None,
       );
 
@@ -256,8 +239,10 @@ describe("Operator - EqualToAvatar", () => {
       const { roles, member, testContractAddress, roleKey } =
         await loadFixture(setupTestContract);
 
-      const packed = await packConditions(
-        roles,
+      await roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
         flattenCondition({
           paramType: Encoding.AbiEncoded,
           operator: Operator.Matches,
@@ -268,12 +253,6 @@ describe("Operator - EqualToAvatar", () => {
             },
           ],
         }),
-      );
-      await roles.allowFunction(
-        roleKey,
-        testContractAddress,
-        fn.selector,
-        packed,
         ExecutionOptions.None,
       );
 
@@ -299,7 +278,7 @@ describe("Operator - EqualToAvatar", () => {
 
   describe("integrity", () => {
     it("reverts UnsuitableParameterType for invalid encodings", async () => {
-      const { roles } = await loadFixture(setupTestContract);
+      const { roles, allowTarget } = await loadFixture(setupTestContract);
 
       for (const encoding of [
         Encoding.None,
@@ -310,7 +289,7 @@ describe("Operator - EqualToAvatar", () => {
         Encoding.EtherValue,
       ]) {
         await expect(
-          packConditions(roles, [
+          allowTarget([
             {
               parent: 0,
               paramType: encoding,
@@ -323,10 +302,10 @@ describe("Operator - EqualToAvatar", () => {
     });
 
     it("reverts UnsuitableCompValue when compValue is not empty", async () => {
-      const { roles } = await loadFixture(setupTestContract);
+      const { roles, allowTarget } = await loadFixture(setupTestContract);
 
       await expect(
-        packConditions(roles, [
+        allowTarget([
           {
             parent: 0,
             paramType: Encoding.Static,
@@ -338,10 +317,10 @@ describe("Operator - EqualToAvatar", () => {
     });
 
     it("reverts LeafNodeCannotHaveChildren when EqualToAvatar has children", async () => {
-      const { roles } = await loadFixture(setupTestContract);
+      const { roles, allowTarget } = await loadFixture(setupTestContract);
 
       await expect(
-        packConditions(roles, [
+        allowTarget([
           {
             parent: 0,
             paramType: Encoding.Static,

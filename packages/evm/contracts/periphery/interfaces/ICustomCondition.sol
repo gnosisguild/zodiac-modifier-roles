@@ -6,6 +6,11 @@ pragma solidity >=0.8.17 <0.9.0;
 
 import "@gnosis-guild/zodiac-core/contracts/core/Operation.sol";
 
+struct AllowanceConsumption {
+    bytes32 allowanceKey;
+    uint256 amount;
+}
+
 interface ICustomCondition {
     function check(
         address to,
@@ -15,6 +20,9 @@ interface ICustomCondition {
         uint256 location,
         uint256 size,
         bytes calldata extra,
-        bytes32[] memory pluckedValues
-    ) external view returns (bool success);
+        bytes32[] calldata pluckedValues
+    )
+        external
+        view
+        returns (bool success, AllowanceConsumption[] memory consumptions);
 }

@@ -41,7 +41,7 @@ async function checkMod(mod: Mod): Promise<SecurityCheckResult | null> {
       `${ZODIAC_APP_ORIGIN}/public/api/security-check?safes=${mod.chainId}:${mod.address}`,
       // Cache briefly so navigating between a mod's pages doesn't re-walk on
       // every request, while still reflecting remediation within a few minutes.
-      { next: { revalidate: 120 } },
+      { next: { revalidate: 120 } }
     )
     if (!response.ok) {
       return null

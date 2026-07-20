@@ -18,7 +18,7 @@ import "../periphery/interfaces/ITransactionUnwrapper.sol";
  *
  * @dev    The authorization follows three steps:
  *         1. Scope Resolution: Resolves the permission configuration
- *         2. Mode Validation: Checks for value transfer and tx operation
+ *         2. Execution Options: Checks for value transfer and tx operation
  *         3. Payload Validation: Evaluates condition trees against tx data
  *
  *         Transaction bundles are supported via adapter-based unwrapping.
@@ -78,48 +78,78 @@ abstract contract Authorization is RolesStorage {
             revert FunctionSignatureTooShort();
         }
 
+        /*
+         * Resolve the scopeConfig governing this transaction.
+         *
+         * Clearance records how the owner scoped the target:
+         *   Target:   whole contract allowed - any calldata, even empty
+         *   Function: only individually allowed selectors
+         *   None:     not scoped - only a global entry can authorize
+         *
+         * scopeConfig keys pack [20 bytes: address][12 bytes: discriminator]:
+         *
+         *                   20 bytes   |  8 bytes   | 4 bytes   |
+         *   Target entry:   address    |        0xFF..FF        | = any calldata
+         *   Function entry: address    |  0x00..00  | selector  |
+         *   Global entry:   0x00..00   |  0x00..00  | selector  | = any target
+         *
+         * A function entry can never collide with a target entry: it always
+         * has 8 zero bytes where a target entry has 0xFF.
+         */
         Clearance clearance = role.clearance[transaction.to];
 
         /*
-         * Resolve scopeConfig:
-         * 1- look up target-specific entry
-         * 2- fallback on global entry
+         * Lookup 1 of 2: destination-specific entry.
+         * Destination rules take precedence over global rules, so this is
+         * consulted first.
+         *
+         * Clearance.None falls through: only a global entry can authorize.
          */
-
-        // Target entry
         uint256 scopeConfig;
-        if (clearance != Clearance.None) {
-            bytes32 key = bytes32(bytes20(transaction.to)) |
-                /*
-                 * Clearance.Target:   set lower 12 bytes to 0xFF..FF
-                 * Clearance.Function: set lower 12 bytes to selector
-                 */
-                (
-                    clearance == Clearance.Target
-                        ? (~bytes32(0) >> 160)
-                        : (bytes32(bytes4(data)) >> 160)
-                );
-
-            scopeConfig = role.scopeConfig[key];
+        if (clearance == Clearance.Function) {
+            scopeConfig = role.scopeConfig[
+                bytes32(bytes20(transaction.to)) |
+                    (bytes32(bytes4(data)) >> 160)
+            ];
+        } else if (clearance == Clearance.Target) {
+            scopeConfig = role.scopeConfig[
+                bytes32(bytes20(transaction.to)) | (~bytes32(0) >> 160)
+            ];
         }
 
-        // Global entry
+        /*
+         * Lookup 2 of 2: global entry. Same layout with the address zeroed:
+         * selector allowed on any target (write side: allowFunctionGlobally).
+         * Requires a selector, so empty-calldata calls never resolve here.
+         */
         if (scopeConfig == 0 && data.length != 0) {
             scopeConfig = role.scopeConfig[bytes32(bytes4(data)) >> 160];
         }
 
+        /*
+         * scopeConfig == 0 means no permission configured.
+         */
         if (scopeConfig == 0) {
             revert TransactionNotAllowed(transaction.to, bytes4(data));
         }
 
         /*
-         * Check ExecutionOptions
+         * Enforce ExecutionOptions packed in the high bits of scopeConfig.
+         * The enum values double as bit flags:
+         *
+         *   None = 0 (00)   Send = 1 (01)
+         *   Both = 3 (11)   DelegateCall = 2 (10)
+         *
+         *   bit 0 set -> transaction may carry ether
+         *   bit 1 set -> transaction may delegatecall
          */
         {
             uint256 options = scopeConfig >> 160;
+            // can Send ?
             if (options & 1 == 0 && transaction.value > 0) {
                 revert SendNotAllowed(transaction.to);
             }
+            // can DelegateCall ?
             if (
                 options & 2 == 0 &&
                 transaction.operation == Operation.DelegateCall
@@ -129,7 +159,7 @@ abstract contract Authorization is RolesStorage {
         }
 
         /*
-         * Load and Evaluate Condition
+         * Load and Evaluate Condition tree
          */
         (Condition memory condition, uint256 maxPluckCount) = ConditionLoader
             .load(scopeConfig);

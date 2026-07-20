@@ -11,7 +11,6 @@ import {
   ExecutionOptions,
   ConditionViolationStatus,
   flattenCondition,
-  packConditions,
 } from "../utils.js";
 
 const abiCoder = AbiCoder.defaultAbiCoder();
@@ -399,7 +398,7 @@ describe("Operator - ArrayTailMatches", () => {
 
   describe("integrity", () => {
     it("reverts UnsuitableParameterType for invalid encodings", async () => {
-      const { roles } = await loadFixture(setupTestContract);
+      const { roles, allowTarget } = await loadFixture(setupTestContract);
 
       for (const encoding of [
         Encoding.AbiEncoded,
@@ -410,7 +409,7 @@ describe("Operator - ArrayTailMatches", () => {
         Encoding.Tuple,
       ]) {
         await expect(
-          packConditions(roles, [
+          allowTarget([
             {
               parent: 0,
               paramType: encoding,
@@ -423,10 +422,10 @@ describe("Operator - ArrayTailMatches", () => {
     });
 
     it("reverts UnsuitableCompValue when compValue is not empty", async () => {
-      const { roles } = await loadFixture(setupTestContract);
+      const { roles, allowTarget } = await loadFixture(setupTestContract);
 
       await expect(
-        packConditions(roles, [
+        allowTarget([
           {
             parent: 0,
             paramType: Encoding.Array,
@@ -445,10 +444,10 @@ describe("Operator - ArrayTailMatches", () => {
 
     describe("children", () => {
       it("reverts UnsuitableChildCount when ArrayTailMatches has zero children", async () => {
-        const { roles } = await loadFixture(setupTestContract);
+        const { roles, allowTarget } = await loadFixture(setupTestContract);
 
         await expect(
-          packConditions(roles, [
+          allowTarget([
             {
               parent: 0,
               paramType: Encoding.Array,
@@ -460,12 +459,12 @@ describe("Operator - ArrayTailMatches", () => {
       });
 
       it("reverts UnsuitableChildCount when ArrayTailMatches has non-structural child", async () => {
-        const { roles } = await loadFixture(setupTestContract);
+        const { roles, allowTarget } = await loadFixture(setupTestContract);
 
         const allowanceKey = hexlify(randomBytes(32));
 
         // Valid: ArrayTailMatches with one structural child - should succeed
-        await roles.packConditions([
+        await allowTarget([
           {
             parent: 0,
             paramType: Encoding.Array,
@@ -482,7 +481,7 @@ describe("Operator - ArrayTailMatches", () => {
 
         // Invalid: Adding a non-structural child should fail
         await expect(
-          roles.packConditions([
+          allowTarget([
             {
               parent: 0,
               paramType: Encoding.Array,

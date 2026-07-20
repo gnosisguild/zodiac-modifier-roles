@@ -75,8 +75,9 @@ library ConditionEvaluator {
                         consumptions,
                         context
                     );
-            } else {
-                // ZipSome or ZipEvery
+            } else if (
+                operator == Operator.ZipSome || operator == Operator.ZipEvery
+            ) {
                 return
                     _zipIterator(
                         data,
@@ -113,7 +114,8 @@ library ConditionEvaluator {
                             data,
                             location,
                             condition.compValue,
-                            condition.inlined
+                            condition.inlined,
+                            condition.size
                         ),
                         location,
                         condition,
@@ -154,26 +156,29 @@ library ConditionEvaluator {
                         condition,
                         consumptions
                     );
-            } else {
-                // Custom
-                return
-                    _result(
-                        CustomConditionChecker.check(
-                            condition.compValue,
-                            context.to,
-                            context.value,
-                            data,
-                            context.operation,
-                            location,
-                            condition,
-                            context.pluckedValues
-                        ),
+            } else if (operator == Operator.Custom) {
+                uint256 size = condition.size != 0
+                    ? condition.size
+                    : AbiLocation.size(data, location, condition);
+                (
+                    Status status,
+                    Consumption[] memory nextConsumptions
+                ) = CustomConditionChecker.check(
+                        condition.compValue,
+                        context.to,
+                        context.value,
+                        data,
+                        context.operation,
                         location,
-                        condition,
-                        consumptions
+                        size,
+                        consumptions,
+                        context.pluckedValues
                     );
+                return _result(status, location, condition, nextConsumptions);
             }
         }
+
+        revert IRolesError.UnsupportedOperator(condition.index);
     }
 
     function _matches(
@@ -183,29 +188,32 @@ library ConditionEvaluator {
         Consumption[] memory consumptions,
         Context memory context
     ) private view returns (Result memory result) {
-        uint256 shift = 32 - condition.compValue.length;
-        if (shift < 32) {
+        uint256 length = condition.compValue.length;
+        if (length > 0) {
             /*
              * Leading Bytes Validation
              *
-             * For AbiEncoded + Matches, compValue might contain N bytes that must
-             * match the first N bytes of calldata at location.
+             * AbiEncoded + Matches may carry an optional prefix (N <= 32,
+             * enforced by Integrity) that must match the first N bytes of
+             * calldata at location:
              *
-             * Integrity.sol validates N <= 32, so shift underflow is impossible.
+             *   data[location:location + length] == compValue
              *
-             * Comparison uses right-alignment in bytes32:
-             *   shift = 32 - N
-             *   expected: bytes32(compValue)  >> shift  (N bytes, right-aligned)
-             *   actual:   bytes32(data[loc:]) >> shift  (N bytes, right-aligned)
+             * The 2-byte count preceding the prefix in the stored payload is
+             * split out by the unpacker into the node's `leadingBytes`, so
+             * compValue is exactly the prefix.
              *
-             * If compValue is empty (shift == 32), validation is skipped.
+             * Both sides are compared on a 32-byte word basis: right-aligned
+             * in bytes32, shifting out the trailing 32 - N bytes (shift
+             * operands are bits, hence * 8). No slice is allocated.
              */
 
             // Check bounds before reading leading bytes
-            if (location + (32 - shift) > data.length) {
+            if (location + length > data.length) {
                 return _violation(Status.CalldataOverflow, location, condition);
             }
 
+            uint256 shift = (32 - length) * 8;
             bytes32 expected = bytes32(condition.compValue) >> shift;
             bytes32 actual = bytes32(data[location:]) >> shift;
 
