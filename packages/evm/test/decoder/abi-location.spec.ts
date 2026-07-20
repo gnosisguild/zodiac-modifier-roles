@@ -56,7 +56,7 @@ describe("AbiLocation", () => {
           ],
         }),
       );
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddress,
         fn.selector,
@@ -115,7 +115,7 @@ describe("AbiLocation", () => {
           ],
         }),
       );
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddress,
         fn.selector,
@@ -186,7 +186,7 @@ describe("AbiLocation", () => {
           ],
         }),
       );
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddress,
         fn.selector,
@@ -255,7 +255,7 @@ describe("AbiLocation", () => {
           ],
         }),
       );
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddress,
         fn.selector,
@@ -319,7 +319,7 @@ describe("AbiLocation", () => {
           ],
         }),
       );
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddress,
         fn.selector,
@@ -385,7 +385,7 @@ describe("AbiLocation", () => {
           ],
         }),
       );
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddress,
         fn.selector,
@@ -451,7 +451,7 @@ describe("AbiLocation", () => {
           ],
         }),
       );
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddress,
         fn.selector,
@@ -516,7 +516,7 @@ describe("AbiLocation", () => {
           ],
         }),
       );
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddress,
         fn.selector,
@@ -579,7 +579,7 @@ describe("AbiLocation", () => {
           ],
         }),
       );
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddress,
         fn.selector,
@@ -637,7 +637,7 @@ describe("AbiLocation", () => {
           ],
         }),
       );
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddress,
         fn.selector,
@@ -705,7 +705,7 @@ describe("AbiLocation", () => {
           ],
         }),
       );
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddress,
         fn.selector,
@@ -776,7 +776,7 @@ describe("AbiLocation", () => {
           ],
         }),
       );
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddress,
         fn.selector,
@@ -846,7 +846,7 @@ describe("AbiLocation", () => {
           ],
         }),
       );
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddress,
         fn.selector,
@@ -915,7 +915,7 @@ describe("AbiLocation", () => {
           ],
         }),
       );
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddress,
         fn.selector,
@@ -980,7 +980,7 @@ describe("AbiLocation", () => {
           ],
         }),
       );
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddress,
         fn.selector,
@@ -1044,7 +1044,7 @@ describe("AbiLocation", () => {
           ],
         }),
       );
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddress,
         fn.selector,
@@ -1159,7 +1159,7 @@ describe("AbiLocation", () => {
           ],
         }),
       );
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddress,
         fn.selector,
@@ -1218,7 +1218,7 @@ describe("AbiLocation", () => {
           ],
         }),
       );
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddress,
         fn.selector,
@@ -1276,7 +1276,7 @@ describe("AbiLocation", () => {
           ],
         }),
       );
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddress,
         fn.selector,
@@ -1339,7 +1339,7 @@ describe("AbiLocation", () => {
           ],
         }),
       );
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddress,
         fn.selector,
@@ -1536,7 +1536,7 @@ describe("AbiLocation", () => {
           ],
         }),
       );
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddress,
         fn.selector,
@@ -1600,7 +1600,7 @@ describe("AbiLocation", () => {
           ],
         }),
       );
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddress,
         fn.selector,
@@ -1668,7 +1668,7 @@ describe("AbiLocation", () => {
           ],
         }),
       );
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddress,
         fn.selector,

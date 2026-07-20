@@ -2086,7 +2086,7 @@ describe("Operator - WithinAllowance", async () => {
           compValue: "0x",
         },
       ]);
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         await testContract.getAddress(),
         selector,

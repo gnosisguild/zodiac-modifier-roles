@@ -134,7 +134,7 @@ describe("onlyOwner", () => {
         await expect(
           roles
             .connect(owner)
-            .allowTarget(ROLE_KEY, TARGET, "0x", ExecutionOptions.None),
+            .allowTargetPacked(ROLE_KEY, TARGET, "0x", ExecutionOptions.None),
         ).to.not.be.revert(ethers);
       });
 
@@ -144,7 +144,7 @@ describe("onlyOwner", () => {
         await expect(
           roles
             .connect(nonOwner)
-            .allowTarget(ROLE_KEY, TARGET, "0x", ExecutionOptions.None),
+            .allowTargetPacked(ROLE_KEY, TARGET, "0x", ExecutionOptions.None),
         ).to.be.revertedWithCustomError(roles, "OwnableUnauthorizedAccount");
       });
     });
@@ -195,7 +195,7 @@ describe("onlyOwner", () => {
         await expect(
           roles
             .connect(owner)
-            .allowFunction(
+            .allowFunctionPacked(
               ROLE_KEY,
               TARGET,
               SELECTOR,
@@ -212,7 +212,7 @@ describe("onlyOwner", () => {
         await expect(
           roles
             .connect(nonOwner)
-            .allowFunction(
+            .allowFunctionPacked(
               ROLE_KEY,
               TARGET,
               SELECTOR,

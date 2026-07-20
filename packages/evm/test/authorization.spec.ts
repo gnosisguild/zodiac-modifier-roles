@@ -101,7 +101,7 @@ describe("Authorization", () => {
 
         await roles.grantRole(member.address, roleKey, 0, 0, 0);
         await roles.setDefaultRole(member.address, roleKey);
-        await roles.allowTarget(
+        await roles.allowTargetPacked(
           roleKey,
           testContractAddress,
           "0x",
@@ -160,7 +160,7 @@ describe("Authorization", () => {
             ),
           },
         ]);
-        await roles.allowTarget(
+        await roles.allowTargetPacked(
           roleKey,
           testContractAddress,
           conditionsEq100,
@@ -239,7 +239,7 @@ describe("Authorization", () => {
 
         const doNothingSelector = iface.getFunction("doNothing")!.selector;
 
-        await roles.allowFunction(
+        await roles.allowFunctionPacked(
           roleKey,
           testContractAddress,
           doNothingSelector,
@@ -272,7 +272,7 @@ describe("Authorization", () => {
 
         const doNothingSelector = iface.getFunction("doNothing")!.selector;
 
-        await roles.allowFunction(
+        await roles.allowFunctionPacked(
           roleKey,
           testContractAddress,
           doNothingSelector,
@@ -340,7 +340,7 @@ describe("Authorization", () => {
             ),
           },
         ]);
-        await roles.allowFunction(
+        await roles.allowFunctionPacked(
           roleKey,
           testContractAddress,
           selector,
@@ -389,7 +389,7 @@ describe("Authorization", () => {
         await roles.setDefaultRole(member.address, roleKey);
 
         // First allow entire target
-        await roles.allowTarget(
+        await roles.allowTargetPacked(
           roleKey,
           testContractAddress,
           "0x",
@@ -426,7 +426,7 @@ describe("Authorization", () => {
 
         // Only allow doNothing
         const doNothingSelector = iface.getFunction("doNothing")!.selector;
-        await roles.allowFunction(
+        await roles.allowFunctionPacked(
           roleKey,
           testContractAddress,
           doNothingSelector,
@@ -471,7 +471,7 @@ describe("Authorization", () => {
         // First scope target and only allow doNothing
         await roles.scopeTarget(roleKey, testContractAddress);
         const doNothingSelector = iface.getFunction("doNothing")!.selector;
-        await roles.allowFunction(
+        await roles.allowFunctionPacked(
           roleKey,
           testContractAddress,
           doNothingSelector,
@@ -492,7 +492,7 @@ describe("Authorization", () => {
         ).to.be.revertedWithCustomError(roles, "TransactionNotAllowed");
 
         // Now allow entire target (loosens)
-        await roles.allowTarget(
+        await roles.allowTargetPacked(
           roleKey,
           testContractAddress,
           "0x",
@@ -522,7 +522,7 @@ describe("Authorization", () => {
         // Scope target and allow doNothing
         await roles.scopeTarget(roleKey, testContractAddress);
         const doNothingSelector = iface.getFunction("doNothing")!.selector;
-        await roles.allowFunction(
+        await roles.allowFunctionPacked(
           roleKey,
           testContractAddress,
           doNothingSelector,
@@ -573,7 +573,7 @@ describe("Authorization", () => {
 
       await roles.grantRole(member.address, roleKey, 0, 0, 0);
       await roles.setDefaultRole(member.address, roleKey);
-      await roles.allowTarget(
+      await roles.allowTargetPacked(
         roleKey,
         testContractAddress,
         "0x",
@@ -594,7 +594,7 @@ describe("Authorization", () => {
 
       await roles.grantRole(member.address, roleKey, 0, 0, 0);
       await roles.setDefaultRole(member.address, roleKey);
-      await roles.allowTarget(
+      await roles.allowTargetPacked(
         roleKey,
         testContractAddress,
         "0x",
@@ -637,7 +637,7 @@ describe("Authorization", () => {
 
           await roles.grantRole(member.address, roleKey, 0, 0, 0);
           await roles.setDefaultRole(member.address, roleKey);
-          await roles.allowTarget(
+          await roles.allowTargetPacked(
             roleKey,
             testContractAddress,
             "0x",
@@ -677,7 +677,7 @@ describe("Authorization", () => {
 
           await roles.grantRole(member.address, roleKey, 0, 0, 0);
           await roles.setDefaultRole(member.address, roleKey);
-          await roles.allowTarget(
+          await roles.allowTargetPacked(
             roleKey,
             testContractAddress,
             "0x",
@@ -711,7 +711,7 @@ describe("Authorization", () => {
 
           await roles.grantRole(member.address, roleKey, 0, 0, 0);
           await roles.setDefaultRole(member.address, roleKey);
-          await roles.allowTarget(
+          await roles.allowTargetPacked(
             roleKey,
             testContractAddress,
             "0x",
@@ -733,7 +733,7 @@ describe("Authorization", () => {
 
           await roles.grantRole(member.address, roleKey, 0, 0, 0);
           await roles.setDefaultRole(member.address, roleKey);
-          await roles.allowTarget(
+          await roles.allowTargetPacked(
             roleKey,
             testContractAddress,
             "0x",
@@ -754,7 +754,7 @@ describe("Authorization", () => {
 
           await roles.grantRole(member.address, roleKey, 0, 0, 0);
           await roles.setDefaultRole(member.address, roleKey);
-          await roles.allowTarget(
+          await roles.allowTargetPacked(
             roleKey,
             testContractAddress,
             "0x",
@@ -783,7 +783,7 @@ describe("Authorization", () => {
 
           await roles.grantRole(member.address, roleKey, 0, 0, 0);
           await roles.setDefaultRole(member.address, roleKey);
-          await roles.allowTarget(
+          await roles.allowTargetPacked(
             roleKey,
             testContractAddress,
             "0x",
@@ -830,7 +830,7 @@ describe("Authorization", () => {
           await roles.scopeTarget(roleKey, testContractAddress);
 
           const selector = iface.getFunction("doNothing")!.selector;
-          await roles.allowFunction(
+          await roles.allowFunctionPacked(
             roleKey,
             testContractAddress,
             selector,
@@ -874,7 +874,7 @@ describe("Authorization", () => {
           await roles.scopeTarget(roleKey, testContractAddress);
 
           const selector = iface.getFunction("doNothing")!.selector;
-          await roles.allowFunction(
+          await roles.allowFunctionPacked(
             roleKey,
             testContractAddress,
             selector,
@@ -912,7 +912,7 @@ describe("Authorization", () => {
           await roles.scopeTarget(roleKey, testContractAddress);
 
           const selector = iface.getFunction("doNothing")!.selector;
-          await roles.allowFunction(
+          await roles.allowFunctionPacked(
             roleKey,
             testContractAddress,
             selector,
@@ -943,7 +943,7 @@ describe("Authorization", () => {
           await roles.scopeTarget(roleKey, testContractAddress);
 
           const selector = iface.getFunction("doNothing")!.selector;
-          await roles.allowFunction(
+          await roles.allowFunctionPacked(
             roleKey,
             testContractAddress,
             selector,
@@ -973,7 +973,7 @@ describe("Authorization", () => {
           await roles.scopeTarget(roleKey, testContractAddress);
 
           const selector = iface.getFunction("doNothing")!.selector;
-          await roles.allowFunction(
+          await roles.allowFunctionPacked(
             roleKey,
             testContractAddress,
             selector,
@@ -1011,7 +1011,7 @@ describe("Authorization", () => {
           await roles.scopeTarget(roleKey, testContractAddress);
 
           const selector = iface.getFunction("doNothing")!.selector;
-          await roles.allowFunction(
+          await roles.allowFunctionPacked(
             roleKey,
             testContractAddress,
             selector,
@@ -1079,7 +1079,7 @@ describe("Authorization", () => {
       await roles.setDefaultRole(member.address, roleKey);
 
       // Allow the inner target
-      await roles.allowTarget(
+      await roles.allowTargetPacked(
         roleKey,
         testContractAddress,
         "0x",
@@ -1185,7 +1185,7 @@ describe("Authorization", () => {
       await roles.setDefaultRole(member.address, roleKey);
 
       // Only allow the first target
-      await roles.allowTarget(
+      await roles.allowTargetPacked(
         roleKey,
         testContractAddress,
         "0x",
@@ -1241,7 +1241,7 @@ describe("Authorization", () => {
 
       await roles.grantRole(member.address, roleKey, 0, 0, 0);
       await roles.setDefaultRole(member.address, roleKey);
-      await roles.allowTarget(
+      await roles.allowTargetPacked(
         roleKey,
         testContractAddress,
         "0x",
@@ -1289,7 +1289,7 @@ describe("Authorization", () => {
           compValue: ALLOWANCE_KEY,
         },
       ]);
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddress,
         selector,
@@ -1354,7 +1354,7 @@ describe("Authorization", () => {
           compValue: ALLOWANCE_KEY,
         },
       ]);
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddress,
         selector,
@@ -1452,7 +1452,7 @@ describe("Authorization", () => {
 
       const selector = iface.getFunction("doNothing")!.selector;
 
-      await expect(roles.allowFunctionGlobally(roleKey, selector, "0x"))
+      await expect(roles.allowFunctionGloballyPacked(roleKey, selector, "0x"))
         .to.emit(roles, "AllowFunctionGlobally")
         .withArgs(roleKey, selector, "0x");
     });
@@ -1469,7 +1469,7 @@ describe("Authorization", () => {
       } = await loadFixture(setupEverywhere);
 
       const selector = iface.getFunction("doNothing")!.selector;
-      await roles.allowFunctionGlobally(roleKey, selector, "0x");
+      await roles.allowFunctionGloballyPacked(roleKey, selector, "0x");
 
       await expect(
         roles
@@ -1503,7 +1503,7 @@ describe("Authorization", () => {
         await loadFixture(setupEverywhere);
 
       const selector = iface.getFunction("doNothing")!.selector;
-      await roles.allowFunctionGlobally(roleKey, selector, "0x");
+      await roles.allowFunctionGloballyPacked(roleKey, selector, "0x");
 
       await expect(
         roles.connect(member).execTransactionFromModule(
@@ -1536,7 +1536,7 @@ describe("Authorization", () => {
         await loadFixture(setupEverywhere);
 
       const selector = iface.getFunction("doNothing")!.selector;
-      await roles.allowFunctionGlobally(roleKey, selector, "0x");
+      await roles.allowFunctionGloballyPacked(roleKey, selector, "0x");
 
       await expect(
         roles.connect(member).execTransactionFromModule(
@@ -1572,7 +1572,7 @@ describe("Authorization", () => {
 
       // Target-specific: param must equal 42
       await roles.scopeTarget(roleKey, testContractAddressA);
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddressA,
         selector,
@@ -1597,7 +1597,7 @@ describe("Authorization", () => {
       );
 
       // Global: no conditions
-      await roles.allowFunctionGlobally(roleKey, selector, "0x");
+      await roles.allowFunctionGloballyPacked(roleKey, selector, "0x");
 
       // param = 42 passes via target rule (first hit)
       await expect(
@@ -1633,7 +1633,7 @@ describe("Authorization", () => {
 
       // Scope target with only doNothing
       await roles.scopeTarget(roleKey, testContractAddressA);
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddressA,
         doNothingSelector,
@@ -1642,7 +1642,7 @@ describe("Authorization", () => {
       );
 
       // Global for oneParamStatic
-      await roles.allowFunctionGlobally(roleKey, oneParamSelector, "0x");
+      await roles.allowFunctionGloballyPacked(roleKey, oneParamSelector, "0x");
 
       await expect(
         roles
@@ -1664,7 +1664,7 @@ describe("Authorization", () => {
 
       const selector = iface.getFunction("oneParamStatic")!.selector;
 
-      await roles.allowFunctionGlobally(
+      await roles.allowFunctionGloballyPacked(
         roleKey,
         selector,
         await packConditions(roles, [
@@ -1724,14 +1724,14 @@ describe("Authorization", () => {
       const selector = iface.getFunction("doNothing")!.selector;
 
       await roles.scopeTarget(roleKey, testContractAddressA);
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddressA,
         selector,
         "0x",
         ExecutionOptions.None,
       );
-      await roles.allowFunctionGlobally(roleKey, selector, "0x");
+      await roles.allowFunctionGloballyPacked(roleKey, selector, "0x");
 
       await roles.revokeFunction(roleKey, testContractAddressA, selector);
 
@@ -1775,14 +1775,14 @@ describe("Authorization", () => {
       const selector = iface.getFunction("doNothing")!.selector;
 
       await roles.scopeTarget(roleKey, testContractAddressA);
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddressA,
         selector,
         "0x",
         ExecutionOptions.None,
       );
-      await roles.allowFunctionGlobally(roleKey, selector, "0x");
+      await roles.allowFunctionGloballyPacked(roleKey, selector, "0x");
 
       await roles.revokeFunctionGlobally(roleKey, selector);
 
@@ -1820,7 +1820,7 @@ describe("Authorization", () => {
       const selector = iface.getFunction("doNothing")!.selector;
 
       await expect(
-        roles.allowFunction(
+        roles.allowFunctionPacked(
           roleKey,
           ZeroAddress,
           selector,
@@ -1843,7 +1843,12 @@ describe("Authorization", () => {
       const { roles, roleKey } = await loadFixture(setup);
 
       await expect(
-        roles.allowTarget(roleKey, ZeroAddress, "0x", ExecutionOptions.None),
+        roles.allowTargetPacked(
+          roleKey,
+          ZeroAddress,
+          "0x",
+          ExecutionOptions.None,
+        ),
       ).to.be.revertedWithCustomError(roles, "ZeroAddressNotAllowed");
     });
 

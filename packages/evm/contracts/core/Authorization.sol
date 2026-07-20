@@ -99,9 +99,9 @@ abstract contract Authorization is RolesStorage {
         Clearance clearance = role.clearance[transaction.to];
 
         /*
-         * Lookup 1 of 2: target-specific entry.
-         * Target rules take precedence over global rules, so this is consulted
-         * first.
+         * Lookup 1 of 2: destination-specific entry.
+         * Destination rules take precedence over global rules, so this is
+         * consulted first.
          *
          * Clearance.None falls through: only a global entry can authorize.
          */

@@ -1621,7 +1621,7 @@ describe("Operator - WithinRatio", () => {
           ],
         }),
       );
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddress,
         fn.selector,
@@ -1697,7 +1697,7 @@ describe("Operator - WithinRatio", () => {
           ],
         }),
       );
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddress,
         fn.selector,
@@ -1785,7 +1785,7 @@ describe("Operator - WithinRatio", () => {
           ],
         }),
       );
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddress,
         fn.selector,
@@ -1870,7 +1870,7 @@ describe("Operator - WithinRatio", () => {
           ],
         }),
       );
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddress,
         fn.selector,
@@ -1945,7 +1945,7 @@ describe("Operator - WithinRatio", () => {
           ],
         }),
       );
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddress,
         fn.selector,
@@ -2050,7 +2050,7 @@ describe("Operator - WithinRatio", () => {
           ],
         }),
       );
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddress,
         fn.selector,
@@ -2128,7 +2128,7 @@ describe("Operator - WithinRatio", () => {
           ],
         }),
       );
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddress,
         fn.selector,

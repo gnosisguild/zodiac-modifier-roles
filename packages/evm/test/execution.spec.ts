@@ -94,7 +94,7 @@ describe("Execution Mechanics", () => {
         compValue: "0x",
       },
     ]);
-    await roles.allowFunction(
+    await roles.allowFunctionPacked(
       ROLE_KEY,
       testContractAddress,
       iface.getFunction("fnThatMaybeReverts")!.selector,
@@ -551,7 +551,7 @@ describe("Execution Mechanics", () => {
         await loadFixture(signedSetup);
       const otherRoleKey = ethers.id("OTHER_ROLE");
       await roles.grantRole(invoker.address, otherRoleKey, 0, 0, 0);
-      await roles.allowTarget(
+      await roles.allowTargetPacked(
         otherRoleKey,
         testContractAddress,
         "0x",

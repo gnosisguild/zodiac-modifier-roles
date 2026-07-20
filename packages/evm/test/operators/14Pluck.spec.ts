@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { network } from "hardhat";
 
 import { createSetup } from "../setup.js";
-import { Encoding, Operator, packConditions } from "../utils.js";
+import { Encoding, Operator } from "../utils.js";
 
 const connection = await network.create();
 const { networkHelpers } = connection;
@@ -16,7 +16,7 @@ describe("Operator - Pluck", () => {
 
   describe("integrity", () => {
     it("reverts UnsuitableParameterType for invalid encodings", async () => {
-      const { roles } = await loadFixture(setupTestContract);
+      const { roles, allowTarget } = await loadFixture(setupTestContract);
 
       // Note: Array is now allowed for Pluck (used by Zip operators)
 
@@ -27,7 +27,7 @@ describe("Operator - Pluck", () => {
         Encoding.AbiEncoded,
       ]) {
         await expect(
-          packConditions(roles, [
+          allowTarget([
             {
               parent: 0,
               paramType: encoding,
@@ -43,10 +43,10 @@ describe("Operator - Pluck", () => {
 
     describe("compValue", () => {
       it("reverts UnsuitableCompValue when compValue is not 1 byte", async () => {
-        const { roles } = await loadFixture(setupTestContract);
+        const { roles, allowTarget } = await loadFixture(setupTestContract);
 
         await expect(
-          packConditions(roles, [
+          allowTarget([
             {
               parent: 0,
               paramType: Encoding.Static,
@@ -58,10 +58,10 @@ describe("Operator - Pluck", () => {
       });
 
       it("reverts UnsuitableCompValue when index is 255 (reserved)", async () => {
-        const { roles } = await loadFixture(setupTestContract);
+        const { roles, allowTarget } = await loadFixture(setupTestContract);
 
         await expect(
-          packConditions(roles, [
+          allowTarget([
             {
               parent: 0,
               paramType: Encoding.Static,
@@ -74,10 +74,10 @@ describe("Operator - Pluck", () => {
     });
 
     it("reverts LeafNodeCannotHaveChildren when Pluck has children", async () => {
-      const { roles } = await loadFixture(setupTestContract);
+      const { roles, allowTarget } = await loadFixture(setupTestContract);
 
       await expect(
-        packConditions(roles, [
+        allowTarget([
           {
             parent: 0,
             paramType: Encoding.Static,
@@ -92,6 +92,37 @@ describe("Operator - Pluck", () => {
           },
         ]),
       ).to.be.revertedWithCustomError(roles, "LeafNodeCannotHaveChildren");
+    });
+
+    it("reverts UnsuitableChildCount when Pluck(Array) has a non-structural child", async () => {
+      const { roles, allowTarget } = await loadFixture(setupTestContract);
+
+      // The evaluator reads raw children[0] as the array element template,
+      // so a non-structural child (invisible to TypeTree) must be rejected.
+      await expect(
+        allowTarget([
+          {
+            parent: 0,
+            paramType: Encoding.Array,
+            operator: Operator.Pluck,
+            compValue: "0x00",
+          },
+          {
+            parent: 0,
+            paramType: Encoding.None,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+          {
+            parent: 0,
+            paramType: Encoding.Static,
+            operator: Operator.Pass,
+            compValue: "0x",
+          },
+        ]),
+      )
+        .to.be.revertedWithCustomError(roles, "UnsuitableChildCount")
+        .withArgs(0);
     });
   });
 });

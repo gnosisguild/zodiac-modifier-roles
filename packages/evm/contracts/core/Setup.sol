@@ -19,31 +19,53 @@ import {Clearance} from "../types/Permission.sol";
  *  │
  *  ├─ targets (address → Clearance)
  *  │   │
- *  │   ├─ Clearance.None ────────────► target blocked (default)
+ *  │   ├─ Clearance.None ────────────► no target rule (default) - only a
+ *  │   │                               global entry can authorize
  *  │   │
  *  │   ├─ Clearance.Target ──────────► all functions allowed, subject to
- *  │   │                               ExecutionOptions and the target-level
- *  │   │                               scopeConfig entry (wildcard selector)
+ *  │   │                               the target entry below (wildcard)
  *  │   │
- *  │   └─ Clearance.Function ────────► only specific functions allowed
- *  │                                   (see scopeConfig below)
+ *  │   └─ Clearance.Function ────────► only functions with a function
+ *  │                                   entry below are allowed
  *  │
- *  └─ scopeConfig (target + selector → ScopeConfig)
+ *  └─ scopeConfig (key → ExecutionOptions + condition tree)
  *      │
- *      │   Used for Clearance.Function (selector == calldata selector)
- *      │   and for Clearance.Target via the wildcard selector.
+ *      │   Key: [20 bytes: address][8 bytes][4 bytes]
+ *      │   ├─ Function entry: address  | 0x00..00 | selector  one selector on one address
+ *      │   ├─ Target entry:   address  |        0xFF..FF      any calldata on one address
+ *      │   └─ Global entry:   0x00..00 | 0x00..00 | selector  one selector on any address
  *      │
- *      ├─ not set ───────────────────► blocked (target/function not allowed)
+ *      ├─ no matching entry ─────────► blocked (TransactionNotAllowed)
  *      │
- *      └─ set ───────────────────────► allowed with conditions
- *                                      + ExecutionOptions
- *                                      + Condition tree
+ *      └─ matching entry ────────────► allowed, subject to ExecutionOptions
+ *                                      (send/delegatecall flags) and the
+ *                                      condition tree
+ *
+ * Resolution: the destination-specific entry (function or target, per
+ * Clearance) is consulted first - destination rules take precedence over
+ * global rules. If no destination-specific entry matches, the global entry
+ * applies. A global entry keys on the selector, so calls with empty calldata
+ * never resolve globally.
  *
  * Allowances (separate storage, referenced by conditions)
  */
 
 /**
  * @title Setup - Configuration and setup functions for Zodiac Roles Mod.
+ *
+ * @dev Permission setters come in two flavors:
+ *
+ *      - Validated (allowTarget, allowFunction, allowFunctionGlobally):
+ *        take a ConditionFlat[] tree, then validate (Integrity) and pack it
+ *        on-chain. Costs more setup gas, but the stored buffer is guaranteed
+ *        well-formed.
+ *      - Packed (allowTargetPacked, allowFunctionPacked,
+ *        allowFunctionGloballyPacked): take a pre-packed condition buffer
+ *        and store it as-is, skipping on-chain validation. An escape hatch
+ *        for large condition trees, where packing on-chain can be costly.
+ *
+ *      To produce a buffer, call the read-only packConditions() off-chain
+ *      (eth_call): validation runs offchain, only the storage write is paid.
  *
  * @author  gnosisguild
  */
@@ -147,17 +169,47 @@ abstract contract Setup is RolesStorage {
                          TARGET PERMISSIONS
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Allows transactions to a target address, optionally with conditions.
+    /// @dev Allows transactions to a target address, restricted by a
+    ///      target-wide condition: the same condition tree governs every
+    ///      call to the target, regardless of selector.
+    ///
+    ///      Sets Clearance.Target.
+    ///
+    ///      Conditions are validated and packed on-chain; use
+    ///      allowTargetPacked() for a pre-packed buffer.
     /// @param roleKey identifier of the role to be modified.
     /// @param targetAddress Destination address of transaction.
-    /// @param packedConditions Pre-packed condition buffer (use packConditions() or empty bytes for pass-through).
+    /// @param conditions Condition tree in flat BFS order. Empty array means
+    ///        no payload restrictions (pass-through).
     /// @param options designates if a transaction can send ether and/or delegatecall to target.
     function allowTarget(
         bytes32 roleKey,
         address targetAddress,
+        ConditionFlat[] memory conditions,
+        ExecutionOptions options
+    ) external {
+        allowTargetPacked(
+            roleKey,
+            targetAddress,
+            packConditions(conditions),
+            options
+        );
+    }
+
+    /// @dev Allows transactions to a target address using a pre-packed
+    ///      condition buffer. Same effect as allowTarget(), but skips
+    ///      on-chain validation - see the contract-level note for the tradeoff.
+    /// @param roleKey identifier of the role to be modified.
+    /// @param targetAddress Destination address of transaction.
+    /// @param packedConditions Pre-packed condition buffer. Empty bytes means
+    ///        no payload restrictions (a single Pass condition is stored).
+    /// @param options designates if a transaction can send ether and/or delegatecall to target.
+    function allowTargetPacked(
+        bytes32 roleKey,
+        address targetAddress,
         bytes memory packedConditions,
         ExecutionOptions options
-    ) external onlyOwner {
+    ) public onlyOwner {
         _requireNonZeroAddress(targetAddress);
         bytes32 key = bytes32(bytes20(targetAddress)) | (~bytes32(0) >> 160);
 
@@ -182,7 +234,8 @@ abstract contract Setup is RolesStorage {
         emit ScopeTarget(roleKey, targetAddress);
     }
 
-    /// @dev Removes transactions to a target address.
+    /// @dev Removes the target-level rule: resets Clearance to None, so only
+    ///      a global entry can still authorize calls to this target.
     /// @param roleKey identifier of the role to be modified.
     /// @param targetAddress Destination address of transaction.
     function revokeTarget(
@@ -198,19 +251,49 @@ abstract contract Setup is RolesStorage {
                         FUNCTION PERMISSIONS
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Specifies the functions that can be called, optionally with conditions.
+    /// @dev Allows a single function on a target address, restricted by
+    ///      validated conditions. Writes a function entry, which takes effect
+    ///      only while the target is scoped (Clearance.Function, see
+    ///      scopeTarget). Conditions are validated and packed on-chain; use
+    ///      allowFunctionPacked() for a pre-packed buffer.
     /// @param roleKey identifier of the role to be modified.
     /// @param targetAddress Destination address of transaction.
     /// @param selector 4 byte function selector.
-    /// @param packedConditions Pre-packed condition buffer (use packConditions() or empty bytes for pass-through).
+    /// @param conditions Condition tree in flat BFS order. Empty array means
+    ///        no payload restrictions (pass-through).
     /// @param options designates if a transaction can send ether and/or delegatecall to target.
     function allowFunction(
         bytes32 roleKey,
         address targetAddress,
         bytes4 selector,
+        ConditionFlat[] memory conditions,
+        ExecutionOptions options
+    ) external {
+        allowFunctionPacked(
+            roleKey,
+            targetAddress,
+            selector,
+            packConditions(conditions),
+            options
+        );
+    }
+
+    /// @dev Allows a single function on a target address using pre-packed
+    ///      conditions. Same effect as allowFunction(), but skips on-chain
+    ///      validation - see the contract-level note for the tradeoff.
+    /// @param roleKey identifier of the role to be modified.
+    /// @param targetAddress Destination address of transaction.
+    /// @param selector 4 byte function selector.
+    /// @param packedConditions Pre-packed condition buffer. Empty bytes means
+    ///        no payload restrictions (a single Pass condition is stored).
+    /// @param options designates if a transaction can send ether and/or delegatecall to target.
+    function allowFunctionPacked(
+        bytes32 roleKey,
+        address targetAddress,
+        bytes4 selector,
         bytes memory packedConditions,
         ExecutionOptions options
-    ) external onlyOwner {
+    ) public onlyOwner {
         _requireNonZeroAddress(targetAddress);
         roles[roleKey].scopeConfig[
             _key(targetAddress, selector)
@@ -225,17 +308,41 @@ abstract contract Setup is RolesStorage {
         );
     }
 
-    /// @dev Allows a function selector on all targets.
-    ///      Always enforces no send and no delegatecall.
-    ///      Target-specific rules take precedence.
+    /// @dev Allows a function selector on all targets, restricted by validated
+    ///      conditions. Always enforces no send and no delegatecall
+    ///      (ExecutionOptions.None). Consulted only when no destination-
+    ///      specific entry matches, and only for calls carrying a selector - calls with
+    ///      empty calldata never resolve via a global entry. Conditions are
+    ///      validated and packed on-chain; use allowFunctionGloballyPacked()
+    ///      for a pre-packed buffer.
     /// @param roleKey identifier of the role to be modified.
     /// @param selector 4 byte function selector.
-    /// @param packedConditions Pre-packed condition buffer (use packConditions() or empty bytes for pass-through).
+    /// @param conditions Condition tree in flat BFS order. Empty array means
+    ///        no payload restrictions (pass-through).
     function allowFunctionGlobally(
         bytes32 roleKey,
         bytes4 selector,
+        ConditionFlat[] memory conditions
+    ) external {
+        allowFunctionGloballyPacked(
+            roleKey,
+            selector,
+            packConditions(conditions)
+        );
+    }
+
+    /// @dev Allows a function selector on all targets using pre-packed
+    ///      conditions. Same effect as allowFunctionGlobally(), but skips
+    ///      on-chain validation - see the contract-level note for the tradeoff.
+    /// @param roleKey identifier of the role to be modified.
+    /// @param selector 4 byte function selector.
+    /// @param packedConditions Pre-packed condition buffer. Empty bytes means
+    ///        no payload restrictions (a single Pass condition is stored).
+    function allowFunctionGloballyPacked(
+        bytes32 roleKey,
+        bytes4 selector,
         bytes memory packedConditions
-    ) external onlyOwner {
+    ) public onlyOwner {
         roles[roleKey].scopeConfig[_key(address(0), selector)] = ConditionStorer
             .store(_conditionsOrPass(packedConditions), ExecutionOptions.None);
 
@@ -341,12 +448,15 @@ abstract contract Setup is RolesStorage {
                                HELPERS
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Packs conditions into a buffer for allowTarget/allowFunction.
-    /// @param conditions The conditions to pack.
+    /// @dev Read-only entrypoint for packing conditions: permission authors
+    ///      can eth_call this to validate and pack, then pass the buffer to
+    ///      a *Packed setter. An empty array packs to empty bytes - no
+    ///      payload restrictions (pass-through).
+    /// @param conditions The conditions to pack, in flat BFS order.
     /// @return buffer The packed condition buffer.
     function packConditions(
         ConditionFlat[] memory conditions
-    ) external pure returns (bytes memory buffer) {
+    ) public pure returns (bytes memory buffer) {
         if (conditions.length > 0) {
             buffer = ConditionStorer.pack(conditions);
         }

@@ -84,7 +84,7 @@ describe("Setup", () => {
 
       await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
       await roles.setDefaultRole(member.address, ROLE_KEY);
-      await roles.allowTarget(
+      await roles.allowTargetPacked(
         ROLE_KEY,
         testContractAddress,
         "0x",
@@ -187,7 +187,7 @@ describe("Setup", () => {
 
       await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
       await roles.setDefaultRole(member.address, ROLE_KEY);
-      await roles.allowTarget(
+      await roles.allowTargetPacked(
         ROLE_KEY,
         testContractAddress,
         "0x",
@@ -247,7 +247,7 @@ describe("Setup", () => {
 
       await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
       await roles.setDefaultRole(member.address, ROLE_KEY);
-      await roles.allowTarget(
+      await roles.allowTargetPacked(
         ROLE_KEY,
         testContractAddress,
         "0x",
@@ -397,7 +397,7 @@ describe("Setup", () => {
           .execTransactionFromModule(testContractAddress, 0, "0x", 0),
       ).to.be.revertedWithCustomError(roles, "TransactionNotAllowed");
 
-      await roles.allowTarget(
+      await roles.allowTargetPacked(
         ROLE_KEY,
         testContractAddress,
         "0x",
@@ -432,7 +432,7 @@ describe("Setup", () => {
       const { roles, ROLE_KEY, testContractAddress } = await loadFixture(setup);
 
       await expect(
-        roles.allowTarget(
+        roles.allowTargetPacked(
           ROLE_KEY,
           testContractAddress,
           "0x",
@@ -451,7 +451,7 @@ describe("Setup", () => {
       await roles.setDefaultRole(member.address, ROLE_KEY);
 
       // Allow target with no conditions
-      await roles.allowTarget(
+      await roles.allowTargetPacked(
         ROLE_KEY,
         testContractAddress,
         "0x",
@@ -488,7 +488,7 @@ describe("Setup", () => {
           ),
         },
       ]);
-      await roles.allowTarget(
+      await roles.allowTargetPacked(
         ROLE_KEY,
         testContractAddress,
         conditionsEq42,
@@ -559,7 +559,7 @@ describe("Setup", () => {
 
       await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
       await roles.setDefaultRole(member.address, ROLE_KEY);
-      await roles.allowTarget(
+      await roles.allowTargetPacked(
         ROLE_KEY,
         testContractAddress,
         "0x",
@@ -585,7 +585,7 @@ describe("Setup", () => {
     it("emits RevokeTarget event", async () => {
       const { roles, ROLE_KEY, testContractAddress } = await loadFixture(setup);
 
-      await roles.allowTarget(
+      await roles.allowTargetPacked(
         ROLE_KEY,
         testContractAddress,
         "0x",
@@ -606,7 +606,7 @@ describe("Setup", () => {
       await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
       await roles.setDefaultRole(member.address, ROLE_KEY);
       await roles.scopeTarget(ROLE_KEY, testContractAddress);
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         ROLE_KEY,
         testContractAddress,
         selector,
@@ -668,7 +668,7 @@ describe("Setup", () => {
       await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
       await roles.setDefaultRole(member.address, ROLE_KEY);
       await roles.scopeTarget(ROLE_KEY, testContractAddress);
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         ROLE_KEY,
         testContractAddress,
         selector,
@@ -719,7 +719,7 @@ describe("Setup", () => {
           ),
         },
       ]);
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         ROLE_KEY,
         testContractAddress,
         selector,
@@ -774,7 +774,7 @@ describe("Setup", () => {
       const selector = iface.getFunction("doNothing")!.selector;
 
       await expect(
-        roles.allowFunction(
+        roles.allowFunctionPacked(
           ROLE_KEY,
           testContractAddress,
           selector,
@@ -817,7 +817,7 @@ describe("Setup", () => {
           compValue: ethers.AbiCoder.defaultAbiCoder().encode(["uint256"], [1]),
         },
       ]);
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         ROLE_KEY,
         testContractAddress,
         selector,
@@ -852,7 +852,7 @@ describe("Setup", () => {
           compValue: ethers.AbiCoder.defaultAbiCoder().encode(["uint256"], [2]),
         },
       ]);
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         ROLE_KEY,
         testContractAddress,
         selector,
@@ -884,7 +884,7 @@ describe("Setup", () => {
       await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
       await roles.setDefaultRole(member.address, ROLE_KEY);
       await roles.scopeTarget(ROLE_KEY, testContractAddress);
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         ROLE_KEY,
         testContractAddress,
         selector,
@@ -924,7 +924,7 @@ describe("Setup", () => {
 
       const selector = iface.getFunction("doNothing")!.selector;
 
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         ROLE_KEY,
         testContractAddress,
         selector,
@@ -949,14 +949,14 @@ describe("Setup", () => {
       await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
       await roles.setDefaultRole(member.address, ROLE_KEY);
       await roles.scopeTarget(ROLE_KEY, testContractAddress);
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         ROLE_KEY,
         testContractAddress,
         selector1,
         "0x",
         ExecutionOptions.None,
       );
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         ROLE_KEY,
         testContractAddress,
         selector2,
@@ -1267,7 +1267,7 @@ describe("Setup", () => {
 
       await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
       await roles.setDefaultRole(member.address, ROLE_KEY);
-      await roles.allowTarget(
+      await roles.allowTargetPacked(
         ROLE_KEY,
         testContractAddress,
         "0x",
@@ -1299,7 +1299,7 @@ describe("Setup", () => {
       await roles.grantRole(member.address, ROLE_KEY, 0, 0, 0);
       await roles.setDefaultRole(member.address, ROLE_KEY);
       await roles.scopeTarget(ROLE_KEY, testContractAddress);
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         ROLE_KEY,
         testContractAddress,
         selector1,
@@ -1348,7 +1348,7 @@ describe("Setup", () => {
       await roles.setDefaultRole(member.address, ROLE_KEY);
       await roles.scopeTarget(ROLE_KEY, testContractAddress);
       await roles.scopeTarget(ROLE_KEY, testContract2Address);
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         ROLE_KEY,
         testContractAddress,
         selector,
@@ -1398,7 +1398,7 @@ describe("Setup", () => {
 
       // ROLE_KEY: only selector1 allowed
       await roles.scopeTarget(ROLE_KEY, testContractAddress);
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         ROLE_KEY,
         testContractAddress,
         selector1,
@@ -1408,7 +1408,7 @@ describe("Setup", () => {
 
       // ROLE_KEY_2: only selector2 allowed
       await roles.scopeTarget(ROLE_KEY_2, testContractAddress);
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         ROLE_KEY_2,
         testContractAddress,
         selector2,

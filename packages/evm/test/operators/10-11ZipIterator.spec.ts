@@ -11,7 +11,6 @@ import {
   ExecutionOptions,
   ConditionViolationStatus,
   flattenCondition,
-  packConditions,
 } from "../utils.js";
 
 const abiCoder = AbiCoder.defaultAbiCoder();
@@ -769,7 +768,7 @@ describe("Operator - Zip (ZipSome & ZipEvery)", () => {
 
   describe("integrity", () => {
     it("reverts UnsuitableParameterType for non-None encoding", async () => {
-      const { roles } = await loadFixture(setupTestContract);
+      const { roles, allowTarget } = await loadFixture(setupTestContract);
 
       for (const encoding of [
         Encoding.Static,
@@ -779,7 +778,7 @@ describe("Operator - Zip (ZipSome & ZipEvery)", () => {
         Encoding.AbiEncoded,
       ]) {
         await expect(
-          packConditions(roles, [
+          allowTarget([
             {
               parent: 0,
               paramType: encoding,
@@ -792,11 +791,11 @@ describe("Operator - Zip (ZipSome & ZipEvery)", () => {
     });
 
     it("reverts UnsuitableCompValue when compValue is shorter than 2 bytes", async () => {
-      const { roles } = await loadFixture(setupTestContract);
+      const { roles, allowTarget } = await loadFixture(setupTestContract);
 
       // 0 bytes
       await expect(
-        packConditions(roles, [
+        allowTarget([
           {
             parent: 0,
             paramType: Encoding.None,
@@ -808,7 +807,7 @@ describe("Operator - Zip (ZipSome & ZipEvery)", () => {
 
       // 1 byte
       await expect(
-        packConditions(roles, [
+        allowTarget([
           {
             parent: 0,
             paramType: Encoding.None,
@@ -820,12 +819,11 @@ describe("Operator - Zip (ZipSome & ZipEvery)", () => {
     });
 
     it("reverts UnsuitableCompValue when compValue length does not match tuple field count", async () => {
-      const { roles } = await loadFixture(setupTestContract);
+      const { roles, allowTarget } = await loadFixture(setupTestContract);
 
       // compValue has 2 bytes but tuple has 3 fields
       await expect(
-        packConditions(
-          roles,
+        allowTarget(
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -856,11 +854,10 @@ describe("Operator - Zip (ZipSome & ZipEvery)", () => {
     });
 
     it("reverts UnsuitableCompValue when pluck indices repeat", async () => {
-      const { roles } = await loadFixture(setupTestContract);
+      const { roles, allowTarget } = await loadFixture(setupTestContract);
 
       await expect(
-        packConditions(
-          roles,
+        allowTarget(
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -889,12 +886,11 @@ describe("Operator - Zip (ZipSome & ZipEvery)", () => {
     });
 
     it("reverts UnsuitableCompValue when pluck index not found", async () => {
-      const { roles } = await loadFixture(setupTestContract);
+      const { roles, allowTarget } = await loadFixture(setupTestContract);
 
       // Reference pluck index 5 which doesn't exist
       await expect(
-        packConditions(
-          roles,
+        allowTarget(
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -923,12 +919,11 @@ describe("Operator - Zip (ZipSome & ZipEvery)", () => {
     });
 
     it("reverts UnsuitableCompValue when pluck is not Array encoding", async () => {
-      const { roles } = await loadFixture(setupTestContract);
+      const { roles, allowTarget } = await loadFixture(setupTestContract);
 
       // Pluck index 1 is Static, not Array
       await expect(
-        packConditions(
-          roles,
+        allowTarget(
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -961,11 +956,10 @@ describe("Operator - Zip (ZipSome & ZipEvery)", () => {
     });
 
     it("reverts UnsuitableChildTypeTree when child does not resolve to a Tuple", async () => {
-      const { roles } = await loadFixture(setupTestContract);
+      const { roles, allowTarget } = await loadFixture(setupTestContract);
 
       await expect(
-        packConditions(
-          roles,
+        allowTarget(
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -990,12 +984,11 @@ describe("Operator - Zip (ZipSome & ZipEvery)", () => {
     });
 
     it("reverts UnsuitableChildTypeTree when field type does not match pluck array element type", async () => {
-      const { roles } = await loadFixture(setupTestContract);
+      const { roles, allowTarget } = await loadFixture(setupTestContract);
 
       // Pluck 0 has Static elements, but zip tuple field 0 is Tuple
       await expect(
-        packConditions(
-          roles,
+        allowTarget(
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -1033,11 +1026,10 @@ describe("Operator - Zip (ZipSome & ZipEvery)", () => {
     });
 
     it("reverts UnsupportedOperator when descendant uses Pluck", async () => {
-      const { roles } = await loadFixture(setupTestContract);
+      const { roles, allowTarget } = await loadFixture(setupTestContract);
 
       await expect(
-        packConditions(
-          roles,
+        allowTarget(
           flattenCondition({
             paramType: Encoding.AbiEncoded,
             operator: Operator.Matches,
@@ -1067,6 +1059,42 @@ describe("Operator - Zip (ZipSome & ZipEvery)", () => {
           }),
         ),
       ).to.be.revertedWithCustomError(roles, "UnsupportedOperator");
+    });
+
+    it("reverts UnsuitableChildCount when tuple child has a non-structural child", async () => {
+      const { roles, allowTarget } = await loadFixture(setupTestContract);
+
+      // TypeTree counts only structural children (2) when matching against
+      // compValue length, but the evaluator iterates the raw child list (3)
+      // and would read compValue out of bounds. Must be rejected at setup.
+      await expect(
+        allowTarget(
+          flattenCondition({
+            paramType: Encoding.AbiEncoded,
+            operator: Operator.Matches,
+            children: [
+              pluckArray(0),
+              pluckArray(1),
+              {
+                paramType: Encoding.None,
+                operator: Operator.ZipEvery,
+                compValue: encodeCompValue(0, 1),
+                children: [
+                  {
+                    paramType: Encoding.Tuple,
+                    operator: Operator.Pass,
+                    children: [
+                      { paramType: Encoding.Static, operator: Operator.Pass },
+                      { paramType: Encoding.Static, operator: Operator.Pass },
+                      { paramType: Encoding.None, operator: Operator.Pass },
+                    ],
+                  },
+                ],
+              },
+            ],
+          }),
+        ),
+      ).to.be.revertedWithCustomError(roles, "UnsuitableChildCount");
     });
   });
 });

@@ -1,6 +1,6 @@
 import { hexlify, Interface, randomBytes, ZeroHash } from "ethers";
 
-import { ExecutionOptions, packConditions } from "./utils.js";
+import { ExecutionOptions } from "./utils.js";
 import type { ConditionFlatStruct } from "../typechain-types/contracts/Roles.js";
 import hre from "hardhat";
 import type { NetworkConnection } from "hardhat/types/network";
@@ -105,6 +105,14 @@ export function createSetup({ ethers, provider }: NetworkConnection) {
     await roles.connect(owner).setDefaultRole(member.address, roleKey);
     await roles.connect(owner).scopeTarget(roleKey, testContractAddress);
 
+    const allowTarget = (
+      conditions: ConditionFlatStruct[],
+      options = ExecutionOptions.None,
+    ) =>
+      roles
+        .connect(owner)
+        .allowTarget(roleKey, testContractAddress, conditions, options);
+
     return {
       roles: roles.connect(owner),
       owner,
@@ -112,6 +120,7 @@ export function createSetup({ ethers, provider }: NetworkConnection) {
       testContract,
       testContractAddress,
       roleKey,
+      allowTarget,
     };
   }
 
@@ -125,12 +134,11 @@ export function createSetup({ ethers, provider }: NetworkConnection) {
       conditions: ConditionFlatStruct[],
       options = ExecutionOptions.None,
     ) => {
-      const packed = await packConditions(roles, conditions);
       return roles.allowFunction(
         roleKey,
         testContractAddress,
         fn.selector,
-        packed,
+        conditions,
         options,
       );
     };
@@ -170,12 +178,11 @@ export function createSetup({ ethers, provider }: NetworkConnection) {
       conditions: ConditionFlatStruct[],
       options = ExecutionOptions.None,
     ) => {
-      const packed = await packConditions(roles, conditions);
       return roles.allowFunction(
         roleKey,
         testContractAddress,
         fn.selector,
-        packed,
+        conditions,
         options,
       );
     };
@@ -215,12 +222,11 @@ export function createSetup({ ethers, provider }: NetworkConnection) {
       conditions: ConditionFlatStruct[],
       options = ExecutionOptions.None,
     ) => {
-      const packed = await packConditions(roles, conditions);
       return roles.allowFunction(
         roleKey,
         testContractAddress,
         fn.selector,
-        packed,
+        conditions,
         options,
       );
     };
@@ -261,12 +267,11 @@ export function createSetup({ ethers, provider }: NetworkConnection) {
       conditions: ConditionFlatStruct[],
       options = ExecutionOptions.None,
     ) => {
-      const packed = await packConditions(roles, conditions);
       return roles.allowFunction(
         roleKey,
         testContractAddress,
         fn.selector,
-        packed,
+        conditions,
         options,
       );
     };
@@ -306,12 +311,11 @@ export function createSetup({ ethers, provider }: NetworkConnection) {
       conditions: ConditionFlatStruct[],
       options = ExecutionOptions.None,
     ) => {
-      const packed = await packConditions(roles, conditions);
       return roles.allowFunction(
         roleKey,
         testContractAddress,
         fn.selector,
-        packed,
+        conditions,
         options,
       );
     };
@@ -351,12 +355,11 @@ export function createSetup({ ethers, provider }: NetworkConnection) {
       conditions: ConditionFlatStruct[],
       options = ExecutionOptions.None,
     ) => {
-      const packed = await packConditions(roles, conditions);
       return roles.allowFunction(
         roleKey,
         testContractAddress,
         fn.selector,
-        packed,
+        conditions,
         options,
       );
     };
@@ -399,12 +402,11 @@ export function createSetup({ ethers, provider }: NetworkConnection) {
       conditions: ConditionFlatStruct[],
       options = ExecutionOptions.None,
     ) => {
-      const packed = await packConditions(roles, conditions);
       return roles.allowFunction(
         roleKey,
         testContractAddress,
         fn.selector,
-        packed,
+        conditions,
         options,
       );
     };
@@ -448,12 +450,11 @@ export function createSetup({ ethers, provider }: NetworkConnection) {
       conditions: ConditionFlatStruct[],
       options = ExecutionOptions.None,
     ) => {
-      const packed = await packConditions(roles, conditions);
       return roles.allowFunction(
         roleKey,
         testContractAddress,
         fn.selector,
-        packed,
+        conditions,
         options,
       );
     };

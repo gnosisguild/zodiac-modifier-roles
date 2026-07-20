@@ -64,7 +64,7 @@ describe("Operator - CallWithinAllowance", async () => {
           compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
         }),
       );
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddress,
         fn.selector,
@@ -480,7 +480,7 @@ describe("Operator - CallWithinAllowance", async () => {
           ],
         }),
       );
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddress,
         fn.selector,
@@ -549,7 +549,7 @@ describe("Operator - CallWithinAllowance", async () => {
           compValue: allowanceKey,
         }),
       );
-      await roles.allowTarget(
+      await roles.allowTargetPacked(
         roleKey,
         testContractAddress,
         packed,
@@ -630,7 +630,7 @@ describe("Operator - CallWithinAllowance", async () => {
           compValue: allowanceKey,
         }),
       );
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddress,
         fn.selector,
@@ -693,7 +693,7 @@ describe("Operator - CallWithinAllowance", async () => {
           compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
         }),
       );
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddress,
         fn.selector,
@@ -737,7 +737,7 @@ describe("Operator - CallWithinAllowance", async () => {
           compValue: defaultAbiCoder.encode(["bytes32"], [allowanceKey]),
         }),
       );
-      await roles.allowFunction(
+      await roles.allowFunctionPacked(
         roleKey,
         testContractAddress,
         fn.selector,

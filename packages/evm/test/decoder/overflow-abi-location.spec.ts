@@ -56,7 +56,7 @@ async function allowTarget(
 ) {
   const { roles, testContractAddress, ROLE_KEY } = fixture;
   const packed = await packConditions(roles, conditions);
-  return roles.allowTarget(
+  return roles.allowTargetPacked(
     ROLE_KEY,
     testContractAddress,
     packed,

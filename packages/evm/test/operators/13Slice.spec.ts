@@ -11,7 +11,6 @@ import {
   ExecutionOptions,
   ConditionViolationStatus,
   flattenCondition,
-  packConditions,
 } from "../utils.js";
 
 const abiCoder = AbiCoder.defaultAbiCoder();
@@ -511,11 +510,11 @@ describe("Operator - Slice", () => {
 
   describe("integrity", () => {
     it("reverts UnsuitableParameterType for invalid encodings", async () => {
-      const { roles } = await loadFixture(setupTestContract);
+      const { roles, allowTarget } = await loadFixture(setupTestContract);
 
       for (const encoding of [Encoding.Tuple, Encoding.Array]) {
         await expect(
-          packConditions(roles, [
+          allowTarget([
             {
               parent: 0,
               paramType: encoding,
@@ -529,10 +528,10 @@ describe("Operator - Slice", () => {
 
     describe("compValue", () => {
       it("reverts UnsuitableCompValue when compValue is not 3 bytes", async () => {
-        const { roles } = await loadFixture(setupTestContract);
+        const { roles, allowTarget } = await loadFixture(setupTestContract);
 
         await expect(
-          packConditions(roles, [
+          allowTarget([
             {
               parent: 0,
               paramType: Encoding.Static,
@@ -544,10 +543,10 @@ describe("Operator - Slice", () => {
       });
 
       it("reverts UnsuitableCompValue when size is 0", async () => {
-        const { roles } = await loadFixture(setupTestContract);
+        const { roles, allowTarget } = await loadFixture(setupTestContract);
 
         await expect(
-          packConditions(roles, [
+          allowTarget([
             {
               parent: 0,
               paramType: Encoding.Static,
@@ -559,10 +558,10 @@ describe("Operator - Slice", () => {
       });
 
       it("reverts UnsuitableCompValue when size is greater than 32", async () => {
-        const { roles } = await loadFixture(setupTestContract);
+        const { roles, allowTarget } = await loadFixture(setupTestContract);
 
         await expect(
-          packConditions(roles, [
+          allowTarget([
             {
               parent: 0,
               paramType: Encoding.Static,
@@ -576,10 +575,10 @@ describe("Operator - Slice", () => {
 
     describe("children", () => {
       it("reverts UnsuitableChildCount when Slice has more than one child", async () => {
-        const { roles } = await loadFixture(setupTestContract);
+        const { roles, allowTarget } = await loadFixture(setupTestContract);
 
         await expect(
-          packConditions(roles, [
+          allowTarget([
             {
               parent: 0,
               paramType: Encoding.Static,
@@ -603,7 +602,7 @@ describe("Operator - Slice", () => {
       });
 
       it("reverts SliceChildNotStatic when Slice child is not Static", async () => {
-        const { roles } = await loadFixture(setupTestContract);
+        const { roles, allowTarget } = await loadFixture(setupTestContract);
 
         // All non-Static encodings should be rejected
         for (const encoding of [
@@ -614,7 +613,7 @@ describe("Operator - Slice", () => {
           Encoding.EtherValue,
         ]) {
           await expect(
-            packConditions(roles, [
+            allowTarget([
               {
                 parent: 0,
                 paramType: Encoding.Static,
