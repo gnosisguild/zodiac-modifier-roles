@@ -143,6 +143,11 @@ const config: HardhatUserConfig = {
       chainId: 130,
       url: "https://mainnet.unichain.org",
     },
+    unichainSepolia: {
+      ...sharedNetworkConfig,
+      chainId: 1301,
+      url: "https://sepolia.unichain.org",
+    },
     mantle: {
       ...sharedNetworkConfig,
       chainId: 5000,
@@ -287,6 +292,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://api.uniscan.xyz/api",
           browserURL: "https://uniscan.xyz",
+        },
+      },
+      {
+        network: "unichainSepolia",
+        chainId: 1301,
+        urls: {
+          apiURL: "https://api-sepolia.uniscan.xyz/api",
+          browserURL: "https://sepolia.uniscan.xyz",
         },
       },
       {

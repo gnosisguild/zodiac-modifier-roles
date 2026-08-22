@@ -25,6 +25,7 @@ import {
   flare,
   megaeth,
   hyperEvm as hyperEvmBase,
+  unichainSepolia,
 } from "wagmi/chains"
 
 const hyperEvm = defineChain({
@@ -138,6 +139,10 @@ const BASE_CHAINS = {
   [megaeth.id]: {
     ...megaeth,
     prefix: "megaeth",
+  },
+  [unichainSepolia.id]: {
+    ...unichainSepolia,
+    prefix: "unichainsep",
   },
 }
 
