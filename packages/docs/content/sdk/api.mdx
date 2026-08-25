@@ -58,13 +58,19 @@ Creates permissions for multiple target addresses.
 
 ### Utilities
 
-#### `encodeKey(roleKey)`
+#### `encodeKey(key)`
 
-Converts string role key to hex-encoded bytes32.
+Converts a string role or allowance key to hex-encoded bytes32. A key that is
+already a full 32 bytes is returned unchanged, so it is safe to apply more than
+once. Anything else is treated as a label and packed, including a shorter
+`0x`-prefixed value. Throws for a label that does not fit into bytes32.
+
+The condition helpers that take an allowance key apply this for you, so you can
+pass them a plain label.
 
 **Parameters:**
 
-- `roleKey` - Human-readable role identifier
+- `key` - Human-readable role or allowance identifier, at most 31 bytes
 
 **Returns:** `0x${string}`
 

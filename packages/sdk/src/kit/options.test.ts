@@ -1,5 +1,5 @@
 import { expect, test } from "vitest"
-import { c } from "zodiac-roles-sdk"
+import { c, encodeKey } from "zodiac-roles-sdk"
 import { Condition, Operator, ParameterType } from "../main/types"
 
 import { Scoping } from "../main/target/authoring/types"
@@ -47,4 +47,15 @@ test("callWithinAllowance without etherWithinAllowance does not throw", () => {
     })
     checkRootConditionIntegrity(permission.condition as Condition)
   }).not.toThrow()
+})
+
+test("allowance options accept a plain label", () => {
+  const withLabel = allow.mainnet.lido.stETH.submit(c.pass, {
+    callWithinAllowance: "my-call-allowance",
+  })
+  const withEncodedKey = allow.mainnet.lido.stETH.submit(c.pass, {
+    callWithinAllowance: encodeKey("my-call-allowance"),
+  })
+
+  expect(withLabel.condition).toEqual(withEncodedKey.condition)
 })

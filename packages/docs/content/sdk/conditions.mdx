@@ -124,15 +124,24 @@ c.calldataMatches(
 
 ### Allowance conditions
 
+An allowance is referenced by its key, which you can pass as the label you named
+it with. The SDK encodes it to `bytes32`, and leaves a key that is already
+encoded alone — so `encodeKey("my-allowance")` keeps working wherever a label
+is accepted.
+
 #### `c.withinAllowance`
 
 See [`WithinAllowance`](/general/conditions#withinallowance) operator
+
+```typescript
+c.withinAllowance("my-allowance");
+```
 
 #### Allowance on Ether value via `c.calldataMatches`
 
 ```typescript
 c.calldataMatches([], [], {
-  etherWithinAllowance: encodeKey("mt-eth-allowance"),
+  etherWithinAllowance: "my-eth-allowance",
 });
 ```
 
@@ -140,7 +149,7 @@ c.calldataMatches([], [], {
 
 ```typescript
 c.calldataMatches([], [], {
-  callWithinAllowance: encodeKey("my-call-allowance"),
+  callWithinAllowance: "my-call-allowance",
 });
 ```
 

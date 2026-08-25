@@ -14,6 +14,7 @@ import { Condition, Operator, ParameterType } from "../main/types"
 // eslint-disable-next-line import/no-unresolved
 import {
   c,
+  encodeKey,
   ExecutionFlags,
   TargetPermission,
   FunctionPermission,
@@ -40,10 +41,10 @@ type Options = {
   send?: boolean
   /** Allow making delegate calls */
   delegatecall?: boolean
-  /** Restrict the total Ether value sent using the specified allowance */
-  etherWithinAllowance?: `0x${string}`
-  /** Restrict the call rate using the specified allowance */
-  callWithinAllowance?: `0x${string}`
+  /** Restrict the total Ether value sent using the specified allowance, named by its key */
+  etherWithinAllowance?: string
+  /** Restrict the call rate using the specified allowance, named by its key */
+  callWithinAllowance?: string
 }
 
 /** We need to skip over functions with "view" state mutability. We do this by matching the ethers ContractMethod type  */
@@ -170,7 +171,7 @@ const applyOptions = (
     condition = applyGlobalAllowance(condition, {
       paramType: ParameterType.None,
       operator: Operator.EtherWithinAllowance,
-      compValue: options.etherWithinAllowance,
+      compValue: encodeKey(options.etherWithinAllowance),
     })
   }
 
@@ -178,7 +179,7 @@ const applyOptions = (
     condition = applyGlobalAllowance(condition, {
       paramType: ParameterType.None,
       operator: Operator.CallWithinAllowance,
-      compValue: options.callWithinAllowance,
+      compValue: encodeKey(options.callWithinAllowance),
     })
   }
 

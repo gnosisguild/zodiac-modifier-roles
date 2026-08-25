@@ -22,4 +22,30 @@ describe("calldataMatches", () => {
       ],
     })
   })
+
+  it("accepts allowance keys as labels", () => {
+    expect(
+      calldataMatches([], [], {
+        etherWithinAllowance: "test-allowance",
+        callWithinAllowance: "other-allowance",
+      })()
+    ).toEqual(
+      calldataMatches([], [], {
+        etherWithinAllowance: encodeKey("test-allowance"),
+        callWithinAllowance: encodeKey("other-allowance"),
+      })()
+    )
+  })
+
+  it("encodes an allowance key that is not already bytes32", () => {
+    // This path assigns `compValue` directly, so before it went through
+    // `encodeKey` a short hex reached the chain as a 2-byte compValue.
+    expect(
+      calldataMatches([], [], { etherWithinAllowance: "0x1234" })()
+    ).toEqual(
+      calldataMatches([], [], {
+        etherWithinAllowance: encodeKey("0x1234"),
+      })()
+    )
+  })
 })

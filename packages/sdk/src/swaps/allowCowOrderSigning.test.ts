@@ -1,6 +1,10 @@
 import { it, describe, expect } from "vitest"
 import { allowCowOrderSigning } from "./allowCowOrderSigning"
-import { processPermissions, targetIntegrity } from "zodiac-roles-sdk"
+import {
+  encodeKey,
+  processPermissions,
+  targetIntegrity,
+} from "zodiac-roles-sdk"
 import { SupportedChainId } from "./types"
 
 const WETH = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2" as const
@@ -179,5 +183,28 @@ describe("allowCowOrderSigning", () => {
 
     const { targets } = processPermissions(permissions)
     expect(() => targetIntegrity(targets)).not.toThrow()
+  })
+})
+
+describe("allowance keys", () => {
+  it("accepts a label wherever an encoded key is accepted", () => {
+    const options = {
+      chainId: SupportedChainId.MAINNET,
+      sell: [WETH],
+      buy: [COW],
+    }
+
+    expect(
+      processPermissions(
+        allowCowOrderSigning({ ...options, sellAllowance: "usdc_payouts" })
+      ).targets
+    ).toEqual(
+      processPermissions(
+        allowCowOrderSigning({
+          ...options,
+          sellAllowance: encodeKey("usdc_payouts"),
+        })
+      ).targets
+    )
   })
 })
