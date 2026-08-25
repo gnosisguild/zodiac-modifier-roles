@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.1.3](https://github.com/gnosisguild/zodiac-modifier-roles/compare/zodiac-roles-sdk-v4.1.2...zodiac-roles-sdk-v4.1.3) (2026-08-25)
+
+
+### Bug Fixes
+
+* **sdk:** declare the repository so provenance can be verified ([#513](https://github.com/gnosisguild/zodiac-modifier-roles/issues/513)) ([6219f97](https://github.com/gnosisguild/zodiac-modifier-roles/commit/6219f972700dd8deb6362d2f76217165b2fbb2ca))
+
 ## [4.1.2](https://github.com/gnosisguild/zodiac-modifier-roles/compare/zodiac-roles-sdk-v4.1.1...zodiac-roles-sdk-v4.1.2) (2026-08-25)
 
 
