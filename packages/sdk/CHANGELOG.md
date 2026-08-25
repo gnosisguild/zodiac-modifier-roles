@@ -1,5 +1,17 @@
 # Changelog
 
+## [4.1.0](https://github.com/gnosisguild/zodiac-modifier-roles/compare/zodiac-roles-sdk-v4.0.0...zodiac-roles-sdk-v4.1.0) (2026-08-25)
+
+
+### Features
+
+* **sdk:** accept a plain label wherever an allowance key is taken ([#506](https://github.com/gnosisguild/zodiac-modifier-roles/issues/506)) ([2fdf408](https://github.com/gnosisguild/zodiac-modifier-roles/commit/2fdf40851b5273c9525600c920022acb71152cef))
+
+
+### Bug Fixes
+
+* **app:** reliable RPC for all chains + record-apply & wallet fixes ([#499](https://github.com/gnosisguild/zodiac-modifier-roles/issues/499)) ([81426d0](https://github.com/gnosisguild/zodiac-modifier-roles/commit/81426d0a86309e9f84ad2d3ed4fad0725fd49a65))
+
 ## [4.0.0](https://github.com/gnosisguild/zodiac-modifier-roles/compare/zodiac-roles-sdk-v3.4.8...zodiac-roles-sdk-v4.0.0) (2026-05-28)
 
 
