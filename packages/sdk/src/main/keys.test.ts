@@ -44,4 +44,11 @@ describe("decodeKey", () => {
   it("returns a short hex string unchanged, as a label", () => {
     expect(decodeKey("0x1234")).toEqual("0x1234")
   })
+
+  it("explains a bytes32 that holds no packed label", () => {
+    const hash = `0x${"ab".repeat(32)}`
+
+    expect(() => decodeKey(hash)).toThrow("is not a packed label")
+    expect(() => decodeKey(hash)).toThrow(hash)
+  })
 })

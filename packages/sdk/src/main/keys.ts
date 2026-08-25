@@ -23,7 +23,7 @@ export const encodeKey = (key: string) => {
  */
 export const decodeKey = (key: string) => {
   if (isEncoded(key)) {
-    return decodeBytes32String(key)
+    return unpack(key)
   }
 
   assertEncodable(key)
@@ -46,6 +46,22 @@ function assertEncodable(key: string): void {
   } catch (e) {
     throw new Error(
       `Invalid key: "${key}" does not fit into bytes32, which holds at most 31 bytes`
+    )
+  }
+}
+
+/**
+ * Not every bytes32 key holds a packed label. A role key can be set to a hash,
+ * or to any other 32 bytes, and those have no label to recover — ethers reports
+ * that as `invalid bytes32 string - no null terminator`, which says nothing
+ * about keys and does not name the one that failed.
+ */
+function unpack(key: string): string {
+  try {
+    return decodeBytes32String(key)
+  } catch (e) {
+    throw new Error(
+      `Invalid key: "${key}" is not a packed label, so it has no readable form`
     )
   }
 }
