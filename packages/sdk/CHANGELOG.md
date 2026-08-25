@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.1.2](https://github.com/gnosisguild/zodiac-modifier-roles/compare/zodiac-roles-sdk-v4.1.1...zodiac-roles-sdk-v4.1.2) (2026-08-25)
+
+
+### Bug Fixes
+
+* **sdk:** require an encoded key to actually be hex ([#511](https://github.com/gnosisguild/zodiac-modifier-roles/issues/511)) ([d093428](https://github.com/gnosisguild/zodiac-modifier-roles/commit/d09342884408fef2e1dc51b7f49b1dc7e39ab00e))
+
 ## [4.1.1](https://github.com/gnosisguild/zodiac-modifier-roles/compare/zodiac-roles-sdk-v4.1.0...zodiac-roles-sdk-v4.1.1) (2026-08-25)
 
 
