@@ -24,6 +24,14 @@ jobs:
           branch: "cla-signatures"
           allowlist: auryn-macmillan, nginnever,*bot # may need to update this expression if we add new bots
 
+          # This bot locks a pull request ~10s after it merges, and the release
+          # workflow comments on the release PR it just merged. Whichever gets
+          # there first decides whether a release succeeds: 4.1.0 published its
+          # comment with seconds to spare, 4.1.1 lost and the whole release job
+          # failed with "Unable to create comment because issue is locked" —
+          # after the tag and GitHub release already existed, so the npm publish
+          # never ran. Locking merged PRs is not worth that race.
+          lock-pullrequest-aftermerge: false
 
           #below are the optional inputs - If the optional inputs are not given, then default values will be taken
           #remote-organization-name: enter the remote organization name where the signatures should be stored (Default is storing the signatures in the same repository)
