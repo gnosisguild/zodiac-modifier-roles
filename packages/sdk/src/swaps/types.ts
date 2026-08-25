@@ -44,7 +44,8 @@ export type QuoteRequest = (SellOrderRequest | BuyOrderRequest) & {
 
   chainId: SupportedChainId
   rolesModifier: `0x${string}`
-  roleKey: `0x${string}`
+  /** The role's key, as a label or already encoded */
+  roleKey: string
   /** Address of the avatar (Safe) the rolesModifier is attached to. Used as the order's `from`. */
   avatar: `0x${string}`
   /** Address of the rolesModifier owner. Used to resolve the partner fee license. */
@@ -72,7 +73,8 @@ export type Quote = {
   from: `0x${string}`
   chainId: SupportedChainId
   rolesModifier: `0x${string}`
-  roleKey: `0x${string}`
+  /** The role's key, as a label or already encoded */
+  roleKey: string
 }
 
 /**
