@@ -10,6 +10,7 @@ import { and } from "./branching"
 import { bitmask, eq } from "./comparison"
 
 import { FunctionPermission } from "../../../permission"
+import { encodeKey } from "../../../keys"
 import {
   ConditionFunction,
   Scoping,
@@ -104,8 +105,8 @@ const calldataMatchesScopings =
     abiTypes: readonly AbiType[],
     options: {
       selector?: `0x${string}`
-      etherWithinAllowance?: `0x${string}`
-      callWithinAllowance?: `0x${string}`
+      etherWithinAllowance?: string
+      callWithinAllowance?: string
     } = {}
   ) =>
   (abiType?: ParamType) => {
@@ -141,7 +142,7 @@ const calldataMatchesScopings =
       matchesCondition.children.push({
         paramType: ParameterType.None,
         operator: Operator.EtherWithinAllowance,
-        compValue: etherWithinAllowance,
+        compValue: encodeKey(etherWithinAllowance),
       })
     }
 
@@ -149,7 +150,7 @@ const calldataMatchesScopings =
       matchesCondition.children.push({
         paramType: ParameterType.None,
         operator: Operator.CallWithinAllowance,
-        compValue: callWithinAllowance,
+        compValue: encodeKey(callWithinAllowance),
       })
     }
 
@@ -218,8 +219,8 @@ type CalldataMatches = {
     abiTypes: readonly AbiType[],
     options?: {
       selector?: `0x${string}`
-      etherWithinAllowance?: `0x${string}`
-      callWithinAllowance?: `0x${string}`
+      etherWithinAllowance?: string
+      callWithinAllowance?: string
     }
   ): (abiType?: ParamType) => Condition
 
@@ -239,8 +240,8 @@ export const calldataMatches: CalldataMatches = <S extends TupleScopings<any>>(
   abiTypes?: readonly AbiType[],
   options?: {
     selector?: `0x${string}`
-    etherWithinAllowance?: `0x${string}`
-    callWithinAllowance?: `0x${string}`
+    etherWithinAllowance?: string
+    callWithinAllowance?: string
   }
 ): ((abiType?: ParamType) => Condition) => {
   return abiTypes
