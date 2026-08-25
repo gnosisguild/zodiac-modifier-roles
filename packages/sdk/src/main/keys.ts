@@ -31,8 +31,15 @@ export const decodeKey = (key: string) => {
   return key
 }
 
+/**
+ * A key counts as encoded only if it is genuinely 32 bytes of hex. Length alone
+ * used to be enough, which let a malformed string of the right shape —
+ * `"0x" + "z".repeat(64)` — pass straight through `encodeKey` and reach the
+ * chain as a key nothing was ever set under. Anything else is a label, and is
+ * packed as one.
+ */
 const isEncoded = (key: string) =>
-  key.startsWith("0x") && key.length === ENCODED_LENGTH
+  key.length === ENCODED_LENGTH && /^0x[0-9a-fA-F]{64}$/.test(key)
 
 /**
  * Anything that is not already encoded is a label, including one that happens

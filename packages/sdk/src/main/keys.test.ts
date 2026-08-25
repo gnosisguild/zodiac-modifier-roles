@@ -24,6 +24,13 @@ describe("encodeKey", () => {
     expect(() => encodeKey("a".repeat(32))).toThrow("a".repeat(32))
   })
 
+  it("rejects a 32-byte-shaped string that is not hex", () => {
+    // Long enough to look encoded, so it used to pass through untouched and
+    // reach the chain as a key nothing was ever set under. It is not a valid
+    // label either, which is what the error now says.
+    expect(() => encodeKey(`0x${"z".repeat(64)}`)).toThrow("at most 31 bytes")
+  })
+
   it("packs a short hex string as the label it is", () => {
     // Only a full 32 bytes counts as already encoded. Anything else is a
     // label, and both sides of an allowance pack it identically, so they agree.
@@ -39,6 +46,10 @@ describe("decodeKey", () => {
 
   it("returns an already decoded key unchanged", () => {
     expect(decodeKey("test-allowance")).toEqual("test-allowance")
+  })
+
+  it("rejects a 32-byte-shaped string that is not hex", () => {
+    expect(() => decodeKey(`0x${"z".repeat(64)}`)).toThrow("at most 31 bytes")
   })
 
   it("returns a short hex string unchanged, as a label", () => {
