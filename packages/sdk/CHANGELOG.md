@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.1.1](https://github.com/gnosisguild/zodiac-modifier-roles/compare/zodiac-roles-sdk-v4.1.0...zodiac-roles-sdk-v4.1.1) (2026-08-25)
+
+
+### Bug Fixes
+
+* **sdk:** explain a bytes32 key that holds no packed label ([#508](https://github.com/gnosisguild/zodiac-modifier-roles/issues/508)) ([b4b5a02](https://github.com/gnosisguild/zodiac-modifier-roles/commit/b4b5a027f36f93b870c9adf2c1c282d7de73f3d1))
+
 ## [4.1.0](https://github.com/gnosisguild/zodiac-modifier-roles/compare/zodiac-roles-sdk-v4.0.0...zodiac-roles-sdk-v4.1.0) (2026-08-25)
 
 
