@@ -8,47 +8,71 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  # Lets the job mint the OIDC token npm exchanges for publish rights, and
+  # sign the provenance attestation.
+  id-token: write
 
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
+      # No `token:` here on purpose. The built-in GITHUB_TOKEN is enough
+      # because the publish happens in this same job — nothing needs the
+      # release event to start another workflow. It also cannot expire, which
+      # a personal access token does.
+      #
+      # The tradeoff: a branch pushed with GITHUB_TOKEN does not trigger
+      # workflows, so ci.yml will not run on the release PR. If that matters,
+      # swap in a GitHub App token (actions/create-github-app-token) rather
+      # than going back to a PAT.
       - uses: googleapis/release-please-action@v4
         id: release
         with:
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           target-branch: main
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         # ensure that a publication only occurs when a new release is created:
         if: ${{ steps.release.outputs.releases_created }}
-      - uses: actions/setup-node@v3
+      # No registry-url here on purpose. It makes setup-node write
+      # //registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN} into .npmrc; with
+      # no token that expands to empty, npm reads the line as "auth is already
+      # configured" and never starts the OIDC exchange, failing with E404.
+      # See actions/setup-node#1551 and npm/documentation#1960.
+      # npm defaults to registry.npmjs.org anyway.
+      - uses: actions/setup-node@v4
         with:
+          # 24.x ships npm 11.17.x; trusted publishing needs >= 11.5.1
           node-version: 24
-        # ensure that a publication only occurs when a new release is created:
         if: ${{ steps.release.outputs.releases_created }}
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: |
             **/node_modules
             .yarn/cache
             .yarn/install-state.gz
           key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock', '.yarnrc.yml') }}
-        # ensure that a publication only occurs when a new release is created:
         if: ${{ steps.release.outputs.releases_created }}
       - run: yarn
-        # ensure that a publication only occurs when a new release is created:
         if: ${{ steps.release.outputs.releases_created }}
       - name: Build packages
         run: |
           yarn run build:evm
           yarn run build:sdk
         if: ${{ steps.release.outputs.releases_created }}
+
+      # `yarn npm publish` substituted `workspace:` ranges on the way out.
+      # `npm publish` does not, and it is npm that speaks OIDC, so do the
+      # substitution ourselves before handing the package over.
+      - name: Resolve workspace ranges in the sdk manifest
+        run: node scripts/resolve-workspace-ranges.mjs packages/sdk
+        if: ${{ steps.release.outputs['packages/sdk--release_created'] }}
+      # Authenticates via OIDC against the trusted publisher configured at
+      # npmjs.com/package/zodiac-roles-sdk/access. No npm token involved; the
+      # binding is to this repo + this workflow filename, so renaming this file
+      # means updating that setting.
       - name: Publish sdk package to npm
         working-directory: ./packages/sdk
-        run: yarn npm publish
-        env:
-          YARN_NPM_AUTH_TOKEN: ${{secrets.PUBLISH_NPM_TOKEN}}
+        run: npm publish --provenance
         if: ${{ steps.release.outputs['packages/sdk--release_created'] }}
