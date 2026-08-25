@@ -24,10 +24,11 @@ describe("encodeKey", () => {
     expect(() => encodeKey("a".repeat(32))).toThrow("a".repeat(32))
   })
 
-  it("rejects a malformed encoded key rather than packing its characters", () => {
-    // Packing "0x1234" as a label yields a valid but different bytes32, which
-    // would reference an allowance that was never set.
-    expect(() => encodeKey("0x1234")).toThrow("is 2 bytes, not 32")
+  it("packs a short hex string as the label it is", () => {
+    // Only a full 32 bytes counts as already encoded. Anything else is a
+    // label, and both sides of an allowance pack it identically, so they agree.
+    expect(encodeKey("0x1234")).toEqual(encodeKey("0x1234"))
+    expect(decodeKey(encodeKey("0x1234"))).toEqual("0x1234")
   })
 })
 
@@ -40,7 +41,7 @@ describe("decodeKey", () => {
     expect(decodeKey("test-allowance")).toEqual("test-allowance")
   })
 
-  it("rejects a malformed encoded key", () => {
-    expect(() => decodeKey("0x1234")).toThrow("is 2 bytes, not 32")
+  it("returns a short hex string unchanged, as a label", () => {
+    expect(decodeKey("0x1234")).toEqual("0x1234")
   })
 })

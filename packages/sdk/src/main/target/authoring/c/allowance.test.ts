@@ -21,7 +21,9 @@ describe("withinAllowance", () => {
     )
   })
 
-  it("rejects a malformed encoded key", () => {
-    expect(() => withinAllowance("0x1234")(uint256)).toThrow("not 32")
+  it("rejects a key too long to pack into bytes32", () => {
+    expect(() => withinAllowance("a".repeat(32))(uint256)).toThrow(
+      "at most 31 bytes"
+    )
   })
 })

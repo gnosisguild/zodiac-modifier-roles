@@ -37,11 +37,15 @@ describe("calldataMatches", () => {
     )
   })
 
-  it("rejects a malformed encoded allowance key", () => {
+  it("encodes an allowance key that is not already bytes32", () => {
     // This path assigns `compValue` directly, so before it went through
-    // `encodeKey` a short hex reached the chain as a key nothing was set under.
-    expect(() =>
+    // `encodeKey` a short hex reached the chain as a 2-byte compValue.
+    expect(
       calldataMatches([], [], { etherWithinAllowance: "0x1234" })()
-    ).toThrow("not 32")
+    ).toEqual(
+      calldataMatches([], [], {
+        etherWithinAllowance: encodeKey("0x1234"),
+      })()
+    )
   })
 })

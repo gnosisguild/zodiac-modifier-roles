@@ -35,20 +35,12 @@ const isEncoded = (key: string) =>
   key.startsWith("0x") && key.length === ENCODED_LENGTH
 
 /**
- * A key is either an encoded bytes32 value or a label that fits into one.
- *
- * A `0x` prefix that is not exactly 32 bytes is rejected rather than packed as
- * the literal characters it spells: it is almost always a malformed encoded
- * key, and silently turning it into a different one produces a role or
- * allowance reference that resolves to nothing on chain.
+ * Anything that is not already encoded is a label, including one that happens
+ * to start with `0x`. Every key goes through here, so a label is packed the
+ * same way on the side that sets an allowance and on the side that references
+ * it — the two agree whatever the label looks like.
  */
 function assertEncodable(key: string): void {
-  if (key.startsWith("0x")) {
-    throw new Error(
-      `Invalid key: "${key}" looks like an encoded key but is ${(key.length - 2) / 2} bytes, not 32`
-    )
-  }
-
   try {
     encodeBytes32String(key)
   } catch (e) {
