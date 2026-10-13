@@ -15,6 +15,8 @@ const cowOrderSigner = "0x23dA9AdE38E4477b23770DeD512fD37b12381FAB" as const
  * - Replaces "native" with the chain's wrapped native token (e.g., WETH) for order signing
  * - Adds WETH.deposit() permission when native is in sell (to wrap native tokens before selling)
  * - Adds WETH.withdraw() permission when native is in buy (to unwrap received tokens)
+ *
+ * @deprecated The `zodiac-roles-sdk/swaps` entrypoint is deprecated and will be removed in the next major release.
  */
 export const allowCowOrderSigning = ({
   chainId,
