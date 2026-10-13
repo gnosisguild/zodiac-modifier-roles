@@ -166,57 +166,6 @@ import { EVERYTHING } from "zodiac-roles-sdk/kit";
 allow.mainnet.dai[EVERYTHING]();
 ```
 
-## `zodiac-roles-sdk/swaps`
-
-CowSwap integration for MEV-protected trading through roles.
-
-### Permission Generation
-
-#### `allowCowOrderSigning(config)`
-
-Generates permissions for COW Protocol order signing.
-
-**Parameters:**
-
-- `config.sell` - Array of sellable token addresses
-- `config.buy` - Array of buyable token addresses
-- `config.receiver` - Optional custom receiver address
-
-**Returns:** [Permission](#permission)[]
-
-### Order Placement
-
-#### `getCowQuote(request, options?)`
-
-Gets a quote for a COW Protocol swap.
-
-**Parameters:**
-
-- `request` - [QuoteRequest](#quoterequest) configuration. Must include the `avatar` and `owner` of the Roles Modifier.
-- `options` - Optional [AdvancedOptions](#advancedoptions)
-
-**Returns:** `Promise<Quote>`
-
-#### `signCowOrder(quote)`
-
-Generates transaction to sign a COW Protocol order.
-
-**Parameters:**
-
-- `quote` - [Quote](#quote) object from `getCowQuote`
-
-**Returns:** `TransactionRequest`
-
-#### `postCowOrder(quote)`
-
-Posts a signed order to COW Protocol orderbook.
-
-**Parameters:**
-
-- `quote` - Signed [Quote](#quote) object
-
-**Returns:** `Promise<string>` (order ID)
-
 ## `zodiac-roles-sdk/annotations`
 
 Annotation processing for enhanced role documentation.
