@@ -57,6 +57,7 @@ The contracts have been developed with [Solidity 0.8.21](https://github.com/ethe
 - [World Chain](https://worldscan.org/address/0xF2964CE6161ce0e75964Fe7927cE114cb0B283D5#code)
 - [MegaETH](https://mega.etherscan.io/address/0xF2964CE6161ce0e75964Fe7927cE114cb0B283D5#code)
 - [Base Sepolia](https://sepolia.basescan.org/address/0xF2964CE6161ce0e75964Fe7927cE114cb0B283D5#code)
+- [Unichain Sepolia](https://sepolia.uniscan.xyz/address/0xF2964CE6161ce0e75964Fe7927cE114cb0B283D5#code)
 - [Sepolia](https://sepolia.etherscan.io/address/0xF2964CE6161ce0e75964Fe7927cE114cb0B283D5#code)
 
 #### Contracts
