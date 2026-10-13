@@ -4,7 +4,7 @@ import { Callout } from "nextra/components";
 
 This guide walks you through the basic steps of using the Roles SDK, showing how to define permissions and apply them to a role.
 
-The Roles SDK is focused on **authoring** permissions. Reading on-chain state and pushing configuration updates is handled by the [Zodiac SDK](https://github.com/gnosisguild/zodiac-os-sdk), which talks to the Zodiac API. The two SDKs are designed to be used together: you compose `Permission`s with the Roles SDK and ship them with the Zodiac SDK's `push()`.
+The Roles SDK is focused on **authoring** permissions. Reading on-chain state and pushing configuration updates is handled by the [Zodiac SDK](https://github.com/gnosisguild/zodiac-sdk), which talks to the Zodiac API. The two SDKs are designed to be used together: you compose `Permission`s with the Roles SDK and ship them with the Zodiac SDK's `push()`.
 
 <Callout type="info">
   For getting started quickly using a pre-configured default setup, check out
@@ -19,15 +19,15 @@ The Roles SDK is focused on **authoring** permissions. Reading on-chain state an
 Install the Roles SDK alongside the Zodiac SDK:
 
 ```bash
-npm i --save zodiac-roles-sdk @zodiac-os/sdk
+npm i --save zodiac-roles-sdk @zodiaceco/sdk
 ```
 
 ```bash
-yarn add zodiac-roles-sdk @zodiac-os/sdk
+yarn add zodiac-roles-sdk @zodiaceco/sdk
 ```
 
 ```bash
-pnpm add zodiac-roles-sdk @zodiac-os/sdk
+pnpm add zodiac-roles-sdk @zodiaceco/sdk
 ```
 
 ## Authorize the Zodiac SDK
@@ -47,7 +47,7 @@ npx zodiac init
 Create a `zodiac.config.ts` in your project root listing the contracts you want to permit calling:
 
 ```typescript
-import { defineConfig } from "@zodiac-os/sdk/cli/config";
+import { defineConfig } from "@zodiaceco/sdk/cli/config";
 
 export default defineConfig({
   contracts: {
@@ -77,10 +77,10 @@ npx zodiac pull
 
 ## Define permissions
 
-You now have a typed _allow kit_ at your disposal. Access it by importing from `"@zodiac-os/sdk/allow"`:
+You now have a typed _allow kit_ at your disposal. Access it by importing from `"@zodiaceco/sdk/allow"`:
 
 ```typescript
-import { allow } from "@zodiac-os/sdk/allow";
+import { allow } from "@zodiaceco/sdk/allow";
 
 const CURVE_3POOL = "0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7";
 
@@ -92,8 +92,8 @@ const permissions = [allow.mainnet.dai.approve(CURVE_3POOL)];
 Describe the role using the `constellation()` factory and ship it with `push()`:
 
 ```typescript
-import { constellation, push } from "@zodiac-os/sdk";
-import { allow } from "@zodiac-os/sdk/allow";
+import { constellation, push } from "@zodiaceco/sdk";
+import { allow } from "@zodiaceco/sdk/allow";
 
 const eth = constellation({
   workspace: "Production",

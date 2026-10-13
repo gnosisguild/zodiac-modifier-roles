@@ -6,7 +6,7 @@ Complete reference for the Zodiac Roles SDK functions and types.
 
 <Callout type="info">
   Applying role configuration to a Roles Modifier is handled by
-  [`@zodiac-os/sdk`](https://github.com/gnosisguild/zodiac-os-sdk)'s `push()`.
+  [`@zodiaceco/sdk`](https://github.com/gnosisguild/zodiac-sdk)'s `push()`.
   The functions documented here cover **authoring** permissions; see the
   [Getting Started guide](/sdk/getting-started#apply-permissions) for the full
   apply flow.
@@ -123,7 +123,7 @@ Type-safe permission builders generated from contract ABIs.
 
 <Callout type="warning">
   Deprecated in favor of
-  [`@zodiac-os/sdk`](https://github.com/gnosisguild/zodiac-os-sdk). The Zodiac
+  [`@zodiaceco/sdk`](https://github.com/gnosisguild/zodiac-sdk). The Zodiac
   SDK generates the same kit from `zodiac.config.ts` via `zodiac pull` and
   integrates with `push()` directly. This entrypoint remains available for
   projects still using the [eth-sdk](https://github.com/gnosisguild/eth-sdk)
@@ -165,57 +165,6 @@ import { EVERYTHING } from "zodiac-roles-sdk/kit";
 // Allow all functions on a target
 allow.mainnet.dai[EVERYTHING]();
 ```
-
-## `zodiac-roles-sdk/swaps`
-
-CowSwap integration for MEV-protected trading through roles.
-
-### Permission Generation
-
-#### `allowCowOrderSigning(config)`
-
-Generates permissions for COW Protocol order signing.
-
-**Parameters:**
-
-- `config.sell` - Array of sellable token addresses
-- `config.buy` - Array of buyable token addresses
-- `config.receiver` - Optional custom receiver address
-
-**Returns:** [Permission](#permission)[]
-
-### Order Placement
-
-#### `getCowQuote(request, options?)`
-
-Gets a quote for a COW Protocol swap.
-
-**Parameters:**
-
-- `request` - [QuoteRequest](#quoterequest) configuration. Must include the `avatar` and `owner` of the Roles Modifier.
-- `options` - Optional [AdvancedOptions](#advancedoptions)
-
-**Returns:** `Promise<Quote>`
-
-#### `signCowOrder(quote)`
-
-Generates transaction to sign a COW Protocol order.
-
-**Parameters:**
-
-- `quote` - [Quote](#quote) object from `getCowQuote`
-
-**Returns:** `TransactionRequest`
-
-#### `postCowOrder(quote)`
-
-Posts a signed order to COW Protocol orderbook.
-
-**Parameters:**
-
-- `quote` - Signed [Quote](#quote) object
-
-**Returns:** `Promise<string>` (order ID)
 
 ## `zodiac-roles-sdk/annotations`
 

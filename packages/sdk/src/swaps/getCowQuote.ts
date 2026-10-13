@@ -30,6 +30,8 @@ const priceQualityMap: Record<string, PriceQuality> = {
 
 /**
  * Gets a quote for a CowSwap order. The result can be used as input for `signCowOrder` and `postCowOrder`.
+ *
+ * @deprecated The `zodiac-roles-sdk/swaps` entrypoint is deprecated and will be removed in the next major release.
  */
 export const getCowQuote = async (
   quoteRequest: QuoteRequest,

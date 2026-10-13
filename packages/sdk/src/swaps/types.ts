@@ -5,6 +5,8 @@
  * TODO: Deploy CowOrderSigner contracts to these additional cow-sdk chains:
  * - LENS (232)
  * - 
+ *
+ * @deprecated The `zodiac-roles-sdk/swaps` entrypoint is deprecated and will be removed in the next major release.
  */
 export enum SupportedChainId {
   MAINNET = 1,
@@ -31,6 +33,8 @@ interface BuyOrderRequest {
 
 /**
  * Request parameters for getting a CowSwap quote.
+ *
+ * @deprecated The `zodiac-roles-sdk/swaps` entrypoint is deprecated and will be removed in the next major release.
  */
 export type QuoteRequest = (SellOrderRequest | BuyOrderRequest) & {
   sellToken: `0x${string}`
@@ -54,6 +58,8 @@ export type QuoteRequest = (SellOrderRequest | BuyOrderRequest) & {
 
 /**
  * Quote returned by getCowQuote, used as input for signCowOrder and postCowOrder.
+ *
+ * @deprecated The `zodiac-roles-sdk/swaps` entrypoint is deprecated and will be removed in the next major release.
  */
 export type Quote = {
   sellToken: `0x${string}`
@@ -79,6 +85,8 @@ export type Quote = {
 
 /**
  * Advanced options for getCowQuote.
+ *
+ * @deprecated The `zodiac-roles-sdk/swaps` entrypoint is deprecated and will be removed in the next major release.
  */
 export interface AdvancedOptions {
   appCode?: string

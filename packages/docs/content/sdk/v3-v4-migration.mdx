@@ -4,7 +4,7 @@ import { Callout } from "nextra/components";
 
 v4 narrows the scope of `zodiac-roles-sdk` to **authoring** permissions. Reading
 on-chain state and applying configuration updates now live in the
-[Zodiac SDK](https://github.com/gnosisguild/zodiac-os-sdk), which talks to
+[Zodiac SDK](https://github.com/gnosisguild/zodiac-sdk), which talks to
 the Zodiac API.
 
 ## What changed
@@ -13,9 +13,9 @@ the Zodiac API.
 
 | Removed                                             | Replacement                              |
 | --------------------------------------------------- | ---------------------------------------- |
-| `planApply`                                         | `push()` from `@zodiac-os/sdk`           |
-| `planApplyRole`                                     | `push()` from `@zodiac-os/sdk`           |
-| `planExtendRole`                                    | `push()` from `@zodiac-os/sdk`           |
+| `planApply`                                         | `push()` from `@zodiaceco/sdk`           |
+| `planApplyRole`                                     | `push()` from `@zodiaceco/sdk`           |
+| `planExtendRole`                                    | `push()` from `@zodiaceco/sdk`           |
 | `callsPlannedForApply`, `callsPlannedForApplyRole`  | — (the API plans calls server-side)      |
 | `encodeCalls`, `Call`                               | — (no longer needed at the SDK boundary) |
 | `fetchRole`, `fetchRolesMod`, `fetchRolesModConfig` | — (state is read through the Zodiac API) |
@@ -60,7 +60,7 @@ diffs against the current on-chain state, plans the calls, and applies them.
   The Zodiac SDK requires a Zodiac org and a project-scoped API key. Run `zodiac
   init` in your project to authorize, then `zodiac pull` to generate typed
   account references. See the [Zodiac SDK
-  README](https://github.com/gnosisguild/zodiac-os-sdk) for the full setup.
+  README](https://github.com/gnosisguild/zodiac-sdk) for the full setup.
 </Callout>
 
 ### Replacing `planApplyRole`
@@ -86,8 +86,8 @@ const calls = await planApplyRole(
 **v4:**
 
 ```typescript
-import { constellation, push } from "@zodiac-os/sdk";
-import { allow } from "@zodiac-os/sdk/allow";
+import { constellation, push } from "@zodiaceco/sdk";
+import { allow } from "@zodiaceco/sdk/allow";
 import { encodeKey } from "zodiac-roles-sdk";
 
 const eth = constellation({
@@ -128,7 +128,7 @@ const calls = await planApply(
 **v4:**
 
 ```typescript
-import { constellation, push } from "@zodiac-os/sdk";
+import { constellation, push } from "@zodiaceco/sdk";
 
 const eth = constellation({
   workspace: "Default",
@@ -152,7 +152,7 @@ API, which returns the planned and applied changes.
 
 | v3                                                  | v4                                                    |
 | --------------------------------------------------- | ----------------------------------------------------- |
-| `planApply`, `planApplyRole`, `planExtendRole`      | `push()` from `@zodiac-os/sdk`                        |
+| `planApply`, `planApplyRole`, `planExtendRole`      | `push()` from `@zodiaceco/sdk`                        |
 | `callsPlannedForApply*`, `encodeCalls`, `Call`      | removed — the API plans server-side                   |
 | `fetchRole`, `fetchRolesMod`, `fetchRolesModConfig` | removed — read through the Zodiac API                 |
 | `import … from "zodiac-roles-deployments"`          | `import … from "zodiac-roles-sdk"`                    |

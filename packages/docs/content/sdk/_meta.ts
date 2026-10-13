@@ -10,9 +10,6 @@ const meta: MetaRecord = {
   conditions: {
     title: "Conditions",
   },
-  swaps: {
-    title: "Swaps",
-  },
   api: {
     title: "API Reference",
   },

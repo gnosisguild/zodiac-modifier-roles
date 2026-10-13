@@ -24,6 +24,8 @@ const buyTokenDestinationMap: Record<string, BuyTokenDestination> = {
  * Posts a CowSwap order to the Cow order book API.
  * Should be used in conjunction with `signCowOrder`.
  * @returns A promise that resolves to the orderId
+ *
+ * @deprecated The `zodiac-roles-sdk/swaps` entrypoint is deprecated and will be removed in the next major release.
  */
 export const postCowOrder = async (quote: Quote) => {
   // Validate the appData before posting
