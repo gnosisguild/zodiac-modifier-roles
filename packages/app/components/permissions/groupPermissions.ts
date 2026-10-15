@@ -3,13 +3,16 @@ import { PermissionCoerced, permissionId } from "zodiac-roles-sdk"
 /** Group permissions by targetAddress and sort everything in ascending order */
 export const groupPermissions = (permissions: PermissionCoerced[]) => {
   const entries = Object.entries(
-    permissions.reduce((groups, permission) => {
-      if (!groups[permission.targetAddress]) {
-        groups[permission.targetAddress] = []
-      }
-      groups[permission.targetAddress].push(permission)
-      return groups
-    }, {} as Record<`0x${string}`, PermissionCoerced[]>)
+    permissions.reduce(
+      (groups, permission) => {
+        if (!groups[permission.targetAddress]) {
+          groups[permission.targetAddress] = []
+        }
+        groups[permission.targetAddress].push(permission)
+        return groups
+      },
+      {} as Record<`0x${string}`, PermissionCoerced[]>
+    )
   ) as [`0x${string}`, PermissionCoerced[]][]
 
   return entries

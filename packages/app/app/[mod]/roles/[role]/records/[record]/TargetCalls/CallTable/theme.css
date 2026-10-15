@@ -50,12 +50,12 @@
 /** group column headers: move the top border into the content wrapper so that the border is open to the parent in the padding area */
 .ag-header-row:where(:not(:first-child)) {
   :where(
-      .ag-header-cell:not(
-          .ag-header-span-height.ag-header-span-total,
-          .ag-header-parent-hidden
-        ),
-      .ag-header-group-cell.ag-header-group-cell-with-group
-    ) {
+    .ag-header-cell:not(
+      .ag-header-span-height.ag-header-span-total,
+      .ag-header-parent-hidden
+    ),
+    .ag-header-group-cell.ag-header-group-cell-with-group
+  ) {
     border-top: none;
   }
 }

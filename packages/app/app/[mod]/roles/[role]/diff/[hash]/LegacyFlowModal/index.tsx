@@ -37,12 +37,12 @@ const LegacyFlowModal: React.FC<{ dismissable: boolean }> = ({
               </Headless.DialogTitle>
 
               <p>
-                You pushed these permissions through the Roles app&apos;s
-                legacy flow.{" "}
+                You pushed these permissions through the Roles app&apos;s legacy
+                flow.{" "}
                 {dismissable ? (
                   <>
-                    Starting <strong>August 15, 2026</strong>, this flow will
-                    no longer be available.
+                    Starting <strong>August 15, 2026</strong>, this flow will no
+                    longer be available.
                   </>
                 ) : (
                   <>

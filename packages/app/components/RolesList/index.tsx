@@ -41,7 +41,8 @@ const RolesList: React.FC<{ roles: readonly Role[]; mod: Mod }> = ({
 
   let emptyMessage = ""
   if (roles.length === 0) {
-    emptyMessage = "No roles have been created yet. Roles are created programmatically. Go here to get started: https://github.com/gnosisguild/zodiac-constellation-template"
+    emptyMessage =
+      "No roles have been created yet. Roles are created programmatically. Go here to get started: https://github.com/gnosisguild/zodiac-constellation-template"
   } else if (matchingRoles.length === 0) {
     emptyMessage = "There's no role matching your query."
   }

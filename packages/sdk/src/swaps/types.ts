@@ -4,7 +4,6 @@
  *
  * TODO: Deploy CowOrderSigner contracts to these additional cow-sdk chains:
  * - LENS (232)
- * - 
  *
  * @deprecated The `zodiac-roles-sdk/swaps` entrypoint is deprecated and will be removed in the next major release.
  */
@@ -17,7 +16,7 @@ export enum SupportedChainId {
   POLYGON = 137,
   BNB = 56,
   PLASMA = 9745,
-  LINEA = 59144,
+  // LINEA = 59144,
   SEPOLIA = 11155111,
 }
 

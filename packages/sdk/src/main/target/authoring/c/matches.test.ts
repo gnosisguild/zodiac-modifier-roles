@@ -1,22 +1,22 @@
 import { describe, expect, it } from "vitest"
-import { Operator, ParameterType } from "../../../types"
+import { Operator, Encoding } from "../../../types"
 
 import { calldataMatches } from "./matches"
 import { encodeKey } from "../../../keys"
 
 describe("calldataMatches", () => {
-  it("correctly encodes EtherWithinAllowance conditions", () => {
+  it("correctly encodes CallWithinAllowance conditions", () => {
     const result = calldataMatches([], [], {
-      etherWithinAllowance: encodeKey("test-allowance"),
+      callWithinAllowance: encodeKey("test-allowance"),
     })()
 
     expect(result).toEqual({
-      paramType: ParameterType.Calldata,
+      paramType: Encoding.AbiEncoded,
       operator: Operator.Matches,
       children: [
         {
-          paramType: ParameterType.None,
-          operator: Operator.EtherWithinAllowance,
+          paramType: Encoding.None,
+          operator: Operator.CallWithinAllowance,
           compValue: encodeKey("test-allowance"),
         },
       ],
@@ -26,13 +26,11 @@ describe("calldataMatches", () => {
   it("accepts allowance keys as labels", () => {
     expect(
       calldataMatches([], [], {
-        etherWithinAllowance: "test-allowance",
-        callWithinAllowance: "other-allowance",
+        callWithinAllowance: "test-allowance",
       })()
     ).toEqual(
       calldataMatches([], [], {
-        etherWithinAllowance: encodeKey("test-allowance"),
-        callWithinAllowance: encodeKey("other-allowance"),
+        callWithinAllowance: encodeKey("test-allowance"),
       })()
     )
   })
@@ -41,10 +39,10 @@ describe("calldataMatches", () => {
     // This path assigns `compValue` directly, so before it went through
     // `encodeKey` a short hex reached the chain as a 2-byte compValue.
     expect(
-      calldataMatches([], [], { etherWithinAllowance: "0x1234" })()
+      calldataMatches([], [], { callWithinAllowance: "0x1234" })()
     ).toEqual(
       calldataMatches([], [], {
-        etherWithinAllowance: encodeKey("0x1234"),
+        callWithinAllowance: encodeKey("0x1234"),
       })()
     )
   })

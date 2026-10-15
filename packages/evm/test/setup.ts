@@ -1,20 +1,21 @@
-import { BigNumberish, ZeroHash } from "ethers";
+import { hexlify, Interface, randomBytes, ZeroHash } from "ethers";
+
+import { ExecutionOptions } from "./utils.js";
+import type { ConditionFlatStruct } from "../typechain-types/contracts/Roles.js";
 import hre from "hardhat";
-import { EthereumProvider, HardhatRuntimeEnvironment } from "hardhat/types";
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import type { NetworkConnection } from "hardhat/types/network";
+import type { EthereumProvider } from "hardhat/types/providers";
+import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/types";
+import type { EIP1193Provider } from "@gnosis-guild/zodiac-core";
 import {
   deployFactories,
-  deployMastercopy,
-  EIP1193Provider,
-} from "@gnosis-guild/zodiac-core";
+  deployMastercopy as zodiacDeployMastercopy,
+} from "@gnosis-guild/zodiac-core/tooling";
 
-import { ExecutionOptions } from "./utils";
-
-import { ConditionFlatStruct } from "../typechain-types/contracts/Integrity";
-import { TestContract } from "../typechain-types/contracts/test";
-
-const DEFAULT_ROLE_KEY =
-  "0x000000000000000000000000000000000000000000000000000000000aabbcc1";
+// Side-effect imports to pull in the NetworkConnection augmentations
+// (adds `ethers` and `networkHelpers` to NetworkConnection).
+import "@nomicfoundation/hardhat-ethers";
+import "@nomicfoundation/hardhat-network-helpers";
 
 export function createEip1193(
   provider: EthereumProvider,
@@ -32,714 +33,468 @@ export function createEip1193(
   };
 }
 
-export async function deployRolesMod(
-  hre: HardhatRuntimeEnvironment,
-  owner: string,
-  avatar: string,
-  target: string,
-) {
-  const [signer] = await hre.ethers.getSigners();
-  const provider = createEip1193(hre.network.provider, signer);
+export function createSetup({ ethers, provider }: NetworkConnection) {
+  async function deployRolesMod(owner: string, avatar: string, target: string) {
+    const [signer] = await ethers.getSigners();
+    const eip1193 = createEip1193(provider, signer);
 
-  await deployFactories({ provider });
-  const integrity = await hre.artifacts.readArtifact("Integrity");
-  const { address: integrityAddress } = await deployMastercopy({
-    bytecode: integrity.bytecode,
-    constructorArgs: { types: [], values: [] },
-    salt: ZeroHash,
-    provider,
-  });
-  const packer = await hre.artifacts.readArtifact("Packer");
-  const { address: packerAddress } = await deployMastercopy({
-    bytecode: packer.bytecode,
-    constructorArgs: { types: [], values: [] },
-    salt: ZeroHash,
-    provider,
-  });
+    await deployFactories({ provider: eip1193 });
+    const conditionStorer = await hre.artifacts.readArtifact("ConditionStorer");
+    const { address: conditionStorerAddress } = await zodiacDeployMastercopy({
+      bytecode: conditionStorer.bytecode,
+      constructorArgs: { types: [], values: [] },
+      salt: ZeroHash,
+      provider: eip1193,
+    });
 
-  const Modifier = await hre.ethers.getContractFactory("Roles", {
-    libraries: {
-      Integrity: integrityAddress,
-      Packer: packerAddress,
-    },
-  });
-  const modifier = await Modifier.deploy(owner, avatar, target);
-  await modifier.waitForDeployment();
-  return modifier;
-}
+    const withinRatioChecker =
+      await hre.artifacts.readArtifact("WithinRatioChecker");
+    const { address: withinRatioCheckerAddress } = await zodiacDeployMastercopy(
+      {
+        bytecode: withinRatioChecker.bytecode,
+        constructorArgs: { types: [], values: [] },
+        salt: ZeroHash,
+        provider: eip1193,
+      },
+    );
 
-export async function setupAvatarAndRoles(roleKey = DEFAULT_ROLE_KEY) {
-  const [owner, member, relayer] = await hre.ethers.getSigners();
+    const customConditionChecker = await hre.artifacts.readArtifact(
+      "CustomConditionChecker",
+    );
+    const { address: customConditionCheckerAddress } =
+      await zodiacDeployMastercopy({
+        bytecode: customConditionChecker.bytecode,
+        constructorArgs: { types: [], values: [] },
+        salt: ZeroHash,
+        provider: eip1193,
+      });
 
-  const Avatar = await hre.ethers.getContractFactory("TestAvatar");
-  const avatar = await Avatar.deploy();
+    const Modifier = await ethers.getContractFactory("Roles", {
+      libraries: {
+        ConditionStorer: conditionStorerAddress,
+        WithinRatioChecker: withinRatioCheckerAddress,
+        CustomConditionChecker: customConditionCheckerAddress,
+      },
+    });
+    const modifier = await Modifier.deploy(owner, avatar, target);
+    await modifier.waitForDeployment();
+    return modifier;
+  }
 
-  const TestContract = await hre.ethers.getContractFactory("TestContract");
-  const testContract = await TestContract.deploy();
-  const avatarAddress = await avatar.getAddress();
-  const roles = await deployRolesMod(
-    hre,
-    owner.address,
-    avatarAddress,
-    avatarAddress,
-  );
-  await roles.connect(owner).enableModule(member.address);
-  await roles.connect(owner).assignRoles(member.address, [roleKey], [true]);
-  await roles.connect(owner).setDefaultRole(member.address, roleKey);
+  async function setupTestContract() {
+    const [owner, member] = await ethers.getSigners();
 
-  await roles
-    .connect(owner)
-    .scopeTarget(roleKey, await testContract.getAddress());
+    const Avatar = await ethers.getContractFactory("TestAvatar");
+    const avatar = await Avatar.deploy();
 
-  const testContractAddress = await testContract.getAddress();
+    const TestContract = await ethers.getContractFactory("TestContract");
+    const testContract = await TestContract.deploy();
 
-  const scopeFunction = (
-    selector: string,
-    conditions: ConditionFlatStruct[],
-    options?: ExecutionOptions,
-  ) =>
-    roles
-      .connect(owner)
-      .scopeFunction(
+    const avatarAddress = await avatar.getAddress();
+    const roles = await deployRolesMod(
+      owner.address,
+      avatarAddress,
+      avatarAddress,
+    );
+
+    const testContractAddress = await testContract.getAddress();
+    const roleKey = hexlify(randomBytes(32));
+
+    await roles.connect(owner).enableModule(member.address);
+    await roles.connect(owner).grantRole(member.address, roleKey, 0, 0, 0);
+    await roles.connect(owner).setDefaultRole(member.address, roleKey);
+    await roles.connect(owner).scopeTarget(roleKey, testContractAddress);
+
+    const allowTarget = (
+      conditions: ConditionFlatStruct[],
+      options = ExecutionOptions.None,
+    ) =>
+      roles
+        .connect(owner)
+        .allowTarget(roleKey, testContractAddress, conditions, options);
+
+    return {
+      roles: roles.connect(owner),
+      owner,
+      member,
+      testContract,
+      testContractAddress,
+      roleKey,
+      allowTarget,
+    };
+  }
+
+  async function setupOneParam() {
+    const iface = new Interface(["function fn(uint256)"]);
+    const fn = iface.getFunction("fn")!;
+    const { owner, roles, member, testContractAddress, roleKey } =
+      await setupTestContract();
+
+    const allowFunction = async (
+      conditions: ConditionFlatStruct[],
+      options = ExecutionOptions.None,
+    ) => {
+      return roles.allowFunction(
         roleKey,
         testContractAddress,
-        selector,
+        fn.selector,
         conditions,
-        options || ExecutionOptions.Both,
+        options,
       );
+    };
 
-  const execTransactionFromModule = async ({
-    data,
-    operation,
-  }: {
-    data: string;
-    operation?: number;
-  }) =>
-    roles
-      .connect(member)
-      .execTransactionFromModule(
-        await testContract.getAddress(),
-        0,
-        data,
-        operation || 0,
+    const invoke = (
+      a: bigint | number,
+      options?: { value?: bigint | number; operation?: number },
+    ) =>
+      roles
+        .connect(member)
+        .execTransactionFromModule(
+          testContractAddress,
+          options?.value ?? 0,
+          iface.encodeFunctionData(fn, [a]),
+          options?.operation ?? 0,
+        );
+
+    return {
+      owner,
+      roles,
+      member,
+      testContractAddress,
+      roleKey,
+      fn,
+      allowFunction,
+      invoke,
+    };
+  }
+
+  async function setupOneParamSigned() {
+    const iface = new Interface(["function fn(int256)"]);
+    const fn = iface.getFunction("fn")!;
+    const { owner, roles, member, testContractAddress, roleKey } =
+      await setupTestContract();
+
+    const allowFunction = async (
+      conditions: ConditionFlatStruct[],
+      options = ExecutionOptions.None,
+    ) => {
+      return roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
+        conditions,
+        options,
       );
+    };
 
-  return {
-    owner,
-    member,
-    relayer,
-    avatar,
-    roles,
-    roleKey,
-    testContract,
-    scopeFunction,
-    execTransactionFromModule,
-  };
-}
+    const invoke = (
+      a: bigint | number,
+      options?: { value?: bigint | number; operation?: number },
+    ) =>
+      roles
+        .connect(member)
+        .execTransactionFromModule(
+          testContractAddress,
+          options?.value ?? 0,
+          iface.encodeFunctionData(fn, [a]),
+          options?.operation ?? 0,
+        );
 
-export async function setupFnThatMaybeReturns() {
-  const {
-    owner,
-    member,
-    roles,
-    testContract,
-    scopeFunction,
-    execTransactionFromModule,
-  } = await setupAvatarAndRoles();
-
-  async function invoke(a: BigNumberish, b: boolean) {
-    return execTransactionFromModule({
-      data: (await testContract.fnThatMaybeReverts.populateTransaction(a, b))
-        .data,
-    });
+    return {
+      owner,
+      roles,
+      member,
+      testContractAddress,
+      roleKey,
+      fn,
+      allowFunction,
+      invoke,
+    };
   }
 
-  const { selector } = testContract.interface.getFunction("fnThatMaybeReverts");
+  async function setupTwoParams() {
+    const iface = new Interface(["function fn(uint256, uint256)"]);
+    const fn = iface.getFunction("fn")!;
+    const { owner, roles, member, testContractAddress, roleKey } =
+      await setupTestContract();
 
-  return {
-    owner,
-    roles,
-    scopeFunction: (
+    const allowFunction = async (
       conditions: ConditionFlatStruct[],
-      options?: ExecutionOptions,
-    ) => scopeFunction(selector, conditions, options),
-    invoke,
-  };
-}
+      options = ExecutionOptions.None,
+    ) => {
+      return roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
+        conditions,
+        options,
+      );
+    };
 
-export async function setupOneParamStatic() {
-  const {
-    owner,
-    member,
-    roles,
-    testContract,
-    scopeFunction,
-    execTransactionFromModule,
-  } = await setupAvatarAndRoles();
+    const invoke = (
+      a: bigint | number,
+      b: bigint | number,
+      options?: { value?: bigint | number; operation?: number },
+    ) =>
+      roles
+        .connect(member)
+        .execTransactionFromModule(
+          testContractAddress,
+          options?.value ?? 0,
+          iface.encodeFunctionData(fn, [a, b]),
+          options?.operation ?? 0,
+        );
 
-  const { selector } = testContract.interface.getFunction("oneParamStatic");
-  return {
-    owner,
-    member,
-    roles,
-    scopeFunction: (
-      conditions: ConditionFlatStruct[],
-      options?: ExecutionOptions,
-    ) => scopeFunction(selector, conditions, options),
-    invoke: async (a: BigNumberish, operation: 0 | 1 = 0) =>
-      execTransactionFromModule({
-        data: (await testContract.oneParamStatic.populateTransaction(a)).data,
-        operation,
-      }),
-  };
-}
-
-export async function setupTwoParamsStatic() {
-  const {
-    owner,
-    member,
-    roles,
-    testContract,
-    scopeFunction,
-    execTransactionFromModule,
-  } = await setupAvatarAndRoles();
-
-  async function invoke(a: number, b: number) {
-    return execTransactionFromModule({
-      data: (await testContract.twoParamsStatic.populateTransaction(a, b)).data,
-    });
+    return {
+      owner,
+      roles,
+      member,
+      testContractAddress,
+      roleKey,
+      fn,
+      allowFunction,
+      invoke,
+    };
   }
 
-  const { selector } = testContract.interface.getFunction("twoParamsStatic");
+  async function setupDynamicParam() {
+    const iface = new Interface(["function fn(bytes)"]);
+    const fn = iface.getFunction("fn")!;
+    const { owner, roles, member, testContractAddress, roleKey } =
+      await setupTestContract();
 
-  return {
-    owner,
-    member,
-    roles,
-    scopeFunction: (
+    const allowFunction = async (
       conditions: ConditionFlatStruct[],
-      options?: ExecutionOptions,
-    ) => scopeFunction(selector, conditions, options),
-    invoke,
-  };
-}
-export async function setupOneParamStaticTuple() {
-  const {
-    owner,
-    member,
-    roles,
-    testContract,
-    scopeFunction,
-    execTransactionFromModule,
-  } = await setupAvatarAndRoles();
+      options = ExecutionOptions.None,
+    ) => {
+      return roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
+        conditions,
+        options,
+      );
+    };
 
-  async function invoke(a: TestContract.StaticTupleStruct) {
-    return execTransactionFromModule({
-      data: (await testContract.oneParamStaticTuple.populateTransaction(a))
-        .data,
-    });
+    const invoke = (
+      data: string,
+      options?: { value?: bigint | number; operation?: number },
+    ) =>
+      roles
+        .connect(member)
+        .execTransactionFromModule(
+          testContractAddress,
+          options?.value ?? 0,
+          iface.encodeFunctionData(fn, [data]),
+          options?.operation ?? 0,
+        );
+
+    return {
+      owner,
+      roles,
+      member,
+      testContractAddress,
+      roleKey,
+      fn,
+      allowFunction,
+      invoke,
+    };
   }
 
-  const { selector } = testContract.interface.getFunction(
-    "oneParamStaticTuple",
-  );
+  async function setupArrayParam() {
+    const iface = new Interface(["function fn(uint256[])"]);
+    const fn = iface.getFunction("fn")!;
+    const { owner, roles, member, testContractAddress, roleKey } =
+      await setupTestContract();
 
-  return {
-    roles,
-    owner,
-    member,
-    scopeFunction: (
+    const allowFunction = async (
       conditions: ConditionFlatStruct[],
-      options?: ExecutionOptions,
-    ) => scopeFunction(selector, conditions, options),
-    invoke,
-  };
-}
-export async function setupOneParamStaticNestedTuple() {
-  const {
-    owner,
-    member,
-    roles,
-    testContract,
-    scopeFunction,
-    execTransactionFromModule,
-  } = await setupAvatarAndRoles();
+      options = ExecutionOptions.None,
+    ) => {
+      return roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
+        conditions,
+        options,
+      );
+    };
 
-  async function invoke(a: TestContract.StaticNestedTupleStruct) {
-    return execTransactionFromModule({
-      data: (
-        await testContract.oneParamStaticNestedTuple.populateTransaction(a)
-      ).data,
-    });
+    const invoke = (
+      arr: (bigint | number)[],
+      options?: { value?: bigint | number; operation?: number },
+    ) =>
+      roles
+        .connect(member)
+        .execTransactionFromModule(
+          testContractAddress,
+          options?.value ?? 0,
+          iface.encodeFunctionData(fn, [arr]),
+          options?.operation ?? 0,
+        );
+
+    return {
+      roles,
+      owner,
+      member,
+      testContractAddress,
+      roleKey,
+      fn,
+      allowFunction,
+      invoke,
+    };
   }
 
-  const { selector } = testContract.interface.getFunction(
-    "oneParamStaticNestedTuple",
-  );
+  async function setupTwoArrayParams() {
+    const iface = new Interface(["function fn(uint256[], uint256[])"]);
+    const fn = iface.getFunction("fn")!;
+    const { owner, roles, member, testContractAddress, roleKey } =
+      await setupTestContract();
 
-  return {
-    roles,
-    owner,
-    member,
-    scopeFunction: (
+    const allowFunction = async (
       conditions: ConditionFlatStruct[],
-      options?: ExecutionOptions,
-    ) => scopeFunction(selector, conditions, options),
-    invoke,
-  };
-}
-export async function setupTwoParamsStaticTupleStatic() {
-  const {
-    owner,
-    member,
-    roles,
-    testContract,
-    scopeFunction,
-    execTransactionFromModule,
-  } = await setupAvatarAndRoles();
+      options = ExecutionOptions.None,
+    ) => {
+      return roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
+        conditions,
+        options,
+      );
+    };
 
-  async function invoke(a: TestContract.StaticTupleStruct, b: number) {
-    return execTransactionFromModule({
-      data: (
-        await testContract.twoParamsStaticTupleStatic.populateTransaction(a, b)
-      ).data,
-    });
+    const invoke = (
+      arr1: (bigint | number)[],
+      arr2: (bigint | number)[],
+      options?: { value?: bigint | number; operation?: number },
+    ) =>
+      roles
+        .connect(member)
+        .execTransactionFromModule(
+          testContractAddress,
+          options?.value ?? 0,
+          iface.encodeFunctionData(fn, [arr1, arr2]),
+          options?.operation ?? 0,
+        );
+
+    return {
+      roles,
+      owner,
+      member,
+      testContractAddress,
+      roleKey,
+      fn,
+      allowFunction,
+      invoke,
+    };
   }
 
-  const { selector } = testContract.interface.getFunction(
-    "twoParamsStaticTupleStatic",
-  );
+  async function setupThreeArrayParams(type = "uint256") {
+    const iface = new Interface([
+      `function fn(${type}[], ${type}[], ${type}[])`,
+    ]);
+    const fn = iface.getFunction("fn")!;
+    const { owner, roles, member, testContractAddress, roleKey } =
+      await setupTestContract();
 
-  return {
-    roles,
-    owner,
-    member,
-    scopeFunction: (
+    const allowFunction = async (
       conditions: ConditionFlatStruct[],
-      options?: ExecutionOptions,
-    ) => scopeFunction(selector, conditions, options),
-    invoke,
-  };
-}
-export async function setupOneParamDynamicTuple() {
-  const {
-    owner,
-    member,
-    roles,
-    testContract,
-    scopeFunction,
-    execTransactionFromModule,
-  } = await setupAvatarAndRoles();
+      options = ExecutionOptions.None,
+    ) => {
+      return roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
+        conditions,
+        options,
+      );
+    };
 
-  async function invoke(a: TestContract.DynamicTupleStruct) {
-    return execTransactionFromModule({
-      data: (await testContract.oneParamDynamicTuple.populateTransaction(a))
-        .data,
-    });
+    const invoke = (
+      arr1: (bigint | number | string)[],
+      arr2: (bigint | number | string)[],
+      arr3: (bigint | number | string)[],
+      options?: { value?: bigint | number; operation?: number },
+    ) =>
+      roles
+        .connect(member)
+        .execTransactionFromModule(
+          testContractAddress,
+          options?.value ?? 0,
+          iface.encodeFunctionData(fn, [arr1, arr2, arr3]),
+          options?.operation ?? 0,
+        );
+
+    return {
+      roles,
+      owner,
+      member,
+      testContractAddress,
+      roleKey,
+      fn,
+      allowFunction,
+      invoke,
+    };
   }
 
-  const { selector } = testContract.interface.getFunction(
-    "oneParamDynamicTuple",
-  );
+  async function setupTwoTupleArrayParams() {
+    const iface = new Interface([
+      "function fn((uint256, uint256)[], (uint256, uint256)[])",
+    ]);
+    const fn = iface.getFunction("fn")!;
+    const { owner, roles, member, testContractAddress, roleKey } =
+      await setupTestContract();
 
-  return {
-    roles,
-    owner,
-    member,
-    scopeFunction: (
+    const allowFunction = async (
       conditions: ConditionFlatStruct[],
-      options?: ExecutionOptions,
-    ) => scopeFunction(selector, conditions, options),
-    invoke,
-  };
-}
-export async function setupOneParamDynamicNestedTuple() {
-  const {
-    owner,
-    member,
-    roles,
-    testContract,
-    scopeFunction,
-    execTransactionFromModule,
-  } = await setupAvatarAndRoles();
+      options = ExecutionOptions.None,
+    ) => {
+      return roles.allowFunction(
+        roleKey,
+        testContractAddress,
+        fn.selector,
+        conditions,
+        options,
+      );
+    };
 
-  async function invoke(a: TestContract.DynamicNestedTupleStruct) {
-    return execTransactionFromModule({
-      data: (
-        await testContract.oneParamDynamicNestedTuple.populateTransaction(a)
-      ).data,
-    });
+    const invoke = (
+      arr1: [bigint | number, bigint | number][],
+      arr2: [bigint | number, bigint | number][],
+      options?: { value?: bigint | number; operation?: number },
+    ) =>
+      roles
+        .connect(member)
+        .execTransactionFromModule(
+          testContractAddress,
+          options?.value ?? 0,
+          iface.encodeFunctionData(fn, [arr1, arr2]),
+          options?.operation ?? 0,
+        );
+
+    return {
+      roles,
+      owner,
+      member,
+      testContractAddress,
+      roleKey,
+      fn,
+      allowFunction,
+      invoke,
+    };
   }
 
-  const { selector } = testContract.interface.getFunction(
-    "oneParamDynamicNestedTuple",
-  );
-
   return {
-    roles,
-    owner,
-    member,
-    scopeFunction: (
-      conditions: ConditionFlatStruct[],
-      options?: ExecutionOptions,
-    ) => scopeFunction(selector, conditions, options),
-    invoke,
-  };
-}
-export async function setupOneParamArrayOfStatic() {
-  const {
-    owner,
-    member,
-    roles,
-    testContract,
-    scopeFunction,
-    execTransactionFromModule,
-  } = await setupAvatarAndRoles();
-
-  async function invoke(a: number[]) {
-    return execTransactionFromModule({
-      data: (await testContract.oneParamArrayOfStatic.populateTransaction(a))
-        .data,
-    });
-  }
-
-  const { selector } = testContract.interface.getFunction(
-    "oneParamArrayOfStatic",
-  );
-
-  return {
-    owner,
-    member,
-    roles,
-    scopeFunction: (
-      conditions: ConditionFlatStruct[],
-      options?: ExecutionOptions,
-    ) => scopeFunction(selector, conditions, options),
-    invoke,
-  };
-}
-export async function setupOneParamArrayOfStaticTuple() {
-  const {
-    owner,
-    member,
-    roles,
-    testContract,
-    scopeFunction,
-    execTransactionFromModule,
-  } = await setupAvatarAndRoles();
-
-  async function invoke(a: TestContract.StaticTupleStruct[]) {
-    return execTransactionFromModule({
-      data: (
-        await testContract.oneParamArrayOfStaticTuple.populateTransaction(a)
-      ).data,
-    });
-  }
-
-  const { selector } = testContract.interface.getFunction(
-    "oneParamArrayOfStaticTuple",
-  );
-
-  return {
-    roles,
-    owner,
-    member,
-    scopeFunction: (
-      conditions: ConditionFlatStruct[],
-      options?: ExecutionOptions,
-    ) => scopeFunction(selector, conditions, options),
-    invoke,
-  };
-}
-export async function setupOneParamArrayOfDynamicTuple() {
-  const {
-    owner,
-    member,
-    roles,
-    testContract,
-    scopeFunction,
-    execTransactionFromModule,
-  } = await setupAvatarAndRoles();
-
-  async function invoke(a: TestContract.DynamicTupleStruct[]) {
-    return execTransactionFromModule({
-      data: (
-        await testContract.oneParamArrayOfDynamicTuple.populateTransaction(a)
-      ).data,
-    });
-  }
-
-  const { selector } = testContract.interface.getFunction(
-    "oneParamArrayOfDynamicTuple",
-  );
-
-  return {
-    roles,
-    owner,
-    member,
-    scopeFunction: (
-      conditions: ConditionFlatStruct[],
-      options?: ExecutionOptions,
-    ) => scopeFunction(selector, conditions, options),
-    invoke,
-  };
-}
-export async function setupOneParamUintWord() {
-  const {
-    owner,
-    member,
-    roles,
-    testContract,
-    scopeFunction,
-    execTransactionFromModule,
-  } = await setupAvatarAndRoles();
-
-  async function invoke(a: number) {
-    return execTransactionFromModule({
-      data: (await testContract.oneParamUintWord.populateTransaction(a)).data,
-    });
-  }
-
-  const { selector } = testContract.interface.getFunction("oneParamUintWord");
-
-  return {
-    roles,
-    owner,
-    member,
-    scopeFunction: (
-      conditions: ConditionFlatStruct[],
-      options?: ExecutionOptions,
-    ) => scopeFunction(selector, conditions, options),
-    invoke,
-  };
-}
-export async function setupOneParamUintSmall() {
-  const {
-    owner,
-    member,
-    roles,
-    testContract,
-    scopeFunction,
-    execTransactionFromModule,
-  } = await setupAvatarAndRoles();
-  2;
-  async function invoke(a: number) {
-    return execTransactionFromModule({
-      data: (await testContract.oneParamUintSmall.populateTransaction(a)).data,
-    });
-  }
-
-  const { selector } = testContract.interface.getFunction("oneParamUintSmall");
-
-  return {
-    roles,
-    owner,
-    member,
-    scopeFunction: (
-      conditions: ConditionFlatStruct[],
-      options?: ExecutionOptions,
-    ) => scopeFunction(selector, conditions, options),
-    invoke,
-  };
-}
-export async function setupOneParamIntWord() {
-  const {
-    owner,
-    member,
-    roles,
-    testContract,
-    scopeFunction,
-    execTransactionFromModule,
-  } = await setupAvatarAndRoles();
-
-  async function invoke(a: number) {
-    return execTransactionFromModule({
-      data: (await testContract.oneParamIntWord.populateTransaction(a)).data,
-    });
-  }
-
-  const { selector } = testContract.interface.getFunction("oneParamIntWord");
-
-  return {
-    roles,
-    owner,
-    member,
-    scopeFunction: (
-      conditions: ConditionFlatStruct[],
-      options?: ExecutionOptions,
-    ) => scopeFunction(selector, conditions, options),
-    invoke,
-  };
-}
-export async function setupOneParamIntSmall() {
-  const {
-    owner,
-    member,
-    roles,
-    testContract,
-    scopeFunction,
-    execTransactionFromModule,
-  } = await setupAvatarAndRoles();
-
-  async function invoke(a: number) {
-    return execTransactionFromModule({
-      data: (await testContract.oneParamIntSmall.populateTransaction(a)).data,
-    });
-  }
-
-  const { selector } = testContract.interface.getFunction("oneParamIntSmall");
-
-  return {
-    roles,
-    owner,
-    member,
-    scopeFunction: (
-      conditions: ConditionFlatStruct[],
-      options?: ExecutionOptions,
-    ) => scopeFunction(selector, conditions, options),
-    invoke,
-  };
-}
-export async function setupOneParamBytesWord() {
-  const {
-    owner,
-    member,
-    roles,
-    testContract,
-    scopeFunction,
-    execTransactionFromModule,
-  } = await setupAvatarAndRoles();
-
-  async function invoke(a: number) {
-    return execTransactionFromModule({
-      data: (await testContract.oneParamUintWord.populateTransaction(a)).data,
-    });
-  }
-
-  const { selector } = testContract.interface.getFunction("oneParamUintWord");
-
-  return {
-    roles,
-    owner,
-    member,
-    scopeFunction: (
-      conditions: ConditionFlatStruct[],
-      options?: ExecutionOptions,
-    ) => scopeFunction(selector, conditions, options),
-    invoke,
-  };
-}
-export async function setupOneParamBytesSmall() {
-  const {
-    owner,
-    member,
-    roles,
-    testContract,
-    scopeFunction,
-    execTransactionFromModule,
-  } = await setupAvatarAndRoles();
-
-  async function invoke(a: string) {
-    return execTransactionFromModule({
-      data: (await testContract.oneParamBytesSmall.populateTransaction(a)).data,
-    });
-  }
-
-  const { selector } = testContract.interface.getFunction("oneParamBytesSmall");
-
-  return {
-    roles,
-    owner,
-    member,
-    scopeFunction: (
-      conditions: ConditionFlatStruct[],
-      options?: ExecutionOptions,
-    ) => scopeFunction(selector, conditions, options),
-    invoke,
-  };
-}
-export async function setupOneParamBytes() {
-  const {
-    owner,
-    member,
-    roles,
-    testContract,
-    scopeFunction,
-    execTransactionFromModule,
-  } = await setupAvatarAndRoles();
-
-  async function invoke(a: string) {
-    return execTransactionFromModule({
-      data: (await testContract.oneParamBytes.populateTransaction(a)).data,
-    });
-  }
-
-  const { selector } = testContract.interface.getFunction("oneParamBytes");
-
-  return {
-    roles,
-    owner,
-    member,
-    scopeFunction: (
-      conditions: ConditionFlatStruct[],
-      options?: ExecutionOptions,
-    ) => scopeFunction(selector, conditions, options),
-    invoke,
-  };
-}
-export async function setupOneParamString() {
-  const {
-    owner,
-    member,
-    roles,
-    testContract,
-    scopeFunction,
-    execTransactionFromModule,
-  } = await setupAvatarAndRoles();
-
-  async function invoke(a: string) {
-    return execTransactionFromModule({
-      data: (await testContract.oneParamString.populateTransaction(a)).data,
-    });
-  }
-
-  const { selector } = testContract.interface.getFunction("oneParamString");
-
-  return {
-    roles,
-    owner,
-    member,
-    scopeFunction: (
-      conditions: ConditionFlatStruct[],
-      options?: ExecutionOptions,
-    ) => scopeFunction(selector, conditions, options),
-    invoke,
-  };
-}
-export async function setupOneParamAddress() {
-  const {
-    owner,
-    member,
-    roles,
-    testContract,
-    scopeFunction,
-    execTransactionFromModule,
-  } = await setupAvatarAndRoles();
-
-  async function invoke(a: string) {
-    return execTransactionFromModule({
-      data: (await testContract.oneParamAddress.populateTransaction(a)).data,
-    });
-  }
-
-  const { selector } = testContract.interface.getFunction("oneParamAddress");
-
-  return {
-    roles,
-    scopeFunction: (
-      conditions: ConditionFlatStruct[],
-      options?: ExecutionOptions,
-    ) => scopeFunction(selector, conditions, options),
-    invoke,
+    deployRolesMod,
+    setupTestContract,
+    setupOneParam,
+    setupOneParamSigned,
+    setupTwoParams,
+    setupDynamicParam,
+    setupArrayParam,
+    setupTwoArrayParams,
+    setupThreeArrayParams,
+    setupTwoTupleArrayParams,
   };
 }

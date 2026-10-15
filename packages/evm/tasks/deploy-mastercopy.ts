@@ -1,61 +1,56 @@
-import { task, types } from "hardhat/config";
-
+import { task } from "hardhat/config";
 import {
   deployFactories,
   deployMastercopy,
-  readMastercopies,
-} from "@gnosis-guild/zodiac-core";
-import { createEIP1193 } from "./createEIP1193";
+} from "@gnosis-guild/zodiac-core/tooling";
 
-task(
+import {
+  buildMastercopyDeployments,
+  type MastercopyDeployment,
+} from "./buildMastercopyDeployments.js";
+import { createEIP1193 } from "./createEIP1193.js";
+
+export default task(
   "deploy:mastercopy",
-  "For every version entry on the artifacts file, deploys a mastercopy into the current network"
+  "Deploys the current Roles release (primary mastercopy plus prerequisite singleton libraries and periphery contracts) without persisting metadata",
 )
-  .addOptionalParam(
-    "contractVersion",
-    "The specific version of the contract to deploy",
-    "latest", // Default value
-    types.string
-  )
-  .setAction(async ({ contractVersion }, hre) => {
-    const [signer] = await hre.ethers.getSigners();
+  .setInlineAction(async (_, hre) => {
+    const connection = await hre.network.create();
+    const [signer] = await connection.ethers.getSigners();
     const provider = createEIP1193(
-      hre.network.config.chainId,
-      hre.network.provider,
-      signer
+      connection.networkConfig.chainId,
+      connection.provider,
+      signer,
     );
 
     await deployFactories({ provider });
 
-    for (const mastercopy of readMastercopies({ contractVersion })) {
-      const {
-        contractName,
-        contractVersion,
-        factory,
-        bytecode,
-        constructorArgs,
-        salt,
-      } = mastercopy;
-      const { address, noop } = await deployMastercopy({
-        factory,
-        bytecode,
-        constructorArgs,
-        salt,
-        provider,
-        onStart: () => {
-          console.log(
-            `⏳ ${contractName}@${contractVersion}: Deployment starting...`
-          );
-        },
-      });
-      if (noop) {
-        console.log(
-          `🔄 ${contractName}@${contractVersion}: Already deployed at ${address}`
-        );
-      } else {
-        console.log(
-          `🚀 ${contractName}@${contractVersion}: Successfully deployed at ${address}`
-        );
-      }
+    for (const deployment of await buildMastercopyDeployments(
+      hre,
+      connection,
+    )) {
+      await deployOne(deployment, provider);
     }
+  })
+  .build();
+
+async function deployOne(
+  deployment: MastercopyDeployment,
+  provider: Parameters<typeof deployMastercopy>[0]["provider"],
+) {
+  const { address, noop } = await deployMastercopy({
+    bytecode: deployment.bytecode,
+    constructorArgs: deployment.constructorArgs,
+    salt: deployment.salt,
+    provider,
+    onStart: () => {
+      console.log(`Deploying ${deployment.contractName}...`);
+    },
   });
+
+  console.log(
+    noop
+      ? `${deployment.contractName} already deployed at ${address}`
+      : `${deployment.contractName} deployed at ${address}`,
+  );
+}

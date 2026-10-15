@@ -100,7 +100,7 @@ const batchSwapAbi = parseAbiItem(
 
 const batchSwapAbiInputs = batchSwapAbi.inputs.map((input) =>
   ParamType.from(input)
-)
+) as any[]
 
 const swap1EthForUsdcArgs = [
   0,

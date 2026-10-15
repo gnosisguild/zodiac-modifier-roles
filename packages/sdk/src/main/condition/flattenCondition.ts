@@ -1,8 +1,8 @@
-import { Condition, Operator, ParameterType } from "../types"
+import { Encoding, Condition, Operator } from "../types"
 
 export interface ConditionFlat {
   parent: number
-  paramType: ParameterType
+  paramType: Encoding
   operator: Operator
   compValue?: string
 }

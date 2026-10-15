@@ -1,8 +1,4 @@
-import {
-  ChainId,
-  posterAbi,
-  rolesAbi,
-} from "zodiac-roles-sdk"
+import { ChainId, posterAbi, rolesAbi } from "zodiac-roles-sdk"
 import {
   hexlify,
   Interface,

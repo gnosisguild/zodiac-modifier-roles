@@ -106,7 +106,6 @@ export default ConditionHeader
 const OperatorLabels: Record<number, ReactNode> = {
   [Operator.Matches]: "matches",
   [Operator.ArrayEvery]: "only has elements that",
-
   [Operator.EqualToAvatar]: (
     <>
       is equal to <span className={classes.avatar}>AVATAR</span>

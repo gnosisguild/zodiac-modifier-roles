@@ -1,5 +1,5 @@
 export { withinAllowance } from "./allowance"
-export { every } from "./array"
+export { every, some } from "./array"
 export { and, or } from "./branching"
 export { avatar, bitmask, eq, gt, gte, lt, lte } from "./comparison"
 export { abiEncodedMatches, calldataMatches, matches } from "./matches"

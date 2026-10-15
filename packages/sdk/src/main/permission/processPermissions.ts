@@ -1,9 +1,4 @@
-import {
-  Annotation,
-  Clearance,
-  ExecutionOptions,
-  Target,
-} from "../types"
+import { Annotation, Clearance, ExecutionOptions, Target } from "../types"
 
 import { groupBy } from "../groupBy"
 import { normalizeCondition } from "../condition"

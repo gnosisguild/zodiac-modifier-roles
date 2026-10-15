@@ -1,48 +1,38 @@
-import { task, types } from "hardhat/config";
-import { readMastercopies, verifyMastercopy } from "@gnosis-guild/zodiac-core";
+import { task } from "hardhat/config";
+import { verifyContract } from "@nomicfoundation/hardhat-verify/verify";
 
-task(
+import {
+  buildMastercopyDeployments,
+  type MastercopyDeployment,
+} from "./buildMastercopyDeployments.js";
+
+export default task(
   "verify:mastercopy",
-  "Verifies all mastercopies from the artifacts file in the block explorer corresponding to the current network",
+  "Verifies the current Roles release (primary mastercopy plus prerequisite singleton libraries and periphery contracts) without local metadata",
 )
-  .addOptionalParam(
-    "contractVersion",
-    "Specify a specific version",
-    "latest", // Default value
-    types.string,
-  )
-  .setAction(async ({ contractVersion }, hre) => {
-    const apiKey = hre.config.etherscan.apiKey as string;
-    if (!apiKey) {
-      throw new Error(
-        "Missing etherscan api key for network " + hre.network.name,
-      );
+  .setInlineAction(async (_, hre) => {
+    const connection = await hre.network.create();
+    for (const deployment of await buildMastercopyDeployments(
+      hre,
+      connection,
+    )) {
+      await verifyOne(deployment, hre);
     }
+  })
+  .build();
 
-    const chainId = Number((await hre.ethers.provider.getNetwork()).chainId);
-
-    for (const artifact of readMastercopies({ contractVersion })) {
-      const { noop } = await verifyMastercopy({
-        chainId: chainId,
-        apiKey,
-        artifact,
-      }).catch((e) => {
-        console.error(
-          `Error verifying ${artifact.contractName}@${artifact.contractVersion}: ${e}`,
-        );
-        throw e;
-      });
-
-      const { contractName, contractVersion, address } = artifact;
-
-      if (noop) {
-        console.log(
-          `🔄 ${contractName}@${contractVersion}: Already verified at ${address}`,
-        );
-      } else {
-        console.log(
-          `🚀 ${contractName}@${contractVersion}: Successfully verified at ${address}`,
-        );
-      }
-    }
-  });
+async function verifyOne(
+  deployment: MastercopyDeployment,
+  hre: Parameters<typeof verifyContract>[1],
+) {
+  await verifyContract(
+    {
+      address: deployment.address,
+      constructorArgs: deployment.constructorArgs.values,
+      contract: deployment.contract,
+      libraries: deployment.libraries,
+      provider: "etherscan",
+    },
+    hre,
+  );
+}
