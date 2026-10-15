@@ -1,3 +1,5 @@
+import { getVercelOidcToken } from "@vercel/oidc"
+
 export type FetchOptions = Omit<RequestInit, "method" | "body">
 
 interface QueryRequest {
@@ -6,18 +8,20 @@ interface QueryRequest {
   operationName: string
 }
 
-const SQD_URL = "https://gnosisguild.squids.live/roles:production/api/graphql"
+const SUBGRAPH_URL = "https://indexer.zodiac.eco/subgraph"
 
 export const fetchFromSubgraph = async (
   request: QueryRequest,
   options?: FetchOptions
 ) => {
-  const res = await fetch(SQD_URL, {
+  const token = await findVercelOidcToken()
+  const res = await fetch(SUBGRAPH_URL, {
     ...options,
     method: "POST",
     headers: {
       ...options?.headers,
       "Content-Type": "application/json",
+      ...(token && { Authorization: `Bearer ${token}` }),
     },
     body: JSON.stringify(request),
   })
@@ -38,4 +42,12 @@ export const fetchFromSubgraph = async (
   }
 
   return data
+}
+
+const findVercelOidcToken = async () => {
+  try {
+    return await getVercelOidcToken()
+  } catch {
+    return null
+  }
 }

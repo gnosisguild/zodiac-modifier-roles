@@ -4551,12 +4551,42 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@vercel/cli-config@npm:0.3.1":
+  version: 0.3.1
+  resolution: "@vercel/cli-config@npm:0.3.1"
+  dependencies:
+    xdg-app-paths: 5
+    zod: 4.1.11
+  checksum: b197a4834c5713ef4e376a9f7b19cc6c54964c24c8eb129a9a69fd3478bd0f79e7bf511b61633300f07a83e2230bac9364a3b4b0e5f3adf9ec25e3c94df6615d
+  languageName: node
+  linkType: hard
+
+"@vercel/cli-exec@npm:1.0.1":
+  version: 1.0.1
+  resolution: "@vercel/cli-exec@npm:1.0.1"
+  dependencies:
+    execa: 5.1.1
+  checksum: 1b50eaa7eb1f67b69966126f7716845c948269980d0af5b499b8d8b1d616369905ba19886a4fd2e07591d2863ff80f23208e2281c78225c7aee304e39944e093
+  languageName: node
+  linkType: hard
+
 "@vercel/kv@npm:^0.2.3":
   version: 0.2.4
   resolution: "@vercel/kv@npm:0.2.4"
   dependencies:
     "@upstash/redis": 1.24.3
   checksum: c2827287f70ed978a00bf49c997829ebc869082770d66f0db7ff387694c8eb6cf9acb44088addfccc83eb60f5d3fa00dadba7758cee08a0f7b1b29bb865268d1
+  languageName: node
+  linkType: hard
+
+"@vercel/oidc@npm:4.0.0":
+  version: 4.0.0
+  resolution: "@vercel/oidc@npm:4.0.0"
+  dependencies:
+    "@vercel/cli-config": 0.3.1
+    "@vercel/cli-exec": 1.0.1
+    jose: ^5.9.6
+  checksum: a24ba7ffc667c6afbbda893804ff807e252bb63940a3b16f6611e4e132d3c034717b951645af0ce3b74fd424e1fdc2d8a9447e9be41cf313de8abdbcdc0d9ba4
   languageName: node
   linkType: hard
 
@@ -7877,6 +7907,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"execa@npm:5.1.1":
+  version: 5.1.1
+  resolution: "execa@npm:5.1.1"
+  dependencies:
+    cross-spawn: ^7.0.3
+    get-stream: ^6.0.0
+    human-signals: ^2.1.0
+    is-stream: ^2.0.0
+    merge-stream: ^2.0.0
+    npm-run-path: ^4.0.1
+    onetime: ^5.1.2
+    signal-exit: ^3.0.3
+    strip-final-newline: ^2.0.0
+  checksum: fba9022c8c8c15ed862847e94c252b3d946036d7547af310e344a527e59021fd8b6bb0723883ea87044dc4f0201f949046993124a42ccb0855cae5bf8c786343
+  languageName: node
+  linkType: hard
+
 "execa@npm:^8.0.1":
   version: 8.0.1
   resolution: "execa@npm:8.0.1"
@@ -8339,6 +8386,13 @@ __metadata:
   dependencies:
     pump: ^3.0.0
   checksum: 8bc1a23174a06b2b4ce600df38d6c98d2ef6d84e020c1ddad632ad75bac4e092eeb40e4c09e0761c35fc2dbc5e7fff5dab5e763a383582c4a167dd69a905bd12
+  languageName: node
+  linkType: hard
+
+"get-stream@npm:^6.0.0":
+  version: 6.0.1
+  resolution: "get-stream@npm:6.0.1"
+  checksum: e04ecece32c92eebf5b8c940f51468cd53554dcbb0ea725b2748be583c9523d00128137966afce410b9b051eb2ef16d657cd2b120ca8edafcf5a65e81af63cad
   languageName: node
   linkType: hard
 
@@ -9001,6 +9055,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"human-signals@npm:^2.1.0":
+  version: 2.1.0
+  resolution: "human-signals@npm:2.1.0"
+  checksum: b87fd89fce72391625271454e70f67fe405277415b48bcc0117ca73d31fa23a4241787afdc8d67f5a116cf37258c052f59ea82daffa72364d61351423848e3b8
+  languageName: node
+  linkType: hard
+
 "human-signals@npm:^5.0.0":
   version: 5.0.0
   resolution: "human-signals@npm:5.0.0"
@@ -9598,6 +9659,13 @@ __metadata:
   bin:
     jiti: lib/jiti-cli.mjs
   checksum: db901281e01013c27d46d6c5cde5fa817082f32232c92099043df11e135d00ccd1b4356a9ba356a3293e91855bd7437b6df5ae0ae6ad2c384d9bd59df926633c
+  languageName: node
+  linkType: hard
+
+"jose@npm:^5.9.6":
+  version: 5.10.0
+  resolution: "jose@npm:5.10.0"
+  checksum: e80965ef3ab47baafac3517f53fa9c74b948b57690de524f51320c314cd545ef51ec7b18761605d58fb5965b7c5e12b2bb6ddae87a6ccf55e3f4ad077347d8d7
   languageName: node
   linkType: hard
 
@@ -11449,6 +11517,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"npm-run-path@npm:^4.0.1":
+  version: 4.0.1
+  resolution: "npm-run-path@npm:4.0.1"
+  dependencies:
+    path-key: ^3.0.0
+  checksum: 5374c0cea4b0bbfdfae62da7bbdf1e1558d338335f4cacf2515c282ff358ff27b2ecb91ffa5330a8b14390ac66a1e146e10700440c1ab868208430f56b5f4d23
+  languageName: node
+  linkType: hard
+
 "npm-run-path@npm:^5.1.0":
   version: 5.3.0
   resolution: "npm-run-path@npm:5.3.0"
@@ -11583,7 +11660,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"onetime@npm:^5.1.0":
+"onetime@npm:^5.1.0, onetime@npm:^5.1.2":
   version: 5.1.2
   resolution: "onetime@npm:5.1.2"
   dependencies:
@@ -11693,6 +11770,13 @@ __metadata:
     strip-ansi: ^6.0.0
     wcwidth: ^1.0.1
   checksum: 28d476ee6c1049d68368c0dc922e7225e3b5600c3ede88fade8052837f9ed342625fdaa84a6209302587c8ddd9b664f71f0759833cbdb3a4cf81344057e63c63
+  languageName: node
+  linkType: hard
+
+"os-paths@npm:^4.0.1":
+  version: 4.4.0
+  resolution: "os-paths@npm:4.4.0"
+  checksum: 4861e9262ca9fa7693a9e5801b0bb50a38a251158b222396102ebe7b04b56b5f716d3c5b81be3410a594e4673004fb247f01fe6a9a89e9616a2a21966f678d49
   languageName: node
   linkType: hard
 
@@ -11917,7 +12001,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"path-key@npm:^3.1.0":
+"path-key@npm:^3.0.0, path-key@npm:^3.1.0":
   version: 3.1.1
   resolution: "path-key@npm:3.1.1"
   checksum: 55cd7a9dd4b343412a8386a743f9c746ef196e57c823d90ca3ab917f90ab9f13dd0ded27252ba49dbdfcab2b091d998bc446f6220cd3cea65db407502a740020
@@ -13498,7 +13582,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"signal-exit@npm:^3.0.2":
+"signal-exit@npm:^3.0.2, signal-exit@npm:^3.0.3":
   version: 3.0.7
   resolution: "signal-exit@npm:3.0.7"
   checksum: a2f098f247adc367dffc27845853e9959b9e88b01cb301658cfe4194352d8d2bb32e18467c786a7fe15f1d44b233ea35633d076d5e737870b7139949d1ab6318
@@ -13822,6 +13906,13 @@ __metadata:
   version: 3.0.0
   resolution: "strip-bom@npm:3.0.0"
   checksum: 8d50ff27b7ebe5ecc78f1fe1e00fcdff7af014e73cf724b46fb81ef889eeb1015fc5184b64e81a2efe002180f3ba431bdd77e300da5c6685d702780fbf0c8d5b
+  languageName: node
+  linkType: hard
+
+"strip-final-newline@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "strip-final-newline@npm:2.0.0"
+  checksum: 69412b5e25731e1938184b5d489c32e340605bb611d6140344abc3421b7f3c6f9984b21dff296dfcf056681b82caa3bb4cc996a965ce37bcfad663e92eae9c64
   languageName: node
   linkType: hard
 
@@ -15686,6 +15777,25 @@ __metadata:
   languageName: node
   linkType: hard
 
+"xdg-app-paths@npm:5":
+  version: 5.5.1
+  resolution: "xdg-app-paths@npm:5.5.1"
+  dependencies:
+    os-paths: ^4.0.1
+    xdg-portable: ^7.2.0
+  checksum: 2bd430f47beb5626445fe77d38c83ce560670ee3c06dfff7a275416290c252458e69c9f33d15738efa92776ea4388aebd73daac3451beb436a8509cb08396e6f
+  languageName: node
+  linkType: hard
+
+"xdg-portable@npm:^7.2.0":
+  version: 7.3.0
+  resolution: "xdg-portable@npm:7.3.0"
+  dependencies:
+    os-paths: ^4.0.1
+  checksum: e228ec6486e143d58d2e151bbb5899107bddbd57f92841e52598ba9515373fc095a570d4e974b009afd9b94bd9b98d4a4e5ebac66736cc02d30d178c7182bf6b
+  languageName: node
+  linkType: hard
+
 "xhr2-cookies@npm:1.1.0":
   version: 1.1.0
   resolution: "xhr2-cookies@npm:1.1.0"
@@ -15853,6 +15963,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"zod@npm:4.1.11":
+  version: 4.1.11
+  resolution: "zod@npm:4.1.11"
+  checksum: 022d59f85ebe054835fbcdc96a93c01479a64321104f846cb5644812c91e00d17ae3479f823956ec9b04e4351dd32841e1f12c567e81bc43f6e21ef5cc02ce3c
+  languageName: node
+  linkType: hard
+
 "zod@npm:^3.11.5, zod@npm:^3.22.3, zod@npm:^3.23.8":
   version: 3.24.2
   resolution: "zod@npm:3.24.2"
@@ -15876,6 +15993,7 @@ __metadata:
     "@types/react-dom": 19.0.4
     "@vercel/analytics": ^1.5.0
     "@vercel/kv": ^0.2.3
+    "@vercel/oidc": 4.0.0
     "@vitejs/plugin-react": ^4.3.4
     ag-grid-community: ^33.1.0
     ag-grid-react: ^33.1.0
